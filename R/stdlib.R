@@ -1,8 +1,14 @@
 #' Load the Rye standard library
 #'
-#' @param env Environment in which to load the library
+#' Creates a new environment with access to R's base functions via the parent
+#' environment chain. Lisp-specific functions are defined in this environment.
+#'
+#' @return An environment containing the Rye standard library
 #' @export
-rye_load_stdlib <- function(env = .GlobalEnv) {
+rye_load_stdlib <- function() {
+  # Create environment with baseenv() as parent
+  # This gives automatic access to all R base functions
+  env <- new.env(parent = baseenv())
   # Define basic list functions
   env$car <- function(lst) {
     if (is.call(lst) && length(lst) > 0) {
@@ -60,15 +66,7 @@ rye_load_stdlib <- function(env = .GlobalEnv) {
     }
   }
 
-  # List utilities
-  env$length <- function(x) {
-    base::length(x)
-  }
-
-  env$list <- function(...) {
-    base::list(...)
-  }
-
+  # List predicates
   env$`list?` <- function(x) {
     is.list(x) || is.call(x)
   }
@@ -89,29 +87,21 @@ rye_load_stdlib <- function(env = .GlobalEnv) {
     is.character(x)
   }
 
-  # Arithmetic and comparison (already available from R)
-  # Just ensure they're in the environment
-  env$`+` <- base::`+`
-  env$`-` <- base::`-`
-  env$`*` <- base::`*`
-  env$`/` <- base::`/`
-  env$`%` <- base::`%%`  # Modulo
-  env$`<` <- base::`<`
-  env$`>` <- base::`>`
-  env$`<=` <- base::`<=`
-  env$`>=` <- base::`>=`
-  env$`=` <- base::`==`
-
   # Boolean operations
   env$not <- function(x) {
     !x
   }
 
+  # Lisp-style equality (can override base::== if needed)
+  env$`=` <- base::`==`
+
   # Output
-  env$print <- base::print
   env$display <- function(x) {
     cat(as.character(x), "\n")
   }
 
-  invisible(NULL)
+  # Return the environment
+  # All R base functions (+, -, *, /, <, >, print, etc.) are automatically
+  # available via the parent environment chain
+  env
 }
