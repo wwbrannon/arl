@@ -5,6 +5,7 @@
 ^\.Rproj\.user$
 ^.*\.Rproj$
 ^README\.Rmd$
+^README\.html$
 ^CLAUDE\.md$
 ^plan\.md$
 ^Makefile$

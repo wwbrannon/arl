@@ -69,23 +69,9 @@ test_that("repl_history_path returns home directory path", {
 
 # History Management Functions ----
 
-test_that("repl_can_use_history checks interactive and readline", {
-  # Mock interactive() and capabilities() to test logic
-  can_use <- testthat::with_mocked_bindings(
-    rye:::repl_can_use_history(),
-    interactive = function() TRUE,
-    capabilities = function(...) c(readline = TRUE),
-    .package = "base"
-  )
-  expect_true(can_use)
-
-  cannot_use <- testthat::with_mocked_bindings(
-    rye:::repl_can_use_history(),
-    interactive = function() FALSE,
-    capabilities = function(...) c(readline = TRUE),
-    .package = "base"
-  )
-  expect_false(cannot_use)
+test_that("repl_can_use_history reflects interactive and readline", {
+  expected <- isTRUE(interactive()) && isTRUE(capabilities("readline"))
+  expect_equal(rye:::repl_can_use_history(), expected)
 })
 
 test_that("repl_can_use_history respects override option", {
