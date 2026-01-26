@@ -10,14 +10,14 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 [![R-CMD-check](https://github.com/wwbrannon/rye/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/rye/actions/workflows/R-CMD-check.yaml)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/rye)](https://CRAN.R-project.org/package=rye)
-[![CRAN
-downloads](https://cranlogs.r-pkg.org/badges/rye)](https://CRAN.R-project.org/package=rye)
+<!--
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/rye)](https://CRAN.R-project.org/package=rye)
 [![Codecov](https://codecov.io/gh/wwbrannon/rye/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/rye)
 [![R-universe](https://wwbrannon.r-universe.dev/badges/rye)](https://wwbrannon.r-universe.dev/rye)
-\[![pkgdown](https://img.shields.io/badge/pkgdown-site-blue.svg)\]\[pkgdown-site\]
-[![License:
+[![pkgdown](https://img.shields.io/badge/pkgdown-site-blue.svg)][pkgdown-site]
+--> [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<!-- badges: end --> \[pkgdown-site\]: <https://wwbrannon.github.io/rye>
+<!-- badges: end -->
 
 A Lisp dialect implemented in and with access to R, leveraging R’s
 Scheme heritage.
@@ -187,7 +187,8 @@ what you need:
 ### Examples
 
 Check out the [examples](inst/examples/) directory for complete working
-programs:
+programs. They range from small algorithms to macro techniques, data
+pipelines, and report outputs:
 
 - **[fibonacci.rye](inst/examples/fibonacci.rye)** - Multiple Fibonacci
   implementations (recursive, iterative, sequence generation)
@@ -197,8 +198,18 @@ programs:
   implementations showcasing control flow
 - **[macro-examples.rye](inst/examples/macro-examples.rye)** -
   Comprehensive macro system demonstrations
+- **[pipeline-macros.rye](inst/examples/pipeline-macros.rye)** -
+  Macro-driven pipeline expansion and data flow
 - **[data-analysis.rye](inst/examples/data-analysis.rye)** - R interop
   for data processing and statistics
+- **[graph-paths.rye](inst/examples/graph-paths.rye)** - BFS traversal
+  and Dijkstra shortest paths with report output
+- **[log-parser.rye](inst/examples/log-parser.rye)** - Text parsing and
+  summary stats from log lines
+- **[sales-report.rye](inst/examples/sales-report.rye)** - R interop for
+  data wrangling and CSV report generation
+- **[task-runner.rye](inst/examples/task-runner.rye)** - Dependency
+  resolution and execution ordering
 
 ### Semantics
 
