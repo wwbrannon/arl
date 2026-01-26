@@ -38,7 +38,7 @@ test-file: ## Run a single test file (usage: make test-file FILE=test-parser)
 		echo "Error: FILE parameter required. Usage: make test-file FILE=test-parser"; \
 		exit 1; \
 	fi
-	R -q -e "testthat::test_file('tests/testthat/$(FILE).R')"
+	R -q -e "testthat::set_max_fails(Inf); testthat::test_file('tests/testthat/$(FILE).R')"
 
 .PHONY: clean
 clean: ## Remove build artifacts
