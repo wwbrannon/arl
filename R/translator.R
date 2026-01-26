@@ -35,6 +35,15 @@ rye_expr_to_r <- function(expr, indent = 0) {
   # Handle symbols
   if (is.symbol(expr)) {
     sym_name <- as.character(expr)
+    if (sym_name == "#inf") {
+      return("Inf")
+    }
+    if (sym_name == "#-inf") {
+      return("-Inf")
+    }
+    if (sym_name == "#nan") {
+      return("NaN")
+    }
     # Handle R operators that need special treatment
     if (sym_name %in% c("+", "-", "*", "/", "%%", "%/%", "^",
                         "<", ">", "<=", ">=", "==", "!=",
@@ -66,7 +75,7 @@ rye_expr_to_r <- function(expr, indent = 0) {
       if (length(expr) != 2) {
         stop("quasiquote requires exactly 1 argument")
       }
-      return(paste0("quasiquote(", rye_expr_to_r(expr[[2]], indent), ")"))
+      return(paste0("bquote(", rye_expr_to_r(expr[[2]], indent), ")"))
     }
 
     # Handle unquote
@@ -74,7 +83,7 @@ rye_expr_to_r <- function(expr, indent = 0) {
       if (length(expr) != 2) {
         stop("unquote requires exactly 1 argument")
       }
-      return(paste0("unquote(", rye_expr_to_r(expr[[2]], indent), ")"))
+      return(paste0(".(", rye_expr_to_r(expr[[2]], indent), ")"))
     }
 
     # Handle unquote-splicing
@@ -82,13 +91,13 @@ rye_expr_to_r <- function(expr, indent = 0) {
       if (length(expr) != 2) {
         stop("unquote-splicing requires exactly 1 argument")
       }
-      return(paste0("unquote_splicing(", rye_expr_to_r(expr[[2]], indent), ")"))
+      return(paste0(".(", rye_expr_to_r(expr[[2]], indent), ")"))
     }
 
     # Handle lambda
     if (is.symbol(op) && as.character(op) == "lambda") {
-      if (length(expr) < 3) {
-        stop("lambda requires at least 2 arguments")
+      if (length(expr) < 2) {
+        stop("lambda requires an argument list")
       }
 
       # Get arguments
@@ -111,13 +120,18 @@ rye_expr_to_r <- function(expr, indent = 0) {
       args_str <- paste(arg_names, collapse = ", ")
       body_str <- paste(body_parts, collapse = "\n")
 
-      if (length(body_parts) > 1) {
-        return(paste0("function(", args_str, ") {\n",
-                     paste(rep("  ", indent + 1), collapse = ""),
-                     body_str, "\n", indent_str, "}"))
-      } else {
-        return(paste0("function(", args_str, ") ", body_str))
+      if (length(body_parts) == 0) {
+        return(paste0("function(", args_str, ") NULL"))
       }
+      if (length(body_parts) > 1) {
+        indented_body <- paste0(
+          paste(rep("  ", indent + 1), collapse = ""),
+          gsub("\n", paste0("\n", paste(rep("  ", indent + 1), collapse = "")), body_str)
+        )
+        return(paste0("function(", args_str, ") {\n",
+                     indented_body, "\n", indent_str, "}"))
+      }
+      return(paste0("function(", args_str, ") ", body_str))
     }
 
     # Handle define
@@ -183,6 +197,23 @@ rye_expr_to_r <- function(expr, indent = 0) {
       return(paste(c("~", parts), collapse = " "))
     }
 
+    # Infix operators
+    if (is.symbol(op) && as.character(op) %in% c(
+        "+", "-", "*", "/", "%%", "%/%", "^",
+        "<", ">", "<=", ">=", "==", "!=",
+        "&&", "||", "&", "|"
+      )) {
+      op_name <- as.character(op)
+      args <- character(0)
+      for (i in 2:length(expr)) {
+        args <- c(args, rye_expr_to_r(expr[[i]], indent))
+      }
+      if (length(args) == 0) {
+        return(op_name)
+      }
+      return(paste(c(op_name, args), collapse = " "))
+    }
+
     # Regular function call
     fn_name <- rye_expr_to_r(op, indent)
 
@@ -231,7 +262,7 @@ rye_translate <- function(source, is_file = NULL) {
   # Read source
   if (is_file) {
     if (!file.exists(source)) {
-      stop(sprintf("File not found: %s", source))
+      stop(sprintf("cannot open file '%s'", source))
     }
     text <- paste(readLines(source, warn = FALSE), collapse = "\n")
   } else {
