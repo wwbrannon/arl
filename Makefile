@@ -47,4 +47,4 @@ test-file: ## Run a single test file (usage: make test-file FILE=test-parser)
 clean: ## Remove build artifacts
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
-	rm -rf site/
+	rm -rf site/ docs/ doc/ Meta/
