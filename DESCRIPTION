@@ -1,15 +1,25 @@
 Package: rye
+Type: Package
 Title: A Lisp Dialect for R
 Version: 0.0.1
 Authors@R:
-    person("William", "Brannon", , "wwbrannon@gmail.com", role = c("aut", "cre"))
+    person("William", "Brannon", email = "will.brannon@gmail.com",
+           role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0002-1435-8535"))
 Description: Rye is a Lisp dialect implemented in and with access to R,
     leveraging R's Scheme heritage to provide a homoiconic language with
     powerful macro capabilities and seamless R interoperability.
-License: MIT + file LICENSE
+License: file LICENSE
+Depends:
+    R (>= 4.2.0)
+Suggests:
+    testthat (>= 3.0.0),
+    covr
+URL: https://github.com/wwbrannon/rye
+BugReports: https://github.com/wwbrannon/rye/issues
 Encoding: UTF-8
+ByteCompile: true
+NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Suggests:
-    testthat (>= 3.0.0)
 Config/testthat/edition: 3
