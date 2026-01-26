@@ -19,4 +19,5 @@ Translates Rye source into equivalent R code without evaluating it.
 }
 \examples{
 rye_translate("(+ 1 2)", is_file = FALSE)
+#> [1] "1 + 2"
 }

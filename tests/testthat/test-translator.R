@@ -128,29 +128,29 @@ test_that("rye_translate handles formula operator", {
 
 test_that("rye_translate handles binary operators", {
   result <- rye_translate("(+ 1 2 3)", is_file = FALSE)
-  expect_match(result, "\\+")
+  expect_match(result, "1 \\+ 2 \\+ 3")
 
   result <- rye_translate("(* 2 3 4)", is_file = FALSE)
-  expect_match(result, "\\*")
+  expect_match(result, "2 \\* 3 \\* 4")
 
   result <- rye_translate("(== a b)", is_file = FALSE)
-  expect_match(result, "==")
+  expect_match(result, "a == b")
 })
 
 test_that("rye_translate handles comparison operators", {
   result <- rye_translate("(< x 10)", is_file = FALSE)
-  expect_match(result, "<")
+  expect_match(result, "x < 10")
 
   result <- rye_translate("(>= y 0)", is_file = FALSE)
-  expect_match(result, ">=")
+  expect_match(result, "y >= 0")
 })
 
 test_that("rye_translate handles logical operators", {
   result <- rye_translate("(&& a b)", is_file = FALSE)
-  expect_match(result, "&&")
+  expect_match(result, "a && b")
 
   result <- rye_translate("(|| x y)", is_file = FALSE)
-  expect_match(result, "\\|\\|")
+  expect_match(result, "x \\|\\| y")
 })
 
 test_that("rye_translate handles :: and ::: operators", {
@@ -174,7 +174,7 @@ test_that("rye_translate handles lambda with multiple body expressions", {
   result <- rye_translate("(lambda (x) (print x) (+ x 1))", is_file = FALSE)
   expect_match(result, "function\\(x\\)")
   expect_match(result, "print")
-  expect_match(result, "\\+ x 1")
+  expect_match(result, "x \\+ 1")
 })
 
 # Complex Nested Expressions ----
@@ -186,6 +186,14 @@ test_that("rye_translate handles deeply nested expressions", {
   expect_match(result, ">")
   expect_match(result, "\\*")
   expect_match(result, "else")
+})
+
+test_that("rye_translate preserves infix grouping", {
+  result <- rye_translate("(* (+ 1 2) 3)", is_file = FALSE)
+  expect_match(result, "\\(1 \\+ 2\\) \\* 3")
+
+  result <- rye_translate("(- (+ 1 2))", is_file = FALSE)
+  expect_match(result, "-\\(1 \\+ 2\\)")
 })
 
 test_that("rye_translate handles nested begin blocks", {
@@ -216,7 +224,7 @@ test_that("rye_translate handles file with multiple expressions", {
 
   result <- rye_translate(temp_file)
   expect_match(result, "x <- 10")
-  expect_match(result, "\\+ x 5")
+  expect_match(result, "x \\+ 5")
 
   unlink(temp_file)
 })

@@ -1,7 +1,3 @@
-o) this is wrong:
-rye_translate("(+ 1 2)", is_file = FALSE)
-#> [1] "+ 1 2"
-
 o) this url is wrong: https://wwbrannon.github.io/rye/, update it when live
 o) update CLAUDE.md
 o) CRAN submission checklist

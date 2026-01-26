@@ -203,17 +203,25 @@ rye_expr_to_r <- function(expr, indent = 0) {
     if (is.symbol(op) && as.character(op) %in% c(
       "+", "-", "*", "/", "%%", "%/%", "^",
       "<", ">", "<=", ">=", "==", "!=",
-      "&&", "||", "&", "|"
+      "&&", "||", "&", "|", "!"
     )) {
       op_name <- as.character(op)
       args <- character(0)
       for (i in 2:length(expr)) {
-        args <- c(args, rye_expr_to_r(expr[[i]], indent))
+        arg_expr <- expr[[i]]
+        arg_text <- rye_expr_to_r(arg_expr, indent)
+        if (is.call(arg_expr)) {
+          arg_text <- paste0("(", arg_text, ")")
+        }
+        args <- c(args, arg_text)
       }
       if (length(args) == 0) {
         return(op_name)
       }
-      return(paste(c(op_name, args), collapse = " "))
+      if (length(args) == 1 && op_name %in% c("+", "-", "!")) {
+        return(paste0(op_name, args[[1]]))
+      }
+      return(paste(args, collapse = paste0(" ", op_name, " ")))
     }
 
     # Regular function call
@@ -258,6 +266,7 @@ rye_expr_to_r <- function(expr, indent = 0) {
 #' @return A character string containing the translated R code
 #' @examples
 #' rye_translate("(+ 1 2)", is_file = FALSE)
+#' #> [1] "1 + 2"
 #' @export
 rye_translate <- function(source, is_file = NULL) {
   # Auto-detect if source is a file path
