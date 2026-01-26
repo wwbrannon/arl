@@ -245,3 +245,371 @@ test_that("error and debug helpers work", {
   output <- capture.output(env$trace("hi", "label"))
   expect_true(any(grepl("label", output)))
 })
+
+test_that("call function converts lists to calls", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Convert list to call
+  lst <- list(quote(`+`), 1, 2)
+  result <- env$call(lst)
+  expect_true(is.call(result))
+  expect_equal(result[[1]], quote(`+`))
+  expect_equal(result[[2]], 1)
+  expect_equal(result[[3]], 2)
+
+  # Already a call should be returned as-is
+  call_obj <- rye_read("(+ 1 2)")[[1]]
+  expect_equal(env$call(call_obj), call_obj)
+})
+
+test_that("eval function evaluates Rye expressions", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Eval simple arithmetic
+  result <- env$eval(rye_read("(+ 1 2)")[[1]], env)
+  expect_equal(result, 3)
+
+  # Eval with variables
+  env$x <- 10
+  result <- env$eval(rye_read("(* x 5)")[[1]], env)
+  expect_equal(result, 50)
+
+  # Eval function definition and call
+  env$eval(rye_read("(define double (lambda (n) (* n 2)))")[[1]], env)
+  result <- env$eval(rye_read("(double 21)")[[1]], env)
+  expect_equal(result, 42)
+})
+
+test_that("gensym generates unique symbols", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Generate unique symbols
+  sym1 <- env$gensym()
+  sym2 <- env$gensym()
+
+  expect_true(is.symbol(sym1))
+  expect_true(is.symbol(sym2))
+  expect_false(identical(sym1, sym2))
+
+  # Custom prefix
+  sym_custom <- env$gensym("foo")
+  expect_true(is.symbol(sym_custom))
+  expect_true(grepl("^foo", as.character(sym_custom)))
+})
+
+test_that("try* with only error handler works", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Success case
+  result <- env$`try*`(
+    function() 42,
+    function(e) "error"
+  )
+  expect_equal(result, 42)
+
+  # Error case
+  result <- env$`try*`(
+    function() stop("boom"),
+    function(e) "caught"
+  )
+  expect_equal(result, "caught")
+})
+
+test_that("try* with only finally handler works", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Track whether finally ran
+  finally_ran <- FALSE
+
+  # Success case
+  result <- env$`try*`(
+    function() 42,
+    NULL,
+    function() finally_ran <<- TRUE
+  )
+  expect_equal(result, 42)
+  expect_true(finally_ran)
+
+  # Error case (finally should run but error should propagate)
+  finally_ran <- FALSE
+  expect_error({
+    env$`try*`(
+      function() stop("boom"),
+      NULL,
+      function() finally_ran <<- TRUE
+    )
+  })
+  expect_true(finally_ran)
+})
+
+test_that("try* with both handlers works", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Track execution
+  finally_ran <- FALSE
+
+  # Error caught and finally runs
+  result <- env$`try*`(
+    function() stop("boom"),
+    function(e) "caught",
+    function() finally_ran <<- TRUE
+  )
+  expect_equal(result, "caught")
+  expect_true(finally_ran)
+
+  # Success and finally runs
+  finally_ran <- FALSE
+  result <- env$`try*`(
+    function() 99,
+    function(e) "error",
+    function() finally_ran <<- TRUE
+  )
+  expect_equal(result, 99)
+  expect_true(finally_ran)
+})
+
+test_that("r/call invokes R functions with arguments", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Call R function by name (string)
+  result <- env$`r/call`("sum", list(1, 2, 3, 4))
+  expect_equal(result, 10)
+
+  # Call R function by symbol
+  result <- env$`r/call`(quote(prod), list(2, 3, 4))
+  expect_equal(result, 24)
+
+  # Call with single argument
+  result <- env$`r/call`("sqrt", list(16))
+  expect_equal(result, 4)
+
+  # Call with no arguments
+  result <- env$`r/call`("ls", list())
+  expect_true(is.character(result))
+})
+
+test_that("macroexpand-1 expands macros one level", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Define a simple macro
+  rye_eval(rye_read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env)
+
+  # Expand once
+  expr <- rye_read("(my-when #t 42)")[[1]]
+  expanded <- env$`macroexpand-1`(expr, env)
+
+  # Should be an if expression
+  expect_true(is.call(expanded))
+  expect_equal(as.character(expanded[[1]]), "if")
+})
+
+test_that("macroexpand fully expands nested macros", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Define nested macros
+  rye_eval(rye_read("(defmacro inner (x) `(* ,x 2))")[[1]], env)
+  rye_eval(rye_read("(defmacro outer (y) `(inner (+ ,y 1)))")[[1]], env)
+
+  # Fully expand
+  expr <- rye_read("(outer 5)")[[1]]
+  expanded <- env$macroexpand(expr, env)
+
+  # Should be fully expanded to arithmetic
+  expect_true(is.call(expanded))
+  expect_equal(as.character(expanded[[1]]), "*")
+})
+
+test_that("macro? predicate identifies macros", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Define a macro
+  rye_eval(rye_read("(defmacro test-macro (x) x)")[[1]], env)
+
+  # Test predicate
+  expect_true(env$`macro?`(quote(`test-macro`)))
+  expect_false(env$`macro?`(quote(`not-a-macro`)))
+  expect_false(env$`macro?`(42))
+})
+
+# ===========================================================================
+# Convenience Functions Tests
+# ===========================================================================
+
+test_that("identity returns its argument", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_equal(env$identity(42), 42)
+  expect_equal(env$identity("hello"), "hello")
+  expect_equal(env$identity(list(1, 2, 3)), list(1, 2, 3))
+  expect_null(env$identity(NULL))
+})
+
+test_that("first is an alias for car", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_equal(env$first(list(1, 2, 3)), 1)
+  expect_null(env$first(list()))
+  expect_equal(env$first(list("a", "b")), "a")
+})
+
+test_that("rest is an alias for cdr", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_equal(env$rest(list(1, 2, 3)), list(2, 3))
+  expect_equal(env$rest(list(1)), list())
+  expect_equal(env$rest(list()), list())
+})
+
+test_that("last returns last element", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_equal(env$last(list(1, 2, 3)), 3)
+  expect_equal(env$last(list(42)), 42)
+  expect_null(env$last(list()))
+  expect_equal(env$last(list("a", "b", "c")), "c")
+})
+
+test_that("nth returns element at index", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  lst <- list(10, 20, 30, 40)
+
+  # 0-indexed
+  expect_equal(env$nth(lst, 0), 10)
+  expect_equal(env$nth(lst, 1), 20)
+  expect_equal(env$nth(lst, 2), 30)
+  expect_equal(env$nth(lst, 3), 40)
+
+  # Out of bounds
+  expect_error(env$nth(lst, -1), "out of bounds")
+  expect_error(env$nth(lst, 4), "out of bounds")
+})
+
+test_that("complement negates predicate", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  is_even <- function(x) x %% 2 == 0
+  is_odd <- env$complement(is_even)
+
+  expect_true(is_odd(1))
+  expect_false(is_odd(2))
+  expect_true(is_odd(3))
+  expect_false(is_odd(4))
+
+  # Use with filter
+  result <- env$filter(is_odd, list(1, 2, 3, 4, 5, 6))
+  expect_equal(result, list(1, 3, 5))
+})
+
+test_that("compose combines functions", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  double <- function(x) x * 2
+  add_one <- function(x) x + 1
+
+  # compose applies right-to-left: f(g(x))
+  double_then_add_one <- env$compose(add_one, double)
+  expect_equal(double_then_add_one(5), 11)  # (5 * 2) + 1
+
+  # Multiple compositions
+  add_ten <- function(x) x + 10
+  complex_fn <- env$compose(double, env$compose(add_one, add_ten))
+  expect_equal(complex_fn(5), 32)  # ((5 + 10) + 1) * 2
+})
+
+test_that("repeatedly calls function n times", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  counter <- 0
+  increment <- function() {
+    counter <<- counter + 1
+    counter
+  }
+
+  result <- env$repeatedly(5, increment)
+  expect_equal(length(result), 5)
+  expect_equal(result[[1]], 1)
+  expect_equal(result[[5]], 5)
+})
+
+test_that("repeat creates list with repeated value", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  result <- env$`repeat`(5, "x")
+  expect_equal(length(result), 5)
+  expect_equal(result[[1]], "x")
+  expect_equal(result[[5]], "x")
+
+  # With number
+  result <- env$`repeat`(3, 42)
+  expect_equal(result, list(42, 42, 42))
+
+  # With NULL
+  result <- env$`repeat`(2, NULL)
+  expect_equal(length(result), 2)
+  expect_null(result[[1]])
+})
+
+test_that("zip combines lists element-wise", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Two lists
+  result <- env$zip(list(1, 2, 3), list("a", "b", "c"))
+  expect_equal(length(result), 3)
+  expect_equal(result[[1]], list(1, "a"))
+  expect_equal(result[[2]], list(2, "b"))
+  expect_equal(result[[3]], list(3, "c"))
+
+  # Three lists
+  result <- env$zip(list(1, 2), list("a", "b"), list(TRUE, FALSE))
+  expect_equal(length(result), 2)
+  expect_equal(result[[1]], list(1, "a", TRUE))
+  expect_equal(result[[2]], list(2, "b", FALSE))
+
+  # Different lengths (zip to shortest)
+  result <- env$zip(list(1, 2, 3, 4), list("a", "b"))
+  expect_equal(length(result), 2)
+
+  # Empty list
+  result <- env$zip(list(), list(1, 2))
+  expect_equal(length(result), 0)
+})
+
+test_that("partial applies arguments partially", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  # Partial application
+  add <- function(a, b) a + b
+  add_five <- env$partial(add, 5)
+
+  expect_equal(add_five(3), 8)
+  expect_equal(add_five(10), 15)
+
+  # Multiple arguments
+  multiply <- function(a, b, c) a * b * c
+  multiply_by_2_3 <- env$partial(multiply, 2, 3)
+
+  expect_equal(multiply_by_2_3(4), 24)  # 2 * 3 * 4
+  expect_equal(multiply_by_2_3(5), 30)  # 2 * 3 * 5
+})

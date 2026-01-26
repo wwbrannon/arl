@@ -1,0 +1,106 @@
+;; Fibonacci Sequence Implementations
+;; Demonstrates recursion, iteration, and functional approaches
+
+;; ============================================================================
+;; Classic Recursive Implementation
+;; ============================================================================
+
+(define fib-recursive
+  (lambda (n)
+    (cond
+      ((= n 0) 0)
+      ((= n 1) 1)
+      (else (+ (fib-recursive (- n 1))
+               (fib-recursive (- n 2)))))))
+
+(println "Recursive Fibonacci:")
+(println (str "fib(0) = " (fib-recursive 0)))
+(println (str "fib(1) = " (fib-recursive 1)))
+(println (str "fib(5) = " (fib-recursive 5)))
+(println (str "fib(10) = " (fib-recursive 10)))
+
+;; ============================================================================
+;; Iterative Implementation with While Loop
+;; ============================================================================
+
+(define fib-iterative
+  (lambda (n)
+    (if (< n 2)
+        n
+        (begin
+          (define a 0)
+          (define b 1)
+          (define i 2)
+          (while (<= i n)
+            (define temp b)
+            (set! b (+ a b))
+            (set! a temp)
+            (set! i (+ i 1)))
+          b))))
+
+(println "\nIterative Fibonacci:")
+(println (str "fib(10) = " (fib-iterative 10)))
+(println (str "fib(15) = " (fib-iterative 15)))
+
+;; ============================================================================
+;; Sequence Generation using unfold-like pattern
+;; ============================================================================
+
+(define fib-sequence
+  (lambda (n)
+    (if (< n 1)
+        ()
+        (if (= n 1)
+            (list 0)
+            (if (= n 2)
+                (list 0 1)
+                (let* ((init (list 0 1))
+                       (generate-next
+                        (lambda (lst count)
+                          (if (>= count n)
+                              lst
+                              (let* ((len (length lst))
+                                     (a (nth lst (- len 2)))
+                                     (b (nth lst (- len 1)))
+                                     (next (+ a b)))
+                                (generate-next (append lst (list next))
+                                              (+ count 1)))))))
+                  (generate-next init 2)))))))
+
+(println "\nFibonacci Sequence:")
+(println (str "First 10: " (fib-sequence 10)))
+(println (str "First 15: " (fib-sequence 15)))
+
+;; ============================================================================
+;; Using reduce to sum fibonacci sequence
+;; ============================================================================
+
+(define sum-fib
+  (lambda (n)
+    (reduce + (fib-sequence n))))
+
+(println "\nSum of Fibonacci:")
+(println (str "Sum of first 10: " (sum-fib 10)))
+
+;; ============================================================================
+;; Memoized Fibonacci (using R environment for cache)
+;; ============================================================================
+
+(define make-memoized-fib
+  (lambda ()
+    (let ((cache (r/call "new.env" ())))
+      (lambda (n)
+        (if (< n 2)
+            n
+            (let ((cached (r/call "get" (list (str n) cache))))
+              (if (null? cached)
+                  (let ((result (+ (fib-recursive (- n 1))
+                                  (fib-recursive (- n 2)))))
+                    (r/call "assign" (list (str n) result cache))
+                    result)
+                  cached)))))))
+
+;; Note: Full memoization would require modifying recursive calls to use cache
+;; This is a simplified demonstration of the concept
+
+(println "\nExample complete!")

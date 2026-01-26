@@ -63,8 +63,8 @@ rye --eval "(+ 1 2)"
 rye script.rye other.rye
 ```
 
-If the installer cannot write to `R_HOME/bin`, locate the script and add it to
-your `PATH`:
+If the installer cannot write to `R_HOME/bin`, locate the script and add
+it to your `PATH`:
 
 ``` r
 system.file("exec", "rye", package = "rye")
@@ -125,21 +125,49 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 
 ### Standard Library
 
-The REPL automatically loads a standard library with:
+The REPL automatically loads a comprehensive standard library with 70+
+functions and macros.
 
-- **List operations**: `car`, `cdr`, `cons`, `list`, `list*`, `append`, `reverse`
-- **Higher-order**: `map`, `mapcat`, `filter`, `remove`, `reduce`, `foldl`, `foldr`
-- **Sequence helpers**: `take`, `drop`, `take-while`, `drop-while`, `partition`, `flatten`
-- **Predicates**: `null?`, `nil?`, `list?`, `pair?`, `symbol?`, `keyword?`, `number?`, `string?`, `true?`, `false?`, `fn?`
-- **Macros**: `when`, `unless`, `and`, `or`, `cond`, `case`, `let`, `let*`, `letrec`, `while`, `for`, `->`, `->>`, `try`
-- **Interop helpers**: `dict`, `hash`, `r/call`
-- **Strings/IO**: `str`, `string-join`, `string-split`, `trim`, `format`, `read-line`, `display`/`println`
-- **Errors/debug**: `error`, `warn`, `assert`, `trace`, `macroexpand`
-- **Arithmetic**: `+`, `-`, `*`, `/`, `%`
-- **Comparison**: `<`, `>`, `<=`, `>=`, `=`
-- **Logic**: `not`
+**Core List Operations:** - `car`, `cdr`, `cons`, `call`, `list*`,
+`append`, `reverse`, `apply` - `first`, `rest`, `last`, `nth`
+(convenience aliases)
 
-The Rye stdlib source is split into focused files in `inst/rye` so you can load just what you need:
+**Higher-Order Functions:** - `map`, `mapcat`, `filter`, `remove`,
+`reduce`, `foldl`, `foldr` - `every?`, `any?`, `complement`, `compose`,
+`partial`
+
+**Sequence Helpers:** - `take`, `drop`, `take-while`, `drop-while`,
+`partition`, `flatten`, `zip` - `repeatedly`, `repeat`
+
+**Predicates:** - `null?`, `nil?`, `list?`, `pair?`, `symbol?`,
+`keyword?` - `number?`, `string?`, `vector?`, `true?`, `false?`, `fn?`,
+`callable?`
+
+**Control Flow Macros:** - `when`, `unless`, `and`, `or`, `cond`, `case`
+
+**Binding & Looping:** - `let`, `let*`, `letrec` - `while`, `for`
+
+**Threading Macros:** - `->`, `->>` (thread-first, thread-last)
+
+**Error Handling:** - `try`, `catch`, `finally`, `error`, `warn`,
+`assert`, `trace`, `try*`
+
+**String & I/O:** - `str`, `string-join`, `string-split`, `trim`,
+`format` - `read-line`, `display`, `println`
+
+**Macro System:** - `gensym`, `macro?`, `eval`, `macroexpand`,
+`macroexpand-1`
+
+**Interop:** - `dict`, `hash`, `r/call`, `identity`
+
+**Arithmetic & Comparison:** - `+`, `-`, `*`, `/`, `%`, `=`, `<`, `>`,
+`<=`, `>=` - `not`
+
+For detailed documentation of all functions, see the [**Standard Library
+Reference**](docs/stdlib-reference.md).
+
+The Rye stdlib source is split into focused files in `inst/rye` so you
+can load just what you need:
 
 ``` lisp
 (load "control")   ; when/unless/and/or/cond/case
@@ -149,11 +177,30 @@ The Rye stdlib source is split into focused files in `inst/rye` so you can load 
 (load "error")     ; try/catch/finally
 ```
 
+### Examples
+
+Check out the [examples](examples/) directory for complete working
+programs:
+
+- **[fibonacci.rye](examples/fibonacci.rye)** - Multiple Fibonacci
+  implementations (recursive, iterative, sequence generation)
+- **[quicksort.rye](examples/quicksort.rye)** - Quicksort and mergesort
+  demonstrating list operations
+- **[fizzbuzz.rye](examples/fizzbuzz.rye)** - Various FizzBuzz
+  implementations showcasing control flow
+- **[macro-examples.rye](examples/macro-examples.rye)** - Comprehensive
+  macro system demonstrations
+- **[data-analysis.rye](examples/data-analysis.rye)** - R interop for
+  data processing and statistics
+
 ### Semantics
 
-- **Truthiness**: only `#f`/`FALSE` and `#nil`/`NULL` are falsey; everything else is truthy.
-- **Lists**: Rye lists are backed by R lists or calls; `car` returns the head and `cdr` returns the tail as a list.
-- **Keywords**: `:kw` tokens are self-evaluating and become named arguments in function calls.
+- **Truthiness**: only `#f`/`FALSE` and `#nil`/`NULL` are falsey;
+  everything else is truthy.
+- **Lists**: Rye lists are backed by R lists or calls; `car` returns the
+  head and `cdr` returns the tail as a list.
+- **Keywords**: `:kw` tokens are self-evaluating and become named
+  arguments in function calls.
 
 ### R Integration
 

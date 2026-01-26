@@ -1,11 +1,7 @@
-o) examples from docs to examples format proper and more of them
+o) more tests; coverage check?
+o) sanity-check the current tests: they all pass, but does the tested behavior match how lisp ought to behave?
+o) big integration-type tests; update examples tests
 
-big features:
-    o) what else needs to be in the stdlib? other common lisp features
-    o) more tests; big integration-type tests? coverage check?
-    o) sanity-check the tests: they all pass, but does the tested behavior match how lisp ought to behave?
-    o) better docs?
-
-inst/CITATION?
-
-
+o) help?
+o) better docs? vignettes etc
+o) inst/CITATION?

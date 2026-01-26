@@ -11,3 +11,5 @@
 ^tags$
 ^\.Rbuildignore$
 ^\.lintr$
+^docs$
+^examples$

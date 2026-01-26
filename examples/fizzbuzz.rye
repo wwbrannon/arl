@@ -1,0 +1,121 @@
+;; FizzBuzz Implementations
+;; Demonstrates control flow, looping, and conditionals
+
+;; ============================================================================
+;; Classic FizzBuzz using cond
+;; ============================================================================
+
+(define fizzbuzz
+  (lambda (n)
+    (cond
+      ((= (% n 15) 0) "FizzBuzz")
+      ((= (% n 3) 0) "Fizz")
+      ((= (% n 5) 0) "Buzz")
+      (else (str n)))))
+
+(println "Classic FizzBuzz (1-20):")
+(define i 1)
+(while (<= i 20)
+  (println (fizzbuzz i))
+  (set! i (+ i 1)))
+
+;; ============================================================================
+;; Using for loop
+;; ============================================================================
+
+(println "\nUsing for loop (1-15):")
+(for (n (r/call "seq" (list 1 15)))
+  (println (fizzbuzz n)))
+
+;; ============================================================================
+;; Functional approach with map
+;; ============================================================================
+
+(println "\nFunctional approach (1-10):")
+(define fizzbuzz-list
+  (lambda (n)
+    (map fizzbuzz (r/call "seq" (list 1 n)))))
+
+(println (fizzbuzz-list 10))
+
+;; ============================================================================
+;; FizzBuzz with when/unless
+;; ============================================================================
+
+(define fizzbuzz-when
+  (lambda (n)
+    (let ((result ""))
+      (when (= (% n 3) 0)
+        (set! result (str result "Fizz")))
+      (when (= (% n 5) 0)
+        (set! result (str result "Buzz")))
+      (when (= result "")
+        (set! result (str n)))
+      result)))
+
+(println "\nUsing when (1-10):")
+(for (n (r/call "seq" (list 1 10)))
+  (println (fizzbuzz-when n)))
+
+;; ============================================================================
+;; Case statement version
+;; ============================================================================
+
+(define fizzbuzz-case
+  (lambda (n)
+    (case (% n 15)
+      (0 "FizzBuzz")
+      (3 "Fizz")
+      (5 "Buzz")
+      (6 "Fizz")
+      (9 "Fizz")
+      (10 "Buzz")
+      (12 "Fizz")
+      (else (str n)))))
+
+(println "\nUsing case (note: case checks exact value, not pattern):")
+(println "1-15 with case-based FizzBuzz:")
+(for (n (r/call "seq" (list 1 15)))
+  (println (fizzbuzz-case n)))
+
+;; ============================================================================
+;; Filter to find Fizz, Buzz, and FizzBuzz numbers
+;; ============================================================================
+
+(println "\nFiltering FizzBuzz numbers:")
+
+(define range-1-30 (r/call "seq" (list 1 30)))
+
+(define fizz-numbers
+  (filter (lambda (n) (= (% n 3) 0)) range-1-30))
+
+(define buzz-numbers
+  (filter (lambda (n) (= (% n 5) 0)) range-1-30))
+
+(define fizzbuzz-numbers
+  (filter (lambda (n) (= (% n 15) 0)) range-1-30))
+
+(println (str "Fizz numbers (1-30): " fizz-numbers))
+(println (str "Buzz numbers (1-30): " buzz-numbers))
+(println (str "FizzBuzz numbers (1-30): " fizzbuzz-numbers))
+
+;; ============================================================================
+;; Count FizzBuzz occurrences
+;; ============================================================================
+
+(define count-fizzbuzz
+  (lambda (n)
+    (let ((results (map fizzbuzz (r/call "seq" (list 1 n)))))
+      (dict
+       :fizz (length (filter (lambda (x) (= x "Fizz")) results))
+       :buzz (length (filter (lambda (x) (= x "Buzz")) results))
+       :fizzbuzz (length (filter (lambda (x) (= x "FizzBuzz")) results))
+       :numbers (length (filter (lambda (x) (not (or (= x "Fizz")
+                                                       (= x "Buzz")
+                                                       (= x "FizzBuzz"))))
+                                results))))))
+
+(println "\nCounts for 1-100:")
+(println (count-fizzbuzz 100))
+
+(println "\nExample complete!")

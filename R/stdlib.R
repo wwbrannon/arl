@@ -104,6 +104,19 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$hash <- rye_stdlib_dict
   env$`r/call` <- rye_stdlib_r_call
 
+  # Convenience functions
+  env$identity <- rye_stdlib_identity
+  env$first <- rye_stdlib_first
+  env$rest <- rye_stdlib_rest
+  env$last <- rye_stdlib_last
+  env$nth <- rye_stdlib_nth
+  env$complement <- rye_stdlib_complement
+  env$compose <- rye_stdlib_compose
+  env$repeatedly <- rye_stdlib_repeatedly
+  env$`repeat` <- rye_stdlib_repeat
+  env$zip <- rye_stdlib_zip
+  env$partial <- rye_stdlib_partial
+
   # Return the environment
   # All R base functions (+, -, *, /, <, >, print, etc.) are automatically
   # available via the parent environment chain
@@ -555,4 +568,97 @@ rye_stdlib_r_call <- function(fn, args = list()) {
     fn <- get(fn, envir = baseenv())
   }
   rye_do_call(fn, rye_as_list(args))
+}
+
+# ============================================================================
+# Convenience Functions
+# Internal stdlib helper functions - not exported
+# ============================================================================
+
+# Identity function - returns its argument unchanged
+rye_stdlib_identity <- function(x) {
+  x
+}
+
+# Alias for car - returns first element of list
+rye_stdlib_first <- function(lst) {
+  rye_stdlib_car(lst)
+}
+
+# Alias for cdr - returns rest of list
+rye_stdlib_rest <- function(lst) {
+  rye_stdlib_cdr(lst)
+}
+
+# Get last element of a list
+rye_stdlib_last <- function(lst) {
+  if (is.call(lst)) {
+    lst <- as.list(lst)
+  }
+  if (length(lst) == 0) {
+    NULL
+  } else {
+    lst[[length(lst)]]
+  }
+}
+
+# Get nth element of a list (0-indexed)
+rye_stdlib_nth <- function(lst, n) {
+  if (is.call(lst)) {
+    lst <- as.list(lst)
+  }
+  if (n < 0 || n >= length(lst)) {
+    stop(sprintf("Index %d out of bounds for list of length %d", n, length(lst)))
+  }
+  lst[[n + 1]]  # R is 1-indexed
+}
+
+# Negate a predicate function
+rye_stdlib_complement <- function(pred) {
+  function(...) !pred(...)
+}
+
+# Compose two functions (right to left)
+rye_stdlib_compose <- function(f, g) {
+  function(...) f(g(...))
+}
+
+# Call a function n times and collect results
+rye_stdlib_repeatedly <- function(n, fn) {
+  lapply(seq_len(n), function(i) fn())
+}
+
+# Repeat a value n times
+rye_stdlib_repeat <- function(n, value) {
+  replicate(n, value, simplify = FALSE)
+}
+
+# Zip multiple lists together
+rye_stdlib_zip <- function(...) {
+  lists <- list(...)
+  if (length(lists) == 0) {
+    return(list())
+  }
+  # Convert calls to lists
+  lists <- lapply(lists, function(x) {
+    if (is.call(x)) as.list(x) else x
+  })
+  # Find minimum length
+  min_len <- min(vapply(lists, length, integer(1)))
+  if (min_len == 0) {
+    return(list())
+  }
+  # Zip together
+  lapply(seq_len(min_len), function(i) {
+    lapply(lists, function(lst) lst[[i]])
+  })
+}
+
+# Partial application of a function
+rye_stdlib_partial <- function(fn, ...) {
+  captured_args <- list(...)
+  function(...) {
+    all_args <- c(captured_args, list(...))
+    do.call(fn, all_args)
+  }
 }

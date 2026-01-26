@@ -93,3 +93,28 @@ test_that("begin returns last expression", {
   result <- rye_eval(rye_read("(begin 1 2 3)")[[1]])
   expect_equal(result, 3)
 })
+
+test_that("set! modifies existing bindings", {
+  env <- new.env()
+
+  # Define a variable
+  rye_eval(rye_read("(define x 10)")[[1]], env)
+  expect_equal(env$x, 10)
+
+  # Modify it with set!
+  rye_eval(rye_read("(set! x 20)")[[1]], env)
+  expect_equal(env$x, 20)
+
+  # set! should error on undefined variable
+  expect_error(
+    rye_eval(rye_read("(set! undefined-var 42)")[[1]], env),
+    "variable 'undefined-var' is not defined"
+  )
+
+  # set! in a lambda should modify parent scope
+  rye_eval(rye_read("(define y 5)")[[1]], env)
+  rye_eval(rye_read("(define f (lambda () (set! y 15)))")[[1]], env)
+  expect_equal(env$y, 5)
+  env$f()
+  expect_equal(env$y, 15)
+})

@@ -135,6 +135,34 @@ rye_eval <- function(expr, env = parent.frame()) {
     return(NULL)
   }
 
+  # set! - modify existing binding
+  if (is.symbol(op) && as.character(op) == "set!") {
+    if (length(expr) != 3) {
+      stop("set! requires exactly 2 arguments: (set! name value)")
+    }
+    name <- expr[[2]]
+    if (!is.symbol(name)) {
+      stop("set! requires a symbol as the first argument")
+    }
+    name_str <- as.character(name)
+    # Check if variable exists
+    if (!exists(name_str, envir = env, inherits = TRUE)) {
+      stop(sprintf("set!: variable '%s' is not defined", name_str))
+    }
+    value <- rye_eval(expr[[3]], env)
+    # Find and assign to the environment where the variable exists
+    target_env <- env
+    while (!exists(name_str, envir = target_env, inherits = FALSE)) {
+      if (identical(target_env, emptyenv())) {
+        # Shouldn't happen since we checked exists(..., inherits = TRUE) above
+        stop(sprintf("set!: variable '%s' not found", name_str))
+      }
+      target_env <- parent.env(target_env)
+    }
+    assign(name_str, value, envir = target_env)
+    return(NULL)
+  }
+
   # load - evaluate a Rye source file or stdlib entry
   if (is.symbol(op) && as.character(op) == "load") {
     if (length(expr) != 2) {
