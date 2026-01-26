@@ -14,7 +14,6 @@
       (let* ,(cdr bindings) ,@body))))
 
 (defmacro letrec (bindings . body)
-  `(begin
-     ,@(map (lambda (b) `(define ,(car b) (list))) bindings)
-     ,@(map (lambda (b) `(define ,(car b) ,(car (cdr b)))) bindings)
+  `(let ,(map (lambda (b) `(,(car b) (list))) bindings)
+     ,@(map (lambda (b) `(set! ,(car b) ,(car (cdr b)))) bindings)
      (begin ,@body)))

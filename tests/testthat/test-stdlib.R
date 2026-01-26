@@ -152,6 +152,27 @@ test_that("or macro works", {
   expect_false(result)
 })
 
+test_that("variadic and/or short-circuit correctly", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+  rye_load_stdlib_files(env)
+
+  result <- rye_eval(rye_read("(and #t 1 2 3)")[[1]], env)
+  expect_equal(result, 3)
+
+  result <- rye_eval(rye_read("(or #f 1 2)")[[1]], env)
+  expect_equal(result, 1)
+
+  rye_eval(rye_read("(define x 0)")[[1]], env)
+  result <- rye_eval(rye_read("(and #f (begin (set! x 1) x))")[[1]], env)
+  expect_false(result)
+  expect_equal(env$x, 0)
+
+  result <- rye_eval(rye_read("(or #t (begin (set! x 2) x))")[[1]], env)
+  expect_true(result)
+  expect_equal(env$x, 0)
+})
+
 test_that("not function works", {
   env <- new.env()
   rye_load_stdlib(env)

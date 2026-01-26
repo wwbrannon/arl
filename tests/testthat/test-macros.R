@@ -207,3 +207,20 @@ test_that("stdlib macros from files work", {
   result <- rye_eval(rye_read("(begin (define x 0) (try (begin (define x 1) (error \"boom\")) (catch e (define x 2)) (finally (define x 3))) x)")[[1]], env)
   expect_equal(result, 3)
 })
+
+test_that("letrec supports mutual recursion", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+  rye_load_stdlib_files(env)
+
+  result <- rye_eval(
+    rye_read(
+      "(letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
+                (odd? (lambda (n) (if (= n 0) #f (even? (- n 1))))))
+         (even? 4))"
+    )[[1]],
+    env
+  )
+
+  expect_true(result)
+})

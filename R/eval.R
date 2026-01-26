@@ -108,7 +108,7 @@ rye_eval <- function(expr, env = parent.frame()) {
       stop("if requires 2 or 3 arguments: (if test then [else])")
     }
     test <- rye_eval(expr[[2]], env)
-    # R's truthiness: NULL and FALSE are falsy, everything else is truthy
+    # R-style truthiness: NULL and FALSE are falsy
     if (identical(test, FALSE) || is.null(test)) {
       # Evaluate else branch if present
       if (length(expr) == 4) {

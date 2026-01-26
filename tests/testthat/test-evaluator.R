@@ -15,6 +15,20 @@ test_that("evaluator handles nested calls", {
   expect_equal(result, 26)
 })
 
+test_that("evaluator evaluates arguments left-to-right", {
+  env <- new.env(parent = baseenv())
+  rye_eval(rye_read("(define x 0)")[[1]], env)
+  rye_eval(rye_read("(define collect (lambda (a b) (list a b)))")[[1]], env)
+
+  result <- rye_eval(
+    rye_read("(collect (begin (set! x (+ x 1)) x) (begin (set! x (+ x 1)) x))")[[1]],
+    env
+  )
+
+  expect_equal(result, list(1, 2))
+  expect_equal(env$x, 2)
+})
+
 test_that("evaluator handles :: sugar", {
   result <- rye_eval(rye_read("(base::mean (c 1 2 3))")[[1]])
   expect_equal(result, 2)
