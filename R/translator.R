@@ -1,9 +1,9 @@
 # Translate a Rye AST expression to R code
-#'
-#' @param expr A parsed Rye expression (from rye_parse)
-#' @param indent Current indentation level (used internally)
-#' @return A character string containing R code
-#' @keywords internal
+#
+# @param expr A parsed Rye expression (from rye_parse)
+# @param indent Current indentation level (used internally)
+# @return A character string containing R code
+# @keywords internal
 rye_expr_to_r <- function(expr, indent = 0) {
   indent_str <- paste(rep("  ", indent), collapse = "")
 
