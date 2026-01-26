@@ -31,6 +31,26 @@ rye_eval_text <- function(text, env) {
   rye_eval_exprs(exprs, env)
 }
 
+rye_resolve_stdlib_path <- function(name) {
+  if (!is.character(name) || length(name) != 1) {
+    return(NULL)
+  }
+  dir_path <- system.file("rye", package = "rye")
+  if (identical(dir_path, "")) {
+    return(NULL)
+  }
+  candidates <- c(
+    file.path(dir_path, name),
+    file.path(dir_path, paste0(name, ".rye"))
+  )
+  for (path in candidates) {
+    if (file.exists(path)) {
+      return(path)
+    }
+  }
+  NULL
+}
+
 #' Load and evaluate a Rye source file
 #'
 #' @param path Path to a Rye source file
@@ -48,15 +68,23 @@ rye_load_file <- function(path, env = parent.frame()) {
   rye_eval_text(text, env)
 }
 
-#' Load the Rye prelude into an environment
+#' Load all Rye standard library source files into an environment
 #'
-#' @param env Environment in which to evaluate the prelude
-#' @return The result of the final expression in the prelude
+#' @param env Environment in which to evaluate the standard library files
+#' @return The result of the final expression in the last file
 #' @export
-rye_load_prelude <- function(env = parent.frame()) {
-  path <- system.file("rye/prelude.rye", package = "rye")
-  if (identical(path, "")) {
-    stop("Rye prelude not found in installed package")
+rye_load_stdlib_files <- function(env = parent.frame()) {
+  dir_path <- system.file("rye", package = "rye")
+  if (identical(dir_path, "")) {
+    stop("Rye standard library directory not found in installed package")
   }
-  rye_load_file(path, env)
+  paths <- list.files(dir_path, pattern = "\\.rye$", full.names = TRUE)
+  if (length(paths) == 0) {
+    stop("No Rye standard library files found in installed package")
+  }
+  result <- NULL
+  for (path in paths) {
+    result <- rye_load_file(path, env)
+  }
+  result
 }

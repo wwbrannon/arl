@@ -26,11 +26,22 @@ test_that("(load ...) evaluates file in current environment", {
   expect_equal(get("foo", envir = env), 7)
 })
 
-test_that("rye_load_prelude registers prelude macros", {
+test_that("(load ...) resolves stdlib entries by name", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
 
-  rye_load_prelude(env)
+  exprs <- rye_read("(load \"prelude\")")
+
+  expect_silent(rye_eval(exprs[[1]], env))
+  expect_true(rye:::is_macro(as.symbol("when")))
+  expect_true(rye:::is_macro(as.symbol("unless")))
+})
+
+test_that("rye_load_stdlib_files registers stdlib macros", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+
+  rye_load_stdlib_files(env)
 
   expect_true(rye:::is_macro(as.symbol("when")))
   expect_true(rye:::is_macro(as.symbol("unless")))

@@ -132,7 +132,7 @@ rye_eval <- function(expr, env = parent.frame()) {
     return(NULL)
   }
 
-  # load - evaluate a Rye source file
+  # load - evaluate a Rye source file or stdlib entry
   if (is.symbol(op) && as.character(op) == "load") {
     if (length(expr) != 2) {
       stop("load requires exactly 1 argument: (load \"path\")")
@@ -141,8 +141,16 @@ rye_eval <- function(expr, env = parent.frame()) {
     if (!is.character(path) || length(path) != 1) {
       stop("load requires a single file path string")
     }
-    if (path %in% c("prelude", "prelude.rye")) {
-      return(rye_load_prelude(env))
+    has_separator <- grepl("[/\\\\]", path)
+    if (!has_separator) {
+      stdlib_path <- rye_resolve_stdlib_path(path)
+      if (!is.null(stdlib_path)) {
+        return(rye_load_file(stdlib_path, env))
+      }
+      if (file.exists(path)) {
+        return(rye_load_file(path, env))
+      }
+      stop(sprintf("File not found: %s", path))
     }
     return(rye_load_file(path, env))
   }
