@@ -12,6 +12,8 @@
 ^tags$
 ^\.Rbuildignore$
 ^\.lintr$
+^CONTRIBUTING\.md$
+^_pkgdown\.yml$
 ^docs$
 ^site$
 ^pkgdown$
