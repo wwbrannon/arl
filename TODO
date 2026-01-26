@@ -1,0 +1,23 @@
+let's have a directive we can put at the top to tell the interpreter to use rye?
+
+improve the repl, it's a bit of a stub rn; use readline lib?
+
+reorganize stdlib to also make those functions available from the package in the usual R way
+how to load rye-lang stdlib files in the repl?
+can we make those available to R code as well?
+
+command-line tool like `$ hy ...`
+
+what R version is needed to make this work?
+
+set up CI
+
+lintr
+
+what else needs to be in the stdlib? other common lisp features
+
+more tests; big integration-type tests?
+
+better docs?
+
+inst/CITATION?
