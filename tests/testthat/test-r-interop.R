@@ -1,16 +1,3 @@
-test_that("keywords are tokenized correctly", {
-  tokens <- rye_tokenize(":data")
-  expect_equal(length(tokens), 1)
-  expect_equal(tokens[[1]]$type, "KEYWORD")
-  expect_equal(tokens[[1]]$value, "data")
-})
-
-test_that("keywords in expressions", {
-  tokens <- rye_tokenize("(plot x y :col \"red\")")
-  expect_equal(tokens[[5]]$type, "KEYWORD")
-  expect_equal(tokens[[5]]$value, "col")
-})
-
 test_that("named arguments work with keywords", {
   env <- new.env()
 

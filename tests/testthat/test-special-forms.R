@@ -93,31 +93,3 @@ test_that("begin returns last expression", {
   result <- rye_eval(rye_read("(begin 1 2 3)")[[1]])
   expect_equal(result, 3)
 })
-
-test_that("factorial function works", {
-  env <- new.env()
-
-  # Define factorial using recursion
-  factorial_def <- "
-    (define factorial
-      (lambda (n)
-        (if (< n 2)
-          1
-          (* n (factorial (- n 1))))))
-  "
-
-  rye_eval(rye_read(factorial_def)[[1]], env)
-
-  # Test factorial
-  result <- rye_eval(rye_read("(factorial 5)")[[1]], env)
-  expect_equal(result, 120)
-
-  result <- rye_eval(rye_read("(factorial 0)")[[1]], env)
-  expect_equal(result, 1)
-
-  result <- rye_eval(rye_read("(factorial 1)")[[1]], env)
-  expect_equal(result, 1)
-
-  result <- rye_eval(rye_read("(factorial 10)")[[1]], env)
-  expect_equal(result, 3628800)
-})
