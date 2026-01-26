@@ -75,7 +75,15 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$not <- rye_stdlib_not
 
   # Arithmetic operators
-  # Provide single-character aliases for R operators
+  # Provide aliases for common R operators
+  env$`+` <- base::`+`
+  env$`-` <- base::`-`
+  env$`*` <- base::`*`
+  env$`/` <- base::`/`
+  env$`<` <- base::`<`
+  env$`<=` <- base::`<=`
+  env$`>` <- base::`>`
+  env$`>=` <- base::`>=`
   env$`%` <- rye_stdlib_modulo
 
   # Lisp-style equality (can override base::== if needed)
