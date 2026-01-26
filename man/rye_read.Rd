@@ -13,5 +13,8 @@ rye_read(source)
 A list of parsed expressions
 }
 \description{
-Read Rye source code into parsed expressions
+Convenience helper that combines tokenization and parsing.
+}
+\examples{
+rye_read("(define x 10) (+ x 5)")
 }

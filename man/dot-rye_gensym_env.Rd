@@ -13,4 +13,4 @@ An object of class \code{environment} of length 1.
 \description{
 Global gensym counter (stored in environment to avoid locking issues)
 }
-\keyword{datasets}
+\keyword{internal}

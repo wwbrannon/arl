@@ -13,4 +13,4 @@ An object of class \code{environment} of length 0.
 \description{
 Global macro registry
 }
-\keyword{datasets}
+\keyword{internal}

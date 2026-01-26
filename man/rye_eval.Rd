@@ -15,5 +15,10 @@ rye_eval(expr, env = parent.frame())
 The result of evaluation
 }
 \description{
-Evaluate Rye expressions
+Evaluates a parsed Rye expression, expanding macros and handling special
+forms before applying functions in the provided environment.
+}
+\examples{
+exprs <- rye_read("(+ 1 2)")
+rye_eval(exprs[[1]])
 }

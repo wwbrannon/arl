@@ -15,5 +15,10 @@ rye_load_file(path, env = parent.frame())
 The result of the final expression in the file
 }
 \description{
-Load and evaluate a Rye source file
+Reads a \code{.rye} file, parses it, and evaluates each expression in order.
+}
+\examples{
+tmp <- tempfile(fileext = ".rye")
+writeLines("(+ 1 2)", tmp)
+rye_load_file(tmp)
 }

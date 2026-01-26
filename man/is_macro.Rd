@@ -15,3 +15,4 @@ TRUE if it's a macro, FALSE otherwise
 \description{
 Check if a symbol names a macro
 }
+\keyword{internal}

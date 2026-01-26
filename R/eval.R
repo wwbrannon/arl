@@ -1,8 +1,14 @@
 #' Evaluate Rye expressions
 #'
+#' Evaluates a parsed Rye expression, expanding macros and handling special
+#' forms before applying functions in the provided environment.
+#'
 #' @param expr A parsed Rye expression
 #' @param env Environment in which to evaluate (default: caller's environment)
 #' @return The result of evaluation
+#' @examples
+#' exprs <- rye_read("(+ 1 2)")
+#' rye_eval(exprs[[1]])
 #' @export
 rye_eval <- function(expr, env = parent.frame()) {
   if (!exists(".rye_env", envir = env, inherits = FALSE)) {

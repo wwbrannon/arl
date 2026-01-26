@@ -1,0 +1,161 @@
+---
+title: "Standard Library: Higher-Order Functions"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Standard Library: Higher-Order Functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+### map
+
+Applies a function to each element of a list, returning a new list.
+
+**Signature:** `(map fn lst)`
+
+**Examples:**
+```lisp
+(map (lambda (x) (* x 2)) (list 1 2 3))  ; => (2 4 6)
+(map str (list 1 2 3))                   ; => ("1" "2" "3")
+(map first (list (list 1 2) (list 3 4))) ; => (1 3)
+```
+
+**See also:** filter, mapcat, reduce
+
+---
+
+### mapcat
+
+Maps a function over a list and concatenates the results.
+
+**Signature:** `(mapcat fn lst)`
+
+**Examples:**
+```lisp
+(mapcat (lambda (x) (list x x)) (list 1 2 3))  ; => (1 1 2 2 3 3)
+(mapcat identity (list (list 1 2) (list 3 4))) ; => (1 2 3 4)
+```
+
+**See also:** map, flatten
+
+---
+
+### filter
+
+Returns a list of elements that satisfy a predicate.
+
+**Signature:** `(filter pred lst)`
+
+**Examples:**
+```lisp
+(filter (lambda (x) (> x 5)) (list 1 10 3 8))  ; => (10 8)
+(filter number? (list 1 "a" 2 "b"))            ; => (1 2)
+(filter even? (list 1 2 3 4 5 6))              ; => (2 4 6)
+```
+
+**See also:** remove, take-while, drop-while
+
+---
+
+### remove
+
+Returns a list of elements that do NOT satisfy a predicate.
+
+**Signature:** `(remove pred lst)`
+
+**Examples:**
+```lisp
+(remove (lambda (x) (> x 5)) (list 1 10 3 8))  ; => (1 3)
+(remove string? (list 1 "a" 2 "b"))            ; => (1 2)
+```
+
+**See also:** filter
+
+---
+
+### reduce
+
+Reduces a list to a single value by repeatedly applying a function.
+
+**Signature:** `(reduce fn lst)` or `(reduce fn lst init)`
+
+**Examples:**
+```lisp
+(reduce + (list 1 2 3 4))       ; => 10
+(reduce * (list 2 3 4))         ; => 24
+(reduce + (list 1 2 3) 10)      ; => 16
+```
+
+**See also:** foldl, foldr, map
+
+---
+
+### foldl
+
+Left fold - reduces from left to right.
+
+**Signature:** `(foldl fn lst)`
+
+**Examples:**
+```lisp
+(foldl - (list 1 2 3))  ; => -4  (equivalent to ((1 - 2) - 3))
+(foldl / (list 8 2 2))  ; => 2   (equivalent to ((8 / 2) / 2))
+```
+
+**See also:** foldr, reduce
+
+---
+
+### foldr
+
+Right fold - reduces from right to left.
+
+**Signature:** `(foldr fn lst)`
+
+**Examples:**
+```lisp
+(foldr - (list 1 2 3))  ; => 2   (equivalent to (1 - (2 - 3)))
+(foldr / (list 8 2 2))  ; => 8   (equivalent to (8 / (2 / 2)))
+```
+
+**See also:** foldl, reduce
+
+---
+
+### every?
+
+Returns true if all elements satisfy the predicate.
+
+**Signature:** `(every? pred lst)`
+
+**Examples:**
+```lisp
+(every? number? (list 1 2 3))         ; => #t
+(every? (lambda (x) (> x 0)) (list 1 2 3)) ; => #t
+(every? even? (list 2 4 5))           ; => #f
+```
+
+**See also:** any?, filter
+
+---
+
+### any?
+
+Returns true if any element satisfies the predicate.
+
+**Signature:** `(any? pred lst)`
+
+**Examples:**
+```lisp
+(any? number? (list "a" 1 "b"))       ; => #t
+(any? (lambda (x) (> x 10)) (list 1 2 3)) ; => #f
+(any? even? (list 1 3 5 6))           ; => #t
+```
+
+**See also:** every?, filter

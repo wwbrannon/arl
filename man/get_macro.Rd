@@ -15,3 +15,4 @@ The macro expander function
 \description{
 Get a macro expander function
 }
+\keyword{internal}

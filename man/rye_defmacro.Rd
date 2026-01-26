@@ -18,3 +18,4 @@ rye_defmacro(name, params, body, env)
 \description{
 Define a macro
 }
+\keyword{internal}

@@ -15,3 +15,7 @@ A unique symbol
 \description{
 Generate a unique symbol
 }
+\examples{
+gensym()
+gensym("tmp")
+}

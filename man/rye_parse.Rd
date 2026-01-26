@@ -13,5 +13,11 @@ rye_parse(tokens)
 A list of parsed expressions as R calls
 }
 \description{
-Parse Rye tokens into R data structures
+Produces R calls and atomic values that represent the Rye AST. Quote and
+quasiquote sugar are expanded into explicit \verb{(quote ...)} and
+\verb{(quasiquote ...)} forms during parsing.
+}
+\examples{
+tokens <- rye_tokenize("(+ 1 2)")
+rye_parse(tokens)
 }

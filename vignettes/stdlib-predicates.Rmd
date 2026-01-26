@@ -1,0 +1,203 @@
+---
+title: "Standard Library: Predicates"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Standard Library: Predicates}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+### list?
+
+Tests if a value is a list.
+
+**Signature:** `(list? x)`
+
+**Examples:**
+```lisp
+(list? (list 1 2 3))  ; => #t
+(list? ())            ; => #t
+(list? "hello")       ; => #f
+```
+
+**See also:** pair?, null?
+
+---
+
+### pair?
+
+Tests if a value is a non-empty list.
+
+**Signature:** `(pair? x)`
+
+**Examples:**
+```lisp
+(pair? (list 1))      ; => #t
+(pair? (list 1 2 3))  ; => #t
+(pair? ())            ; => #f
+```
+
+**See also:** list?, null?
+
+---
+
+### null?
+
+Tests if a value is NULL or an empty list.
+
+**Signature:** `(null? x)`
+
+**Examples:**
+```lisp
+(null? #nil)          ; => #t
+(null? ())            ; => #t
+(null? (list 1))      ; => #f
+```
+
+**See also:** nil?, pair?
+
+---
+
+### nil?
+
+Alias for `null?`.
+
+**Signature:** `(nil? x)`
+
+**See also:** null?
+
+---
+
+### symbol?
+
+Tests if a value is a symbol.
+
+**Signature:** `(symbol? x)`
+
+**Examples:**
+```lisp
+(symbol? 'foo)        ; => #t
+(symbol? "foo")       ; => #f
+(symbol? 42)          ; => #f
+```
+
+---
+
+### keyword?
+
+Tests if a value is a keyword (`:key` syntax).
+
+**Signature:** `(keyword? x)`
+
+**Examples:**
+```lisp
+(keyword? :foo)       ; => #t
+(keyword? 'foo)       ; => #f
+```
+
+---
+
+### number?
+
+Tests if a value is a number.
+
+**Signature:** `(number? x)`
+
+**Examples:**
+```lisp
+(number? 42)          ; => #t
+(number? 3.14)        ; => #t
+(number? "42")        ; => #f
+```
+
+---
+
+### string?
+
+Tests if a value is a string.
+
+**Signature:** `(string? x)`
+
+**Examples:**
+```lisp
+(string? "hello")     ; => #t
+(string? 'hello)      ; => #f
+(string? 42)          ; => #f
+```
+
+---
+
+### vector?
+
+Tests if a value is a numeric vector.
+
+**Signature:** `(vector? x)`
+
+**Examples:**
+```lisp
+(vector? [1 2 3])     ; => #t
+(vector? (list 1 2))  ; => #f
+```
+
+**Note:** Only numeric vectors are considered vectors by this predicate.
+
+---
+
+### true?
+
+Tests if a value is exactly TRUE.
+
+**Signature:** `(true? x)`
+
+**Examples:**
+```lisp
+(true? #t)            ; => #t
+(true? 1)             ; => #f
+```
+
+---
+
+### false?
+
+Tests if a value is exactly FALSE.
+
+**Signature:** `(false? x)`
+
+**Examples:**
+```lisp
+(false? #f)           ; => #t
+(false? 0)            ; => #f
+```
+
+---
+
+### fn?
+
+Tests if a value is a function.
+
+**Signature:** `(fn? x)`
+
+**Examples:**
+```lisp
+(fn? +)               ; => #t
+(fn? (lambda (x) x))  ; => #t
+(fn? 42)              ; => #f
+```
+
+**See also:** callable?
+
+---
+
+### callable?
+
+Alias for `fn?`.
+
+**Signature:** `(callable? x)`
+
+**See also:** fn?

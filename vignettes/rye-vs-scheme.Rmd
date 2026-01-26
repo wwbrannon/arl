@@ -1,0 +1,89 @@
+---
+title: "Rye Compared to Scheme"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Rye Compared to Scheme}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Rye is a Lisp dialect implemented in and with access to R. It borrows Lisp
+syntax and macro conventions, but its runtime model and interop are rooted in R.
+This vignette highlights key similarities with Scheme and the most important
+differences.
+
+## Common ground
+
+Rye and Scheme share a Lisp-family surface syntax and several familiar ideas:
+
+- **S-expressions**: code and data use the same list syntax.
+- **Homoiconic macros**: `defmacro` plus quasiquote/unquote are central.
+- **First-class functions**: anonymous functions and higher-order patterns are
+  idiomatic.
+- **Lexical scoping**: bindings are local by default and resolve predictably.
+
+## Core differences
+
+The main differences come from Rye leaning on R’s runtime:
+
+### Evaluation model
+
+Rye evaluates expressions via R’s `eval()` and environments. That means:
+
+- R’s base functions are available without importing.
+- R’s evaluation and error semantics apply under the hood.
+
+### Data model
+
+Scheme has pairs and lists as the fundamental sequence type. Rye uses R data
+structures:
+
+- Lists are R lists or calls.
+- Vectors are R vectors.
+- `#nil` maps to R’s `NULL`.
+
+### Truthiness
+
+Scheme typically treats only `#f` as false. Rye treats **only** `#f`/`FALSE`
+and `#nil`/`NULL` as falsey; everything else is truthy.
+
+### Keywords and named arguments
+
+Rye keywords (`:from`, `:to`) are self-evaluating and map to **named arguments**
+in R calls. This is a major ergonomic difference from Scheme.
+
+### Interop
+
+Rye can call R functions directly:
+
+```lisp
+(mean (c 1 2 3 4 5))
+(seq :from 1 :to 10 :by 2)
+```
+
+Scheme code typically requires FFI layers for such interop; Rye treats it as
+normal function application.
+
+## Special forms and macros
+
+Many familiar special forms exist (`quote`, `if`, `define`, `lambda`, `begin`),
+but there are Rye-specific forms (`~`, `::`, `:::`) and macro helpers tuned for
+R interop.
+
+## When to think “Scheme” vs “R”
+
+- **Think Scheme** for macro structure and list processing patterns.
+- **Think R** for data frames, formulas, statistical modeling, and named
+  argument calls.
+
+## Related guides
+
+- [Getting Started](getting-started.html)
+- [Macros and Quasiquote](macros.html)
+- [R Interop and Data Workflows](r-interop.html)

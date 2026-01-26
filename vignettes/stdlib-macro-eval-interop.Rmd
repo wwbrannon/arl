@@ -1,0 +1,351 @@
+---
+title: "Standard Library: Macro, Eval, Interop, and Convenience"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Standard Library: Macro, Eval, Interop, and Convenience}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Macro and Eval
+
+### gensym
+
+Generates a unique symbol.
+
+**Signature:** `(gensym)` or `(gensym prefix)`
+
+**Examples:**
+```lisp
+(gensym)       ; => 'g1234
+(gensym "tmp") ; => 'tmp5678
+```
+
+**See also:** defmacro
+
+---
+
+### macro?
+
+Tests if a symbol names a macro.
+
+**Signature:** `(macro? sym)`
+
+**Examples:**
+```lisp
+(macro? 'when)   ; => #t
+(macro? 'car)    ; => #f
+```
+
+**See also:** defmacro
+
+---
+
+### eval
+
+Evaluates an expression.
+
+**Signature:** `(eval expr)` or `(eval expr env)`
+
+**Examples:**
+```lisp
+(eval '(+ 1 2))  ; => 3
+(eval (list '+ 1 2))  ; => 3
+```
+
+**See also:** apply, call
+
+---
+
+### macroexpand
+
+Fully expands all macros in an expression.
+
+**Signature:** `(macroexpand expr)` or `(macroexpand expr env)`
+
+**Examples:**
+```lisp
+(macroexpand '(when #t 42))
+; => (if #t (begin 42) #nil)
+```
+
+**See also:** macroexpand-1, macro?
+
+---
+
+### macroexpand-1
+
+Expands macros one level.
+
+**Signature:** `(macroexpand-1 expr)` or `(macroexpand-1 expr env)`
+
+**Examples:**
+```lisp
+(macroexpand-1 '(when #t 42))
+; => (if #t (begin 42) #nil)
+```
+
+**See also:** macroexpand, macro?
+
+---
+
+## Interop Helpers
+
+### dict
+
+Creates a named list (dictionary).
+
+**Signature:** `(dict key1: value1 key2: value2 ...)`
+
+**Examples:**
+```lisp
+(dict :name "Alice" :age 30)
+; => (name: "Alice" age: 30)
+```
+
+**See also:** hash
+
+---
+
+### hash
+
+Alias for `dict`.
+
+**Signature:** `(hash key1: value1 key2: value2 ...)`
+
+**See also:** dict
+
+---
+
+### r/call
+
+Calls an R function with arguments.
+
+**Signature:** `(r/call fn args)`
+
+**Examples:**
+```lisp
+(r/call "sum" (list 1 2 3))  ; => 6
+(r/call 'sqrt (list 16))     ; => 4
+```
+
+**Note:** R functions are also available directly in Rye code (e.g., `(sum 1 2 3)`).
+
+---
+
+## Convenience Functions
+
+### identity
+
+Identity function - returns its argument unchanged.
+
+**Signature:** `(identity x)`
+
+**Examples:**
+```lisp
+(identity 42)        ; => 42
+(map identity lst)   ; => lst
+```
+
+**See also:** map
+
+---
+
+### first
+
+Alias for `car` - returns first element.
+
+**Signature:** `(first lst)`
+
+**Examples:**
+```lisp
+(first (list 1 2 3))  ; => 1
+```
+
+**See also:** car, rest, last
+
+---
+
+### rest
+
+Alias for `cdr` - returns all but first element.
+
+**Signature:** `(rest lst)`
+
+**Examples:**
+```lisp
+(rest (list 1 2 3))  ; => (2 3)
+```
+
+**See also:** cdr, first
+
+---
+
+### last
+
+Returns the last element of a list.
+
+**Signature:** `(last lst)`
+
+**Examples:**
+```lisp
+(last (list 1 2 3))  ; => 3
+(last (list 42))     ; => 42
+(last ())            ; => #nil
+```
+
+**See also:** first, nth
+
+---
+
+### nth
+
+Returns the nth element of a list (0-indexed).
+
+**Signature:** `(nth lst n)`
+
+**Examples:**
+```lisp
+(nth (list 10 20 30) 0)  ; => 10
+(nth (list 10 20 30) 1)  ; => 20
+(nth (list 10 20 30) 2)  ; => 30
+```
+
+**See also:** first, last
+
+---
+
+### complement
+
+Returns the negation of a predicate function.
+
+**Signature:** `(complement pred)`
+
+**Examples:**
+```lisp
+(define odd? (complement even?))
+(filter odd? (list 1 2 3 4))  ; => (1 3)
+```
+
+**See also:** not, filter
+
+---
+
+### compose
+
+Composes two functions (right-to-left application).
+
+**Signature:** `(compose f g)`
+
+**Examples:**
+```lisp
+(define double (lambda (x) (* x 2)))
+(define add-one (lambda (x) (+ x 1)))
+(define f (compose add-one double))
+(f 5)  ; => 11  (equivalent to (add-one (double 5)))
+```
+
+**See also:** partial
+
+---
+
+### repeatedly
+
+Calls a function n times, collecting results.
+
+**Signature:** `(repeatedly n fn)`
+
+**Examples:**
+```lisp
+(repeatedly 3 random)  ; => (0.123 0.456 0.789)
+(repeatedly 5 (lambda () 42))  ; => (42 42 42 42 42)
+```
+
+**See also:** repeat, map
+
+---
+
+### repeat
+
+Repeats a value n times.
+
+**Signature:** `(repeat n value)`
+
+**Examples:**
+```lisp
+(repeat 3 "x")  ; => ("x" "x" "x")
+(repeat 5 0)    ; => (0 0 0 0 0)
+```
+
+**See also:** repeatedly
+
+---
+
+### partial
+
+Partially applies arguments to a function.
+
+**Signature:** `(partial fn arg1 arg2 ...)`
+
+**Examples:**
+```lisp
+(define add-five (partial + 5))
+(add-five 10)  ; => 15
+
+(define multiply-by-2-3 (partial * 2 3))
+(multiply-by-2-3 4)  ; => 24
+```
+
+**See also:** compose
+
+---
+
+## Quick Reference by Category
+
+### Core List Operations
+`car`, `cdr`, `cons`, `call`, `list*`, `append`, `reverse`, `apply`, `first`, `rest`, `last`, `nth`
+
+### Iteration & Transformation
+`map`, `mapcat`, `filter`, `remove`, `reduce`, `foldl`, `foldr`
+
+### Sequence Operations
+`take`, `drop`, `take-while`, `drop-while`, `partition`, `flatten`, `zip`
+
+### Predicates
+`list?`, `pair?`, `null?`, `nil?`, `symbol?`, `keyword?`, `number?`, `string?`, `vector?`, `true?`, `false?`, `fn?`, `callable?`
+
+### Control Flow
+`when`, `unless`, `and`, `or`, `not`, `cond`, `case`
+
+### Looping
+`while`, `for`
+
+### Binding
+`let`, `let*`, `letrec`
+
+### Error Handling
+`error`, `warn`, `assert`, `trace`, `try`, `catch`, `finally`, `try*`
+
+### String Operations
+`str`, `string-join`, `string-split`, `trim`, `format`
+
+### I/O
+`display`, `println`, `read-line`
+
+### Higher-Order Utilities
+`every?`, `any?`, `identity`, `complement`, `compose`, `partial`, `repeatedly`, `repeat`
+
+### Macro System
+`gensym`, `macro?`, `eval`, `macroexpand`, `macroexpand-1`
+
+### Interop
+`dict`, `hash`, `r/call`
+
+### Threading
+`->`, `->>`

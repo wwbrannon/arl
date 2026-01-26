@@ -15,5 +15,10 @@ rye_macroexpand(expr, env = parent.frame())
 Expanded expression
 }
 \description{
-Expand macros in an expression
+Expands macros recursively until the expression no longer begins with a macro
+call. Quoted and quasiquoted forms are not expanded.
+}
+\examples{
+rye_eval(rye_read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]])
+rye_macroexpand(rye_read("(when #t 1)")[[1]])
 }

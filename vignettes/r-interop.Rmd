@@ -1,0 +1,83 @@
+---
+title: "R Interop and Data Workflows"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{R Interop and Data Workflows}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Rye can call any R function directly. Function names, operators, and data
+structures are shared between Rye and R.
+
+## Calling R functions
+
+```lisp
+(mean (c 1 2 3 4 5))
+(seq :from 1 :to 10 :by 2)
+```
+
+Keywords (`:from`, `:to`) map to named arguments in R.
+
+You can also call functions via `r/call` if you need to pass a name
+programmatically:
+
+```lisp
+(r/call "sum" (list 1 2 3))
+```
+
+## Working with formulas
+
+```lisp
+(lm (~ y x) :data df)
+```
+
+The `~` special form builds an R formula without evaluating its arguments.
+
+## Accessing R objects
+
+```lisp
+($ mylist field)
+([ vector 1)
+```
+
+Use `::` and `:::` to access R packages:
+
+```lisp
+(:: stats median)
+(::: stats .lm.fit)
+```
+
+R base operators are also available directly:
+
+```lisp
+(+ 1 2 3)
+(< 3 5)
+```
+
+## Example workflow
+
+The `inst/examples/data-analysis.rye` example shows a small analysis pipeline
+from Rye that uses `data.frame`, `mean`, and `lm`. You can run it with:
+
+```{r eval=FALSE}
+rye_load_file(system.file("examples", "data-analysis.rye", package = "rye"))
+```
+
+## Standard library helpers
+
+The stdlib exposes helpers like `map`, `filter`, `reduce`, and threading macros
+(`->`, `->>`). See the `Standard Library Overview` and reference pages for the
+full list.
+
+## Related guides
+
+- [Getting Started](getting-started.html)
+- [Macros and Quasiquote](macros.html)
+- [Standard Library Overview](stdlib-reference.html)

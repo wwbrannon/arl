@@ -4,7 +4,7 @@ Title: A Lisp Dialect for R
 Version: 0.0.1
 Authors@R:
     person("William", "Brannon", email = "will.brannon@gmail.com",
-           role = c("aut", "cre", "cph"),
+           role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1435-8535"))
 Author: William Brannon
 Maintainer: William Brannon <will.brannon@gmail.com>
@@ -20,8 +20,10 @@ Suggests:
     testthat (>= 3.0.0),
     covr (>= 3.6.0),
     lintr (>= 3.3.0),
-    withr (>= 2.5.0)
-URL: https://github.com/wwbrannon/rye
+    withr (>= 2.5.0),
+    knitr,
+    rmarkdown
+URL: https://wwbrannon.github.io/rye, https://github.com/wwbrannon/rye
 BugReports: https://github.com/wwbrannon/rye/issues
 Encoding: UTF-8
 ByteCompile: true
@@ -29,3 +31,4 @@ NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
+VignetteBuilder: knitr

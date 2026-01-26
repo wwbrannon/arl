@@ -1,0 +1,414 @@
+---
+title: "Standard Library: Control Flow and Macros"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Standard Library: Control Flow and Macros}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Control Flow Macros
+
+### when
+
+Executes body if test is truthy.
+
+**Signature:** `(when test body...)`
+
+**Examples:**
+```lisp
+(when (> 5 3)
+  (println "5 is greater than 3"))  ; prints message
+
+(when #f
+  (println "not printed"))          ; nothing happens
+```
+
+**Defined in:** `inst/rye/control.rye`
+
+**See also:** unless, if, cond
+
+---
+
+### unless
+
+Executes body if test is falsy.
+
+**Signature:** `(unless test body...)`
+
+**Examples:**
+```lisp
+(unless (> 3 5)
+  (println "3 is not greater than 5"))  ; prints message
+
+(unless #t
+  (println "not printed"))              ; nothing happens
+```
+
+**Defined in:** `inst/rye/control.rye`
+
+**See also:** when, if
+
+---
+
+### and
+
+Logical AND with short-circuit evaluation.
+
+**Signature:** `(and expr1 expr2 ...)`
+
+**Examples:**
+```lisp
+(and #t #t)           ; => #t
+(and #t #f)           ; => #f
+(and (> 5 3) (< 2 4)) ; => #t
+```
+
+**Defined in:** `inst/rye/control.rye`
+
+**See also:** or, not
+
+---
+
+### or
+
+Logical OR with short-circuit evaluation.
+
+**Signature:** `(or expr1 expr2 ...)`
+
+**Examples:**
+```lisp
+(or #f #t)            ; => #t
+(or #f #f)            ; => #f
+(or (> 3 5) (< 2 4))  ; => #t
+```
+
+**Defined in:** `inst/rye/control.rye`
+
+**See also:** and, not
+
+---
+
+### not
+
+Logical NOT.
+
+**Signature:** `(not expr)`
+
+**Examples:**
+```lisp
+(not #t)              ; => #f
+(not #f)              ; => #t
+(not 42)              ; => #f  (only #f is falsy)
+```
+
+**See also:** and, or
+
+---
+
+### cond
+
+Multi-way conditional.
+
+**Signature:** `(cond (test1 result1) (test2 result2) ... (else result))`
+
+**Examples:**
+```lisp
+(cond
+  ((> x 10) "big")
+  ((> x 5) "medium")
+  (else "small"))
+```
+
+**Defined in:** `inst/rye/control.rye`
+
+**See also:** case, if, when
+
+---
+
+### case
+
+Pattern matching on a value.
+
+**Signature:** `(case expr (pattern1 result1) (pattern2 result2) ... (else result))`
+
+**Examples:**
+```lisp
+(case x
+  (1 "one")
+  (2 "two")
+  (3 "three")
+  (else "other"))
+```
+
+**Defined in:** `inst/rye/control.rye`
+
+**See also:** cond, if
+
+---
+
+## Binding Macros
+
+### let
+
+Creates local bindings (sequential).
+
+**Signature:** `(let ((var1 val1) (var2 val2) ...) body...)`
+
+**Examples:**
+```lisp
+(let ((x 10)
+      (y 20))
+  (+ x y))  ; => 30
+```
+
+**Defined in:** `inst/rye/binding.rye`
+
+**See also:** let*, letrec
+
+---
+
+### let*
+
+Creates local bindings (each binding can reference previous ones).
+
+**Signature:** `(let* ((var1 val1) (var2 val2) ...) body...)`
+
+**Examples:**
+```lisp
+(let* ((x 10)
+       (y (* x 2)))
+  (+ x y))  ; => 30
+```
+
+**Defined in:** `inst/rye/binding.rye`
+
+**See also:** let, letrec
+
+---
+
+### letrec
+
+Creates local bindings (allows recursive definitions).
+
+**Signature:** `(letrec ((var1 val1) (var2 val2) ...) body...)`
+
+**Examples:**
+```lisp
+(letrec ((factorial
+         (lambda (n)
+           (if (= n 0)
+               1
+               (* n (factorial (- n 1)))))))
+  (factorial 5))  ; => 120
+```
+
+**Defined in:** `inst/rye/binding.rye`
+
+**See also:** let, let*
+
+---
+
+## Looping Macros
+
+### while
+
+Executes body repeatedly while test is truthy.
+
+**Signature:** `(while test body...)`
+
+**Examples:**
+```lisp
+(define i 0)
+(while (< i 5)
+  (println i)
+  (set! i (+ i 1)))
+```
+
+**Defined in:** `inst/rye/looping.rye`
+
+**See also:** for
+
+---
+
+### for
+
+Iterates over a sequence.
+
+**Signature:** `(for (var lst) body...)`
+
+**Examples:**
+```lisp
+(for (x (list 1 2 3))
+  (println x))
+
+(for (item items)
+  (process item))
+```
+
+**Defined in:** `inst/rye/looping.rye`
+
+**See also:** while, map
+
+---
+
+## Threading Macros
+
+### ->
+
+Thread-first macro: threads value through forms as first argument.
+
+**Signature:** `(-> value form1 form2 ...)`
+
+**Examples:**
+```lisp
+(-> 5
+    (+ 3)
+    (* 2))  ; => 16  (equivalent to (* (+ 5 3) 2))
+
+(-> data
+    (filter even?)
+    (map double))
+```
+
+**Defined in:** `inst/rye/threading.rye`
+
+**See also:** ->>
+
+---
+
+### ->>
+
+Thread-last macro: threads value through forms as last argument.
+
+**Signature:** `(->> value form1 form2 ...)`
+
+**Examples:**
+```lisp
+(->> (list 1 2 3 4 5)
+     (filter even?)
+     (map double)
+     (reduce +))  ; => 12
+```
+
+**Defined in:** `inst/rye/threading.rye`
+
+**See also:** ->
+
+---
+
+## Error Handling
+
+### error
+
+Raises an error with a message.
+
+**Signature:** `(error message)`
+
+**Examples:**
+```lisp
+(error "Something went wrong")
+(error (str "Invalid value: " x))
+```
+
+**See also:** warn, assert, try
+
+---
+
+### warn
+
+Issues a warning with a message.
+
+**Signature:** `(warn message)`
+
+**Examples:**
+```lisp
+(warn "Deprecated function")
+(warn (str "Unusual value: " x))
+```
+
+**See also:** error, trace
+
+---
+
+### assert
+
+Asserts that a condition is true, or raises an error.
+
+**Signature:** `(assert test message)`
+
+**Examples:**
+```lisp
+(assert (> x 0) "x must be positive")
+(assert (list? data) "data must be a list")
+```
+
+**See also:** error
+
+---
+
+### trace
+
+Prints a debug trace message.
+
+**Signature:** `(trace value label)`
+
+**Examples:**
+```lisp
+(trace x "x value")
+(trace (+ 1 2) "sum")
+```
+
+**See also:** warn, display
+
+---
+
+### try / catch / finally
+
+Exception handling.
+
+**Signature:** `(try body... (catch error handler...) (finally cleanup...))`
+
+**Examples:**
+```lisp
+(try
+  (divide x y)
+  (catch e
+    (println "Error:" e)
+    0))
+
+(try
+  (risky-operation)
+  (catch e
+    (println "Failed:" e))
+  (finally
+    (cleanup)))
+```
+
+**Defined in:** `inst/rye/error.rye`
+
+**See also:** error, try*
+
+---
+
+### try*
+
+Low-level exception handling with handlers.
+
+**Signature:** `(try* thunk error-handler finally-handler)`
+
+**Examples:**
+```lisp
+(try*
+  (lambda () (divide x y))
+  (lambda (e) (println "Error:" e))
+  (lambda () (cleanup)))
+```
+
+**See also:** try, catch, finally

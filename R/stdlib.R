@@ -3,9 +3,16 @@
 #' Loads the base Rye stdlib functions and, optionally, Rye stdlib source files
 #' from the package's `inst/rye` directory.
 #'
+#' @details
+#' The returned environment uses `baseenv()` as its parent so that core R
+#' functions remain available alongside Rye helpers.
+#'
 #' @param env An environment to populate. If NULL, creates a new one.
 #' @param load_files Whether to load Rye stdlib source files from `inst/rye`.
 #' @return An environment containing the Rye standard library
+#' @examples
+#' env <- rye_load_stdlib()
+#' env$`+`(1, 2)
 #' @importFrom stats setNames
 #' @export
 rye_load_stdlib <- function(env = NULL, load_files = FALSE) {

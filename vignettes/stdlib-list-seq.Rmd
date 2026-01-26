@@ -1,0 +1,268 @@
+---
+title: "Standard Library: Lists and Sequences"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Standard Library: Lists and Sequences}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## List Operations
+
+### car
+
+Returns the first element of a list.
+
+**Signature:** `(car lst)`
+
+**Examples:**
+```lisp
+(car (list 1 2 3))  ; => 1
+(car ())            ; => #nil
+(car (list "a" "b")) ; => "a"
+```
+
+**See also:** cdr, cons, first
+
+---
+
+### cdr
+
+Returns all elements except the first (the "rest" of the list).
+
+**Signature:** `(cdr lst)`
+
+**Examples:**
+```lisp
+(cdr (list 1 2 3))  ; => (2 3)
+(cdr (list 1))      ; => ()
+(cdr ())            ; => ()
+```
+
+**See also:** car, cons, rest
+
+---
+
+### cons
+
+Adds an element to the front of a list.
+
+**Signature:** `(cons elem lst)`
+
+**Examples:**
+```lisp
+(cons 1 (list 2 3))     ; => (1 2 3)
+(cons "a" ())           ; => ("a")
+(cons (list 1 2) (list 3)) ; => ((1 2) 3)
+```
+
+**See also:** car, cdr, append
+
+---
+
+### call
+
+Converts a list to a call expression.
+
+**Signature:** `(call lst)`
+
+**Examples:**
+```lisp
+(call (list + 1 2))  ; => (+ 1 2)
+(eval (call (list * 3 4))) ; => 12
+```
+
+**See also:** eval, apply
+
+---
+
+### list*
+
+Creates a list from elements, with the last argument providing the tail.
+
+**Signature:** `(list* elem1 elem2 ... tail)`
+
+**Examples:**
+```lisp
+(list* 1 (list 2 3))     ; => (1 2 3)
+(list* 1 2 (list 3 4))   ; => (1 2 3 4)
+(list* 1 ())             ; => (1)
+```
+
+**See also:** list, cons, append
+
+---
+
+### append
+
+Concatenates two lists.
+
+**Signature:** `(append lst1 lst2)`
+
+**Examples:**
+```lisp
+(append (list 1 2) (list 3 4))  ; => (1 2 3 4)
+(append () (list 1))            ; => (1)
+(append (list "a") (list "b" "c")) ; => ("a" "b" "c")
+```
+
+**See also:** cons, list*
+
+---
+
+### reverse
+
+Reverses a list.
+
+**Signature:** `(reverse lst)`
+
+**Examples:**
+```lisp
+(reverse (list 1 2 3))  ; => (3 2 1)
+(reverse ())            ; => ()
+(reverse (list "a" "b")) ; => ("b" "a")
+```
+
+---
+
+### apply
+
+Applies a function to a list of arguments.
+
+**Signature:** `(apply fn args)`
+
+**Examples:**
+```lisp
+(apply + (list 1 2 3))  ; => 6
+(apply max (list 5 2 9 1)) ; => 9
+(apply str (list "a" "b" "c")) ; => "abc"
+```
+
+**See also:** map, reduce
+
+---
+
+## Sequence Helpers
+
+### take
+
+Takes the first n elements from a list.
+
+**Signature:** `(take n lst)`
+
+**Examples:**
+```lisp
+(take 2 (list 1 2 3 4))  ; => (1 2)
+(take 0 (list 1 2 3))    ; => ()
+(take 10 (list 1 2))     ; => (1 2)
+```
+
+**See also:** drop, take-while
+
+---
+
+### drop
+
+Drops the first n elements from a list.
+
+**Signature:** `(drop n lst)`
+
+**Examples:**
+```lisp
+(drop 2 (list 1 2 3 4))  ; => (3 4)
+(drop 0 (list 1 2 3))    ; => (1 2 3)
+(drop 10 (list 1 2))     ; => ()
+```
+
+**See also:** take, drop-while
+
+---
+
+### take-while
+
+Takes elements while they satisfy a predicate.
+
+**Signature:** `(take-while pred lst)`
+
+**Examples:**
+```lisp
+(take-while (lambda (x) (< x 5)) (list 1 2 3 6 4))  ; => (1 2 3)
+(take-while number? (list 1 2 "a" 3))               ; => (1 2)
+```
+
+**See also:** take, drop-while, filter
+
+---
+
+### drop-while
+
+Drops elements while they satisfy a predicate.
+
+**Signature:** `(drop-while pred lst)`
+
+**Examples:**
+```lisp
+(drop-while (lambda (x) (< x 5)) (list 1 2 3 6 4))  ; => (6 4)
+(drop-while number? (list 1 2 "a" 3))               ; => ("a" 3)
+```
+
+**See also:** drop, take-while, filter
+
+---
+
+### partition
+
+Divides a list into chunks of size n.
+
+**Signature:** `(partition n lst)` or `(partition n lst step)`
+
+**Examples:**
+```lisp
+(partition 2 (list 1 2 3 4))     ; => ((1 2) (3 4))
+(partition 3 (list 1 2 3 4 5))   ; => ((1 2 3))  ; incomplete chunks dropped
+(partition 2 (list 1 2 3 4 5) 1) ; => ((1 2) (2 3) (3 4) (4 5))  ; overlapping
+```
+
+**See also:** take, drop
+
+---
+
+### flatten
+
+Flattens nested lists into a single list.
+
+**Signature:** `(flatten lst)`
+
+**Examples:**
+```lisp
+(flatten (list 1 (list 2 3) 4))           ; => (1 2 3 4)
+(flatten (list (list 1 2) (list 3 4)))    ; => (1 2 3 4)
+(flatten (list 1 (list 2 (list 3 4)) 5))  ; => (1 2 3 4 5)
+```
+
+**See also:** mapcat, append
+
+---
+
+### zip
+
+Combines multiple lists element-wise.
+
+**Signature:** `(zip lst1 lst2 ...)`
+
+**Examples:**
+```lisp
+(zip (list 1 2 3) (list "a" "b" "c"))
+; => ((1 "a") (2 "b") (3 "c"))
+
+(zip (list 1 2) (list "a" "b") (list #t #f))
+; => ((1 "a" #t) (2 "b" #f))
+```
+
+**See also:** map

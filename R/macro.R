@@ -1,7 +1,9 @@
 #' Global macro registry
+#' @keywords internal
 .rye_macros <- new.env(parent = emptyenv())
 
 #' Global gensym counter (stored in environment to avoid locking issues)
+#' @keywords internal
 .rye_gensym_env <- new.env(parent = emptyenv())
 .rye_gensym_env$counter <- 0
 
@@ -9,6 +11,9 @@
 #'
 #' @param prefix Optional prefix for the symbol (default: "G")
 #' @return A unique symbol
+#' @examples
+#' gensym()
+#' gensym("tmp")
 #' @export
 gensym <- function(prefix = "G") {
   .rye_gensym_env$counter <- .rye_gensym_env$counter + 1
@@ -21,6 +26,7 @@ gensym <- function(prefix = "G") {
 #' @param env Environment for evaluation
 #' @param depth Nesting depth of quasiquote (for nested quasiquotes)
 #' @return The processed expression
+#' @keywords internal
 rye_quasiquote <- function(expr, env, depth = 1) {
   # Handle atoms - return as-is
   if (!is.call(expr)) {
@@ -108,6 +114,7 @@ rye_quasiquote <- function(expr, env, depth = 1) {
 #' @param params Parameter list
 #' @param body Macro body expressions
 #' @param env Environment in which to define the macro
+#' @keywords internal
 rye_defmacro <- function(name, params, body, env) {
   # Create a function that will expand the macro
   macro_fn <- function(...) {
@@ -188,6 +195,7 @@ rye_defmacro <- function(name, params, body, env) {
 #'
 #' @param name Symbol to check
 #' @return TRUE if it's a macro, FALSE otherwise
+#' @keywords internal
 is_macro <- function(name) {
   if (!is.symbol(name)) {
     return(FALSE)
@@ -199,15 +207,22 @@ is_macro <- function(name) {
 #'
 #' @param name Symbol naming the macro
 #' @return The macro expander function
+#' @keywords internal
 get_macro <- function(name) {
   .rye_macros[[as.character(name)]]
 }
 
 #' Expand macros in an expression
 #'
+#' Expands macros recursively until the expression no longer begins with a macro
+#' call. Quoted and quasiquoted forms are not expanded.
+#'
 #' @param expr Expression to expand
 #' @param env Environment for evaluation
 #' @return Expanded expression
+#' @examples
+#' rye_eval(rye_read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]])
+#' rye_macroexpand(rye_read("(when #t 1)")[[1]])
 #' @export
 rye_macroexpand <- function(expr, env = parent.frame()) {
   # Handle non-calls

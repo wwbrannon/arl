@@ -15,5 +15,8 @@ rye_translate(source, is_file = NULL)
 A character string containing the translated R code
 }
 \description{
-Translate Rye code to R code
+Translates Rye source into equivalent R code without evaluating it.
+}
+\examples{
+rye_translate("(+ 1 2)", is_file = FALSE)
 }

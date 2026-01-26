@@ -17,8 +17,11 @@ check: build ## Check the package (includes tests)
 	R -q -e 'devtools::check(args="--as-cran")'
 
 .PHONY: document
-document: ## Generate roxygen2 documentation
+document: ## Generate roxygen, README, and pkgdown docs
 	R -q -e "devtools::document()"
+	R -q -e "rmarkdown::render('README.Rmd')"
+	R -q -e "devtools::build_vignettes()"
+	R -q -e "pkgdown::build_site()"
 
 .PHONY: coverage
 coverage:
@@ -44,4 +47,4 @@ test-file: ## Run a single test file (usage: make test-file FILE=test-parser)
 clean: ## Remove build artifacts
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
-
+	rm -rf site/

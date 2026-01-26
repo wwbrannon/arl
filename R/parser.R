@@ -1,7 +1,14 @@
 #' Parse Rye tokens into R data structures
 #'
+#' Produces R calls and atomic values that represent the Rye AST. Quote and
+#' quasiquote sugar are expanded into explicit `(quote ...)` and
+#' `(quasiquote ...)` forms during parsing.
+#'
 #' @param tokens A list of tokens from rye_tokenize
 #' @return A list of parsed expressions as R calls
+#' @examples
+#' tokens <- rye_tokenize("(+ 1 2)")
+#' rye_parse(tokens)
 #' @export
 rye_parse <- function(tokens) {
   pos <- 1
@@ -137,8 +144,12 @@ rye_parse <- function(tokens) {
 
 #' Read Rye source code into parsed expressions
 #'
+#' Convenience helper that combines tokenization and parsing.
+#'
 #' @param source A string containing Rye source code
 #' @return A list of parsed expressions
+#' @examples
+#' rye_read("(define x 10) (+ x 5)")
 #' @export
 rye_read <- function(source) {
   tokens <- rye_tokenize(source)

@@ -251,9 +251,13 @@ rye_expr_to_r <- function(expr, indent = 0) {
 
 #' Translate Rye code to R code
 #'
+#' Translates Rye source into equivalent R code without evaluating it.
+#'
 #' @param source Either a file path to a .rye file or a string containing Rye code
 #' @param is_file Logical indicating whether source is a file path (default: TRUE if source ends with .rye)
 #' @return A character string containing the translated R code
+#' @examples
+#' rye_translate("(+ 1 2)", is_file = FALSE)
 #' @export
 rye_translate <- function(source, is_file = NULL) {
   # Auto-detect if source is a file path

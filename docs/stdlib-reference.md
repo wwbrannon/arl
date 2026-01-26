@@ -1,3 +1,93 @@
+# Standard Library Reference
+
+Rye ships with a small standard library implemented in R, plus additional Rye
+source modules. The REPL loads the base R stdlib by default; you can also load
+modules from `inst/rye/` when you want more macros and helpers.
+
+## Loading
+
+```lisp
+; Load focused modules
+(load "control")   ; when/unless/and/or/cond/case
+(load "binding")   ; let/let*/letrec
+(load "looping")   ; while/for
+(load "threading") ; -> and ->>
+(load "error")     ; try/catch/finally
+```
+
+From R, you can load all modules with:
+
+```r
+env <- rye_load_stdlib(load_files = TRUE)
+```
+
+## Core list operations
+
+`car`, `cdr`, `cons`, `call`, `list*`, `append`, `reverse`, `apply`,
+`first`, `rest`, `last`, `nth`
+
+## Higher-order functions
+
+`map`, `mapcat`, `filter`, `remove`, `reduce`, `foldl`, `foldr`,
+`every?`, `any?`, `complement`, `compose`, `partial`
+
+## Sequence helpers
+
+`take`, `drop`, `take-while`, `drop-while`, `partition`, `flatten`, `zip`,
+`repeatedly`, `repeat`
+
+## Predicates
+
+`null?`, `nil?`, `list?`, `pair?`, `symbol?`, `keyword?`,
+`number?`, `string?`, `vector?`, `true?`, `false?`, `fn?`, `callable?`
+
+## Control flow macros
+
+`when`, `unless`, `and`, `or`, `cond`, `case`
+
+## Binding and looping
+
+`let`, `let*`, `letrec`, `while`, `for`
+
+## Threading macros
+
+`->`, `->>`
+
+## Error handling
+
+`try`, `catch`, `finally`, `error`, `warn`, `assert`, `trace`, `try*`
+
+## String and I/O
+
+`str`, `string-join`, `string-split`, `trim`, `format`,
+`read-line`, `display`, `println`
+
+## Macro system
+
+`gensym`, `macro?`, `eval`, `macroexpand`, `macroexpand-1`
+
+## Interop helpers
+
+`dict`, `hash`, `r/call`, `identity`
+
+## Arithmetic and comparison
+
+`+`, `-`, `*`, `/`, `%`, `=`, `<`, `>`, `<=`, `>=`, `not`
+
+## Source mapping
+
+The stdlib is organized by topic in `inst/rye/`. The base R implementation
+lives in `R/stdlib.R`.
+
+- `binding.rye`
+- `control.rye`
+- `error.rye`
+- `looping.rye`
+- `threading.rye`
+
+If you’re looking for implementation details, these files are the source of
+truth for the stdlib definitions.
+
 # Rye Standard Library Reference
 
 This document provides a comprehensive reference for all functions and macros in the Rye standard library.

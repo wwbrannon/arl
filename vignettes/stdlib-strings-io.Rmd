@@ -1,0 +1,166 @@
+---
+title: "Standard Library: Strings, I/O, and Arithmetic"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Standard Library: Strings, I/O, and Arithmetic}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## String and I/O
+
+### str
+
+Concatenates values into a string.
+
+**Signature:** `(str value...)`
+
+**Examples:**
+```lisp
+(str "hello" " " "world")  ; => "hello world"
+(str "x = " 42)            ; => "x = 42"
+(str)                      ; => ""
+```
+
+**See also:** string-join, format
+
+---
+
+### string-join
+
+Joins a list of strings with a separator.
+
+**Signature:** `(string-join lst sep)`
+
+**Examples:**
+```lisp
+(string-join (list "a" "b" "c") "-")  ; => "a-b-c"
+(string-join (list "hello" "world") " ")  ; => "hello world"
+```
+
+**See also:** string-split, str
+
+---
+
+### string-split
+
+Splits a string by a separator.
+
+**Signature:** `(string-split str sep)`
+
+**Examples:**
+```lisp
+(string-split "a-b-c" "-")  ; => ["a" "b" "c"]
+(string-split "hello world" " ")  ; => ["hello" "world"]
+```
+
+**See also:** string-join
+
+---
+
+### trim
+
+Removes leading and trailing whitespace.
+
+**Signature:** `(trim str)`
+
+**Examples:**
+```lisp
+(trim "  hello  ")  ; => "hello"
+(trim "world")      ; => "world"
+```
+
+---
+
+### format
+
+Formats a string with values (using R's sprintf).
+
+**Signature:** `(format fmt ...)`
+
+**Examples:**
+```lisp
+(format "x = %d, y = %d" 10 20)  ; => "x = 10, y = 20"
+(format "%.2f" 3.14159)          ; => "3.14"
+```
+
+**See also:** str
+
+---
+
+### display
+
+Prints a value (alias: `println`).
+
+**Signature:** `(display value)`
+
+**Examples:**
+```lisp
+(display "Hello, world!")
+(display (+ 1 2))
+```
+
+**See also:** println, trace
+
+---
+
+### println
+
+Alias for `display`.
+
+**Signature:** `(println value)`
+
+**See also:** display
+
+---
+
+### read-line
+
+Reads a line from stdin.
+
+**Signature:** `(read-line)`
+
+**Examples:**
+```lisp
+(define name (read-line))
+(println (str "Hello, " name))
+```
+
+---
+
+## Arithmetic and Comparison
+
+### %
+
+Modulo operation.
+
+**Signature:** `(% a b)`
+
+**Examples:**
+```lisp
+(% 10 3)   ; => 1
+(% 17 5)   ; => 2
+```
+
+---
+
+### =
+
+Equality test.
+
+**Signature:** `(= a b)`
+
+**Examples:**
+```lisp
+(= 1 1)           ; => #t
+(= "a" "a")       ; => #t
+(= 1 2)           ; => #f
+```
+
+**Note:** All other R arithmetic operators (`+`, `-`, `*`, `/`, `<`, `>`, etc.) are available directly.

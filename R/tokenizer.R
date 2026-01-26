@@ -1,7 +1,13 @@
 #' Tokenize Rye source code
 #'
+#' Converts raw Rye source into a stream of tokens that can be parsed into
+#' expressions. Comments beginning with `;` are ignored.
+#'
 #' @param source A string containing Rye source code
 #' @return A list of tokens, each with type, value, line, and column
+#' @examples
+#' rye_tokenize("(+ 1 2)")
+#' rye_tokenize("(define x 10) ; comment")
 #' @export
 rye_tokenize <- function(source) {
   tokens <- list()

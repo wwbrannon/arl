@@ -84,9 +84,15 @@ rye_resolve_stdlib_path <- function(name) {
 
 #' Load and evaluate a Rye source file
 #'
+#' Reads a `.rye` file, parses it, and evaluates each expression in order.
+#'
 #' @param path Path to a Rye source file
 #' @param env Environment in which to evaluate the file
 #' @return The result of the final expression in the file
+#' @examples
+#' tmp <- tempfile(fileext = ".rye")
+#' writeLines("(+ 1 2)", tmp)
+#' rye_load_file(tmp)
 #' @export
 rye_load_file <- function(path, env = parent.frame()) {
   if (!is.character(path) || length(path) != 1) {

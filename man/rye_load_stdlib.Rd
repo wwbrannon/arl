@@ -18,3 +18,11 @@ An environment containing the Rye standard library
 Loads the base Rye stdlib functions and, optionally, Rye stdlib source files
 from the package's \code{inst/rye} directory.
 }
+\details{
+The returned environment uses \code{baseenv()} as its parent so that core R
+functions remain available alongside Rye helpers.
+}
+\examples{
+env <- rye_load_stdlib()
+env$`+`(1, 2)
+}

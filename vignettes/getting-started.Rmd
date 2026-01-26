@@ -1,0 +1,122 @@
+---
+title: "Getting Started"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Getting Started}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Rye is a Lisp dialect implemented in and with access to R. This vignette
+walks through installing Rye, running the REPL, and evaluating a few
+expressions.
+
+## Installation
+
+```{r eval=FALSE}
+devtools::install()
+```
+
+## Start the REPL
+
+```{r eval=FALSE}
+library(rye)
+rye_repl()
+```
+
+At the prompt, you can enter Rye expressions:
+
+```lisp
+(+ 1 2)
+(define x 10)
+(* x 2)
+```
+
+## Run from the command line
+
+If you installed the CLI wrapper, you can evaluate code without opening R:
+
+```bash
+rye --eval "(+ 1 2)"
+rye --file script.rye
+```
+
+You can also pass multiple files; they run in order.
+
+## Evaluate Rye from R
+
+If you want to evaluate Rye inside an R script, you can parse and evaluate
+expressions directly:
+
+```{r eval=FALSE}
+exprs <- rye_read("(define x 10) (+ x 5)")
+rye_eval(exprs[[1]])
+rye_eval(exprs[[2]])
+```
+
+If you have multiple expressions, `rye_eval_exprs()` will evaluate them
+sequentially and return the last value.
+
+## Run Rye files
+
+You can execute a file from the REPL using `load`:
+
+```lisp
+(load "script.rye")
+```
+
+From R, use `rye_load_file()`:
+
+```{r eval=FALSE}
+rye_load_file("script.rye")
+```
+
+## Loading stdlib modules
+
+The REPL loads the base stdlib. You can load extra modules from `inst/rye`:
+
+```lisp
+(load "control")
+(load "binding")
+(load "looping")
+(load "threading")
+(load "error")
+```
+
+## Core syntax
+
+```lisp
+; Function definition
+(define factorial
+  (lambda (n)
+    (if (< n 2)
+      1
+      (* n (factorial (- n 1))))))
+
+; Lists
+(list 1 2 3)
+(car (list 1 2 3))
+(cdr (list 1 2 3))
+
+; Quoting
+'(+ 1 2)           ; => (+ 1 2)
+`(list ,x 20 30)   ; => (list 10 20 30)
+
+; Comments start with semicolon
+; This line is ignored
+```
+
+For more details on the standard library and macros, see the other vignettes in
+this package.
+
+## Next steps
+
+- [Macros and Quasiquote](macros.html)
+- [R Interop and Data Workflows](r-interop.html)
+- [Standard Library Overview](stdlib-reference.html)

@@ -7,10 +7,17 @@
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![R-CMD-check](https://github.com/wwbrannon/rye/workflows/R-CMD-check/badge.svg)](https://github.com/wwbrannon/rye/actions)
+[![R-CMD-check](https://github.com/wwbrannon/rye/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/rye/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/rye)](https://CRAN.R-project.org/package=rye)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/rye)](https://CRAN.R-project.org/package=rye)
+[![Codecov](https://codecov.io/gh/wwbrannon/rye/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/rye)
+[![R-universe](https://wwbrannon.r-universe.dev/badges/rye)](https://wwbrannon.r-universe.dev/rye)
+\[![pkgdown](https://img.shields.io/badge/pkgdown-site-blue.svg)\]\[pkgdown-site\]
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<!-- badges: end -->
+<!-- badges: end --> \[pkgdown-site\]: <https://wwbrannon.github.io/rye>
 
 A Lisp dialect implemented in and with access to R, leveraging R’s
 Scheme heritage.
@@ -125,8 +132,8 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 
 ### Standard Library
 
-The REPL automatically loads a comprehensive standard library with 70+
-functions and macros.
+The REPL loads a base standard library (implemented in R) with core
+helpers and access to all base R functions.
 
 **Core List Operations:** - `car`, `cdr`, `cons`, `call`, `list*`,
 `append`, `reverse`, `apply` - `first`, `rest`, `last`, `nth`
@@ -166,8 +173,8 @@ functions and macros.
 For detailed documentation of all functions, see the [**Standard Library
 Reference**](docs/stdlib-reference.md).
 
-The Rye stdlib source is split into focused files in `inst/rye` so you
-can load just what you need:
+Additional Rye stdlib modules live in `inst/rye` so you can load just
+what you need:
 
 ``` lisp
 (load "control")   ; when/unless/and/or/cond/case
@@ -179,19 +186,19 @@ can load just what you need:
 
 ### Examples
 
-Check out the [examples](examples/) directory for complete working
+Check out the [examples](inst/examples/) directory for complete working
 programs:
 
-- **[fibonacci.rye](examples/fibonacci.rye)** - Multiple Fibonacci
+- **[fibonacci.rye](inst/examples/fibonacci.rye)** - Multiple Fibonacci
   implementations (recursive, iterative, sequence generation)
-- **[quicksort.rye](examples/quicksort.rye)** - Quicksort and mergesort
-  demonstrating list operations
-- **[fizzbuzz.rye](examples/fizzbuzz.rye)** - Various FizzBuzz
+- **[quicksort.rye](inst/examples/quicksort.rye)** - Quicksort and
+  mergesort demonstrating list operations
+- **[fizzbuzz.rye](inst/examples/fizzbuzz.rye)** - Various FizzBuzz
   implementations showcasing control flow
-- **[macro-examples.rye](examples/macro-examples.rye)** - Comprehensive
-  macro system demonstrations
-- **[data-analysis.rye](examples/data-analysis.rye)** - R interop for
-  data processing and statistics
+- **[macro-examples.rye](inst/examples/macro-examples.rye)** -
+  Comprehensive macro system demonstrations
+- **[data-analysis.rye](inst/examples/data-analysis.rye)** - R interop
+  for data processing and statistics
 
 ### Semantics
 
@@ -232,6 +239,15 @@ make check
 
 # Generate documentation
 make document
+```
+
+## Citing Rye
+
+If you use Rye in academic work, please cite it. The package includes a
+`CITATION` file, so you can use:
+
+``` r
+citation("rye")
 ```
 
 ## Architecture

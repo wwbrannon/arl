@@ -162,6 +162,12 @@ repl_print_value <- function(value) {
 
 #' Start the Rye REPL (Read-Eval-Print Loop)
 #'
+#' Launches an interactive Rye session with command history.
+#'
+#' @examples
+#' if (interactive()) {
+#'   rye_repl()
+#' }
 #' @export
 rye_repl <- function() {
   cat(repl_version(), "\n", sep = "")

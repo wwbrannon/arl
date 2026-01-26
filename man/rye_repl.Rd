@@ -7,5 +7,10 @@
 rye_repl()
 }
 \description{
-Start the Rye REPL (Read-Eval-Print Loop)
+Launches an interactive Rye session with command history.
+}
+\examples{
+if (interactive()) {
+  rye_repl()
+}
 }

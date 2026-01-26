@@ -1,0 +1,47 @@
+destination: site
+url: https://wwbrannon.github.io/rye
+
+template:
+  bootstrap: 5
+
+build:
+  vignettes: false
+
+home:
+  title: Rye
+  description: A Lisp dialect implemented in and with access to R.
+
+reference:
+  - title: Evaluation and parsing
+    contents:
+      - rye_read
+      - rye_tokenize
+      - rye_parse
+      - rye_eval
+      - rye_translate
+  - title: REPL and loading
+    contents:
+      - rye_repl
+      - rye_load_file
+      - rye_load_stdlib
+  - title: Macros
+    contents:
+      - rye_macroexpand
+      - gensym
+
+articles:
+  - title: Guides
+    contents:
+      - getting-started
+      - macros
+      - r-interop
+      - stdlib-reference
+      - rye-vs-scheme
+  - title: Reference
+    contents:
+      - stdlib-list-seq
+      - stdlib-higher-order
+      - stdlib-predicates
+      - stdlib-control
+      - stdlib-strings-io
+      - stdlib-macro-eval-interop

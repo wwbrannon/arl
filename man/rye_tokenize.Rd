@@ -13,5 +13,10 @@ rye_tokenize(source)
 A list of tokens, each with type, value, line, and column
 }
 \description{
-Tokenize Rye source code
+Converts raw Rye source into a stream of tokens that can be parsed into
+expressions. Comments beginning with \verb{;} are ignored.
+}
+\examples{
+rye_tokenize("(+ 1 2)")
+rye_tokenize("(define x 10) ; comment")
 }

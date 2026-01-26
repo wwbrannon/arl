@@ -1,0 +1,99 @@
+---
+title: "Macros and Quasiquote"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Macros and Quasiquote}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Macros let you transform code before evaluation. Rye supports `defmacro`,
+`quasiquote`, `unquote`, and `unquote-splicing`.
+
+## Defining a macro
+
+```lisp
+(defmacro when (test body)
+  `(if ,test ,body #nil))
+```
+
+With that macro defined, you can write:
+
+```lisp
+(when (> 5 3) (print "yes"))
+```
+
+Macros receive their arguments *unevaluated*, so they can rewrite code before
+evaluation happens.
+
+## Macro parameters
+
+Macros can take any number of parameters:
+
+```lisp
+(defmacro unless (test body)
+  `(if ,test #nil ,body))
+```
+
+## Generating symbols safely
+
+Use `gensym` to create unique symbols when you need a temporary binding:
+
+```lisp
+(defmacro with-temp (value body)
+  (let ((tmp (gensym "tmp")))
+    `(let ((,tmp ,value))
+       ,body)))
+```
+
+## Quasiquote basics
+
+Use backtick to build templates and unquote to evaluate parts.
+
+```lisp
+(define x 10)
+`(list ,x 20 30)  ; => (list 10 20 30)
+```
+
+## Splicing lists
+
+```lisp
+(define xs (list 2 3))
+`(list 1 ,@xs 4)  ; => (list 1 2 3 4)
+```
+
+## Nested quasiquote
+
+If you nest quasiquotes, only the innermost unquote is evaluated:
+
+```lisp
+`(list `(,x))   ; => (list (quasiquote (unquote x)))
+```
+
+## Macro expansion
+
+You can inspect expansions from R using `rye_macroexpand()`:
+
+```{r eval=FALSE}
+rye_eval(rye_read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]])
+rye_macroexpand(rye_read("(when #t 1)")[[1]])
+```
+
+To expand only one level, use `macroexpand-1` from Rye code:
+
+```lisp
+(macroexpand-1 '(when #t 1))
+```
+
+For more examples, see `inst/examples/macro-examples.rye`.
+
+## Related guides
+
+- [Getting Started](getting-started.html)
+- [Standard Library Overview](stdlib-reference.html)

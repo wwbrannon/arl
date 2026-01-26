@@ -13,3 +13,7 @@
 ^\.Rbuildignore$
 ^\.lintr$
 ^docs$
+^site$
+^pkgdown$
+^doc$
+^Meta$
