@@ -62,6 +62,22 @@ rye_eval <- function(expr, env = parent.frame()) {
     return(rye_quasiquote(expr[[2]], env))
   }
 
+  # help - show docs without evaluating argument
+  if (is.symbol(op) && as.character(op) == "help") {
+    if (length(expr) != 2) {
+      stop("help requires exactly 1 argument: (help topic)")
+    }
+    topic <- expr[[2]]
+    if (is.symbol(topic)) {
+      topic <- as.character(topic)
+    }
+    if (!is.character(topic) || length(topic) != 1) {
+      stop("help requires a symbol or string")
+    }
+    rye_help(topic, env)
+    return(NULL)
+  }
+
   # defmacro - define a macro
   if (is.symbol(op) && as.character(op) == "defmacro") {
     if (length(expr) < 4) {

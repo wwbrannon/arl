@@ -663,3 +663,260 @@ rye_stdlib_partial <- function(fn, ...) {
     do.call(fn, all_args)
   }
 }
+
+attr(rye_stdlib_map, "rye_doc") <- list(
+  usage = "(map fn lst)",
+  description = "Apply fn to each element of lst and return a list."
+)
+attr(rye_stdlib_mapcat, "rye_doc") <- list(
+  usage = "(mapcat fn lst)",
+  description = "Map fn over lst and concatenate the results."
+)
+attr(rye_stdlib_filter, "rye_doc") <- list(
+  usage = "(filter pred lst)",
+  description = "Return elements of lst for which pred returns truthy."
+)
+attr(rye_stdlib_remove, "rye_doc") <- list(
+  usage = "(remove pred lst)",
+  description = "Return elements of lst for which pred returns falsy."
+)
+attr(rye_stdlib_reduce, "rye_doc") <- list(
+  usage = "(reduce fn lst [init])",
+  description = "Reduce lst by repeatedly applying fn."
+)
+attr(rye_stdlib_apply, "rye_doc") <- list(
+  usage = "(apply fn lst)",
+  description = "Apply fn to the elements of lst as arguments."
+)
+
+attr(rye_stdlib_car, "rye_doc") <- list(
+  usage = "(car lst)",
+  description = "Return the first element of lst."
+)
+attr(rye_stdlib_cdr, "rye_doc") <- list(
+  usage = "(cdr lst)",
+  description = "Return the rest of lst after the first element."
+)
+attr(rye_stdlib_cons, "rye_doc") <- list(
+  usage = "(cons item lst)",
+  description = "Prepend item to lst."
+)
+attr(rye_stdlib_call, "rye_doc") <- list(
+  usage = "(call lst)",
+  description = "Convert a list to a callable form."
+)
+attr(rye_stdlib_list_star, "rye_doc") <- list(
+  usage = "(list* item ... tail)",
+  description = "Build a list with tail as the final cdr."
+)
+attr(rye_stdlib_append, "rye_doc") <- list(
+  usage = "(append lst ...)",
+  description = "Concatenate lists."
+)
+attr(rye_stdlib_reverse, "rye_doc") <- list(
+  usage = "(reverse lst)",
+  description = "Return a reversed list."
+)
+attr(rye_stdlib_take, "rye_doc") <- list(
+  usage = "(take n lst)",
+  description = "Return the first n elements of lst."
+)
+attr(rye_stdlib_drop, "rye_doc") <- list(
+  usage = "(drop n lst)",
+  description = "Return lst without the first n elements."
+)
+attr(rye_stdlib_take_while, "rye_doc") <- list(
+  usage = "(take-while pred lst)",
+  description = "Take elements while pred returns truthy."
+)
+attr(rye_stdlib_drop_while, "rye_doc") <- list(
+  usage = "(drop-while pred lst)",
+  description = "Drop elements while pred returns truthy."
+)
+attr(rye_stdlib_partition, "rye_doc") <- list(
+  usage = "(partition n lst)",
+  description = "Partition lst into sublists of size n."
+)
+attr(rye_stdlib_flatten, "rye_doc") <- list(
+  usage = "(flatten lst)",
+  description = "Flatten a nested list."
+)
+
+attr(rye_stdlib_list_p, "rye_doc") <- list(
+  usage = "(list? x)",
+  description = "Return TRUE if x is a list or call."
+)
+attr(rye_stdlib_pair_p, "rye_doc") <- list(
+  usage = "(pair? x)",
+  description = "Return TRUE if x is a non-empty list or call."
+)
+attr(rye_stdlib_null_p, "rye_doc") <- list(
+  usage = "(null? x)",
+  description = "Return TRUE if x is NULL or an empty list."
+)
+attr(rye_stdlib_symbol_p, "rye_doc") <- list(
+  usage = "(symbol? x)",
+  description = "Return TRUE if x is a symbol."
+)
+attr(rye_stdlib_keyword_p, "rye_doc") <- list(
+  usage = "(keyword? x)",
+  description = "Return TRUE if x is a keyword."
+)
+attr(rye_stdlib_number_p, "rye_doc") <- list(
+  usage = "(number? x)",
+  description = "Return TRUE if x is numeric."
+)
+attr(rye_stdlib_string_p, "rye_doc") <- list(
+  usage = "(string? x)",
+  description = "Return TRUE if x is a string."
+)
+attr(rye_stdlib_vector_p, "rye_doc") <- list(
+  usage = "(vector? x)",
+  description = "Return TRUE if x is a vector."
+)
+attr(rye_stdlib_true_p, "rye_doc") <- list(
+  usage = "(true? x)",
+  description = "Return TRUE if x is truthy."
+)
+attr(rye_stdlib_false_p, "rye_doc") <- list(
+  usage = "(false? x)",
+  description = "Return TRUE if x is falsy."
+)
+attr(rye_stdlib_fn_p, "rye_doc") <- list(
+  usage = "(fn? x)",
+  description = "Return TRUE if x is a function."
+)
+attr(rye_stdlib_callable_p, "rye_doc") <- list(
+  usage = "(callable? x)",
+  description = "Return TRUE if x can be called."
+)
+
+attr(rye_stdlib_not, "rye_doc") <- list(
+  usage = "(not x)",
+  description = "Logical negation."
+)
+attr(rye_stdlib_modulo, "rye_doc") <- list(
+  usage = "(% a b)",
+  description = "Remainder of a divided by b."
+)
+attr(rye_stdlib_equal, "rye_doc") <- list(
+  usage = "(= a b)",
+  description = "Lisp-style equality."
+)
+
+attr(rye_stdlib_display, "rye_doc") <- list(
+  usage = "(display x)",
+  description = "Print x without formatting."
+)
+attr(rye_stdlib_str, "rye_doc") <- list(
+  usage = "(str x)",
+  description = "Display structure of x."
+)
+attr(rye_stdlib_string_join, "rye_doc") <- list(
+  usage = "(string-join parts [sep])",
+  description = "Join strings with sep."
+)
+attr(rye_stdlib_string_split, "rye_doc") <- list(
+  usage = "(string-split s [sep])",
+  description = "Split string s on sep."
+)
+attr(rye_stdlib_trim, "rye_doc") <- list(
+  usage = "(trim s)",
+  description = "Trim whitespace from s."
+)
+attr(rye_stdlib_format, "rye_doc") <- list(
+  usage = "(format fmt args...)",
+  description = "Format a string."
+)
+attr(rye_stdlib_read_line, "rye_doc") <- list(
+  usage = "(read-line)",
+  description = "Read a single line from stdin."
+)
+
+attr(rye_stdlib_error, "rye_doc") <- list(
+  usage = "(error message)",
+  description = "Raise an error with message."
+)
+attr(rye_stdlib_warn, "rye_doc") <- list(
+  usage = "(warn message)",
+  description = "Emit a warning with message."
+)
+attr(rye_stdlib_assert, "rye_doc") <- list(
+  usage = "(assert test [message])",
+  description = "Raise error if test is falsy."
+)
+attr(rye_stdlib_trace, "rye_doc") <- list(
+  usage = "(trace x)",
+  description = "Print x and return it."
+)
+attr(rye_stdlib_try, "rye_doc") <- list(
+  usage = "(try* thunk [:error_handler fn] [:finally_handler fn])",
+  description = "Evaluate thunk with error/finally handlers."
+)
+
+attr(rye_stdlib_macroexpand, "rye_doc") <- list(
+  usage = "(macroexpand expr)",
+  description = "Recursively expand macros in expr."
+)
+attr(rye_stdlib_macroexpand_1, "rye_doc") <- list(
+  usage = "(macroexpand-1 expr)",
+  description = "Expand a single macro layer in expr."
+)
+attr(rye_stdlib_eval, "rye_doc") <- list(
+  usage = "(eval expr)",
+  description = "Evaluate expr in the current environment."
+)
+
+attr(rye_stdlib_dict, "rye_doc") <- list(
+  usage = "(dict key val ...)",
+  description = "Create a dictionary as a list of key/value pairs."
+)
+attr(rye_stdlib_r_call, "rye_doc") <- list(
+  usage = "(r/call fn [:args list])",
+  description = "Call an R function with list arguments."
+)
+
+attr(rye_stdlib_identity, "rye_doc") <- list(
+  usage = "(identity x)",
+  description = "Return x unchanged."
+)
+attr(rye_stdlib_first, "rye_doc") <- list(
+  usage = "(first lst)",
+  description = "Return the first element of lst."
+)
+attr(rye_stdlib_rest, "rye_doc") <- list(
+  usage = "(rest lst)",
+  description = "Return the rest of lst."
+)
+attr(rye_stdlib_last, "rye_doc") <- list(
+  usage = "(last lst)",
+  description = "Return the last element of lst."
+)
+attr(rye_stdlib_nth, "rye_doc") <- list(
+  usage = "(nth lst n)",
+  description = "Return the nth (0-indexed) element of lst."
+)
+attr(rye_stdlib_complement, "rye_doc") <- list(
+  usage = "(complement pred)",
+  description = "Return a predicate that negates pred."
+)
+attr(rye_stdlib_compose, "rye_doc") <- list(
+  usage = "(compose f g)",
+  description = "Compose f after g."
+)
+attr(rye_stdlib_repeatedly, "rye_doc") <- list(
+  usage = "(repeatedly n fn)",
+  description = "Call fn n times and collect results."
+)
+attr(rye_stdlib_repeat, "rye_doc") <- list(
+  usage = "(repeat n value)",
+  description = "Repeat value n times."
+)
+attr(rye_stdlib_zip, "rye_doc") <- list(
+  usage = "(zip lst ...)",
+  description = "Zip lists together."
+)
+attr(rye_stdlib_partial, "rye_doc") <- list(
+  usage = "(partial fn args...)",
+  description = "Return fn with args pre-applied."
+)
