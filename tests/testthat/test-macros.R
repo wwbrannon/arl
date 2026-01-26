@@ -189,7 +189,14 @@ test_that("stdlib macros from files work", {
   result <- rye_eval(rye_read("(letrec ((f (lambda (n) (if (< n 1) 0 (+ n (f (- n 1))))))) (f 3))")[[1]], env)
   expect_equal(result, 6)
 
-  result <- rye_eval(rye_read("(begin (define x 0) (define acc 0) (while (< x 3) (define acc (+ acc x)) (define x (+ x 1))) acc)")[[1]], env)
+  result <- rye_eval(
+    rye_read(paste0(
+      "(begin (define x 0) (define acc 0) ",
+      "(while (< x 3) (define acc (+ acc x)) (define x (+ x 1))) ",
+      "acc)"
+    ))[[1]],
+    env
+  )
   expect_equal(result, 3)
 
   result <- rye_eval(rye_read("(for (x (list 1 2 3)) (* x 2))")[[1]], env)
@@ -204,7 +211,16 @@ test_that("stdlib macros from files work", {
   result <- rye_eval(rye_read("(try (error \"boom\") (catch e 42))")[[1]], env)
   expect_equal(result, 42)
 
-  result <- rye_eval(rye_read("(begin (define x 0) (try (begin (define x 1) (error \"boom\")) (catch e (define x 2)) (finally (define x 3))) x)")[[1]], env)
+  result <- rye_eval(
+    rye_read(paste0(
+      "(begin (define x 0) ",
+      "(try (begin (define x 1) (error \"boom\")) ",
+      "(catch e (define x 2)) ",
+      "(finally (define x 3))) ",
+      "x)"
+    ))[[1]],
+    env
+  )
   expect_equal(result, 3)
 })
 

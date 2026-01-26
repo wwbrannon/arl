@@ -220,7 +220,9 @@ test_that("rye_cli errors and shows help on invalid args", {
         type = "message"
       )
     },
-    quit = function(...) { quit_called <<- TRUE },
+    quit = function(...) {
+      quit_called <<- TRUE
+    },
     .package = "base"
   )
   expect_true(quit_called)

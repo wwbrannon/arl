@@ -7,7 +7,7 @@ run_example <- function(example_name) {
   if (!nzchar(example_path)) {
     example_path <- testthat::test_path("../../inst/examples", example_name)
   }
-  skip_if_not(file.exists(example_path), "Example file not found")
+  testthat::skip_if_not(file.exists(example_path), "Example file not found")
 
   env <- new.env()
   rye::rye_load_stdlib(env, load_files = TRUE)

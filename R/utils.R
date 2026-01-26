@@ -10,7 +10,6 @@ rye_trimws_compat <- function(x, which = c("both", "left", "right"), whitespace 
   }
   sub(left_pattern, "", sub(right_pattern, "", x))
 }
-
 rye_trimws_shim <- function(x, which = c("both", "left", "right"), whitespace = "[ \t\r\n]") {
   if (exists("trimws", mode = "function", inherits = TRUE)) {
     return(trimws(x, which = which, whitespace = whitespace))
@@ -99,4 +98,3 @@ rye_load_file <- function(path, env = parent.frame()) {
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
   rye_eval_text(text, env)
 }
-

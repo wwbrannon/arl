@@ -295,8 +295,9 @@ rye_stdlib_reverse <- function(x) {
 
 rye_stdlib_apply <- function(fn, args) {
   args <- rye_as_list(args)
-  if (length(args) > 2 && (identical(fn, base::`+`) || identical(fn, base::`*`) ||
-    identical(fn, base::`-`) || identical(fn, base::`/`))) {
+  if (length(args) > 2 &&
+        (identical(fn, base::`+`) || identical(fn, base::`*`) ||
+           identical(fn, base::`-`) || identical(fn, base::`/`))) {
     return(Reduce(fn, args))
   }
   rye_do_call(fn, args)

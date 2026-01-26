@@ -128,8 +128,10 @@ rye_expr_to_r <- function(expr, indent = 0) {
           paste(rep("  ", indent + 1), collapse = ""),
           gsub("\n", paste0("\n", paste(rep("  ", indent + 1), collapse = "")), body_str)
         )
-        return(paste0("function(", args_str, ") {\n",
-                     indented_body, "\n", indent_str, "}"))
+        return(paste0(
+          "function(", args_str, ") {\n",
+          indented_body, "\n", indent_str, "}"
+        ))
       }
       return(paste0("function(", args_str, ") ", body_str))
     }
@@ -199,10 +201,10 @@ rye_expr_to_r <- function(expr, indent = 0) {
 
     # Infix operators
     if (is.symbol(op) && as.character(op) %in% c(
-        "+", "-", "*", "/", "%%", "%/%", "^",
-        "<", ">", "<=", ">=", "==", "!=",
-        "&&", "||", "&", "|"
-      )) {
+      "+", "-", "*", "/", "%%", "%/%", "^",
+      "<", ">", "<=", ">=", "==", "!=",
+      "&&", "||", "&", "|"
+    )) {
       op_name <- as.character(op)
       args <- character(0)
       for (i in 2:length(expr)) {
@@ -244,7 +246,7 @@ rye_expr_to_r <- function(expr, indent = 0) {
   }
 
   # Fallback
-  return(as.character(expr))
+  as.character(expr)
 }
 
 #' Translate Rye code to R code

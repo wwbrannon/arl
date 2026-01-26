@@ -96,7 +96,7 @@ repl_input_line <- function(prompt) {
     return(readline(prompt))
   }
   cat(prompt)
-  flush.console()
+  utils::flush.console()
   line <- readLines("stdin", n = 1, warn = FALSE)
   if (length(line) == 0) {
     return(NULL)
@@ -178,7 +178,7 @@ rye_repl <- function() {
       repl_read_form(),
       error = function(e) {
         cat("Error: ", conditionMessage(e), "\n", sep = "")
-        return(list(error = TRUE))
+        list(error = TRUE)
       }
     )
 
