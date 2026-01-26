@@ -1,0 +1,54 @@
+;; Pipeline Macros Example
+;; Demonstrates a small macro-driven data pipeline
+
+;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
+(define *output-dir*
+  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
+    (if (= dir "")
+        (r/call "tempdir" ())
+        dir)))
+
+;; Pipeline macro: threads a value through a sequence of steps
+(defmacro pipeline (value . steps)
+  (if (null? steps)
+      value
+      (let ((step (car steps))
+            (rest-steps (cdr steps)))
+        (if (pair? step)
+            `(pipeline (,(car step) ,@(cdr step) ,value) ,@rest-steps)
+            `(pipeline (,step ,value) ,@rest-steps)))))
+
+(define data (list 1 2 3 4 5 6 7 8 9))
+
+(define pipeline-result
+  (pipeline data
+            (filter (lambda (x) (> x 0)))
+            (map (lambda (x) x))
+            (reduce +)))
+
+(println "=== Pipeline Output ===")
+(println (str "Input: " data))
+(println (str "Pipeline result: " pipeline-result))
+
+(define expanded (macroexpand-1
+                  '(pipeline data
+                             (filter (lambda (x) (> x 0)))
+                             (map (lambda (x) x))
+                             (reduce +))))
+
+(println "\nExpanded form:")
+(println expanded)
+
+(define example-result
+  (dict
+   :pipeline_total pipeline-result
+   :expanded_steps 3))
+
+(define report-path (r/call "file.path" (list *output-dir* "pipeline-report.txt")))
+(r/call "writeLines"
+        (list
+         (r/call "c" (list (str "pipeline_total=" pipeline-result)
+                           (str "expanded_steps=3")))
+         report-path))
+
+(println "\nExample complete!")

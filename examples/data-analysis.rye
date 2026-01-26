@@ -1,6 +1,16 @@
 ;; Data Analysis with R Interop
 ;; Demonstrates seamless integration between Rye and R
 
+;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
+(define *output-dir*
+  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
+    (if (= dir "")
+        (r/call "tempdir" ())
+        dir)))
+
+;; Deterministic randomness for reproducible examples
+(r/call "set.seed" (list 123))
+
 ;; ============================================================================
 ;; Working with R Vectors and Lists
 ;; ============================================================================
@@ -13,8 +23,8 @@
 
 ;; Use R statistical functions
 (define mean-val (r/call "mean" (list nums)))
-(define median-val (r/call "median" (list nums)))
-(define sd-val (r/call "sd" (list nums)))
+(define median-val ((:: stats median) nums))
+(define sd-val ((:: stats sd) nums))
 
 (println (str "Mean: " mean-val))
 (println (str "Median: " median-val))
@@ -27,9 +37,9 @@
 (println "\n=== Generating Data ===\n")
 
 ;; Generate random normal data
-(define random-data (r/call "rnorm" (list 100)))
+(define random-data ((:: stats rnorm) 100))
 (println (str "Generated 100 random numbers"))
-(println (str "First 10: " (r/call "head" (list random-data 10))))
+(println (str "First 10: " ((:: utils head) random-data 10)))
 
 ;; Summary statistics
 (println "\nSummary:")
@@ -100,7 +110,7 @@
 ;; Combine groups for comparison
 (define all-values (r/call "c" (list group-a group-b)))
 (println (str "\nCombined range: " (r/call "range" (list all-values))))
-(println (str "Combined quantiles: " (r/call "quantile" (list all-values))))
+(println (str "Combined quantiles: " ((:: stats quantile) all-values)))
 
 ;; ============================================================================
 ;; Using R's seq and rep functions
@@ -126,7 +136,7 @@
 (println "\n=== Hybrid Processing ===\n")
 
 ;; Generate data in R
-(define raw-data (r/call "rnorm" (list 20 50 10)))
+(define raw-data ((:: stats rnorm) 20 50 10))
 
 ;; Convert to list for Rye processing
 (define data-list (r/call "as.list" (list raw-data)))
@@ -191,5 +201,17 @@
 (define food-total (reduce + (map (lambda (t) (r/call "get" (list "amount" t)))
                                   food-trans)))
 (println (str "Food total: $" food-total))
+
+(define example-result
+  (dict
+   :passing_avg passing-avg
+   :food_total food-total))
+
+(define report-path (r/call "file.path" (list *output-dir* "data-analysis-report.txt")))
+(r/call "writeLines"
+        (list
+         (r/call "c" (list (str "passing_avg=" passing-avg)
+                           (str "food_total=" food-total)))
+         report-path))
 
 (println "\nExample complete!")

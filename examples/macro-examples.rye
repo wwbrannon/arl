@@ -1,6 +1,13 @@
 ;; Macro System Examples
 ;; Demonstrates defmacro, quasiquote, unquote, and macro expansion
 
+;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
+(define *output-dir*
+  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
+    (if (= dir "")
+        (r/call "tempdir" ())
+        dir)))
+
 ;; ============================================================================
 ;; Simple Macros
 ;; ============================================================================
@@ -90,9 +97,9 @@
 (println "\n=== Anaphoric Macros ===\n")
 
 ;; An anaphoric if that binds result to 'it'
-(defmacro aif (test then else)
+(defmacro aif (test then alt)
   `(let ((it ,test))
-     (if it ,then ,else)))
+     (if it ,then ,alt)))
 
 (println "Anaphoric if example:")
 (aif (+ 2 3)
@@ -175,7 +182,9 @@
       value
       (let ((first-form (car forms))
             (rest-forms (cdr forms)))
-        `(-> (,first-form ,value) ,@rest-forms))))
+        (if (pair? first-form)
+            `(-> (,(car first-form) ,value ,@(cdr first-form)) ,@rest-forms)
+            `(-> (,first-form ,value) ,@rest-forms)))))
 
 (println "Threading macro example:")
 (println (str "Result: " (-> 5
@@ -196,5 +205,23 @@
 
 (println (str "(const-multiply 6 7) = " (const-multiply 6 7)))
 (println "This multiplication happened at macro expansion time!")
+
+(define threading-result (-> 5 (+ 3) (* 2) (- 1)))
+(define aif-result (aif (+ 2 3) it #nil))
+(define expanded-when (macroexpand-1 '(when (> 5 3) (println "yes"))))
+
+(define example-result
+  (dict
+   :threading_result threading-result
+   :aif_result aif-result
+   :expanded_when expanded-when))
+
+(define report-path (r/call "file.path" (list *output-dir* "macro-report.txt")))
+(r/call "writeLines"
+        (list
+         (r/call "c" (list (str "threading_result=" threading-result)
+                           (str "aif_result=" aif-result)
+                           (str "expanded_when=" expanded-when)))
+         report-path))
 
 (println "\nExample complete!")

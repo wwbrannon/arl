@@ -1,6 +1,13 @@
 ;; Fibonacci Sequence Implementations
 ;; Demonstrates recursion, iteration, and functional approaches
 
+;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
+(define *output-dir*
+  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
+    (if (= dir "")
+        (r/call "tempdir" ())
+        dir)))
+
 ;; ============================================================================
 ;; Classic Recursive Implementation
 ;; ============================================================================
@@ -54,18 +61,18 @@
             (list 0)
             (if (= n 2)
                 (list 0 1)
-                (let* ((init (list 0 1))
-                       (generate-next
-                        (lambda (lst count)
-                          (if (>= count n)
-                              lst
-                              (let* ((len (length lst))
-                                     (a (nth lst (- len 2)))
-                                     (b (nth lst (- len 1)))
-                                     (next (+ a b)))
-                                (generate-next (append lst (list next))
-                                              (+ count 1)))))))
-                  (generate-next init 2)))))))
+                (let* ((init (list 0 1)))
+                  (letrec ((generate-next
+                            (lambda (lst count)
+                              (if (>= count n)
+                                  lst
+                                  (let* ((len (length lst))
+                                         (a (nth lst (- len 2)))
+                                         (b (nth lst (- len 1)))
+                                         (next (+ a b)))
+                                    (generate-next (append lst (list next))
+                                                  (+ count 1)))))))
+                    (generate-next init 2))))))))
 
 (println "\nFibonacci Sequence:")
 (println (str "First 10: " (fib-sequence 10)))
@@ -102,5 +109,26 @@
 
 ;; Note: Full memoization would require modifying recursive calls to use cache
 ;; This is a simplified demonstration of the concept
+
+(define fib10 (fib-recursive 10))
+(define fib15 (fib-iterative 15))
+(define seq10 (fib-sequence 10))
+(define sum10 (sum-fib 10))
+
+(define example-result
+  (dict
+   :fib10 fib10
+   :fib15 fib15
+   :seq10 seq10
+   :sum10 sum10))
+
+(define report-path (r/call "file.path" (list *output-dir* "fibonacci-report.txt")))
+(r/call "writeLines"
+        (list
+         (r/call "c" (list (str "fib10=" fib10)
+                           (str "fib15=" fib15)
+                           (str "sum10=" sum10)
+                           (str "seq10=" seq10)))
+         report-path))
 
 (println "\nExample complete!")

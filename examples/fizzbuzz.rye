@@ -1,6 +1,13 @@
 ;; FizzBuzz Implementations
 ;; Demonstrates control flow, looping, and conditionals
 
+;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
+(define *output-dir*
+  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
+    (if (= dir "")
+        (r/call "tempdir" ())
+        dir)))
+
 ;; ============================================================================
 ;; Classic FizzBuzz using cond
 ;; ============================================================================
@@ -117,5 +124,22 @@
 
 (println "\nCounts for 1-100:")
 (println (count-fizzbuzz 100))
+
+(define counts-100 (count-fizzbuzz 100))
+(define example-result
+  (dict
+   :count_fizz (r/call "get" (list "fizz" counts-100))
+   :count_buzz (r/call "get" (list "buzz" counts-100))
+   :count_fizzbuzz (r/call "get" (list "fizzbuzz" counts-100))
+   :count_numbers (r/call "get" (list "numbers" counts-100))))
+
+(define report-path (r/call "file.path" (list *output-dir* "fizzbuzz-report.txt")))
+(r/call "writeLines"
+        (list
+         (r/call "c" (list (str "fizz=" (r/call "get" (list "fizz" counts-100)))
+                           (str "buzz=" (r/call "get" (list "buzz" counts-100)))
+                           (str "fizzbuzz=" (r/call "get" (list "fizzbuzz" counts-100)))
+                           (str "numbers=" (r/call "get" (list "numbers" counts-100)))))
+         report-path))
 
 (println "\nExample complete!")
