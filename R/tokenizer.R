@@ -106,7 +106,8 @@ rye_tokenize <- function(source) {
             } else if (next_ch == "\\") {
               str_chars <- c(str_chars, "\\")
             } else {
-              str_chars <- c(str_chars, next_ch)
+              # Preserve unknown escapes as literal backslash + char
+              str_chars <- c(str_chars, "\\", next_ch)
             }
             i <- i + 2
             col <- col + 2

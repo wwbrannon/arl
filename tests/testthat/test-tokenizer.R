@@ -23,6 +23,11 @@ test_that("tokenizer handles escape sequences", {
   expect_equal(tokens[[1]]$value, "hello\nworld")
 })
 
+test_that("tokenizer preserves unknown escapes", {
+  tokens <- rye_tokenize('"C:\\\\Users\\\\runner\\\\file.rye"')
+  expect_equal(tokens[[1]]$value, "C:\\Users\\runner\\file.rye")
+})
+
 test_that("tokenizer handles booleans and nil", {
   tokens <- rye_tokenize("#t #f #nil")
   expect_equal(tokens[[1]]$type, "BOOLEAN")

@@ -20,7 +20,8 @@ test_that("(load ...) evaluates file in current environment", {
   writeLines("(define foo 7)", path)
   on.exit(unlink(path), add = TRUE)
 
-  exprs <- rye_read(paste0("(load \"", path, "\")"))
+  path_for_rye <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  exprs <- rye_read(paste0("(load \"", path_for_rye, "\")"))
   rye_eval(exprs[[1]], env)
 
   expect_equal(get("foo", envir = env), 7)
