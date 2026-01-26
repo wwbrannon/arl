@@ -3,7 +3,10 @@ if (!nzchar(Sys.getenv("_R_CHECK_PACKAGE_NAME_"))) {
 }
 
 run_example <- function(example_name) {
-  example_path <- testthat::test_path("../../examples", example_name)
+  example_path <- system.file("examples", example_name, package = "rye")
+  if (!nzchar(example_path)) {
+    example_path <- testthat::test_path("../../inst/examples", example_name)
+  }
   skip_if_not(file.exists(example_path), "Example file not found")
 
   env <- new.env()
