@@ -1,35 +1,41 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
 
 # Rye
 
 <!-- badges: start -->
-
-[![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/wwbrannon/rye/workflows/R-CMD-check/badge.svg)](https://github.com/wwbrannon/rye/actions)
-[![License:
-MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
-A Lisp dialect implemented in and with access to R, leveraging R’s
-Scheme heritage.
+A Lisp dialect implemented in and with access to R, leveraging R's Scheme heritage.
 
 ## Overview
 
 Rye is a Lisp dialect that seamlessly integrates with R. It provides:
 
 - **Homoiconic syntax**: Code as data, data as code
-- **Powerful macros**: Transform code at compile-time with `defmacro`
-  and quasiquote
+- **Powerful macros**: Transform code at compile-time with `defmacro` and quasiquote
 - **R interoperability**: Call any R function, use R data structures
 - **Lexical scoping**: Clean, predictable variable binding
-- **First-class functions**: Functions are values, closures work
-  naturally
+- **First-class functions**: Functions are values, closures work naturally
 
 ## Installation
 
-``` r
+```{r eval=FALSE}
 # Install from source
 devtools::install()
 
@@ -40,7 +46,7 @@ devtools::load_all()
 
 ## Quick Start
 
-``` r
+```{r eval=FALSE}
 library(rye)
 
 # Start the REPL
@@ -49,7 +55,7 @@ rye_repl()
 
 ### Examples
 
-``` lisp
+```lisp
 ; Arithmetic
 (+ 1 (* 2 3))  ; => 7
 
@@ -111,7 +117,7 @@ The REPL automatically loads a standard library with:
 
 All R functions are accessible directly:
 
-``` lisp
+```lisp
 ; Call R functions
 (lm (~ y x) :data df)
 
@@ -127,7 +133,7 @@ All R functions are accessible directly:
 
 See the [Makefile](Makefile) for common development commands:
 
-``` bash
+```bash
 # Run tests
 make test
 
@@ -141,12 +147,12 @@ make document
 
 ## Architecture
 
-Rye leverages R’s existing eval/quote/environment system:
+Rye leverages R's existing eval/quote/environment system:
 
-1.  **Parser**: Converts S-expressions to R calls
-2.  **Macro expander**: Processes `defmacro` definitions
-3.  **Evaluator**: Handles special forms, delegates to R’s `eval()`
-4.  **R bridge**: Seamless access to all R functions
+1. **Parser**: Converts S-expressions to R calls
+2. **Macro expander**: Processes `defmacro` definitions
+3. **Evaluator**: Handles special forms, delegates to R's `eval()`
+4. **R bridge**: Seamless access to all R functions
 
 ## License
 

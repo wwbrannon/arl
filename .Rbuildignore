@@ -1,0 +1,12 @@
+^\.git$
+^\.gitignore$
+^\.github$
+^\.claude$
+^\.Rproj\.user$
+^.*\.Rproj$
+^README\.Rmd$
+^CLAUDE\.md$
+^plan\.md$
+^Makefile$
+^tags$
+^\.Rbuildignore$

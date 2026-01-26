@@ -1,0 +1,18 @@
+;;; Rye Standard Library Prelude
+;;; This file defines standard macros in Rye itself
+
+;;; Control flow macros
+
+(defmacro when (test body)
+  `(if ,test ,body #nil))
+
+(defmacro unless (test body)
+  `(if ,test #nil ,body))
+
+;;; Boolean macros with short-circuit evaluation
+
+(defmacro and (first second)
+  `(if ,test ,second #f))
+
+(defmacro or (first second)
+  `(if ,first #t ,second))
