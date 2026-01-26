@@ -1,14 +1,10 @@
 o) does this actually work with R version 3.0?
 
-Frontend fixes:
-    o) command-line tool like `$ hy ...`
-    o) improve the repl, it's a bit of a stub rn; maybe use GNU readline?
-    o) do we need anywhere to have any special handling of .rye the file ending?
-
 Import and interop fixes:
     o) reorganize stdlib to also make those functions available from the package in the usual R way
     o) how to load rye-lang stdlib files in the repl? e.g. inst/rye/prelude.rye
     o) can we make those available to R code as well?
+    o) do we need anywhere to have any special handling of .rye the file ending?
 
 big features:
     o) what else needs to be in the stdlib? other common lisp features
