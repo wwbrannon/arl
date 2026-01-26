@@ -11,30 +11,58 @@ repl_history_path <- function() {
   path.expand("~/.rye_history")
 }
 
+repl_history_state <- new.env(parent = emptyenv())
+repl_history_state$enabled <- FALSE
+repl_history_state$path <- NULL
+repl_history_state$snapshot <- NULL
+
 repl_can_use_history <- function() {
-  interactive() && capabilities("readline")
+  isTRUE(interactive()) && isTRUE(capabilities("readline"))
 }
 
 repl_load_history <- function(path) {
   if (!repl_can_use_history()) {
-    return(invisible(NULL))
+    return(invisible(FALSE))
+  }
+  snapshot <- tempfile("rye_rhistory_")
+  saved <- tryCatch({
+    utils::savehistory(snapshot)
+    TRUE
+  }, error = function(...) FALSE)
+  if (!saved) {
+    return(invisible(FALSE))
   }
   if (file.exists(path)) {
     try(utils::loadhistory(path), silent = TRUE)
   }
-  invisible(NULL)
+  repl_history_state$enabled <- TRUE
+  repl_history_state$path <- path
+  repl_history_state$snapshot <- snapshot
+  invisible(TRUE)
 }
 
-repl_save_history <- function(path) {
+repl_save_history <- function() {
   if (!repl_can_use_history()) {
     return(invisible(NULL))
   }
-  try(utils::savehistory(path), silent = TRUE)
+  if (!isTRUE(repl_history_state$enabled)) {
+    return(invisible(NULL))
+  }
+  try(utils::savehistory(repl_history_state$path), silent = TRUE)
+  if (!is.null(repl_history_state$snapshot)) {
+    try(utils::loadhistory(repl_history_state$snapshot), silent = TRUE)
+  }
+  repl_history_state$enabled <- FALSE
+  repl_history_state$path <- NULL
+  repl_history_state$snapshot <- NULL
   invisible(NULL)
 }
 
 repl_add_history <- function(text) {
   if (!repl_can_use_history()) {
+    return(invisible(NULL))
+  }
+  if (!isTRUE(repl_history_state$enabled)) {
     return(invisible(NULL))
   }
   if (rye_trimws_shim(text) == "") { # nolint: object_usage_linter
@@ -57,6 +85,8 @@ repl_is_incomplete_error <- function(e) {
 }
 
 repl_read_form <- function(input_fn = readline, prompt = "rye> ", cont_prompt = "...> ") {
+  # NOTE: readline provides line editing/history, but EOF (Ctrl-D) is not
+  # distinguishable from an empty line, so we cannot reliably exit on Ctrl-D.
   buffer <- character(0)
 
   repeat {
@@ -88,11 +118,7 @@ repl_read_form <- function(input_fn = readline, prompt = "rye> ", cont_prompt = 
 }
 
 repl_eval_exprs <- function(exprs, env) {
-  result <- NULL
-  for (expr in exprs) {
-    result <- rye_eval(expr, env)
-  }
-  result
+  rye_eval_exprs(exprs, env)
 }
 
 repl_print_value <- function(value) {
@@ -118,7 +144,7 @@ rye_repl <- function() {
 
   history_path <- repl_history_path()
   repl_load_history(history_path)
-  on.exit(repl_save_history(history_path), add = TRUE)
+  on.exit(repl_save_history(), add = TRUE)
 
   repeat {
     form <- tryCatch(

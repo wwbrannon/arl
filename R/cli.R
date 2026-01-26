@@ -122,10 +122,7 @@ cli_load_env <- function() {
 }
 
 cli_eval_exprs <- function(exprs, env) {
-  result <- NULL
-  for (expr in exprs) {
-    result <- rye_eval(expr, env)
-  }
+  result <- rye_eval_exprs(exprs, env)
   if (!is.null(result)) {
     print(result)
   }
@@ -133,8 +130,11 @@ cli_eval_exprs <- function(exprs, env) {
 }
 
 cli_eval_text <- function(text, env) {
-  exprs <- rye_read(text)
-  cli_eval_exprs(exprs, env)
+  result <- rye_eval_text(text, env)
+  if (!is.null(result)) {
+    print(result)
+  }
+  invisible(result)
 }
 
 cli_isatty <- function() {
@@ -193,8 +193,10 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
       }
     }
     for (path in parsed$files) {
-      text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-      cli_eval_text(text, env)
+      result <- rye_load_file(path, env)
+      if (!is.null(result)) {
+        print(result)
+      }
     }
     return(invisible(NULL))
   }

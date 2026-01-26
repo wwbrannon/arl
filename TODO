@@ -3,7 +3,8 @@ o) does this actually work with R version 3.0?
 Import and interop fixes:
     o) how to load rye-lang stdlib files in the repl? e.g. inst/rye/prelude.rye
     o) can we make those available to R code as well?
-    o) do we need anywhere to have any special handling of .rye the file ending?
+    o) load stdlib rye files defined in inst/rye automatically, don't special-case "prelude"
+    o) does load need to be a special form?
 
 big features:
     o) what else needs to be in the stdlib? other common lisp features

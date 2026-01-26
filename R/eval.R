@@ -132,6 +132,21 @@ rye_eval <- function(expr, env = parent.frame()) {
     return(NULL)
   }
 
+  # load - evaluate a Rye source file
+  if (is.symbol(op) && as.character(op) == "load") {
+    if (length(expr) != 2) {
+      stop("load requires exactly 1 argument: (load \"path\")")
+    }
+    path <- rye_eval(expr[[2]], env)
+    if (!is.character(path) || length(path) != 1) {
+      stop("load requires a single file path string")
+    }
+    if (path %in% c("prelude", "prelude.rye")) {
+      return(rye_load_prelude(env))
+    }
+    return(rye_load_file(path, env))
+  }
+
   # lambda - function creation
   if (is.symbol(op) && as.character(op) == "lambda") {
     if (length(expr) < 3) {

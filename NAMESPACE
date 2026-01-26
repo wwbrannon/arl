@@ -2,6 +2,8 @@
 
 export(gensym)
 export(rye_eval)
+export(rye_load_file)
+export(rye_load_prelude)
 export(rye_load_stdlib)
 export(rye_macroexpand)
 export(rye_parse)
