@@ -31,6 +31,11 @@ parse_cli_args <- function(args) {
   while (i <= length(args)) {
     arg <- args[[i]]
 
+    if (arg == "--args") {
+      i <- i + 1
+      next
+    }
+
     if (arg == "--") {
       if (i < length(args)) {
         state$files <- c(state$files, args[(i + 1):length(args)])
@@ -145,7 +150,11 @@ cli_isatty <- function() {
     }
     return(isTRUE(override))
   }
-  isatty(0)
+  tty <- tryCatch(isatty(stdin()), error = function(...) FALSE)
+  if (!isTRUE(tty)) {
+    tty <- tryCatch(isatty(0), error = function(...) FALSE)
+  }
+  isTRUE(tty)
 }
 
 cli_read_stdin <- function() {

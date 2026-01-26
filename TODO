@@ -1,7 +1,10 @@
-o) big integration-type tests; update examples and examples tests
+o) make linter shut up
 
-o) help?
+o) help system?
+
+o) update CLAUDE.md
 o) better docs? vignettes, examples, etc
+
 o) inst/CITATION and in README
 
 o) CRAN submission checklist

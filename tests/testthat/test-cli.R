@@ -58,6 +58,12 @@ test_that("parse_cli_args treats positional args as files", {
   expect_equal(parsed$files, c("a.rye", "b.rye"))
 })
 
+test_that("parse_cli_args ignores --args from wrappers", {
+  parsed <- rye:::parse_cli_args(c("--args", "--eval", "(+ 1 2)"))
+  expect_equal(parsed$action, "eval")
+  expect_equal(parsed$expr, "(+ 1 2)")
+})
+
 test_that("rye_cli executes files in order", {
   file_a <- tempfile(fileext = ".rye")
   file_b <- tempfile(fileext = ".rye")

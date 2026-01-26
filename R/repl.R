@@ -91,7 +91,20 @@ repl_is_incomplete_error <- function(e) {
   grepl("Unexpected end of input|Unclosed parenthesis", msg)
 }
 
-repl_read_form <- function(input_fn = readline, prompt = "rye> ", cont_prompt = "...> ") {
+repl_input_line <- function(prompt) {
+  if (isTRUE(interactive()) && isTRUE(capabilities("readline"))) {
+    return(readline(prompt))
+  }
+  cat(prompt)
+  flush.console()
+  line <- readLines("stdin", n = 1, warn = FALSE)
+  if (length(line) == 0) {
+    return(NULL)
+  }
+  line
+}
+
+repl_read_form <- function(input_fn = repl_input_line, prompt = "rye> ", cont_prompt = "...> ") {
   override <- getOption("rye.repl_read_form_override", NULL)
   if (!is.null(override)) {
     if (is.function(override)) {
