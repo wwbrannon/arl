@@ -46,32 +46,3 @@ jobs:
           args: 'c("--no-manual", "--as-cran")'
           error-on: '"warning"'
 
-  R-3-1:
-    runs-on: ubuntu-20.04
-    container: rocker/r-ver:3.1.0
-    name: ubuntu-20.04 (3.1.0)
-    env:
-      R_KEEP_PKG_SOURCE: yes
-      _R_CHECK_CRAN_INCOMING_: false
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            build-essential \
-            libcurl4-openssl-dev \
-            libssl-dev \
-            libxml2-dev
-          rm -rf /var/lib/apt/lists/*
-
-      - name: Install R dependencies
-        run: |
-          R -q -e "install.packages(c('remotes','rcmdcheck'), repos = 'https://cloud.r-project.org')"
-          R -q -e "remotes::install_deps(dependencies = TRUE)"
-
-      - name: Run R CMD check
-        run: |
-          R -q -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--as-cran'), error_on = 'warning', check_dir = 'check')"

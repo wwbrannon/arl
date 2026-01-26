@@ -1,9 +1,9 @@
-o) does this actually work with R version 3.1?
-o) test this locally via dockerfile if rocker has a 3.1 image
+o) examples from docs to examples format proper and more of them
 
 big features:
     o) what else needs to be in the stdlib? other common lisp features
     o) more tests; big integration-type tests? coverage check?
+    o) sanity-check the tests: they all pass, but does the tested behavior match how lisp ought to behave?
     o) better docs?
 
 inst/CITATION?

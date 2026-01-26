@@ -14,7 +14,7 @@ build: ## Build the package
 
 .PHONY: check
 check: build ## Check the package (includes tests)
-	R -q -e "devtools::check()"
+	R -q -e 'devtools::check(args="--as-cran")'
 
 .PHONY: document
 document: ## Generate roxygen2 documentation
@@ -44,3 +44,4 @@ test-file: ## Run a single test file (usage: make test-file FILE=test-parser)
 clean: ## Remove build artifacts
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
+

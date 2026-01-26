@@ -6,12 +6,16 @@ Authors@R:
     person("William", "Brannon", email = "will.brannon@gmail.com",
            role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-1435-8535"))
+Author: William Brannon
+Maintainer: William Brannon <will.brannon@gmail.com>
 Description: Rye is a Lisp dialect implemented in and with access to R,
     leveraging R's Scheme heritage to provide a homoiconic language with
-    powerful macro capabilities and seamless R interoperability.
+    powerful macro capabilities and seamless R interoperability. Compatibility
+    with older R versions is intended, but versions earlier than R 4.x have not
+    been tested.
 License: file LICENSE
 Depends:
-    R (>= 3.1.0)
+    R (>= 3.0.2)
 Suggests:
     testthat (>= 3.0.0),
     covr (>= 3.6.0),
