@@ -1,4 +1,3 @@
-o) more tests; coverage check?
 o) sanity-check the current tests: they all pass, but does the tested behavior match how lisp ought to behave?
 
 o) big integration-type tests; update examples and examples tests

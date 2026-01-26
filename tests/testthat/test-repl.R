@@ -36,6 +36,23 @@ test_that("repl_read_form surfaces non-incomplete parse errors", {
   expect_error(rye:::repl_read_form(input_fn = input_fn), "Unexpected")
 })
 
+test_that("repl_read_form supports override option", {
+  withr::local_options(list(
+    rye.repl_read_form_override = function(...) list(text = "override", exprs = list(quote(1)))
+  ))
+  form <- rye:::repl_read_form()
+  expect_equal(form$text, "override")
+  expect_length(form$exprs, 1)
+
+  withr::local_options(list(rye.repl_read_form_override = "static"))
+  expect_equal(rye:::repl_read_form(), "static")
+})
+
+test_that("repl_read_form returns NULL on EOF", {
+  input_fn <- function(...) NULL
+  expect_null(rye:::repl_read_form(input_fn = input_fn))
+})
+
 # Version and History Path Functions ----
 
 test_that("repl_version returns version string", {
@@ -71,6 +88,26 @@ test_that("repl_can_use_history checks interactive and readline", {
   expect_false(cannot_use)
 })
 
+test_that("repl_can_use_history respects override option", {
+  withr::local_options(list(rye.repl_can_use_history_override = FALSE))
+  can_use <- testthat::with_mocked_bindings(
+    rye:::repl_can_use_history(),
+    interactive = function() TRUE,
+    capabilities = function(...) c(readline = TRUE),
+    .package = "base"
+  )
+  expect_false(can_use)
+
+  withr::local_options(list(rye.repl_can_use_history_override = function() TRUE))
+  can_use <- testthat::with_mocked_bindings(
+    rye:::repl_can_use_history(),
+    interactive = function() FALSE,
+    capabilities = function(...) c(readline = FALSE),
+    .package = "base"
+  )
+  expect_true(can_use)
+})
+
 test_that("repl_load_history handles non-interactive mode", {
   result <- testthat::with_mocked_bindings(
     rye:::repl_load_history("dummy.txt"),
@@ -80,6 +117,30 @@ test_that("repl_load_history handles non-interactive mode", {
   expect_false(result)
 })
 
+test_that("repl_load_history returns FALSE when savehistory fails", {
+  state <- rye:::repl_history_state
+  old_enabled <- state$enabled
+  old_path <- state$path
+  old_snapshot <- state$snapshot
+  on.exit({
+    state$enabled <- old_enabled
+    state$path <- old_path
+    state$snapshot <- old_snapshot
+  }, add = TRUE)
+
+  result <- testthat::with_mocked_bindings(
+    testthat::with_mocked_bindings(
+      rye:::repl_load_history("dummy.txt"),
+      repl_can_use_history = function() TRUE,
+      .env = asNamespace("rye")
+    ),
+    savehistory = function(...) stop("fail"),
+    .package = "utils"
+  )
+  expect_false(result)
+  expect_false(isTRUE(state$enabled))
+})
+
 test_that("repl_save_history handles disabled state", {
   result <- testthat::with_mocked_bindings(
     rye:::repl_save_history(),
@@ -87,6 +148,37 @@ test_that("repl_save_history handles disabled state", {
     .env = asNamespace("rye")
   )
   expect_null(result)
+})
+
+test_that("repl_save_history resets state even on save errors", {
+  state <- rye:::repl_history_state
+  old_enabled <- state$enabled
+  old_path <- state$path
+  old_snapshot <- state$snapshot
+  on.exit({
+    state$enabled <- old_enabled
+    state$path <- old_path
+    state$snapshot <- old_snapshot
+  }, add = TRUE)
+
+  state$enabled <- TRUE
+  state$path <- "dummy.txt"
+  state$snapshot <- "dummy_snapshot"
+
+  result <- testthat::with_mocked_bindings(
+    testthat::with_mocked_bindings(
+      rye:::repl_save_history(),
+      repl_can_use_history = function() TRUE,
+      .env = asNamespace("rye")
+    ),
+    savehistory = function(...) stop("fail"),
+    loadhistory = function(...) stop("fail"),
+    .package = "utils"
+  )
+  expect_null(result)
+  expect_false(isTRUE(state$enabled))
+  expect_null(state$path)
+  expect_null(state$snapshot)
 })
 
 test_that("repl_add_history handles non-interactive mode", {
@@ -104,6 +196,19 @@ test_that("repl_add_history skips empty input", {
     rye:::repl_add_history("   "),
     repl_can_use_history = function() TRUE,
     .env = asNamespace("rye")
+  )
+  expect_null(result)
+})
+
+test_that("repl_add_history handles missing addHistory", {
+  result <- testthat::with_mocked_bindings(
+    testthat::with_mocked_bindings(
+      rye:::repl_add_history("(+ 1 2)"),
+      repl_can_use_history = function() TRUE,
+      .env = asNamespace("rye")
+    ),
+    getFromNamespace = function(...) NULL,
+    .package = "utils"
   )
   expect_null(result)
 })

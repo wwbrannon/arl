@@ -24,3 +24,52 @@ test_that("calculator with nested expressions", {
   result <- rye_eval(rye_read("(+ 1 (* 2 3))")[[1]])
   expect_equal(result, 7)
 })
+
+test_that("evaluator validates special form arity and types", {
+  expect_error(rye_eval(rye_read("(quote 1 2)")[[1]]), "quote requires exactly 1 argument")
+  expect_error(rye_eval(rye_read("(quasiquote)")[[1]]), "quasiquote requires exactly 1 argument")
+  expect_error(rye_eval(rye_read("(if 1)")[[1]]), "if requires 2 or 3 arguments")
+  expect_error(rye_eval(rye_read("(define 1 2)")[[1]]), "define requires a symbol")
+  expect_error(rye_eval(rye_read("(set! 1 2)")[[1]]), "set! requires a symbol")
+})
+
+test_that("evaluator handles set! scoping and missing bindings", {
+  env <- new.env(parent = emptyenv())
+  assign(".rye_env", TRUE, envir = env)
+  env$x <- 1
+  child <- new.env(parent = env)
+  assign(".rye_env", TRUE, envir = child)
+
+  rye_eval(rye_read("(set! x 2)")[[1]], child)
+  expect_equal(env$x, 2)
+  expect_error(rye_eval(rye_read("(set! y 1)")[[1]], child), "variable 'y' is not defined")
+})
+
+test_that("evaluator validates load arguments and missing files", {
+  expect_error(rye_eval(rye_read("(load 1)")[[1]]), "load requires a single file path string")
+  expect_error(rye_eval(rye_read('(load "missing-file.rye")')[[1]]), "File not found")
+})
+
+test_that("evaluator builds formulas without evaluating arguments", {
+  env <- new.env(parent = baseenv())
+  env$x <- 10
+  result <- rye_eval(rye_read("(~ x y)")[[1]], env)
+  expect_s3_class(result, "formula")
+  expect_equal(as.character(result)[2], "x")
+  expect_equal(as.character(result)[3], "y")
+})
+
+test_that("evaluator validates package accessor arguments", {
+  expect_error(rye_eval(rye_read("(:: base mean extra)")[[1]]), "requires exactly 2 arguments")
+  expect_error(rye_eval(rye_read("(:: 1 mean)")[[1]]), "Package name must be a symbol or string")
+  expect_error(rye_eval(rye_read("(:: base 1)")[[1]]), "Function/object name must be a symbol or string")
+})
+
+test_that("evaluator validates keyword usage", {
+  expect_error(rye_eval(rye_read("(mean :trim)")[[1]]), "requires a value")
+})
+
+test_that("evaluator validates lambda argument lists", {
+  expect_error(rye_eval(rye_read("(lambda 1 2)")[[1]]), "lambda arguments must be a list")
+  expect_error(rye_eval(rye_read("(lambda (1) 2)")[[1]]), "lambda arguments must be symbols")
+})
