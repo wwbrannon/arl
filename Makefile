@@ -30,7 +30,7 @@ lint:
 
 .PHONY: test
 test: ## Run tests
-	R -q -e "devtools::test()"
+	R -q -e "testthat::set_max_fails(Inf); devtools::test()"
 
 .PHONY: test-file
 test-file: ## Run a single test file (usage: make test-file FILE=test-parser)
