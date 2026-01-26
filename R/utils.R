@@ -1,4 +1,4 @@
-trimws_compat <- function(x, which = c("both", "left", "right"), whitespace = "[ \t\r\n]") {
+rye_trimws_compat <- function(x, which = c("both", "left", "right"), whitespace = "[ \t\r\n]") {
   which <- match.arg(which)
   left_pattern <- paste0("^", whitespace, "+")
   right_pattern <- paste0(whitespace, "+$")
@@ -11,9 +11,9 @@ trimws_compat <- function(x, which = c("both", "left", "right"), whitespace = "[
   sub(left_pattern, "", sub(right_pattern, "", x))
 }
 
-trimws_shim <- function(x, which = c("both", "left", "right"), whitespace = "[ \t\r\n]") {
+rye_trimws_shim <- function(x, which = c("both", "left", "right"), whitespace = "[ \t\r\n]") {
   if (exists("trimws", mode = "function", inherits = TRUE)) {
     return(trimws(x, which = which, whitespace = whitespace))
   }
-  trimws_compat(x, which = which, whitespace = whitespace)
+  rye_trimws_compat(x, which = which, whitespace = whitespace)
 }

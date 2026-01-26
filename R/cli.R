@@ -174,7 +174,7 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
     if (!cli_isatty()) {
       env <- cli_load_env()
       text <- paste(cli_read_stdin(), collapse = "\n")
-      if (trimws_shim(text) != "") { # nolint: object_usage_linter
+      if (rye_trimws_shim(text) != "") { # nolint: object_usage_linter
         cli_eval_text(text, env)
       }
       return(invisible(NULL))
