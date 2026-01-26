@@ -1,13 +1,22 @@
 #' Load the Rye standard library
 #'
-#' Creates a new environment with access to R's base functions via the parent
-#' environment chain. Lisp-specific functions are defined in this environment.
+#' Loads the base Rye stdlib functions and, optionally, Rye stdlib source files
+#' from the package's `inst/rye` directory.
 #'
-#' @param env An environment to populate with stdlib functions. If NULL, creates a new one.
+#' @param env An environment to populate. If NULL, creates a new one.
+#' @param load_files Whether to load Rye stdlib source files from `inst/rye`.
 #' @return An environment containing the Rye standard library
 #' @importFrom stats setNames
 #' @export
-rye_load_stdlib <- function(env = NULL) {
+rye_load_stdlib <- function(env = NULL, load_files = FALSE) {
+  env <- rye_load_stdlib_base(env)
+  if (isTRUE(load_files)) {
+    rye_load_stdlib_files(env)
+  }
+  env
+}
+
+rye_load_stdlib_base <- function(env = NULL) {
   # Create environment with baseenv() as parent if not provided
   # This gives automatic access to all R base functions
   if (is.null(env)) {
@@ -47,6 +56,22 @@ rye_load_stdlib <- function(env = NULL) {
   # All R base functions (+, -, *, /, <, >, print, etc.) are automatically
   # available via the parent environment chain
   env
+}
+
+rye_load_stdlib_files <- function(env = parent.frame()) {
+  dir_path <- system.file("rye", package = "rye")
+  if (identical(dir_path, "")) {
+    stop("Rye standard library directory not found in installed package")
+  }
+  paths <- list.files(dir_path, pattern = "\\.rye$", full.names = TRUE)
+  if (length(paths) == 0) {
+    stop("No Rye standard library files found in installed package")
+  }
+  result <- NULL
+  for (path in paths) {
+    result <- rye_load_file(path, env)
+  }
+  result
 }
 
 rye_stdlib_car <- function(lst) {

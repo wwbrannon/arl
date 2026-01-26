@@ -117,7 +117,7 @@ cli_print_version <- function() {
 
 cli_load_env <- function() {
   env <- new.env(parent = .GlobalEnv)
-  rye_load_stdlib(env)
+  rye_load_stdlib_base(env)
   env
 }
 

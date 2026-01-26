@@ -4,15 +4,17 @@
 \alias{rye_load_stdlib}
 \title{Load the Rye standard library}
 \usage{
-rye_load_stdlib(env = NULL)
+rye_load_stdlib(env = NULL, load_files = FALSE)
 }
 \arguments{
-\item{env}{An environment to populate with stdlib functions. If NULL, creates a new one.}
+\item{env}{An environment to populate. If NULL, creates a new one.}
+
+\item{load_files}{Whether to load Rye stdlib source files from \code{inst/rye}.}
 }
 \value{
 An environment containing the Rye standard library
 }
 \description{
-Creates a new environment with access to R's base functions via the parent
-environment chain. Lisp-specific functions are defined in this environment.
+Loads the base Rye stdlib functions and, optionally, Rye stdlib source files
+from the package's \code{inst/rye} directory.
 }

@@ -68,23 +68,3 @@ rye_load_file <- function(path, env = parent.frame()) {
   rye_eval_text(text, env)
 }
 
-#' Load all Rye standard library source files into an environment
-#'
-#' @param env Environment in which to evaluate the standard library files
-#' @return The result of the final expression in the last file
-#' @export
-rye_load_stdlib_files <- function(env = parent.frame()) {
-  dir_path <- system.file("rye", package = "rye")
-  if (identical(dir_path, "")) {
-    stop("Rye standard library directory not found in installed package")
-  }
-  paths <- list.files(dir_path, pattern = "\\.rye$", full.names = TRUE)
-  if (length(paths) == 0) {
-    stop("No Rye standard library files found in installed package")
-  }
-  result <- NULL
-  for (path in paths) {
-    result <- rye_load_file(path, env)
-  }
-  result
-}
