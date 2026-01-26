@@ -170,7 +170,6 @@ rye_repl <- function() {
     )
 
     if (is.null(form)) {
-      cat("Goodbye!\n")
       break
     }
 
@@ -180,7 +179,6 @@ rye_repl <- function() {
 
     input_text <- form$text
     if (rye_trimws_shim(input_text) %in% c("(quit)", "(exit)", "quit", "exit")) { # nolint: object_usage_linter
-      cat("Goodbye!\n")
       break
     }
 

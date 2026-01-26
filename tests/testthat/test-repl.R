@@ -156,7 +156,7 @@ test_that("rye_repl exits on (quit) command", {
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
   )
-  expect_true(any(grepl("Goodbye", output)))
+  expect_true(any(grepl("^Rye REPL", output)))
 })
 
 test_that("rye_repl exits on (exit) command", {
@@ -168,7 +168,7 @@ test_that("rye_repl exits on (exit) command", {
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
   )
-  expect_true(any(grepl("Goodbye", output)))
+  expect_true(any(grepl("^Rye REPL", output)))
 })
 
 test_that("rye_repl exits on quit command", {
@@ -180,7 +180,7 @@ test_that("rye_repl exits on quit command", {
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
   )
-  expect_true(any(grepl("Goodbye", output)))
+  expect_true(any(grepl("^Rye REPL", output)))
 })
 
 test_that("rye_repl exits on NULL from read_form", {
@@ -190,7 +190,7 @@ test_that("rye_repl exits on NULL from read_form", {
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
   )
-  expect_true(any(grepl("Goodbye", output)))
+  expect_true(any(grepl("^Rye REPL", output)))
 })
 
 test_that("rye_repl handles parse errors gracefully", {
@@ -208,7 +208,7 @@ test_that("rye_repl handles parse errors gracefully", {
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
   )
-  expect_true(any(grepl("Goodbye", output)))
+  expect_true(any(grepl("^Rye REPL", output)))
 })
 
 test_that("rye_repl evaluates expressions and prints results", {
@@ -227,7 +227,6 @@ test_that("rye_repl evaluates expressions and prints results", {
     .env = asNamespace("rye")
   )
   expect_true(any(grepl("3", output)))
-  expect_true(any(grepl("Goodbye", output)))
 })
 
 test_that("rye_repl handles evaluation errors gracefully", {
@@ -246,5 +245,4 @@ test_that("rye_repl handles evaluation errors gracefully", {
     .env = asNamespace("rye")
   )
   expect_true(any(grepl("Error", output)))
-  expect_true(any(grepl("Goodbye", output)))
 })
