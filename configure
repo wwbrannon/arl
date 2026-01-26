@@ -2,7 +2,7 @@
 set -e
 
 R_HOME="${R_HOME:-$(R RHOME)}"
-SOURCE="$(pwd)/inst/exec/rye"
+SOURCE="$(pwd)/inst/cli/rye"
 TARGET="${R_HOME}/bin/rye"
 
 if [ ! -f "$SOURCE" ]; then
@@ -22,5 +22,5 @@ if [ -w "${R_HOME}/bin" ]; then
 else
   echo "R_HOME/bin is not writable; rye CLI not installed on PATH." >&2
   echo "After install, add the script location to PATH:" >&2
-  echo "  export PATH=\"\$(Rscript -e 'cat(dirname(system.file(\"exec\", \"rye\", package = \"rye\")))'):\$PATH\"" >&2
+  echo "  export PATH=\"\$(Rscript -e 'cat(dirname(system.file(\"cli\", \"rye\", package = \"rye\")))'):\$PATH\"" >&2
 fi
