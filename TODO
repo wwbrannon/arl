@@ -1,23 +1,24 @@
-let's have a directive we can put at the top to tell the interpreter to use rye?
+Build and dev tooling:
+    o) what minimum R version is needed to make this work? (i.e., what should
+       we test with?)
+    o) set up CI via github actions
 
-improve the repl, it's a bit of a stub rn; use readline lib?
+Frontend fixes:
+    o) command-line tool like `$ hy ...`
+    o) if possible, let's have a directive we can put at the top to tell the
+       interpreter to use rye? NOTE: obvious way to do this is with a cmd-line
+       tool: just use the #! syntax
+    o) improve the repl, it's a bit of a stub rn; maybe use GNU readline?
+    o) do we need anywhere to have any special handling of .rye the file ending?
 
-reorganize stdlib to also make those functions available from the package in the usual R way
-how to load rye-lang stdlib files in the repl?
-can we make those available to R code as well?
+Import and interop fixes:
+    o) reorganize stdlib to also make those functions available from the package in the usual R way
+    o) how to load rye-lang stdlib files in the repl? e.g. inst/rye/prelude.rye
+    o) can we make those available to R code as well?
 
-command-line tool like `$ hy ...`
-
-what R version is needed to make this work?
-
-set up CI
-
-lintr
-
-what else needs to be in the stdlib? other common lisp features
-
-more tests; big integration-type tests?
-
-better docs?
+big features:
+    o) what else needs to be in the stdlib? other common lisp features
+    o) more tests; big integration-type tests?
+    o) better docs?
 
 inst/CITATION?

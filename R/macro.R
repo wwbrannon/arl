@@ -83,7 +83,10 @@ rye_quasiquote <- function(expr, env, depth = 1) {
         }
       } else {
         # Nested quasiquote
-        result <- c(result, list(as.call(list(as.symbol("unquote-splicing"), rye_quasiquote(elem[[2]], env, depth - 1)))))
+        result <- c(result, list(as.call(list(
+          as.symbol("unquote-splicing"),
+          rye_quasiquote(elem[[2]], env, depth - 1)
+        ))))
       }
     } else {
       # Regular element - process recursively
