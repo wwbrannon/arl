@@ -21,7 +21,7 @@ rye_repl <- function() {
     }
 
     # Check for quit command
-    if (trimws(input) %in% c("(quit)", "(exit)", "quit", "exit")) {
+    if (trimws_shim(input) %in% c("(quit)", "(exit)", "quit", "exit")) {
       cat("Goodbye!\n")
       break
     }

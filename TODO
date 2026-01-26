@@ -5,9 +5,6 @@ Build and dev tooling:
 
 Frontend fixes:
     o) command-line tool like `$ hy ...`
-    o) if possible, let's have a directive we can put at the top to tell the
-       interpreter to use rye? NOTE: obvious way to do this is with a cmd-line
-       tool: just use the #! syntax
     o) improve the repl, it's a bit of a stub rn; maybe use GNU readline?
     o) do we need anywhere to have any special handling of .rye the file ending?
 
