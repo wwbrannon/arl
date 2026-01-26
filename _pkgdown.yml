@@ -37,6 +37,9 @@ articles:
       - r-interop
       - stdlib-reference
       - rye-vs-scheme
+  - title: Examples
+    contents:
+      - examples
   - title: Reference
     contents:
       - stdlib-list-seq

@@ -186,29 +186,29 @@ what you need:
 
 ### Examples
 
-Check out the [examples](inst/examples/) directory for complete working
-programs. They range from small algorithms to macro techniques, data
-pipelines, and report outputs:
+Check out the [examples](articles/examples.html) page for complete
+working programs with syntax highlighting. They range from small
+algorithms to macro techniques, data pipelines, and report outputs:
 
-- **[fibonacci.rye](inst/examples/fibonacci.rye)** - Multiple Fibonacci
-  implementations (recursive, iterative, sequence generation)
-- **[quicksort.rye](inst/examples/quicksort.rye)** - Quicksort and
+- **[fibonacci.rye](articles/examples.html#fibonacci)** - Multiple
+  Fibonacci implementations (recursive, iterative, sequence generation)
+- **[quicksort.rye](articles/examples.html#quicksort)** - Quicksort and
   mergesort demonstrating list operations
-- **[fizzbuzz.rye](inst/examples/fizzbuzz.rye)** - Various FizzBuzz
+- **[fizzbuzz.rye](articles/examples.html#fizzbuzz)** - Various FizzBuzz
   implementations showcasing control flow
-- **[macro-examples.rye](inst/examples/macro-examples.rye)** -
+- **[macro-examples.rye](articles/examples.html#macro-examples)** -
   Comprehensive macro system demonstrations
-- **[pipeline-macros.rye](inst/examples/pipeline-macros.rye)** -
+- **[pipeline-macros.rye](articles/examples.html#pipeline-macros)** -
   Macro-driven pipeline expansion and data flow
-- **[data-analysis.rye](inst/examples/data-analysis.rye)** - R interop
-  for data processing and statistics
-- **[graph-paths.rye](inst/examples/graph-paths.rye)** - BFS traversal
-  and Dijkstra shortest paths with report output
-- **[log-parser.rye](inst/examples/log-parser.rye)** - Text parsing and
-  summary stats from log lines
-- **[sales-report.rye](inst/examples/sales-report.rye)** - R interop for
-  data wrangling and CSV report generation
-- **[task-runner.rye](inst/examples/task-runner.rye)** - Dependency
+- **[data-analysis.rye](articles/examples.html#data-analysis)** - R
+  interop for data processing and statistics
+- **[graph-paths.rye](articles/examples.html#graph-paths)** - BFS
+  traversal and Dijkstra shortest paths with report output
+- **[log-parser.rye](articles/examples.html#log-parser)** - Text parsing
+  and summary stats from log lines
+- **[sales-report.rye](articles/examples.html#sales-report)** - R
+  interop for data wrangling and CSV report generation
+- **[task-runner.rye](articles/examples.html#task-runner)** - Dependency
   resolution and execution ordering
 
 ### Semantics

@@ -91,7 +91,8 @@ To expand only one level, use `macroexpand-1` from Rye code:
 (macroexpand-1 '(when #t 1))
 ```
 
-For more examples, see `inst/examples/macro-examples.rye`.
+For more examples, see the
+[Macro Examples](examples.html#macro-examples) article.
 
 ## Related guides
 

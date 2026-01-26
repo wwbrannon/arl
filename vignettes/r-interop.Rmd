@@ -63,7 +63,7 @@ R base operators are also available directly:
 
 ## Example workflow
 
-The `inst/examples/data-analysis.rye` example shows a small analysis pipeline
+The [data analysis example](examples.html#data-analysis) shows a small analysis pipeline
 from Rye that uses `data.frame`, `mean`, and `lm`. You can run it with:
 
 ```{r eval=FALSE}
