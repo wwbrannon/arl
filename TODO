@@ -1,7 +1,13 @@
+o) doesn't run correctly on windows: https://github.com/wwbrannon/rye/actions/runs/21350255252/job/61445223486
 o) more tests; coverage check?
+o) remove "Goodbye!"
+
 o) sanity-check the current tests: they all pass, but does the tested behavior match how lisp ought to behave?
-o) big integration-type tests; update examples tests
+
+o) big integration-type tests; update examples and examples tests
 
 o) help?
-o) better docs? vignettes etc
-o) inst/CITATION?
+o) better docs? vignettes, examples, etc
+o) inst/CITATION and in README
+
+o) CRAN submission checklist

@@ -138,10 +138,24 @@ cli_eval_text <- function(text, env) {
 }
 
 cli_isatty <- function() {
+  override <- getOption("rye.cli_isatty_override", NULL)
+  if (!is.null(override)) {
+    if (is.function(override)) {
+      return(isTRUE(override()))
+    }
+    return(isTRUE(override))
+  }
   isatty(0)
 }
 
 cli_read_stdin <- function() {
+  override <- getOption("rye.cli_read_stdin_override", NULL)
+  if (!is.null(override)) {
+    if (is.function(override)) {
+      return(override())
+    }
+    return(override)
+  }
   readLines("stdin", warn = FALSE)
 }
 
@@ -153,11 +167,14 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
   parsed <- parse_cli_args(args)
 
   if (length(parsed$errors) > 0) {
-    for (err in parsed$errors) {
-      cli_error(err)
+    if (!isTRUE(getOption("rye.cli_quiet", FALSE))) {
+      for (err in parsed$errors) {
+        cli_error(err)
+      }
+      cat(cli_help_text(), "\n", sep = "")
     }
-    cat(cli_help_text(), "\n", sep = "")
     quit(save = "no", status = 1)
+    return(invisible(NULL))
   }
 
   if (parsed$action == "help") {

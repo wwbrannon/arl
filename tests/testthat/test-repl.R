@@ -35,3 +35,216 @@ test_that("repl_read_form surfaces non-incomplete parse errors", {
   input_fn <- make_repl_input(c(")"))
   expect_error(rye:::repl_read_form(input_fn = input_fn), "Unexpected")
 })
+
+# Version and History Path Functions ----
+
+test_that("repl_version returns version string", {
+  version <- rye:::repl_version()
+  expect_match(version, "^Rye REPL")
+  expect_type(version, "character")
+})
+
+test_that("repl_history_path returns home directory path", {
+  path <- rye:::repl_history_path()
+  expect_match(path, "\\.rye_history$")
+  expect_type(path, "character")
+})
+
+# History Management Functions ----
+
+test_that("repl_can_use_history checks interactive and readline", {
+  # Mock interactive() and capabilities() to test logic
+  can_use <- testthat::with_mocked_bindings(
+    rye:::repl_can_use_history(),
+    interactive = function() TRUE,
+    capabilities = function(...) c(readline = TRUE),
+    .package = "base"
+  )
+  expect_true(can_use)
+
+  cannot_use <- testthat::with_mocked_bindings(
+    rye:::repl_can_use_history(),
+    interactive = function() FALSE,
+    capabilities = function(...) c(readline = TRUE),
+    .package = "base"
+  )
+  expect_false(cannot_use)
+})
+
+test_that("repl_load_history handles non-interactive mode", {
+  result <- testthat::with_mocked_bindings(
+    rye:::repl_load_history("dummy.txt"),
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_false(result)
+})
+
+test_that("repl_save_history handles disabled state", {
+  result <- testthat::with_mocked_bindings(
+    rye:::repl_save_history(),
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_null(result)
+})
+
+test_that("repl_add_history handles non-interactive mode", {
+  result <- testthat::with_mocked_bindings(
+    rye:::repl_add_history("test input"),
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_null(result)
+})
+
+test_that("repl_add_history skips empty input", {
+  # Test that empty/whitespace-only input is not added
+  result <- testthat::with_mocked_bindings(
+    rye:::repl_add_history("   "),
+    repl_can_use_history = function() TRUE,
+    .env = asNamespace("rye")
+  )
+  expect_null(result)
+})
+
+# Print Value Function ----
+
+test_that("repl_print_value handles NULL", {
+  result <- capture.output(val <- rye:::repl_print_value(NULL))
+  expect_length(result, 0)
+  expect_null(val)
+})
+
+test_that("repl_print_value handles calls with str", {
+  call_obj <- quote(f(a, b))
+  output <- capture.output(val <- rye:::repl_print_value(call_obj))
+  expect_true(length(output) > 0)
+  expect_equal(val, call_obj)
+})
+
+test_that("repl_print_value handles lists with str", {
+  list_obj <- list(a = 1, b = 2)
+  output <- capture.output(val <- rye:::repl_print_value(list_obj))
+  expect_true(length(output) > 0)
+  expect_equal(val, list_obj)
+})
+
+test_that("repl_print_value handles vectors with print", {
+  output <- capture.output(val <- rye:::repl_print_value(c(1, 2, 3)))
+  expect_true(any(grepl("1.*2.*3", output)))
+  expect_equal(val, c(1, 2, 3))
+})
+
+# Eval Wrapper Function ----
+
+test_that("repl_eval_exprs delegates to rye_eval_exprs", {
+  env <- new.env()
+  exprs <- rye_read("(+ 1 2)")
+  result <- rye:::repl_eval_exprs(exprs, env)
+  expect_equal(result, 3)
+})
+
+# Main REPL Loop (rye_repl) ----
+
+test_that("rye_repl exits on (quit) command", {
+  output <- testthat::with_mocked_bindings(
+    capture.output(rye_repl()),
+    repl_read_form = function(...) {
+      list(text = "(quit)", exprs = rye_read("(quit)"))
+    },
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_true(any(grepl("Goodbye", output)))
+})
+
+test_that("rye_repl exits on (exit) command", {
+  output <- testthat::with_mocked_bindings(
+    capture.output(rye_repl()),
+    repl_read_form = function(...) {
+      list(text = "(exit)", exprs = rye_read("(exit)"))
+    },
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_true(any(grepl("Goodbye", output)))
+})
+
+test_that("rye_repl exits on quit command", {
+  output <- testthat::with_mocked_bindings(
+    capture.output(rye_repl()),
+    repl_read_form = function(...) {
+      list(text = "quit", exprs = rye_read("(list)"))
+    },
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_true(any(grepl("Goodbye", output)))
+})
+
+test_that("rye_repl exits on NULL from read_form", {
+  output <- testthat::with_mocked_bindings(
+    capture.output(rye_repl()),
+    repl_read_form = function(...) NULL,
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_true(any(grepl("Goodbye", output)))
+})
+
+test_that("rye_repl handles parse errors gracefully", {
+  call_count <- 0
+  output <- testthat::with_mocked_bindings(
+    capture.output(rye_repl()),
+    repl_read_form = function(...) {
+      call_count <<- call_count + 1
+      if (call_count == 1) {
+        list(error = TRUE)
+      } else {
+        NULL
+      }
+    },
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_true(any(grepl("Goodbye", output)))
+})
+
+test_that("rye_repl evaluates expressions and prints results", {
+  call_count <- 0
+  output <- testthat::with_mocked_bindings(
+    capture.output(rye_repl()),
+    repl_read_form = function(...) {
+      call_count <<- call_count + 1
+      if (call_count == 1) {
+        list(text = "(+ 1 2)", exprs = rye_read("(+ 1 2)"))
+      } else {
+        NULL
+      }
+    },
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_true(any(grepl("3", output)))
+  expect_true(any(grepl("Goodbye", output)))
+})
+
+test_that("rye_repl handles evaluation errors gracefully", {
+  call_count <- 0
+  output <- testthat::with_mocked_bindings(
+    capture.output(rye_repl()),
+    repl_read_form = function(...) {
+      call_count <<- call_count + 1
+      if (call_count == 1) {
+        list(text = "(undefined-fn)", exprs = rye_read("(undefined-fn)"))
+      } else {
+        NULL
+      }
+    },
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_true(any(grepl("Error", output)))
+  expect_true(any(grepl("Goodbye", output)))
+})

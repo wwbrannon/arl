@@ -17,6 +17,13 @@ repl_history_state$path <- NULL
 repl_history_state$snapshot <- NULL
 
 repl_can_use_history <- function() {
+  override <- getOption("rye.repl_can_use_history_override", NULL)
+  if (!is.null(override)) {
+    if (is.function(override)) {
+      return(isTRUE(override()))
+    }
+    return(isTRUE(override))
+  }
   isTRUE(interactive()) && isTRUE(capabilities("readline"))
 }
 
@@ -85,6 +92,13 @@ repl_is_incomplete_error <- function(e) {
 }
 
 repl_read_form <- function(input_fn = readline, prompt = "rye> ", cont_prompt = "...> ") {
+  override <- getOption("rye.repl_read_form_override", NULL)
+  if (!is.null(override)) {
+    if (is.function(override)) {
+      return(override(input_fn = input_fn, prompt = prompt, cont_prompt = cont_prompt))
+    }
+    return(override)
+  }
   # NOTE: readline provides line editing/history, but EOF (Ctrl-D) is not
   # distinguishable from an empty line, so we cannot reliably exit on Ctrl-D.
   buffer <- character(0)
