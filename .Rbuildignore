@@ -19,3 +19,7 @@
 ^pkgdown$
 ^doc$
 ^Meta$
+^tools$
+^cran-comments\.md$
+^CRAN-SUBMISSION$
+^LICENSE\.md$

@@ -48,3 +48,25 @@ clean: ## Remove build artifacts
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
 	rm -rf site/ docs/ doc/ Meta/
+
+.PHONY: cran-prep
+cran-prep: ## Prepare docs and run CRAN check
+	R -q -e "source('tools/cran_prep.R')"
+
+.PHONY: cran-check
+cran-check: ## Run CRAN check
+	R -q -e "source('tools/cran_check.R')"
+
+.PHONY: cran-comments
+cran-comments: ## Generate cran-comments and CRAN-SUBMISSION
+	R -q -e "source('tools/cran_comments.R')"
+
+.PHONY: cran-clean
+cran-clean: ## Remove CRAN check artifacts
+	rm -rf rye.Rcheck
+	rm -f tools/cran_check_summary.txt
+
+.PHONY: cran
+cran: ## Run full CRAN prep/check/comments
+	make cran-prep
+	make cran-comments

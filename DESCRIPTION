@@ -13,7 +13,7 @@ Description: Rye is a Lisp dialect implemented in and with access to R,
     powerful macro capabilities and seamless R interoperability. Compatibility
     with older R versions is intended, but versions earlier than R 4.x have not
     been tested.
-License: file LICENSE
+License: MIT + file LICENSE
 Depends:
     R (>= 3.0.2)
 Suggests:
