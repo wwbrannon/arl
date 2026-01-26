@@ -3,12 +3,16 @@
 #' Creates a new environment with access to R's base functions via the parent
 #' environment chain. Lisp-specific functions are defined in this environment.
 #'
+#' @param env An environment to populate with stdlib functions. If NULL, creates a new one.
 #' @return An environment containing the Rye standard library
+#' @importFrom stats setNames
 #' @export
-rye_load_stdlib <- function() {
-  # Create environment with baseenv() as parent
+rye_load_stdlib <- function(env = NULL) {
+  # Create environment with baseenv() as parent if not provided
   # This gives automatic access to all R base functions
-  env <- new.env(parent = baseenv())
+  if (is.null(env)) {
+    env <- new.env(parent = baseenv())
+  }
   # Define basic list functions
   env$car <- function(lst) {
     if (is.call(lst) && length(lst) > 0) {
@@ -91,6 +95,10 @@ rye_load_stdlib <- function() {
   env$not <- function(x) {
     !x
   }
+
+  # Arithmetic operators
+  # Provide single-character aliases for R operators
+  env$`%` <- base::`%%`  # modulo
 
   # Lisp-style equality (can override base::== if needed)
   env$`=` <- base::`==`
