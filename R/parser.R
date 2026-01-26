@@ -128,7 +128,8 @@ rye_parse <- function(tokens) {
   }
 
   while (pos <= length(tokens)) {
-    expressions[[length(expressions) + 1]] <- parse_expr()
+    expr <- parse_expr()
+    expressions <- c(expressions, list(expr))
   }
 
   expressions
