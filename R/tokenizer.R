@@ -140,10 +140,28 @@ rye_tokenize <- function(source) {
       next
     }
 
-    # Keywords (colon-prefixed symbols like :key)
+    # Keywords (colon-prefixed symbols like :key) or :: and ::: operators
     if (char == ":") {
       start_col <- col
       start <- i
+
+      # Check if this is :: or ::: (package accessor operators)
+      if (i + 1 <= n && substr(source, i + 1, i + 1) == ":") {
+        # It's :: or :::, treat as a symbol
+        i <- i + 2
+        col <- col + 2
+        # Check for third colon
+        if (i <= n && substr(source, i, i) == ":") {
+          i <- i + 1
+          col <- col + 1
+          tokens[[length(tokens) + 1]] <- list(type = "SYMBOL", value = ":::", line = line, col = start_col)
+        } else {
+          tokens[[length(tokens) + 1]] <- list(type = "SYMBOL", value = "::", line = line, col = start_col)
+        }
+        next
+      }
+
+      # It's a keyword
       i <- i + 1  # Skip the colon
       col <- col + 1
 
@@ -170,8 +188,35 @@ rye_tokenize <- function(source) {
       start_col <- col
       start <- i
 
-      # Read until we hit a delimiter
-      while (i <= n && !substr(source, i, i) %in% delimiters) {
+      # Read until we hit a delimiter, but handle :: and ::: specially
+      while (i <= n) {
+        curr_char <- substr(source, i, i)
+
+        # Check for :: or ::: within the symbol
+        if (curr_char == ":") {
+          # Look ahead to see if this is :: or :::
+          if (i + 1 <= n && substr(source, i + 1, i + 1) == ":") {
+            # It's at least ::, include it
+            i <- i + 2
+            col <- col + 2
+            # Check for third colon (:::)
+            if (i <= n && substr(source, i, i) == ":") {
+              i <- i + 1
+              col <- col + 1
+            }
+            # Continue reading the rest of the symbol
+            next
+          } else {
+            # Single colon - treat as delimiter
+            break
+          }
+        }
+
+        # Check for other delimiters
+        if (curr_char %in% delimiters) {
+          break
+        }
+
         i <- i + 1
         col <- col + 1
       }

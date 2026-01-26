@@ -65,6 +65,25 @@ rye_parse <- function(tokens) {
 
     if (token$type == "SYMBOL") {
       pos <<- pos + 1
+
+      # Handle :: and ::: syntactic sugar
+      # Check for ::: first (3 colons) as it's more specific
+      if (grepl(":::", token$value, fixed = TRUE)) {
+        parts <- strsplit(token$value, ":::", fixed = TRUE)[[1]]
+        if (length(parts) == 2 && nzchar(parts[1]) && nzchar(parts[2])) {
+          # Convert pkg:::name to (::: pkg name)
+          return(as.call(list(as.symbol(":::"), as.symbol(parts[1]), as.symbol(parts[2]))))
+        }
+        # Invalid format, fall through to return as-is
+      } else if (grepl("::", token$value, fixed = TRUE)) {
+        parts <- strsplit(token$value, "::", fixed = TRUE)[[1]]
+        if (length(parts) == 2 && nzchar(parts[1]) && nzchar(parts[2])) {
+          # Convert pkg::name to (:: pkg name)
+          return(as.call(list(as.symbol("::"), as.symbol(parts[1]), as.symbol(parts[2]))))
+        }
+        # Invalid format, fall through to return as-is
+      }
+
       return(as.symbol(token$value))
     }
 

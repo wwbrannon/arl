@@ -235,6 +235,38 @@ rye_eval <- function(expr, env = parent.frame()) {
     return(eval(formula_call, envir = env))
   }
 
+  # :: and ::: - package accessors (don't evaluate arguments)
+  if (is.symbol(op) && (as.character(op) == "::" || as.character(op) == ":::")) {
+    if (length(expr) != 3) {
+      stop(sprintf("%s requires exactly 2 arguments: (%s pkg name)", as.character(op), as.character(op)))
+    }
+
+    # Arguments should be symbols or can be strings
+    pkg <- expr[[2]]
+    name <- expr[[3]]
+
+    # Convert to symbols if they aren't already
+    if (!is.symbol(pkg)) {
+      if (is.character(pkg)) {
+        pkg <- as.symbol(pkg)
+      } else {
+        stop("Package name must be a symbol or string")
+      }
+    }
+
+    if (!is.symbol(name)) {
+      if (is.character(name)) {
+        name <- as.symbol(name)
+      } else {
+        stop("Function/object name must be a symbol or string")
+      }
+    }
+
+    # Build and evaluate the call using R's :: or :::
+    access_call <- as.call(list(as.symbol(as.character(op)), pkg, name))
+    return(eval(access_call, envir = env))
+  }
+
   # Regular function application
   # Evaluate operator
   fn <- rye_eval(op, env)

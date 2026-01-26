@@ -89,3 +89,56 @@ test_that("evaluator handles nested calls", {
   result <- rye_eval(rye_read("(+ (* 2 3) (* 4 5))")[[1]])
   expect_equal(result, 26)
 })
+
+test_that("tokenizer handles :: operator in symbols", {
+  tokens <- rye_tokenize("base::mean")
+  expect_equal(length(tokens), 1)
+  expect_equal(tokens[[1]]$type, "SYMBOL")
+  expect_equal(tokens[[1]]$value, "base::mean")
+})
+
+test_that("tokenizer handles ::: operator in symbols", {
+  tokens <- rye_tokenize("pkg:::internal")
+  expect_equal(length(tokens), 1)
+  expect_equal(tokens[[1]]$type, "SYMBOL")
+  expect_equal(tokens[[1]]$value, "pkg:::internal")
+})
+
+test_that("parser converts :: sugar to function call", {
+  exprs <- rye_read("base::mean")
+  expect_equal(length(exprs), 1)
+  expect_true(is.call(exprs[[1]]))
+  expect_equal(as.character(exprs[[1]][[1]]), "::")
+  expect_equal(as.character(exprs[[1]][[2]]), "base")
+  expect_equal(as.character(exprs[[1]][[3]]), "mean")
+})
+
+test_that("parser converts ::: sugar to function call", {
+  exprs <- rye_read("stats:::fitted.default")
+  expect_equal(length(exprs), 1)
+  expect_true(is.call(exprs[[1]]))
+  expect_equal(as.character(exprs[[1]][[1]]), ":::")
+  expect_equal(as.character(exprs[[1]][[2]]), "stats")
+  expect_equal(as.character(exprs[[1]][[3]]), "fitted.default")
+})
+
+test_that(":: can still be used in explicit form", {
+  exprs <- rye_read("(:: base mean)")
+  expect_equal(length(exprs), 1)
+  expect_true(is.call(exprs[[1]]))
+  expect_equal(as.character(exprs[[1]][[1]]), "::")
+})
+
+test_that(":: sugar works in expressions", {
+  exprs <- rye_read("(base::mean (c 1 2 3))")
+  expect_equal(length(exprs), 1)
+  expect_true(is.call(exprs[[1]]))
+  # First element should be the base::mean call
+  expect_true(is.call(exprs[[1]][[1]]))
+  expect_equal(as.character(exprs[[1]][[1]][[1]]), "::")
+})
+
+test_that("evaluator handles :: sugar", {
+  result <- rye_eval(rye_read("(base::mean (c 1 2 3))")[[1]])
+  expect_equal(result, 2)
+})
