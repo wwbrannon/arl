@@ -5,6 +5,9 @@
 #' @return The result of evaluation
 #' @export
 rye_eval <- function(expr, env = parent.frame()) {
+  if (!exists(".rye_env", envir = env, inherits = FALSE)) {
+    assign(".rye_env", TRUE, envir = env)
+  }
   # Handle NULL (empty list or #nil)
   if (is.null(expr)) {
     return(NULL)
@@ -128,7 +131,7 @@ rye_eval <- function(expr, env = parent.frame()) {
       stop("define requires a symbol as the first argument")
     }
     value <- rye_eval(expr[[3]], env)
-    assign(as.character(name), value, envir = env)
+    rye_assign(as.character(name), value, env)
     return(NULL)
   }
 
@@ -164,24 +167,29 @@ rye_eval <- function(expr, env = parent.frame()) {
     # Parse argument list
     args_expr <- expr[[2]]
 
-    # Handle empty argument list () which is parsed as list()
-    # or as a call of length 0
+    # Handle argument list which may be a call or list
     arg_names <- character(0)
     if (!is.null(args_expr)) {
-      if (is.call(args_expr) && length(args_expr) > 0) {
-        # Non-empty argument list
-        for (i in seq_along(args_expr)) {
-          arg <- args_expr[[i]]
-          if (!is.symbol(arg)) {
-            stop("lambda arguments must be symbols")
+      if (is.call(args_expr)) {
+        if (length(args_expr) > 0) {
+          for (i in seq_along(args_expr)) {
+            arg <- args_expr[[i]]
+            if (!is.symbol(arg)) {
+              stop("lambda arguments must be symbols")
+            }
+            arg_names <- c(arg_names, as.character(arg))
           }
-          arg_names <- c(arg_names, as.character(arg))
         }
-      } else if (is.list(args_expr) && length(args_expr) == 0) {
-        # Empty list() - no arguments
-        arg_names <- character(0)
-      } else if (!(is.call(args_expr) && length(args_expr) == 0)) {
-        # It's not a call and not an empty list - error
+      } else if (is.list(args_expr)) {
+        if (length(args_expr) > 0) {
+          for (arg in args_expr) {
+            if (!is.symbol(arg)) {
+              stop("lambda arguments must be symbols")
+            }
+            arg_names <- c(arg_names, as.character(arg))
+          }
+        }
+      } else {
         stop("lambda arguments must be a list")
       }
     }
@@ -327,6 +335,6 @@ rye_eval <- function(expr, env = parent.frame()) {
     names(args) <- arg_names
   }
 
-  # Apply function
-  do.call(fn, args)
+  # Apply function (arguments already evaluated by Rye)
+  rye_do_call(fn, args)
 }

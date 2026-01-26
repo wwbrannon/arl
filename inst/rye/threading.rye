@@ -1,0 +1,19 @@
+;;; Rye Standard Library - Threading Macros
+
+(defmacro -> (value . forms)
+  (reduce
+    (lambda (acc form)
+      (if (list? form)
+        (call (cons (car form) (cons acc (cdr form))))
+        (call (list form acc))))
+    forms
+    :init value))
+
+(defmacro ->> (value . forms)
+  (reduce
+    (lambda (acc form)
+      (if (list? form)
+        (call (cons (car form) (append (cdr form) (list acc))))
+        (call (list form acc))))
+    forms
+    :init value))

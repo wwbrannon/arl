@@ -1,0 +1,26 @@
+;;; Rye Standard Library - Error Handling Macros
+
+(defmacro try (body . clauses)
+  (begin
+    (define catch-clause #nil)
+    (define finally-clause #nil)
+    (define first (car clauses))
+    (define second (car (cdr clauses)))
+    (if (and (list? first) (symbol? (car first)) (= (as.character (car first)) "catch"))
+      (begin
+        (define catch-clause first)
+        (if (and (list? second) (symbol? (car second)) (= (as.character (car second)) "finally"))
+          (define finally-clause second)))
+      (if (and (list? first) (symbol? (car first)) (= (as.character (car first)) "finally"))
+        (define finally-clause first)))
+    (if (null? catch-clause)
+      (if (null? finally-clause)
+        `(try* (lambda () ,body))
+        `(try* (lambda () ,body)
+           :finally_handler (lambda () ,@(cdr finally-clause))))
+      (if (null? finally-clause)
+        `(try* (lambda () ,body)
+           :error_handler (lambda (,(car (cdr catch-clause))) ,@(cdr (cdr catch-clause))))
+        `(try* (lambda () ,body)
+           :error_handler (lambda (,(car (cdr catch-clause))) ,@(cdr (cdr catch-clause)))
+           :finally_handler (lambda () ,@(cdr finally-clause)))))))

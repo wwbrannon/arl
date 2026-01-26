@@ -1,0 +1,18 @@
+;;; Rye Standard Library - Looping Macros
+
+(defmacro while (test . body)
+  (begin
+    (define loop (gensym "while"))
+    `(begin
+       (define ,loop
+         (lambda ()
+           (if ,test
+             (begin ,@body (,loop))
+             #nil)))
+       (,loop))))
+
+(defmacro for (binding . body)
+  (begin
+    (define var (car binding))
+    (define seq (car (cdr binding)))
+    `(map (lambda (,var) (begin ,@body)) ,seq)))

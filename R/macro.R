@@ -119,13 +119,30 @@ rye_defmacro <- function(name, params, body, env) {
     param_names <- as.character(params)
 
     # Handle rest parameters (param . rest)
-    if (length(param_names) > 0 && param_names[length(param_names)] == ".") {
-      # Last param is a dot - bind remaining args to previous param
-      if (length(param_names) < 2) {
-        stop("Dotted parameter list must have at least one parameter before .")
+    dot_idx <- which(param_names == ".")
+    if (length(dot_idx) > 1) {
+      stop("Dotted parameter list can only contain one '.'")
+    }
+    if (length(dot_idx) == 1) {
+      if (dot_idx == length(param_names)) {
+        # Legacy dotted-list style: (a b rest .)
+        if (length(param_names) < 2) {
+          stop("Dotted parameter list must have at least one parameter before .")
+        }
+        rest_param <- param_names[length(param_names) - 1]
+        regular_params <- param_names[1:(length(param_names) - 2)]
+      } else {
+        # Standard dotted-list style: (a b . rest)
+        if (dot_idx != length(param_names) - 1) {
+          stop("Dotted parameter list must have exactly one parameter after '.'")
+        }
+        rest_param <- param_names[dot_idx + 1]
+        if (dot_idx > 1) {
+          regular_params <- param_names[1:(dot_idx - 1)]
+        } else {
+          regular_params <- character(0)
+        }
       }
-      rest_param <- param_names[length(param_names) - 1]
-      regular_params <- param_names[1:(length(param_names) - 2)]
 
       # Bind regular params
       for (i in seq_along(regular_params)) {

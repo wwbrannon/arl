@@ -1,0 +1,47 @@
+;;; Rye Standard Library - Control Flow Macros
+
+;;; Control flow macros
+
+(defmacro when (test body)
+  `(if ,test ,body #nil))
+
+(defmacro unless (test body)
+  `(if ,test #nil ,body))
+
+;;; Boolean macros with short-circuit evaluation
+
+(defmacro and (first . rest)
+  (if (null? rest)
+    first
+    `((lambda (tmp)
+        (if tmp (and ,@rest) tmp))
+      ,first)))
+
+(defmacro or (first . rest)
+  (if (null? rest)
+    first
+    `((lambda (tmp)
+        (if tmp tmp (or ,@rest)))
+      ,first)))
+
+;;; Conditional macros
+
+(defmacro cond (clause . rest)
+  (if (null? clause)
+    #nil
+    (begin
+      (define test (car clause))
+      (define body (cdr clause))
+      (if (and (symbol? test) (= (as.character test) "else"))
+        `(begin ,@body)
+        `(if ,test (begin ,@body) (cond ,@rest))))))
+
+(defmacro case (key clause . rest)
+  (if (null? clause)
+    #nil
+    (begin
+      (define datum (car clause))
+      (define body (cdr clause))
+      (if (and (symbol? datum) (= (as.character datum) "else"))
+        `(begin ,@body)
+        `(if (= ,key ,datum) (begin ,@body) (case ,key ,@rest))))))

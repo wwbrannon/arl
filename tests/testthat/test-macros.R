@@ -147,3 +147,42 @@ test_that("macros with unquote-splicing work", {
   expect_equal(result[[5]], 4)
   expect_equal(result[[6]], 5)
 })
+
+test_that("stdlib macros from files work", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+  rye_load_stdlib_files(env)
+
+  result <- rye_eval(rye_read("(cond ((> 1 2) 1) ((< 1 2) 2) (else 3))")[[1]], env)
+  expect_equal(result, 2)
+
+  result <- rye_eval(rye_read("(case 2 (1 \"a\") (2 \"b\") (else \"c\"))")[[1]], env)
+  expect_equal(result, "b")
+
+  result <- rye_eval(rye_read("(let ((x 1) (y 2)) (+ x y))")[[1]], env)
+  expect_equal(result, 3)
+
+  result <- rye_eval(rye_read("(let* ((x 1) (y (+ x 2))) y)")[[1]], env)
+  expect_equal(result, 3)
+
+  result <- rye_eval(rye_read("(letrec ((f (lambda (n) (if (< n 1) 0 (+ n (f (- n 1))))))) (f 3))")[[1]], env)
+  expect_equal(result, 6)
+
+  result <- rye_eval(rye_read("(begin (define x 0) (define acc 0) (while (< x 3) (define acc (+ acc x)) (define x (+ x 1))) acc)")[[1]], env)
+  expect_equal(result, 3)
+
+  result <- rye_eval(rye_read("(for (x (list 1 2 3)) (* x 2))")[[1]], env)
+  expect_equal(result, list(2, 4, 6))
+
+  result <- rye_eval(rye_read("(-> 1 (+ 2) (* 3))")[[1]], env)
+  expect_equal(result, 9)
+
+  result <- rye_eval(rye_read("(->> (list 1 2 3) (map (lambda (x) (* x 2))) (reduce +))")[[1]], env)
+  expect_equal(result, 12)
+
+  result <- rye_eval(rye_read("(try (error \"boom\") (catch e 42))")[[1]], env)
+  expect_equal(result, 42)
+
+  result <- rye_eval(rye_read("(begin (define x 0) (try (begin (define x 1) (error \"boom\")) (catch e (define x 2)) (finally (define x 3))) x)")[[1]], env)
+  expect_equal(result, 3)
+})

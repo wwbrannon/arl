@@ -31,6 +31,38 @@ rye_eval_text <- function(text, env) {
   rye_eval_exprs(exprs, env)
 }
 
+rye_quote_arg <- function(value, quote_symbols = TRUE) {
+  if (is.call(value) || (quote_symbols && is.symbol(value))) {
+    return(as.call(list(as.symbol("quote"), value)))
+  }
+  value
+}
+
+rye_do_call <- function(fn, args) {
+  quote_symbols <- !identical(fn, base::`$`) &&
+    !identical(fn, base::`[`) &&
+    !identical(fn, base::`[[`)
+  args <- lapply(args, rye_quote_arg, quote_symbols = quote_symbols)
+  do.call(fn, args)
+}
+
+rye_assign <- function(name, value, env) {
+  target <- env
+  repeat {
+    if (exists(name, envir = target, inherits = FALSE)) {
+      assign(name, value, envir = target)
+      return(invisible(NULL))
+    }
+    parent_env <- parent.env(target)
+    if (!exists(".rye_env", envir = parent_env, inherits = FALSE)) {
+      break
+    }
+    target <- parent_env
+  }
+  assign(name, value, envir = env)
+  invisible(NULL)
+}
+
 rye_resolve_stdlib_path <- function(name) {
   if (!is.character(name) || length(name) != 1) {
     return(NULL)

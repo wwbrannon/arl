@@ -160,3 +160,88 @@ test_that("not function works", {
   expect_true(rye_eval(rye_read("(not #f)")[[1]], env))
   expect_false(rye_eval(rye_read("(not 42)")[[1]], env))
 })
+
+test_that("list helpers work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_equal(env$`list*`(1, list(2, 3)), list(1, 2, 3))
+  expect_equal(env$append(list(1, 2), list(3)), list(1, 2, 3))
+  expect_equal(env$reverse(list(1, 2, 3)), list(3, 2, 1))
+  expect_equal(env$apply(`+`, list(1, 2, 3)), 6)
+})
+
+test_that("sequence helpers work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  result <- env$mapcat(function(x) list(x, x + 10), list(1, 2))
+  expect_equal(result, list(1, 11, 2, 12))
+
+  result <- env$remove(function(x) x %% 2 == 0, list(1, 2, 3, 4))
+  expect_equal(result, list(1, 3))
+
+  expect_equal(env$foldl(`-`, list(1, 2, 3)), -4)
+  expect_equal(env$foldr(`-`, list(1, 2, 3)), 2)
+
+  expect_true(env$`every?`(function(x) x > 0, list(1, 2, 3)))
+  expect_false(env$`every?`(function(x) x > 1, list(1, 2, 3)))
+  expect_true(env$`any?`(function(x) x > 2, list(1, 2, 3)))
+  expect_false(env$`any?`(function(x) x > 5, list(1, 2, 3)))
+
+  expect_equal(env$take(2, list(1, 2, 3)), list(1, 2))
+  expect_equal(env$drop(2, list(1, 2, 3)), list(3))
+  expect_equal(env$`take-while`(function(x) x < 3, list(1, 2, 3, 1)), list(1, 2))
+  expect_equal(env$`drop-while`(function(x) x < 3, list(1, 2, 3, 1)), list(3, 1))
+  expect_equal(env$partition(2, list(1, 2, 3, 4)), list(list(1, 2), list(3, 4)))
+  expect_equal(env$flatten(list(1, list(2, list(3)), 4)), list(1, 2, 3, 4))
+})
+
+test_that("predicates and interop helpers work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_true(env$`pair?`(list(1)))
+  expect_false(env$`pair?`(list()))
+  expect_true(env$`keyword?`(structure("from", class = "rye_keyword")))
+  expect_true(env$`vector?`(c(1, 2, 3)))
+  expect_true(env$`true?`(TRUE))
+  expect_true(env$`false?`(FALSE))
+  expect_true(env$`fn?`(function(x) x))
+  expect_true(env$`callable?`(function(x) x))
+
+  expect_equal(env$dict(a = 1, b = 2), list(a = 1, b = 2))
+  expect_equal(env$`r/call`("sum", list(1, 2, 3)), 6)
+})
+
+test_that("string and io helpers work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_equal(env$str("a", 1, "b"), "a1b")
+  expect_equal(env$`string-join`(list("a", "b", "c"), "-"), "a-b-c")
+  expect_equal(env$`string-split`("a-b-c", "-"), c("a", "b", "c"))
+  expect_equal(env$trim("  hi "), "hi")
+  expect_equal(env$format("x=%s", "y"), "x=y")
+
+  con <- textConnection("hello")
+  old_opts <- options(rye.stdin = con)
+  on.exit({
+    options(old_opts)
+    close(con)
+  }, add = TRUE)
+  expect_equal(env$`read-line`(), "hello")
+})
+
+test_that("error and debug helpers work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_error(env$error("boom"), "boom")
+  expect_warning(env$warn("warn"))
+  expect_error(env$assert(FALSE, "nope"), "nope")
+  expect_true(env$assert(TRUE, "nope"))
+
+  output <- capture.output(env$trace("hi", "label"))
+  expect_true(any(grepl("label", output)))
+})

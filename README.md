@@ -127,12 +127,33 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 
 The REPL automatically loads a standard library with:
 
-- **List operations**: `car`, `cdr`, `cons`, `list`
-- **Higher-order**: `map`, `filter`, `reduce`
-- **Predicates**: `null?`, `list?`, `number?`, `string?`, `symbol?`
+- **List operations**: `car`, `cdr`, `cons`, `list`, `list*`, `append`, `reverse`
+- **Higher-order**: `map`, `mapcat`, `filter`, `remove`, `reduce`, `foldl`, `foldr`
+- **Sequence helpers**: `take`, `drop`, `take-while`, `drop-while`, `partition`, `flatten`
+- **Predicates**: `null?`, `nil?`, `list?`, `pair?`, `symbol?`, `keyword?`, `number?`, `string?`, `true?`, `false?`, `fn?`
+- **Macros**: `when`, `unless`, `and`, `or`, `cond`, `case`, `let`, `let*`, `letrec`, `while`, `for`, `->`, `->>`, `try`
+- **Interop helpers**: `dict`, `hash`, `r/call`
+- **Strings/IO**: `str`, `string-join`, `string-split`, `trim`, `format`, `read-line`, `display`/`println`
+- **Errors/debug**: `error`, `warn`, `assert`, `trace`, `macroexpand`
 - **Arithmetic**: `+`, `-`, `*`, `/`, `%`
 - **Comparison**: `<`, `>`, `<=`, `>=`, `=`
 - **Logic**: `not`
+
+The Rye stdlib source is split into focused files in `inst/rye` so you can load just what you need:
+
+``` lisp
+(load "control")   ; when/unless/and/or/cond/case
+(load "binding")   ; let/let*/letrec
+(load "looping")   ; while/for
+(load "threading") ; -> and ->>
+(load "error")     ; try/catch/finally
+```
+
+### Semantics
+
+- **Truthiness**: only `#f`/`FALSE` and `#nil`/`NULL` are falsey; everything else is truthy.
+- **Lists**: Rye lists are backed by R lists or calls; `car` returns the head and `cdr` returns the tail as a list.
+- **Keywords**: `:kw` tokens are self-evaluating and become named arguments in function calls.
 
 ### R Integration
 

@@ -1,0 +1,20 @@
+;;; Rye Standard Library - Binding Macros
+
+(defmacro let (bindings . body)
+  (if (null? bindings)
+    `(begin ,@body)
+    `((lambda ,(map car bindings)
+        (begin ,@body))
+      ,@(map (lambda (b) (car (cdr b))) bindings))))
+
+(defmacro let* (bindings . body)
+  (if (null? bindings)
+    `(begin ,@body)
+    `(let (,(car bindings))
+      (let* ,(cdr bindings) ,@body))))
+
+(defmacro letrec (bindings . body)
+  `(begin
+     ,@(map (lambda (b) `(define ,(car b) (list))) bindings)
+     ,@(map (lambda (b) `(define ,(car b) ,(car (cdr b)))) bindings)
+     (begin ,@body)))
