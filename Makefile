@@ -9,10 +9,16 @@ install: ## Install package dependencies
 	R -e "devtools::install_deps()"
 
 build: ## Build the package
-	R CMD build .
+	R -e "devtools::build()"
 
 check: build ## Check the package (includes tests)
-	R CMD check rye_*.tar.gz
+	R -e "devtools::check()"
+
+document: ## Generate roxygen2 documentation
+	R -e "devtools::document()"
+
+coverage:
+	R -e "covr::package_coverage()"
 
 test: ## Run tests
 	R -e "devtools::test()"
@@ -23,9 +29,6 @@ test-file: ## Run a single test file (usage: make test-file FILE=test-parser)
 		exit 1; \
 	fi
 	R -e "testthat::test_file('tests/testthat/$(FILE).R')"
-
-document: ## Generate roxygen2 documentation
-	R -e "devtools::document()"
 
 clean: ## Remove build artifacts
 	rm -f rye_*.tar.gz
