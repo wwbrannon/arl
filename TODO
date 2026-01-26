@@ -1,5 +1,5 @@
-o) does this actually work with R version 3.0?
-o) test this locally via dockerfile if rocker has a 3.0 image
+o) does this actually work with R version 3.1?
+o) test this locally via dockerfile if rocker has a 3.1 image
 
 o) a "translator" that emits the R code from a parsed rye file
 

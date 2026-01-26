@@ -46,10 +46,10 @@ jobs:
           args: 'c("--no-manual", "--as-cran")'
           error-on: '"warning"'
 
-  R-3-0:
+  R-3-1:
     runs-on: ubuntu-20.04
-    container: rocker/r-ver:3.0.3
-    name: ubuntu-20.04 (3.0.3)
+    container: rocker/r-ver:3.1.0
+    name: ubuntu-20.04 (3.1.0)
     env:
       R_KEEP_PKG_SOURCE: yes
       _R_CHECK_CRAN_INCOMING_: false
