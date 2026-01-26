@@ -1,7 +1,4 @@
-Build and dev tooling:
-    o) what minimum R version is needed to make this work? (i.e., what should
-       we test with?)
-    o) set up CI via github actions
+o) does this actually work with R version 3.0?
 
 Frontend fixes:
     o) command-line tool like `$ hy ...`

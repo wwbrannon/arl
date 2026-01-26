@@ -47,6 +47,33 @@ library(rye)
 rye_repl()
 ```
 
+## Command Line
+
+``` bash
+# Start REPL
+rye
+
+# Run a file
+rye --file script.rye
+
+# Eval a single expression
+rye --eval "(+ 1 2)"
+
+# Positional files are executed in order
+rye script.rye other.rye
+```
+
+If the installer cannot write to `R_HOME/bin`, locate the script and add it to
+your `PATH`:
+
+``` r
+system.file("exec", "rye", package = "rye")
+```
+
+``` bash
+export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye")))'):$PATH"
+```
+
 ### Examples
 
 ``` lisp

@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+set -e
+
+R_HOME="${R_HOME:-$(R RHOME)}"
+SOURCE="$(pwd)/inst/exec/rye"
+TARGET="${R_HOME}/bin/rye"
+
+if [ ! -f "$SOURCE" ]; then
+  echo "configure: missing ${SOURCE}" >&2
+  exit 0
+fi
+
+if [ -w "${R_HOME}/bin" ]; then
+  rm -f "$TARGET"
+  if ln -s "$SOURCE" "$TARGET" 2>/dev/null; then
+    chmod +x "$TARGET" 2>/dev/null || true
+  else
+    cp "$SOURCE" "$TARGET"
+    chmod +x "$TARGET" 2>/dev/null || true
+  fi
+  echo "Installed rye CLI to ${TARGET}"
+else
+  echo "R_HOME/bin is not writable; rye CLI not installed on PATH." >&2
+  echo "After install, add the script location to PATH:" >&2
+  echo "  export PATH=\"\$(Rscript -e 'cat(dirname(system.file(\"exec\", \"rye\", package = \"rye\")))'):\$PATH\"" >&2
+fi
