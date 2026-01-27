@@ -4,18 +4,17 @@
 \alias{rye_load_stdlib}
 \title{Load the Rye standard library}
 \usage{
-rye_load_stdlib(env = NULL, load_files = FALSE)
+rye_load_stdlib(env = NULL)
 }
 \arguments{
 \item{env}{An environment to populate. If NULL, creates a new one.}
 
-\item{load_files}{Whether to load Rye stdlib source files from \code{inst/rye}.}
 }
 \value{
 An environment containing the Rye standard library
 }
 \description{
-Loads the base Rye stdlib functions and, optionally, Rye stdlib source files
+Loads the base Rye stdlib functions and Rye stdlib source files
 from the package's \code{inst/rye} directory.
 }
 \details{

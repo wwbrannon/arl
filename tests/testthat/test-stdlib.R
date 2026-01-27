@@ -155,7 +155,6 @@ test_that("or macro works", {
 test_that("variadic and/or short-circuit correctly", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
-  rye_load_stdlib_files(env)
 
   result <- rye_eval(rye_read("(and #t 1 2 3)")[[1]], env)
   expect_equal(result, 3)
@@ -369,7 +368,6 @@ test_that("dict and set helpers work", {
 test_that("defstruct macro defines constructor and accessors", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
-  rye_load_stdlib_files(env)
 
   rye_eval(rye_read("(defstruct Point (x y))")[[1]], env)
   rye_eval(rye_read("(define p (make-Point 1 2))")[[1]], env)

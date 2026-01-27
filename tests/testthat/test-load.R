@@ -38,11 +38,9 @@ test_that("(load ...) resolves stdlib entries by name", {
   expect_true(rye:::is_macro(as.symbol("unless")))
 })
 
-test_that("rye_load_stdlib_files registers stdlib macros", {
+test_that("rye_load_stdlib registers stdlib macros", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
-
-  rye_load_stdlib_files(env)
 
   expect_true(rye:::is_macro(as.symbol("when")))
   expect_true(rye:::is_macro(as.symbol("unless")))

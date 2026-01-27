@@ -14,12 +14,12 @@ test_that("help shows Rye special-form docs", {
 
 test_that("help shows Rye stdlib docs via attributes", {
   env <- rye_load_stdlib_base()
-  output <- capture.output(rye_eval_text("(help map)", env))
-  expect_true(any(grepl("\\(map fn lst\\)", output)))
+  output <- capture.output(rye_eval_text("(help apply)", env))
+  expect_true(any(grepl("\\(apply fn lst\\)", output)))
 })
 
 test_that("help shows Rye macro docs from stdlib files", {
-  env <- rye_load_stdlib(load_files = TRUE)
+  env <- rye_load_stdlib()
   output <- capture.output(rye_eval_text("(help when)", env))
   expect_true(any(grepl("Topic: when", output)))
   expect_true(any(grepl("\\(when test body\\)", output)))

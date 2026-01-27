@@ -199,7 +199,6 @@ test_that("capture allows intentional binding capture", {
 test_that("stdlib macros from files work", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
-  rye_load_stdlib_files(env)
 
   result <- rye_eval(rye_read("(cond ((> 1 2) 1) ((< 1 2) 2) (else 3))")[[1]], env)
   expect_equal(result, 2)
@@ -254,7 +253,6 @@ test_that("stdlib macros from files work", {
 test_that("letrec supports mutual recursion", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
-  rye_load_stdlib_files(env)
 
   result <- rye_eval(
     rye_read(
@@ -271,7 +269,6 @@ test_that("letrec supports mutual recursion", {
 test_that("destructuring bindings work for define and let forms", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
-  rye_load_stdlib_files(env)
 
   rye_eval(rye_read("(define (a b . rest) (list 1 2 3 4))")[[1]], env)
   expect_equal(env$a, 1)
@@ -307,7 +304,6 @@ test_that("destructuring bindings work for define and let forms", {
 test_that("destructuring errors on arity mismatch", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
-  rye_load_stdlib_files(env)
 
   expect_error(
     rye_eval(rye_read("(define (a b) (list 1))")[[1]], env),

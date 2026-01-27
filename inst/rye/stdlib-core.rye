@@ -1,0 +1,452 @@
+;;; Rye Standard Library - Core Functions
+
+;;; Predicates
+(define list?
+  (lambda (x)
+    (if (is.list x) #t (if (is.call x) #t #f))))
+
+(define pair?
+  (lambda (x)
+    (if (list? x) (if (> (length x) 0) #t #f) #f)))
+
+(define null?
+  (lambda (x)
+    (if (is.null x)
+      #t
+      (if (is.list x)
+        (if (= (length x) 0) #t #f)
+        (if (is.call x)
+          (if (= (length x) 0) #t #f)
+          #f)))))
+
+(define nil? (lambda (x) (null? x)))
+
+(define symbol?
+  (lambda (x)
+    (is.symbol x)))
+
+(define keyword?
+  (lambda (x)
+    (isTRUE (inherits x "rye_keyword"))))
+
+(define number?
+  (lambda (x)
+    (is.numeric x)))
+
+(define string?
+  (lambda (x)
+    (is.character x)))
+
+(define vector?
+  (lambda (x)
+    (if (is.atomic x)
+      (if (is.character x) #f (if (is.list x) #f #t))
+      #f)))
+
+(define true?
+  (lambda (x)
+    (isTRUE x)))
+
+(define false?
+  (lambda (x)
+    (identical x #f)))
+
+(define fn?
+  (lambda (x)
+    (is.function x)))
+
+(define callable?
+  (lambda (x)
+    (is.function x)))
+
+(define not
+  (lambda (x)
+    (if x #f #t)))
+
+;;; Arithmetic and equality helpers
+(define %
+  (lambda (x y)
+    (%% x y)))
+
+(define =
+  (lambda (x y)
+    (== x y)))
+
+;;; Error helpers
+(define error
+  (lambda (msg)
+    (stop msg :call. #f)))
+
+(define warn
+  (lambda (msg)
+    (warning msg :call. #f)))
+
+(define assert
+  (lambda (cond (msg "Assertion failed"))
+    (if cond
+      #t
+      (error msg))))
+
+;;; List helpers
+(define __as-list
+  (lambda (x)
+    (if (is.call x)
+      (as.list x)
+      (if (is.list x)
+        x
+        (if (= (length x) 0)
+          (list)
+          (as.list x))))))
+
+(define __list-last
+  (lambda (lst)
+    (r/call "[[" (list lst (length lst)))))
+
+(define __list-head
+  (lambda (lst)
+    (if (<= (length lst) 1)
+      (list)
+      (r/call "[" (list lst (seq 1 (- (length lst) 1)))))))
+
+(define car
+  (lambda (lst)
+    (if (is.call lst)
+      (if (> (length lst) 0) (r/call "[[" (list lst 1)) #nil)
+      (if (is.list lst)
+        (if (> (length lst) 0) (r/call "[[" (list lst 1)) #nil)
+        #nil))))
+
+(define cdr
+  (lambda (lst)
+    (if (is.call lst)
+      (if (> (length lst) 1)
+        (r/call "[" (list (as.list lst) (seq 2 (length lst))))
+        (list))
+      (if (is.list lst)
+        (if (> (length lst) 1)
+          (r/call "[" (list lst (seq 2 (length lst))))
+          (list))
+        (list)))))
+
+(define cons
+  (lambda (item lst)
+    (if (is.call lst)
+      (as.call (c (list item) (as.list lst)))
+      (if (is.list lst)
+        (c (list item) lst)
+        (list item lst)))))
+
+(define list*
+  (lambda (. args)
+    (if (= (length args) 0)
+      (list)
+      (if (= (length args) 1)
+        (car args)
+        (begin
+          (define last (__list-last args))
+          (define head (__list-head args))
+          (if (is.list last)
+            (c head (__as-list last))
+            (if (is.call last)
+              (c head (__as-list last))
+              (c head (list last)))))))))
+
+(define append
+  (lambda (. lists)
+    (define append-loop
+      (lambda (acc rest)
+        (if (= (length rest) 0)
+          acc
+          (append-loop (c acc (__as-list (car rest))) (cdr rest)))))
+    (append-loop (list) lists)))
+
+(define reverse
+  (lambda (x)
+    (rev (__as-list x))))
+
+;;; Higher-order and sequence helpers
+(define map
+  (lambda (fn lst)
+    (lapply (__as-list lst) fn)))
+
+(define mapcat
+  (lambda (fn lst)
+    (define results (lapply (__as-list lst) fn))
+    (define flatten-results
+      (lambda (remaining acc)
+        (if (= (length remaining) 0)
+          acc
+          (flatten-results (cdr remaining) (c acc (__as-list (car remaining)))))))
+    (flatten-results results (list))))
+
+(define filter
+  (lambda (pred lst)
+    (Filter pred (__as-list lst))))
+
+(define remove
+  (lambda (pred lst)
+    (Filter (lambda (x) (not (isTRUE (pred x)))) (__as-list lst))))
+
+(define reduce
+  (lambda (fn lst . rest)
+    (if (= (length rest) 0)
+      (Reduce fn (__as-list lst))
+      (Reduce fn (__as-list lst) :init (car rest)))))
+
+(define foldl
+  (lambda (fn lst . rest)
+    (if (= (length rest) 0)
+      (Reduce fn (__as-list lst))
+      (Reduce fn (__as-list lst) :init (car rest)))))
+
+(define foldr
+  (lambda (fn lst . rest)
+    (if (= (length rest) 0)
+      (Reduce fn (__as-list lst) :right #t)
+      (Reduce fn (__as-list lst) :init (car rest) :right #t))))
+
+(define every?
+  (lambda (pred lst)
+    (all (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
+
+(define any?
+  (lambda (pred lst)
+    (any (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
+
+(define take
+  (lambda (n lst)
+    (define items (__as-list lst))
+    (if (<= n 0)
+      (list)
+      (r/call "[" (list items (seq_len (min n (length items))))))))
+
+(define drop
+  (lambda (n lst)
+    (define items (__as-list lst))
+    (if (<= n 0)
+      items
+      (if (>= n (length items))
+        (list)
+        (r/call "[" (list items (seq (+ n 1) (length items))))))))
+
+(define take-while
+  (lambda (pred lst)
+    (define items (__as-list lst))
+    (define loop
+      (lambda (remaining acc)
+        (if (= (length remaining) 0)
+          acc
+          (if (isTRUE (pred (car remaining)))
+            (loop (cdr remaining) (c acc (list (car remaining))))
+            acc))))
+    (loop items (list))))
+
+(define drop-while
+  (lambda (pred lst)
+    (define items (__as-list lst))
+    (define loop
+      (lambda (remaining)
+        (if (= (length remaining) 0)
+          (list)
+          (if (isTRUE (pred (car remaining)))
+            (loop (cdr remaining))
+            remaining))))
+    (loop items)))
+
+(define partition
+  (lambda (n lst (step n))
+    (define items (__as-list lst))
+    (if (<= n 0)
+      (stop "partition requires positive n and step")
+      (if (<= step 0)
+        (stop "partition requires positive n and step")
+        (begin
+          (define loop
+            (lambda (idx acc)
+              (if (> idx (length items))
+                acc
+                (begin
+                  (define end (+ idx (- n 1)))
+                  (if (> end (length items))
+                    acc
+                    (loop (+ idx step)
+                      (c acc (list (r/call "[" (list items (seq idx end)))))))))))
+          (loop 1 (list)))))))
+
+(define flatten
+  (lambda (lst)
+    (define items (__as-list lst))
+    (define loop
+      (lambda (remaining acc)
+        (if (= (length remaining) 0)
+          acc
+          (begin
+            (define item (car remaining))
+            (define rest (cdr remaining))
+            (if (list? item)
+              (loop rest (c acc (flatten item)))
+              (loop rest (c acc (list item))))))))
+    (loop items (list))))
+
+;;; Convenience functions
+(define identity (lambda (x) x))
+(define first (lambda (lst) (car lst)))
+(define rest (lambda (lst) (cdr lst)))
+
+(define last
+  (lambda (lst)
+    (define items (__as-list lst))
+    (if (= (length items) 0) #nil (__list-last items))))
+
+(define nth
+  (lambda (lst n)
+    (define items (__as-list lst))
+    (if (< n 0)
+      (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
+      (if (>= n (length items))
+        (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
+        (r/call "[[" (list items (+ n 1)))))))
+
+(define complement
+  (lambda (pred)
+    (lambda (. args)
+      (not (do.call pred args)))))
+
+(define compose
+  (lambda (f g)
+    (lambda (. args)
+      (f (do.call g args)))))
+
+(define repeatedly
+  (lambda (n fn)
+    (lapply (seq_len n) (lambda (i) (fn)))))
+
+(define repeat
+  (lambda (n value)
+    (replicate n value :simplify #f)))
+
+(define zip
+  (lambda (. lists)
+    (if (= (length lists) 0)
+      (list)
+      (begin
+        (define items (lapply lists __as-list))
+        (define min-len (min (vapply items length (integer 1))))
+        (if (= min-len 0)
+          (list)
+          (begin
+            (define zip-at
+              (lambda (i)
+                (lapply items (lambda (lst) (r/call "[[" (list lst i))))))
+            (lapply (seq_len min-len) zip-at)))))))
+
+(define partial
+  (lambda (fn . captured)
+    (lambda (. more)
+      (do.call fn (append captured more)))))
+
+;;; String helpers
+(define string-join
+  (lambda (x (sep ""))
+    (paste (unlist (__as-list x)) :collapse sep)))
+
+(define string-split
+  (lambda (x (sep ""))
+    (unname (r/call "[[" (list (strsplit x :split sep :fixed #t) 1)))))
+
+(define trim
+  (lambda (x)
+    (trimws x)))
+
+(define format
+  (lambda (fmt . args)
+    (r/call "sprintf" (cons fmt args))))
+
+(define string-contains?
+  (lambda (str pattern (fixed #t))
+    (isTRUE (grepl pattern str :fixed fixed))))
+
+(define string-match?
+  (lambda (str pattern (fixed #f))
+    (isTRUE (grepl pattern str :fixed fixed))))
+
+(define string-find
+  (lambda (str pattern (fixed #t))
+    (define match (regexpr pattern str :fixed fixed))
+    (define pos (r/call "[[" (list match 1)))
+    (if (< pos 0) #nil (- pos 1))))
+
+(define string-replace
+  (lambda (str pattern replacement (fixed #f))
+    (sub pattern replacement str :fixed fixed)))
+
+(define string-replace-all
+  (lambda (str pattern replacement (fixed #f))
+    (gsub pattern replacement str :fixed fixed)))
+
+;;; IO helpers
+(define __normalize-line-vector
+  (lambda (lines)
+    (if (is.null lines)
+      (character 0)
+      (if (is.call lines)
+        (vapply (as.list lines) as.character (character 1))
+        (if (is.list lines)
+          (vapply lines as.character (character 1))
+          (as.character lines))))))
+
+(define __normalize-lines
+  (lambda (content (sep "\n"))
+    (define lines (__normalize-line-vector content))
+    (if (<= (length lines) 1)
+      (as.character lines)
+      (paste lines :collapse sep))))
+
+(define read-line
+  (lambda ((prompt ""))
+    (define con (getOption "rye.stdin"))
+    (if (is.null con) (define con (stdin)) #nil)
+    (if (nzchar prompt) (cat prompt) #nil)
+    (r/call "readLines" (list :con con :n 1 :warn #f))))
+
+(define read-file
+  (lambda (path (encoding "UTF-8"))
+    (define con (file path :open "r" :encoding encoding))
+    (define lines (readLines :con con :warn #f))
+    (close con)
+    (paste lines :collapse "\n")))
+
+(define read-lines
+  (lambda (path (encoding "UTF-8"))
+    (define con (file path :open "r" :encoding encoding))
+    (define lines (readLines :con con :warn #f))
+    (close con)
+    (as.list lines)))
+
+(define write-file
+  (lambda (path content (sep "\n") (encoding "UTF-8"))
+    (define text (__normalize-lines content sep))
+    (define con (file path :open "w" :encoding encoding))
+    (writeLines text :con con :useBytes #f)
+    (close con)
+    #t))
+
+(define write-lines
+  (lambda (path lines (encoding "UTF-8"))
+    (define out (__normalize-line-vector lines))
+    (define con (file path :open "w" :encoding encoding))
+    (writeLines out :con con :useBytes #f)
+    (close con)
+    #t))
+
+(define append-file
+  (lambda (path content (sep "\n") (encoding "UTF-8"))
+    (define text (__normalize-lines content sep))
+    (define con (file path :open "a" :encoding encoding))
+    (writeLines text :con con :useBytes #f :sep "")
+    (close con)
+    #t))
+
+(define file-exists?
+  (lambda (path)
+    (isTRUE (file.exists path))))
