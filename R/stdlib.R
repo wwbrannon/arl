@@ -40,6 +40,8 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$apply <- rye_stdlib_apply
   env$values <- rye_stdlib_values
   env$`call-with-values` <- rye_stdlib_call_with_values
+  env$`call/cc` <- rye_make_builtin_callcc()
+  env$`call-with-current-continuation` <- env$`call/cc`
 
   # Higher-order functions
   env$map <- rye_stdlib_map

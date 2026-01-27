@@ -133,3 +133,36 @@ test_that("set! modifies existing bindings", {
   env$f()
   expect_equal(env$y, 15)
 })
+
+test_that("call/cc exits to current continuation", {
+  env <- rye_load_stdlib()
+  result <- rye_eval(
+    rye_read("(call/cc (lambda (k) (+ 1 (k 42) 3)))")[[1]],
+    env
+  )
+  expect_equal(result, 42)
+})
+
+test_that("call/cc continuations are multi-shot", {
+  env <- rye_load_stdlib()
+  rye_eval(rye_read("(define saved #nil)")[[1]], env)
+  result <- rye_eval(
+    rye_read("(call/cc (lambda (k) (set! saved k) 0))")[[1]],
+    env
+  )
+  expect_equal(result, 0)
+  expect_equal(rye_eval(rye_read("(saved 1)")[[1]], env), 1)
+  expect_equal(rye_eval(rye_read("(saved 2)")[[1]], env), 2)
+})
+
+test_that("call/cc is first-class and has an alias", {
+  env <- rye_load_stdlib()
+  rye_eval(rye_read("(define cc call/cc)")[[1]], env)
+  result <- rye_eval(rye_read("(cc (lambda (k) (k 7)))")[[1]], env)
+  expect_equal(result, 7)
+  alias_result <- rye_eval(
+    rye_read("(call-with-current-continuation (lambda (k) (k 9)))")[[1]],
+    env
+  )
+  expect_equal(alias_result, 9)
+})
