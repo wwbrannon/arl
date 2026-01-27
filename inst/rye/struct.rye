@@ -15,6 +15,7 @@
         (define accessor-name (as.symbol (str struct-name "-" (as.character field))))
         `(define ,accessor-name
            (lambda (obj)
+             "Return a struct field by name."
              (r/call "[["
                (list obj ,(as.character field)))
            )))
@@ -22,6 +23,10 @@
   `(begin
      (define ,ctor-name
        (lambda (,@fields)
+        "Construct a struct from field values."
          (structure (list ,@field-pairs) :class ,struct-name)))
-     (define ,pred-name (lambda (obj) (inherits obj ,struct-name)))
+    (define ,pred-name
+      (lambda (obj)
+        "Return #t if object is this struct type."
+        (inherits obj ,struct-name)))
      ,@accessors))

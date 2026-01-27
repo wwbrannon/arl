@@ -2,6 +2,7 @@
 
 (define pattern-symbols
   (lambda (pattern)
+    "Collect symbols from a destructuring pattern."
     (if (symbol? pattern)
       (if (= (as.character pattern) ".")
         (list)

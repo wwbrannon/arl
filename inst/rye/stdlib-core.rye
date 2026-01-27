@@ -3,14 +3,17 @@
 ;;; Predicates
 (define list?
   (lambda (x)
+    "Return #t if x is a list or call."
     (if (is.list x) #t (if (is.call x) #t #f))))
 
 (define pair?
   (lambda (x)
+    "Return #t if x is a non-empty list."
     (if (list? x) (if (> (length x) 0) #t #f) #f)))
 
 (define null?
   (lambda (x)
+    "Return #t for empty list or #nil."
     (if (is.null x)
       #t
       (if (is.list x)
@@ -19,70 +22,88 @@
           (if (= (length x) 0) #t #f)
           #f)))))
 
-(define nil? (lambda (x) (null? x)))
+(define nil?
+  (lambda (x)
+    "Alias for null?."
+    (null? x)))
 
 (define symbol?
   (lambda (x)
+    "Return #t if x is a symbol."
     (is.symbol x)))
 
 (define keyword?
   (lambda (x)
+    "Return #t if x is a Rye keyword."
     (isTRUE (inherits x "rye_keyword"))))
 
 (define number?
   (lambda (x)
+    "Return #t if x is numeric."
     (is.numeric x)))
 
 (define string?
   (lambda (x)
+    "Return #t if x is character."
     (is.character x)))
 
 (define vector?
   (lambda (x)
+    "Return #t if x is a non-list atomic vector."
     (if (is.atomic x)
       (if (is.character x) #f (if (is.list x) #f #t))
       #f)))
 
 (define true?
   (lambda (x)
+    "Return #t if x is TRUE."
     (isTRUE x)))
 
 (define false?
   (lambda (x)
+    "Return #t if x is #f."
     (identical x #f)))
 
 (define fn?
   (lambda (x)
+    "Return #t if x is a function."
     (is.function x)))
 
 (define callable?
   (lambda (x)
+    "Alias for fn?."
     (is.function x)))
 
 (define not
   (lambda (x)
+    "Logical negation with Rye truthiness."
     (if x #f #t)))
 
 ;;; Arithmetic and equality helpers
 (define %
   (lambda (x y)
+    "Modulo helper using R %%."
     (%% x y)))
 
 (define =
   (lambda (x y)
+    "Equality helper using R ==."
     (== x y)))
 
 ;;; Error helpers
 (define error
   (lambda (msg)
+    "Signal an error with message."
     (stop msg :call. #f)))
 
 (define warn
   (lambda (msg)
+    "Emit warning with message."
     (warning msg :call. #f)))
 
 (define assert
   (lambda (cond (msg "Assertion failed"))
+    "Assert condition or raise error."
     (if cond
       #t
       (error msg))))
@@ -90,6 +111,7 @@
 ;;; List helpers
 (define __as-list
   (lambda (x)
+    "Coerce calls and vectors to list."
     (if (is.call x)
       (as.list x)
       (if (is.list x)
@@ -100,16 +122,19 @@
 
 (define __list-last
   (lambda (lst)
+    "Return last element of list."
     (r/call "[[" (list lst (length lst)))))
 
 (define __list-head
   (lambda (lst)
+    "Return list without last element."
     (if (<= (length lst) 1)
       (list)
       (r/call "[" (list lst (seq 1 (- (length lst) 1)))))))
 
 (define car
   (lambda (lst)
+    "Return first element or #nil."
     (if (is.call lst)
       (if (> (length lst) 0) (r/call "[[" (list lst 1)) #nil)
       (if (is.list lst)
@@ -118,6 +143,7 @@
 
 (define cdr
   (lambda (lst)
+    "Return list without first element."
     (if (is.call lst)
       (if (> (length lst) 1)
         (r/call "[" (list (as.list lst) (seq 2 (length lst))))
@@ -130,6 +156,7 @@
 
 (define cons
   (lambda (item lst)
+    "Prepend item to list or call."
     (if (is.call lst)
       (as.call (c (list item) (as.list lst)))
       (if (is.list lst)
@@ -138,6 +165,7 @@
 
 (define list*
   (lambda (. args)
+    "Build list ending with last arg."
     (if (= (length args) 0)
       (list)
       (if (= (length args) 1)
@@ -155,6 +183,7 @@
   (lambda (. lists)
     (define append-loop
       (lambda (acc rest)
+        "Accumulate list append."
         (if (= (length rest) 0)
           acc
           (append-loop (c acc (__as-list (car rest))) (cdr rest)))))
@@ -162,18 +191,22 @@
 
 (define reverse
   (lambda (x)
+    "Reverse list."
     (rev (__as-list x))))
 
 ;;; Higher-order and sequence helpers
 (define map
   (lambda (fn lst)
+    "Apply function to each element."
     (lapply (__as-list lst) fn)))
 
 (define mapcat
   (lambda (fn lst)
+    "Map then concatenate results."
     (define results (lapply (__as-list lst) fn))
     (define flatten-results
       (lambda (remaining acc)
+        "Concatenate list results."
         (if (= (length remaining) 0)
           acc
           (flatten-results (cdr remaining) (c acc (__as-list (car remaining)))))))
@@ -181,40 +214,48 @@
 
 (define filter
   (lambda (pred lst)
+    "Filter items by predicate."
     (Filter pred (__as-list lst))))
 
 (define remove
   (lambda (pred lst)
+    "Remove items where predicate is true."
     (Filter (lambda (x) (not (isTRUE (pred x)))) (__as-list lst))))
 
 (define reduce
   (lambda (fn lst . rest)
+    "Reduce list with function."
     (if (= (length rest) 0)
       (Reduce fn (__as-list lst))
       (Reduce fn (__as-list lst) :init (car rest)))))
 
 (define foldl
   (lambda (fn lst . rest)
+    "Left fold alias for reduce."
     (if (= (length rest) 0)
       (Reduce fn (__as-list lst))
       (Reduce fn (__as-list lst) :init (car rest)))))
 
 (define foldr
   (lambda (fn lst . rest)
+    "Right fold."
     (if (= (length rest) 0)
       (Reduce fn (__as-list lst) :right #t)
       (Reduce fn (__as-list lst) :init (car rest) :right #t))))
 
 (define every?
   (lambda (pred lst)
+    "Return #t if predicate true for all items."
     (all (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
 
 (define any?
   (lambda (pred lst)
+    "Return #t if predicate true for any item."
     (any (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
 
 (define take
   (lambda (n lst)
+    "Take first n items."
     (define items (__as-list lst))
     (if (<= n 0)
       (list)
@@ -222,6 +263,7 @@
 
 (define drop
   (lambda (n lst)
+    "Drop first n items."
     (define items (__as-list lst))
     (if (<= n 0)
       items
@@ -231,9 +273,11 @@
 
 (define take-while
   (lambda (pred lst)
+    "Take items while predicate is true."
     (define items (__as-list lst))
     (define loop
       (lambda (remaining acc)
+        "Accumulate items while predicate holds."
         (if (= (length remaining) 0)
           acc
           (if (isTRUE (pred (car remaining)))
@@ -243,9 +287,11 @@
 
 (define drop-while
   (lambda (pred lst)
+    "Drop items while predicate is true."
     (define items (__as-list lst))
     (define loop
       (lambda (remaining)
+        "Skip items while predicate holds."
         (if (= (length remaining) 0)
           (list)
           (if (isTRUE (pred (car remaining)))
@@ -255,6 +301,7 @@
 
 (define partition
   (lambda (n lst (step n))
+    "Split list into chunks of size n."
     (define items (__as-list lst))
     (if (<= n 0)
       (stop "partition requires positive n and step")
@@ -263,6 +310,7 @@
         (begin
           (define loop
             (lambda (idx acc)
+              "Build partitions incrementally."
               (if (> idx (length items))
                 acc
                 (begin
@@ -275,9 +323,11 @@
 
 (define flatten
   (lambda (lst)
+    "Flatten nested lists."
     (define items (__as-list lst))
     (define loop
       (lambda (remaining acc)
+        "Recursively flatten items."
         (if (= (length remaining) 0)
           acc
           (begin
@@ -289,17 +339,28 @@
     (loop items (list))))
 
 ;;; Convenience functions
-(define identity (lambda (x) x))
-(define first (lambda (lst) (car lst)))
-(define rest (lambda (lst) (cdr lst)))
+(define identity
+  (lambda (x)
+    "Return argument."
+    x))
+(define first
+  (lambda (lst)
+    "Alias for car."
+    (car lst)))
+(define rest
+  (lambda (lst)
+    "Alias for cdr."
+    (cdr lst)))
 
 (define last
   (lambda (lst)
+    "Return last item or #nil."
     (define items (__as-list lst))
     (if (= (length items) 0) #nil (__list-last items))))
 
 (define nth
   (lambda (lst n)
+    "Return nth item (0-based)."
     (define items (__as-list lst))
     (if (< n 0)
       (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
@@ -309,24 +370,29 @@
 
 (define complement
   (lambda (pred)
+    "Negate predicate."
     (lambda (. args)
       (not (do.call pred args)))))
 
 (define compose
   (lambda (f g)
+    "Compose two functions."
     (lambda (. args)
       (f (do.call g args)))))
 
 (define repeatedly
   (lambda (n fn)
+    "Call fn n times collecting results."
     (lapply (seq_len n) (lambda (i) (fn)))))
 
 (define repeat
   (lambda (n value)
+    "Repeat value n times."
     (replicate n value :simplify #f)))
 
 (define zip
   (lambda (. lists)
+    "Zip lists into list of tuples."
     (if (= (length lists) 0)
       (list)
       (begin
@@ -337,56 +403,68 @@
           (begin
             (define zip-at
               (lambda (i)
+                "Collect ith elements from lists."
                 (lapply items (lambda (lst) (r/call "[[" (list lst i))))))
             (lapply (seq_len min-len) zip-at)))))))
 
 (define partial
   (lambda (fn . captured)
+    "Partially apply function."
     (lambda (. more)
       (do.call fn (append captured more)))))
 
 ;;; String helpers
 (define string-join
   (lambda (x (sep ""))
+    "Join strings with separator."
     (paste (unlist (__as-list x)) :collapse sep)))
 
 (define string-split
   (lambda (x (sep ""))
+    "Split string on separator."
     (unname (r/call "[[" (list (strsplit x :split sep :fixed #t) 1)))))
 
 (define trim
   (lambda (x)
+    "Trim leading and trailing whitespace."
     (trimws x)))
 
 (define format
   (lambda (fmt . args)
+    "Format string with sprintf."
     (r/call "sprintf" (cons fmt args))))
 
 (define string-contains?
   (lambda (str pattern (fixed #t))
+    "Check pattern in string (fixed)."
     (isTRUE (grepl pattern str :fixed fixed))))
 
 (define string-match?
   (lambda (str pattern (fixed #f))
+    "Check pattern in string (regex)."
     (isTRUE (grepl pattern str :fixed fixed))))
 
 (define string-find
   (lambda (str pattern (fixed #t))
+    "Find pattern index or #nil."
     (define match (regexpr pattern str :fixed fixed))
     (define pos (r/call "[[" (list match 1)))
     (if (< pos 0) #nil (- pos 1))))
 
 (define string-replace
   (lambda (str pattern replacement (fixed #f))
+    "Replace first match."
     (sub pattern replacement str :fixed fixed)))
 
 (define string-replace-all
   (lambda (str pattern replacement (fixed #f))
+    "Replace all matches."
     (gsub pattern replacement str :fixed fixed)))
 
 ;;; IO helpers
 (define __normalize-line-vector
   (lambda (lines)
+    "Normalize content to character vector."
     (if (is.null lines)
       (character 0)
       (if (is.call lines)
@@ -397,6 +475,7 @@
 
 (define __normalize-lines
   (lambda (content (sep "\n"))
+    "Collapse content to string."
     (define lines (__normalize-line-vector content))
     (if (<= (length lines) 1)
       (as.character lines)
@@ -404,6 +483,7 @@
 
 (define read-line
   (lambda ((prompt ""))
+    "Read single line from stdin."
     (define con (getOption "rye.stdin"))
     (if (is.null con) (define con (stdin)) #nil)
     (if (nzchar prompt) (cat prompt) #nil)
@@ -411,6 +491,7 @@
 
 (define read-file
   (lambda (path (encoding "UTF-8"))
+    "Read entire file as string."
     (define con (file path :open "r" :encoding encoding))
     (define lines (readLines :con con :warn #f))
     (close con)
@@ -418,6 +499,7 @@
 
 (define read-lines
   (lambda (path (encoding "UTF-8"))
+    "Read file into list of lines."
     (define con (file path :open "r" :encoding encoding))
     (define lines (readLines :con con :warn #f))
     (close con)
@@ -425,6 +507,7 @@
 
 (define write-file
   (lambda (path content (sep "\n") (encoding "UTF-8"))
+    "Write string or lines to file."
     (define text (__normalize-lines content sep))
     (define con (file path :open "w" :encoding encoding))
     (writeLines text :con con :useBytes #f)
@@ -433,6 +516,7 @@
 
 (define write-lines
   (lambda (path lines (encoding "UTF-8"))
+    "Write list of lines to file."
     (define out (__normalize-line-vector lines))
     (define con (file path :open "w" :encoding encoding))
     (writeLines out :con con :useBytes #f)
@@ -441,6 +525,7 @@
 
 (define append-file
   (lambda (path content (sep "\n") (encoding "UTF-8"))
+    "Append content to file."
     (define text (__normalize-lines content sep))
     (define con (file path :open "a" :encoding encoding))
     (writeLines text :con con :useBytes #f :sep "")
@@ -449,4 +534,5 @@
 
 (define file-exists?
   (lambda (path)
+    "Return #t if file exists."
     (isTRUE (file.exists path))))
