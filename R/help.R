@@ -144,6 +144,54 @@ rye_help_print <- function(topic, doc) {
   cat(paste(lines, collapse = "\n"), "\n")
 }
 
+rye_help_format_default <- function(expr) {
+  if (identical(expr, quote(expr = ))) {
+    return(NULL)
+  }
+  if (inherits(expr, "rye_missing_default")) {
+    return(NULL)
+  }
+  paste(deparse(expr, width.cutoff = 500), collapse = " ")
+}
+
+rye_help_usage_from_closure <- function(fn, topic) {
+  info <- attr(fn, "rye_closure", exact = TRUE)
+  if (is.null(info)) {
+    return(NULL)
+  }
+  args <- character(0)
+  if (length(info$params) > 0) {
+    for (name in info$params) {
+      default_expr <- info$defaults[[name]][[1]]
+      default_text <- rye_help_format_default(default_expr)
+      if (is.null(default_text)) {
+        args <- c(args, name)
+      } else {
+        args <- c(args, paste0("(", name, " ", default_text, ")"))
+      }
+    }
+  }
+  if (!is.null(info$rest_param)) {
+    args <- c(args, ".", info$rest_param)
+  }
+  paste0("(", topic, if (length(args) > 0) paste0(" ", paste(args, collapse = " ")) else "", ")")
+}
+
+rye_help_usage_from_formals <- function(fn, topic) {
+  signature <- args(fn)
+  if (is.null(signature)) {
+    return(paste0("(", topic, ")"))
+  }
+  args_text <- paste(deparse(signature), collapse = " ")
+  args_text <- sub("\\)\\s*NULL\\s*$", ")", args_text)
+  args_text <- gsub(",\\s*", " ", args_text)
+  args_text <- gsub("\\s+", " ", args_text)
+  args_text <- sub("^function\\s*\\(", "", args_text)
+  args_text <- sub("\\)$", "", args_text)
+  args_text <- trimws(args_text)
+  paste0("(", topic, if (nzchar(args_text)) paste0(" ", args_text) else "", ")")
+}
+
 rye_help <- function(topic, env = parent.frame()) {
   if (!is.character(topic) || length(topic) != 1) {
     stop("help requires a symbol or string")
@@ -164,8 +212,24 @@ rye_help <- function(topic, env = parent.frame()) {
   if (exists(topic, envir = env, inherits = TRUE)) {
     obj <- get(topic, envir = env, inherits = TRUE)
     obj_doc <- attr(obj, "rye_doc", exact = TRUE)
+    usage <- NULL
+    if (inherits(obj, "rye_closure")) {
+      usage <- rye_help_usage_from_closure(obj, topic)
+    } else if (is.function(obj)) {
+      usage <- rye_help_usage_from_formals(obj, topic)
+    }
     if (!is.null(obj_doc)) {
+      if (is.character(obj_doc)) {
+        obj_doc <- list(description = paste(obj_doc, collapse = "\n"))
+      }
+      if (is.null(obj_doc$usage) && !is.null(usage)) {
+        obj_doc$usage <- usage
+      }
       rye_help_print(topic, obj_doc)
+      return(invisible(NULL))
+    }
+    if (!is.null(usage)) {
+      rye_help_print(topic, list(usage = usage))
       return(invisible(NULL))
     }
   }

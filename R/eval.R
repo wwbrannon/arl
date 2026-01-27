@@ -404,6 +404,16 @@ rye_eval_cps_inner <- function(expr, env, k) {
       }
     }
 
+    # Optional docstring convention: first body form is a string literal
+    docstring <- NULL
+    if (length(body_exprs) > 0) {
+      first_expr <- rye_strip_src(body_exprs[[1]])
+      if (is.character(first_expr) && length(first_expr) == 1) {
+        docstring <- first_expr
+        body_exprs <- body_exprs[-1]
+      }
+    }
+
     # Create a closure that evaluates the body in a new environment
     # Capture the current environment as the parent
     parent_env <- env
@@ -445,6 +455,9 @@ rye_eval_cps_inner <- function(expr, env, k) {
       body_exprs = body_exprs,
       parent_env = parent_env
     )
+    if (!is.null(docstring)) {
+      attr(fn, "rye_doc") <- list(description = docstring)
+    }
 
     return(rye_call_k(k, fn))
   }

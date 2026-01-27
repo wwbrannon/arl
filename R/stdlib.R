@@ -597,127 +597,93 @@ rye_stdlib_format_value <- function(x) {
 }
 
 attr(rye_stdlib_apply, "rye_doc") <- list(
-  usage = "(apply fn lst)",
   description = "Apply fn to the elements of lst as arguments."
 )
 attr(rye_stdlib_values, "rye_doc") <- list(
-  usage = "(values ...)",
   description = "Return multiple values to a call-with-values consumer."
 )
 attr(rye_stdlib_call_with_values, "rye_doc") <- list(
-  usage = "(call-with-values producer consumer)",
   description = "Call producer and pass its values to consumer."
 )
-
 attr(rye_stdlib_call, "rye_doc") <- list(
-  usage = "(call lst)",
   description = "Convert a list to a callable form."
 )
-
 attr(rye_stdlib_display, "rye_doc") <- list(
-  usage = "(display x)",
   description = "Print x without formatting."
 )
 attr(rye_stdlib_str, "rye_doc") <- list(
-  usage = "(str x)",
   description = "Display structure of x."
 )
 attr(rye_stdlib_trace, "rye_doc") <- list(
-  usage = "(trace x)",
   description = "Print x and return it."
 )
 attr(rye_stdlib_try, "rye_doc") <- list(
-  usage = "(try* thunk [:error_handler fn] [:finally_handler fn])",
   description = "Evaluate thunk with error/finally handlers."
 )
-
 attr(rye_stdlib_macroexpand, "rye_doc") <- list(
-  usage = "(macroexpand expr)",
   description = "Recursively expand macros in expr."
 )
 attr(rye_stdlib_macroexpand_1, "rye_doc") <- list(
-  usage = "(macroexpand-1 expr)",
   description = "Expand a single macro layer in expr."
 )
 attr(rye_stdlib_eval, "rye_doc") <- list(
-  usage = "(eval expr)",
   description = "Evaluate expr in the current environment."
 )
 attr(rye_stdlib_promise_p, "rye_doc") <- list(
-  usage = "(promise? x)",
   description = "Return TRUE if x is a promise."
 )
-
 attr(rye_stdlib_dict, "rye_doc") <- list(
-  usage = "(dict key val ...)",
   description = "Create a hash-backed dictionary from key/value pairs."
 )
 attr(rye_stdlib_dict_p, "rye_doc") <- list(
-  usage = "(dict? x)",
   description = "Return TRUE if x is a dictionary."
 )
 attr(rye_stdlib_dict_get, "rye_doc") <- list(
-  usage = "(dict-get dict key [default])",
   description = "Get value for key or default if missing."
 )
 attr(rye_stdlib_dict_set, "rye_doc") <- list(
-  usage = "(dict-set dict key value)",
   description = "Set key to value in dict and return dict."
 )
 attr(rye_stdlib_dict_remove, "rye_doc") <- list(
-  usage = "(dict-remove dict key)",
   description = "Remove key from dict and return dict."
 )
 attr(rye_stdlib_dict_keys, "rye_doc") <- list(
-  usage = "(dict-keys dict)",
   description = "Return a list of dict keys."
 )
 attr(rye_stdlib_dict_values, "rye_doc") <- list(
-  usage = "(dict-values dict)",
   description = "Return a list of dict values."
 )
 attr(rye_stdlib_dict_has_p, "rye_doc") <- list(
-  usage = "(dict-has? dict key)",
   description = "Return TRUE if dict contains key."
 )
 attr(rye_stdlib_dict_merge, "rye_doc") <- list(
-  usage = "(dict-merge dict ...)",
   description = "Merge dicts, later values override earlier."
 )
 attr(rye_stdlib_set, "rye_doc") <- list(
-  usage = "(set item ...)",
   description = "Create a hash-backed set of unique items."
 )
 attr(rye_stdlib_set_p, "rye_doc") <- list(
-  usage = "(set? x)",
   description = "Return TRUE if x is a set."
 )
 attr(rye_stdlib_set_add, "rye_doc") <- list(
-  usage = "(set-add set item)",
   description = "Add item to set and return set."
 )
 attr(rye_stdlib_set_remove, "rye_doc") <- list(
-  usage = "(set-remove set item)",
   description = "Remove item from set and return set."
 )
 attr(rye_stdlib_set_contains_p, "rye_doc") <- list(
-  usage = "(set-contains? set item)",
   description = "Return TRUE if set contains item."
 )
 attr(rye_stdlib_set_union, "rye_doc") <- list(
-  usage = "(set-union a b)",
   description = "Return union of two sets."
 )
 attr(rye_stdlib_set_intersection, "rye_doc") <- list(
-  usage = "(set-intersection a b)",
   description = "Return intersection of two sets."
 )
 attr(rye_stdlib_set_difference, "rye_doc") <- list(
-  usage = "(set-difference a b)",
   description = "Return items in a that are not in b."
 )
 attr(rye_stdlib_r_call, "rye_doc") <- list(
-  usage = "(r/call fn [:args list])",
   description = "Call an R function with list arguments."
 )
 
