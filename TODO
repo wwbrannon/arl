@@ -1,7 +1,3 @@
-o) refactor stdlib into different files, especially -core is too big
-o) refactor these stdlib files to use (module ...)
-o) Loading in R/stdlib.R: we don't need an express list right? use import
-
 o) Can we rewrite any of the current code in rye? Any functionality that can be streamlined?
 * Stdlib
 

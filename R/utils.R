@@ -19,7 +19,29 @@ rye_trimws_shim <- function(x, which = c("both", "left", "right"), whitespace = 
 
 .rye_error_state <- new.env(parent = emptyenv())
 .rye_error_state$src_stack <- list()
-.rye_module_registry <- new.env(parent = emptyenv())
+rye_env_module_registry <- function(env, create = TRUE) {
+  if (is.null(env)) {
+    env <- parent.frame()
+  }
+  registry <- get0(".rye_module_registry", envir = env, inherits = TRUE)
+  if (is.null(registry) && create) {
+    registry <- new.env(parent = emptyenv())
+    assign(".rye_module_registry", registry, envir = env)
+  }
+  registry
+}
+
+rye_env_macro_registry <- function(env, create = TRUE) {
+  if (is.null(env)) {
+    env <- parent.frame()
+  }
+  registry <- get0(".rye_macros", envir = env, inherits = TRUE)
+  if (is.null(registry) && create) {
+    registry <- new.env(parent = emptyenv())
+    assign(".rye_macros", registry, envir = env)
+  }
+  registry
+}
 
 rye_src_new <- function(file, start_line, start_col, end_line = start_line, end_col = start_col) {
   structure(
@@ -87,35 +109,38 @@ rye_strip_src <- function(value) {
   value
 }
 
-rye_module_exists <- function(name) {
-  is.character(name) && length(name) == 1 &&
-    exists(name, envir = .rye_module_registry, inherits = FALSE)
+rye_module_exists <- function(name, env = parent.frame()) {
+  registry <- rye_env_module_registry(env, create = FALSE)
+  is.character(name) && length(name) == 1 && !is.null(registry) &&
+    exists(name, envir = registry, inherits = FALSE)
 }
 
-rye_module_get <- function(name) {
-  if (!rye_module_exists(name)) {
+rye_module_get <- function(name, env = parent.frame()) {
+  if (!rye_module_exists(name, env = env)) {
     return(NULL)
   }
-  get(name, envir = .rye_module_registry, inherits = FALSE)
+  registry <- rye_env_module_registry(env, create = FALSE)
+  get(name, envir = registry, inherits = FALSE)
 }
 
-rye_module_register <- function(name, env, exports, path = NULL) {
+rye_module_register <- function(name, env, exports, path = NULL, registry_env = parent.frame()) {
   if (!is.character(name) || length(name) != 1) {
     stop("module name must be a single string")
   }
-  if (rye_module_exists(name)) {
+  registry <- rye_env_module_registry(registry_env, create = TRUE)
+  if (rye_module_exists(name, env = registry_env)) {
     stop(sprintf("module '%s' is already defined", name))
   }
   entry <- list(env = env, exports = exports, path = path)
-  assign(name, entry, envir = .rye_module_registry)
+  assign(name, entry, envir = registry)
   entry
 }
 
-rye_module_update_exports <- function(name, exports) {
+rye_module_update_exports <- function(name, exports, registry_env = parent.frame()) {
   if (!is.character(name) || length(name) != 1) {
     stop("module name must be a single string")
   }
-  entry <- rye_module_get(name)
+  entry <- rye_module_get(name, env = registry_env)
   if (is.null(entry)) {
     stop(sprintf("module '%s' is not loaded", name))
   }
@@ -123,30 +148,38 @@ rye_module_update_exports <- function(name, exports) {
     exports <- as.character(exports)
   }
   entry$exports <- exports
-  assign(name, entry, envir = .rye_module_registry)
+  registry <- rye_env_module_registry(registry_env, create = TRUE)
+  assign(name, entry, envir = registry)
   entry
 }
 
-rye_module_unregister <- function(name) {
+rye_module_unregister <- function(name, registry_env = parent.frame()) {
   if (!is.character(name) || length(name) != 1) {
     stop("module name must be a single string")
   }
-  if (exists(name, envir = .rye_module_registry, inherits = FALSE)) {
-    rm(list = name, envir = .rye_module_registry)
+  registry <- rye_env_module_registry(registry_env, create = FALSE)
+  if (!is.null(registry) && exists(name, envir = registry, inherits = FALSE)) {
+    rm(list = name, envir = registry)
   }
   invisible(NULL)
 }
 
 rye_module_attach <- function(name, target_env) {
-  entry <- rye_module_get(name)
+  entry <- rye_module_get(name, env = target_env)
   if (is.null(entry)) {
     stop(sprintf("module '%s' is not loaded", name))
   }
   exports <- entry$exports
   module_env <- entry$env
+  target_macro_registry <- rye_env_macro_registry(target_env, create = TRUE)
+  module_macro_registry <- rye_env_macro_registry(module_env, create = FALSE)
+  
   for (export_name in exports) {
     if (!exists(export_name, envir = module_env, inherits = FALSE)) {
-      if (is_macro(as.symbol(export_name))) {
+      if (!is.null(module_macro_registry) && exists(export_name, envir = module_macro_registry, inherits = FALSE)) {
+        # Copy macro to target environment's macro registry
+        macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
+        assign(export_name, macro_fn, envir = target_macro_registry)
         next
       }
       stop(sprintf("module '%s' does not export '%s'", name, export_name))

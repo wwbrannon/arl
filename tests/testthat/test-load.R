@@ -34,8 +34,8 @@ test_that("(load ...) resolves stdlib entries by name", {
   exprs <- rye_read("(load \"control\")")
 
   expect_silent(rye_eval(exprs[[1]], env))
-  expect_true(rye:::is_macro(as.symbol("when")))
-  expect_true(rye:::is_macro(as.symbol("unless")))
+  expect_true(rye:::is_macro(as.symbol("when"), env = env))
+  expect_true(rye:::is_macro(as.symbol("unless"), env = env))
 })
 
 test_that("rye_load_stdlib registers stdlib macros", {
@@ -43,11 +43,11 @@ test_that("rye_load_stdlib registers stdlib macros", {
   rye_load_stdlib(env)
   import_stdlib_modules(env, c("control", "binding", "threading", "error"))
 
-  expect_true(rye:::is_macro(as.symbol("when")))
-  expect_true(rye:::is_macro(as.symbol("unless")))
-  expect_true(rye:::is_macro(as.symbol("let")))
-  expect_true(rye:::is_macro(as.symbol("->")))
-  expect_true(rye:::is_macro(as.symbol("try")))
+  expect_true(rye:::is_macro(as.symbol("when"), env = env))
+  expect_true(rye:::is_macro(as.symbol("unless"), env = env))
+  expect_true(rye:::is_macro(as.symbol("let"), env = env))
+  expect_true(rye:::is_macro(as.symbol("->"), env = env))
+  expect_true(rye:::is_macro(as.symbol("try"), env = env))
 })
 
 test_that("(import ...) loads module exports into environment", {

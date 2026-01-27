@@ -47,14 +47,14 @@ test_that("defmacro defines macros", {
   rye_eval(rye_read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]], env)
 
   # Check macro is defined
-  expect_true(is_macro(as.symbol("when")))
+  expect_true(is_macro(as.symbol("when"), env = env))
 })
 
 test_that("get_macro returns registered macro function", {
   env <- new.env()
   rye_eval(rye_read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]], env)
 
-  macro_fn <- rye:::get_macro(as.symbol("when"))
+  macro_fn <- rye:::get_macro(as.symbol("when"), env = env)
   expect_true(is.function(macro_fn))
 })
 
@@ -62,12 +62,12 @@ test_that("defmacro validates dotted parameter lists", {
   env <- new.env()
   params_multi_dot <- c("a", ".", "b", ".", "c")
   rye:::rye_defmacro(as.symbol("bad"), params_multi_dot, list(as.symbol("a")), env)
-  macro_fn <- rye:::get_macro(as.symbol("bad"))
+  macro_fn <- rye:::get_macro(as.symbol("bad"), env = env)
   expect_error(macro_fn(), "Dotted parameter list can only contain one '\\.'")
 
   params_bad_position <- c("a", ".", "b", "c")
   rye:::rye_defmacro(as.symbol("bad2"), params_bad_position, list(as.symbol("a")), env)
-  macro_fn <- rye:::get_macro(as.symbol("bad2"))
+  macro_fn <- rye:::get_macro(as.symbol("bad2"), env = env)
   expect_error(macro_fn(), "Dotted parameter list must have exactly one parameter after '\\.'")
 })
 

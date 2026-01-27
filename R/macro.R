@@ -1,7 +1,3 @@
-#' Global macro registry
-#' @keywords internal
-.rye_macros <- new.env(parent = emptyenv())
-
 #' Global gensym counter (stored in environment to avoid locking issues)
 #' @keywords internal
 .rye_gensym_env <- new.env(parent = emptyenv())
@@ -651,8 +647,9 @@ rye_defmacro <- function(name, params, body, env, docstring = NULL) {
     attr(macro_fn, "rye_doc") <- list(description = docstring)
   }
 
-  # Store in macro registry
-  .rye_macros[[as.character(name)]] <- macro_fn
+  # Store in macro registry (env-local)
+  registry <- rye_env_macro_registry(env, create = TRUE)
+  registry[[as.character(name)]] <- macro_fn
   assign(as.character(name), macro_fn, envir = env)
 }
 
@@ -661,11 +658,12 @@ rye_defmacro <- function(name, params, body, env, docstring = NULL) {
 #' @param name Symbol to check
 #' @return TRUE if it's a macro, FALSE otherwise
 #' @keywords internal
-is_macro <- function(name) {
+is_macro <- function(name, env = parent.frame()) {
   if (!is.symbol(name)) {
     return(FALSE)
   }
-  exists(as.character(name), envir = .rye_macros)
+  registry <- rye_env_macro_registry(env, create = FALSE)
+  !is.null(registry) && exists(as.character(name), envir = registry, inherits = FALSE)
 }
 
 #' Get a macro expander function
@@ -673,8 +671,12 @@ is_macro <- function(name) {
 #' @param name Symbol naming the macro
 #' @return The macro expander function
 #' @keywords internal
-get_macro <- function(name) {
-  .rye_macros[[as.character(name)]]
+get_macro <- function(name, env = parent.frame()) {
+  registry <- rye_env_macro_registry(env, create = FALSE)
+  if (is.null(registry)) {
+    return(NULL)
+  }
+  registry[[as.character(name)]]
 }
 
 #' Expand macros in an expression
@@ -701,9 +703,9 @@ rye_macroexpand <- function(expr, env = parent.frame(), preserve_src = FALSE) {
   op <- expr[[1]]
 
   # Check if it's a macro call
-  if (is_macro(op)) {
+  if (is_macro(op, env = env)) {
     # Get the macro
-    macro_fn <- get_macro(op)
+    macro_fn <- get_macro(op, env = env)
 
     # Expand the macro with unevaluated arguments
     args <- as.list(expr[-1])

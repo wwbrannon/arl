@@ -5,6 +5,7 @@
 
   (import list-core)
   (import strings)
+  (import control)
 
   (define __format-atomic
     (lambda (x)

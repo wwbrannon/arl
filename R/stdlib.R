@@ -27,6 +27,8 @@ rye_load_stdlib_base <- function(env = NULL) {
   if (is.null(env)) {
     env <- new.env(parent = baseenv())
   }
+  rye_env_module_registry(env, create = TRUE)
+  rye_env_macro_registry(env, create = TRUE)
   # Core helpers implemented in R
   env$call <- rye_stdlib_call
   env$apply <- rye_stdlib_apply
@@ -61,7 +63,13 @@ rye_load_stdlib_base <- function(env = NULL) {
   # Macro and eval helpers
   env$gensym <- gensym
   env$capture <- rye_capture
-  env$`macro?` <- rye_stdlib_macro_p
+  env$`macro?` <- function(x) {
+    if (is.symbol(x)) {
+      is_macro(x, env = env)
+    } else {
+      FALSE
+    }
+  }
   env$macroexpand <- rye_stdlib_macroexpand
   env$`macroexpand-1` <- rye_stdlib_macroexpand_1
   env$`macroexpand-all` <- rye_stdlib_macroexpand
@@ -112,7 +120,7 @@ rye_load_stdlib_files <- function(env = parent.frame()) {
   )
 
   for (module_name in base_modules) {
-    rye_module_unregister(module_name)
+    rye_module_unregister(module_name, registry_env = env)
   }
 
   result <- NULL
@@ -221,7 +229,7 @@ rye_stdlib_try <- function(thunk, error_handler = NULL, finally_handler = NULL) 
 
 rye_stdlib_macro_p <- function(x) {
   if (is.symbol(x)) {
-    is_macro(x)
+    is_macro(x, env = parent.frame())
   } else {
     FALSE
   }
@@ -236,8 +244,8 @@ rye_stdlib_macroexpand_1 <- function(expr, env = parent.frame()) {
     return(expr)
   }
   op <- expr[[1]]
-  if (is.symbol(op) && is_macro(op)) {
-    macro_fn <- get_macro(op)
+  if (is.symbol(op) && is_macro(op, env = env)) {
+    macro_fn <- get_macro(op, env = env)
     args <- as.list(expr[-1])
     expanded <- do.call(macro_fn, args)
     expanded <- rye_hygienize(expanded)

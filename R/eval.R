@@ -95,7 +95,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
   # Macro expansion (before special forms)
   # Must happen before we check special forms
   if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]])) {
-    if (is_macro(expr[[1]])) {
+    if (is_macro(expr[[1]], env = env)) {
       expanded <- rye_macroexpand(expr, env, preserve_src = TRUE)
       return(rye_eval_cps(expanded, env, k))
     }
@@ -255,7 +255,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
       }
-      if (!grepl("[/\\\\]", path) && rye_module_exists(path)) {
+      if (!grepl("[/\\\\]", path) && rye_module_exists(path, env = env)) {
         return(rye_call_k(k, NULL))
       }
       has_separator <- grepl("[/\\\\]", path)
@@ -319,7 +319,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
     module_env <- new.env(parent = env)
     assign(".rye_env", TRUE, envir = module_env)
     assign(".rye_module", TRUE, envir = module_env)
-    rye_module_register(module_name, module_env, exports)
+    rye_module_register(module_name, module_env, exports, registry_env = env)
 
     body_exprs <- list()
     if (length(expr) > 3) {
@@ -330,14 +330,14 @@ rye_eval_cps_inner <- function(expr, env, k) {
     if (length(body_exprs) == 0) {
       if (export_all) {
         exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
-        rye_module_update_exports(module_name, exports)
+        rye_module_update_exports(module_name, exports, registry_env = env)
       }
       return(rye_call_k(k, NULL))
     }
     return(rye_eval_seq_cps(body_exprs, module_env, function(value) {
       if (export_all) {
         exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
-        rye_module_update_exports(module_name, exports)
+        rye_module_update_exports(module_name, exports, registry_env = env)
       }
       rye_call_k(k, NULL)
     }))
@@ -357,13 +357,13 @@ rye_eval_cps_inner <- function(expr, env, k) {
       stop("import requires a module name symbol or string")
     }
 
-    if (!rye_module_exists(module_name)) {
+    if (!rye_module_exists(module_name, env = env)) {
       module_path <- rye_resolve_module_path(module_name)
       if (is.null(module_path)) {
         stop(sprintf("Module not found: %s", module_name))
       }
       rye_load_file(module_path, env)
-      if (!rye_module_exists(module_name)) {
+      if (!rye_module_exists(module_name, env = env)) {
         stop(sprintf("Module '%s' did not register itself", module_name))
       }
     }

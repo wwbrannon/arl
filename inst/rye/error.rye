@@ -5,6 +5,7 @@
 
   (import predicates)
   (import list-core)
+  (import control)
 
 (defmacro try (body . clauses)
   "Macro wrapper around try* with catch/finally."
