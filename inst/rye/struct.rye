@@ -1,5 +1,10 @@
 ;;; Rye Standard Library - Struct Macros
 
+(module struct
+  (export defstruct)
+
+  (import higher-order)
+
 (defmacro defstruct (name fields)
   "Define a struct constructor, predicate, and accessors."
   (define struct-name (as.character name))
@@ -31,3 +36,4 @@
         "Return #t if object is this struct type."
         (inherits obj ,struct-name)))
      ,@accessors))
+)

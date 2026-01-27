@@ -1,5 +1,11 @@
 ;;; Rye Standard Library - Error Handling Macros
 
+(module error
+  (export try)
+
+  (import predicates)
+  (import list-core)
+
 (defmacro try (body . clauses)
   "Macro wrapper around try* with catch/finally."
   (begin
@@ -25,3 +31,4 @@
         `(try* (lambda () ,body)
            :error_handler (lambda (,(car (cdr catch-clause))) ,@(cdr (cdr catch-clause)))
            :finally_handler (lambda () ,@(cdr finally-clause)))))))
+)

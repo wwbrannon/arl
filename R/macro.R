@@ -653,6 +653,7 @@ rye_defmacro <- function(name, params, body, env, docstring = NULL) {
 
   # Store in macro registry
   .rye_macros[[as.character(name)]] <- macro_fn
+  assign(as.character(name), macro_fn, envir = env)
 }
 
 #' Check if a symbol names a macro

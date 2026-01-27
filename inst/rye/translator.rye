@@ -1,5 +1,15 @@
 ;;; Rye Standard Library - Translator
 
+(module translator
+  (export __indent __at __slice __string-in? translate-expr translate-str translate-file translate-source)
+
+  (import predicates)
+  (import list-core)
+  (import strings)
+  (import io)
+  (import control)
+  (import looping)
+
 (define __indent
   (lambda (indent)
     (paste (rep "  " indent) :collapse "")))
@@ -354,3 +364,4 @@
           #nil)
         (translate-file source))
       (translate-str source))))
+)

@@ -1,0 +1,74 @@
+;;; Rye Standard Library - Display Helpers
+
+(module display
+  (export __format-atomic __format-seq format-value display println str trace)
+
+  (import list-core)
+  (import strings)
+
+  (define __format-atomic
+    (lambda (x)
+      "Format atomic values to a single string."
+      (define parts (as.character x))
+      (if (= (length parts) 0)
+        ""
+        (if (= (length parts) 1)
+          (as.character parts)
+          (string-join parts " ")))))
+
+  (define __format-seq
+    (lambda (items)
+      "Format list/call contents with spaces."
+      (define parts (lapply (__as-list items) format-value))
+      (if (= (length parts) 0)
+        ""
+        (string-join parts " "))))
+
+  (define format-value
+    (lambda (x)
+      "Format value for display."
+      (if (values? x)
+        (begin
+          (define inner (r/call "unclass" (list x)))
+          (if (= (length inner) 0)
+            "(values)"
+            (string-join (append (list "(values") (lapply inner format-value) (list ")")) " ")))
+        (if (dict? x)
+          (begin
+            (define keys (dict-keys x))
+            (define values (lapply keys (lambda (k) (dict-get x k))))
+            (__format-seq values))
+          (if (set? x)
+            (__format-seq (r/call "as.list" (list x :all.names #t)))
+            (if (promise? x)
+              "<promise>"
+              (if (is.symbol x)
+                (as.character x)
+                (if (or (is.call x) (is.list x))
+                  (__format-seq x)
+                  (__format-atomic x)))))))))
+
+  (define display
+    (lambda (x)
+      "Print value with newline."
+      (r/call "cat" (list (format-value x) "\n"))))
+
+  (define println display)
+
+  (define str
+    (lambda (. args)
+      "Concatenate formatted values into string."
+      (define parts (lapply (__as-list args) format-value))
+      (if (= (length parts) 0)
+        (character 0)
+        (string-join parts ""))))
+
+  (define trace
+    (lambda (x . rest)
+      "Print value and return it."
+      (define label (if (> (length rest) 0) (car rest) #nil))
+      (if (is.null label)
+        #nil
+        (r/call "cat" (list (format-value label) ": ")))
+      (r/call "cat" (list (format-value x) "\n"))
+      x)))

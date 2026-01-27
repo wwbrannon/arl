@@ -1,0 +1,82 @@
+;;; Rye Standard Library - Predicates
+
+(module predicates
+  (export list? pair? null? nil? symbol? keyword? number? string? vector? true? false? fn? callable? not)
+
+  (define list?
+    (lambda (x)
+      "Return #t if x is a list or call."
+      (if (is.list x) #t (if (is.call x) #t #f))))
+
+  (define pair?
+    (lambda (x)
+      "Return #t if x is a non-empty list."
+      (if (list? x) (if (> (length x) 0) #t #f) #f)))
+
+  (define null?
+    (lambda (x)
+      "Return #t for empty list or #nil."
+      (if (is.null x)
+        #t
+        (if (is.list x)
+          (if (= (length x) 0) #t #f)
+          (if (is.call x)
+            (if (= (length x) 0) #t #f)
+            #f)))))
+
+  (define nil?
+    (lambda (x)
+      "Alias for null?."
+      (null? x)))
+
+  (define symbol?
+    (lambda (x)
+      "Return #t if x is a symbol."
+      (is.symbol x)))
+
+  (define keyword?
+    (lambda (x)
+      "Return #t if x is a Rye keyword."
+      (isTRUE (inherits x "rye_keyword"))))
+
+  (define number?
+    (lambda (x)
+      "Return #t if x is numeric."
+      (is.numeric x)))
+
+  (define string?
+    (lambda (x)
+      "Return #t if x is character."
+      (is.character x)))
+
+  (define vector?
+    (lambda (x)
+      "Return #t if x is a non-list atomic vector."
+      (if (is.atomic x)
+        (if (is.character x) #f (if (is.list x) #f #t))
+        #f)))
+
+  (define true?
+    (lambda (x)
+      "Return #t if x is TRUE."
+      (isTRUE x)))
+
+  (define false?
+    (lambda (x)
+      "Return #t if x is #f."
+      (identical x #f)))
+
+  (define fn?
+    (lambda (x)
+      "Return #t if x is a function."
+      (is.function x)))
+
+  (define callable?
+    (lambda (x)
+      "Alias for fn?."
+      (is.function x)))
+
+  (define not
+    (lambda (x)
+      "Logical negation with Rye truthiness."
+      (if x #f #t))))

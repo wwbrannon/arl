@@ -1,6 +1,11 @@
 ;; Fibonacci Sequence Implementations
 ;; Demonstrates recursion, iteration, and functional approaches
 
+(import binding)
+(import control)
+(import looping)
+(import threading)
+
 ;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
 (define *output-dir*
   (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))

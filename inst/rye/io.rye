@@ -1,0 +1,79 @@
+;;; Rye Standard Library - IO Helpers
+
+(module io
+  (export __normalize-line-vector __normalize-lines read-line read-file read-lines write-file write-lines append-file file-exists?)
+
+  (define __normalize-line-vector
+    (lambda (lines)
+      "Normalize content to character vector."
+      (if (is.null lines)
+        (character 0)
+        (if (is.call lines)
+          (vapply (as.list lines) as.character (character 1))
+          (if (is.list lines)
+            (vapply lines as.character (character 1))
+            (as.character lines))))))
+
+  (define __normalize-lines
+    (lambda (content (sep "\n"))
+      "Collapse content to string."
+      (define lines (__normalize-line-vector content))
+      (if (<= (length lines) 1)
+        (as.character lines)
+        (paste lines :collapse sep))))
+
+  (define read-line
+    (lambda ((prompt ""))
+      "Read single line from stdin."
+      (define con (getOption "rye.stdin"))
+      (if (is.null con) (define con (stdin)) #nil)
+      (if (nzchar prompt) (cat prompt) #nil)
+      (r/call "readLines" (list :con con :n 1 :warn #f))))
+
+  (define read-file
+    (lambda (path (encoding "UTF-8"))
+      "Read entire file as string."
+      (define con (file path :open "r" :encoding encoding))
+      (define lines (readLines :con con :warn #f))
+      (close con)
+      (paste lines :collapse "\n")))
+
+  (define read-lines
+    (lambda (path (encoding "UTF-8"))
+      "Read file into list of lines."
+      (define con (file path :open "r" :encoding encoding))
+      (define lines (readLines :con con :warn #f))
+      (close con)
+      (as.list lines)))
+
+  (define write-file
+    (lambda (path content (sep "\n") (encoding "UTF-8"))
+      "Write string or lines to file."
+      (define text (__normalize-lines content sep))
+      (define con (file path :open "w" :encoding encoding))
+      (writeLines text :con con :useBytes #f)
+      (close con)
+      #t))
+
+  (define write-lines
+    (lambda (path lines (encoding "UTF-8"))
+      "Write list of lines to file."
+      (define out (__normalize-line-vector lines))
+      (define con (file path :open "w" :encoding encoding))
+      (writeLines out :con con :useBytes #f)
+      (close con)
+      #t))
+
+  (define append-file
+    (lambda (path content (sep "\n") (encoding "UTF-8"))
+      "Append content to file."
+      (define text (__normalize-lines content sep))
+      (define con (file path :open "a" :encoding encoding))
+      (writeLines text :con con :useBytes #f :sep "")
+      (close con)
+      #t))
+
+  (define file-exists?
+    (lambda (path)
+      "Return #t if file exists."
+      (isTRUE (file.exists path)))))

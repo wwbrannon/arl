@@ -1,5 +1,11 @@
 ;;; Rye Standard Library - Looping Macros
 
+(module looping
+  (export while for)
+
+  (import higher-order)
+  (import list-core)
+
 (defmacro while (test . body)
   "Repeat body while test is truthy."
   (begin
@@ -19,3 +25,4 @@
     (define var (car binding))
     (define seq (car (cdr binding)))
     `(map (lambda (,var) (begin ,@body)) ,seq)))
+)

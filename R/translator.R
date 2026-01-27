@@ -3,6 +3,7 @@ rye_translate_env <- local({
   function() {
     if (is.null(env)) {
       env <- rye_load_stdlib()
+      rye_eval(rye_read("(import translator)")[[1]], env)
     }
     env
   }

@@ -255,6 +255,9 @@ rye_eval_cps_inner <- function(expr, env, k) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
       }
+      if (!grepl("[/\\\\]", path) && rye_module_exists(path)) {
+        return(rye_call_k(k, NULL))
+      }
       has_separator <- grepl("[/\\\\]", path)
       if (!has_separator) {
         stdlib_path <- rye_resolve_stdlib_path(path)
@@ -287,24 +290,35 @@ rye_eval_cps_inner <- function(expr, env, k) {
     exports_expr <- expr[[3]]
     if (!is.call(exports_expr) ||
         length(exports_expr) < 1 ||
-        !is.symbol(exports_expr[[1]]) ||
-        as.character(exports_expr[[1]]) != "export") {
+        !is.symbol(exports_expr[[1]])) {
       stop("module requires an export list: (module name (export ...) body...)")
     }
 
+    export_tag <- as.character(exports_expr[[1]])
+    export_all <- FALSE
     exports <- character(0)
-    if (length(exports_expr) > 1) {
-      for (i in 2:length(exports_expr)) {
-        item <- exports_expr[[i]]
-        if (!is.symbol(item)) {
-          stop("module exports must be symbols")
+    if (identical(export_tag, "export")) {
+      if (length(exports_expr) > 1) {
+        for (i in 2:length(exports_expr)) {
+          item <- exports_expr[[i]]
+          if (!is.symbol(item)) {
+            stop("module exports must be symbols")
+          }
+          exports <- c(exports, as.character(item))
         }
-        exports <- c(exports, as.character(item))
       }
+    } else if (identical(export_tag, "export-all")) {
+      if (length(exports_expr) > 1) {
+        stop("export-all does not take any arguments")
+      }
+      export_all <- TRUE
+    } else {
+      stop("module requires an export list: (module name (export ...) body...)")
     }
 
     module_env <- new.env(parent = env)
     assign(".rye_env", TRUE, envir = module_env)
+    assign(".rye_module", TRUE, envir = module_env)
     rye_module_register(module_name, module_env, exports)
 
     body_exprs <- list()
@@ -314,9 +328,17 @@ rye_eval_cps_inner <- function(expr, env, k) {
       }
     }
     if (length(body_exprs) == 0) {
+      if (export_all) {
+        exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
+        rye_module_update_exports(module_name, exports)
+      }
       return(rye_call_k(k, NULL))
     }
     return(rye_eval_seq_cps(body_exprs, module_env, function(value) {
+      if (export_all) {
+        exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
+        rye_module_update_exports(module_name, exports)
+      }
       rye_call_k(k, NULL)
     }))
   }

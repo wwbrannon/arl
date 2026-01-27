@@ -1,5 +1,13 @@
 ;;; Rye Standard Library - Binding Macros
 
+(module binding
+  (export pattern-symbols destructuring-bind let let* letrec)
+
+  (import predicates)
+  (import list-core)
+  (import higher-order)
+  (import sequences)
+
 (define pattern-symbols
   (lambda (pattern)
     "Collect symbols from a destructuring pattern."
@@ -56,3 +64,4 @@
   `(let ,(map (lambda (n) `(,n (list))) names)
      ,@(map (lambda (b) `(set! ,(car b) ,(car (cdr b)))) bindings)
      (begin ,@body)))
+)

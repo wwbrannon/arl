@@ -54,7 +54,7 @@ rye_special_forms_help <- list(
   ),
   module = list(
     usage = "(module name (export ...) body...)",
-    description = "Define a module with explicit exports."
+    description = "Define a module with explicit exports. Use (export-all) to export all definitions."
   ),
   import = list(
     usage = "(import name)",

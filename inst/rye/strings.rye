@@ -1,0 +1,53 @@
+;;; Rye Standard Library - String Helpers
+
+(module strings
+  (export string-join string-split trim format string-contains? string-match? string-find string-replace string-replace-all)
+
+  (import list-core)
+
+  (define string-join
+    (lambda (x (sep ""))
+      "Join strings with separator."
+      (paste (unlist (__as-list x)) :collapse sep)))
+
+  (define string-split
+    (lambda (x (sep ""))
+      "Split string on separator."
+      (unname (r/call "[[" (list (strsplit x :split sep :fixed #t) 1)))))
+
+  (define trim
+    (lambda (x)
+      "Trim leading and trailing whitespace."
+      (trimws x)))
+
+  (define format
+    (lambda (fmt . args)
+      "Format string with sprintf."
+      (r/call "sprintf" (cons fmt args))))
+
+  (define string-contains?
+    (lambda (str pattern (fixed #t))
+      "Check pattern in string (fixed)."
+      (isTRUE (grepl pattern str :fixed fixed))))
+
+  (define string-match?
+    (lambda (str pattern (fixed #f))
+      "Check pattern in string (regex)."
+      (isTRUE (grepl pattern str :fixed fixed))))
+
+  (define string-find
+    (lambda (str pattern (fixed #t))
+      "Find pattern index or #nil."
+      (define match (regexpr pattern str :fixed fixed))
+      (define pos (r/call "[[" (list match 1)))
+      (if (< pos 0) #nil (- pos 1))))
+
+  (define string-replace
+    (lambda (str pattern replacement (fixed #f))
+      "Replace first match."
+      (sub pattern replacement str :fixed fixed)))
+
+  (define string-replace-all
+    (lambda (str pattern replacement (fixed #f))
+      "Replace all matches."
+      (gsub pattern replacement str :fixed fixed))))

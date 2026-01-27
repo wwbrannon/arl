@@ -1,5 +1,11 @@
 ;;; Rye Standard Library - Control Flow Macros
 
+(module control
+  (export when unless and or cond case)
+
+  (import predicates)
+  (import list-core)
+
 ;;; Control flow macros
 
 (defmacro when (test body)
@@ -51,3 +57,4 @@
       (if (and (symbol? datum) (= (as.character datum) "else"))
         `(begin ,@body)
         `(if (= ,key ,datum) (begin ,@body) (case ,key ,@rest))))))
+)

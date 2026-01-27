@@ -20,6 +20,7 @@ test_that("help shows Rye stdlib docs via attributes", {
 
 test_that("help shows Rye macro docs from stdlib files", {
   env <- rye_load_stdlib()
+  import_stdlib_modules(env, c("control"))
   output <- capture.output(rye_eval_text("(help when)", env))
   expect_true(any(grepl("Topic: when", output)))
   expect_true(any(grepl("\\(when test body\\)", output)))

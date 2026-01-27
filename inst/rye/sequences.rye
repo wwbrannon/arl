@@ -1,0 +1,119 @@
+;;; Rye Standard Library - Sequence Helpers
+
+(module sequences
+  (export take drop take-while drop-while partition flatten repeatedly repeat zip)
+
+  (import list-core)
+  (import predicates)
+
+  (define take
+    (lambda (n lst)
+      "Take first n items."
+      (define items (__as-list lst))
+      (if (<= n 0)
+        (list)
+        (r/call "[" (list items (seq_len (min n (length items))))))))
+
+  (define drop
+    (lambda (n lst)
+      "Drop first n items."
+      (define items (__as-list lst))
+      (if (<= n 0)
+        items
+        (if (>= n (length items))
+          (list)
+          (r/call "[" (list items (seq (+ n 1) (length items))))))))
+
+  (define take-while
+    (lambda (pred lst)
+      "Take items while predicate is true."
+      (define items (__as-list lst))
+      (define loop
+        (lambda (remaining acc)
+          "Accumulate items while predicate holds."
+          (if (= (length remaining) 0)
+            acc
+            (if (isTRUE (pred (car remaining)))
+              (loop (cdr remaining) (c acc (list (car remaining))))
+              acc))))
+      (loop items (list))))
+
+  (define drop-while
+    (lambda (pred lst)
+      "Drop items while predicate is true."
+      (define items (__as-list lst))
+      (define loop
+        (lambda (remaining)
+          "Skip items while predicate holds."
+          (if (= (length remaining) 0)
+            (list)
+            (if (isTRUE (pred (car remaining)))
+              (loop (cdr remaining))
+              remaining))))
+      (loop items)))
+
+  (define partition
+    (lambda (n lst (step n))
+      "Split list into chunks of size n."
+      (define items (__as-list lst))
+      (if (<= n 0)
+        (stop "partition requires positive n and step")
+        (if (<= step 0)
+          (stop "partition requires positive n and step")
+          (begin
+            (define loop
+              (lambda (idx acc)
+                "Build partitions incrementally."
+                (if (> idx (length items))
+                  acc
+                  (begin
+                    (define end (+ idx (- n 1)))
+                    (if (> end (length items))
+                      acc
+                      (loop (+ idx step)
+                        (c acc (list (r/call "[" (list items (seq idx end)))))))))))
+            (loop 1 (list)))))))
+
+  (define flatten
+    (lambda (lst)
+      "Flatten nested lists."
+      (define items (__as-list lst))
+      (define loop
+        (lambda (remaining acc)
+          "Recursively flatten items."
+          (if (= (length remaining) 0)
+            acc
+            (begin
+              (define item (car remaining))
+              (define rest (cdr remaining))
+              (if (list? item)
+                (loop rest (c acc (flatten item)))
+                (loop rest (c acc (list item))))))))
+      (loop items (list))))
+
+  (define repeatedly
+    (lambda (n fn)
+      "Call fn n times collecting results."
+      (lapply (seq_len n) (lambda (i) (fn)))))
+
+  (define repeat
+    (lambda (n value)
+      "Repeat value n times."
+      (replicate n value :simplify #f)))
+
+  (define zip
+    (lambda (. lists)
+      "Zip lists into list of tuples."
+      (if (= (length lists) 0)
+        (list)
+        (begin
+          (define items (lapply lists __as-list))
+          (define min-len (min (vapply items length (integer 1))))
+          (if (= min-len 0)
+            (list)
+            (begin
+              (define zip-at
+                (lambda (i)
+                  "Collect ith elements from lists."
+                  (lapply items (lambda (lst) (r/call "[[" (list lst i))))))
+              (lapply (seq_len min-len) zip-at))))))))

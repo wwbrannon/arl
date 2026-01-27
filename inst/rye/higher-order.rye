@@ -1,0 +1,83 @@
+;;; Rye Standard Library - Higher-Order Functions
+
+(module higher-order
+  (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial)
+
+  (import list-core)
+  (import predicates)
+
+  (define map
+    (lambda (fn lst)
+      "Apply function to each element."
+      (lapply (__as-list lst) fn)))
+
+  (define mapcat
+    (lambda (fn lst)
+      "Map then concatenate results."
+      (define results (lapply (__as-list lst) fn))
+      (define flatten-results
+        (lambda (remaining acc)
+          "Concatenate list results."
+          (if (= (length remaining) 0)
+            acc
+            (flatten-results (cdr remaining) (c acc (__as-list (car remaining)))))))
+      (flatten-results results (list))))
+
+  (define filter
+    (lambda (pred lst)
+      "Filter items by predicate."
+      (Filter pred (__as-list lst))))
+
+  (define remove
+    (lambda (pred lst)
+      "Remove items where predicate is true."
+      (Filter (lambda (x) (not (isTRUE (pred x)))) (__as-list lst))))
+
+  (define reduce
+    (lambda (fn lst . rest)
+      "Reduce list with function."
+      (if (= (length rest) 0)
+        (Reduce fn (__as-list lst))
+        (Reduce fn (__as-list lst) :init (car rest)))))
+
+  (define foldl
+    (lambda (fn lst . rest)
+      "Left fold alias for reduce."
+      (if (= (length rest) 0)
+        (Reduce fn (__as-list lst))
+        (Reduce fn (__as-list lst) :init (car rest)))))
+
+  (define foldr
+    (lambda (fn lst . rest)
+      "Right fold."
+      (if (= (length rest) 0)
+        (Reduce fn (__as-list lst) :right #t)
+        (Reduce fn (__as-list lst) :init (car rest) :right #t))))
+
+  (define every?
+    (lambda (pred lst)
+      "Return #t if predicate true for all items."
+      (all (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
+
+  (define any?
+    (lambda (pred lst)
+      "Return #t if predicate true for any item."
+      (any (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
+
+  (define complement
+    (lambda (pred)
+      "Negate predicate."
+      (lambda (. args)
+        (not (do.call pred args)))))
+
+  (define compose
+    (lambda (f g)
+      "Compose two functions."
+      (lambda (. args)
+        (f (do.call g args)))))
+
+  (define partial
+    (lambda (fn . captured)
+      "Partially apply function."
+      (lambda (. more)
+        (do.call fn (append captured more))))))

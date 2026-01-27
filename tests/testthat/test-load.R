@@ -41,6 +41,7 @@ test_that("(load ...) resolves stdlib entries by name", {
 test_that("rye_load_stdlib registers stdlib macros", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
+  import_stdlib_modules(env, c("control", "binding", "threading", "error"))
 
   expect_true(rye:::is_macro(as.symbol("when")))
   expect_true(rye:::is_macro(as.symbol("unless")))

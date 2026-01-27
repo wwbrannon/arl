@@ -1,0 +1,115 @@
+;;; Rye Standard Library - List Helpers
+
+(module list-core
+  (export __as-list __list-last __list-head car cdr cons list* append reverse first rest last nth)
+
+  (define __as-list
+    (lambda (x)
+      "Coerce calls and vectors to list."
+      (if (is.call x)
+        (as.list x)
+        (if (is.list x)
+          x
+          (if (= (length x) 0)
+            (list)
+            (as.list x))))))
+
+  (define __list-last
+    (lambda (lst)
+      "Return last element of list."
+      (r/call "[[" (list lst (length lst)))))
+
+  (define __list-head
+    (lambda (lst)
+      "Return list without last element."
+      (if (<= (length lst) 1)
+        (list)
+        (r/call "[" (list lst (seq 1 (- (length lst) 1)))))))
+
+  (define car
+    (lambda (lst)
+      "Return first element or #nil."
+      (if (is.call lst)
+        (if (> (length lst) 0) (r/call "[[" (list lst 1)) #nil)
+        (if (is.list lst)
+          (if (> (length lst) 0) (r/call "[[" (list lst 1)) #nil)
+          #nil))))
+
+  (define cdr
+    (lambda (lst)
+      "Return list without first element."
+      (if (is.call lst)
+        (if (> (length lst) 1)
+          (r/call "[" (list (as.list lst) (seq 2 (length lst))))
+          (list))
+        (if (is.list lst)
+          (if (> (length lst) 1)
+            (r/call "[" (list lst (seq 2 (length lst))))
+            (list))
+          (list)))))
+
+  (define cons
+    (lambda (item lst)
+      "Prepend item to list or call."
+      (if (is.call lst)
+        (as.call (c (list item) (as.list lst)))
+        (if (is.list lst)
+          (c (list item) lst)
+          (list item lst)))))
+
+  (define list*
+    (lambda (. args)
+      "Build list ending with last arg."
+      (if (= (length args) 0)
+        (list)
+        (if (= (length args) 1)
+          (car args)
+          (begin
+            (define last (__list-last args))
+            (define head (__list-head args))
+            (if (is.list last)
+              (c head (__as-list last))
+              (if (is.call last)
+                (c head (__as-list last))
+                (c head (list last)))))))))
+
+  (define append
+    (lambda (. lists)
+      (define append-loop
+        (lambda (acc rest)
+          "Accumulate list append."
+          (if (= (length rest) 0)
+            acc
+            (append-loop (c acc (__as-list (car rest))) (cdr rest)))))
+      (append-loop (list) lists)))
+
+  (define reverse
+    (lambda (x)
+      "Reverse list."
+      (rev (__as-list x))))
+
+  (define first
+    (lambda (lst)
+      "Alias for car."
+      (car lst)))
+
+  (define rest
+    (lambda (lst)
+      "Alias for cdr."
+      (cdr lst)))
+
+  (define last
+    (lambda (lst)
+      "Return last item or #nil."
+      (define items (__as-list lst))
+      (if (= (length items) 0) #nil (__list-last items))))
+
+  (define nth
+    (lambda (lst n)
+      "Return nth item (0-based)."
+      (define items (__as-list lst))
+      (if (< n 0)
+        (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
+        (if (>= n (length items))
+          (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
+          (r/call "[[" (list items (+ n 1))))))))

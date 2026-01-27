@@ -178,15 +178,15 @@ test_that("and macro works", {
   env <- new.env()
 
   # Define and macro
-  rye_eval(rye_read("(defmacro and (first second) `(if ,first ,second #f))")[[1]], env)
+  rye_eval(rye_read("(defmacro and2 (first second) `(if ,first ,second #f))")[[1]], env)
 
-  result <- rye_eval(rye_read("(and #t #t)")[[1]], env)
+  result <- rye_eval(rye_read("(and2 #t #t)")[[1]], env)
   expect_true(result)
 
-  result <- rye_eval(rye_read("(and #t #f)")[[1]], env)
+  result <- rye_eval(rye_read("(and2 #t #f)")[[1]], env)
   expect_false(result)
 
-  result <- rye_eval(rye_read("(and #f #t)")[[1]], env)
+  result <- rye_eval(rye_read("(and2 #f #t)")[[1]], env)
   expect_false(result)
 })
 
@@ -194,21 +194,22 @@ test_that("or macro works", {
   env <- new.env()
 
   # Define or macro
-  rye_eval(rye_read("(defmacro or (first second) `(if ,first #t ,second))")[[1]], env)
+  rye_eval(rye_read("(defmacro or2 (first second) `(if ,first #t ,second))")[[1]], env)
 
-  result <- rye_eval(rye_read("(or #t #f)")[[1]], env)
+  result <- rye_eval(rye_read("(or2 #t #f)")[[1]], env)
   expect_true(result)
 
-  result <- rye_eval(rye_read("(or #f #t)")[[1]], env)
+  result <- rye_eval(rye_read("(or2 #f #t)")[[1]], env)
   expect_true(result)
 
-  result <- rye_eval(rye_read("(or #f #f)")[[1]], env)
+  result <- rye_eval(rye_read("(or2 #f #f)")[[1]], env)
   expect_false(result)
 })
 
 test_that("variadic and/or short-circuit correctly", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
+  import_stdlib_modules(env, c("control"))
 
   result <- rye_eval(rye_read("(and #t 1 2 3)")[[1]], env)
   expect_equal(result, 3)
@@ -424,6 +425,7 @@ test_that("dict and set helpers work", {
 test_that("defstruct macro defines constructor and accessors", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)
+  import_stdlib_modules(env, c("struct"))
 
   rye_eval(rye_read("(defstruct Point (x y))")[[1]], env)
   rye_eval(rye_read("(define p (make-Point 1 2))")[[1]], env)

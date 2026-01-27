@@ -1,11 +1,12 @@
 #' Load the Rye standard library
 #'
-#' Loads the base Rye stdlib functions and Rye stdlib source files from
+#' Loads the base Rye stdlib functions and core Rye stdlib modules from
 #' the package's `inst/rye` directory.
 #'
 #' @details
 #' The returned environment uses `baseenv()` as its parent so that core R
-#' functions remain available alongside Rye helpers.
+#' functions remain available alongside Rye helpers. Additional Rye stdlib
+#' modules can be loaded via `(import ...)`.
 #'
 #' @param env An environment to populate. If NULL, creates a new one.
 #' @return An environment containing the Rye standard library
@@ -99,32 +100,25 @@ rye_load_stdlib_base <- function(env = NULL) {
 }
 
 rye_load_stdlib_files <- function(env = parent.frame()) {
-  dir_path <- system.file("rye", package = "rye")
-  if (identical(dir_path, "")) {
-    stop("Rye standard library directory not found in installed package")
-  }
-  paths <- list.files(dir_path, pattern = "\\.rye$", full.names = TRUE)
-  if (length(paths) == 0) {
-    stop("No Rye standard library files found in installed package")
-  }
-  ordered_files <- c(
-    "stdlib-core.rye",
-    "binding.rye",
-    "struct.rye",
-    "control.rye",
-    "looping.rye",
-    "threading.rye",
-    "error.rye",
-    "translator.rye"
+  base_modules <- c(
+    "stdlib-core",
+    "predicates",
+    "list-core",
+    "higher-order",
+    "sequences",
+    "strings",
+    "display",
+    "io"
   )
-  ordered_paths <- file.path(dir_path, ordered_files)
-  ordered_paths <- ordered_paths[file.exists(ordered_paths)]
-  remaining_paths <- setdiff(paths, ordered_paths)
-  load_paths <- c(ordered_paths, sort(remaining_paths))
+
+  for (module_name in base_modules) {
+    rye_module_unregister(module_name)
+  }
 
   result <- NULL
-  for (path in load_paths) {
-    result <- rye_load_file(path, env)
+  for (module_name in base_modules) {
+    exprs <- rye_read(sprintf("(import %s)", module_name))
+    result <- rye_eval(exprs[[1]], env)
   }
   result
 }

@@ -107,14 +107,23 @@ env <- rye_load_stdlib()
 ## Source mapping
 
 The base R parts of the stdlib implementation live in `R/stdlib.R`. The rye
-parts are organized by topic in `inst/rye/`:
+parts are organized by topic in `inst/rye/` (each file defines a module):
 
 - `stdlib-core.rye`
+- `predicates.rye`
+- `list-core.rye`
+- `higher-order.rye`
+- `sequences.rye`
+- `strings.rye`
+- `display.rye`
+- `io.rye`
 - `binding.rye`
+- `struct.rye`
 - `control.rye`
-- `error.rye`
 - `looping.rye`
 - `threading.rye`
+- `error.rye`
+- `translator.rye`
 
 If you’re looking for implementation details, these files are the source of
 truth for the stdlib definitions.

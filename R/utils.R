@@ -111,6 +111,32 @@ rye_module_register <- function(name, env, exports, path = NULL) {
   entry
 }
 
+rye_module_update_exports <- function(name, exports) {
+  if (!is.character(name) || length(name) != 1) {
+    stop("module name must be a single string")
+  }
+  entry <- rye_module_get(name)
+  if (is.null(entry)) {
+    stop(sprintf("module '%s' is not loaded", name))
+  }
+  if (!is.character(exports)) {
+    exports <- as.character(exports)
+  }
+  entry$exports <- exports
+  assign(name, entry, envir = .rye_module_registry)
+  entry
+}
+
+rye_module_unregister <- function(name) {
+  if (!is.character(name) || length(name) != 1) {
+    stop("module name must be a single string")
+  }
+  if (exists(name, envir = .rye_module_registry, inherits = FALSE)) {
+    rm(list = name, envir = .rye_module_registry)
+  }
+  invisible(NULL)
+}
+
 rye_module_attach <- function(name, target_env) {
   entry <- rye_module_get(name)
   if (is.null(entry)) {
@@ -120,6 +146,9 @@ rye_module_attach <- function(name, target_env) {
   module_env <- entry$env
   for (export_name in exports) {
     if (!exists(export_name, envir = module_env, inherits = FALSE)) {
+      if (is_macro(as.symbol(export_name))) {
+        next
+      }
       stop(sprintf("module '%s' does not export '%s'", name, export_name))
     }
     assign(export_name, get(export_name, envir = module_env, inherits = FALSE), envir = target_env)
@@ -253,6 +282,10 @@ rye_env_format_value <- function(env, value) {
 }
 
 rye_assign <- function(name, value, env) {
+  if (isTRUE(get0(".rye_module", envir = env, inherits = FALSE))) {
+    assign(name, value, envir = env)
+    return(invisible(NULL))
+  }
   target <- env
   repeat {
     if (exists(name, envir = target, inherits = FALSE)) {

@@ -1,5 +1,12 @@
 ;;; Rye Standard Library - Threading Macros
 
+(module threading
+  (export -> ->>)
+
+  (import higher-order)
+  (import list-core)
+  (import predicates)
+
 (defmacro -> (value . forms)
   "Thread value through forms (first argument)."
   (reduce
@@ -19,3 +26,4 @@
         (call (list form acc))))
     forms
     :init value))
+)
