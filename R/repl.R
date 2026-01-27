@@ -172,7 +172,7 @@ repl_print_value <- function(value) {
 rye_repl <- function() {
   cat(repl_version(), "\n", sep = "")
   cat("Type (quit) or press Ctrl+C to exit\n")
-  cat("R has readline:", ifelse(isTRUE(capabilities("readline")), "yes", "no"), "\n\n")
+  cat("Builtin readline support:", ifelse(isTRUE(capabilities("readline")), "yes", "no"), "\n\n")
 
   repl_env <- cli_load_env()
 
