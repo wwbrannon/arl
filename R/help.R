@@ -8,6 +8,18 @@ rye_help_topics <- list(
     usage = "(quasiquote expr)",
     description = "Template with selective evaluation via unquote."
   ),
+  delay = list(
+    usage = "(delay expr)",
+    description = "Return a promise that evaluates expr when forced."
+  ),
+  force = list(
+    usage = "(force promise)",
+    description = "Force a promise or return the value unchanged."
+  ),
+  `promise?` = list(
+    usage = "(promise? x)",
+    description = "Return TRUE if x is a promise."
+  ),
   unquote = list(
     usage = "(unquote expr)",
     description = "Evaluate expr inside quasiquote."

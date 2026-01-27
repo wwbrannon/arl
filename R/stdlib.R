@@ -64,6 +64,7 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$`macroexpand-1` <- rye_stdlib_macroexpand_1
   env$`macroexpand-all` <- rye_stdlib_macroexpand
   env$eval <- rye_stdlib_eval
+  env$`promise?` <- rye_stdlib_promise_p
 
   # Interop helpers
   env$dict <- rye_stdlib_dict
@@ -483,6 +484,10 @@ rye_stdlib_r_call <- function(fn, args = list()) {
   rye_do_call(fn, rye_as_list(args))
 }
 
+rye_stdlib_promise_p <- function(x) {
+  rye_promise_p(x)
+}
+
 rye_stdlib_dict_key_to_name <- function(key) {
   if (is.character(key)) {
     return(key)
@@ -563,6 +568,9 @@ rye_stdlib_format_value <- function(x) {
   if (is.environment(x) && inherits(x, "rye_set")) {
     return(rye_stdlib_deparse_single(unname(as.list(x, all.names = TRUE))))
   }
+  if (is.environment(x) && inherits(x, "rye_promise")) {
+    return("<promise>")
+  }
   if (is.list(x)) {
     if (length(x) == 0) {
       return("")
@@ -634,6 +642,10 @@ attr(rye_stdlib_macroexpand_1, "rye_doc") <- list(
 attr(rye_stdlib_eval, "rye_doc") <- list(
   usage = "(eval expr)",
   description = "Evaluate expr in the current environment."
+)
+attr(rye_stdlib_promise_p, "rye_doc") <- list(
+  usage = "(promise? x)",
+  description = "Return TRUE if x is a promise."
 )
 
 attr(rye_stdlib_dict, "rye_doc") <- list(

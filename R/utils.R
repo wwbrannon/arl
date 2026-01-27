@@ -86,6 +86,43 @@ rye_strip_src <- function(value) {
   value
 }
 
+rye_promise_value_key <- ".rye_promise_value"
+rye_promise_expr_key <- ".rye_promise_expr"
+rye_promise_env_key <- ".rye_promise_env"
+rye_promise_eval_key <- ".rye_promise_eval"
+
+rye_promise_new <- function(expr, env) {
+  promise_env <- new.env(parent = emptyenv())
+  assign(rye_promise_expr_key, expr, envir = promise_env)
+  assign(rye_promise_env_key, env, envir = promise_env)
+  assign(rye_promise_eval_key, rye_eval, envir = promise_env)
+  delayedAssign(
+    rye_promise_value_key,
+    .rye_promise_eval(.rye_promise_expr, .rye_promise_env),
+    eval.env = promise_env,
+    assign.env = promise_env
+  )
+  class(promise_env) <- c("rye_promise", class(promise_env))
+  lockEnvironment(promise_env, bindings = FALSE)
+  promise_env
+}
+
+rye_promise_p <- function(x) {
+  is.environment(x) && inherits(x, "rye_promise")
+}
+
+rye_promise_force <- function(x) {
+  if (!rye_promise_p(x)) {
+    return(x)
+  }
+  get(rye_promise_value_key, envir = x, inherits = FALSE)
+}
+
+print.rye_promise <- function(x, ...) {
+  cat("<promise>\n")
+  invisible(x)
+}
+
 rye_values_new <- function(values) {
   if (is.null(values)) {
     values <- list()

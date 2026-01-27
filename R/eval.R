@@ -125,6 +125,26 @@ rye_eval_cps_inner <- function(expr, env, k) {
     return(rye_call_k(k, rye_strip_src(result)))
   }
 
+  # delay - create a promise without evaluating the expression
+  if (is.symbol(op) && as.character(op) == "delay") {
+    if (length(expr) != 2) {
+      stop("delay requires exactly 1 argument")
+    }
+    promise <- rye_promise_new(rye_strip_src(expr[[2]]), env)
+    return(rye_call_k(k, promise))
+  }
+
+  # force - evaluate a promise (or return value as-is)
+  if (is.symbol(op) && as.character(op) == "force") {
+    if (length(expr) != 2) {
+      stop("force requires exactly 1 argument")
+    }
+    return(rye_eval_cps(expr[[2]], env, function(value) {
+      value <- rye_strip_src(value)
+      rye_call_k(k, rye_promise_force(value))
+    }))
+  }
+
   # help - show docs without evaluating argument
   if (is.symbol(op) && as.character(op) == "help") {
     if (length(expr) != 2) {

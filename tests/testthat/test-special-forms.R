@@ -17,6 +17,50 @@ test_that("quote sugar works", {
   expect_true(is.call(result))
 })
 
+test_that("delay creates a promise and force evaluates it", {
+  result <- rye_eval(rye_read("(delay (+ 1 2))")[[1]])
+  expect_true(is.environment(result))
+  expect_true(inherits(result, "rye_promise"))
+
+  forced <- rye_eval(rye_read("(force (delay (+ 1 2)))")[[1]])
+  expect_equal(forced, 3)
+})
+
+test_that("promise? detects promises", {
+  env <- rye_load_stdlib()
+  result <- rye_eval(rye_read("(promise? (delay 1))")[[1]], env)
+  expect_true(isTRUE(result))
+
+  non_promise <- rye_eval(rye_read("(promise? 1)")[[1]], env)
+  expect_false(isTRUE(non_promise))
+})
+
+test_that("delay is lazy until forced", {
+  env <- new.env()
+  rye_eval(
+    rye_read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  counter)")[[1]],
+    env
+  )
+  expect_equal(env$counter, 0)
+
+  rye_eval(rye_read("(force p)")[[1]], env)
+  expect_equal(env$counter, 1)
+})
+
+test_that("force memoizes delayed expressions", {
+  env <- new.env()
+  rye_eval(
+    rye_read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  (force p)\n  (force p)\n  counter)")[[1]],
+    env
+  )
+  expect_equal(env$counter, 1)
+})
+
+test_that("force returns non-promises unchanged", {
+  result <- rye_eval(rye_read("(force 42)")[[1]])
+  expect_equal(result, 42)
+})
+
 test_that("if evaluates conditionally", {
   result <- rye_eval(rye_read("(if #t 1 2)")[[1]])
   expect_equal(result, 1)
