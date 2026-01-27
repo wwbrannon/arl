@@ -19,6 +19,7 @@ rye_trimws_shim <- function(x, which = c("both", "left", "right"), whitespace = 
 
 .rye_error_state <- new.env(parent = emptyenv())
 .rye_error_state$src_stack <- list()
+.rye_module_registry <- new.env(parent = emptyenv())
 
 rye_src_new <- function(file, start_line, start_col, end_line = start_line, end_col = start_col) {
   structure(
@@ -84,6 +85,46 @@ rye_strip_src <- function(value) {
     return(stripped)
   }
   value
+}
+
+rye_module_exists <- function(name) {
+  is.character(name) && length(name) == 1 &&
+    exists(name, envir = .rye_module_registry, inherits = FALSE)
+}
+
+rye_module_get <- function(name) {
+  if (!rye_module_exists(name)) {
+    return(NULL)
+  }
+  get(name, envir = .rye_module_registry, inherits = FALSE)
+}
+
+rye_module_register <- function(name, env, exports, path = NULL) {
+  if (!is.character(name) || length(name) != 1) {
+    stop("module name must be a single string")
+  }
+  if (rye_module_exists(name)) {
+    stop(sprintf("module '%s' is already defined", name))
+  }
+  entry <- list(env = env, exports = exports, path = path)
+  assign(name, entry, envir = .rye_module_registry)
+  entry
+}
+
+rye_module_attach <- function(name, target_env) {
+  entry <- rye_module_get(name)
+  if (is.null(entry)) {
+    stop(sprintf("module '%s' is not loaded", name))
+  }
+  exports <- entry$exports
+  module_env <- entry$env
+  for (export_name in exports) {
+    if (!exists(export_name, envir = module_env, inherits = FALSE)) {
+      stop(sprintf("module '%s' does not export '%s'", name, export_name))
+    }
+    assign(export_name, get(export_name, envir = module_env, inherits = FALSE), envir = target_env)
+  }
+  invisible(NULL)
 }
 
 rye_promise_value_key <- ".rye_promise_value"
@@ -345,6 +386,30 @@ rye_resolve_stdlib_path <- function(name) {
   for (path in candidates) {
     if (file.exists(path)) {
       return(path)
+    }
+  }
+  NULL
+}
+
+rye_resolve_module_path <- function(name) {
+  if (!is.character(name) || length(name) != 1) {
+    return(NULL)
+  }
+  has_separator <- grepl("[/\\\\]", name)
+  if (has_separator) {
+    if (file.exists(name)) {
+      return(name)
+    }
+    return(NULL)
+  }
+  stdlib_path <- rye_resolve_stdlib_path(name)
+  if (!is.null(stdlib_path)) {
+    return(stdlib_path)
+  }
+  candidates <- c(name, paste0(name, ".rye"))
+  for (candidate in candidates) {
+    if (file.exists(candidate)) {
+      return(candidate)
     }
   }
   NULL

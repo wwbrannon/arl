@@ -195,6 +195,25 @@ what you need:
 (load "error")     ; try/catch/finally
 ```
 
+Rye also supports simple modules with explicit exports. A module file
+defines its own namespace and declares what it exports:
+
+``` lisp
+; math.rye
+(module math
+  (export square inc)
+  (define square (lambda (x) (* x x)))
+  (define inc (lambda (x) (+ x 1))))
+```
+
+Importing loads the module (using the same stdlib/current directory
+resolution as `load`) and attaches its exports into the current scope:
+
+``` lisp
+(import math)
+(square 3) ; => 9
+```
+
 ### Examples
 
 Check out the [examples](articles/examples.html) page for complete

@@ -297,6 +297,86 @@ rye_eval_cps_inner <- function(expr, env, k) {
     }))
   }
 
+  # module - define a module with explicit exports
+  if (is.symbol(op) && as.character(op) == "module") {
+    if (length(expr) < 3) {
+      stop("module requires at least 2 arguments: (module name (export ...) body...)")
+    }
+    name_expr <- expr[[2]]
+    if (is.symbol(name_expr)) {
+      module_name <- as.character(name_expr)
+    } else if (is.character(name_expr) && length(name_expr) == 1) {
+      module_name <- name_expr
+    } else {
+      stop("module name must be a symbol or string")
+    }
+
+    exports_expr <- expr[[3]]
+    if (!is.call(exports_expr) ||
+        length(exports_expr) < 1 ||
+        !is.symbol(exports_expr[[1]]) ||
+        as.character(exports_expr[[1]]) != "export") {
+      stop("module requires an export list: (module name (export ...) body...)")
+    }
+
+    exports <- character(0)
+    if (length(exports_expr) > 1) {
+      for (i in 2:length(exports_expr)) {
+        item <- exports_expr[[i]]
+        if (!is.symbol(item)) {
+          stop("module exports must be symbols")
+        }
+        exports <- c(exports, as.character(item))
+      }
+    }
+
+    module_env <- new.env(parent = env)
+    assign(".rye_env", TRUE, envir = module_env)
+    rye_module_register(module_name, module_env, exports)
+
+    body_exprs <- list()
+    if (length(expr) > 3) {
+      for (i in 4:length(expr)) {
+        body_exprs[[length(body_exprs) + 1]] <- expr[[i]]
+      }
+    }
+    if (length(body_exprs) == 0) {
+      return(rye_call_k(k, NULL))
+    }
+    return(rye_eval_seq_cps(body_exprs, module_env, function(value) {
+      rye_call_k(k, NULL)
+    }))
+  }
+
+  # import - load module and attach exports
+  if (is.symbol(op) && as.character(op) == "import") {
+    if (length(expr) != 2) {
+      stop("import requires exactly 1 argument: (import name)")
+    }
+    name_expr <- expr[[2]]
+    if (is.symbol(name_expr)) {
+      module_name <- as.character(name_expr)
+    } else if (is.character(name_expr) && length(name_expr) == 1) {
+      module_name <- name_expr
+    } else {
+      stop("import requires a module name symbol or string")
+    }
+
+    if (!rye_module_exists(module_name)) {
+      module_path <- rye_resolve_module_path(module_name)
+      if (is.null(module_path)) {
+        stop(sprintf("Module not found: %s", module_name))
+      }
+      rye_load_file(module_path, env)
+      if (!rye_module_exists(module_name)) {
+        stop(sprintf("Module '%s' did not register itself", module_name))
+      }
+    }
+
+    rye_module_attach(module_name, env)
+    return(rye_call_k(k, NULL))
+  }
+
   # lambda - function creation
   if (is.symbol(op) && as.character(op) == "lambda") {
     if (length(expr) < 3) {
