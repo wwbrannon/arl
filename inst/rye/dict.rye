@@ -1,0 +1,177 @@
+;;; Rye Standard Library - Dictionary (Hash Table)
+
+(module dict
+  (export dict hash dict? dict-get dict-set dict-remove dict-keys dict-values dict-has? dict-merge)
+
+  (import predicates)
+  (import list-core)
+  (import looping)
+
+;;; Internal helpers (defined early for use in constructors)
+
+(define dict-new
+  (lambda ()
+    "Create a new empty dictionary environment."
+    (define dict-obj (r/call "new.env" (list :hash #t :parent (r/call "emptyenv" (list)))))
+    (r/call "class<-" (list dict-obj (c (list "rye_dict") (r/call "class" (list dict-obj)))))
+    (r/call "assign" (list ".rye_keys" (r/call "character" (list 0)) :envir dict-obj))
+    dict-obj))
+
+(define dict-key-to-name
+  (lambda (key)
+    "Convert key to string name for dict storage."
+    (if (r/call "is.character" (list key))
+      key
+      (if (or (r/call "inherits" (list key "rye_keyword")) (r/call "is.symbol" (list key)))
+        (r/call "as.character" (list key))
+        #nil))))
+
+;;; Dictionary constructor
+
+(define dict
+  (lambda (. args)
+    "Create a hash-backed dictionary from key/value pairs."
+    (define dict-obj (dict-new))
+    (if (= (length args) 0)
+      dict-obj
+      (begin
+        (define arg-names (r/call "names" (list args)))
+        (if (or (is.null arg-names) (r/call "any" (list (r/call "!" (list (r/call "nzchar" (list arg-names)))))))
+          (error "dict requires named arguments")
+          (begin
+            (define keys (r/call "as.character" (list arg-names)))
+            (define assign-pair
+              (lambda (i)
+                (begin
+                  (define key (r/call "[[" (list keys i)))
+                  (define value (r/call "[[" (list args i)))
+                  (r/call "assign" (list key value :envir dict-obj)))))
+            (r/call "lapply" (list (r/call "seq_len" (list (length keys))) assign-pair))
+            (r/call "assign" (list ".rye_keys" keys :envir dict-obj))
+            dict-obj))))))
+
+(define hash dict)
+
+;;; Type predicate
+
+(define dict?
+  (lambda (x)
+    "Return #t if x is a dictionary."
+    (and (r/call "is.environment" (list x)) (r/call "inherits" (list x "rye_dict")))))
+
+;;; Internal helper (defined early for forward references)
+
+(define dict-keys-ordered
+  (lambda (dict)
+    "Return ordered keys vector (internal helper)."
+    (if (not (dict? dict))
+      (r/call "character" (list 0))
+      (begin
+        (define keys (r/call "get0" (list ".rye_keys" :envir dict :inherits #f)))
+        (if (is.null keys)
+          (r/call "sort" (list (r/call "ls" (list :envir dict :all.names #f))))
+          keys)))))
+
+;;; Dictionary operations
+
+(define dict-get
+  (lambda (dict key . rest)
+    "Get value for key or default if missing."
+    (define default (if (= (length rest) 0) #nil (car rest)))
+    (define name (dict-key-to-name key))
+    (if (or (is.null name) (not (dict? dict)))
+      default
+      (if (r/call "exists" (list name :envir dict :inherits #f))
+        (r/call "get" (list name :envir dict :inherits #f))
+        default))))
+
+(define dict-set
+  (lambda (dict key value)
+    "Set key to value in dict and return dict."
+    (define name (dict-key-to-name key))
+    (if (is.null name)
+      (error "dict-set requires a string, symbol, or keyword key")
+      (if (not (dict? dict))
+        (error "dict-set requires a dict")
+        (begin
+          (define keys (dict-keys-ordered dict))
+          (if (not (r/call "%in%" (list name keys)))
+            (r/call "assign" (list ".rye_keys" (c keys (list name)) :envir dict)))
+          (r/call "assign" (list name value :envir dict))
+          dict)))))
+
+(define dict-remove
+  (lambda (dict key)
+    "Remove key from dict and return dict."
+    (define name (dict-key-to-name key))
+    (if (or (is.null name) (not (dict? dict)))
+      dict
+      (if (r/call "exists" (list name :envir dict :inherits #f))
+        (begin
+          (r/call "rm" (list :list (c name) :envir dict :inherits #f))
+          (define keys (dict-keys-ordered dict))
+          (if (> (length keys) 0)
+            (r/call "assign" (list ".rye_keys" (r/call "as.character" (list (filter (lambda (k) (not (= k name))) (as.list keys)))) :envir dict)))
+          dict)
+        dict))))
+
+(define dict-keys
+  (lambda (dict)
+    "Return a list of dict keys."
+    (if (not (dict? dict))
+      (list)
+      (begin
+        (define keys (dict-keys-ordered dict))
+        (__as-list keys)))))
+
+(define dict-values
+  (lambda (dict)
+    "Return a list of dict values."
+    (if (not (dict? dict))
+      (list)
+      (begin
+        (define keys (dict-keys-ordered dict))
+        (if (= (length keys) 0)
+          (list)
+          (begin
+            (define values (r/call "mget" (list keys :envir dict :inherits #f)))
+            (__as-list (r/call "unname" (list values)))))))))
+
+(define dict-has?
+  (lambda (dict key)
+    "Return #t if dict contains key."
+    (define name (dict-key-to-name key))
+    (if (or (is.null name) (not (dict? dict)))
+      #f
+      (r/call "exists" (list name :envir dict :inherits #f)))))
+
+(define dict-merge
+  (lambda (. dicts)
+    "Merge dicts, later values override earlier."
+    (define result (dict-new))
+    (define result-keys (list))
+    (define merge-dict
+      (lambda (d)
+        (if (dict? d)
+          (begin
+            (define keys (dict-keys-ordered d))
+            (define merge-key
+              (lambda (name)
+                (begin
+                  (define value (r/call "get" (list name :envir d :inherits #f)))
+                  (r/call "assign" (list name value :envir result))
+                  (if (not (r/call "%in%" (list name (r/call "as.character" (list result-keys)))))
+                    (set! result-keys (c result-keys (list name)))))))
+            (if (> (length keys) 0)
+              (r/call "lapply" (list (as.list keys) merge-key)))))))
+    (define merge-loop
+      (lambda (rest)
+        (if (= (length rest) 0)
+          (begin
+            (r/call "assign" (list ".rye_keys" (r/call "as.character" (list result-keys)) :envir result))
+            result)
+          (begin
+            (merge-dict (car rest))
+            (merge-loop (cdr rest))))))
+    (merge-loop dicts)))
+)

@@ -1,0 +1,142 @@
+;;; Rye Standard Library - Set (Hash Table)
+
+(module set
+  (export set set? set-add set-remove set-contains? set-union set-intersection set-difference)
+
+  (import predicates)
+  (import list-core)
+  (import looping)
+
+;;; Internal helpers (defined early for use in constructors)
+
+(define set-new
+  (lambda ()
+    "Create a new empty set environment."
+    (define set-obj (r/call "new.env" (list :hash #t :parent (r/call "emptyenv" (list)))))
+    (r/call "class<-" (list set-obj (c (list "rye_set") (r/call "class" (list set-obj)))))
+    set-obj))
+
+(define set-key
+  (lambda (value)
+    "Convert value to string key for set storage via serialization."
+    (define raw (r/call "serialize" (list value #nil :ascii #t)))
+    (r/call "paste" (list (r/call "as.integer" (list raw)) :collapse ","))))
+
+;;; Set constructor
+
+(define set
+  (lambda (. args)
+    "Create a hash-backed set of unique items."
+    (define set-obj (set-new))
+    (define items
+      (if (and (= (length args) 1) (or (is.list (car args)) (is.call (car args))))
+        (as.list (car args))
+        (as.list args)))
+    (define add-item
+      (lambda (item)
+        (begin
+          (define key (set-key item))
+          (if (not (r/call "exists" (list key :envir set-obj :inherits #f)))
+            (r/call "assign" (list key item :envir set-obj))))))
+    (r/call "lapply" (list items add-item))
+    set-obj))
+
+;;; Type predicate
+
+(define set?
+  (lambda (x)
+    "Return #t if x is a set."
+    (and (r/call "is.environment" (list x)) (r/call "inherits" (list x "rye_set")))))
+
+;;; Set operations
+
+(define set-add
+  (lambda (set item)
+    "Add item to set and return set."
+    (if (not (set? set))
+      (error "set-add requires a set")
+      (begin
+        (define key (set-key item))
+        (if (not (r/call "exists" (list key :envir set :inherits #f)))
+          (r/call "assign" (list key item :envir set)))
+        set))))
+
+(define set-remove
+  (lambda (set item)
+    "Remove item from set and return set."
+    (if (not (set? set))
+      set
+      (begin
+        (define key (set-key item))
+        (if (r/call "exists" (list key :envir set :inherits #f))
+          (r/call "rm" (list :list (c key) :envir set :inherits #f)))
+        set))))
+
+(define set-contains?
+  (lambda (set item)
+    "Return #t if set contains item."
+    (if (not (set? set))
+      #f
+      (begin
+        (define key (set-key item))
+        (r/call "exists" (list key :envir set :inherits #f))))))
+
+(define set-union
+  (lambda (a b)
+    "Return union of two sets."
+    (define result (set-new))
+    (set-copy-into result a)
+    (set-copy-into result b)
+    result))
+
+(define set-intersection
+  (lambda (a b)
+    "Return intersection of two sets."
+    (define result (set-new))
+    (if (and (set? a) (set? b))
+      (begin
+        (define keys (r/call "ls" (list :envir a :all.names #t :sorted #f)))
+        (define add-if-in-b
+          (lambda (key)
+            (if (r/call "exists" (list key :envir b :inherits #f))
+              (begin
+                (define value (r/call "get" (list key :envir a :inherits #f)))
+                (r/call "assign" (list key value :envir result))))))
+        (r/call "lapply" (list (as.list keys) add-if-in-b))
+        result))
+    result))
+
+(define set-difference
+  (lambda (a b)
+    "Return items in a that are not in b."
+    (define result (set-new))
+    (if (set? a)
+      (begin
+        (define keys (r/call "ls" (list :envir a :all.names #t :sorted #f)))
+        (define add-if-not-in-b
+          (lambda (key)
+            (if (or (not (set? b)) (not (r/call "exists" (list key :envir b :inherits #f))))
+              (begin
+                (define value (r/call "get" (list key :envir a :inherits #f)))
+                (r/call "assign" (list key value :envir result))))))
+        (r/call "lapply" (list (as.list keys) add-if-not-in-b))
+        result))
+    result))
+
+;;; Internal helper
+
+(define set-copy-into
+  (lambda (target source)
+    "Copy items from source into target (internal helper)."
+    (if (and (set? target) (set? source))
+      (begin
+        (define keys (r/call "ls" (list :envir source :all.names #t :sorted #f)))
+        (define copy-key
+          (lambda (key)
+            (if (not (r/call "exists" (list key :envir target :inherits #f)))
+              (begin
+                (define value (r/call "get" (list key :envir source :inherits #f)))
+                (r/call "assign" (list key value :envir target))))))
+        (r/call "lapply" (list (as.list keys) copy-key)))
+    target)))
+)

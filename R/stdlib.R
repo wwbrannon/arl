@@ -80,26 +80,34 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$rye_parse <- rye_parse
   env$rye_tokenize <- rye_tokenize
 
-  # Interop helpers
-  env$dict <- rye_stdlib_dict
-  env$hash <- rye_stdlib_dict
-  env$`dict?` <- rye_stdlib_dict_p
-  env$`dict-get` <- rye_stdlib_dict_get
-  env$`dict-set` <- rye_stdlib_dict_set
-  env$`dict-remove` <- rye_stdlib_dict_remove
-  env$`dict-keys` <- rye_stdlib_dict_keys
-  env$`dict-values` <- rye_stdlib_dict_values
-  env$`dict-has?` <- rye_stdlib_dict_has_p
-  env$`dict-merge` <- rye_stdlib_dict_merge
-  env$set <- rye_stdlib_set
-  env$`set?` <- rye_stdlib_set_p
-  env$`set-add` <- rye_stdlib_set_add
-  env$`set-remove` <- rye_stdlib_set_remove
-  env$`set-contains?` <- rye_stdlib_set_contains_p
-  env$`set-union` <- rye_stdlib_set_union
-  env$`set-intersection` <- rye_stdlib_set_intersection
-  env$`set-difference` <- rye_stdlib_set_difference
-  env$`r/call` <- rye_stdlib_r_call
+  # Create r/call with closure that captures the stdlib environment
+  stdlib_env <- env
+  env$`r/call` <- function(fn, args = list()) {
+    fn_name <- if (is.symbol(fn)) {
+      as.character(fn)
+    } else if (is.character(fn)) {
+      fn
+    } else {
+      stop("r/call requires a symbol or string function name")
+    }
+    # First try the stdlib environment (where wrappers are)
+    fn_obj <- get0(fn_name, envir = stdlib_env, inherits = FALSE, ifnotfound = NULL)
+    # Then try parent frames
+    if (is.null(fn_obj)) {
+      for (i in 0:5) {
+        tryCatch({
+          frame_env <- parent.frame(i + 1)
+          fn_obj <- get0(fn_name, envir = frame_env, inherits = TRUE, ifnotfound = NULL)
+          if (!is.null(fn_obj)) break
+        }, error = function(e) NULL)
+      }
+    }
+    # Fall back to baseenv()
+    if (is.null(fn_obj)) {
+      fn_obj <- get(fn_name, envir = baseenv())
+    }
+    rye_do_call(fn_obj, rye_as_list(args))
+  }
 
   # Return the environment
   # All R base functions (+, -, *, /, <, >, print, etc.) are automatically
@@ -116,7 +124,9 @@ rye_load_stdlib_files <- function(env = parent.frame()) {
     "sequences",
     "strings",
     "display",
-    "io"
+    "io",
+    "dict",
+    "set"
   )
 
   for (module_name in base_modules) {
@@ -260,210 +270,39 @@ rye_stdlib_eval <- function(expr, env = parent.frame()) {
   rye_eval(expr, env)
 }
 
-rye_stdlib_dict <- function(...) {
-  args <- list(...)
-  dict <- rye_stdlib_dict_new()
-  if (length(args) == 0) {
-    return(dict)
-  }
-  arg_names <- names(args)
-  if (is.null(arg_names) || any(!nzchar(arg_names))) {
-    stop("dict requires named arguments")
-  }
-  for (name in arg_names) {
-    assign(name, args[[name]], envir = dict)
-  }
-  assign(".rye_keys", arg_names, envir = dict)
-  dict
-}
-
-rye_stdlib_dict_p <- function(x) {
-  is.environment(x) && inherits(x, "rye_dict")
-}
-
-rye_stdlib_dict_get <- function(dict, key, default = NULL) {
-  name <- rye_stdlib_dict_key_to_name(key)
-  if (is.null(name) || !rye_stdlib_dict_p(dict)) {
-    return(default)
-  }
-  if (exists(name, envir = dict, inherits = FALSE)) {
-    return(get(name, envir = dict, inherits = FALSE))
-  }
-  default
-}
-
-rye_stdlib_dict_set <- function(dict, key, value) {
-  name <- rye_stdlib_dict_key_to_name(key)
-  if (is.null(name)) {
-    stop("dict-set requires a string, symbol, or keyword key")
-  }
-  if (!rye_stdlib_dict_p(dict)) {
-    stop("dict-set requires a dict")
-  }
-  keys <- rye_stdlib_dict_keys_ordered(dict)
-  if (!name %in% keys) {
-    assign(".rye_keys", c(keys, name), envir = dict)
-  }
-  assign(name, value, envir = dict)
-  dict
-}
-
-rye_stdlib_dict_remove <- function(dict, key) {
-  name <- rye_stdlib_dict_key_to_name(key)
-  if (is.null(name) || !rye_stdlib_dict_p(dict)) {
-    return(dict)
-  }
-  if (!exists(name, envir = dict, inherits = FALSE)) {
-    return(dict)
-  }
-  rm(list = name, envir = dict, inherits = FALSE)
-  keys <- rye_stdlib_dict_keys_ordered(dict)
-  if (length(keys) > 0) {
-    assign(".rye_keys", keys[keys != name], envir = dict)
-  }
-  dict
-}
-
-rye_stdlib_dict_keys <- function(dict) {
-  if (!rye_stdlib_dict_p(dict)) {
-    return(list())
-  }
-  as.list(rye_stdlib_dict_keys_ordered(dict))
-}
-
-rye_stdlib_dict_values <- function(dict) {
-  if (!rye_stdlib_dict_p(dict)) {
-    return(list())
-  }
-  keys <- rye_stdlib_dict_keys_ordered(dict)
-  if (length(keys) == 0) {
-    return(list())
-  }
-  rye_as_list(unname(mget(keys, envir = dict, inherits = FALSE)))
-}
-
-rye_stdlib_dict_has_p <- function(dict, key) {
-  name <- rye_stdlib_dict_key_to_name(key)
-  if (is.null(name) || !rye_stdlib_dict_p(dict)) {
-    return(FALSE)
-  }
-  exists(name, envir = dict, inherits = FALSE)
-}
-
-rye_stdlib_dict_merge <- function(...) {
-  dicts <- list(...)
-  result <- rye_stdlib_dict_new()
-  result_keys <- character(0)
-  for (dict in dicts) {
-    if (!rye_stdlib_dict_p(dict)) {
-      next
-    }
-    keys <- rye_stdlib_dict_keys_ordered(dict)
-    if (length(keys) == 0) {
-      next
-    }
-    for (name in keys) {
-      assign(name, get(name, envir = dict, inherits = FALSE), envir = result)
-      if (!name %in% result_keys) {
-        result_keys <- c(result_keys, name)
-      }
-    }
-  }
-  assign(".rye_keys", result_keys, envir = result)
-  result
-}
-
-rye_stdlib_set <- function(...) {
-  args <- list(...)
-  set <- rye_stdlib_set_new()
-  if (length(args) == 1 && (is.list(args[[1]]) || is.call(args[[1]]))) {
-    items <- rye_as_list(args[[1]])
-  } else {
-    items <- rye_as_list(args)
-  }
-  for (item in items) {
-    key <- rye_stdlib_set_key(item)
-    if (!exists(key, envir = set, inherits = FALSE)) {
-      assign(key, item, envir = set)
-    }
-  }
-  set
-}
-
-rye_stdlib_set_p <- function(x) {
-  is.environment(x) && inherits(x, "rye_set")
-}
-
-rye_stdlib_set_add <- function(set, item) {
-  if (!rye_stdlib_set_p(set)) {
-    stop("set-add requires a set")
-  }
-  key <- rye_stdlib_set_key(item)
-  if (!exists(key, envir = set, inherits = FALSE)) {
-    assign(key, item, envir = set)
-  }
-  set
-}
-
-rye_stdlib_set_remove <- function(set, item) {
-  if (!rye_stdlib_set_p(set)) {
-    return(set)
-  }
-  key <- rye_stdlib_set_key(item)
-  if (exists(key, envir = set, inherits = FALSE)) {
-    rm(list = key, envir = set, inherits = FALSE)
-  }
-  set
-}
-
-rye_stdlib_set_contains_p <- function(set, item) {
-  if (!rye_stdlib_set_p(set)) {
-    return(FALSE)
-  }
-  key <- rye_stdlib_set_key(item)
-  exists(key, envir = set, inherits = FALSE)
-}
-
-rye_stdlib_set_union <- function(a, b) {
-  result <- rye_stdlib_set_new()
-  rye_stdlib_set_copy_into(result, a)
-  rye_stdlib_set_copy_into(result, b)
-  result
-}
-
-rye_stdlib_set_intersection <- function(a, b) {
-  result <- rye_stdlib_set_new()
-  if (!rye_stdlib_set_p(a) || !rye_stdlib_set_p(b)) {
-    return(result)
-  }
-  keys <- ls(envir = a, all.names = TRUE, sorted = FALSE)
-  for (key in keys) {
-    if (exists(key, envir = b, inherits = FALSE)) {
-      assign(key, get(key, envir = a, inherits = FALSE), envir = result)
-    }
-  }
-  result
-}
-
-rye_stdlib_set_difference <- function(a, b) {
-  result <- rye_stdlib_set_new()
-  if (!rye_stdlib_set_p(a)) {
-    return(result)
-  }
-  keys <- ls(envir = a, all.names = TRUE, sorted = FALSE)
-  for (key in keys) {
-    if (!rye_stdlib_set_p(b) || !exists(key, envir = b, inherits = FALSE)) {
-      assign(key, get(key, envir = a, inherits = FALSE), envir = result)
-    }
-  }
-  result
-}
 
 rye_stdlib_r_call <- function(fn, args = list()) {
-  if (is.symbol(fn)) {
-    fn <- get(as.character(fn), envir = baseenv())
+  fn_name <- if (is.symbol(fn)) {
+    as.character(fn)
   } else if (is.character(fn)) {
-    fn <- get(fn, envir = baseenv())
+    fn
+  } else {
+    stop("r/call requires a symbol or string function name")
+  }
+  # Search for function in parent frames and their parent chains
+  fn <- NULL
+  # Try multiple parent frames
+  for (i in 0:10) {
+    tryCatch({
+      frame_env <- parent.frame(i + 1)
+      # Search this frame and its parent chain
+      fn <- get0(fn_name, envir = frame_env, inherits = TRUE, ifnotfound = NULL)
+      if (!is.null(fn)) break
+      # Also check if this frame has a Rye environment in its parent chain
+      current <- frame_env
+      while (!is.null(current) && !identical(current, baseenv()) && !identical(current, emptyenv())) {
+        if (exists(fn_name, envir = current, inherits = FALSE)) {
+          fn <- get(fn_name, envir = current, inherits = FALSE)
+          break
+        }
+        current <- parent.env(current)
+      }
+      if (!is.null(fn)) break
+    }, error = function(e) NULL)
+  }
+  # Fall back to baseenv() if not found
+  if (is.null(fn)) {
+    fn <- get(fn_name, envir = baseenv())
   }
   rye_do_call(fn, rye_as_list(args))
 }
@@ -476,67 +315,6 @@ rye_stdlib_force <- function(x) {
   rye_promise_force(x)
 }
 
-rye_stdlib_dict_key_to_name <- function(key) {
-  if (is.character(key)) {
-    return(key)
-  }
-  if (inherits(key, "rye_keyword") || is.symbol(key)) {
-    return(as.character(key))
-  }
-  NULL
-}
-
-rye_stdlib_dict_new <- function() {
-  dict <- new.env(hash = TRUE, parent = emptyenv())
-  class(dict) <- c("rye_dict", class(dict))
-  assign(".rye_keys", character(0), envir = dict)
-  dict
-}
-
-rye_stdlib_set_new <- function() {
-  set <- new.env(hash = TRUE, parent = emptyenv())
-  class(set) <- c("rye_set", class(set))
-  set
-}
-
-rye_stdlib_set_key <- function(value) {
-  raw <- serialize(value, NULL, ascii = TRUE)
-  paste(as.integer(raw), collapse = ",")
-}
-
-rye_stdlib_set_copy_into <- function(target, source) {
-  if (!rye_stdlib_set_p(target) || !rye_stdlib_set_p(source)) {
-    return(target)
-  }
-  keys <- ls(envir = source, all.names = TRUE, sorted = FALSE)
-  for (key in keys) {
-    if (!exists(key, envir = target, inherits = FALSE)) {
-      assign(key, get(key, envir = source, inherits = FALSE), envir = target)
-    }
-  }
-  target
-}
-
-rye_stdlib_dict_keys_ordered <- function(dict) {
-  if (!rye_stdlib_dict_p(dict)) {
-    return(character(0))
-  }
-  keys <- get0(".rye_keys", envir = dict, inherits = FALSE)
-  if (is.null(keys)) {
-    return(sort(ls(envir = dict, all.names = FALSE)))
-  }
-  keys
-}
-
-rye_stdlib_dict_to_list <- function(dict) {
-  keys <- rye_stdlib_dict_keys_ordered(dict)
-  if (length(keys) == 0) {
-    return(list())
-  }
-  values <- mget(keys, envir = dict, inherits = FALSE)
-  names(values) <- keys
-  values
-}
 
 rye_stdlib_deparse_single <- function(x) {
   paste(deparse(x, width.cutoff = 500), collapse = " ")
@@ -584,57 +362,6 @@ attr(rye_stdlib_promise_p, "rye_doc") <- list(
 )
 attr(rye_stdlib_force, "rye_doc") <- list(
   description = "Force a promise or return x unchanged."
-)
-attr(rye_stdlib_dict, "rye_doc") <- list(
-  description = "Create a hash-backed dictionary from key/value pairs."
-)
-attr(rye_stdlib_dict_p, "rye_doc") <- list(
-  description = "Return TRUE if x is a dictionary."
-)
-attr(rye_stdlib_dict_get, "rye_doc") <- list(
-  description = "Get value for key or default if missing."
-)
-attr(rye_stdlib_dict_set, "rye_doc") <- list(
-  description = "Set key to value in dict and return dict."
-)
-attr(rye_stdlib_dict_remove, "rye_doc") <- list(
-  description = "Remove key from dict and return dict."
-)
-attr(rye_stdlib_dict_keys, "rye_doc") <- list(
-  description = "Return a list of dict keys."
-)
-attr(rye_stdlib_dict_values, "rye_doc") <- list(
-  description = "Return a list of dict values."
-)
-attr(rye_stdlib_dict_has_p, "rye_doc") <- list(
-  description = "Return TRUE if dict contains key."
-)
-attr(rye_stdlib_dict_merge, "rye_doc") <- list(
-  description = "Merge dicts, later values override earlier."
-)
-attr(rye_stdlib_set, "rye_doc") <- list(
-  description = "Create a hash-backed set of unique items."
-)
-attr(rye_stdlib_set_p, "rye_doc") <- list(
-  description = "Return TRUE if x is a set."
-)
-attr(rye_stdlib_set_add, "rye_doc") <- list(
-  description = "Add item to set and return set."
-)
-attr(rye_stdlib_set_remove, "rye_doc") <- list(
-  description = "Remove item from set and return set."
-)
-attr(rye_stdlib_set_contains_p, "rye_doc") <- list(
-  description = "Return TRUE if set contains item."
-)
-attr(rye_stdlib_set_union, "rye_doc") <- list(
-  description = "Return union of two sets."
-)
-attr(rye_stdlib_set_intersection, "rye_doc") <- list(
-  description = "Return intersection of two sets."
-)
-attr(rye_stdlib_set_difference, "rye_doc") <- list(
-  description = "Return items in a that are not in b."
 )
 attr(rye_stdlib_r_call, "rye_doc") <- list(
   description = "Call an R function with list arguments."
