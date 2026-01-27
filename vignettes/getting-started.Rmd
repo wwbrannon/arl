@@ -99,6 +99,16 @@ The REPL loads the base stdlib. You can load extra modules from `inst/rye`:
       1
       (* n (factorial (- n 1))))))
 
+; Lambda destructuring (pattern wrapper keeps defaults unambiguous)
+(define sum-pair
+  (lambda ((pattern (a b)))
+    (+ a b)))
+
+; Dotted rest destructuring
+(define head-tail
+  (lambda (x . (pattern (a b)))
+    (list x a b)))
+
 ; Lists
 (list 1 2 3)
 (car (list 1 2 3))

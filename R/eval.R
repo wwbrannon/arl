@@ -227,15 +227,8 @@ rye_eval_cps_inner <- function(expr, env, k) {
     name <- expr[[2]]
     return(rye_eval_cps(expr[[3]], env, function(value) {
       value <- rye_strip_src(value)
-      if (is.symbol(name)) {
-        rye_assign(as.character(name), value, env)
-        return(rye_call_k(k, NULL))
-      }
-      if (is.call(name) || (is.list(name) && is.null(attr(name, "class", exact = TRUE)))) {
-        rye_destructure_bind(name, value, env, mode = "define")
-        return(rye_call_k(k, NULL))
-      }
-      stop("define requires a symbol or list pattern as the first argument")
+      rye_assign_pattern(name, value, env, mode = "define", context = "define")
+      rye_call_k(k, NULL)
     }))
   }
 
@@ -247,15 +240,8 @@ rye_eval_cps_inner <- function(expr, env, k) {
     name <- expr[[2]]
     return(rye_eval_cps(expr[[3]], env, function(value) {
       value <- rye_strip_src(value)
-      if (is.symbol(name)) {
-        rye_assign_existing(as.character(name), value, env)
-        return(rye_call_k(k, NULL))
-      }
-      if (is.call(name) || (is.list(name) && is.null(attr(name, "class", exact = TRUE)))) {
-        rye_destructure_bind(name, value, env, mode = "set")
-        return(rye_call_k(k, NULL))
-      }
-      stop("set! requires a symbol or list pattern as the first argument")
+      rye_assign_pattern(name, value, env, mode = "set", context = "set!")
+      rye_call_k(k, NULL)
     }))
   }
 
@@ -389,6 +375,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
 
     # Handle dotted rest parameter (x y . rest)
     rest_param <- NULL
+    rest_param_spec <- NULL
     if (length(arg_items) > 0) {
       dot_idx <- which(vapply(arg_items, function(arg) {
         is.symbol(arg) && as.character(arg) == "."
@@ -401,10 +388,31 @@ rye_eval_cps_inner <- function(expr, env, k) {
           stop("Dotted parameter list must have exactly one parameter after '.'")
         }
         rest_arg <- arg_items[[dot_idx + 1]]
-        if (!is.symbol(rest_arg)) {
-          stop("Rest parameter must be a symbol")
+        if (is.symbol(rest_arg)) {
+          rest_param <- as.character(rest_arg)
+          rest_param_spec <- list(type = "name", name = rest_param, pattern = NULL, display = rest_param)
+        } else if (is.call(rest_arg) || (is.list(rest_arg) && is.null(attr(rest_arg, "class", exact = TRUE)))) {
+          rest_list <- if (is.call(rest_arg)) as.list(rest_arg) else rest_arg
+          is_pattern_wrapper <- length(rest_list) >= 2 &&
+            is.symbol(rest_list[[1]]) &&
+            as.character(rest_list[[1]]) %in% c("pattern", "destructure")
+          if (!is_pattern_wrapper) {
+            stop("Rest parameter must be a symbol or (pattern <pat>)")
+          }
+          if (length(rest_list) != 2) {
+            stop("Rest pattern must be (pattern <pat>)")
+          }
+          rest_pattern <- rest_list[[2]]
+          rest_display <- paste(deparse(rest_pattern, width.cutoff = 500), collapse = " ")
+          rest_param_spec <- list(
+            type = "pattern",
+            name = NULL,
+            pattern = rest_pattern,
+            display = rest_display
+          )
+        } else {
+          stop("Rest parameter must be a symbol or (pattern <pat>)")
         }
-        rest_param <- as.character(rest_arg)
         if (dot_idx > 1) {
           arg_items <- arg_items[1:(dot_idx - 1)]
         } else {
@@ -413,8 +421,10 @@ rye_eval_cps_inner <- function(expr, env, k) {
       }
     }
 
-    # Parse required and defaulted parameters
+    # Parse required, defaulted, and destructured parameters
+    param_specs <- list()
     param_names <- character(0)
+    param_display <- character(0)
     param_defaults <- list()
     param_default_exprs <- list()
     if (length(arg_items) > 0) {
@@ -422,26 +432,71 @@ rye_eval_cps_inner <- function(expr, env, k) {
         if (is.symbol(arg)) {
           name <- as.character(arg)
           param_names <- c(param_names, name)
+          param_display <- c(param_display, name)
           param_defaults[[name]] <- quote(expr = )
           param_default_exprs[[name]] <- list(rye_missing_default())
-        } else if (is.call(arg) || is.list(arg)) {
+          param_specs[[length(param_specs) + 1]] <- list(
+            type = "name",
+            formal = name,
+            pattern = NULL,
+            display = name
+          )
+        } else if (is.call(arg) || (is.list(arg) && is.null(attr(arg, "class", exact = TRUE)))) {
           arg_list <- if (is.call(arg)) as.list(arg) else arg
-          if (length(arg_list) != 2) {
-            stop("lambda default argument must be a 2-element list")
+          is_pattern_wrapper <- length(arg_list) >= 2 &&
+            is.symbol(arg_list[[1]]) &&
+            as.character(arg_list[[1]]) %in% c("pattern", "destructure")
+          is_default_pair <- length(arg_list) == 2 && is.symbol(arg_list[[1]])
+          if (is_pattern_wrapper) {
+            if (length(arg_list) != 2 && length(arg_list) != 3) {
+              stop("pattern wrapper must be (pattern <pat>) or (pattern <pat> <default>)")
+            }
+            pattern <- arg_list[[2]]
+            default_expr <- rye_missing_default()
+            if (length(arg_list) == 3) {
+              default_expr <- arg_list[[3]]
+              if (is.null(default_expr)) {
+                default_expr <- quote(NULL)
+              }
+            }
+            tmp_name <- as.character(gensym(".__rye_arg"))
+            display <- paste(deparse(pattern, width.cutoff = 500), collapse = " ")
+            param_names <- c(param_names, tmp_name)
+            param_display <- c(param_display, display)
+            if (inherits(default_expr, "rye_missing_default")) {
+              param_defaults[[tmp_name]] <- quote(expr = )
+              param_default_exprs[[tmp_name]] <- list(rye_missing_default())
+            } else {
+              param_defaults[[tmp_name]] <- default_expr
+              param_default_exprs[[tmp_name]] <- list(default_expr)
+            }
+            param_specs[[length(param_specs) + 1]] <- list(
+              type = "pattern",
+              formal = tmp_name,
+              pattern = pattern,
+              display = display
+            )
+          } else if (is_default_pair) {
+            name <- as.character(arg_list[[1]])
+            default_expr <- arg_list[[2]]
+            if (is.null(default_expr)) {
+              default_expr <- quote(NULL)
+            }
+            param_names <- c(param_names, name)
+            param_display <- c(param_display, name)
+            param_defaults[[name]] <- default_expr
+            param_default_exprs[[name]] <- list(default_expr)
+            param_specs[[length(param_specs) + 1]] <- list(
+              type = "name",
+              formal = name,
+              pattern = NULL,
+              display = name
+            )
+          } else {
+            stop("lambda arguments must be symbols, (name default) pairs, or (pattern <pat> [default])")
           }
-          if (!is.symbol(arg_list[[1]])) {
-            stop("lambda default argument name must be a symbol")
-          }
-          name <- as.character(arg_list[[1]])
-          default_expr <- arg_list[[2]]
-          if (is.null(default_expr)) {
-            default_expr <- quote(NULL)
-          }
-          param_names <- c(param_names, name)
-          param_defaults[[name]] <- default_expr
-          param_default_exprs[[name]] <- list(default_expr)
         } else {
-          stop("lambda arguments must be symbols or (name default) pairs")
+          stop("lambda arguments must be symbols, (name default) pairs, or (pattern <pat> [default])")
         }
       }
     }
@@ -458,7 +513,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
         formals_list[[name]] <- param_defaults[[name]]
       }
     }
-    if (!is.null(rest_param)) {
+    if (!is.null(rest_param) || !is.null(rest_param_spec)) {
       formals_list[["..."]] <- quote(expr = )
     }
 
@@ -517,8 +572,11 @@ rye_eval_cps_inner <- function(expr, env, k) {
     class(fn) <- c("rye_closure", class(fn))
     attr(fn, "rye_closure") <- list(
       params = param_names,
+      param_specs = param_specs,
+      param_display = param_display,
       defaults = param_default_exprs,
       rest_param = rest_param,
+      rest_param_spec = rest_param_spec,
       body_exprs = body_exprs,
       parent_env = parent_env
     )
@@ -692,10 +750,15 @@ rye_apply_closure_cps <- function(fn, args, k) {
   }
 
   rest_args <- list()
-  if (!is.null(info$rest_param)) {
+  formal_params <- info$params
+  if (is.null(formal_params)) {
+    formal_params <- character(0)
+  }
+  has_rest <- !is.null(info$rest_param_spec) || !is.null(info$rest_param)
+  if (has_rest) {
     for (idx in seq_along(matched_args)) {
       name <- matched_names[[idx]]
-      if (!nzchar(name) || !(name %in% info$params)) {
+      if (!nzchar(name) || !(name %in% formal_params)) {
         rest_args <- c(rest_args, list(rye_strip_src(matched_args[[idx]])))
         if (nzchar(name)) {
           names(rest_args)[length(rest_args)] <- name
@@ -705,32 +768,55 @@ rye_apply_closure_cps <- function(fn, args, k) {
   } else {
     for (idx in seq_along(matched_args)) {
       name <- matched_names[[idx]]
-      if (!nzchar(name) || !(name %in% info$params)) {
+      if (!nzchar(name) || !(name %in% formal_params)) {
         stop("lambda got unexpected arguments")
       }
     }
   }
 
   bind_defaults <- function(idx) {
-    if (idx > length(info$params)) {
-      if (!is.null(info$rest_param)) {
-        assign(info$rest_param, rest_args, envir = fn_env)
+    param_specs <- info$param_specs
+    if (is.null(param_specs)) {
+      param_specs <- lapply(info$params, function(name) {
+        list(type = "name", formal = name, pattern = NULL, display = name)
+      })
+    }
+    if (idx > length(param_specs)) {
+      if (has_rest) {
+        rest_spec <- info$rest_param_spec
+        if (is.null(rest_spec)) {
+          assign(info$rest_param, rest_args, envir = fn_env)
+        } else if (identical(rest_spec$type, "pattern")) {
+          rye_destructure_bind(rest_spec$pattern, rest_args, fn_env, mode = "define")
+        } else {
+          assign(rest_spec$name, rest_args, envir = fn_env)
+        }
       }
       return(rye_eval_seq_cps(info$body_exprs, fn_env, k))
     }
-    name <- info$params[[idx]]
+    spec <- param_specs[[idx]]
+    name <- spec$formal
+    display <- spec$display
+    if (is.null(display) || !nzchar(display)) {
+      display <- name
+    }
+    bind_value <- function(value) {
+      value <- rye_strip_src(value)
+      if (identical(spec$type, "pattern")) {
+        rye_destructure_bind(spec$pattern, value, fn_env, mode = "define")
+      } else {
+        assign(name, value, envir = fn_env)
+      }
+      bind_defaults(idx + 1)
+    }
     if (name %in% matched_names) {
-      assign(name, rye_strip_src(matched_args[[name]]), envir = fn_env)
-      return(bind_defaults(idx + 1))
+      return(bind_value(matched_args[[name]]))
     }
     default_expr <- info$defaults[[name]][[1]]
     if (inherits(default_expr, "rye_missing_default")) {
-      stop(sprintf("lambda missing argument: %s", name))
+      stop(sprintf("lambda missing argument: %s", display))
     }
-    rye_eval_cps(default_expr, fn_env, function(value) {
-      assign(name, rye_strip_src(value), envir = fn_env)
-      bind_defaults(idx + 1)
-    })
+    rye_eval_cps(default_expr, fn_env, bind_value)
   }
 
   bind_defaults(1)

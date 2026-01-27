@@ -102,6 +102,22 @@ test_that("lambda supports default arguments", {
   expect_equal(rye_eval(rye_read("(add-default 2 3)")[[1]], env), 5)
 })
 
+test_that("lambda supports destructuring arguments", {
+  env <- new.env()
+  rye_eval(rye_read("(define sum-pair (lambda ((pattern (a b))) (+ a b)))")[[1]], env)
+  expect_equal(rye_eval(rye_read("(sum-pair (list 2 3))")[[1]], env), 5)
+
+  rye_eval(rye_read("(define nested (lambda ((pattern (a (b c)))) (+ a (+ b c))))")[[1]], env)
+  expect_equal(rye_eval(rye_read("(nested (list 1 (list 2 3)))")[[1]], env), 6)
+
+  rye_eval(rye_read("(define sum-default (lambda ((pattern (a b) (list 4 5))) (+ a b)))")[[1]], env)
+  expect_equal(rye_eval(rye_read("(sum-default)")[[1]], env), 9)
+  expect_equal(rye_eval(rye_read("(sum-default (list 1 2))")[[1]], env), 3)
+
+  rye_eval(rye_read("(define rest-pair (lambda (x . (pattern (a b))) (list x a b)))")[[1]], env)
+  expect_equal(rye_eval(rye_read("(rest-pair 1 2 3)")[[1]], env), list(1, 2, 3))
+})
+
 test_that("lambda supports dotted rest arguments", {
   env <- new.env()
   rye_eval(rye_read("(define count-rest (lambda (x . rest) (length rest)))")[[1]], env)

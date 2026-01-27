@@ -306,6 +306,24 @@ rye_pattern_symbols <- function(pattern) {
   character(0)
 }
 
+rye_assign_pattern <- function(pattern, value, env, mode = c("define", "set"), context = "define") {
+  mode <- match.arg(mode)
+  if (is.symbol(pattern)) {
+    name <- as.character(pattern)
+    if (identical(mode, "define")) {
+      rye_assign(name, value, env)
+    } else {
+      rye_assign_existing(name, value, env)
+    }
+    return(invisible(NULL))
+  }
+  if (is.call(pattern) || (is.list(pattern) && is.null(attr(pattern, "class", exact = TRUE)))) {
+    rye_destructure_bind(pattern, value, env, mode = mode)
+    return(invisible(NULL))
+  }
+  stop(sprintf("%s requires a symbol or list pattern as the first argument", context))
+}
+
 rye_destructure_bind <- function(pattern, value, env, mode = c("define", "set")) {
   mode <- match.arg(mode)
   bind_symbol <- function(symbol, val) {

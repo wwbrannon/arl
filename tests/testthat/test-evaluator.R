@@ -87,7 +87,7 @@ test_that("evaluator validates lambda argument lists", {
   expect_error(rye_eval(rye_read("(lambda 1 2)")[[1]]), "lambda arguments must be a list")
   expect_error(
     rye_eval(rye_read("(lambda (1) 2)")[[1]]),
-    "lambda arguments must be symbols or \\(name default\\) pairs"
+    "lambda arguments must be symbols, \\(name default\\) pairs, or \\(pattern <pat> \\[default\\]\\)"
   )
   expect_error(
     rye_eval(rye_read("(lambda (a .) a)")[[1]]),

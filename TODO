@@ -5,8 +5,8 @@ o) refactor these stdlib files to use (module ...)
 
 o) Can we rewrite any of the current code in rye? Any functionality that can be streamlined?
 * Stdlib
-* formatting/printing
 * Destructuring utilities
+
 
 o) Look for any R code that’s left over or not used
 
@@ -15,3 +15,5 @@ o) Look for any R code that can be refactored to make it simpler
 o) How to calculate test coverage of .rye code
 
 o) More tests for .rye code
+
+o) fix everything in `make check`

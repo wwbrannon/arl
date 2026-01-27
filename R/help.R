@@ -102,17 +102,35 @@ rye_help_usage_from_closure <- function(fn, topic) {
   }
   args <- character(0)
   if (length(info$params) > 0) {
-    for (name in info$params) {
+    param_specs <- info$param_specs
+    if (is.null(param_specs)) {
+      param_specs <- lapply(info$params, function(name) {
+        list(type = "name", formal = name, display = name)
+      })
+    }
+    for (spec in param_specs) {
+      name <- spec$formal
+      display <- spec$display
+      if (is.null(display) || !nzchar(display)) {
+        display <- name
+      }
       default_expr <- info$defaults[[name]][[1]]
       default_text <- rye_help_format_default(default_expr)
       if (is.null(default_text)) {
-        args <- c(args, name)
+        args <- c(args, display)
       } else {
-        args <- c(args, paste0("(", name, " ", default_text, ")"))
+        args <- c(args, paste0("(", display, " ", default_text, ")"))
       }
     }
   }
-  if (!is.null(info$rest_param)) {
+  rest_spec <- info$rest_param_spec
+  if (!is.null(rest_spec)) {
+    rest_display <- rest_spec$display
+    if (is.null(rest_display) || !nzchar(rest_display)) {
+      rest_display <- rest_spec$name
+    }
+    args <- c(args, ".", rest_display)
+  } else if (!is.null(info$rest_param)) {
     args <- c(args, ".", info$rest_param)
   }
   paste0("(", topic, if (length(args) > 0) paste0(" ", paste(args, collapse = " ")) else "", ")")
