@@ -95,11 +95,28 @@ Expands macros one level.
 
 ---
 
+### defstruct
+
+Defines a simple S3-backed struct constructor, predicate, and accessors.
+
+**Signature:** `(defstruct Name (field ...))`
+
+**Examples:**
+```lisp
+(defstruct Point (x y))
+(define p (make-Point 1 2))
+(Point? p)      ; => #t
+(Point-x p)     ; => 1
+(Point-y p)     ; => 2
+```
+
+---
+
 ## Interop Helpers
 
 ### dict
 
-Creates a named list (dictionary).
+Creates a hash-backed dictionary.
 
 **Signature:** `(dict key1: value1 key2: value2 ...)`
 
@@ -110,6 +127,27 @@ Creates a named list (dictionary).
 ```
 
 **See also:** hash
+
+**Related helpers:** dict?, dict-get, dict-set, dict-remove, dict-keys,
+dict-values, dict-has?, dict-merge
+
+---
+
+### set
+
+Creates a hash-backed set.
+
+**Signature:** `(set item ...)`
+
+**Examples:**
+```lisp
+(define s (set 1 2 3 3))
+(set-contains? s 2)   ; => #t
+(set-contains? s 9)   ; => #f
+```
+
+**Related helpers:** set?, set-add, set-remove, set-contains?,
+set-union, set-intersection, set-difference
 
 ---
 

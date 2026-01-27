@@ -233,9 +233,9 @@ test_that("predicates and interop helpers work", {
 
   dict <- env$dict(a = 1, b = 2)
   expect_true(env$`dict?`(dict))
-  expect_equal(names(dict), c("a", "b"))
-  expect_equal(dict$a, 1)
-  expect_equal(dict$b, 2)
+  expect_true(env$`dict-has?`(dict, "a"))
+  expect_equal(env$`dict-get`(dict, "a"), 1)
+  expect_equal(env$`dict-get`(dict, "b"), 2)
   expect_equal(env$`r/call`("sum", list(1, 2, 3)), 6)
 })
 
@@ -311,20 +311,55 @@ test_that("dict and set helpers work", {
   removed <- env$`dict-remove`(updated, "a")
   expect_false(env$`dict-has?`(removed, "a"))
 
-  merged <- env$`dict-merge`(dict, env$dict(b = 3, c = 4))
+  merged <- env$`dict-merge`(env$dict(a = 1, b = 2), env$dict(b = 3, c = 4))
   expect_equal(env$`dict-get`(merged, "a"), 1)
   expect_equal(env$`dict-get`(merged, "b"), 3)
   expect_equal(env$`dict-get`(merged, "c"), 4)
 
+  set_values <- function(set) {
+    keys <- ls(envir = set, all.names = TRUE, sorted = FALSE)
+    if (length(keys) == 0) {
+      return(list())
+    }
+    as.list(mget(keys, envir = set, inherits = FALSE))
+  }
   set <- env$set(1, 2, 2, 3)
   expect_true(env$`set?`(set))
   expect_true(env$`set-contains?`(set, 2))
   expect_false(env$`set-contains?`(set, 4))
-  expect_equal(env$`set-add`(set, 4), env$set(1, 2, 3, 4))
-  expect_equal(env$`set-remove`(set, 2), env$set(1, 3))
-  expect_equal(env$`set-union`(env$set(1, 2), env$set(2, 3)), env$set(1, 2, 3))
-  expect_equal(env$`set-intersection`(env$set(1, 2), env$set(2, 3)), env$set(2))
-  expect_equal(env$`set-difference`(env$set(1, 2), env$set(2, 3)), env$set(1))
+
+  updated_set <- env$`set-add`(set, 4)
+  expect_true(env$`set-contains?`(updated_set, 4))
+
+  removed_set <- env$`set-remove`(set, 2)
+  expect_false(env$`set-contains?`(removed_set, 2))
+
+  union_set <- env$`set-union`(env$set(1, 2), env$set(2, 3))
+  expect_true(env$`set-contains?`(union_set, 1))
+  expect_true(env$`set-contains?`(union_set, 2))
+  expect_true(env$`set-contains?`(union_set, 3))
+
+  intersection_set <- env$`set-intersection`(env$set(1, 2), env$set(2, 3))
+  expect_true(env$`set-contains?`(intersection_set, 2))
+  expect_false(env$`set-contains?`(intersection_set, 1))
+
+  difference_set <- env$`set-difference`(env$set(1, 2), env$set(2, 3))
+  expect_true(env$`set-contains?`(difference_set, 1))
+  expect_false(env$`set-contains?`(difference_set, 2))
+  expect_equal(length(set_values(difference_set)), 1)
+})
+
+test_that("defstruct macro defines constructor and accessors", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+  rye_load_stdlib_files(env)
+
+  rye_eval(rye_read("(defstruct Point (x y))")[[1]], env)
+  rye_eval(rye_read("(define p (make-Point 1 2))")[[1]], env)
+
+  expect_true(rye_eval(rye_read("(Point? p)")[[1]], env))
+  expect_equal(rye_eval(rye_read("(Point-x p)")[[1]], env), 1)
+  expect_equal(rye_eval(rye_read("(Point-y p)")[[1]], env), 2)
 })
 
 test_that("error and debug helpers work", {

@@ -176,6 +176,7 @@ rye_load_stdlib_files <- function(env = parent.frame()) {
   }
   ordered_files <- c(
     "binding.rye",
+    "struct.rye",
     "control.rye",
     "looping.rye",
     "threading.rye",
@@ -289,7 +290,7 @@ rye_stdlib_equal <- function(x, y) {
 }
 
 rye_stdlib_display <- function(x) {
-  cat(as.character(x), "\n")
+  cat(rye_stdlib_format_value(x), "\n")
 }
 
 rye_is_truthy <- function(x) {
@@ -492,7 +493,36 @@ rye_stdlib_callable_p <- function(x) {
 }
 
 rye_stdlib_str <- function(...) {
-  paste0(...)
+  args <- list(...)
+  formatted <- lapply(args, function(arg) {
+    if (is.symbol(arg)) {
+      return(as.character(arg))
+    }
+    if (is.environment(arg) && inherits(arg, "rye_dict")) {
+      return(as.character(rye_stdlib_dict_to_list(arg)))
+    }
+    if (is.environment(arg) && inherits(arg, "rye_set")) {
+      return(as.character(unname(as.list(arg, all.names = TRUE))))
+    }
+    if (is.list(arg) && any(vapply(arg, function(item) is.environment(item) &&
+        (inherits(item, "rye_dict") || inherits(item, "rye_set")), logical(1)))) {
+      converted <- lapply(arg, function(item) {
+        if (is.environment(item) && inherits(item, "rye_dict")) {
+          return(rye_stdlib_dict_to_list(item))
+        }
+        if (is.environment(item) && inherits(item, "rye_set")) {
+          return(unname(as.list(item, all.names = TRUE)))
+        }
+        item
+      })
+      return(as.character(converted))
+    }
+    if (is.call(arg)) {
+      return(as.character(arg))
+    }
+    arg
+  })
+  do.call(paste0, formatted)
 }
 
 rye_stdlib_string_join <- function(x, sep = "") {
@@ -608,7 +638,7 @@ rye_stdlib_trace <- function(x, label = NULL) {
   if (!is.null(label)) {
     cat(as.character(label), ": ", sep = "")
   }
-  cat(as.character(x), "\n")
+  cat(rye_stdlib_format_value(x), "\n")
   x
 }
 
@@ -667,22 +697,23 @@ rye_stdlib_eval <- function(expr, env = parent.frame()) {
 
 rye_stdlib_dict <- function(...) {
   args <- list(...)
-  class(args) <- c("rye_dict", class(args))
-  args
+  dict <- rye_stdlib_dict_new()
+  if (length(args) == 0) {
+    return(dict)
+  }
+  arg_names <- names(args)
+  if (is.null(arg_names) || any(!nzchar(arg_names))) {
+    stop("dict requires named arguments")
+  }
+  for (name in arg_names) {
+    assign(name, args[[name]], envir = dict)
+  }
+  assign(".rye_keys", arg_names, envir = dict)
+  dict
 }
 
 rye_stdlib_dict_p <- function(x) {
-  if (inherits(x, "rye_dict")) {
-    return(TRUE)
-  }
-  if (!is.list(x)) {
-    return(FALSE)
-  }
-  if (length(x) == 0) {
-    return(TRUE)
-  }
-  nms <- names(x)
-  !is.null(nms) && all(nzchar(nms))
+  is.environment(x) && inherits(x, "rye_dict")
 }
 
 rye_stdlib_dict_get <- function(dict, key, default = NULL) {
@@ -690,8 +721,8 @@ rye_stdlib_dict_get <- function(dict, key, default = NULL) {
   if (is.null(name) || !rye_stdlib_dict_p(dict)) {
     return(default)
   }
-  if (!is.null(names(dict)) && name %in% names(dict)) {
-    return(dict[[name]])
+  if (exists(name, envir = dict, inherits = FALSE)) {
+    return(get(name, envir = dict, inherits = FALSE))
   }
   default
 }
@@ -701,144 +732,165 @@ rye_stdlib_dict_set <- function(dict, key, value) {
   if (is.null(name)) {
     stop("dict-set requires a string, symbol, or keyword key")
   }
-  result <- dict
-  result[[name]] <- value
-  class(result) <- c("rye_dict", class(result))
-  result
+  if (!rye_stdlib_dict_p(dict)) {
+    stop("dict-set requires a dict")
+  }
+  keys <- rye_stdlib_dict_keys_ordered(dict)
+  if (!name %in% keys) {
+    assign(".rye_keys", c(keys, name), envir = dict)
+  }
+  assign(name, value, envir = dict)
+  dict
 }
 
 rye_stdlib_dict_remove <- function(dict, key) {
   name <- rye_stdlib_dict_key_to_name(key)
-  if (is.null(name) || is.null(names(dict))) {
+  if (is.null(name) || !rye_stdlib_dict_p(dict)) {
     return(dict)
   }
-  if (!(name %in% names(dict))) {
+  if (!exists(name, envir = dict, inherits = FALSE)) {
     return(dict)
   }
-  result <- dict[names(dict) != name]
-  class(result) <- c("rye_dict", class(result))
-  result
+  rm(list = name, envir = dict, inherits = FALSE)
+  keys <- rye_stdlib_dict_keys_ordered(dict)
+  if (length(keys) > 0) {
+    assign(".rye_keys", keys[keys != name], envir = dict)
+  }
+  dict
 }
 
 rye_stdlib_dict_keys <- function(dict) {
-  if (!rye_stdlib_dict_p(dict) || is.null(names(dict))) {
+  if (!rye_stdlib_dict_p(dict)) {
     return(list())
   }
-  as.list(names(dict))
+  as.list(rye_stdlib_dict_keys_ordered(dict))
 }
 
 rye_stdlib_dict_values <- function(dict) {
   if (!rye_stdlib_dict_p(dict)) {
     return(list())
   }
-  rye_as_list(unname(unclass(dict)))
+  keys <- rye_stdlib_dict_keys_ordered(dict)
+  if (length(keys) == 0) {
+    return(list())
+  }
+  rye_as_list(unname(mget(keys, envir = dict, inherits = FALSE)))
 }
 
 rye_stdlib_dict_has_p <- function(dict, key) {
   name <- rye_stdlib_dict_key_to_name(key)
-  if (is.null(name) || !rye_stdlib_dict_p(dict) || is.null(names(dict))) {
+  if (is.null(name) || !rye_stdlib_dict_p(dict)) {
     return(FALSE)
   }
-  name %in% names(dict)
+  exists(name, envir = dict, inherits = FALSE)
 }
 
 rye_stdlib_dict_merge <- function(...) {
   dicts <- list(...)
-  result <- list()
+  result <- rye_stdlib_dict_new()
+  result_keys <- character(0)
   for (dict in dicts) {
     if (!rye_stdlib_dict_p(dict)) {
       next
     }
-    nms <- names(dict)
-    if (is.null(nms)) {
+    keys <- rye_stdlib_dict_keys_ordered(dict)
+    if (length(keys) == 0) {
       next
     }
-    for (name in nms) {
-      result[[name]] <- dict[[name]]
+    for (name in keys) {
+      assign(name, get(name, envir = dict, inherits = FALSE), envir = result)
+      if (!name %in% result_keys) {
+        result_keys <- c(result_keys, name)
+      }
     }
   }
-  class(result) <- c("rye_dict", class(result))
+  assign(".rye_keys", result_keys, envir = result)
   result
 }
 
 rye_stdlib_set <- function(...) {
   args <- list(...)
+  set <- rye_stdlib_set_new()
   if (length(args) == 1 && (is.list(args[[1]]) || is.call(args[[1]]))) {
     items <- rye_as_list(args[[1]])
   } else {
     items <- rye_as_list(args)
   }
-  items <- items[!duplicated(items)]
-  class(items) <- c("rye_set", class(items))
-  items
+  for (item in items) {
+    key <- rye_stdlib_set_key(item)
+    if (!exists(key, envir = set, inherits = FALSE)) {
+      assign(key, item, envir = set)
+    }
+  }
+  set
 }
 
 rye_stdlib_set_p <- function(x) {
-  inherits(x, "rye_set")
+  is.environment(x) && inherits(x, "rye_set")
 }
 
 rye_stdlib_set_add <- function(set, item) {
-  items <- rye_as_list(set)
-  if (!rye_stdlib_list_contains(items, item)) {
-    items <- c(items, list(item))
+  if (!rye_stdlib_set_p(set)) {
+    stop("set-add requires a set")
   }
-  class(items) <- c("rye_set", class(items))
-  items
+  key <- rye_stdlib_set_key(item)
+  if (!exists(key, envir = set, inherits = FALSE)) {
+    assign(key, item, envir = set)
+  }
+  set
 }
 
 rye_stdlib_set_remove <- function(set, item) {
-  items <- rye_as_list(set)
-  if (length(items) == 0) {
-    class(items) <- c("rye_set", class(items))
-    return(items)
+  if (!rye_stdlib_set_p(set)) {
+    return(set)
   }
-  keep <- vapply(items, function(x) !identical(x, item), logical(1))
-  result <- items[keep]
-  class(result) <- c("rye_set", class(result))
-  result
+  key <- rye_stdlib_set_key(item)
+  if (exists(key, envir = set, inherits = FALSE)) {
+    rm(list = key, envir = set, inherits = FALSE)
+  }
+  set
 }
 
 rye_stdlib_set_contains_p <- function(set, item) {
-  items <- rye_as_list(set)
-  rye_stdlib_list_contains(items, item)
+  if (!rye_stdlib_set_p(set)) {
+    return(FALSE)
+  }
+  key <- rye_stdlib_set_key(item)
+  exists(key, envir = set, inherits = FALSE)
 }
 
 rye_stdlib_set_union <- function(a, b) {
-  a_list <- rye_as_list(a)
-  b_list <- rye_as_list(b)
-  result <- a_list
-  for (item in b_list) {
-    if (!rye_stdlib_list_contains(result, item)) {
-      result <- c(result, list(item))
-    }
-  }
-  class(result) <- c("rye_set", class(result))
+  result <- rye_stdlib_set_new()
+  rye_stdlib_set_copy_into(result, a)
+  rye_stdlib_set_copy_into(result, b)
   result
 }
 
 rye_stdlib_set_intersection <- function(a, b) {
-  a_list <- rye_as_list(a)
-  b_list <- rye_as_list(b)
-  result <- list()
-  for (item in a_list) {
-    if (rye_stdlib_list_contains(b_list, item)) {
-      result <- c(result, list(item))
+  result <- rye_stdlib_set_new()
+  if (!rye_stdlib_set_p(a) || !rye_stdlib_set_p(b)) {
+    return(result)
+  }
+  keys <- ls(envir = a, all.names = TRUE, sorted = FALSE)
+  for (key in keys) {
+    if (exists(key, envir = b, inherits = FALSE)) {
+      assign(key, get(key, envir = a, inherits = FALSE), envir = result)
     }
   }
-  class(result) <- c("rye_set", class(result))
   result
 }
 
 rye_stdlib_set_difference <- function(a, b) {
-  a_list <- rye_as_list(a)
-  b_list <- rye_as_list(b)
-  result <- list()
-  for (item in a_list) {
-    if (!rye_stdlib_list_contains(b_list, item)) {
-      result <- c(result, list(item))
+  result <- rye_stdlib_set_new()
+  if (!rye_stdlib_set_p(a)) {
+    return(result)
+  }
+  keys <- ls(envir = a, all.names = TRUE, sorted = FALSE)
+  for (key in keys) {
+    if (!rye_stdlib_set_p(b) || !exists(key, envir = b, inherits = FALSE)) {
+      assign(key, get(key, envir = a, inherits = FALSE), envir = result)
     }
   }
-  class(result) <- c("rye_set", class(result))
   result
 }
 
@@ -975,11 +1027,92 @@ rye_stdlib_dict_key_to_name <- function(key) {
   NULL
 }
 
-rye_stdlib_list_contains <- function(items, value) {
-  if (length(items) == 0) {
-    return(FALSE)
+rye_stdlib_dict_new <- function() {
+  dict <- new.env(hash = TRUE, parent = emptyenv())
+  class(dict) <- c("rye_dict", class(dict))
+  assign(".rye_keys", character(0), envir = dict)
+  dict
+}
+
+rye_stdlib_set_new <- function() {
+  set <- new.env(hash = TRUE, parent = emptyenv())
+  class(set) <- c("rye_set", class(set))
+  set
+}
+
+rye_stdlib_set_key <- function(value) {
+  raw <- serialize(value, NULL, ascii = TRUE)
+  paste(as.integer(raw), collapse = ",")
+}
+
+rye_stdlib_set_copy_into <- function(target, source) {
+  if (!rye_stdlib_set_p(target) || !rye_stdlib_set_p(source)) {
+    return(target)
   }
-  any(vapply(items, function(x) identical(x, value), logical(1)))
+  keys <- ls(envir = source, all.names = TRUE, sorted = FALSE)
+  for (key in keys) {
+    if (!exists(key, envir = target, inherits = FALSE)) {
+      assign(key, get(key, envir = source, inherits = FALSE), envir = target)
+    }
+  }
+  target
+}
+
+rye_stdlib_dict_keys_ordered <- function(dict) {
+  if (!rye_stdlib_dict_p(dict)) {
+    return(character(0))
+  }
+  keys <- get0(".rye_keys", envir = dict, inherits = FALSE)
+  if (is.null(keys)) {
+    return(sort(ls(envir = dict, all.names = FALSE)))
+  }
+  keys
+}
+
+rye_stdlib_dict_to_list <- function(dict) {
+  keys <- rye_stdlib_dict_keys_ordered(dict)
+  if (length(keys) == 0) {
+    return(list())
+  }
+  values <- mget(keys, envir = dict, inherits = FALSE)
+  names(values) <- keys
+  values
+}
+
+rye_stdlib_deparse_single <- function(x) {
+  paste(deparse(x, width.cutoff = 500), collapse = " ")
+}
+
+rye_stdlib_format_value <- function(x) {
+  if (is.environment(x) && inherits(x, "rye_dict")) {
+    return(paste(as.character(rye_stdlib_dict_to_list(x)), collapse = " "))
+  }
+  if (is.environment(x) && inherits(x, "rye_set")) {
+    return(rye_stdlib_deparse_single(unname(as.list(x, all.names = TRUE))))
+  }
+  if (is.list(x)) {
+    if (length(x) == 0) {
+      return("")
+    }
+    if (any(vapply(x, function(item) is.environment(item) &&
+        (inherits(item, "rye_dict") || inherits(item, "rye_set")), logical(1)))) {
+      converted <- lapply(x, function(item) {
+        if (is.environment(item) && inherits(item, "rye_dict")) {
+          return(rye_stdlib_dict_to_list(item))
+        }
+        if (is.environment(item) && inherits(item, "rye_set")) {
+          return(unname(as.list(item, all.names = TRUE)))
+        }
+        item
+      })
+      return(paste(as.character(converted), collapse = " "))
+    }
+    return(paste(as.character(x), collapse = " "))
+  }
+  if (is.call(x)) {
+    return(paste(as.character(x), collapse = " "))
+  }
+  as.character(x)
 }
 
 attr(rye_stdlib_map, "rye_doc") <- list(
@@ -1231,7 +1364,7 @@ attr(rye_stdlib_eval, "rye_doc") <- list(
 
 attr(rye_stdlib_dict, "rye_doc") <- list(
   usage = "(dict key val ...)",
-  description = "Create a dictionary as a list of key/value pairs."
+  description = "Create a hash-backed dictionary from key/value pairs."
 )
 attr(rye_stdlib_dict_p, "rye_doc") <- list(
   usage = "(dict? x)",
@@ -1243,11 +1376,11 @@ attr(rye_stdlib_dict_get, "rye_doc") <- list(
 )
 attr(rye_stdlib_dict_set, "rye_doc") <- list(
   usage = "(dict-set dict key value)",
-  description = "Return dict with key set to value."
+  description = "Set key to value in dict and return dict."
 )
 attr(rye_stdlib_dict_remove, "rye_doc") <- list(
   usage = "(dict-remove dict key)",
-  description = "Return dict without key."
+  description = "Remove key from dict and return dict."
 )
 attr(rye_stdlib_dict_keys, "rye_doc") <- list(
   usage = "(dict-keys dict)",
@@ -1267,7 +1400,7 @@ attr(rye_stdlib_dict_merge, "rye_doc") <- list(
 )
 attr(rye_stdlib_set, "rye_doc") <- list(
   usage = "(set item ...)",
-  description = "Create a set of unique items."
+  description = "Create a hash-backed set of unique items."
 )
 attr(rye_stdlib_set_p, "rye_doc") <- list(
   usage = "(set? x)",
@@ -1275,11 +1408,11 @@ attr(rye_stdlib_set_p, "rye_doc") <- list(
 )
 attr(rye_stdlib_set_add, "rye_doc") <- list(
   usage = "(set-add set item)",
-  description = "Return set with item added."
+  description = "Add item to set and return set."
 )
 attr(rye_stdlib_set_remove, "rye_doc") <- list(
   usage = "(set-remove set item)",
-  description = "Return set without item."
+  description = "Remove item from set and return set."
 )
 attr(rye_stdlib_set_contains_p, "rye_doc") <- list(
   usage = "(set-contains? set item)",

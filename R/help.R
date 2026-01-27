@@ -95,6 +95,10 @@ rye_help_macro_topics <- list(
     usage = "(letrec ((name value) ...) body...)",
     description = "Recursive bindings."
   ),
+  `defstruct` = list(
+    usage = "(defstruct Name (field ...))",
+    description = "Define a struct constructor, predicate, and accessors."
+  ),
   `while` = list(
     usage = "(while test body...)",
     description = "Repeat body while test is truthy."

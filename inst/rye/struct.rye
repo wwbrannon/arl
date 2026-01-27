@@ -1,0 +1,27 @@
+;;; Rye Standard Library - Struct Macros
+
+(defmacro defstruct (name fields)
+  (define struct-name (as.character name))
+  (define ctor-name (as.symbol (str "make-" struct-name)))
+  (define pred-name (as.symbol (str struct-name "?")))
+  (define field-pairs
+    (mapcat
+      (lambda (field)
+        (list (structure (as.character field) :class "rye_keyword") field))
+      fields))
+  (define accessors
+    (map
+      (lambda (field)
+        (define accessor-name (as.symbol (str struct-name "-" (as.character field))))
+        `(define ,accessor-name
+           (lambda (obj)
+             (r/call "[["
+               (list obj ,(as.character field)))
+           )))
+      fields))
+  `(begin
+     (define ,ctor-name
+       (lambda (,@fields)
+         (structure (list ,@field-pairs) :class ,struct-name)))
+     (define ,pred-name (lambda (obj) (inherits obj ,struct-name)))
+     ,@accessors))

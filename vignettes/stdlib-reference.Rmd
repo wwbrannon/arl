@@ -69,7 +69,7 @@ env <- rye_load_stdlib(load_files = TRUE)
 
 ## Binding and looping
 
-`let`, `let*`, `letrec`, `while`, `for`
+`let`, `let*`, `letrec`, `defstruct`, `while`, `for`
 
 ## Threading macros
 
