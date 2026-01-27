@@ -1,5 +1,5 @@
 # Help utilities for Rye
-rye_help_topics <- list(
+rye_special_forms_help <- list(
   quote = list(
     usage = "(quote expr)",
     description = "Return expr without evaluation."
@@ -36,6 +36,10 @@ rye_help_topics <- list(
     usage = "(set! name value)",
     description = "Update an existing binding."
   ),
+  help = list(
+    usage = "(help topic)",
+    description = "Show help for a topic without evaluating it."
+  ),
   begin = list(
     usage = "(begin expr...)",
     description = "Evaluate expressions in sequence, returning the last."
@@ -47,6 +51,14 @@ rye_help_topics <- list(
   defmacro = list(
     usage = "(defmacro name (params...) body...)",
     description = "Define a macro."
+  ),
+  module = list(
+    usage = "(module name (export ...) body...)",
+    description = "Define a module with explicit exports."
+  ),
+  import = list(
+    usage = "(import name)",
+    description = "Load a module and attach its exports."
   ),
   `::` = list(
     usage = "(:: pkg name)",
@@ -135,7 +147,7 @@ rye_help <- function(topic, env = parent.frame()) {
     stop("help requires a symbol or string")
   }
 
-  doc <- rye_help_topics[[topic]]
+  doc <- rye_special_forms_help[[topic]]
   if (!is.null(doc)) {
     rye_help_print(topic, doc)
     return(invisible(NULL))
