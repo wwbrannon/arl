@@ -192,6 +192,23 @@ test_that("list helpers work", {
   expect_equal(env$apply(`+`, list(1, 2, 3)), 6)
 })
 
+test_that("values and call-with-values work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  result <- rye_eval(rye_read("(call-with-values (lambda () (values)) (lambda () 42))")[[1]], env)
+  expect_equal(result, 42)
+
+  result <- rye_eval(rye_read("(call-with-values (lambda () (values 1)) (lambda (x) (+ x 1)))")[[1]], env)
+  expect_equal(result, 2)
+
+  result <- rye_eval(rye_read("(call-with-values (lambda () (values 1 2)) (lambda (a b) (+ a b)))")[[1]], env)
+  expect_equal(result, 3)
+
+  result <- rye_eval(rye_read("(call-with-values (lambda () 5) (lambda (x) (* x 2)))")[[1]], env)
+  expect_equal(result, 10)
+})
+
 test_that("sequence helpers work", {
   env <- new.env()
   rye_load_stdlib(env)

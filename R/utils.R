@@ -86,6 +86,27 @@ rye_strip_src <- function(value) {
   value
 }
 
+rye_values_new <- function(values) {
+  if (is.null(values)) {
+    values <- list()
+  }
+  if (!is.list(values)) {
+    values <- list(values)
+  }
+  structure(values, class = "rye_values")
+}
+
+rye_values_p <- function(x) {
+  is.list(x) && inherits(x, "rye_values")
+}
+
+rye_values_list <- function(x) {
+  if (!rye_values_p(x)) {
+    return(list(x))
+  }
+  unclass(x)
+}
+
 rye_src_stack_get <- function() {
   .rye_error_state$src_stack
 }

@@ -38,6 +38,8 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$append <- rye_stdlib_append
   env$reverse <- rye_stdlib_reverse
   env$apply <- rye_stdlib_apply
+  env$values <- rye_stdlib_values
+  env$`call-with-values` <- rye_stdlib_call_with_values
 
   # Higher-order functions
   env$map <- rye_stdlib_map
@@ -345,6 +347,22 @@ rye_stdlib_apply <- function(fn, args) {
     return(Reduce(fn, args))
   }
   rye_do_call(fn, args)
+}
+
+rye_stdlib_values <- function(...) {
+  rye_values_new(list(...))
+}
+
+rye_stdlib_call_with_values <- function(producer, consumer) {
+  if (!is.function(producer)) {
+    stop("call-with-values expects a function as the producer")
+  }
+  if (!is.function(consumer)) {
+    stop("call-with-values expects a function as the consumer")
+  }
+  produced <- producer()
+  args <- rye_values_list(produced)
+  rye_do_call(consumer, args)
 }
 
 rye_stdlib_mapcat <- function(fn, lst) {
@@ -1089,6 +1107,13 @@ rye_stdlib_deparse_single <- function(x) {
 }
 
 rye_stdlib_format_value <- function(x) {
+  if (rye_values_p(x)) {
+    inner <- unclass(x)
+    if (length(inner) == 0) {
+      return("(values)")
+    }
+    return(paste(c("(values", as.character(inner), ")"), collapse = " "))
+  }
   if (is.environment(x) && inherits(x, "rye_dict")) {
     return(paste(as.character(rye_stdlib_dict_to_list(x)), collapse = " "))
   }
@@ -1143,6 +1168,14 @@ attr(rye_stdlib_reduce, "rye_doc") <- list(
 attr(rye_stdlib_apply, "rye_doc") <- list(
   usage = "(apply fn lst)",
   description = "Apply fn to the elements of lst as arguments."
+)
+attr(rye_stdlib_values, "rye_doc") <- list(
+  usage = "(values ...)",
+  description = "Return multiple values to a call-with-values consumer."
+)
+attr(rye_stdlib_call_with_values, "rye_doc") <- list(
+  usage = "(call-with-values producer consumer)",
+  description = "Call producer and pass its values to consumer."
 )
 
 attr(rye_stdlib_car, "rye_doc") <- list(
