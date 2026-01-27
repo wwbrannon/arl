@@ -78,6 +78,77 @@ Removes leading and trailing whitespace.
 
 ---
 
+### string-contains?
+
+Checks whether a substring occurs in a string.
+
+**Signature:** `(string-contains? str pattern [:fixed #t])`
+
+**Examples:**
+```lisp
+(string-contains? "hello" "ell")          ; => #t
+(string-contains? "hello" "^ell")         ; => #f
+(string-contains? "hello" "^he" :fixed #f) ; => #t
+```
+
+---
+
+### string-match?
+
+Checks whether a regex pattern matches a string.
+
+**Signature:** `(string-match? str pattern [:fixed #f])`
+
+**Examples:**
+```lisp
+(string-match? "hello" "^he")           ; => #t
+(string-match? "hello" "ELL")           ; => #f
+(string-match? "hello" "ELL" :fixed #t) ; => #f
+```
+
+---
+
+### string-find
+
+Returns the 0-based index of the first match or `#nil`.
+
+**Signature:** `(string-find str pattern [:fixed #t])`
+
+**Examples:**
+```lisp
+(string-find "hello" "ll")         ; => 2
+(string-find "hello" "nope")       ; => #nil
+(string-find "hello" "^he" :fixed #f) ; => 0
+```
+
+---
+
+### string-replace
+
+Replaces the first match in a string.
+
+**Signature:** `(string-replace str pattern replacement [:fixed #f])`
+
+**Examples:**
+```lisp
+(string-replace "hello" "l" "L") ; => "heLlo"
+```
+
+---
+
+### string-replace-all
+
+Replaces all matches in a string.
+
+**Signature:** `(string-replace-all str pattern replacement [:fixed #f])`
+
+**Examples:**
+```lisp
+(string-replace-all "hello" "l" "L") ; => "heLLo"
+```
+
+---
+
 ### format
 
 Formats a string with values (using R's sprintf).
@@ -130,6 +201,85 @@ Reads a line from stdin.
 ```lisp
 (define name (read-line))
 (println (str "Hello, " name))
+```
+
+---
+
+### read-file
+
+Reads an entire file into a single string.
+
+**Signature:** `(read-file path [:encoding enc])`
+
+**Examples:**
+```lisp
+(read-file "notes.txt")
+```
+
+---
+
+### read-lines
+
+Reads a file into a list of lines.
+
+**Signature:** `(read-lines path [:encoding enc])`
+
+**Examples:**
+```lisp
+(read-lines "notes.txt")
+```
+
+---
+
+### write-file
+
+Writes content to a file, replacing any existing contents.
+
+**Signature:** `(write-file path content [:sep s] [:encoding enc])`
+
+**Examples:**
+```lisp
+(write-file "notes.txt" "hello")
+(write-file "notes.txt" (list "a" "b" "c") :sep "\n")
+```
+
+---
+
+### write-lines
+
+Writes a list of lines to a file.
+
+**Signature:** `(write-lines path lines [:encoding enc])`
+
+**Examples:**
+```lisp
+(write-lines "notes.txt" (list "a" "b" "c"))
+```
+
+---
+
+### append-file
+
+Appends content to a file.
+
+**Signature:** `(append-file path content [:sep s] [:encoding enc])`
+
+**Examples:**
+```lisp
+(append-file "notes.txt" (list "more" "lines"))
+```
+
+---
+
+### file-exists?
+
+Checks whether a file exists.
+
+**Signature:** `(file-exists? path)`
+
+**Examples:**
+```lisp
+(file-exists? "notes.txt")
 ```
 
 ---

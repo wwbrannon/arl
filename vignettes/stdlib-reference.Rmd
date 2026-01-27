@@ -82,7 +82,11 @@ env <- rye_load_stdlib(load_files = TRUE)
 ## String and I/O
 
 `str`, `string-join`, `string-split`, `trim`, `format`,
-`read-line`, `display`, `println`
+`string-contains?`, `string-match?`, `string-find`,
+`string-replace`, `string-replace-all`,
+`read-line`, `read-file`, `read-lines`,
+`write-file`, `write-lines`, `append-file`,
+`file-exists?`, `display`, `println`
 
 ## Macro system
 
@@ -90,7 +94,11 @@ env <- rye_load_stdlib(load_files = TRUE)
 
 ## Interop helpers
 
-`dict`, `hash`, `r/call`, `identity`
+`dict`, `hash`, `dict?`, `dict-get`, `dict-set`, `dict-remove`,
+`dict-keys`, `dict-values`, `dict-has?`, `dict-merge`,
+`set`, `set?`, `set-add`, `set-remove`, `set-contains?`,
+`set-union`, `set-intersection`, `set-difference`,
+`r/call`, `identity`
 
 ## Arithmetic and comparison
 

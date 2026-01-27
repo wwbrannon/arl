@@ -98,6 +98,17 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$trim <- rye_stdlib_trim
   env$format <- rye_stdlib_format
   env$`read-line` <- rye_stdlib_read_line
+  env$`read-file` <- rye_stdlib_read_file
+  env$`read-lines` <- rye_stdlib_read_lines
+  env$`write-file` <- rye_stdlib_write_file
+  env$`write-lines` <- rye_stdlib_write_lines
+  env$`append-file` <- rye_stdlib_append_file
+  env$`file-exists?` <- rye_stdlib_file_exists_p
+  env$`string-contains?` <- rye_stdlib_string_contains_p
+  env$`string-match?` <- rye_stdlib_string_match_p
+  env$`string-find` <- rye_stdlib_string_find
+  env$`string-replace` <- rye_stdlib_string_replace
+  env$`string-replace-all` <- rye_stdlib_string_replace_all
 
   # Errors and debugging
   env$error <- rye_stdlib_error
@@ -117,6 +128,22 @@ rye_load_stdlib_base <- function(env = NULL) {
   # Interop helpers
   env$dict <- rye_stdlib_dict
   env$hash <- rye_stdlib_dict
+  env$`dict?` <- rye_stdlib_dict_p
+  env$`dict-get` <- rye_stdlib_dict_get
+  env$`dict-set` <- rye_stdlib_dict_set
+  env$`dict-remove` <- rye_stdlib_dict_remove
+  env$`dict-keys` <- rye_stdlib_dict_keys
+  env$`dict-values` <- rye_stdlib_dict_values
+  env$`dict-has?` <- rye_stdlib_dict_has_p
+  env$`dict-merge` <- rye_stdlib_dict_merge
+  env$set <- rye_stdlib_set
+  env$`set?` <- rye_stdlib_set_p
+  env$`set-add` <- rye_stdlib_set_add
+  env$`set-remove` <- rye_stdlib_set_remove
+  env$`set-contains?` <- rye_stdlib_set_contains_p
+  env$`set-union` <- rye_stdlib_set_union
+  env$`set-intersection` <- rye_stdlib_set_intersection
+  env$`set-difference` <- rye_stdlib_set_difference
   env$`r/call` <- rye_stdlib_r_call
 
   # Convenience functions
@@ -496,6 +523,72 @@ rye_stdlib_read_line <- function(prompt = "") {
   readLines(con = con, n = 1, warn = FALSE)
 }
 
+rye_stdlib_read_file <- function(path, encoding = "UTF-8") {
+  con <- file(path, open = "r", encoding = encoding)
+  on.exit(close(con), add = TRUE)
+  lines <- readLines(con, warn = FALSE)
+  paste(lines, collapse = "\n")
+}
+
+rye_stdlib_read_lines <- function(path, encoding = "UTF-8") {
+  con <- file(path, open = "r", encoding = encoding)
+  on.exit(close(con), add = TRUE)
+  lines <- readLines(con, warn = FALSE)
+  as.list(lines)
+}
+
+rye_stdlib_write_file <- function(path, content, sep = "\n", encoding = "UTF-8") {
+  text <- rye_stdlib_normalize_lines(content, sep = sep)
+  con <- file(path, open = "w", encoding = encoding)
+  on.exit(close(con), add = TRUE)
+  writeLines(text, con = con, useBytes = FALSE)
+  invisible(TRUE)
+}
+
+rye_stdlib_write_lines <- function(path, lines, encoding = "UTF-8") {
+  lines <- rye_stdlib_normalize_line_vector(lines)
+  con <- file(path, open = "w", encoding = encoding)
+  on.exit(close(con), add = TRUE)
+  writeLines(lines, con = con, useBytes = FALSE)
+  invisible(TRUE)
+}
+
+rye_stdlib_append_file <- function(path, content, sep = "\n", encoding = "UTF-8") {
+  text <- rye_stdlib_normalize_lines(content, sep = sep)
+  con <- file(path, open = "a", encoding = encoding)
+  on.exit(close(con), add = TRUE)
+  writeLines(text, con = con, useBytes = FALSE, sep = "")
+  invisible(TRUE)
+}
+
+rye_stdlib_file_exists_p <- function(path) {
+  isTRUE(file.exists(path))
+}
+
+rye_stdlib_string_contains_p <- function(str, pattern, fixed = TRUE) {
+  isTRUE(grepl(pattern, str, fixed = fixed))
+}
+
+rye_stdlib_string_match_p <- function(str, pattern, fixed = FALSE) {
+  isTRUE(grepl(pattern, str, fixed = fixed))
+}
+
+rye_stdlib_string_find <- function(str, pattern, fixed = TRUE) {
+  match <- regexpr(pattern, str, fixed = fixed)
+  if (match[1] < 0) {
+    return(NULL)
+  }
+  match[1] - 1
+}
+
+rye_stdlib_string_replace <- function(str, pattern, replacement, fixed = FALSE) {
+  sub(pattern, replacement, str, fixed = fixed)
+}
+
+rye_stdlib_string_replace_all <- function(str, pattern, replacement, fixed = FALSE) {
+  gsub(pattern, replacement, str, fixed = fixed)
+}
+
 rye_stdlib_error <- function(msg) {
   stop(msg, call. = FALSE)
 }
@@ -574,7 +667,179 @@ rye_stdlib_eval <- function(expr, env = parent.frame()) {
 
 rye_stdlib_dict <- function(...) {
   args <- list(...)
+  class(args) <- c("rye_dict", class(args))
   args
+}
+
+rye_stdlib_dict_p <- function(x) {
+  if (inherits(x, "rye_dict")) {
+    return(TRUE)
+  }
+  if (!is.list(x)) {
+    return(FALSE)
+  }
+  if (length(x) == 0) {
+    return(TRUE)
+  }
+  nms <- names(x)
+  !is.null(nms) && all(nzchar(nms))
+}
+
+rye_stdlib_dict_get <- function(dict, key, default = NULL) {
+  name <- rye_stdlib_dict_key_to_name(key)
+  if (is.null(name) || !rye_stdlib_dict_p(dict)) {
+    return(default)
+  }
+  if (!is.null(names(dict)) && name %in% names(dict)) {
+    return(dict[[name]])
+  }
+  default
+}
+
+rye_stdlib_dict_set <- function(dict, key, value) {
+  name <- rye_stdlib_dict_key_to_name(key)
+  if (is.null(name)) {
+    stop("dict-set requires a string, symbol, or keyword key")
+  }
+  result <- dict
+  result[[name]] <- value
+  class(result) <- c("rye_dict", class(result))
+  result
+}
+
+rye_stdlib_dict_remove <- function(dict, key) {
+  name <- rye_stdlib_dict_key_to_name(key)
+  if (is.null(name) || is.null(names(dict))) {
+    return(dict)
+  }
+  if (!(name %in% names(dict))) {
+    return(dict)
+  }
+  result <- dict[names(dict) != name]
+  class(result) <- c("rye_dict", class(result))
+  result
+}
+
+rye_stdlib_dict_keys <- function(dict) {
+  if (!rye_stdlib_dict_p(dict) || is.null(names(dict))) {
+    return(list())
+  }
+  as.list(names(dict))
+}
+
+rye_stdlib_dict_values <- function(dict) {
+  if (!rye_stdlib_dict_p(dict)) {
+    return(list())
+  }
+  rye_as_list(unname(unclass(dict)))
+}
+
+rye_stdlib_dict_has_p <- function(dict, key) {
+  name <- rye_stdlib_dict_key_to_name(key)
+  if (is.null(name) || !rye_stdlib_dict_p(dict) || is.null(names(dict))) {
+    return(FALSE)
+  }
+  name %in% names(dict)
+}
+
+rye_stdlib_dict_merge <- function(...) {
+  dicts <- list(...)
+  result <- list()
+  for (dict in dicts) {
+    if (!rye_stdlib_dict_p(dict)) {
+      next
+    }
+    nms <- names(dict)
+    if (is.null(nms)) {
+      next
+    }
+    for (name in nms) {
+      result[[name]] <- dict[[name]]
+    }
+  }
+  class(result) <- c("rye_dict", class(result))
+  result
+}
+
+rye_stdlib_set <- function(...) {
+  args <- list(...)
+  if (length(args) == 1 && (is.list(args[[1]]) || is.call(args[[1]]))) {
+    items <- rye_as_list(args[[1]])
+  } else {
+    items <- rye_as_list(args)
+  }
+  items <- items[!duplicated(items)]
+  class(items) <- c("rye_set", class(items))
+  items
+}
+
+rye_stdlib_set_p <- function(x) {
+  inherits(x, "rye_set")
+}
+
+rye_stdlib_set_add <- function(set, item) {
+  items <- rye_as_list(set)
+  if (!rye_stdlib_list_contains(items, item)) {
+    items <- c(items, list(item))
+  }
+  class(items) <- c("rye_set", class(items))
+  items
+}
+
+rye_stdlib_set_remove <- function(set, item) {
+  items <- rye_as_list(set)
+  if (length(items) == 0) {
+    class(items) <- c("rye_set", class(items))
+    return(items)
+  }
+  keep <- vapply(items, function(x) !identical(x, item), logical(1))
+  result <- items[keep]
+  class(result) <- c("rye_set", class(result))
+  result
+}
+
+rye_stdlib_set_contains_p <- function(set, item) {
+  items <- rye_as_list(set)
+  rye_stdlib_list_contains(items, item)
+}
+
+rye_stdlib_set_union <- function(a, b) {
+  a_list <- rye_as_list(a)
+  b_list <- rye_as_list(b)
+  result <- a_list
+  for (item in b_list) {
+    if (!rye_stdlib_list_contains(result, item)) {
+      result <- c(result, list(item))
+    }
+  }
+  class(result) <- c("rye_set", class(result))
+  result
+}
+
+rye_stdlib_set_intersection <- function(a, b) {
+  a_list <- rye_as_list(a)
+  b_list <- rye_as_list(b)
+  result <- list()
+  for (item in a_list) {
+    if (rye_stdlib_list_contains(b_list, item)) {
+      result <- c(result, list(item))
+    }
+  }
+  class(result) <- c("rye_set", class(result))
+  result
+}
+
+rye_stdlib_set_difference <- function(a, b) {
+  a_list <- rye_as_list(a)
+  b_list <- rye_as_list(b)
+  result <- list()
+  for (item in a_list) {
+    if (!rye_stdlib_list_contains(b_list, item)) {
+      result <- c(result, list(item))
+    }
+  }
+  class(result) <- c("rye_set", class(result))
+  result
 }
 
 rye_stdlib_r_call <- function(fn, args = list()) {
@@ -677,6 +942,44 @@ rye_stdlib_partial <- function(fn, ...) {
     all_args <- c(captured_args, list(...))
     do.call(fn, all_args)
   }
+}
+
+rye_stdlib_normalize_line_vector <- function(lines) {
+  if (is.null(lines)) {
+    return(character(0))
+  }
+  if (is.call(lines)) {
+    lines <- as.list(lines)
+  }
+  if (is.list(lines)) {
+    return(vapply(lines, as.character, character(1)))
+  }
+  as.character(lines)
+}
+
+rye_stdlib_normalize_lines <- function(content, sep = "\n") {
+  lines <- rye_stdlib_normalize_line_vector(content)
+  if (length(lines) <= 1) {
+    return(as.character(lines))
+  }
+  paste(lines, collapse = sep)
+}
+
+rye_stdlib_dict_key_to_name <- function(key) {
+  if (is.character(key)) {
+    return(key)
+  }
+  if (inherits(key, "rye_keyword") || is.symbol(key)) {
+    return(as.character(key))
+  }
+  NULL
+}
+
+rye_stdlib_list_contains <- function(items, value) {
+  if (length(items) == 0) {
+    return(FALSE)
+  }
+  any(vapply(items, function(x) identical(x, value), logical(1)))
 }
 
 attr(rye_stdlib_map, "rye_doc") <- list(
@@ -847,6 +1150,50 @@ attr(rye_stdlib_read_line, "rye_doc") <- list(
   usage = "(read-line)",
   description = "Read a single line from stdin."
 )
+attr(rye_stdlib_read_file, "rye_doc") <- list(
+  usage = "(read-file path [:encoding enc])",
+  description = "Read an entire file into a single string."
+)
+attr(rye_stdlib_read_lines, "rye_doc") <- list(
+  usage = "(read-lines path [:encoding enc])",
+  description = "Read a file into a list of lines."
+)
+attr(rye_stdlib_write_file, "rye_doc") <- list(
+  usage = "(write-file path content [:sep s] [:encoding enc])",
+  description = "Write content to a file, overwriting if it exists."
+)
+attr(rye_stdlib_write_lines, "rye_doc") <- list(
+  usage = "(write-lines path lines [:encoding enc])",
+  description = "Write a list of lines to a file."
+)
+attr(rye_stdlib_append_file, "rye_doc") <- list(
+  usage = "(append-file path content [:sep s] [:encoding enc])",
+  description = "Append content to a file."
+)
+attr(rye_stdlib_file_exists_p, "rye_doc") <- list(
+  usage = "(file-exists? path)",
+  description = "Return TRUE if path exists."
+)
+attr(rye_stdlib_string_contains_p, "rye_doc") <- list(
+  usage = "(string-contains? s pattern [:fixed #t])",
+  description = "Return TRUE if pattern occurs in s."
+)
+attr(rye_stdlib_string_match_p, "rye_doc") <- list(
+  usage = "(string-match? s pattern [:fixed #f])",
+  description = "Return TRUE if regex pattern matches s."
+)
+attr(rye_stdlib_string_find, "rye_doc") <- list(
+  usage = "(string-find s pattern [:fixed #t])",
+  description = "Return 0-based index of first match or #nil."
+)
+attr(rye_stdlib_string_replace, "rye_doc") <- list(
+  usage = "(string-replace s pattern replacement [:fixed #f])",
+  description = "Replace the first match in s."
+)
+attr(rye_stdlib_string_replace_all, "rye_doc") <- list(
+  usage = "(string-replace-all s pattern replacement [:fixed #f])",
+  description = "Replace all matches in s."
+)
 
 attr(rye_stdlib_error, "rye_doc") <- list(
   usage = "(error message)",
@@ -885,6 +1232,70 @@ attr(rye_stdlib_eval, "rye_doc") <- list(
 attr(rye_stdlib_dict, "rye_doc") <- list(
   usage = "(dict key val ...)",
   description = "Create a dictionary as a list of key/value pairs."
+)
+attr(rye_stdlib_dict_p, "rye_doc") <- list(
+  usage = "(dict? x)",
+  description = "Return TRUE if x is a dictionary."
+)
+attr(rye_stdlib_dict_get, "rye_doc") <- list(
+  usage = "(dict-get dict key [default])",
+  description = "Get value for key or default if missing."
+)
+attr(rye_stdlib_dict_set, "rye_doc") <- list(
+  usage = "(dict-set dict key value)",
+  description = "Return dict with key set to value."
+)
+attr(rye_stdlib_dict_remove, "rye_doc") <- list(
+  usage = "(dict-remove dict key)",
+  description = "Return dict without key."
+)
+attr(rye_stdlib_dict_keys, "rye_doc") <- list(
+  usage = "(dict-keys dict)",
+  description = "Return a list of dict keys."
+)
+attr(rye_stdlib_dict_values, "rye_doc") <- list(
+  usage = "(dict-values dict)",
+  description = "Return a list of dict values."
+)
+attr(rye_stdlib_dict_has_p, "rye_doc") <- list(
+  usage = "(dict-has? dict key)",
+  description = "Return TRUE if dict contains key."
+)
+attr(rye_stdlib_dict_merge, "rye_doc") <- list(
+  usage = "(dict-merge dict ...)",
+  description = "Merge dicts, later values override earlier."
+)
+attr(rye_stdlib_set, "rye_doc") <- list(
+  usage = "(set item ...)",
+  description = "Create a set of unique items."
+)
+attr(rye_stdlib_set_p, "rye_doc") <- list(
+  usage = "(set? x)",
+  description = "Return TRUE if x is a set."
+)
+attr(rye_stdlib_set_add, "rye_doc") <- list(
+  usage = "(set-add set item)",
+  description = "Return set with item added."
+)
+attr(rye_stdlib_set_remove, "rye_doc") <- list(
+  usage = "(set-remove set item)",
+  description = "Return set without item."
+)
+attr(rye_stdlib_set_contains_p, "rye_doc") <- list(
+  usage = "(set-contains? set item)",
+  description = "Return TRUE if set contains item."
+)
+attr(rye_stdlib_set_union, "rye_doc") <- list(
+  usage = "(set-union a b)",
+  description = "Return union of two sets."
+)
+attr(rye_stdlib_set_intersection, "rye_doc") <- list(
+  usage = "(set-intersection a b)",
+  description = "Return intersection of two sets."
+)
+attr(rye_stdlib_set_difference, "rye_doc") <- list(
+  usage = "(set-difference a b)",
+  description = "Return items in a that are not in b."
 )
 attr(rye_stdlib_r_call, "rye_doc") <- list(
   usage = "(r/call fn [:args list])",

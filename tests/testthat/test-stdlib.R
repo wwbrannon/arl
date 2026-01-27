@@ -231,7 +231,11 @@ test_that("predicates and interop helpers work", {
   expect_true(env$`fn?`(function(x) x))
   expect_true(env$`callable?`(function(x) x))
 
-  expect_equal(env$dict(a = 1, b = 2), list(a = 1, b = 2))
+  dict <- env$dict(a = 1, b = 2)
+  expect_true(env$`dict?`(dict))
+  expect_equal(names(dict), c("a", "b"))
+  expect_equal(dict$a, 1)
+  expect_equal(dict$b, 2)
   expect_equal(env$`r/call`("sum", list(1, 2, 3)), 6)
 })
 
@@ -252,6 +256,75 @@ test_that("string and io helpers work", {
     close(con)
   }, add = TRUE)
   expect_equal(env$`read-line`(), "hello")
+})
+
+test_that("string match helpers work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_true(env$`string-contains?`("hello", "ell"))
+  expect_false(env$`string-contains?`("hello", "^ell"))
+  expect_true(env$`string-contains?`("hello", "^he", fixed = FALSE))
+
+  expect_true(env$`string-match?`("hello", "^he"))
+  expect_false(env$`string-match?`("hello", "ELL"))
+  expect_false(env$`string-match?`("hello", "ELL", fixed = TRUE))
+
+  expect_equal(env$`string-find`("hello", "ll"), 2)
+  expect_equal(env$`string-find`("hello", "nope"), NULL)
+  expect_equal(env$`string-find`("hello", "^he", fixed = FALSE), 0)
+
+  expect_equal(env$`string-replace`("hello", "l", "L"), "heLlo")
+  expect_equal(env$`string-replace-all`("hello", "l", "L"), "heLLo")
+})
+
+test_that("file io helpers work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  path <- tempfile(fileext = ".txt")
+  env$`write-file`(path, "hello")
+  expect_true(env$`file-exists?`(path))
+  expect_equal(env$`read-file`(path), "hello")
+
+  env$`append-file`(path, list("world", "there"))
+  expect_equal(env$`read-file`(path), "hello\nworld\nthere")
+
+  env$`write-lines`(path, list("a", "b", "c"))
+  expect_equal(env$`read-lines`(path), list("a", "b", "c"))
+})
+
+test_that("dict and set helpers work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  dict <- env$dict(a = 1, b = 2)
+  expect_equal(env$`dict-get`(dict, "a"), 1)
+  expect_equal(env$`dict-get`(dict, "missing", 99), 99)
+  expect_true(env$`dict-has?`(dict, "b"))
+  expect_false(env$`dict-has?`(dict, "c"))
+  expect_equal(env$`dict-keys`(dict), list("a", "b"))
+  expect_equal(env$`dict-values`(dict), list(1, 2))
+
+  updated <- env$`dict-set`(dict, "c", 3)
+  expect_equal(env$`dict-get`(updated, "c"), 3)
+  removed <- env$`dict-remove`(updated, "a")
+  expect_false(env$`dict-has?`(removed, "a"))
+
+  merged <- env$`dict-merge`(dict, env$dict(b = 3, c = 4))
+  expect_equal(env$`dict-get`(merged, "a"), 1)
+  expect_equal(env$`dict-get`(merged, "b"), 3)
+  expect_equal(env$`dict-get`(merged, "c"), 4)
+
+  set <- env$set(1, 2, 2, 3)
+  expect_true(env$`set?`(set))
+  expect_true(env$`set-contains?`(set, 2))
+  expect_false(env$`set-contains?`(set, 4))
+  expect_equal(env$`set-add`(set, 4), env$set(1, 2, 3, 4))
+  expect_equal(env$`set-remove`(set, 2), env$set(1, 3))
+  expect_equal(env$`set-union`(env$set(1, 2), env$set(2, 3)), env$set(1, 2, 3))
+  expect_equal(env$`set-intersection`(env$set(1, 2), env$set(2, 3)), env$set(2))
+  expect_equal(env$`set-difference`(env$set(1, 2), env$set(2, 3)), env$set(1))
 })
 
 test_that("error and debug helpers work", {
