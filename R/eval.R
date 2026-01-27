@@ -14,6 +14,17 @@ rye_eval <- function(expr, env = parent.frame()) {
   if (!exists(".rye_env", envir = env, inherits = FALSE)) {
     assign(".rye_env", TRUE, envir = env)
   }
+  had_error <- FALSE
+  src <- rye_src_get(expr)
+  if (!is.null(src)) {
+    rye_src_stack_push(src)
+    on.exit({
+      if (!had_error) {
+        rye_src_stack_pop()
+      }
+    }, add = TRUE)
+  }
+  withCallingHandlers({
   # Handle NULL (empty list or #nil)
   if (is.null(expr)) {
     return(NULL)
@@ -22,12 +33,12 @@ rye_eval <- function(expr, env = parent.frame()) {
   # Handle atoms (self-evaluating)
   if (!is.call(expr) && !is.symbol(expr)) {
     # Keywords are self-evaluating (return as-is for now)
-    return(expr)
+    return(rye_strip_src(expr))
   }
 
   # Handle keywords (they pass through as-is for use in function calls)
   if (inherits(expr, "rye_keyword")) {
-    return(expr)
+    return(rye_strip_src(expr))
   }
 
   # Handle symbols (variable lookup)
@@ -44,7 +55,7 @@ rye_eval <- function(expr, env = parent.frame()) {
   # Must happen before we check special forms
   if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]])) {
     if (is_macro(expr[[1]])) {
-      expanded <- rye_macroexpand(expr, env)
+      expanded <- rye_macroexpand(expr, env, preserve_src = TRUE)
       return(rye_eval(expanded, env))
     }
   }
@@ -57,7 +68,7 @@ rye_eval <- function(expr, env = parent.frame()) {
     if (length(expr) != 2) {
       stop("quote requires exactly 1 argument")
     }
-    return(expr[[2]])
+    return(rye_strip_src(expr[[2]]))
   }
 
   # quasiquote - template with selective evaluation
@@ -65,7 +76,7 @@ rye_eval <- function(expr, env = parent.frame()) {
     if (length(expr) != 2) {
       stop("quasiquote requires exactly 1 argument")
     }
-    return(rye_quasiquote(expr[[2]], env))
+    return(rye_strip_src(rye_quasiquote(expr[[2]], env)))
   }
 
   # help - show docs without evaluating argument
@@ -129,17 +140,17 @@ rye_eval <- function(expr, env = parent.frame()) {
     if (length(expr) < 3 || length(expr) > 4) {
       stop("if requires 2 or 3 arguments: (if test then [else])")
     }
-    test <- rye_eval(expr[[2]], env)
+    test <- rye_strip_src(rye_eval(expr[[2]], env))
     # R-style truthiness: NULL and FALSE are falsy
     if (identical(test, FALSE) || is.null(test)) {
       # Evaluate else branch if present
       if (length(expr) == 4) {
-        return(rye_eval(expr[[4]], env))
+        return(rye_strip_src(rye_eval(expr[[4]], env)))
       } else {
         return(NULL)
       }
     } else {
-      return(rye_eval(expr[[3]], env))
+      return(rye_strip_src(rye_eval(expr[[3]], env)))
     }
   }
 
@@ -152,7 +163,7 @@ rye_eval <- function(expr, env = parent.frame()) {
     if (!is.symbol(name)) {
       stop("define requires a symbol as the first argument")
     }
-    value <- rye_eval(expr[[3]], env)
+    value <- rye_strip_src(rye_eval(expr[[3]], env))
     rye_assign(as.character(name), value, env)
     return(NULL)
   }
@@ -171,7 +182,7 @@ rye_eval <- function(expr, env = parent.frame()) {
     if (!exists(name_str, envir = env, inherits = TRUE)) {
       stop(sprintf("set!: variable '%s' is not defined", name_str))
     }
-    value <- rye_eval(expr[[3]], env)
+    value <- rye_strip_src(rye_eval(expr[[3]], env))
     # Find and assign to the environment where the variable exists
     target_env <- env
     while (!exists(name_str, envir = target_env, inherits = FALSE)) {
@@ -190,7 +201,7 @@ rye_eval <- function(expr, env = parent.frame()) {
     if (length(expr) != 2) {
       stop("load requires exactly 1 argument: (load \"path\")")
     }
-    path <- rye_eval(expr[[2]], env)
+    path <- rye_strip_src(rye_eval(expr[[2]], env))
     if (!is.character(path) || length(path) != 1) {
       stop("load requires a single file path string")
     }
@@ -198,14 +209,14 @@ rye_eval <- function(expr, env = parent.frame()) {
     if (!has_separator) {
       stdlib_path <- rye_resolve_stdlib_path(path)
       if (!is.null(stdlib_path)) {
-        return(rye_load_file(stdlib_path, env))
+        return(rye_strip_src(rye_load_file(stdlib_path, env)))
       }
       if (file.exists(path)) {
-        return(rye_load_file(path, env))
+        return(rye_strip_src(rye_load_file(path, env)))
       }
       stop(sprintf("File not found: %s", path))
     }
-    return(rye_load_file(path, env))
+    return(rye_strip_src(rye_load_file(path, env)))
   }
 
   # lambda - function creation
@@ -280,7 +291,7 @@ rye_eval <- function(expr, env = parent.frame()) {
       result <- NULL
       if (length(body_exprs) > 0) {
         for (i in seq_along(body_exprs)) {
-          result <- rye_eval(body_exprs[[i]], fn_env)
+          result <- rye_strip_src(rye_eval(body_exprs[[i]], fn_env))
         }
       }
       result
@@ -296,7 +307,7 @@ rye_eval <- function(expr, env = parent.frame()) {
   if (is.symbol(op) && as.character(op) == "begin") {
     result <- NULL
     for (i in 2:length(expr)) {
-      result <- rye_eval(expr[[i]], env)
+      result <- rye_strip_src(rye_eval(expr[[i]], env))
     }
     return(result)
   }
@@ -350,7 +361,7 @@ rye_eval <- function(expr, env = parent.frame()) {
 
   # Regular function application
   # Evaluate operator
-  fn <- rye_eval(op, env)
+  fn <- rye_strip_src(rye_eval(op, env))
 
   # Evaluate arguments, handling keywords for named parameters
   args <- list()
@@ -366,14 +377,14 @@ rye_eval <- function(expr, env = parent.frame()) {
         stop(sprintf("Keyword :%s requires a value", arg_expr))
       }
       keyword_name <- as.character(arg_expr)
-      value <- rye_eval(expr[[i + 1]], env)
+      value <- rye_strip_src(rye_eval(expr[[i + 1]], env))
 
       args <- c(args, list(value))
       arg_names <- c(arg_names, keyword_name)
       i <- i + 2  # Skip both keyword and value
     } else {
       # Regular positional argument
-      value <- rye_eval(arg_expr, env)
+      value <- rye_strip_src(rye_eval(arg_expr, env))
       args <- c(args, list(value))
       arg_names <- c(arg_names, "")
       i <- i + 1
@@ -386,5 +397,9 @@ rye_eval <- function(expr, env = parent.frame()) {
   }
 
   # Apply function (arguments already evaluated by Rye)
-  rye_do_call(fn, args)
+  rye_strip_src(rye_do_call(fn, args))
+  }, error = function(e) {
+    had_error <<- TRUE
+    stop(e)
+  })
 }

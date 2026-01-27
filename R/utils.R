@@ -17,16 +17,113 @@ rye_trimws_shim <- function(x, which = c("both", "left", "right"), whitespace = 
   rye_trimws_compat(x, which = which, whitespace = whitespace)
 }
 
-rye_eval_exprs <- function(exprs, env) {
-  result <- NULL
-  for (expr in exprs) {
-    result <- rye_eval(expr, env)
-  }
-  result
+.rye_error_state <- new.env(parent = emptyenv())
+.rye_error_state$src_stack <- list()
+
+rye_src_new <- function(file, start_line, start_col, end_line = start_line, end_col = start_col) {
+  structure(
+    list(
+      file = file,
+      start_line = start_line,
+      start_col = start_col,
+      end_line = end_line,
+      end_col = end_col
+    ),
+    class = "rye_src"
+  )
 }
 
-rye_eval_text <- function(text, env) {
-  exprs <- rye_read(text)
+rye_src_get <- function(expr) {
+  if (is.null(expr)) {
+    return(NULL)
+  }
+  attr(expr, "rye_src", exact = TRUE)
+}
+
+rye_src_set <- function(expr, src) {
+  if (is.null(expr) || is.null(src)) {
+    return(expr)
+  }
+  if (is.symbol(expr)) {
+    return(expr)
+  }
+  attr(expr, "rye_src") <- src
+  expr
+}
+
+rye_src_inherit <- function(expr, from) {
+  src <- rye_src_get(from)
+  if (is.null(src)) {
+    return(expr)
+  }
+  if (!is.null(rye_src_get(expr))) {
+    return(expr)
+  }
+  rye_src_set(expr, src)
+}
+
+rye_strip_src <- function(value) {
+  if (is.null(value)) {
+    return(value)
+  }
+  if (is.symbol(value)) {
+    return(value)
+  }
+  if (!is.null(attr(value, "rye_src", exact = TRUE))) {
+    attr(value, "rye_src") <- NULL
+  }
+  if (is.call(value)) {
+    stripped <- lapply(as.list(value), rye_strip_src)
+    return(as.call(stripped))
+  }
+  if (is.list(value) && is.null(attr(value, "class", exact = TRUE))) {
+    stripped <- lapply(value, rye_strip_src)
+    if (!is.null(names(value))) {
+      names(stripped) <- names(value)
+    }
+    return(stripped)
+  }
+  value
+}
+
+rye_src_stack_get <- function() {
+  .rye_error_state$src_stack
+}
+
+rye_src_stack_reset <- function() {
+  .rye_error_state$src_stack <- list()
+  invisible(NULL)
+}
+
+rye_src_stack_push <- function(src) {
+  if (is.null(src)) {
+    return(invisible(NULL))
+  }
+  .rye_error_state$src_stack <- c(.rye_error_state$src_stack, list(src))
+  invisible(NULL)
+}
+
+rye_src_stack_pop <- function() {
+  stack <- .rye_error_state$src_stack
+  if (length(stack) == 0) {
+    return(invisible(NULL))
+  }
+  .rye_error_state$src_stack <- stack[-length(stack)]
+  invisible(NULL)
+}
+
+rye_eval_exprs <- function(exprs, env) {
+  rye_with_error_context(function() {
+    result <- NULL
+    for (expr in exprs) {
+      result <- rye_eval(expr, env)
+    }
+    result
+  })
+}
+
+rye_eval_text <- function(text, env, source_name = "<eval>") {
+  exprs <- rye_read(text, source_name = source_name)
   rye_eval_exprs(exprs, env)
 }
 
@@ -102,5 +199,86 @@ rye_load_file <- function(path, env = parent.frame()) {
     stop(sprintf("File not found: %s", path))
   }
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-  rye_eval_text(text, env)
+  rye_eval_text(text, env, source_name = path)
+}
+
+rye_error <- function(message, src_stack = list(), r_stack = list()) {
+  structure(
+    list(message = message, src_stack = src_stack, r_stack = r_stack),
+    class = c("rye_error", "error", "condition")
+  )
+}
+
+rye_with_error_context <- function(fn) {
+  prev_stack <- rye_src_stack_get()
+  on.exit({
+    .rye_error_state$src_stack <- prev_stack
+  }, add = TRUE)
+  rye_src_stack_reset()
+  tryCatch(
+    fn(),
+    error = function(e) {
+      if (inherits(e, "rye_error")) {
+        stop(e)
+      }
+      cond <- rye_error(conditionMessage(e), rye_src_stack_get(), sys.calls())
+      stop(cond)
+    }
+  )
+}
+
+rye_format_src <- function(src) {
+  if (is.null(src)) {
+    return(NULL)
+  }
+  file <- src$file
+  if (is.null(file) || !is.character(file) || length(file) != 1 || !nzchar(file)) {
+    file <- "<input>"
+  }
+  start <- paste0(src$start_line, ":", src$start_col)
+  end <- paste0(src$end_line, ":", src$end_col)
+  if (identical(start, end)) {
+    return(paste0(file, ":", start))
+  }
+  paste0(file, ":", start, "-", end)
+}
+
+rye_format_error <- function(e, include_r_stack = TRUE) {
+  lines <- c(paste0("Error: ", conditionMessage(e)))
+  if (inherits(e, "rye_error")) {
+    src_stack <- e$src_stack
+    if (!is.null(src_stack) && length(src_stack) > 0) {
+      loc <- rye_format_src(src_stack[[length(src_stack)]])
+      if (!is.null(loc)) {
+        lines <- c(lines, paste0("Location: ", loc))
+      }
+      if (length(src_stack) > 1) {
+        lines <- c(lines, "Rye stack:")
+        for (src in rev(src_stack)) {
+          loc <- rye_format_src(src)
+          if (!is.null(loc)) {
+            lines <- c(lines, paste0("  at ", loc))
+          }
+        }
+      }
+    }
+    if (isTRUE(include_r_stack)) {
+      r_stack <- e$r_stack
+      if (!is.null(r_stack) && length(r_stack) > 0) {
+        lines <- c(lines, "R stack:")
+        max_frames <- 20
+        calls <- r_stack
+        if (length(calls) > max_frames) {
+          calls <- tail(calls, max_frames)
+        }
+        for (call in rev(calls)) {
+          lines <- c(lines, paste0("  ", paste(deparse(call), collapse = "")))
+        }
+        if (length(r_stack) > max_frames) {
+          lines <- c(lines, "  ...")
+        }
+      }
+    }
+  }
+  paste(lines, collapse = "\n")
 }

@@ -10,7 +10,7 @@
 #' tokens <- rye_tokenize("(+ 1 2)")
 #' rye_parse(tokens)
 #' @export
-rye_parse <- function(tokens) {
+rye_parse <- function(tokens, source_name = NULL) {
   pos <- 1
   expressions <- list()
 
@@ -21,48 +21,66 @@ rye_parse <- function(tokens) {
 
     token <- tokens[[pos]]
 
+    make_src <- function(start_token, end_src = NULL) {
+      end_line <- start_token$line
+      end_col <- start_token$col
+      if (!is.null(end_src)) {
+        if (!is.null(end_src$end_line)) {
+          end_line <- end_src$end_line
+        }
+        if (!is.null(end_src$end_col)) {
+          end_col <- end_src$end_col
+        }
+      }
+      rye_src_new(source_name, start_token$line, start_token$col, end_line, end_col)
+    }
+
     # Quote sugar
     if (token$type == "QUOTE") {
       pos <<- pos + 1
       quoted <- parse_expr()
-      return(as.call(list(as.symbol("quote"), quoted)))
+      expr <- as.call(list(as.symbol("quote"), quoted))
+      return(rye_src_set(expr, make_src(token, rye_src_get(quoted))))
     }
 
     # Quasiquote sugar
     if (token$type == "QUASIQUOTE") {
       pos <<- pos + 1
       quoted <- parse_expr()
-      return(as.call(list(as.symbol("quasiquote"), quoted)))
+      expr <- as.call(list(as.symbol("quasiquote"), quoted))
+      return(rye_src_set(expr, make_src(token, rye_src_get(quoted))))
     }
 
     # Unquote sugar
     if (token$type == "UNQUOTE") {
       pos <<- pos + 1
       unquoted <- parse_expr()
-      return(as.call(list(as.symbol("unquote"), unquoted)))
+      expr <- as.call(list(as.symbol("unquote"), unquoted))
+      return(rye_src_set(expr, make_src(token, rye_src_get(unquoted))))
     }
 
     # Unquote-splicing sugar
     if (token$type == "UNQUOTE_SPLICING") {
       pos <<- pos + 1
       unquoted <- parse_expr()
-      return(as.call(list(as.symbol("unquote-splicing"), unquoted)))
+      expr <- as.call(list(as.symbol("unquote-splicing"), unquoted))
+      return(rye_src_set(expr, make_src(token, rye_src_get(unquoted))))
     }
 
     # Atoms
     if (token$type == "NUMBER") {
       pos <<- pos + 1
-      return(token$value)
+      return(rye_src_set(token$value, make_src(token)))
     }
 
     if (token$type == "STRING") {
       pos <<- pos + 1
-      return(token$value)
+      return(rye_src_set(token$value, make_src(token)))
     }
 
     if (token$type == "BOOLEAN") {
       pos <<- pos + 1
-      return(token$value)
+      return(rye_src_set(token$value, make_src(token)))
     }
 
     if (token$type == "NIL") {
@@ -79,31 +97,35 @@ rye_parse <- function(tokens) {
         parts <- strsplit(token$value, ":::", fixed = TRUE)[[1]]
         if (length(parts) == 2 && nzchar(parts[1]) && nzchar(parts[2])) {
           # Convert pkg:::name to (::: pkg name)
-          return(as.call(list(as.symbol(":::"), as.symbol(parts[1]), as.symbol(parts[2]))))
+          expr <- as.call(list(as.symbol(":::"), as.symbol(parts[1]), as.symbol(parts[2])))
+          return(rye_src_set(expr, make_src(token)))
         }
         # Invalid format, fall through to return as-is
       } else if (grepl("::", token$value, fixed = TRUE)) {
         parts <- strsplit(token$value, "::", fixed = TRUE)[[1]]
         if (length(parts) == 2 && nzchar(parts[1]) && nzchar(parts[2])) {
           # Convert pkg::name to (:: pkg name)
-          return(as.call(list(as.symbol("::"), as.symbol(parts[1]), as.symbol(parts[2]))))
+          expr <- as.call(list(as.symbol("::"), as.symbol(parts[1]), as.symbol(parts[2])))
+          return(rye_src_set(expr, make_src(token)))
         }
         # Invalid format, fall through to return as-is
       }
 
-      return(as.symbol(token$value))
+      return(rye_src_set(as.symbol(token$value), make_src(token)))
     }
 
     if (token$type == "KEYWORD") {
       pos <<- pos + 1
       # Store keywords as a special structure
       # We'll use this in the evaluator to convert to named arguments
-      return(structure(token$value, class = "rye_keyword"))
+      keyword <- structure(token$value, class = "rye_keyword")
+      return(rye_src_set(keyword, make_src(token)))
     }
 
     # Lists (S-expressions)
     if (token$type == "LPAREN") {
       pos <<- pos + 1
+      start_token <- token
       elements <- list()
 
       while (pos <= length(tokens) && tokens[[pos]]$type != "RPAREN") {
@@ -116,15 +138,17 @@ rye_parse <- function(tokens) {
         stop(sprintf("Unclosed parenthesis at line %d, column %d", token$line, token$col))
       }
 
+      end_token <- tokens[[pos]]
       pos <<- pos + 1  # Skip RPAREN
 
       # Empty list
       if (length(elements) == 0) {
-        return(list())
+        return(rye_src_set(list(), rye_src_new(source_name, start_token$line, start_token$col, end_token$line, end_token$col)))
       }
 
       # Convert to R call
-      return(as.call(elements))
+      expr <- as.call(elements)
+      return(rye_src_set(expr, rye_src_new(source_name, start_token$line, start_token$col, end_token$line, end_token$col)))
     }
 
     if (token$type == "RPAREN") {
@@ -151,7 +175,7 @@ rye_parse <- function(tokens) {
 #' @examples
 #' rye_read("(define x 10) (+ x 5)")
 #' @export
-rye_read <- function(source) {
+rye_read <- function(source, source_name = NULL) {
   tokens <- rye_tokenize(source)
-  rye_parse(tokens)
+  rye_parse(tokens, source_name = source_name)
 }

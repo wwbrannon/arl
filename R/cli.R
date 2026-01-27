@@ -127,15 +127,27 @@ cli_load_env <- function() {
 }
 
 cli_eval_exprs <- function(exprs, env) {
-  result <- rye_eval_exprs(exprs, env)
+  result <- tryCatch(
+    rye_eval_exprs(exprs, env),
+    error = function(e) {
+      cli_print_error(e)
+      quit(save = "no", status = 1)
+    }
+  )
   if (!is.null(result)) {
     print(result)
   }
   invisible(result)
 }
 
-cli_eval_text <- function(text, env) {
-  result <- rye_eval_text(text, env)
+cli_eval_text <- function(text, env, source_name = "<cli>") {
+  result <- tryCatch(
+    rye_eval_text(text, env, source_name = source_name),
+    error = function(e) {
+      cli_print_error(e)
+      quit(save = "no", status = 1)
+    }
+  )
   if (!is.null(result)) {
     print(result)
   }
@@ -172,6 +184,10 @@ cli_error <- function(message) {
   cat("Error: ", message, "\n", sep = "", file = stderr())
 }
 
+cli_print_error <- function(e) {
+  cat(rye_format_error(e), "\n", sep = "", file = stderr())
+}
+
 rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
   parsed <- parse_cli_args(args)
 
@@ -201,7 +217,7 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
       env <- cli_load_env()
       text <- paste(cli_read_stdin(), collapse = "\n")
       if (rye_trimws_shim(text) != "") { # nolint: object_usage_linter
-        cli_eval_text(text, env)
+        cli_eval_text(text, env, source_name = "<stdin>")
       }
       return(invisible(NULL))
     }
@@ -219,7 +235,13 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
       }
     }
     for (path in parsed$files) {
-      result <- rye_load_file(path, env)
+      result <- tryCatch(
+        rye_load_file(path, env),
+        error = function(e) {
+          cli_print_error(e)
+          quit(save = "no", status = 1)
+        }
+      )
       if (!is.null(result)) {
         print(result)
       }
@@ -228,7 +250,7 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
   }
 
   if (parsed$action == "eval") {
-    cli_eval_text(parsed$expr, env)
+    cli_eval_text(parsed$expr, env, source_name = "<cli>")
     return(invisible(NULL))
   }
 

@@ -87,3 +87,17 @@ test_that("evaluator validates lambda argument lists", {
   expect_error(rye_eval(rye_read("(lambda 1 2)")[[1]]), "lambda arguments must be a list")
   expect_error(rye_eval(rye_read("(lambda (1) 2)")[[1]]), "lambda arguments must be symbols")
 })
+
+test_that("eval text errors include source and stack context", {
+  env <- new.env(parent = baseenv())
+  err <- tryCatch(
+    rye_eval_text("(+ 1 nope)", env, source_name = "test.rye"),
+    error = function(e) e
+  )
+  expect_s3_class(err, "rye_error")
+
+  formatted <- rye_format_error(err)
+  expect_match(formatted, "test\\.rye:1:1-1:10")
+  expect_match(formatted, "R stack:")
+  expect_match(formatted, "rye_eval")
+})

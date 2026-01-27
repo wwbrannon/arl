@@ -129,7 +129,7 @@ repl_read_form <- function(input_fn = repl_input_line, prompt = "rye> ", cont_pr
     text <- paste(buffer, collapse = "\n")
 
     parsed <- tryCatch(
-      rye_read(text),
+      rye_read(text, source_name = "<repl>"),
       error = function(e) e
     )
 
@@ -149,12 +149,14 @@ repl_eval_exprs <- function(exprs, env) {
 }
 
 repl_eval_and_print_exprs <- function(exprs, env) {
-  result <- NULL
-  for (expr in exprs) {
-    result <- rye_eval(expr, env)
-    repl_print_value(result)
-  }
-  invisible(result)
+  rye_with_error_context(function() {
+    result <- NULL
+    for (expr in exprs) {
+      result <- rye_eval(expr, env)
+      repl_print_value(result)
+    }
+    invisible(result)
+  })
 }
 
 repl_print_value <- function(value) {
@@ -193,7 +195,7 @@ rye_repl <- function() {
     form <- tryCatch(
       repl_read_form(),
       error = function(e) {
-        cat("Error: ", conditionMessage(e), "\n", sep = "")
+        cat(rye_format_error(e), "\n", sep = "")
         list(error = TRUE)
       }
     )
@@ -216,7 +218,7 @@ rye_repl <- function() {
     tryCatch({
       repl_eval_and_print_exprs(form$exprs, repl_env)
     }, error = function(e) {
-      cat("Error: ", conditionMessage(e), "\n", sep = "")
+      cat(rye_format_error(e), "\n", sep = "")
     })
   }
 }

@@ -224,10 +224,13 @@ get_macro <- function(name) {
 #' rye_eval(rye_read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]])
 #' rye_macroexpand(rye_read("(when #t 1)")[[1]])
 #' @export
-rye_macroexpand <- function(expr, env = parent.frame()) {
+rye_macroexpand <- function(expr, env = parent.frame(), preserve_src = FALSE) {
   # Handle non-calls
   if (!is.call(expr) || length(expr) == 0) {
-    return(expr)
+    if (isTRUE(preserve_src)) {
+      return(expr)
+    }
+    return(rye_strip_src(expr))
   }
 
   op <- expr[[1]]
@@ -240,9 +243,10 @@ rye_macroexpand <- function(expr, env = parent.frame()) {
     # Expand the macro with unevaluated arguments
     args <- as.list(expr[-1])
     expanded <- do.call(macro_fn, args)
+    expanded <- rye_src_inherit(expanded, expr)
 
     # Recursively expand the result
-    return(rye_macroexpand(expanded, env))
+    return(rye_macroexpand(expanded, env, preserve_src = preserve_src))
   }
 
   # Not a macro - recursively expand subexpressions
@@ -251,11 +255,17 @@ rye_macroexpand <- function(expr, env = parent.frame()) {
     op_name <- as.character(op)
     if (op_name %in% c("quote", "defmacro")) {
       # Don't expand inside quote or defmacro
-      return(expr)
+      if (isTRUE(preserve_src)) {
+        return(expr)
+      }
+      return(rye_strip_src(expr))
     }
     if (op_name == "quasiquote") {
       # Only expand unquoted parts
-      return(expr)
+      if (isTRUE(preserve_src)) {
+        return(expr)
+      }
+      return(rye_strip_src(expr))
     }
   }
 
@@ -263,9 +273,13 @@ rye_macroexpand <- function(expr, env = parent.frame()) {
   result <- list(expr[[1]])
   if (length(expr) > 1) {
     for (i in 2:length(expr)) {
-      result[[i]] <- rye_macroexpand(expr[[i]], env)
+      result[[i]] <- rye_macroexpand(expr[[i]], env, preserve_src = preserve_src)
     }
   }
 
-  as.call(result)
+  expanded <- rye_src_inherit(as.call(result), expr)
+  if (isTRUE(preserve_src)) {
+    return(expanded)
+  }
+  rye_strip_src(expanded)
 }
