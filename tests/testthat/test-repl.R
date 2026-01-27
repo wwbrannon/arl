@@ -202,27 +202,31 @@ test_that("repl_add_history handles missing addHistory", {
 # Print Value Function ----
 
 test_that("repl_print_value handles NULL", {
-  result <- capture.output(val <- rye:::repl_print_value(NULL))
+  env <- rye:::cli_load_env()
+  result <- capture.output(val <- rye:::repl_print_value(NULL, env))
   expect_length(result, 0)
   expect_null(val)
 })
 
 test_that("repl_print_value handles calls with str", {
+  env <- rye:::cli_load_env()
   call_obj <- quote(f(a, b))
-  output <- capture.output(val <- rye:::repl_print_value(call_obj))
+  output <- capture.output(val <- rye:::repl_print_value(call_obj, env))
   expect_true(length(output) > 0)
   expect_equal(val, call_obj)
 })
 
 test_that("repl_print_value handles lists with str", {
+  env <- rye:::cli_load_env()
   list_obj <- list(a = 1, b = 2)
-  output <- capture.output(val <- rye:::repl_print_value(list_obj))
+  output <- capture.output(val <- rye:::repl_print_value(list_obj, env))
   expect_true(length(output) > 0)
   expect_equal(val, list_obj)
 })
 
 test_that("repl_print_value handles vectors with print", {
-  output <- capture.output(val <- rye:::repl_print_value(c(1, 2, 3)))
+  env <- rye:::cli_load_env()
+  output <- capture.output(val <- rye:::repl_print_value(c(1, 2, 3), env))
   expect_true(any(grepl("1.*2.*3", output)))
   expect_equal(val, c(1, 2, 3))
 })
@@ -335,9 +339,7 @@ test_that("rye_repl prints each expression result in input", {
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
   )
-  expect_true(any(grepl("\\[1\\] 1", output)))
-  expect_true(any(grepl("\\.Primitive\\(\"\\+\"\\)", output)))
-  expect_true(any(grepl("\\[1\\] 2", output)))
+  expect_true(any(grepl("1 \\+ 2", output)))
 })
 
 test_that("rye_repl handles evaluation errors gracefully", {

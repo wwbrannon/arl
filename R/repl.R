@@ -153,21 +153,17 @@ repl_eval_and_print_exprs <- function(exprs, env) {
     result <- NULL
     for (expr in exprs) {
       result <- rye_eval(expr, env)
-      repl_print_value(result)
+      repl_print_value(result, env)
     }
     invisible(result)
   })
 }
 
-repl_print_value <- function(value) {
+repl_print_value <- function(value, env) {
   if (is.null(value)) {
     return(invisible(NULL))
   }
-  if (is.call(value) || is.list(value)) {
-    utils::str(value)
-    return(invisible(value))
-  }
-  print(value)
+  cat(rye_env_format_value(env, value), "\n", sep = "")
   invisible(value)
 }
 

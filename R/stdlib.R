@@ -30,6 +30,7 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$call <- rye_stdlib_call
   env$apply <- rye_stdlib_apply
   env$values <- rye_stdlib_values
+  env$`values?` <- rye_values_p
   env$`call-with-values` <- rye_stdlib_call_with_values
   env$`call/cc` <- rye_make_builtin_callcc()
   env$`call-with-current-continuation` <- env$`call/cc`
@@ -130,7 +131,8 @@ rye_load_stdlib_files <- function(env = parent.frame()) {
 
 
 rye_stdlib_display <- function(x) {
-  cat(rye_stdlib_format_value(x), "\n")
+  env <- parent.frame()
+  cat(rye_env_format_value(env, x), "\n", sep = "")
 }
 
 rye_as_list <- function(x) {
@@ -184,43 +186,18 @@ rye_stdlib_call_with_values <- function(producer, consumer) {
 
 rye_stdlib_str <- function(...) {
   args <- list(...)
-  formatted <- lapply(args, function(arg) {
-    if (is.symbol(arg)) {
-      return(as.character(arg))
-    }
-    if (is.environment(arg) && inherits(arg, "rye_dict")) {
-      return(as.character(rye_stdlib_dict_to_list(arg)))
-    }
-    if (is.environment(arg) && inherits(arg, "rye_set")) {
-      return(as.character(unname(as.list(arg, all.names = TRUE))))
-    }
-    if (is.list(arg) && any(vapply(arg, function(item) is.environment(item) &&
-        (inherits(item, "rye_dict") || inherits(item, "rye_set")), logical(1)))) {
-      converted <- lapply(arg, function(item) {
-        if (is.environment(item) && inherits(item, "rye_dict")) {
-          return(rye_stdlib_dict_to_list(item))
-        }
-        if (is.environment(item) && inherits(item, "rye_set")) {
-          return(unname(as.list(item, all.names = TRUE)))
-        }
-        item
-      })
-      return(as.character(converted))
-    }
-    if (is.call(arg)) {
-      return(as.character(arg))
-    }
-    arg
-  })
+  env <- parent.frame()
+  formatted <- lapply(args, function(arg) rye_env_format_value(env, arg))
   do.call(paste0, formatted)
 }
 
 
 rye_stdlib_trace <- function(x, label = NULL) {
   if (!is.null(label)) {
-    cat(as.character(label), ": ", sep = "")
+    cat(rye_env_format_value(parent.frame(), label), ": ", sep = "")
   }
-  cat(rye_stdlib_format_value(x), "\n")
+  env <- parent.frame()
+  cat(rye_env_format_value(env, x), "\n", sep = "")
   x
 }
 
@@ -564,45 +541,7 @@ rye_stdlib_deparse_single <- function(x) {
 }
 
 rye_stdlib_format_value <- function(x) {
-  if (rye_values_p(x)) {
-    inner <- unclass(x)
-    if (length(inner) == 0) {
-      return("(values)")
-    }
-    return(paste(c("(values", as.character(inner), ")"), collapse = " "))
-  }
-  if (is.environment(x) && inherits(x, "rye_dict")) {
-    return(paste(as.character(rye_stdlib_dict_to_list(x)), collapse = " "))
-  }
-  if (is.environment(x) && inherits(x, "rye_set")) {
-    return(rye_stdlib_deparse_single(unname(as.list(x, all.names = TRUE))))
-  }
-  if (is.environment(x) && inherits(x, "rye_promise")) {
-    return("<promise>")
-  }
-  if (is.list(x)) {
-    if (length(x) == 0) {
-      return("")
-    }
-    if (any(vapply(x, function(item) is.environment(item) &&
-        (inherits(item, "rye_dict") || inherits(item, "rye_set")), logical(1)))) {
-      converted <- lapply(x, function(item) {
-        if (is.environment(item) && inherits(item, "rye_dict")) {
-          return(rye_stdlib_dict_to_list(item))
-        }
-        if (is.environment(item) && inherits(item, "rye_set")) {
-          return(unname(as.list(item, all.names = TRUE)))
-        }
-        item
-      })
-      return(paste(as.character(converted), collapse = " "))
-    }
-    return(paste(as.character(x), collapse = " "))
-  }
-  if (is.call(x)) {
-    return(paste(as.character(x), collapse = " "))
-  }
-  as.character(x)
+  rye_env_format_value(parent.frame(), x)
 }
 
 attr(rye_stdlib_apply, "rye_doc") <- list(

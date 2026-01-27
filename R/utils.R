@@ -241,6 +241,17 @@ rye_do_call <- function(fn, args) {
   do.call(fn, args)
 }
 
+rye_env_format_value <- function(env, value) {
+  formatter <- get0("format-value", envir = env, inherits = TRUE)
+  if (!is.function(formatter)) {
+    return(paste(as.character(value), collapse = " "))
+  }
+  tryCatch(
+    do.call(formatter, list(value)),
+    error = function(e) paste(as.character(value), collapse = " ")
+  )
+}
+
 rye_assign <- function(name, value, env) {
   target <- env
   repeat {

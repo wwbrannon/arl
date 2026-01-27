@@ -135,7 +135,7 @@ cli_eval_exprs <- function(exprs, env) {
     }
   )
   if (!is.null(result)) {
-    print(result)
+    cat(rye_env_format_value(env, result), "\n", sep = "")
   }
   invisible(result)
 }
@@ -149,7 +149,7 @@ cli_eval_text <- function(text, env, source_name = "<cli>") {
     }
   )
   if (!is.null(result)) {
-    print(result)
+    cat(rye_env_format_value(env, result), "\n", sep = "")
   }
   invisible(result)
 }
@@ -243,7 +243,7 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
         }
       )
       if (!is.null(result)) {
-        print(result)
+        cat(rye_env_format_value(env, result), "\n", sep = "")
       }
     }
     return(invisible(NULL))
