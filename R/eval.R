@@ -134,17 +134,6 @@ rye_eval_cps_inner <- function(expr, env, k) {
     return(rye_call_k(k, promise))
   }
 
-  # force - evaluate a promise (or return value as-is)
-  if (is.symbol(op) && as.character(op) == "force") {
-    if (length(expr) != 2) {
-      stop("force requires exactly 1 argument")
-    }
-    return(rye_eval_cps(expr[[2]], env, function(value) {
-      value <- rye_strip_src(value)
-      rye_call_k(k, rye_promise_force(value))
-    }))
-  }
-
   # help - show docs without evaluating argument
   if (is.symbol(op) && as.character(op) == "help") {
     if (length(expr) != 2) {
@@ -199,18 +188,6 @@ rye_eval_cps_inner <- function(expr, env, k) {
 
     rye_defmacro(name, params, body, env)
     return(rye_call_k(k, NULL))
-  }
-
-  # call/cc - capture continuation
-  if (is.symbol(op) && (as.character(op) == "call/cc" ||
-                        as.character(op) == "call-with-current-continuation")) {
-    if (length(expr) != 2) {
-      stop("call/cc requires exactly 1 argument")
-    }
-    return(rye_eval_cps(expr[[2]], env, function(proc) {
-      proc <- rye_strip_src(proc)
-      rye_apply_callcc_cps(proc, k)
-    }))
   }
 
   # if - conditional evaluation

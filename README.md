@@ -133,13 +133,13 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 - `defmacro` - Define macros
 - `quasiquote` / `` ` `` - Template with selective evaluation
 - `~` - Formula (for R modeling)
-- `call/cc` / `call-with-current-continuation` - Capture the current continuation
 
 ### Continuations
 
-Rye provides Scheme-style, multi-shot continuations via `call/cc`.
-Continuations capture Rye-level control flow; side effects in raw R code are
-not rewound.
+Rye provides Scheme-style, multi-shot continuations via the standard
+library functions `call/cc` and `call-with-current-continuation`.
+Continuations capture Rye-level control flow; side effects in raw R code
+are not rewound.
 
 ### Standard Library
 
@@ -163,12 +163,16 @@ helpers and access to all base R functions.
 
 **Control Flow Macros:** - `when`, `unless`, `and`, `or`, `cond`, `case`
 
-**Binding & Looping:** - `let`, `let*`, `letrec`, `destructuring-bind` - `while`, `for`
+**Binding & Looping:** - `let`, `let*`, `letrec`, `destructuring-bind` -
+`while`, `for`
 
 **Threading Macros:** - `->`, `->>` (thread-first, thread-last)
 
 **Error Handling:** - `try`, `catch`, `finally`, `error`, `warn`,
 `assert`, `trace`, `try*`
+
+**Continuations & Promises:** - `call/cc`,
+`call-with-current-continuation`, `promise?`, `force`
 
 **String & I/O:** - `str`, `string-join`, `string-split`, `trim`,
 `format` - `read-line`, `display`, `println`
@@ -193,25 +197,6 @@ what you need:
 (load "looping")   ; while/for
 (load "threading") ; -> and ->>
 (load "error")     ; try/catch/finally
-```
-
-Rye also supports simple modules with explicit exports. A module file
-defines its own namespace and declares what it exports:
-
-``` lisp
-; math.rye
-(module math
-  (export square inc)
-  (define square (lambda (x) (* x x)))
-  (define inc (lambda (x) (+ x 1))))
-```
-
-Importing loads the module (using the same stdlib/current directory
-resolution as `load`) and attaches its exports into the current scope:
-
-``` lisp
-(import math)
-(square 3) ; => 9
 ```
 
 ### Examples

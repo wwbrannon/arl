@@ -4,7 +4,7 @@
 \alias{rye_read}
 \title{Read Rye source code into parsed expressions}
 \usage{
-rye_read(source)
+rye_read(source, source_name = NULL)
 }
 \arguments{
 \item{source}{A string containing Rye source code}

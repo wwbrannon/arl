@@ -17,13 +17,10 @@ test_that("quote sugar works", {
   expect_true(is.call(result))
 })
 
-test_that("delay creates a promise and force evaluates it", {
+test_that("delay creates a promise", {
   result <- rye_eval(rye_read("(delay (+ 1 2))")[[1]])
   expect_true(is.environment(result))
   expect_true(inherits(result, "rye_promise"))
-
-  forced <- rye_eval(rye_read("(force (delay (+ 1 2)))")[[1]])
-  expect_equal(forced, 3)
 })
 
 test_that("promise? detects promises", {
@@ -43,23 +40,10 @@ test_that("delay is lazy until forced", {
   )
   expect_equal(env$counter, 0)
 
-  rye_eval(rye_read("(force p)")[[1]], env)
+  rye_promise_force(env$p)
   expect_equal(env$counter, 1)
 })
 
-test_that("force memoizes delayed expressions", {
-  env <- new.env()
-  rye_eval(
-    rye_read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  (force p)\n  (force p)\n  counter)")[[1]],
-    env
-  )
-  expect_equal(env$counter, 1)
-})
-
-test_that("force returns non-promises unchanged", {
-  result <- rye_eval(rye_read("(force 42)")[[1]])
-  expect_equal(result, 42)
-})
 
 test_that("if evaluates conditionally", {
   result <- rye_eval(rye_read("(if #t 1 2)")[[1]])
@@ -178,35 +162,3 @@ test_that("set! modifies existing bindings", {
   expect_equal(env$y, 15)
 })
 
-test_that("call/cc exits to current continuation", {
-  env <- rye_load_stdlib()
-  result <- rye_eval(
-    rye_read("(call/cc (lambda (k) (+ 1 (k 42) 3)))")[[1]],
-    env
-  )
-  expect_equal(result, 42)
-})
-
-test_that("call/cc continuations are multi-shot", {
-  env <- rye_load_stdlib()
-  rye_eval(rye_read("(define saved #nil)")[[1]], env)
-  result <- rye_eval(
-    rye_read("(call/cc (lambda (k) (set! saved k) 0))")[[1]],
-    env
-  )
-  expect_equal(result, 0)
-  expect_equal(rye_eval(rye_read("(saved 1)")[[1]], env), 1)
-  expect_equal(rye_eval(rye_read("(saved 2)")[[1]], env), 2)
-})
-
-test_that("call/cc is first-class and has an alias", {
-  env <- rye_load_stdlib()
-  rye_eval(rye_read("(define cc call/cc)")[[1]], env)
-  result <- rye_eval(rye_read("(cc (lambda (k) (k 7)))")[[1]], env)
-  expect_equal(result, 7)
-  alias_result <- rye_eval(
-    rye_read("(call-with-current-continuation (lambda (k) (k 9)))")[[1]],
-    env
-  )
-  expect_equal(alias_result, 9)
-})

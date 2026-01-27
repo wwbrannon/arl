@@ -4,7 +4,7 @@
 \alias{rye_parse}
 \title{Parse Rye tokens into R data structures}
 \usage{
-rye_parse(tokens)
+rye_parse(tokens, source_name = NULL)
 }
 \arguments{
 \item{tokens}{A list of tokens from rye_tokenize}

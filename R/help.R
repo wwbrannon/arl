@@ -56,6 +56,14 @@ rye_help_topics <- list(
     usage = "(defmacro name (params...) body...)",
     description = "Define a macro."
   ),
+  `call/cc` = list(
+    usage = "(call/cc proc)",
+    description = "Capture the current continuation and pass it to proc."
+  ),
+  `call-with-current-continuation` = list(
+    usage = "(call-with-current-continuation proc)",
+    description = "Alias for call/cc."
+  ),
   `::` = list(
     usage = "(:: pkg name)",
     description = "Access an exported object from an R package."

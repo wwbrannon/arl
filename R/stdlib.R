@@ -65,6 +65,7 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$`macroexpand-all` <- rye_stdlib_macroexpand
   env$eval <- rye_stdlib_eval
   env$`promise?` <- rye_stdlib_promise_p
+  env$force <- rye_stdlib_force
 
   # Interop helpers
   env$dict <- rye_stdlib_dict
@@ -488,6 +489,10 @@ rye_stdlib_promise_p <- function(x) {
   rye_promise_p(x)
 }
 
+rye_stdlib_force <- function(x) {
+  rye_promise_force(x)
+}
+
 rye_stdlib_dict_key_to_name <- function(key) {
   if (is.character(key)) {
     return(key)
@@ -631,6 +636,9 @@ attr(rye_stdlib_eval, "rye_doc") <- list(
 )
 attr(rye_stdlib_promise_p, "rye_doc") <- list(
   description = "Return TRUE if x is a promise."
+)
+attr(rye_stdlib_force, "rye_doc") <- list(
+  description = "Force a promise or return x unchanged."
 )
 attr(rye_stdlib_dict, "rye_doc") <- list(
   description = "Create a hash-backed dictionary from key/value pairs."

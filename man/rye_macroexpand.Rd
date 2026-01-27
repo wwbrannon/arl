@@ -4,7 +4,7 @@
 \alias{rye_macroexpand}
 \title{Expand macros in an expression}
 \usage{
-rye_macroexpand(expr, env = parent.frame())
+rye_macroexpand(expr, env = parent.frame(), preserve_src = FALSE)
 }
 \arguments{
 \item{expr}{Expression to expand}

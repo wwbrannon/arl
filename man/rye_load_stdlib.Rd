@@ -8,14 +8,13 @@ rye_load_stdlib(env = NULL)
 }
 \arguments{
 \item{env}{An environment to populate. If NULL, creates a new one.}
-
 }
 \value{
 An environment containing the Rye standard library
 }
 \description{
-Loads the base Rye stdlib functions and Rye stdlib source files
-from the package's \code{inst/rye} directory.
+Loads the base Rye stdlib functions and Rye stdlib source files from
+the package's \code{inst/rye} directory.
 }
 \details{
 The returned environment uses \code{baseenv()} as its parent so that core R

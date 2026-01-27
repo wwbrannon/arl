@@ -141,12 +141,12 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 - `defmacro` - Define macros
 - `quasiquote` / `` ` `` - Template with selective evaluation
 - `~` - Formula (for R modeling)
-- `call/cc` / `call-with-current-continuation` - Capture the current continuation
 
 ### Continuations
 
-Rye provides Scheme-style, multi-shot continuations via `call/cc`. Continuations
-capture Rye-level control flow; side effects in raw R code are not rewound.
+Rye provides Scheme-style, multi-shot continuations via the standard library
+functions `call/cc` and `call-with-current-continuation`. Continuations capture
+Rye-level control flow; side effects in raw R code are not rewound.
 
 ### Standard Library
 
@@ -181,6 +181,9 @@ access to all base R functions.
 
 **Error Handling:**
 - `try`, `catch`, `finally`, `error`, `warn`, `assert`, `trace`, `try*`
+
+**Continuations & Promises:**
+- `call/cc`, `call-with-current-continuation`, `promise?`, `force`
 
 **String & I/O:**
 - `str`, `string-join`, `string-split`, `trim`, `format`
