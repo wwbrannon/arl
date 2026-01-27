@@ -148,6 +148,15 @@ repl_eval_exprs <- function(exprs, env) {
   rye_eval_exprs(exprs, env)
 }
 
+repl_eval_and_print_exprs <- function(exprs, env) {
+  result <- NULL
+  for (expr in exprs) {
+    result <- rye_eval(expr, env)
+    repl_print_value(result)
+  }
+  invisible(result)
+}
+
 repl_print_value <- function(value) {
   if (is.null(value)) {
     return(invisible(NULL))
@@ -205,8 +214,7 @@ rye_repl <- function() {
     repl_add_history(input_text)
 
     tryCatch({
-      result <- repl_eval_exprs(form$exprs, repl_env)
-      repl_print_value(result)
+      repl_eval_and_print_exprs(form$exprs, repl_env)
     }, error = function(e) {
       cat("Error: ", conditionMessage(e), "\n", sep = "")
     })

@@ -320,6 +320,26 @@ test_that("rye_repl evaluates expressions and prints results", {
   expect_true(any(grepl("3", output)))
 })
 
+test_that("rye_repl prints each expression result in input", {
+  call_count <- 0
+  output <- testthat::with_mocked_bindings(
+    capture.output(rye_repl()),
+    repl_read_form = function(...) {
+      call_count <<- call_count + 1
+      if (call_count == 1) {
+        list(text = "1 + 2", exprs = rye_read("1 + 2"))
+      } else {
+        NULL
+      }
+    },
+    repl_can_use_history = function() FALSE,
+    .env = asNamespace("rye")
+  )
+  expect_true(any(grepl("\\[1\\] 1", output)))
+  expect_true(any(grepl("\\.Primitive\\(\"\\+\"\\)", output)))
+  expect_true(any(grepl("\\[1\\] 2", output)))
+})
+
 test_that("rye_repl handles evaluation errors gracefully", {
   call_count <- 0
   output <- testthat::with_mocked_bindings(
