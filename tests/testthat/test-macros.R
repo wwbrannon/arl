@@ -267,3 +267,50 @@ test_that("letrec supports mutual recursion", {
 
   expect_true(result)
 })
+
+test_that("destructuring bindings work for define and let forms", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+  rye_load_stdlib_files(env)
+
+  rye_eval(rye_read("(define (a b . rest) (list 1 2 3 4))")[[1]], env)
+  expect_equal(env$a, 1)
+  expect_equal(env$b, 2)
+  expect_equal(env$rest, list(3, 4))
+
+  rye_eval(rye_read("(define ((x y) z) (list (list 9 8) 7))")[[1]], env)
+  expect_equal(env$x, 9)
+  expect_equal(env$y, 8)
+  expect_equal(env$z, 7)
+
+  result <- rye_eval(
+    rye_read("(let (((a b) (list 1 2)) (c 3)) (+ a (+ b c)))")[[1]],
+    env
+  )
+  expect_equal(result, 6)
+
+  result <- rye_eval(
+    rye_read("(let* (((a b) (list 1 2)) (c (+ a b))) c)")[[1]],
+    env
+  )
+  expect_equal(result, 3)
+
+  result <- rye_eval(
+    rye_read(
+      "(letrec (((even? odd?) (list (lambda (n) (if (= n 0) #t (odd? (- n 1))))\n        (lambda (n) (if (= n 0) #f (even? (- n 1))))))) (even? 4))"
+    )[[1]],
+    env
+  )
+  expect_true(result)
+})
+
+test_that("destructuring errors on arity mismatch", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+  rye_load_stdlib_files(env)
+
+  expect_error(
+    rye_eval(rye_read("(define (a b) (list 1))")[[1]], env),
+    "expects 2 item"
+  )
+})

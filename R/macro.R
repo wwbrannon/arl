@@ -226,6 +226,10 @@ rye_hygienize_define <- function(expr, env) {
     fresh <- rye_hygiene_gensym(name)
     new_env[[name]] <- fresh
     result[[2]] <- fresh
+  } else if (is.call(name_expr) || (is.list(name_expr) && is.null(attr(name_expr, "class", exact = TRUE)))) {
+    pattern_out <- rye_hygienize_define_pattern(expr[[2]], new_env)
+    result[[2]] <- pattern_out$expr
+    new_env <- pattern_out$env
   } else {
     result[[2]] <- rye_hygienize_expr(expr[[2]], env, protected = FALSE)
   }
@@ -233,6 +237,56 @@ rye_hygienize_define <- function(expr, env) {
     result[[3]] <- rye_hygienize_expr(expr[[3]], env, protected = FALSE)
   }
   list(expr = as.call(result), env = new_env)
+}
+
+#' @keywords internal
+rye_hygienize_define_pattern <- function(pattern, env, protected = FALSE) {
+  if (isTRUE(protected)) {
+    return(list(expr = rye_hygienize_expr(pattern, env, protected = TRUE), env = env))
+  }
+  if (rye_hygiene_is(pattern)) {
+    origin <- rye_hygiene_origin(pattern)
+    inner <- rye_hygiene_expr(pattern)
+    if (identical(origin, "call_site")) {
+      return(rye_hygienize_define_pattern(inner, env, protected = TRUE))
+    }
+    if (identical(origin, "introduced")) {
+      return(rye_hygienize_define_pattern(inner, env, protected = FALSE))
+    }
+    return(rye_hygienize_define_pattern(inner, env, protected = protected))
+  }
+  if (is.symbol(pattern)) {
+    name <- as.character(pattern)
+    if (identical(name, ".")) {
+      return(list(expr = pattern, env = env))
+    }
+    fresh <- rye_hygiene_gensym(name)
+    env[[name]] <- fresh
+    return(list(expr = fresh, env = env))
+  }
+  if (is.call(pattern)) {
+    parts <- as.list(pattern)
+    updated <- list()
+    for (i in seq_along(parts)) {
+      out <- rye_hygienize_define_pattern(parts[[i]], env, protected = protected)
+      updated[[i]] <- out$expr
+      env <- out$env
+    }
+    return(list(expr = as.call(updated), env = env))
+  }
+  if (is.list(pattern) && is.null(attr(pattern, "class", exact = TRUE))) {
+    updated <- list()
+    for (i in seq_along(pattern)) {
+      out <- rye_hygienize_define_pattern(pattern[[i]], env, protected = protected)
+      updated[[i]] <- out$expr
+      env <- out$env
+    }
+    if (!is.null(names(pattern))) {
+      names(updated) <- names(pattern)
+    }
+    return(list(expr = updated, env = env))
+  }
+  list(expr = pattern, env = env)
 }
 
 #' @keywords internal

@@ -165,11 +165,16 @@ rye_eval <- function(expr, env = parent.frame()) {
       stop("define requires exactly 2 arguments: (define name value)")
     }
     name <- expr[[2]]
-    if (!is.symbol(name)) {
-      stop("define requires a symbol as the first argument")
-    }
     value <- rye_strip_src(rye_eval(expr[[3]], env))
-    rye_assign(as.character(name), value, env)
+    if (is.symbol(name)) {
+      rye_assign(as.character(name), value, env)
+      return(NULL)
+    }
+    if (is.call(name) || (is.list(name) && is.null(attr(name, "class", exact = TRUE)))) {
+      rye_destructure_bind(name, value, env, mode = "define")
+      return(NULL)
+    }
+    stop("define requires a symbol or list pattern as the first argument")
     return(NULL)
   }
 
@@ -179,26 +184,16 @@ rye_eval <- function(expr, env = parent.frame()) {
       stop("set! requires exactly 2 arguments: (set! name value)")
     }
     name <- expr[[2]]
-    if (!is.symbol(name)) {
-      stop("set! requires a symbol as the first argument")
-    }
-    name_str <- as.character(name)
-    # Check if variable exists
-    if (!exists(name_str, envir = env, inherits = TRUE)) {
-      stop(sprintf("set!: variable '%s' is not defined", name_str))
-    }
     value <- rye_strip_src(rye_eval(expr[[3]], env))
-    # Find and assign to the environment where the variable exists
-    target_env <- env
-    while (!exists(name_str, envir = target_env, inherits = FALSE)) {
-      if (identical(target_env, emptyenv())) {
-        # Shouldn't happen since we checked exists(..., inherits = TRUE) above
-        stop(sprintf("set!: variable '%s' not found", name_str))
-      }
-      target_env <- parent.env(target_env)
+    if (is.symbol(name)) {
+      rye_assign_existing(as.character(name), value, env)
+      return(NULL)
     }
-    assign(name_str, value, envir = target_env)
-    return(NULL)
+    if (is.call(name) || (is.list(name) && is.null(attr(name, "class", exact = TRUE)))) {
+      rye_destructure_bind(name, value, env, mode = "set")
+      return(NULL)
+    }
+    stop("set! requires a symbol or list pattern as the first argument")
   }
 
   # load - evaluate a Rye source file or stdlib entry

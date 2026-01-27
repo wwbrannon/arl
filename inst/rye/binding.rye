@@ -1,19 +1,53 @@
 ;;; Rye Standard Library - Binding Macros
 
+(define pattern-symbols
+  (lambda (pattern)
+    (if (symbol? pattern)
+      (if (= (as.character pattern) ".")
+        (list)
+        (list pattern))
+      (if (pair? pattern)
+        (begin
+          (define head (car pattern))
+          (define tail (cdr pattern))
+          (if (and (symbol? head) (= (as.character head) "."))
+            (if (null? tail) (list) (pattern-symbols (car tail)))
+            (append (pattern-symbols head) (pattern-symbols tail))))
+        (list)))))
+
+(defmacro destructuring-bind (pattern value . body)
+  (define tmp (gensym "tmp"))
+  `((lambda (,tmp)
+      (define ,pattern ,tmp)
+      (begin ,@body))
+    ,value))
+
 (defmacro let (bindings . body)
   (if (null? bindings)
     `(begin ,@body)
-    `((lambda ,(map car bindings)
-        (begin ,@body))
-      ,@(map (lambda (b) (car (cdr b))) bindings))))
+    (begin
+      (define temps (map (lambda (b) (gensym "tmp")) bindings))
+      (define patterns (map car bindings))
+      (define values (map (lambda (b) (car (cdr b))) bindings))
+      `((lambda ,temps
+          ,@(map (lambda (pair)
+                   `(define ,(car pair) ,(car (cdr pair))))
+                 (zip patterns temps))
+          (begin ,@body))
+        ,@values))))
 
 (defmacro let* (bindings . body)
   (if (null? bindings)
     `(begin ,@body)
-    `(let (,(car bindings))
-      (let* ,(cdr bindings) ,@body))))
+    (begin
+      (define binding (car bindings))
+      (define pattern (car binding))
+      (define value (car (cdr binding)))
+      `(destructuring-bind ,pattern ,value
+         (let* ,(cdr bindings) ,@body)))))
 
 (defmacro letrec (bindings . body)
-  `(let ,(map (lambda (b) `(,(car b) (list))) bindings)
+  (define names (mapcat (lambda (b) (pattern-symbols (car b))) bindings))
+  `(let ,(map (lambda (n) `(,n (list))) names)
      ,@(map (lambda (b) `(set! ,(car b) ,(car (cdr b)))) bindings)
      (begin ,@body)))

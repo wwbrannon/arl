@@ -159,6 +159,119 @@ rye_assign <- function(name, value, env) {
   invisible(NULL)
 }
 
+rye_assign_existing <- function(name, value, env) {
+  if (!exists(name, envir = env, inherits = TRUE)) {
+    stop(sprintf("set!: variable '%s' is not defined", name))
+  }
+  target_env <- env
+  while (!exists(name, envir = target_env, inherits = FALSE)) {
+    if (identical(target_env, emptyenv())) {
+      stop(sprintf("set!: variable '%s' not found", name))
+    }
+    target_env <- parent.env(target_env)
+  }
+  assign(name, value, envir = target_env)
+  invisible(NULL)
+}
+
+rye_pattern_symbols <- function(pattern) {
+  if (is.symbol(pattern)) {
+    name <- as.character(pattern)
+    if (identical(name, ".")) {
+      return(character(0))
+    }
+    return(name)
+  }
+  if (is.null(pattern)) {
+    return(character(0))
+  }
+  if (is.call(pattern) || (is.list(pattern) && is.null(attr(pattern, "class", exact = TRUE)))) {
+    parts <- if (is.call(pattern)) as.list(pattern) else pattern
+    names <- character(0)
+    for (part in parts) {
+      names <- c(names, rye_pattern_symbols(part))
+    }
+    return(names)
+  }
+  character(0)
+}
+
+rye_destructure_bind <- function(pattern, value, env, mode = c("define", "set")) {
+  mode <- match.arg(mode)
+  bind_symbol <- function(symbol, val) {
+    name <- as.character(symbol)
+    if (identical(name, ".")) {
+      stop("Invalid destructuring pattern: '.'")
+    }
+    if (identical(mode, "define")) {
+      rye_assign(name, val, env)
+    } else {
+      rye_assign_existing(name, val, env)
+    }
+    invisible(NULL)
+  }
+
+  if (is.symbol(pattern)) {
+    return(bind_symbol(pattern, value))
+  }
+  if (is.null(pattern)) {
+    value_list <- rye_as_list(value)
+    if (length(value_list) != 0) {
+      stop(sprintf("Destructuring pattern expects empty list, got %d item(s)", length(value_list)))
+    }
+    return(invisible(NULL))
+  }
+  if (is.call(pattern) || (is.list(pattern) && is.null(attr(pattern, "class", exact = TRUE)))) {
+    parts <- if (is.call(pattern)) as.list(pattern) else pattern
+    dot_idx <- which(vapply(parts, function(x) {
+      is.symbol(x) && identical(as.character(x), ".")
+    }, logical(1)))
+    if (length(dot_idx) > 1) {
+      stop("Destructuring pattern can only contain one '.'")
+    }
+    value_list <- rye_as_list(value)
+    if (length(dot_idx) == 1) {
+      if (dot_idx == 1 || dot_idx == length(parts)) {
+        stop("Destructuring '.' must appear between head and rest")
+      }
+      if (dot_idx != length(parts) - 1) {
+        stop("Destructuring '.' must be followed by a single rest pattern")
+      }
+      head_patterns <- parts[1:(dot_idx - 1)]
+      rest_pattern <- parts[[dot_idx + 1]]
+      if (length(value_list) < length(head_patterns)) {
+        stop(sprintf(
+          "Destructuring pattern expects at least %d item(s), got %d",
+          length(head_patterns),
+          length(value_list)
+        ))
+      }
+      for (i in seq_along(head_patterns)) {
+        rye_destructure_bind(head_patterns[[i]], value_list[[i]], env, mode)
+      }
+      rest_values <- if (length(value_list) > length(head_patterns)) {
+        value_list[(length(head_patterns) + 1):length(value_list)]
+      } else {
+        list()
+      }
+      rye_destructure_bind(rest_pattern, rest_values, env, mode)
+      return(invisible(NULL))
+    }
+    if (length(value_list) != length(parts)) {
+      stop(sprintf(
+        "Destructuring pattern expects %d item(s), got %d",
+        length(parts),
+        length(value_list)
+      ))
+    }
+    for (i in seq_along(parts)) {
+      rye_destructure_bind(parts[[i]], value_list[[i]], env, mode)
+    }
+    return(invisible(NULL))
+  }
+  stop("Invalid destructuring pattern")
+}
+
 rye_resolve_stdlib_path <- function(name) {
   if (!is.character(name) || length(name) != 1) {
     return(NULL)

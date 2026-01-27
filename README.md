@@ -91,6 +91,10 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 (define x 10)
 (+ x 5)  ; => 15
 
+; Destructuring
+(define (a b . rest) (list 1 2 3 4))
+(list a b rest)  ; => (1 2 (3 4))
+
 ; Functions
 (define factorial
   (lambda (n)
@@ -152,7 +156,7 @@ helpers and access to all base R functions.
 
 **Control Flow Macros:** - `when`, `unless`, `and`, `or`, `cond`, `case`
 
-**Binding & Looping:** - `let`, `let*`, `letrec` - `while`, `for`
+**Binding & Looping:** - `let`, `let*`, `letrec`, `destructuring-bind` - `while`, `for`
 
 **Threading Macros:** - `->`, `->>` (thread-first, thread-last)
 
