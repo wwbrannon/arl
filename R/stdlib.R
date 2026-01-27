@@ -66,6 +66,9 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$eval <- rye_stdlib_eval
   env$`promise?` <- rye_stdlib_promise_p
   env$force <- rye_stdlib_force
+  env$rye_read <- rye_read
+  env$rye_parse <- rye_parse
+  env$rye_tokenize <- rye_tokenize
 
   # Interop helpers
   env$dict <- rye_stdlib_dict
@@ -110,7 +113,8 @@ rye_load_stdlib_files <- function(env = parent.frame()) {
     "control.rye",
     "looping.rye",
     "threading.rye",
-    "error.rye"
+    "error.rye",
+    "translator.rye"
   )
   ordered_paths <- file.path(dir_path, ordered_files)
   ordered_paths <- ordered_paths[file.exists(ordered_paths)]
