@@ -85,7 +85,14 @@ test_that("evaluator validates keyword usage", {
 
 test_that("evaluator validates lambda argument lists", {
   expect_error(rye_eval(rye_read("(lambda 1 2)")[[1]]), "lambda arguments must be a list")
-  expect_error(rye_eval(rye_read("(lambda (1) 2)")[[1]]), "lambda arguments must be symbols")
+  expect_error(
+    rye_eval(rye_read("(lambda (1) 2)")[[1]]),
+    "lambda arguments must be symbols or \\(name default\\) pairs"
+  )
+  expect_error(
+    rye_eval(rye_read("(lambda (a .) a)")[[1]]),
+    "Dotted parameter list must have exactly one parameter after '\\.'"
+  )
 })
 
 test_that("eval text errors include source and stack context", {

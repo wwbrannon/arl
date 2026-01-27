@@ -66,6 +66,21 @@ test_that("lambda with no arguments", {
   expect_equal(result, 5)
 })
 
+test_that("lambda supports default arguments", {
+  env <- new.env()
+  rye_eval(rye_read("(define add-default (lambda ((x 10) (y 5)) (+ x y)))")[[1]], env)
+  expect_equal(rye_eval(rye_read("(add-default)")[[1]], env), 15)
+  expect_equal(rye_eval(rye_read("(add-default 2)")[[1]], env), 7)
+  expect_equal(rye_eval(rye_read("(add-default 2 3)")[[1]], env), 5)
+})
+
+test_that("lambda supports dotted rest arguments", {
+  env <- new.env()
+  rye_eval(rye_read("(define count-rest (lambda (x . rest) (length rest)))")[[1]], env)
+  expect_equal(rye_eval(rye_read("(count-rest 1)")[[1]], env), 0)
+  expect_equal(rye_eval(rye_read("(count-rest 1 2 3 4)")[[1]], env), 3)
+})
+
 test_that("lambda with multiple body expressions", {
   env <- new.env()
   rye_eval(rye_read("(define f (lambda (x) (define y 10) (+ x y)))")[[1]], env)

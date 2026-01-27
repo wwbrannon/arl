@@ -177,6 +177,19 @@ test_that("rye_translate handles lambda with multiple body expressions", {
   expect_match(result, "x \\+ 1")
 })
 
+test_that("rye_translate handles lambda defaults", {
+  result <- rye_translate("(lambda ((x 10) (y (+ 1 2))) (+ x y))", is_file = FALSE)
+  expect_match(result, "function\\(x = 10, y = 1 \\+ 2\\)")
+  expect_match(result, "x \\+ y")
+})
+
+test_that("rye_translate handles lambda dotted rest args", {
+  result <- rye_translate("(lambda (x . rest) (list x rest))", is_file = FALSE)
+  expect_match(result, "function\\(x, \\.\\.\\.\\)")
+  expect_match(result, "rest <- list\\(\\.\\.\\.\\)")
+  expect_match(result, "list\\(x, rest\\)")
+})
+
 # Complex Nested Expressions ----
 
 test_that("rye_translate handles deeply nested expressions", {

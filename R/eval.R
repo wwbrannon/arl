@@ -229,37 +229,85 @@ rye_eval <- function(expr, env = parent.frame()) {
     args_expr <- expr[[2]]
 
     # Handle argument list which may be a call or list
-    arg_names <- character(0)
+    arg_items <- list()
     if (!is.null(args_expr)) {
       if (is.call(args_expr)) {
         if (length(args_expr) > 0) {
-          for (i in seq_along(args_expr)) {
-            arg <- args_expr[[i]]
-            if (!is.symbol(arg)) {
-              stop("lambda arguments must be symbols")
-            }
-            arg_names <- c(arg_names, as.character(arg))
-          }
+          arg_items <- as.list(args_expr)
         }
       } else if (is.list(args_expr)) {
-        if (length(args_expr) > 0) {
-          for (arg in args_expr) {
-            if (!is.symbol(arg)) {
-              stop("lambda arguments must be symbols")
-            }
-            arg_names <- c(arg_names, as.character(arg))
-          }
-        }
+        arg_items <- args_expr
       } else {
         stop("lambda arguments must be a list")
       }
     }
 
-    # Create formals list (all arguments are required, no defaults)
-    if (length(arg_names) > 0) {
-      formals_list <- setNames(rep(list(quote(expr = )), length(arg_names)), arg_names)
-    } else {
-      formals_list <- list()
+    # Handle dotted rest parameter (x y . rest)
+    rest_param <- NULL
+    if (length(arg_items) > 0) {
+      dot_idx <- which(vapply(arg_items, function(arg) {
+        is.symbol(arg) && as.character(arg) == "."
+      }, logical(1)))
+      if (length(dot_idx) > 1) {
+        stop("Dotted parameter list can only contain one '.'")
+      }
+      if (length(dot_idx) == 1) {
+        if (dot_idx != length(arg_items) - 1) {
+          stop("Dotted parameter list must have exactly one parameter after '.'")
+        }
+        rest_arg <- arg_items[[dot_idx + 1]]
+        if (!is.symbol(rest_arg)) {
+          stop("Rest parameter must be a symbol")
+        }
+        rest_param <- as.character(rest_arg)
+        if (dot_idx > 1) {
+          arg_items <- arg_items[1:(dot_idx - 1)]
+        } else {
+          arg_items <- list()
+        }
+      }
+    }
+
+    # Parse required and defaulted parameters
+    param_names <- character(0)
+    param_defaults <- list()
+    if (length(arg_items) > 0) {
+      for (arg in arg_items) {
+        if (is.symbol(arg)) {
+          name <- as.character(arg)
+          param_names <- c(param_names, name)
+          param_defaults[[name]] <- quote(expr = )
+        } else if (is.call(arg) || is.list(arg)) {
+          arg_list <- if (is.call(arg)) as.list(arg) else arg
+          if (length(arg_list) != 2) {
+            stop("lambda default argument must be a 2-element list")
+          }
+          if (!is.symbol(arg_list[[1]])) {
+            stop("lambda default argument name must be a symbol")
+          }
+          name <- as.character(arg_list[[1]])
+          param_names <- c(param_names, name)
+          param_defaults[[name]] <- arg_list[[2]]
+        } else {
+          stop("lambda arguments must be symbols or (name default) pairs")
+        }
+      }
+    }
+
+    all_names <- c(param_names, if (!is.null(rest_param)) rest_param)
+    if (length(all_names) > 0 && any(duplicated(all_names))) {
+      stop("lambda argument names must be unique")
+    }
+
+    # Create formals list (support defaults and rest args)
+    formals_list <- list()
+    if (length(param_names) > 0) {
+      for (name in param_names) {
+        formals_list[[name]] <- param_defaults[[name]]
+      }
+    }
+    if (!is.null(rest_param)) {
+      formals_list[["..."]] <- quote(expr = )
     }
 
     # Get body expressions (everything after the argument list)
@@ -280,11 +328,16 @@ rye_eval <- function(expr, env = parent.frame()) {
       fn_env <- new.env(parent = parent_env)
 
       # Bind arguments
-      arg_values <- as.list(match.call()[-1])
-      if (length(arg_values) > 0) {
-        for (i in seq_along(arg_values)) {
-          assign(names(formals_list)[i], eval(arg_values[[i]], envir = parent.frame()), envir = fn_env)
+      if (length(formals_list) > 0) {
+        for (param_name in names(formals_list)) {
+          if (param_name == "...") {
+            next
+          }
+          assign(param_name, get(param_name, inherits = FALSE), envir = fn_env)
         }
+      }
+      if (!is.null(rest_param)) {
+        assign(rest_param, list(...), envir = fn_env)
       }
 
       # Evaluate body expressions in sequence

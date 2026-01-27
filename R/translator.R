@@ -102,28 +102,102 @@ rye_expr_to_r <- function(expr, indent = 0) {
 
       # Get arguments
       args_expr <- expr[[2]]
-      arg_names <- character(0)
-      if (!is.null(args_expr) && is.call(args_expr) && length(args_expr) > 0) {
-        for (i in seq_along(args_expr)) {
-          arg_names <- c(arg_names, as.character(args_expr[[i]]))
+      arg_items <- list()
+      if (!is.null(args_expr)) {
+        if (is.call(args_expr)) {
+          if (length(args_expr) > 0) {
+            arg_items <- as.list(args_expr)
+          }
+        } else if (is.list(args_expr)) {
+          arg_items <- args_expr
+        } else {
+          stop("lambda arguments must be a list")
         }
+      }
+
+      rest_param <- NULL
+      if (length(arg_items) > 0) {
+        dot_idx <- which(vapply(arg_items, function(arg) {
+          is.symbol(arg) && as.character(arg) == "."
+        }, logical(1)))
+        if (length(dot_idx) > 1) {
+          stop("Dotted parameter list can only contain one '.'")
+        }
+        if (length(dot_idx) == 1) {
+          if (dot_idx != length(arg_items) - 1) {
+            stop("Dotted parameter list must have exactly one parameter after '.'")
+          }
+          rest_arg <- arg_items[[dot_idx + 1]]
+          if (!is.symbol(rest_arg)) {
+            stop("Rest parameter must be a symbol")
+          }
+          rest_param <- as.character(rest_arg)
+          if (dot_idx > 1) {
+            arg_items <- arg_items[1:(dot_idx - 1)]
+          } else {
+            arg_items <- list()
+          }
+        }
+      }
+
+      arg_parts <- character(0)
+      param_names <- character(0)
+      if (length(arg_items) > 0) {
+        for (arg in arg_items) {
+          if (is.symbol(arg)) {
+            name <- as.character(arg)
+            param_names <- c(param_names, name)
+            arg_parts <- c(arg_parts, name)
+          } else if (is.call(arg) || is.list(arg)) {
+            arg_list <- if (is.call(arg)) as.list(arg) else arg
+            if (length(arg_list) != 2) {
+              stop("lambda default argument must be a 2-element list")
+            }
+            if (!is.symbol(arg_list[[1]])) {
+              stop("lambda default argument name must be a symbol")
+            }
+            name <- as.character(arg_list[[1]])
+            param_names <- c(param_names, name)
+            default_expr <- rye_expr_to_r(arg_list[[2]], indent)
+            arg_parts <- c(arg_parts, paste0(name, " = ", default_expr))
+          } else {
+            stop("lambda arguments must be symbols or (name default) pairs")
+          }
+        }
+      }
+
+      all_names <- c(param_names, if (!is.null(rest_param)) rest_param)
+      if (length(all_names) > 0 && any(duplicated(all_names))) {
+        stop("lambda argument names must be unique")
+      }
+      if (!is.null(rest_param)) {
+        arg_parts <- c(arg_parts, "...")
       }
 
       # Get body
       body_parts <- character(0)
-      if (length(expr) >= 3) {
+      has_body <- length(expr) >= 3
+      if (has_body) {
         for (i in 3:length(expr)) {
           body_parts <- c(body_parts, rye_expr_to_r(expr[[i]], indent + 1))
         }
       }
 
-      args_str <- paste(arg_names, collapse = ", ")
+      if (!is.null(rest_param)) {
+        rest_binding <- paste0(rest_param, " <- list(...)")
+        body_parts <- c(rest_binding, body_parts)
+        if (!has_body) {
+          body_parts <- c(body_parts, "NULL")
+        }
+      }
+
+      args_str <- paste(arg_parts, collapse = ", ")
       body_str <- paste(body_parts, collapse = "\n")
 
       if (length(body_parts) == 0) {
         return(paste0("function(", args_str, ") NULL"))
       }
-      if (length(body_parts) > 1) {
+      if (length(body_parts) > 1 || !is.null(rest_param)) {
         indented_body <- paste0(
           paste(rep("  ", indent + 1), collapse = ""),
           gsub("\n", paste0("\n", paste(rep("  ", indent + 1), collapse = "")), body_str)
