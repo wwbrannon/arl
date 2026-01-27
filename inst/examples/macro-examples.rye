@@ -99,7 +99,7 @@
 ;; An anaphoric if that binds result to 'it'
 (defmacro aif (test then alt)
   `(let ((it ,test))
-     (if it ,then ,alt)))
+     (if it ,(capture 'it then) ,(capture 'it alt))))
 
 (println "Anaphoric if example:")
 (aif (+ 2 3)
@@ -128,23 +128,16 @@
           "String concatenation works"))
 
 ;; ============================================================================
-;; Hygiene with gensym
+;; Hygiene and explicit capture
 ;; ============================================================================
 
-(println "\n=== Macro Hygiene ===\n")
+(println "\n=== Hygiene and Capture ===\n")
 
-;; Without hygiene (could capture user variables)
-(defmacro bad-swap (a b)
+;; Automatic hygiene (no gensym needed)
+(defmacro swap (a b)
   `(let ((temp ,a))
      (set! ,a ,b)
      (set! ,b temp)))
-
-;; With hygiene (uses gensym)
-(defmacro good-swap (a b)
-  (let ((temp-var (gensym "temp")))
-    `(let ((,temp-var ,a))
-       (set! ,a ,b)
-       (set! ,b ,temp-var))))
 
 (println "Demonstrating gensym:")
 (println (str "Generated symbol 1: " (gensym)))

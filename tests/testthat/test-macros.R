@@ -169,6 +169,33 @@ test_that("macros with unquote-splicing work", {
   expect_equal(result[[6]], 5)
 })
 
+test_that("macro-introduced bindings are hygienic", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+
+  rye_eval(rye_read("(define tmp 100)")[[1]], env)
+  rye_eval(rye_read("(defmacro wrap (expr) `(begin (define tmp 1) ,expr))")[[1]], env)
+
+  result <- rye_eval(rye_read("(wrap tmp)")[[1]], env)
+  expect_equal(result, 100)
+})
+
+test_that("capture allows intentional binding capture", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+
+  rye_eval(
+    rye_read(
+      "(defmacro aif (test then alt)\n  `(let ((it ,test))\n     (if it ,(capture 'it then) ,(capture 'it alt))))"
+    )[[1]],
+    env
+  )
+
+  rye_eval(rye_read("(define it 99)")[[1]], env)
+  result <- rye_eval(rye_read("(aif 10 it #nil)")[[1]], env)
+  expect_equal(result, 10)
+})
+
 test_that("stdlib macros from files work", {
   env <- new.env(parent = baseenv())
   rye_load_stdlib(env)

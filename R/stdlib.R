@@ -119,6 +119,7 @@ rye_load_stdlib_base <- function(env = NULL) {
 
   # Macro and eval helpers
   env$gensym <- gensym
+  env$capture <- rye_capture
   env$`macro?` <- rye_stdlib_macro_p
   env$macroexpand <- rye_stdlib_macroexpand
   env$`macroexpand-1` <- rye_stdlib_macroexpand_1
@@ -686,7 +687,11 @@ rye_stdlib_macroexpand_1 <- function(expr, env = parent.frame()) {
   if (is.symbol(op) && is_macro(op)) {
     macro_fn <- get_macro(op)
     args <- as.list(expr[-1])
-    return(do.call(macro_fn, args))
+    expanded <- do.call(macro_fn, args)
+    expanded <- rye_hygienize(expanded)
+    expanded <- rye_hygiene_unwrap(expanded)
+    expanded <- rye_src_inherit(expanded, expr)
+    return(expanded)
   }
   expr
 }

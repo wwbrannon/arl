@@ -7,6 +7,11 @@
 .rye_gensym_env <- new.env(parent = emptyenv())
 .rye_gensym_env$counter <- 0
 
+#' Global hygiene gensym counter
+#' @keywords internal
+.rye_hygiene_gensym_env <- new.env(parent = emptyenv())
+.rye_hygiene_gensym_env$counter <- 0
+
 #' Generate a unique symbol
 #'
 #' @param prefix Optional prefix for the symbol (default: "G")
@@ -18,6 +23,405 @@
 gensym <- function(prefix = "G") {
   .rye_gensym_env$counter <- .rye_gensym_env$counter + 1
   as.symbol(paste0(prefix, "__", .rye_gensym_env$counter))
+}
+
+#' Generate a unique symbol for hygiene
+#' @keywords internal
+rye_hygiene_gensym <- function(prefix = "H") {
+  .rye_hygiene_gensym_env$counter <- .rye_hygiene_gensym_env$counter + 1
+  as.symbol(paste0(prefix, "__h", .rye_hygiene_gensym_env$counter))
+}
+
+#' Internal syntax wrapper for hygiene
+#' @keywords internal
+rye_hygiene_wrap <- function(expr, origin) {
+  structure(list(expr = expr, origin = origin), class = "rye_syntax")
+}
+
+#' @keywords internal
+rye_hygiene_is <- function(x) {
+  inherits(x, "rye_syntax")
+}
+
+#' @keywords internal
+rye_hygiene_origin <- function(x) {
+  if (rye_hygiene_is(x)) {
+    return(x$origin)
+  }
+  NULL
+}
+
+#' @keywords internal
+rye_hygiene_expr <- function(x) {
+  if (rye_hygiene_is(x)) {
+    return(x$expr)
+  }
+  x
+}
+
+#' @keywords internal
+rye_hygiene_unwrap <- function(expr) {
+  if (rye_hygiene_is(expr)) {
+    return(rye_hygiene_unwrap(expr$expr))
+  }
+  if (is.call(expr)) {
+    stripped <- lapply(as.list(expr), rye_hygiene_unwrap)
+    return(as.call(stripped))
+  }
+  if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
+    stripped <- lapply(expr, rye_hygiene_unwrap)
+    if (!is.null(names(expr))) {
+      names(stripped) <- names(expr)
+    }
+    return(stripped)
+  }
+  expr
+}
+
+#' Mark occurrences of a symbol as introduced
+#'
+#' @param symbol A symbol or single string naming the identifier to capture
+#' @param expr Expression to scan for occurrences
+#' @keywords internal
+rye_capture <- function(symbol, expr) {
+  name <- NULL
+  if (is.symbol(symbol)) {
+    name <- as.character(symbol)
+  } else if (is.character(symbol) && length(symbol) == 1) {
+    name <- symbol
+  }
+  if (is.null(name) || !nzchar(name)) {
+    stop("capture expects a symbol or single string name")
+  }
+  rye_capture_mark(expr, name)
+}
+
+#' @keywords internal
+rye_capture_mark <- function(expr, name) {
+  if (rye_hygiene_is(expr)) {
+    origin <- rye_hygiene_origin(expr)
+    inner <- rye_capture_mark(rye_hygiene_expr(expr), name)
+    return(rye_hygiene_wrap(inner, origin))
+  }
+  if (is.symbol(expr) && identical(as.character(expr), name)) {
+    return(rye_hygiene_wrap(expr, "introduced"))
+  }
+  if (is.call(expr)) {
+    updated <- lapply(as.list(expr), rye_capture_mark, name = name)
+    return(as.call(updated))
+  }
+  if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
+    updated <- lapply(expr, rye_capture_mark, name = name)
+    if (!is.null(names(expr))) {
+      names(updated) <- names(expr)
+    }
+    return(updated)
+  }
+  expr
+}
+
+#' @keywords internal
+rye_hygienize <- function(expr) {
+  rye_hygienize_expr(expr, env = list(), protected = FALSE)
+}
+
+#' @keywords internal
+rye_hygienize_expr <- function(expr, env, protected) {
+  if (rye_hygiene_is(expr)) {
+    origin <- rye_hygiene_origin(expr)
+    inner <- rye_hygiene_expr(expr)
+    if (identical(origin, "call_site")) {
+      return(rye_hygienize_expr(inner, env, protected = TRUE))
+    }
+    if (identical(origin, "introduced")) {
+      return(rye_hygienize_expr(inner, env, protected = FALSE))
+    }
+    return(rye_hygienize_expr(inner, env, protected = protected))
+  }
+
+  if (is.symbol(expr)) {
+    if (isTRUE(protected)) {
+      return(expr)
+    }
+    name <- as.character(expr)
+    if (!is.null(env[[name]])) {
+      return(env[[name]])
+    }
+    return(expr)
+  }
+
+  if (!is.call(expr)) {
+    if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
+      updated <- lapply(expr, rye_hygienize_expr, env = env, protected = protected)
+      if (!is.null(names(expr))) {
+        names(updated) <- names(expr)
+      }
+      return(updated)
+    }
+    return(expr)
+  }
+
+  op <- expr[[1]]
+  if (is.symbol(op)) {
+    op_name <- as.character(op)
+    if (op_name %in% c("quote", "quasiquote")) {
+      return(expr)
+    }
+  }
+
+  if (isTRUE(protected)) {
+    updated <- lapply(as.list(expr), rye_hygienize_expr, env = env, protected = TRUE)
+    return(as.call(updated))
+  }
+
+  if (is.symbol(op)) {
+    op_name <- as.character(op)
+    if (op_name == "begin") {
+      return(rye_hygienize_begin(expr, env))
+    }
+    if (op_name == "define") {
+      return(rye_hygienize_define(expr, env)$expr)
+    }
+    if (op_name == "lambda") {
+      return(rye_hygienize_lambda(expr, env))
+    }
+    if (op_name %in% c("let", "let*", "letrec")) {
+      return(rye_hygienize_let(expr, env, op_name))
+    }
+  }
+
+  updated <- lapply(as.list(expr), rye_hygienize_expr, env = env, protected = FALSE)
+  as.call(updated)
+}
+
+#' @keywords internal
+rye_hygienize_begin <- function(expr, env) {
+  result <- list(expr[[1]])
+  current_env <- env
+  if (length(expr) > 1) {
+    for (i in 2:length(expr)) {
+      form <- expr[[i]]
+      if (is.call(form) && length(form) >= 2 && is.symbol(form[[1]]) &&
+          as.character(form[[1]]) == "define") {
+        out <- rye_hygienize_define(form, current_env)
+        result[[i]] <- out$expr
+        current_env <- out$env
+      } else {
+        result[[i]] <- rye_hygienize_expr(form, current_env, protected = FALSE)
+      }
+    }
+  }
+  as.call(result)
+}
+
+#' @keywords internal
+rye_hygienize_define <- function(expr, env) {
+  result <- list(expr[[1]])
+  name_expr <- expr[[2]]
+  name_origin <- rye_hygiene_origin(name_expr)
+  name_expr <- rye_hygiene_expr(name_expr)
+  new_env <- env
+  if (is.symbol(name_expr) && !identical(name_origin, "call_site")) {
+    name <- as.character(name_expr)
+    fresh <- rye_hygiene_gensym(name)
+    new_env[[name]] <- fresh
+    result[[2]] <- fresh
+  } else {
+    result[[2]] <- rye_hygienize_expr(expr[[2]], env, protected = FALSE)
+  }
+  if (length(expr) >= 3) {
+    result[[3]] <- rye_hygienize_expr(expr[[3]], env, protected = FALSE)
+  }
+  list(expr = as.call(result), env = new_env)
+}
+
+#' @keywords internal
+rye_hygienize_lambda <- function(expr, env) {
+  if (length(expr) < 3) {
+    return(expr)
+  }
+  args_expr <- expr[[2]]
+  if (!is.call(args_expr)) {
+    result <- list(expr[[1]], rye_hygienize_expr(args_expr, env, protected = TRUE))
+    if (length(expr) > 2) {
+      for (i in 3:length(expr)) {
+        result[[i]] <- rye_hygienize_expr(expr[[i]], env, protected = FALSE)
+      }
+    }
+    return(as.call(result))
+  }
+  args_list <- as.list(args_expr)
+  new_args <- list()
+  new_env <- env
+  if (length(args_list) > 0) {
+    for (i in seq_along(args_list)) {
+      arg <- args_list[[i]]
+      arg_origin <- rye_hygiene_origin(arg)
+      arg_unwrapped <- rye_hygiene_expr(arg)
+      if (is.symbol(arg_unwrapped) && as.character(arg_unwrapped) != "." &&
+          !identical(arg_origin, "call_site")) {
+        name <- as.character(arg_unwrapped)
+        fresh <- rye_hygiene_gensym(name)
+        new_env[[name]] <- fresh
+        new_args[[i]] <- fresh
+      } else {
+        new_args[[i]] <- rye_hygienize_expr(arg, env, protected = TRUE)
+      }
+    }
+  }
+  args_out <- if (length(args_list) == 0) args_expr else as.call(new_args)
+  result <- list(expr[[1]], args_out)
+  if (length(expr) > 2) {
+    for (i in 3:length(expr)) {
+      result[[i]] <- rye_hygienize_expr(expr[[i]], new_env, protected = FALSE)
+    }
+  }
+  as.call(result)
+}
+
+#' @keywords internal
+rye_hygienize_let <- function(expr, env, op_name) {
+  if (length(expr) < 3) {
+    return(expr)
+  }
+  bindings_expr <- expr[[2]]
+  bindings_list <- if (is.call(bindings_expr)) as.list(bindings_expr) else list()
+  new_bindings <- list()
+  if (op_name == "letrec") {
+    value_env <- env
+    body_env <- env
+    if (length(bindings_list) > 0) {
+      for (i in seq_along(bindings_list)) {
+        binding <- bindings_list[[i]]
+        parts <- if (is.call(binding)) as.list(binding) else list()
+        if (length(parts) == 0) {
+          next
+        }
+        name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
+        name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+        if (is.symbol(name_expr) && !identical(name_origin, "call_site")) {
+          name <- as.character(name_expr)
+          body_env[[name]] <- rye_hygiene_gensym(name)
+        }
+      }
+    }
+    if (length(bindings_list) > 0) {
+      for (i in seq_along(bindings_list)) {
+        binding <- bindings_list[[i]]
+        parts <- if (is.call(binding)) as.list(binding) else list()
+        if (length(parts) == 0) {
+          new_bindings[[i]] <- binding
+          next
+        }
+        name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
+        name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+        if (is.symbol(name_expr) && !identical(name_origin, "call_site") &&
+            !is.null(body_env[[as.character(name_expr)]])) {
+          renamed <- body_env[[as.character(name_expr)]]
+          value <- if (length(parts) >= 2) {
+            rye_hygienize_expr(parts[[2]], body_env, protected = FALSE)
+          } else {
+            NULL
+          }
+          new_bindings[[i]] <- as.call(list(renamed, value))
+        } else {
+          value <- if (length(parts) >= 2) rye_hygienize_expr(parts[[2]], value_env, protected = FALSE) else NULL
+          new_bindings[[i]] <- as.call(c(list(parts[[1]]), list(value)))
+        }
+      }
+    }
+    bindings_out <- if (length(bindings_list) == 0) bindings_expr else as.call(new_bindings)
+    body <- list(expr[[1]], bindings_out)
+    if (length(expr) > 2) {
+      for (i in 3:length(expr)) {
+        body[[i]] <- rye_hygienize_expr(expr[[i]], body_env, protected = FALSE)
+      }
+    }
+    return(as.call(body))
+  }
+
+  if (op_name == "let*") {
+    current_env <- env
+    if (length(bindings_list) > 0) {
+      for (i in seq_along(bindings_list)) {
+        binding <- bindings_list[[i]]
+        parts <- if (is.call(binding)) as.list(binding) else list()
+        if (length(parts) == 0) {
+          new_bindings[[i]] <- binding
+          next
+        }
+        name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
+        name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+        value <- if (length(parts) >= 2) rye_hygienize_expr(parts[[2]], current_env, protected = FALSE) else NULL
+        if (is.symbol(name_expr) && !identical(name_origin, "call_site")) {
+          name <- as.character(name_expr)
+          fresh <- rye_hygiene_gensym(name)
+          current_env[[name]] <- fresh
+          new_bindings[[i]] <- as.call(list(fresh, value))
+        } else {
+          new_bindings[[i]] <- as.call(c(list(parts[[1]]), list(value)))
+        }
+      }
+    }
+    bindings_out <- if (length(bindings_list) == 0) bindings_expr else as.call(new_bindings)
+    body <- list(expr[[1]], bindings_out)
+    if (length(expr) > 2) {
+      for (i in 3:length(expr)) {
+        body[[i]] <- rye_hygienize_expr(expr[[i]], current_env, protected = FALSE)
+      }
+    }
+    return(as.call(body))
+  }
+
+  body_env <- env
+  if (length(bindings_list) > 0) {
+    for (i in seq_along(bindings_list)) {
+      binding <- bindings_list[[i]]
+      parts <- if (is.call(binding)) as.list(binding) else list()
+      if (length(parts) == 0) {
+        next
+      }
+      name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
+      name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+      if (is.symbol(name_expr) && !identical(name_origin, "call_site")) {
+        name <- as.character(name_expr)
+        body_env[[name]] <- rye_hygiene_gensym(name)
+      }
+    }
+  }
+  if (length(bindings_list) > 0) {
+    for (i in seq_along(bindings_list)) {
+      binding <- bindings_list[[i]]
+      parts <- if (is.call(binding)) as.list(binding) else list()
+      if (length(parts) == 0) {
+        new_bindings[[i]] <- binding
+        next
+      }
+      name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
+      name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+      if (is.symbol(name_expr) && !identical(name_origin, "call_site") &&
+          !is.null(body_env[[as.character(name_expr)]])) {
+        renamed <- body_env[[as.character(name_expr)]]
+        value <- if (length(parts) >= 2) {
+          rye_hygienize_expr(parts[[2]], env, protected = FALSE)
+        } else {
+          NULL
+        }
+        new_bindings[[i]] <- as.call(list(renamed, value))
+      } else {
+        value <- if (length(parts) >= 2) rye_hygienize_expr(parts[[2]], env, protected = FALSE) else NULL
+        new_bindings[[i]] <- as.call(c(list(parts[[1]]), list(value)))
+      }
+    }
+  }
+  bindings_out <- if (length(bindings_list) == 0) bindings_expr else as.call(new_bindings)
+  body <- list(expr[[1]], bindings_out)
+  if (length(expr) > 2) {
+    for (i in 3:length(expr)) {
+      body[[i]] <- rye_hygienize_expr(expr[[i]], body_env, protected = FALSE)
+    }
+  }
+  as.call(body)
 }
 
 #' Process quasiquote expressions
@@ -40,7 +444,7 @@ rye_quasiquote <- function(expr, env, depth = 1) {
       if (length(expr) != 2) {
         stop("unquote requires exactly 1 argument")
       }
-      return(rye_eval(expr[[2]], env))
+      return(rye_hygiene_wrap(rye_eval(expr[[2]], env), "call_site"))
     } else {
       # Nested quasiquote - decrease depth
       return(as.call(list(as.symbol("unquote"), rye_quasiquote(expr[[2]], env, depth - 1))))
@@ -82,7 +486,7 @@ rye_quasiquote <- function(expr, env, depth = 1) {
         # Splice elements (use c() to preserve NULLs in sublists)
         if (is.list(spliced)) {
           for (item in spliced) {
-            result <- c(result, list(item))
+            result <- c(result, list(rye_hygiene_wrap(item, "call_site")))
           }
         } else {
           stop("unquote-splicing requires a list")
@@ -120,6 +524,7 @@ rye_defmacro <- function(name, params, body, env) {
   macro_fn <- function(...) {
     # Create environment for macro expansion
     macro_env <- new.env(parent = env)
+    assign(".rye_macroexpanding", TRUE, envir = macro_env)
 
     # Bind parameters to arguments (unevaluated!)
     args <- match.call(expand.dots = FALSE)$...
@@ -243,6 +648,8 @@ rye_macroexpand <- function(expr, env = parent.frame(), preserve_src = FALSE) {
     # Expand the macro with unevaluated arguments
     args <- as.list(expr[-1])
     expanded <- do.call(macro_fn, args)
+    expanded <- rye_hygienize(expanded)
+    expanded <- rye_hygiene_unwrap(expanded)
     expanded <- rye_src_inherit(expanded, expr)
 
     # Recursively expand the result

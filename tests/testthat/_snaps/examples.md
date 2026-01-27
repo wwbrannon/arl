@@ -195,7 +195,7 @@
       [45] "Test passed!"                                          
       [46] " "                                                     
       [47] ""                                                      
-      [48] "=== Macro Hygiene ==="                                 
+      [48] "=== Hygiene and Capture ==="                           
       [49] " "                                                     
       [50] "Demonstrating gensym: "                                
       [51] "Generated symbol 1: G__7 "                             

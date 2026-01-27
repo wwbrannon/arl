@@ -76,7 +76,12 @@ rye_eval <- function(expr, env = parent.frame()) {
     if (length(expr) != 2) {
       stop("quasiquote requires exactly 1 argument")
     }
-    return(rye_strip_src(rye_quasiquote(expr[[2]], env)))
+    result <- rye_quasiquote(expr[[2]], env)
+    if (!exists(".rye_macroexpanding", envir = env, inherits = TRUE) ||
+        !isTRUE(get(".rye_macroexpanding", envir = env, inherits = TRUE))) {
+      result <- rye_hygiene_unwrap(result)
+    }
+    return(rye_strip_src(result))
   }
 
   # help - show docs without evaluating argument
