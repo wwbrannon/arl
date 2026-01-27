@@ -17,6 +17,7 @@
         (list)))))
 
 (defmacro destructuring-bind (pattern value . body)
+  "Bind pattern to value, then evaluate body."
   (define tmp (gensym "tmp"))
   `((lambda (,tmp)
       (define ,pattern ,tmp)
@@ -24,6 +25,7 @@
     ,value))
 
 (defmacro let (bindings . body)
+  "Bind names to values within body."
   (if (null? bindings)
     `(begin ,@body)
     (begin
@@ -38,6 +40,7 @@
         ,@values))))
 
 (defmacro let* (bindings . body)
+  "Sequential let bindings."
   (if (null? bindings)
     `(begin ,@body)
     (begin
@@ -48,6 +51,7 @@
          (let* ,(cdr bindings) ,@body)))))
 
 (defmacro letrec (bindings . body)
+  "Recursive bindings."
   (define names (mapcat (lambda (b) (pattern-symbols (car b))) bindings))
   `(let ,(map (lambda (n) `(,n (list))) names)
      ,@(map (lambda (b) `(set! ,(car b) ,(car (cdr b)))) bindings)

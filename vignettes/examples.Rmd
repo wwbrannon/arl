@@ -477,6 +477,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; A macro that doubles its argument
 (defmacro double (x)
+  "Multiply x by 2 at macro expansion time."
   `(* 2 ,x))
 
 (println (str "(double 5) = " (double 5)))
@@ -484,6 +485,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; A macro that creates a variable with a default value
 (defmacro defvar (name value)
+  "Define a variable with a value."
   `(define ,name ,value))
 
 (defvar x 42)
@@ -497,6 +499,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; A macro that executes multiple forms and returns the last
 (defmacro progn (first . rest)
+  "Evaluate forms in order and return the last."
   `(begin ,first ,@rest))
 
 (println "Using progn:")
@@ -513,6 +516,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; Custom when-not macro
 (defmacro when-not (test . body)
+  "Evaluate body when test is falsy."
   `(if (not ,test)
        (begin ,@body)
        #nil))
@@ -525,6 +529,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; A do-times macro
 (defmacro do-times (n . body)
+  "Repeat body n times."
   (let ((counter (gensym "counter")))
     `(let ((,counter 0))
        (while (< ,counter ,n)
@@ -559,6 +564,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; An anaphoric if that binds result to 'it'
 (defmacro aif (test then alt)
+  "Bind test result to it and select then/alt."
   `(let ((it ,test))
      (if it ,then ,alt)))
 
@@ -575,6 +581,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; A macro for defining test cases
 (defmacro deftest (name . body)
+  "Define and run a simple test case."
   `(begin
      (println (str "Running test: " (quote ,name)))
      ,@body
@@ -596,12 +603,14 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; Without hygiene (could capture user variables)
 (defmacro bad-swap (a b)
+  "Swap two bindings without gensym."
   `(let ((temp ,a))
      (set! ,a ,b)
      (set! ,b temp)))
 
 ;; With hygiene (uses gensym)
 (defmacro good-swap (a b)
+  "Swap two bindings with a fresh temp."
   (let ((temp-var (gensym "temp")))
     `(let ((,temp-var ,a))
        (set! ,a ,b)
@@ -639,6 +648,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; A macro that chains function calls
 (defmacro -> (value . forms)
+  "Thread value through forms (first argument)."
   (if (null? forms)
       value
       (let ((first-form (car forms))
@@ -661,6 +671,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples
 
 ;; A macro that computes at macro expansion time
 (defmacro const-multiply (a b)
+  "Compute the product of a and b at expand time."
   (let ((result (* a b)))
     `(quote ,result)))
 
@@ -707,6 +718,7 @@ Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/pipeline-macro
 
 ;; Pipeline macro: threads a value through a sequence of steps
 (defmacro pipeline (value . steps)
+  "Thread value through steps (last argument)."
   (if (null? steps)
       value
       (let ((step (car steps))

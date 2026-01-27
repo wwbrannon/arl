@@ -186,7 +186,17 @@ rye_eval_cps_inner <- function(expr, env, k) {
       }
     }
 
-    rye_defmacro(name, params, body, env)
+    # Optional docstring convention: first body form is a string literal
+    docstring <- NULL
+    if (length(body) > 0) {
+      first_expr <- rye_strip_src(body[[1]])
+      if (is.character(first_expr) && length(first_expr) == 1) {
+        docstring <- first_expr
+        body <- body[-1]
+      }
+    }
+
+    rye_defmacro(name, params, body, env, docstring = docstring)
     return(rye_call_k(k, NULL))
   }
 

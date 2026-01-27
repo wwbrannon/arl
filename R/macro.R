@@ -573,7 +573,7 @@ rye_quasiquote <- function(expr, env, depth = 1) {
 #' @param body Macro body expressions
 #' @param env Environment in which to define the macro
 #' @keywords internal
-rye_defmacro <- function(name, params, body, env) {
+rye_defmacro <- function(name, params, body, env, docstring = NULL) {
   # Create a function that will expand the macro
   macro_fn <- function(...) {
     # Create environment for macro expansion
@@ -644,6 +644,11 @@ rye_defmacro <- function(name, params, body, env) {
       result <- rye_eval(expr, macro_env)
     }
     result
+  }
+
+  attr(macro_fn, "rye_macro") <- list(params = as.character(params))
+  if (!is.null(docstring)) {
+    attr(macro_fn, "rye_doc") <- list(description = docstring)
   }
 
   # Store in macro registry

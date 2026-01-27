@@ -4,7 +4,7 @@
 \alias{rye_defmacro}
 \title{Define a macro}
 \usage{
-rye_defmacro(name, params, body, env)
+rye_defmacro(name, params, body, env, docstring = NULL)
 }
 \arguments{
 \item{name}{Symbol naming the macro}

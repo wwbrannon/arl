@@ -1,6 +1,7 @@
 ;;; Rye Standard Library - Threading Macros
 
 (defmacro -> (value . forms)
+  "Thread value through forms (first argument)."
   (reduce
     (lambda (acc form)
       (if (list? form)
@@ -10,6 +11,7 @@
     :init value))
 
 (defmacro ->> (value . forms)
+  "Thread value through forms (last argument)."
   (reduce
     (lambda (acc form)
       (if (list? form)

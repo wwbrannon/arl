@@ -1,6 +1,7 @@
 ;;; Rye Standard Library - Struct Macros
 
 (defmacro defstruct (name fields)
+  "Define a struct constructor, predicate, and accessors."
   (define struct-name (as.character name))
   (define ctor-name (as.symbol (str "make-" struct-name)))
   (define pred-name (as.symbol (str struct-name "?")))

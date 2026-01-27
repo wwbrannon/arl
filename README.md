@@ -112,9 +112,13 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 
 ; Macros
 (defmacro when (test body)
+  "Evaluate body when test is truthy."
   `(if ,test ,body #nil))
 
 (when (> 5 3) (print "yes"))  ; => "yes"
+
+; Macro docstrings are a leading string literal
+(help "when")
 
 ; Higher-order functions
 (define double (lambda (x) (* x 2)))

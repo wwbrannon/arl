@@ -12,14 +12,6 @@ rye_help_topics <- list(
     usage = "(delay expr)",
     description = "Return a promise that evaluates expr when forced."
   ),
-  force = list(
-    usage = "(force promise)",
-    description = "Force a promise or return the value unchanged."
-  ),
-  `promise?` = list(
-    usage = "(promise? x)",
-    description = "Return TRUE if x is a promise."
-  ),
   unquote = list(
     usage = "(unquote expr)",
     description = "Evaluate expr inside quasiquote."
@@ -56,14 +48,6 @@ rye_help_topics <- list(
     usage = "(defmacro name (params...) body...)",
     description = "Define a macro."
   ),
-  `call/cc` = list(
-    usage = "(call/cc proc)",
-    description = "Capture the current continuation and pass it to proc."
-  ),
-  `call-with-current-continuation` = list(
-    usage = "(call-with-current-continuation proc)",
-    description = "Alias for call/cc."
-  ),
   `::` = list(
     usage = "(:: pkg name)",
     description = "Access an exported object from an R package."
@@ -75,69 +59,6 @@ rye_help_topics <- list(
   `~` = list(
     usage = "(~ lhs rhs)",
     description = "Build an R formula without evaluating arguments."
-  )
-)
-
-rye_help_macro_topics <- list(
-  `when` = list(
-    usage = "(when test body)",
-    description = "Evaluate body when test is truthy."
-  ),
-  `unless` = list(
-    usage = "(unless test body)",
-    description = "Evaluate body when test is falsy."
-  ),
-  `and` = list(
-    usage = "(and expr ...)",
-    description = "Short-circuit boolean AND."
-  ),
-  `or` = list(
-    usage = "(or expr ...)",
-    description = "Short-circuit boolean OR."
-  ),
-  `cond` = list(
-    usage = "(cond (test expr...) ...)",
-    description = "Multi-branch conditional."
-  ),
-  `case` = list(
-    usage = "(case key (datum expr...) ...)",
-    description = "Branch on key equality."
-  ),
-  `let` = list(
-    usage = "(let ((name value) ...) body...)",
-    description = "Bind names to values within body."
-  ),
-  `let*` = list(
-    usage = "(let* ((name value) ...) body...)",
-    description = "Sequential let bindings."
-  ),
-  `letrec` = list(
-    usage = "(letrec ((name value) ...) body...)",
-    description = "Recursive bindings."
-  ),
-  `defstruct` = list(
-    usage = "(defstruct Name (field ...))",
-    description = "Define a struct constructor, predicate, and accessors."
-  ),
-  `while` = list(
-    usage = "(while test body...)",
-    description = "Repeat body while test is truthy."
-  ),
-  `for` = list(
-    usage = "(for (var seq) body...)",
-    description = "Map body over seq, binding var."
-  ),
-  `->` = list(
-    usage = "(-> value form...)",
-    description = "Thread value through forms (first argument)."
-  ),
-  `->>` = list(
-    usage = "(->> value form...)",
-    description = "Thread value through forms (last argument)."
-  ),
-  `try` = list(
-    usage = "(try body [catch err body...] [finally body...])",
-    description = "Macro wrapper around try* with catch/finally."
   )
 )
 
@@ -200,6 +121,15 @@ rye_help_usage_from_formals <- function(fn, topic) {
   paste0("(", topic, if (nzchar(args_text)) paste0(" ", args_text) else "", ")")
 }
 
+rye_help_usage_from_macro <- function(fn, topic) {
+  info <- attr(fn, "rye_macro", exact = TRUE)
+  if (is.null(info) || is.null(info$params)) {
+    return(paste0("(", topic, ")"))
+  }
+  params <- info$params
+  paste0("(", topic, if (length(params) > 0) paste0(" ", paste(params, collapse = " ")) else "", ")")
+}
+
 rye_help <- function(topic, env = parent.frame()) {
   if (!is.character(topic) || length(topic) != 1) {
     stop("help requires a symbol or string")
@@ -211,10 +141,25 @@ rye_help <- function(topic, env = parent.frame()) {
     return(invisible(NULL))
   }
 
-  macro_doc <- rye_help_macro_topics[[topic]]
-  if (!is.null(macro_doc)) {
-    rye_help_print(topic, macro_doc)
-    return(invisible(NULL))
+  macro_symbol <- as.symbol(topic)
+  if (is_macro(macro_symbol)) {
+    macro_fn <- get_macro(macro_symbol)
+    macro_doc <- attr(macro_fn, "rye_doc", exact = TRUE)
+    usage <- rye_help_usage_from_macro(macro_fn, topic)
+    if (!is.null(macro_doc)) {
+      if (is.character(macro_doc)) {
+        macro_doc <- list(description = paste(macro_doc, collapse = "\n"))
+      }
+      if (is.null(macro_doc$usage) && !is.null(usage)) {
+        macro_doc$usage <- usage
+      }
+      rye_help_print(topic, macro_doc)
+      return(invisible(NULL))
+    }
+    if (!is.null(usage)) {
+      rye_help_print(topic, list(usage = usage))
+      return(invisible(NULL))
+    }
   }
 
   if (exists(topic, envir = env, inherits = TRUE)) {

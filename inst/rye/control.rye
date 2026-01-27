@@ -3,14 +3,17 @@
 ;;; Control flow macros
 
 (defmacro when (test body)
+  "Evaluate body when test is truthy."
   `(if ,test ,body #nil))
 
 (defmacro unless (test body)
+  "Evaluate body when test is falsy."
   `(if ,test #nil ,body))
 
 ;;; Boolean macros with short-circuit evaluation
 
 (defmacro and (first . rest)
+  "Short-circuit boolean AND."
   (if (null? rest)
     first
     `((lambda (tmp)
@@ -18,6 +21,7 @@
       ,first)))
 
 (defmacro or (first . rest)
+  "Short-circuit boolean OR."
   (if (null? rest)
     first
     `((lambda (tmp)
@@ -27,6 +31,7 @@
 ;;; Conditional macros
 
 (defmacro cond (clause . rest)
+  "Multi-branch conditional."
   (if (null? clause)
     #nil
     (begin
@@ -37,6 +42,7 @@
         `(if ,test (begin ,@body) (cond ,@rest))))))
 
 (defmacro case (key clause . rest)
+  "Branch on key equality."
   (if (null? clause)
     #nil
     (begin

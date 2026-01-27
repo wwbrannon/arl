@@ -20,6 +20,7 @@ Macros let you transform code before evaluation. Rye supports `defmacro`,
 
 ```lisp
 (defmacro when (test body)
+  "Evaluate body when test is truthy."
   `(if ,test ,body #nil))
 ```
 
@@ -32,12 +33,19 @@ With that macro defined, you can write:
 Macros receive their arguments *unevaluated*, so they can rewrite code before
 evaluation happens.
 
+You can attach a docstring by adding a leading string literal in the macro body:
+
+```lisp
+(help "when")
+```
+
 ## Macro parameters
 
 Macros can take any number of parameters:
 
 ```lisp
 (defmacro unless (test body)
+  "Evaluate body when test is falsy."
   `(if ,test #nil ,body))
 ```
 
@@ -47,6 +55,7 @@ Use `gensym` to create unique symbols when you need a temporary binding:
 
 ```lisp
 (defmacro with-temp (value body)
+  "Bind value to a fresh temporary symbol."
   (let ((tmp (gensym "tmp")))
     `(let ((,tmp ,value))
        ,body)))
@@ -81,7 +90,7 @@ If you nest quasiquotes, only the innermost unquote is evaluated:
 You can inspect expansions from R using `rye_macroexpand()`:
 
 ```{r eval=FALSE}
-rye_eval(rye_read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]])
+rye_eval(rye_read("(defmacro when (test body) \"Evaluate body when test is truthy.\" `(if ,test ,body #nil))")[[1]])
 rye_macroexpand(rye_read("(when #t 1)")[[1]])
 ```
 

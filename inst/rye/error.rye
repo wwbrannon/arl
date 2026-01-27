@@ -1,6 +1,7 @@
 ;;; Rye Standard Library - Error Handling Macros
 
 (defmacro try (body . clauses)
+  "Macro wrapper around try* with catch/finally."
   (begin
     (define catch-clause #nil)
     (define finally-clause #nil)

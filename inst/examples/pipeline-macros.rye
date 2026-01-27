@@ -10,6 +10,7 @@
 
 ;; Pipeline macro: threads a value through a sequence of steps
 (defmacro pipeline (value . steps)
+  "Thread value through steps (last argument)."
   (if (null? steps)
       value
       (let ((step (car steps))

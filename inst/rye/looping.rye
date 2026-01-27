@@ -1,6 +1,7 @@
 ;;; Rye Standard Library - Looping Macros
 
 (defmacro while (test . body)
+  "Repeat body while test is truthy."
   (begin
     (define loop (gensym "while"))
     `(begin
@@ -13,6 +14,7 @@
        (,loop))))
 
 (defmacro for (binding . body)
+  "Map body over seq, binding var."
   (begin
     (define var (car binding))
     (define seq (car (cdr binding)))
