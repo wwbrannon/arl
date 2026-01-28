@@ -11,13 +11,13 @@ Based on benchmark and profiling analysis conducted on 2026-01-27.
 
 The component breakdown shows the evaluator consuming **virtually 100% of execution time** for real workloads:
 - Fibonacci: Eval 5719ms vs Tokenize 12ms + Parse 5ms
-- The CPS (Continuation-Passing Style) implementation creates closures and thunks for every expression, even non-tail-recursive ones
+- The CPS (Continuation-Passing Style) implementation creates closures and thunks for every expression
 
-**Recommendation**: Implement a hybrid evaluator that uses direct recursion for non-tail positions and reserves CPS only for true tail calls. This requires tail-position analysis but could deliver the largest single performance gain.
+**Recommendation**: Replace the CPS evaluator with a direct-style evaluator to eliminate thunk/trampoline overhead.
 
 **Priority**: CRITICAL - This is the dominant bottleneck
 
-**Status**: Not started
+**Status**: ✅ COMPLETED (2026-01-28)
 
 ---
 
@@ -118,7 +118,6 @@ Multiple type checks and `as.call()` overhead for each quote sugar form (`'`, ``
    - Highest potential impact but also highest complexity
    - Requires careful tail-position analysis
    - Recommend prototyping on a branch first
-   - Must preserve tail-call optimization correctness
    - Consider making this optional or configurable initially
 
 ## Validation Strategy

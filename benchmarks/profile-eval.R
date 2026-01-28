@@ -31,8 +31,8 @@ setup_env <- function() {
   env
 }
 
-# Profile 1: Fibonacci (non-tail recursive - tests CPS overhead)
-cat("Profile 1: Fibonacci (non-tail recursive)\n")
+# Profile 1: Fibonacci
+cat("Profile 1: Fibonacci\n")
 env1 <- setup_env()
 
 eval_text('
@@ -49,72 +49,51 @@ profile_component({
 }, "eval-fibonacci")
 
 
-# Profile 2: Tail-recursive factorial (tests tail-call optimization)
-cat("Profile 2: Factorial (tail recursive)\n")
+# Profile 2: Many function arguments (tests arg list growing)
+cat("Profile 2: Many function arguments\n")
 env2 <- setup_env()
-
-eval_text('
-(define fact-helper (lambda (n acc)
-  (if (= n 0)
-    acc
-    (fact-helper (- n 1) (* n acc)))))
-
-(define fact (lambda (n)
-  (fact-helper n 1)))
-', env2)
-
-profile_component({
-  for (i in 1:50) {
-    rye_eval(rye_read("(fact 1000)")[[1]], env2)
-  }
-}, "eval-factorial")
-
-
-# Profile 3: Many function arguments (tests arg list growing)
-cat("Profile 3: Many function arguments\n")
-env3 <- setup_env()
 
 eval_text('
 (define sum-many (lambda (a b c d e f g h i j k l m n o p q r s t)
   (+ a b c d e f g h i j k l m n o p q r s t)))
-', env3)
+', env2)
 
 profile_component({
   for (i in 1:1000) {
-    rye_eval(rye_read("(sum-many 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)")[[1]], env3)
+    rye_eval(rye_read("(sum-many 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)")[[1]], env2)
   }
 }, "eval-many-args")
 
 
-# Profile 4: Higher-order functions (map over large list)
-cat("Profile 4: Higher-order functions (map)\n")
-env4 <- setup_env()
+# Profile 3: Higher-order functions (map over large list)
+cat("Profile 3: Higher-order functions (map)\n")
+env3 <- setup_env()
 
 eval_text('
 (define inc (lambda (x) (+ x 1)))
 (define list1000 (range 1 1000))
-', env4)
+', env3)
 
 profile_component({
   for (i in 1:20) {
-    rye_eval(rye_read("(map inc list1000)")[[1]], env4)
+    rye_eval(rye_read("(map inc list1000)")[[1]], env3)
   }
 }, "eval-map")
 
 
-# Profile 5: Closure creation and invocation
-cat("Profile 5: Closures\n")
-env5 <- setup_env()
+# Profile 4: Closure creation and invocation
+cat("Profile 4: Closures\n")
+env4 <- setup_env()
 
 eval_text('
 (define make-adder (lambda (n)
   (lambda (x) (+ x n))))
-', env5)
+', env4)
 
 profile_component({
   for (i in 1:1000) {
     # Call closure by evaluating the full expression
-    rye_eval(rye_read("((make-adder 10) 5)")[[1]], env5)
+    rye_eval(rye_read("((make-adder 10) 5)")[[1]], env4)
   }
 }, "eval-closures")
 

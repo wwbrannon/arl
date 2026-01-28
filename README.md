@@ -140,10 +140,33 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 
 ### Continuations
 
-Rye provides Scheme-style, multi-shot continuations via the standard
-library functions `call/cc` and `call-with-current-continuation`.
-Continuations capture Rye-level control flow; side effects in raw R code
-are not rewound.
+Rye provides downward-only continuations via R’s native `callCC`
+function, exposed as `call/cc` and `call-with-current-continuation`.
+Unlike full Scheme continuations, R’s `callCC` supports one-shot,
+downward-only escapes (early returns). Continuations capture Rye-level
+control flow; side effects are not rewound.
+
+### Tail Call Optimization
+
+Rye does not provide automatic tail-call optimization. For efficient
+tail-recursive patterns, use the `while` macro from the `looping`
+module, which provides iteration-based TCO:
+
+``` lisp
+(import looping)
+
+(define factorial
+  (lambda (n)
+    (if (< n 2)
+      1
+      (begin
+        (define acc 1)
+        (define i n)
+        (while (> i 1)
+          (set! acc (* acc i))
+          (set! i (- i 1)))
+        acc))))
+```
 
 ### Standard Library
 

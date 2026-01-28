@@ -39,16 +39,21 @@ test_that("call/cc exits to current continuation", {
   expect_equal(result, 42)
 })
 
-test_that("call/cc continuations are multi-shot", {
+test_that("call/cc is downward-only (R's callCC behavior)", {
   env <- rye_load_stdlib()
-  rye_eval(rye_read("(define saved #nil)")[[1]], env)
+  # R's callCC is one-shot and downward-only
   result <- rye_eval(
-    rye_read("(call/cc (lambda (k) (set! saved k) 0))")[[1]],
+    rye_read("(call/cc (lambda (k) (k 5)))")[[1]],
     env
   )
-  expect_equal(result, 0)
-  expect_equal(rye_eval(rye_read("(saved 1)")[[1]], env), 1)
-  expect_equal(rye_eval(rye_read("(saved 2)")[[1]], env), 2)
+  expect_equal(result, 5)
+  
+  # Test that it works as a regular function
+  result2 <- rye_eval(
+    rye_read("(call/cc (lambda (exit) (if (> 2 1) (exit 10) 20)))")[[1]],
+    env
+  )
+  expect_equal(result2, 10)
 })
 
 test_that("call/cc is first-class and has an alias", {

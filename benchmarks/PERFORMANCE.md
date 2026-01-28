@@ -22,7 +22,7 @@ Source Code
     ↓
 [Macro Expander] → Macro expansion with hygiene (R/macro.R)
     ↓
-[Evaluator] → CPS evaluation with tail-call optimization (R/eval.R)
+[Evaluator] → Direct-style evaluation (R/eval.R)
     ↓
 Result
 ```
@@ -49,9 +49,8 @@ Result
 - ~700 lines of code
 
 **Evaluator (R/eval.R)**
-- CPS (Continuation-Passing Style) evaluator with trampolining
+- Direct-style evaluator (no CPS/trampolines)
 - Handles special forms (quote, if, define, lambda, begin, defmacro, quasiquote, ~)
-- Implements tail-call optimization via CPS
 - Delegates non-special forms to R's native `eval()`
 - ~850 lines of code
 
@@ -281,67 +280,7 @@ These issues remain in the codebase and represent potential performance improvem
 
 **Location**: `R/eval.R:56-681` (entire evaluator)
 
-**Pattern**: Every expression evaluation uses CPS with closures, thunks, and trampolining, even for expressions that don't require tail-call optimization.
-
-**Code Example**:
-```r
-rye_eval_cps <- function(expr, env, k) {
-  rye_src_stack_push(expr)
-  # Every eval creates a thunk that returns a thunk
-  rye_eval_cps_inner(expr, env, function(value) {
-    rye_src_stack_pop()
-    k(value)  # Continuation call
-  })
-}
-```
-
-**Problem**:
-- Every expression creates multiple closures (continuation, thunk)
-- Trampolining adds overhead for checking thunk types
-- Non-tail recursive calls could use direct recursion without this machinery
-
-**Impact**:
-- **Conservative estimate**: 2-3x slowdown for recursive workloads
-- **Aggressive estimate**: 3-5x slowdown compared to direct recursion
-- Affects all evaluation, but most visible in recursive functions
-
-**Benchmark Evidence**:
-```r
-# Fibonacci(15) takes ~45ms with CPS
-# Equivalent direct recursion would likely be ~15-20ms
-```
-
-**Potential Fix**:
-```r
-# Use direct recursion for non-tail positions
-rye_eval <- function(expr, env) {
-  # Fast path for simple cases
-  if (is.symbol(expr)) return(get(as.character(expr), env))
-  if (!is.call(expr)) return(expr)
-
-  # Check if tail position
-  if (is_tail_position(expr)) {
-    # Use CPS for tail calls
-    return(rye_eval_cps(expr, env, identity))
-  } else {
-    # Use direct recursion
-    return(rye_eval_direct(expr, env))
-  }
-}
-```
-
-**Challenge**: Determining tail positions requires static analysis or runtime tracking.
-
-**Expected Speedup**: 2-3x for recursive workloads
-
-**Test Workload**:
-```r
-# Compare fibonacci performance
-source("benchmarks/bench-eval.R")
-
-# Fibonacci(15): Before CPS optimization
-# Expected after: 2-3x faster
-```
+**Status**: Completed. The evaluator has been converted from CPS/trampolines to direct style.
 
 ---
 
@@ -598,8 +537,8 @@ All 871 tests pass. Performance improvements verified:
 
 1. **CPS Overhead** (Issue 4)
    - **Impact**: 2-3x speedup for recursive workloads
-   - **Effort**: High (requires careful analysis of tail positions)
-   - **Risk**: Medium (must preserve tail-call optimization correctness)
+   - **Effort**: Completed
+   - **Risk**: Low
 
 2. **Multiple Macro Tree Walks** (Issue 5)
    - **Impact**: 30-50% speedup for macro-heavy code

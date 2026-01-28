@@ -92,7 +92,6 @@ Each benchmark script measures different aspects of Rye performance:
 - Function calls (1, 5, 10 arguments)
 - Special forms (if, define, lambda, begin)
 - Recursive functions (fibonacci, factorial)
-- Tail-call vs non-tail patterns
 - Closures and environments
 
 ### Standard Library (`bench-stdlib.R`)

@@ -15,81 +15,62 @@ rye_eval <- function(expr, env = parent.frame()) {
     assign(".rye_env", TRUE, envir = env)
   }
   withCallingHandlers({
-    rye_trampoline(rye_eval_cps(expr, env, function(value) value))
+    rye_eval_inner(expr, env)
   }, error = function(e) {
     stop(e)
   })
-}
-
-rye_thunk <- function(fn) {
-  structure(fn, class = "rye_thunk")
-}
-
-rye_is_thunk <- function(value) {
-  inherits(value, "rye_thunk")
-}
-
-rye_trampoline <- function(thunk) {
-  current <- thunk
-  while (rye_is_thunk(current)) {
-    current <- current()
-  }
-  current
-}
-
-rye_call_k <- function(k, value) {
-  rye_thunk(function() k(value))
 }
 
 rye_missing_default <- function() {
   structure(list(), class = "rye_missing_default")
 }
 
-rye_make_continuation <- function(k) {
-  structure(list(k = k), class = "rye_continuation")
-}
-
-rye_make_builtin_callcc <- function() {
-  structure(list(), class = "rye_builtin_callcc")
-}
-
-rye_eval_cps <- function(expr, env, k) {
+rye_eval_inner <- function(expr, env) {
+  # Source tracking:
+  # We *must not* pop the src stack on error, because `rye_with_error_context()`
+  # captures `rye_src_stack_get()` to include Location/Rye stack in errors.
+  #
+  # If we used `on.exit(pop())`, unwinding would pop before the error wrapper
+  # runs, losing location context (see `tests/testthat/test-evaluator.R`).
   src <- rye_src_get(expr)
-  if (!is.null(src)) {
-    rye_src_stack_push(src)
-    return(rye_eval_cps_inner(expr, env, function(value) {
-      rye_src_stack_pop()
-      k(value)
-    }))
+  if (is.null(src)) {
+    return(rye_eval_inner_impl(expr, env))
   }
-  rye_eval_cps_inner(expr, env, k)
+  rye_src_stack_push(src)
+  result <- tryCatch(
+    rye_eval_inner_impl(expr, env),
+    error = function(e) stop(e)
+  )
+  rye_src_stack_pop()
+  result
 }
 
-rye_eval_cps_inner <- function(expr, env, k) {
+rye_eval_inner_impl <- function(expr, env) {
+
   # Handle NULL (empty list or #nil)
   if (is.null(expr)) {
-    return(rye_call_k(k, NULL))
+    return(NULL)
   }
 
   # Handle atoms (self-evaluating)
   if (!is.call(expr) && !is.symbol(expr)) {
     # Keywords are self-evaluating (return as-is for now)
-    return(rye_call_k(k, rye_strip_src(expr)))
+    return(rye_strip_src(expr))
   }
 
   # Handle keywords (they pass through as-is for use in function calls)
   if (inherits(expr, "rye_keyword")) {
-    return(rye_call_k(k, rye_strip_src(expr)))
+    return(rye_strip_src(expr))
   }
 
   # Handle symbols (variable lookup)
   if (is.symbol(expr)) {
-    return(rye_call_k(k, eval(expr, envir = env)))
+    return(eval(expr, envir = env))
   }
 
   # Handle empty list
   if (is.call(expr) && length(expr) == 0) {
-    return(rye_call_k(k, list()))
+    return(list())
   }
 
   # Macro expansion (before special forms)
@@ -97,7 +78,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
   if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]])) {
     if (is_macro(expr[[1]], env = env)) {
       expanded <- rye_macroexpand(expr, env, preserve_src = TRUE)
-      return(rye_eval_cps(expanded, env, k))
+      return(rye_eval_inner(expanded, env))
     }
   }
 
@@ -109,7 +90,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
     if (length(expr) != 2) {
       stop("quote requires exactly 1 argument")
     }
-    return(rye_call_k(k, rye_strip_src(expr[[2]])))
+    return(rye_strip_src(expr[[2]]))
   }
 
   # quasiquote - template with selective evaluation
@@ -122,7 +103,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
         !isTRUE(get(".rye_macroexpanding", envir = env, inherits = TRUE))) {
       result <- rye_hygiene_unwrap(result)
     }
-    return(rye_call_k(k, rye_strip_src(result)))
+    return(rye_strip_src(result))
   }
 
   # delay - create a promise without evaluating the expression
@@ -131,7 +112,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
       stop("delay requires exactly 1 argument")
     }
     promise <- rye_promise_new(rye_strip_src(expr[[2]]), env)
-    return(rye_call_k(k, promise))
+    return(promise)
   }
 
   # help - show docs without evaluating argument
@@ -147,7 +128,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
       stop("help requires a symbol or string")
     }
     rye_help(topic, env)
-    return(rye_call_k(k, NULL))
+    return(NULL)
   }
 
   # defmacro - define a macro
@@ -197,7 +178,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
     }
 
     rye_defmacro(name, params, body, env, docstring = docstring)
-    return(rye_call_k(k, NULL))
+    return(NULL)
   }
 
   # if - conditional evaluation
@@ -205,18 +186,17 @@ rye_eval_cps_inner <- function(expr, env, k) {
     if (length(expr) < 3 || length(expr) > 4) {
       stop("if requires 2 or 3 arguments: (if test then [else])")
     }
-    return(rye_eval_cps(expr[[2]], env, function(test) {
-      test <- rye_strip_src(test)
-      # R-style truthiness: NULL and FALSE are falsy
-      if (identical(test, FALSE) || is.null(test)) {
-        # Evaluate else branch if present
-        if (length(expr) == 4) {
-          return(rye_eval_cps(expr[[4]], env, k))
-        }
-        return(rye_call_k(k, NULL))
+    test <- rye_eval_inner(expr[[2]], env)
+    test <- rye_strip_src(test)
+    # R-style truthiness: NULL and FALSE are falsy
+    if (identical(test, FALSE) || is.null(test)) {
+      # Evaluate else branch if present
+      if (length(expr) == 4) {
+        return(rye_eval_inner(expr[[4]], env))
       }
-      rye_eval_cps(expr[[3]], env, k)
-    }))
+      return(NULL)
+    }
+    return(rye_eval_inner(expr[[3]], env))
   }
 
   # define - variable assignment
@@ -225,11 +205,10 @@ rye_eval_cps_inner <- function(expr, env, k) {
       stop("define requires exactly 2 arguments: (define name value)")
     }
     name <- expr[[2]]
-    return(rye_eval_cps(expr[[3]], env, function(value) {
-      value <- rye_strip_src(value)
-      rye_assign_pattern(name, value, env, mode = "define", context = "define")
-      rye_call_k(k, NULL)
-    }))
+    value <- rye_eval_inner(expr[[3]], env)
+    value <- rye_strip_src(value)
+    rye_assign_pattern(name, value, env, mode = "define", context = "define")
+    return(NULL)
   }
 
   # set! - modify existing binding
@@ -238,11 +217,10 @@ rye_eval_cps_inner <- function(expr, env, k) {
       stop("set! requires exactly 2 arguments: (set! name value)")
     }
     name <- expr[[2]]
-    return(rye_eval_cps(expr[[3]], env, function(value) {
-      value <- rye_strip_src(value)
-      rye_assign_pattern(name, value, env, mode = "set", context = "set!")
-      rye_call_k(k, NULL)
-    }))
+    value <- rye_eval_inner(expr[[3]], env)
+    value <- rye_strip_src(value)
+    rye_assign_pattern(name, value, env, mode = "set", context = "set!")
+    return(NULL)
   }
 
   # load - evaluate a Rye source file or stdlib entry
@@ -250,27 +228,26 @@ rye_eval_cps_inner <- function(expr, env, k) {
     if (length(expr) != 2) {
       stop("load requires exactly 1 argument: (load \"path\")")
     }
-    return(rye_eval_cps(expr[[2]], env, function(path) {
-      path <- rye_strip_src(path)
-      if (!is.character(path) || length(path) != 1) {
-        stop("load requires a single file path string")
+    path <- rye_eval_inner(expr[[2]], env)
+    path <- rye_strip_src(path)
+    if (!is.character(path) || length(path) != 1) {
+      stop("load requires a single file path string")
+    }
+    if (!grepl("[/\\\\]", path) && rye_module_exists(path, env = env)) {
+      return(NULL)
+    }
+    has_separator <- grepl("[/\\\\]", path)
+    if (!has_separator) {
+      stdlib_path <- rye_resolve_stdlib_path(path)
+      if (!is.null(stdlib_path)) {
+        return(rye_strip_src(rye_load_file(stdlib_path, env)))
       }
-      if (!grepl("[/\\\\]", path) && rye_module_exists(path, env = env)) {
-        return(rye_call_k(k, NULL))
+      if (file.exists(path)) {
+        return(rye_strip_src(rye_load_file(path, env)))
       }
-      has_separator <- grepl("[/\\\\]", path)
-      if (!has_separator) {
-        stdlib_path <- rye_resolve_stdlib_path(path)
-        if (!is.null(stdlib_path)) {
-          return(rye_call_k(k, rye_strip_src(rye_load_file(stdlib_path, env))))
-        }
-        if (file.exists(path)) {
-          return(rye_call_k(k, rye_strip_src(rye_load_file(path, env))))
-        }
-        stop(sprintf("File not found: %s", path))
-      }
-      rye_call_k(k, rye_strip_src(rye_load_file(path, env)))
-    }))
+      stop(sprintf("File not found: %s", path))
+    }
+    return(rye_strip_src(rye_load_file(path, env)))
   }
 
   # module - define a module with explicit exports
@@ -332,15 +309,14 @@ rye_eval_cps_inner <- function(expr, env, k) {
         exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
         rye_module_update_exports(module_name, exports, registry_env = env)
       }
-      return(rye_call_k(k, NULL))
+      return(NULL)
     }
-    return(rye_eval_seq_cps(body_exprs, module_env, function(value) {
-      if (export_all) {
-        exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
-        rye_module_update_exports(module_name, exports, registry_env = env)
-      }
-      rye_call_k(k, NULL)
-    }))
+    result <- rye_eval_seq(body_exprs, module_env)
+    if (export_all) {
+      exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
+      rye_module_update_exports(module_name, exports, registry_env = env)
+    }
+    return(result)
   }
 
   # import - load module and attach exports
@@ -369,7 +345,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
     }
 
     rye_module_attach(module_name, env)
-    return(rye_call_k(k, NULL))
+    return(NULL)
   }
 
   # lambda - function creation
@@ -607,15 +583,15 @@ rye_eval_cps_inner <- function(expr, env, k) {
       attr(fn, "rye_doc") <- list(description = docstring)
     }
 
-    return(rye_call_k(k, fn))
+    return(fn)
   }
 
   # begin - sequence of expressions
   if (is.symbol(op) && as.character(op) == "begin") {
     if (length(expr) == 1) {
-      return(rye_call_k(k, NULL))
+      return(NULL)
     }
-    return(rye_eval_seq_cps(as.list(expr)[-1], env, k))
+    return(rye_eval_seq(as.list(expr)[-1], env))
   }
 
   # ~ - formula (don't evaluate arguments)
@@ -630,7 +606,7 @@ rye_eval_cps_inner <- function(expr, env, k) {
       }
     }
     formula_call <- as.call(formula_parts)
-    return(rye_call_k(k, eval(formula_call, envir = env)))
+    return(eval(formula_call, envir = env))
   }
 
   # :: and ::: - package accessors (don't evaluate arguments)
@@ -662,111 +638,85 @@ rye_eval_cps_inner <- function(expr, env, k) {
 
     # Build and evaluate the call using R's :: or :::
     access_call <- as.call(list(as.symbol(as.character(op)), pkg, name))
-    return(rye_call_k(k, eval(access_call, envir = env)))
+    return(eval(access_call, envir = env))
   }
 
   # Regular function application
   # Evaluate operator
-  return(rye_eval_cps(op, env, function(fn) {
-    fn <- rye_strip_src(fn)
-    rye_eval_args_cps(expr, env, function(args_info) {
-      args <- args_info$args
-      if (length(args_info$arg_names) > 0) {
-        names(args) <- args_info$arg_names
-      }
-      rye_apply_cps(fn, args, function(value) {
-        rye_call_k(k, rye_strip_src(value))
-      })
-    })
-  }))
+  fn <- rye_eval_inner(op, env)
+  fn <- rye_strip_src(fn)
+  args_info <- rye_eval_args(expr, env)
+  args <- args_info$args
+  if (length(args_info$arg_names) > 0) {
+    names(args) <- args_info$arg_names
+  }
+  result <- rye_apply(fn, args, env)
+  return(rye_strip_src(result))
 }
 
-rye_eval_seq_cps <- function(exprs, env, k) {
+rye_eval_seq <- function(exprs, env) {
   if (length(exprs) == 0) {
-    return(rye_call_k(k, NULL))
+    return(NULL)
   }
-  step <- function(idx) {
-    if (idx >= length(exprs)) {
-      return(rye_eval_cps(exprs[[idx]], env, k))
-    }
-    rye_eval_cps(exprs[[idx]], env, function(value) {
-      value <- rye_strip_src(value)
-      step(idx + 1)
-    })
+  result <- NULL
+  for (i in seq_along(exprs)) {
+    result <- rye_eval_inner(exprs[[i]], env)
   }
-  step(1)
+  return(result)
 }
 
-rye_eval_args_cps <- function(expr, env, k) {
+rye_eval_args <- function(expr, env) {
   # Pre-allocate to avoid O(n^2) vector growing, but handle NULL values correctly
   # Note: args[[i]] <- NULL doesn't work (removes element), so we pre-allocate
   max_args <- max(0, length(expr) - 1)
   args <- vector("list", max_args)
   arg_names <- character(max_args)
   arg_idx <- 1
-  step <- function(i) {
-    if (i > length(expr)) {
-      # Trim to actual size
-      actual_size <- arg_idx - 1
-      if (actual_size == 0) {
-        return(rye_call_k(k, list(args = list(), arg_names = character(0))))
-      }
-      args <- args[1:actual_size]
-      arg_names <- arg_names[1:actual_size]
-      return(rye_call_k(k, list(args = args, arg_names = arg_names)))
-    }
+
+  i <- 2
+  while (i <= length(expr)) {
     arg_expr <- expr[[i]]
     if (inherits(arg_expr, "rye_keyword")) {
       if (i + 1 > length(expr)) {
         stop(sprintf("Keyword :%s requires a value", arg_expr))
       }
       keyword_name <- as.character(arg_expr)
-      return(rye_eval_cps(expr[[i + 1]], env, function(value) {
-        args[[arg_idx]] <<- rye_strip_src(value)
-        arg_names[[arg_idx]] <<- keyword_name
-        arg_idx <<- arg_idx + 1
-        step(i + 2)
-      }))
+      value <- rye_eval_inner(expr[[i + 1]], env)
+      args[[arg_idx]] <- rye_strip_src(value)
+      arg_names[[arg_idx]] <- keyword_name
+      arg_idx <- arg_idx + 1
+      i <- i + 2
+    } else {
+      value <- rye_eval_inner(arg_expr, env)
+      args[[arg_idx]] <- rye_strip_src(value)
+      arg_names[[arg_idx]] <- ""
+      arg_idx <- arg_idx + 1
+      i <- i + 1
     }
-    rye_eval_cps(arg_expr, env, function(value) {
-      args[[arg_idx]] <<- rye_strip_src(value)
-      arg_names[[arg_idx]] <<- ""
-      arg_idx <<- arg_idx + 1
-      step(i + 1)
-    })
   }
-  step(2)
+
+  # Trim to actual size
+  actual_size <- arg_idx - 1
+  if (actual_size == 0) {
+    return(list(args = list(), arg_names = character(0)))
+  }
+  args <- args[1:actual_size]
+  arg_names <- arg_names[1:actual_size]
+  return(list(args = args, arg_names = arg_names))
 }
 
-rye_apply_cps <- function(fn, args, k) {
-  if (inherits(fn, "rye_builtin_callcc")) {
-    if (length(args) != 1) {
-      stop("call/cc requires exactly 1 argument")
-    }
-    return(rye_apply_callcc_cps(args[[1]], k))
-  }
-  if (inherits(fn, "rye_continuation")) {
-    if (length(args) != 1) {
-      stop("continuation requires exactly 1 argument")
-    }
-    return(rye_call_k(fn$k, args[[1]]))
-  }
+rye_apply <- function(fn, args, env) {
   if (inherits(fn, "rye_closure")) {
-    return(rye_apply_closure_cps(fn, args, k))
+    return(rye_apply_closure(fn, args, env))
   }
   if (!is.function(fn)) {
     stop("attempt to call non-function")
   }
   result <- rye_do_call(fn, args)
-  rye_call_k(k, result)
+  return(result)
 }
 
-rye_apply_callcc_cps <- function(proc, k) {
-  cont <- rye_make_continuation(k)
-  rye_apply_cps(proc, list(cont), k)
-}
-
-rye_apply_closure_cps <- function(fn, args, k) {
+rye_apply_closure <- function(fn, args, env) {
   info <- attr(fn, "rye_closure")
   if (is.null(info)) {
     stop("invalid rye closure")
@@ -810,50 +760,57 @@ rye_apply_closure_cps <- function(fn, args, k) {
     }
   }
 
-  bind_defaults <- function(idx) {
-    param_specs <- info$param_specs
-    if (is.null(param_specs)) {
-      param_specs <- lapply(info$params, function(name) {
-        list(type = "name", formal = name, pattern = NULL, display = name)
-      })
-    }
-    if (idx > length(param_specs)) {
-      if (has_rest) {
-        rest_spec <- info$rest_param_spec
-        if (is.null(rest_spec)) {
-          assign(info$rest_param, rest_args, envir = fn_env)
-        } else if (identical(rest_spec$type, "pattern")) {
-          rye_destructure_bind(rest_spec$pattern, rest_args, fn_env, mode = "define")
-        } else {
-          assign(rest_spec$name, rest_args, envir = fn_env)
-        }
-      }
-      return(rye_eval_seq_cps(info$body_exprs, fn_env, k))
-    }
+  # Bind parameters with defaults
+  param_specs <- info$param_specs
+  if (is.null(param_specs)) {
+    param_specs <- lapply(info$params, function(name) {
+      list(type = "name", formal = name, pattern = NULL, display = name)
+    })
+  }
+
+  for (idx in seq_along(param_specs)) {
     spec <- param_specs[[idx]]
     name <- spec$formal
     display <- spec$display
     if (is.null(display) || !nzchar(display)) {
       display <- name
     }
-    bind_value <- function(value) {
+
+    if (name %in% matched_names) {
+      value <- matched_args[[name]]
       value <- rye_strip_src(value)
       if (identical(spec$type, "pattern")) {
         rye_destructure_bind(spec$pattern, value, fn_env, mode = "define")
       } else {
         assign(name, value, envir = fn_env)
       }
-      bind_defaults(idx + 1)
+    } else {
+      default_expr <- info$defaults[[name]][[1]]
+      if (inherits(default_expr, "rye_missing_default")) {
+        stop(sprintf("lambda missing argument: %s", display))
+      }
+      value <- rye_eval_inner(default_expr, fn_env)
+      value <- rye_strip_src(value)
+      if (identical(spec$type, "pattern")) {
+        rye_destructure_bind(spec$pattern, value, fn_env, mode = "define")
+      } else {
+        assign(name, value, envir = fn_env)
+      }
     }
-    if (name %in% matched_names) {
-      return(bind_value(matched_args[[name]]))
-    }
-    default_expr <- info$defaults[[name]][[1]]
-    if (inherits(default_expr, "rye_missing_default")) {
-      stop(sprintf("lambda missing argument: %s", display))
-    }
-    rye_eval_cps(default_expr, fn_env, bind_value)
   }
 
-  bind_defaults(1)
+  # Bind rest parameter if present
+  if (has_rest) {
+    rest_spec <- info$rest_param_spec
+    if (is.null(rest_spec)) {
+      assign(info$rest_param, rest_args, envir = fn_env)
+    } else if (identical(rest_spec$type, "pattern")) {
+      rye_destructure_bind(rest_spec$pattern, rest_args, fn_env, mode = "define")
+    } else {
+      assign(rest_spec$name, rest_args, envir = fn_env)
+    }
+  }
+
+  # Evaluate body expressions
+  return(rye_eval_seq(info$body_exprs, fn_env))
 }

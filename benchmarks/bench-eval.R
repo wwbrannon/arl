@@ -71,7 +71,7 @@ cat("\n")
 cat("Benchmark 4: Recursive functions\n")
 env4 <- setup_env()
 
-# Fibonacci (non-tail recursive)
+# Fibonacci
 rye:::rye_eval_text('
 (define fib (lambda (n)
   (if (< n 2)
@@ -79,7 +79,7 @@ rye:::rye_eval_text('
     (+ (fib (- n 1)) (fib (- n 2))))))
 ', env4)
 
-# Factorial (tail recursive)
+# Factorial
 rye:::rye_eval_text('
 (define fact-helper (lambda (n acc)
   (if (= n 0)
@@ -101,37 +101,8 @@ bench_recursive <- benchmark_component(
 print(bench_recursive[, c("expression", "median", "mem_alloc")])
 cat("\n")
 
-# Benchmark 5: Tail-call vs non-tail patterns
-cat("Benchmark 5: Tail-call optimization\n")
-env5 <- setup_env()
-
-rye:::rye_eval_text('
-(define non-tail (lambda (n)
-  (if (= n 0)
-    0
-    (+ 1 (non-tail (- n 1))))))
-
-(define tail-helper (lambda (n acc)
-  (if (= n 0)
-    acc
-    (tail-helper (- n 1) (+ acc 1)))))
-
-(define tail (lambda (n)
-  (tail-helper n 0)))
-', env5)
-
-bench_tail <- benchmark_component(
-  "Non-tail (50)" = rye_eval(rye_read("(non-tail 50)")[[1]], env5),
-  "Tail (100)" = rye_eval(rye_read("(tail 100)")[[1]], env5),
-  "Tail (500)" = rye_eval(rye_read("(tail 500)")[[1]], env5),
-  iterations = 50,
-  check = FALSE
-)
-print(bench_tail[, c("expression", "median", "mem_alloc")])
-cat("\n")
-
-# Benchmark 6: Real workloads
-cat("Benchmark 6: Real workloads\n")
+# Benchmark 5: Real workloads
+cat("Benchmark 5: Real workloads\n")
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0) {
@@ -149,8 +120,8 @@ if (length(real_workloads) > 0) {
 }
 cat("\n")
 
-# Benchmark 7: Closures and environments
-cat("Benchmark 7: Closures and environments\n")
+# Benchmark 6: Closures and environments
+cat("Benchmark 6: Closures and environments\n")
 env7 <- setup_env()
 load_binding(env7)
 
@@ -166,7 +137,7 @@ bench_closures <- benchmark_component(
   "Create closure" = rye_eval(rye_read("(make-counter)")[[1]], env7),
   "Call closure" = {
     counter <- rye_eval(rye_read("(make-counter)")[[1]], env7)
-    rye:::rye_apply_cps(counter, list(), function(x) x)
+    counter()
   },
   iterations = 1000,
   check = FALSE

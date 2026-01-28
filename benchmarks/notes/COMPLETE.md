@@ -30,7 +30,7 @@ The complete performance profiling infrastructure for Rye has been successfully 
 1. `bench-tokenizer.R` - Strings, nesting, mixed content, escapes, real files
 2. `bench-parser.R` - Flat/nested lists, quote sugar, NULL handling
 3. `bench-macro.R` - Simple/complex macros, nested expansion, hygiene
-4. `bench-eval.R` - Arithmetic, function calls, recursion, tail-calls, closures
+4. `bench-eval.R` - Arithmetic, function calls, recursion, closures
 5. `bench-stdlib.R` - List ops, higher-order functions, composition, strings
 6. `bench-e2e.R` - Full pipeline with component breakdown
 

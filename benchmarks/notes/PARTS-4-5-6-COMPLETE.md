@@ -30,8 +30,7 @@ Created profiling scripts that use `profvis` to generate interactive HTML flame 
    - Multiple macro tree walks
 
 4. **profile-eval.R** - Evaluator profiling
-   - Fibonacci (non-tail recursive) - tests CPS overhead
-   - Factorial (tail recursive) - tests tail-call optimization
+   - Fibonacci - tests evaluator overhead
    - Many function arguments - tests arg list growing
    - Higher-order functions (map)
    - Closure creation and invocation

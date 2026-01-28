@@ -35,8 +35,8 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$values <- rye_stdlib_values
   env$`values?` <- rye_values_p
   env$`call-with-values` <- rye_stdlib_call_with_values
-  env$`call/cc` <- rye_make_builtin_callcc()
-  env$`call-with-current-continuation` <- env$`call/cc`
+  env$`call/cc` <- callCC
+  env$`call-with-current-continuation` <- callCC
 
   # Variadic arithmetic operators
   env$`+` <- rye_stdlib_add

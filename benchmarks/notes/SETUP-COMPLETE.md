@@ -66,7 +66,6 @@ All benchmark scripts created and tested:
    - Function calls (1, 5, 10 arguments)
    - Special forms (if, define, lambda, begin)
    - Recursive functions (fibonacci, factorial)
-   - Tail-call vs non-tail patterns
    - Closures and environments
    - Real workloads
 
