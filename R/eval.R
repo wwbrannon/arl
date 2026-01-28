@@ -562,7 +562,8 @@ rye_eval_cps_inner <- function(expr, env, k) {
     # Capture the current environment as the parent
     parent_env <- env
 
-    fn <- function() {
+    # Define function with ... to satisfy codetools when list(...) is used
+    fn <- function(...) {
       # Create new environment for function execution
       fn_env <- new.env(parent = parent_env)
 

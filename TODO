@@ -1,9 +1,10 @@
-o) failing benchmark results e2e
-o) we have a code-smell TODO from `make check`
+o) performance optimizations: use profiling and benchmarking
+    o) we should probably take out full call/cc and just use R's downward-only
+    o) tail-call optimization (will also fix failing profile case)
+    o) use R's bytecode compiler
+    o) other things
 
-o) tail-call optimization (will also fix failing profile case)
-
-o) performance optimizations: use profiling and benchmarking (once fixed)
+o) update the examples vignette to dynamically pull in the examples
 
 o) should the macro and module registries really be user-visible variables?
 
