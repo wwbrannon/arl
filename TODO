@@ -1,3 +1,5 @@
+o) should the macro and module registries really be user-visible variables?
+
 o) Can we rewrite any of the current code in rye? Any functionality that can be streamlined?
 * Stdlib
 
