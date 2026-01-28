@@ -54,8 +54,8 @@ bench_higher_order <- benchmark_component(
   "map (1000)" = rye_eval(rye_read("(map inc list1000)")[[1]], env2),
   "filter (10)" = rye_eval(rye_read("(filter even? list10)")[[1]], env2),
   "filter (100)" = rye_eval(rye_read("(filter even? list100)")[[1]], env2),
-  "reduce (10)" = rye_eval(rye_read("(reduce add 0 list10)")[[1]], env2),
-  "reduce (100)" = rye_eval(rye_read("(reduce add 0 list100)")[[1]], env2),
+  "reduce (10)" = rye_eval(rye_read("(reduce add list10 0)")[[1]], env2),
+  "reduce (100)" = rye_eval(rye_read("(reduce add list100 0)")[[1]], env2),
   iterations = 100,
   check = FALSE
 )
@@ -133,13 +133,13 @@ env7 <- setup_env()
 
 rye:::rye_eval_text('(define list10 (range 1 10))', env7)
 rye:::rye_eval_text('(define inc (lambda (x) (+ x 1)))', env7)
-rye:::rye_eval_text('(define even? (lambda (x) (= (mod x 2) 0)))', env7)
+rye:::rye_eval_text('(define even? (lambda (x) (= (%% x 2) 0)))', env7)
 rye:::rye_eval_text('(define add (lambda (a b) (+ a b)))', env7)
 
 bench_nested <- benchmark_component(
   "map then filter" = rye_eval(rye_read("(filter even? (map inc list10))")[[1]], env7),
   "filter then map" = rye_eval(rye_read("(map inc (filter even? list10))")[[1]], env7),
-  "map, filter, reduce" = rye_eval(rye_read("(reduce add 0 (filter even? (map inc list10)))")[[1]], env7),
+  "map, filter, reduce" = rye_eval(rye_read("(reduce add (filter even? (map inc list10)) 0)")[[1]], env7),
   iterations = 500,
   check = FALSE
 )
