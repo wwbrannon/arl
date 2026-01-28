@@ -245,6 +245,7 @@ rye_promise_force <- function(x) {
   get(rye_promise_value_key, envir = x, inherits = FALSE)
 }
 
+#' @export
 print.rye_promise <- function(x, ...) {
   cat("<promise>\n")
   invisible(x)
