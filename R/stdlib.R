@@ -92,13 +92,15 @@ rye_load_stdlib_base <- function(env = NULL) {
     }
     # First try the stdlib environment (where wrappers are)
     fn_obj <- get0(fn_name, envir = stdlib_env, inherits = FALSE, ifnotfound = NULL)
+    if (!is.null(fn_obj) && !is.function(fn_obj)) fn_obj <- NULL
     # Then try parent frames
     if (is.null(fn_obj)) {
       for (i in 0:5) {
         tryCatch({
           frame_env <- parent.frame(i + 1)
           fn_obj <- get0(fn_name, envir = frame_env, inherits = TRUE, ifnotfound = NULL)
-          if (!is.null(fn_obj)) break
+          if (!is.null(fn_obj) && is.function(fn_obj)) break
+          fn_obj <- NULL
         }, error = function(e) NULL)
       }
     }
