@@ -1,9 +1,9 @@
-o) failing benchmark results for stdlib and e2e
-o) not all the profiles run either
+o) failing benchmark results e2e
 o) we have a code-smell TODO from `make check`
 
+o) tail-call optimization (will also fix failing profile case)
+
 o) performance optimizations: use profiling and benchmarking (once fixed)
-o) TCO?
 
 o) should the macro and module registries really be user-visible variables?
 
