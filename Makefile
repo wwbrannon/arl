@@ -43,6 +43,38 @@ test-file: ## Run a single test file (usage: make test-file FILE=test-parser)
 	fi
 	R -q -e "devtools::load_all(); testthat::set_max_fails(Inf); testthat::test_file('tests/testthat/$(FILE).R')"
 
+.PHONY: bench
+bench: ## Run all benchmarks
+	R -q -e "source('inst/benchmarks/run-all-benchmarks.R')"
+
+.PHONY: bench-component
+bench-component: ## Run single component benchmark (usage: make bench-component COMPONENT=tokenizer)
+	@if [ -z "$(COMPONENT)" ]; then \
+		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval, stdlib, e2e"; \
+		exit 1; \
+	fi
+	R -q -e "source('inst/benchmarks/bench-$(COMPONENT).R')"
+
+.PHONY: profile
+profile: ## Generate profiling reports
+	R -q -e "source('inst/benchmarks/run-all-profiles.R')"
+
+.PHONY: profile-component
+profile-component: ## Profile single component (usage: make profile-component COMPONENT=tokenizer)
+	@if [ -z "$(COMPONENT)" ]; then \
+		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval"; \
+		exit 1; \
+	fi
+	R -q -e "source('inst/benchmarks/profile-$(COMPONENT).R')"
+
+.PHONY: bench-compare
+bench-compare: ## Compare benchmark results (usage: make bench-compare OLD=baseline.rds NEW=optimized.rds)
+	@if [ -z "$(OLD)" ] || [ -z "$(NEW)" ]; then \
+		echo "Error: OLD and NEW parameters required"; \
+		exit 1; \
+	fi
+	R -q -e "source('inst/benchmarks/compare-results.R'); compare_benchmarks('$(OLD)', '$(NEW)')"
+
 .PHONY: clean
 clean: ## Remove build artifacts
 	rm -f rye_*.tar.gz

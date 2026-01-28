@@ -21,6 +21,8 @@ Suggests:
     covr (>= 3.6.0),
     lintr (>= 3.3.0),
     withr (>= 2.5.0),
+    profvis (>= 0.3.7),
+    bench (>= 1.1.2),
     knitr,
     rmarkdown
 URL: https://wwbrannon.github.io/rye, https://github.com/wwbrannon/rye
