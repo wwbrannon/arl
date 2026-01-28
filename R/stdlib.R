@@ -38,6 +38,14 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$`call/cc` <- rye_make_builtin_callcc()
   env$`call-with-current-continuation` <- env$`call/cc`
 
+  # Variadic arithmetic operators
+  env$`+` <- rye_stdlib_add
+  env$`*` <- rye_stdlib_multiply
+  env$`-` <- rye_stdlib_subtract
+  env$`/` <- rye_stdlib_divide
+  env$min <- rye_stdlib_min
+  env$max <- rye_stdlib_max
+
   # Output
   env$display <- rye_stdlib_display
   env$println <- rye_stdlib_display
@@ -312,6 +320,47 @@ rye_stdlib_deparse_single <- function(x) {
 
 rye_stdlib_format_value <- function(x) {
   rye_env_format_value(parent.frame(), x)
+}
+
+# Variadic arithmetic operators
+rye_stdlib_add <- function(...) {
+  args <- list(...)
+  if (length(args) == 0) return(0)
+  if (length(args) == 1) return(args[[1]])
+  Reduce(base::`+`, args)
+}
+
+rye_stdlib_multiply <- function(...) {
+  args <- list(...)
+  if (length(args) == 0) return(1)
+  if (length(args) == 1) return(args[[1]])
+  Reduce(base::`*`, args)
+}
+
+rye_stdlib_subtract <- function(...) {
+  args <- list(...)
+  if (length(args) == 0) stop("- requires at least one argument")
+  if (length(args) == 1) return(-args[[1]])
+  Reduce(base::`-`, args)
+}
+
+rye_stdlib_divide <- function(...) {
+  args <- list(...)
+  if (length(args) == 0) stop("/ requires at least one argument")
+  if (length(args) == 1) return(1 / args[[1]])
+  Reduce(base::`/`, args)
+}
+
+rye_stdlib_min <- function(...) {
+  args <- list(...)
+  if (length(args) == 0) stop("min requires at least one argument")
+  do.call(base::min, args)
+}
+
+rye_stdlib_max <- function(...) {
+  args <- list(...)
+  if (length(args) == 0) stop("max requires at least one argument")
+  do.call(base::max, args)
 }
 
 attr(rye_stdlib_apply, "rye_doc") <- list(
