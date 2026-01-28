@@ -13,14 +13,15 @@ rye_load_stdlib(env = NULL)
 An environment containing the Rye standard library
 }
 \description{
-Loads the base Rye stdlib functions and Rye stdlib source files from
+Loads the base Rye stdlib functions and core Rye stdlib modules from
 the package's \code{inst/rye} directory.
 }
 \details{
 The returned environment uses \code{baseenv()} as its parent so that core R
-functions remain available alongside Rye helpers.
+functions remain available alongside Rye helpers. Additional Rye stdlib
+modules can be loaded via \verb{(import ...)}.
 }
 \examples{
 env <- rye_load_stdlib()
-env$`+`(1, 2)
+rye_eval(rye_read('(+ 1 2)'), env)
 }

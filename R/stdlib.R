@@ -12,7 +12,7 @@
 #' @return An environment containing the Rye standard library
 #' @examples
 #' env <- rye_load_stdlib()
-#' env$`+`(1, 2)
+#' rye_eval(rye_read('(+ 1 2)'), env)
 #' @importFrom stats setNames
 #' @export
 rye_load_stdlib <- function(env = NULL) {

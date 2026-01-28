@@ -4,7 +4,7 @@
 \alias{is_macro}
 \title{Check if a symbol names a macro}
 \usage{
-is_macro(name)
+is_macro(name, env = parent.frame())
 }
 \arguments{
 \item{name}{Symbol to check}

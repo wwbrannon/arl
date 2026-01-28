@@ -4,7 +4,7 @@
 \alias{get_macro}
 \title{Get a macro expander function}
 \usage{
-get_macro(name)
+get_macro(name, env = parent.frame())
 }
 \arguments{
 \item{name}{Symbol naming the macro}
