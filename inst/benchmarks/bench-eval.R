@@ -16,7 +16,7 @@ setup_env <- function() {
 
 # Helper to load binding module (for let, let*, letrec)
 load_binding <- function(env) {
-  rye:::rye_eval_text('(import-module "binding")', env)
+  rye:::rye_eval_text('(import binding)', env)
   invisible(env)
 }
 

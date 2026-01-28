@@ -44,7 +44,7 @@ setup_env <- function() {
 # Helper to load modules
 load_modules <- function(env, modules) {
   for (mod in modules) {
-    rye:::rye_eval_text(paste0('(import-module "', mod, '")'), env)
+    rye:::rye_eval_text(paste0('(import "', mod, '")'), env)
   }
   invisible(env)
 }
