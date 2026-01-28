@@ -41,6 +41,14 @@ setup_env <- function() {
   env
 }
 
+# Helper to load modules
+load_modules <- function(env, modules) {
+  for (mod in modules) {
+    rye:::rye_eval_text(paste0('(import-module "', mod, '")'), env)
+  }
+  invisible(env)
+}
+
 # Benchmark 1: Synthetic workloads
 cat("Benchmark 1: Synthetic workloads (full pipeline)\n")
 
@@ -57,6 +65,7 @@ bench_synthetic <- benchmark_component(
   },
   "Medium" = {
     env <- setup_env()
+    load_modules(env, "binding")  # Needed for let
     rye:::rye_eval_text(workloads$medium, env)
   },
   "Deep recursion" = {
@@ -85,7 +94,7 @@ if (length(real_workloads) > 0) {
     },
     "macro-examples.rye" = {
       env <- setup_env()
-      rye:::import_stdlib_modules(env, c("control", "binding"))
+      load_modules(env, c("control", "binding"))
       rye:::rye_eval_text(real_workloads$macro_examples, env)
     },
     iterations = 10,
@@ -104,7 +113,7 @@ if (length(real_workloads) > 0) {
     timings <- replicate(10, {
       env <- setup_env()
       if (name == "macro_examples") {
-        rye:::import_stdlib_modules(env, c("control", "binding"))
+        load_modules(env, c("control", "binding"))
       }
       time_components(real_workloads[[name]], env)
     }, simplify = FALSE)

@@ -86,19 +86,42 @@ rye_src_inherit <- function(expr, from) {
 }
 
 rye_strip_src <- function(value) {
-  if (is.null(value)) {
+  # Fast paths for common cases
+  if (is.null(value) || is.symbol(value)) {
     return(value)
   }
-  if (is.symbol(value)) {
+
+  # Check for rye_src attribute
+  has_src_attr <- !is.null(attr(value, "rye_src", exact = TRUE))
+
+  # For non-recursive types (atomic vectors, environments, functions, etc.)
+  # just remove the attribute if present and return
+  if (!is.call(value) && (!is.list(value) || !is.null(attr(value, "class", exact = TRUE)))) {
+    if (has_src_attr) {
+      attr(value, "rye_src") <- NULL
+    }
     return(value)
   }
-  if (!is.null(attr(value, "rye_src", exact = TRUE))) {
+
+  # For calls and plain lists, we need to recurse
+  # But first check if there's anything to do
+  if (!has_src_attr && length(value) == 0) {
+    # Empty call/list with no attribute - nothing to do
+    return(value)
+  }
+
+  # Remove attribute from current level
+  if (has_src_attr) {
     attr(value, "rye_src") <- NULL
   }
+
+  # Recursively strip children
   if (is.call(value)) {
     stripped <- lapply(as.list(value), rye_strip_src)
     return(as.call(stripped))
   }
+
+  # Plain list
   if (is.list(value) && is.null(attr(value, "class", exact = TRUE))) {
     stripped <- lapply(value, rye_strip_src)
     if (!is.null(names(value))) {
@@ -106,6 +129,7 @@ rye_strip_src <- function(value) {
     }
     return(stripped)
   }
+
   value
 }
 

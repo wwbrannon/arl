@@ -45,7 +45,7 @@ rye:::rye_eval_text('(define list10 (list 1 2 3 4 5 6 7 8 9 10))', env2)
 rye:::rye_eval_text('(define list100 (range 1 100))', env2)
 rye:::rye_eval_text('(define list1000 (range 1 1000))', env2)
 rye:::rye_eval_text('(define inc (lambda (x) (+ x 1)))', env2)
-rye:::rye_eval_text('(define even? (lambda (x) (= (mod x 2) 0)))', env2)
+rye:::rye_eval_text('(define even? (lambda (x) (= (%% x 2) 0)))', env2)
 rye:::rye_eval_text('(define add (lambda (a b) (+ a b)))', env2)
 
 bench_higher_order <- benchmark_component(
