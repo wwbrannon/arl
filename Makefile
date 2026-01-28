@@ -45,7 +45,7 @@ test-file: ## Run a single test file (usage: make test-file FILE=test-parser)
 
 .PHONY: bench
 bench: ## Run all benchmarks
-	R -q -e "source('inst/benchmarks/run-all-benchmarks.R')"
+	R -q -e "source('benchmarks/run-all-benchmarks.R')"
 
 .PHONY: bench-component
 bench-component: ## Run single component benchmark (usage: make bench-component COMPONENT=tokenizer)
@@ -53,11 +53,11 @@ bench-component: ## Run single component benchmark (usage: make bench-component 
 		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval, stdlib, e2e"; \
 		exit 1; \
 	fi
-	R -q -e "source('inst/benchmarks/bench-$(COMPONENT).R')"
+	R -q -e "source('benchmarks/bench-$(COMPONENT).R')"
 
 .PHONY: profile
 profile: ## Generate profiling reports
-	R -q -e "source('inst/benchmarks/run-all-profiles.R')"
+	R -q -e "source('benchmarks/run-all-profiles.R')"
 
 .PHONY: profile-component
 profile-component: ## Profile single component (usage: make profile-component COMPONENT=tokenizer)
@@ -65,7 +65,7 @@ profile-component: ## Profile single component (usage: make profile-component CO
 		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval"; \
 		exit 1; \
 	fi
-	R -q -e "source('inst/benchmarks/profile-$(COMPONENT).R')"
+	R -q -e "source('benchmarks/profile-$(COMPONENT).R')"
 
 .PHONY: bench-compare
 bench-compare: ## Compare benchmark results (usage: make bench-compare OLD=baseline.rds NEW=optimized.rds)
@@ -73,7 +73,7 @@ bench-compare: ## Compare benchmark results (usage: make bench-compare OLD=basel
 		echo "Error: OLD and NEW parameters required"; \
 		exit 1; \
 	fi
-	R -q -e "source('inst/benchmarks/compare-results.R'); compare_benchmarks('$(OLD)', '$(NEW)')"
+	R -q -e "source('benchmarks/compare-results.R'); compare_benchmarks('$(OLD)', '$(NEW)')"
 
 .PHONY: clean
 clean: ## Remove build artifacts

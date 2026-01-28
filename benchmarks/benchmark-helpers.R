@@ -40,9 +40,9 @@ benchmark_component <- function(..., iterations = NULL, check = TRUE) {
 #'
 #' @param expr Expression to profile
 #' @param name Name for the output file
-#' @param output_dir Directory for HTML output (default: inst/benchmarks/profiles/)
+#' @param output_dir Directory for HTML output (default: benchmarks/profiles/)
 #' @return Path to generated HTML file
-profile_component <- function(expr, name, output_dir = "inst/benchmarks/profiles") {
+profile_component <- function(expr, name, output_dir = "benchmarks/profiles") {
   if (!requireNamespace("profvis", quietly = TRUE)) {
     stop("Package 'profvis' is required for profiling. Install with: install.packages('profvis')")
   }
@@ -134,10 +134,10 @@ load_example_workload <- function(filename) {
 #'
 #' @param results Benchmark results (list or bench::mark output)
 #' @param name Name for the results (e.g., "baseline", "optimized")
-#' @param output_dir Directory for results (default: inst/benchmarks/results/)
+#' @param output_dir Directory for results (default: benchmarks/results/)
 #' @return Path to saved RDS file
 save_benchmark_results <- function(results, name = "benchmark",
-                                    output_dir = "inst/benchmarks/results") {
+                                    output_dir = "benchmarks/results") {
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }

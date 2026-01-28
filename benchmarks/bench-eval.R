@@ -2,8 +2,8 @@
 # Benchmarks for the CPS evaluator component
 
 library(rye)
-source("inst/benchmarks/benchmark-helpers.R")
-source("inst/benchmarks/workloads.R")
+source("benchmarks/benchmark-helpers.R")
+source("benchmarks/workloads.R")
 
 cat("=== Evaluator Benchmarks ===\n\n")
 

@@ -2,8 +2,8 @@
 # Benchmarks for the macro expansion system
 
 library(rye)
-source("inst/benchmarks/benchmark-helpers.R")
-source("inst/benchmarks/workloads.R")
+source("benchmarks/benchmark-helpers.R")
+source("benchmarks/workloads.R")
 
 cat("=== Macro Benchmarks ===\n\n")
 

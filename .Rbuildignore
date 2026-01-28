@@ -20,6 +20,7 @@
 ^doc$
 ^Meta$
 ^tools$
+^benchmarks$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^LICENSE\.md$

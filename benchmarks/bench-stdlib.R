@@ -2,8 +2,8 @@
 # Benchmarks for stdlib functions (list ops, higher-order functions, etc.)
 
 library(rye)
-source("inst/benchmarks/benchmark-helpers.R")
-source("inst/benchmarks/workloads.R")
+source("benchmarks/benchmark-helpers.R")
+source("benchmarks/workloads.R")
 
 cat("=== Standard Library Benchmarks ===\n\n")
 

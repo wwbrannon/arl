@@ -14,7 +14,7 @@ Parts 7 and 8 of the performance profiling plan have been successfully implement
 1. **`make bench`** - Run all benchmarks
    ```bash
    make bench
-   # Runs inst/benchmarks/run-all-benchmarks.R
+   # Runs benchmarks/run-all-benchmarks.R
    # Generates consolidated results with summary
    # Saves timestamped RDS files
    ```
@@ -32,9 +32,9 @@ Parts 7 and 8 of the performance profiling plan have been successfully implement
 3. **`make profile`** - Generate all profiling reports
    ```bash
    make profile
-   # Runs inst/benchmarks/run-all-profiles.R
+   # Runs benchmarks/run-all-profiles.R
    # Generates HTML flame graphs for all components
-   # Output: inst/benchmarks/profiles/*.html
+   # Output: benchmarks/profiles/*.html
    ```
 
 4. **`make profile-component COMPONENT=<name>`** - Profile single component
@@ -48,8 +48,8 @@ Parts 7 and 8 of the performance profiling plan have been successfully implement
 5. **`make bench-compare OLD=<file> NEW=<file>`** - Compare benchmark results
    ```bash
    make bench-compare \
-       OLD=inst/benchmarks/results/baseline-20260127-120000.rds \
-       NEW=inst/benchmarks/results/optimized-20260127-130000.rds
+       OLD=benchmarks/results/baseline-20260127-120000.rds \
+       NEW=benchmarks/results/optimized-20260127-130000.rds
 
    # Shows:
    # - Regressions (>5% slower)
@@ -86,8 +86,8 @@ make profile-component COMPONENT=eval
 
 # Compare before/after optimization
 make bench-compare \
-    OLD=inst/benchmarks/results/baseline-20260127-211700.rds \
-    NEW=inst/benchmarks/results/optimized-20260127-213000.rds
+    OLD=benchmarks/results/baseline-20260127-211700.rds \
+    NEW=benchmarks/results/optimized-20260127-213000.rds
 ```
 
 ## Part 8: Test Infrastructure ✅
@@ -171,8 +171,8 @@ The test infrastructure includes several robustness features:
 1. **Working Directory Agnostic**
    - Helper function `find_bench_dir()` locates benchmarks from:
      - Installed package: `system.file("benchmarks", package = "rye")`
-     - Source directory: `inst/benchmarks`
-     - Test directory: `../../inst/benchmarks`
+     - Source directory: `benchmarks`
+     - Test directory: `../../benchmarks`
 
 2. **Graceful Degradation**
    - Uses `skip_if_not_installed("bench")` and `skip_if_not_installed("profvis")`
@@ -193,15 +193,15 @@ The test infrastructure includes several robustness features:
 
 Updated these files to work from different working directories:
 
-- **inst/benchmarks/compare-results.R**
-- **inst/benchmarks/analyze-results.R**
-- **inst/benchmarks/workloads.R**
+- **benchmarks/compare-results.R**
+- **benchmarks/analyze-results.R**
+- **benchmarks/workloads.R**
 
 Each now includes:
 ```r
 # Source benchmark helpers (works from different working directories)
-if (file.exists("inst/benchmarks/benchmark-helpers.R")) {
-  source("inst/benchmarks/benchmark-helpers.R")
+if (file.exists("benchmarks/benchmark-helpers.R")) {
+  source("benchmarks/benchmark-helpers.R")
 } else if (file.exists("benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {

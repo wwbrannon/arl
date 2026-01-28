@@ -2,8 +2,8 @@
 # Compare two benchmark runs to identify improvements and regressions
 
 # Source benchmark helpers (works from different working directories)
-if (file.exists("inst/benchmarks/benchmark-helpers.R")) {
-  source("inst/benchmarks/benchmark-helpers.R")
+if (file.exists("benchmarks/benchmark-helpers.R")) {
+  source("benchmarks/benchmark-helpers.R")
 } else if (file.exists("benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {
@@ -225,7 +225,7 @@ compare_benchmarks <- function(old_file, new_file, regression_threshold = 5) {
 generate_comparison_report <- function(old_file, new_file, output_file = NULL) {
   if (is.null(output_file)) {
     timestamp <- format(Sys.time(), "%Y%m%d-%H%M%S")
-    output_file <- file.path("inst/benchmarks/results", paste0("comparison-", timestamp, ".txt"))
+    output_file <- file.path("benchmarks/results", paste0("comparison-", timestamp, ".txt"))
   }
 
   # Capture output
@@ -247,7 +247,7 @@ generate_comparison_report <- function(old_file, new_file, output_file = NULL) {
 #' @param new_pattern Pattern to match new results (default: most recent non-baseline)
 #' @return Comparison data frame
 quick_compare <- function(old_pattern = "baseline", new_pattern = NULL) {
-  results_dir <- "inst/benchmarks/results"
+  results_dir <- "benchmarks/results"
   all_files <- list.files(results_dir, pattern = "\\.rds$", full.names = TRUE)
 
   # Find baseline
@@ -296,8 +296,8 @@ if (!interactive() && !exists(".comparison_loaded")) {
   cat("Example usage:\n")
   cat("  # Compare two specific files\n")
   cat("  comparison <- compare_benchmarks(\n")
-  cat("    'inst/benchmarks/results/baseline-20260127-120000.rds',\n")
-  cat("    'inst/benchmarks/results/optimized-20260127-130000.rds'\n")
+  cat("    'benchmarks/results/baseline-20260127-120000.rds',\n")
+  cat("    'benchmarks/results/optimized-20260127-130000.rds'\n")
   cat("  )\n\n")
   cat("  # Quick comparison with latest\n")
   cat("  comparison <- quick_compare()\n\n")

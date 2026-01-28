@@ -40,7 +40,7 @@ Created profiling scripts that use `profvis` to generate interactive HTML flame 
 
 5. **run-all-profiles.R** - Master profiling script
    - Runs all profiling scripts
-   - Generates HTML reports in `inst/benchmarks/profiles/`
+   - Generates HTML reports in `benchmarks/profiles/`
    - Provides summary of success/failure
    - Lists generated HTML files with sizes
 
@@ -129,18 +129,18 @@ Created powerful comparison tools for before/after analysis:
 ## Files Created
 
 ### Profiling Scripts (Part 4)
-- inst/benchmarks/profile-tokenizer.R ✅
-- inst/benchmarks/profile-parser.R ✅
-- inst/benchmarks/profile-macro.R ✅
-- inst/benchmarks/profile-eval.R ✅
-- inst/benchmarks/run-all-profiles.R ✅
+- benchmarks/profile-tokenizer.R ✅
+- benchmarks/profile-parser.R ✅
+- benchmarks/profile-macro.R ✅
+- benchmarks/profile-eval.R ✅
+- benchmarks/run-all-profiles.R ✅
 
 ### Analysis Scripts (Part 5)
-- inst/benchmarks/run-all-benchmarks.R ✅
-- inst/benchmarks/analyze-results.R ✅
+- benchmarks/run-all-benchmarks.R ✅
+- benchmarks/analyze-results.R ✅
 
 ### Comparison Scripts (Part 6)
-- inst/benchmarks/compare-results.R ✅
+- benchmarks/compare-results.R ✅
 
 ## Usage Examples
 
@@ -148,35 +148,35 @@ Created powerful comparison tools for before/after analysis:
 
 ```r
 # Profile individual components
-source("inst/benchmarks/profile-tokenizer.R")
-source("inst/benchmarks/profile-eval.R")
+source("benchmarks/profile-tokenizer.R")
+source("benchmarks/profile-eval.R")
 
 # Profile all components
-source("inst/benchmarks/run-all-profiles.R")
+source("benchmarks/run-all-profiles.R")
 
 # View generated HTML reports
-browseURL("inst/benchmarks/profiles/eval-fibonacci.html")
-browseURL("inst/benchmarks/profiles/tokenizer-large-string.html")
+browseURL("benchmarks/profiles/eval-fibonacci.html")
+browseURL("benchmarks/profiles/tokenizer-large-string.html")
 ```
 
 ### Running Benchmarks
 
 ```r
 # Run all benchmarks and generate consolidated report
-source("inst/benchmarks/run-all-benchmarks.R")
+source("benchmarks/run-all-benchmarks.R")
 
 # Run individual benchmarks
-source("inst/benchmarks/bench-tokenizer.R")
-source("inst/benchmarks/bench-eval.R")
+source("benchmarks/bench-tokenizer.R")
+source("benchmarks/bench-eval.R")
 ```
 
 ### Analyzing Results
 
 ```r
-source("inst/benchmarks/analyze-results.R")
+source("benchmarks/analyze-results.R")
 
 # Load results
-results <- load_benchmark_results("inst/benchmarks/results/baseline-20260127-211700.rds")
+results <- load_benchmark_results("benchmarks/results/baseline-20260127-211700.rds")
 
 # Analyze
 plot_breakdown(results)
@@ -189,12 +189,12 @@ extremes(results, n = 10)
 ### Comparing Results
 
 ```r
-source("inst/benchmarks/compare-results.R")
+source("benchmarks/compare-results.R")
 
 # Compare two specific runs
 comparison <- compare_benchmarks(
-  "inst/benchmarks/results/baseline-20260127-120000.rds",
-  "inst/benchmarks/results/optimized-20260127-130000.rds"
+  "benchmarks/results/baseline-20260127-120000.rds",
+  "benchmarks/results/optimized-20260127-130000.rds"
 )
 
 # Quick comparison (auto-selects latest files)

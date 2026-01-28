@@ -11,9 +11,9 @@ Parts 1, 2, and 3 of the performance profiling plan have been successfully imple
 
 ### Part 2: Benchmark Infrastructure Created ✅
 - **Directory structure**:
-  - `inst/benchmarks/` - Main directory
-  - `inst/benchmarks/results/` - RDS output files
-  - `inst/benchmarks/profiles/` - HTML profiling reports
+  - `benchmarks/` - Main directory
+  - `benchmarks/results/` - RDS output files
+  - `benchmarks/profiles/` - HTML profiling reports
 
 - **Helper files**:
   - `benchmark-helpers.R` - Core infrastructure functions:
@@ -119,37 +119,37 @@ Benchmark 5: Escape sequences
   Many escapes: 1.30 ms
 ```
 
-Results saved to: `inst/benchmarks/results/tokenizer-20260127-211113.rds`
+Results saved to: `benchmarks/results/tokenizer-20260127-211113.rds`
 
 ## Usage
 
 ### Run Individual Benchmarks
 ```r
 # Tokenizer
-source("inst/benchmarks/bench-tokenizer.R")
+source("benchmarks/bench-tokenizer.R")
 
 # Parser
-source("inst/benchmarks/bench-parser.R")
+source("benchmarks/bench-parser.R")
 
 # Macro
-source("inst/benchmarks/bench-macro.R")
+source("benchmarks/bench-macro.R")
 
 # Evaluator
-source("inst/benchmarks/bench-eval.R")
+source("benchmarks/bench-eval.R")
 
 # Standard library
-source("inst/benchmarks/bench-stdlib.R")
+source("benchmarks/bench-stdlib.R")
 
 # End-to-end
-source("inst/benchmarks/bench-e2e.R")
+source("benchmarks/bench-e2e.R")
 ```
 
 ### Analyze Results
 ```r
-source("inst/benchmarks/benchmark-helpers.R")
+source("benchmarks/benchmark-helpers.R")
 
 # Load saved results
-results <- load_benchmark_results("inst/benchmarks/results/tokenizer-20260127-211113.rds")
+results <- load_benchmark_results("benchmarks/results/tokenizer-20260127-211113.rds")
 
 # Print summary
 summarize_benchmark(results)
@@ -172,16 +172,16 @@ Still to be implemented:
 
 ## Files Created
 
-- inst/benchmarks/README.md
-- inst/benchmarks/benchmark-helpers.R
-- inst/benchmarks/workloads.R
-- inst/benchmarks/bench-tokenizer.R ✓ tested
-- inst/benchmarks/bench-parser.R
-- inst/benchmarks/bench-macro.R
-- inst/benchmarks/bench-eval.R
-- inst/benchmarks/bench-stdlib.R
-- inst/benchmarks/bench-e2e.R
-- inst/benchmarks/SETUP-COMPLETE.md (this file)
+- benchmarks/README.md
+- benchmarks/benchmark-helpers.R
+- benchmarks/workloads.R
+- benchmarks/bench-tokenizer.R ✓ tested
+- benchmarks/bench-parser.R
+- benchmarks/bench-macro.R
+- benchmarks/bench-eval.R
+- benchmarks/bench-stdlib.R
+- benchmarks/bench-e2e.R
+- benchmarks/SETUP-COMPLETE.md (this file)
 
 ## Performance Improvements Already Applied
 

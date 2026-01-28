@@ -2,8 +2,8 @@
 # Benchmarks for the S-expression parsing component
 
 library(rye)
-source("inst/benchmarks/benchmark-helpers.R")
-source("inst/benchmarks/workloads.R")
+source("benchmarks/benchmark-helpers.R")
+source("benchmarks/workloads.R")
 
 cat("=== Parser Benchmarks ===\n\n")
 

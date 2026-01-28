@@ -130,7 +130,7 @@ For each optimization:
 4. Re-run benchmarks and compare
 5. Look for any regressions >5%
 
-The benchmarking infrastructure in `inst/benchmarks/` is comprehensive and ready for this work.
+The benchmarking infrastructure in `benchmarks/` is comprehensive and ready for this work.
 
 ## Benchmark Results Summary
 

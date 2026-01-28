@@ -13,7 +13,7 @@ The complete performance profiling infrastructure for Rye has been successfully 
 
 ### ✅ Part 2: Benchmark Infrastructure
 **Created:**
-- `inst/benchmarks/` directory structure
+- `benchmarks/` directory structure
 - `benchmark-helpers.R` - Core infrastructure functions
 - `workloads.R` - Pre-defined test workloads
 - `results/` and `profiles/` output directories
@@ -158,43 +158,43 @@ The complete performance profiling infrastructure for Rye has been successfully 
 ### New Files (25 total)
 
 **Infrastructure (2):**
-- inst/benchmarks/benchmark-helpers.R
-- inst/benchmarks/workloads.R
+- benchmarks/benchmark-helpers.R
+- benchmarks/workloads.R
 
 **Benchmarks (6):**
-- inst/benchmarks/bench-tokenizer.R
-- inst/benchmarks/bench-parser.R
-- inst/benchmarks/bench-macro.R
-- inst/benchmarks/bench-eval.R
-- inst/benchmarks/bench-stdlib.R
-- inst/benchmarks/bench-e2e.R
+- benchmarks/bench-tokenizer.R
+- benchmarks/bench-parser.R
+- benchmarks/bench-macro.R
+- benchmarks/bench-eval.R
+- benchmarks/bench-stdlib.R
+- benchmarks/bench-e2e.R
 
 **Profiling (5):**
-- inst/benchmarks/profile-tokenizer.R
-- inst/benchmarks/profile-parser.R
-- inst/benchmarks/profile-macro.R
-- inst/benchmarks/profile-eval.R
-- inst/benchmarks/run-all-profiles.R
+- benchmarks/profile-tokenizer.R
+- benchmarks/profile-parser.R
+- benchmarks/profile-macro.R
+- benchmarks/profile-eval.R
+- benchmarks/run-all-profiles.R
 
 **Analysis (3):**
-- inst/benchmarks/run-all-benchmarks.R
-- inst/benchmarks/analyze-results.R
-- inst/benchmarks/compare-results.R
+- benchmarks/run-all-benchmarks.R
+- benchmarks/analyze-results.R
+- benchmarks/compare-results.R
 
 **Documentation (6):**
-- inst/benchmarks/README.md
-- inst/benchmarks/PERFORMANCE.md
-- inst/benchmarks/SETUP-COMPLETE.md
-- inst/benchmarks/PART-6-COMPLETE.md
-- inst/benchmarks/PARTS-7-8-COMPLETE.md
-- inst/benchmarks/COMPLETE.md (this file)
+- benchmarks/README.md
+- benchmarks/PERFORMANCE.md
+- benchmarks/SETUP-COMPLETE.md
+- benchmarks/PART-6-COMPLETE.md
+- benchmarks/PARTS-7-8-COMPLETE.md
+- benchmarks/COMPLETE.md (this file)
 
 **Tests (1):**
 - tests/testthat/test-benchmarks.R
 
 **Plan (2):**
 - performance-plan.md
-- inst/benchmarks/PARTS-4-5-6-COMPLETE.md
+- benchmarks/PARTS-4-5-6-COMPLETE.md
 
 ### Modified Files (4)
 
@@ -222,7 +222,7 @@ make bench
 make profile
 
 # View results
-open inst/benchmarks/profiles/eval-fibonacci.html
+open benchmarks/profiles/eval-fibonacci.html
 ```
 
 ### Development Workflow
@@ -230,7 +230,7 @@ open inst/benchmarks/profiles/eval-fibonacci.html
 ```bash
 # 1. Establish baseline
 make bench
-# Saves: inst/benchmarks/results/baseline-YYYYMMDD-HHMMSS.rds
+# Saves: benchmarks/results/baseline-YYYYMMDD-HHMMSS.rds
 
 # 2. Make optimization changes
 # ... edit source code ...
@@ -240,25 +240,25 @@ make test
 
 # 4. Measure improvement
 make bench
-# Saves: inst/benchmarks/results/baseline-YYYYMMDD-HHMMSS.rds
+# Saves: benchmarks/results/baseline-YYYYMMDD-HHMMSS.rds
 
 # 5. Compare
 make bench-compare \
-    OLD=inst/benchmarks/results/baseline-20260127-120000.rds \
-    NEW=inst/benchmarks/results/baseline-20260127-130000.rds
+    OLD=benchmarks/results/baseline-20260127-120000.rds \
+    NEW=benchmarks/results/baseline-20260127-130000.rds
 
 # 6. Profile to verify hotspot reduced
 make profile
-open inst/benchmarks/profiles/eval-fibonacci.html
+open benchmarks/profiles/eval-fibonacci.html
 ```
 
 ### Analysis
 
 ```r
 # Load and analyze results
-source("inst/benchmarks/analyze-results.R")
+source("benchmarks/analyze-results.R")
 
-results <- load_benchmark_results("inst/benchmarks/results/baseline-*.rds")
+results <- load_benchmark_results("benchmarks/results/baseline-*.rds")
 plot_breakdown(results)
 bottlenecks <- identify_bottlenecks(results, threshold = 0.05)
 memory_summary(results)
@@ -269,7 +269,7 @@ extremes(results, n = 10)
 
 ```r
 # Compare two runs
-source("inst/benchmarks/compare-results.R")
+source("benchmarks/compare-results.R")
 
 compare_benchmarks("baseline.rds", "optimized.rds")
 
@@ -356,7 +356,7 @@ $ make bench-component COMPONENT=tokenizer
 ```bash
 $ make profile-component COMPONENT=eval
 === Profiling Evaluator ===
-✓ Generated: inst/benchmarks/profiles/eval-fibonacci.html
+✓ Generated: benchmarks/profiles/eval-fibonacci.html
 ```
 
 ## Status: Production Ready
@@ -430,15 +430,15 @@ make bench-compare OLD=a.rds NEW=b.rds   # Compare results
 
 ### Analysis
 ```r
-source("inst/benchmarks/analyze-results.R")
+source("benchmarks/analyze-results.R")
 results <- load_benchmark_results("baseline-*.rds")
 plot_breakdown(results)
 identify_bottlenecks(results)
 ```
 
 ### Documentation
-- README: `inst/benchmarks/README.md`
-- Performance Analysis: `inst/benchmarks/PERFORMANCE.md`
+- README: `benchmarks/README.md`
+- Performance Analysis: `benchmarks/PERFORMANCE.md`
 - Implementation Plan: `performance-plan.md`
 
 ### Test

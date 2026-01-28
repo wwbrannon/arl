@@ -115,7 +115,7 @@ value = paste(unlist(str_chars), collapse = "")
 **Verification**:
 ```r
 # Test with large string
-source("inst/benchmarks/bench-tokenizer.R")
+source("benchmarks/bench-tokenizer.R")
 
 # Before: ~240 ms for 10K chars
 # After:  ~24 ms for 10K chars (10x improvement)
@@ -181,7 +181,7 @@ if (chunk_idx > 1) {
 **Verification**:
 ```r
 # Test with large flat list
-source("inst/benchmarks/bench-parser.R")
+source("benchmarks/bench-parser.R")
 
 # Benchmark parsing of (list 1 2 3 ... 1000)
 ```
@@ -259,7 +259,7 @@ rye_eval_args_cps <- function(expr, env, k) {
 **Verification**:
 ```r
 # Test with many-argument functions
-source("inst/benchmarks/bench-eval.R")
+source("benchmarks/bench-eval.R")
 
 # Tests functions with 1, 5, 10, 20 arguments
 ```
@@ -337,7 +337,7 @@ rye_eval <- function(expr, env) {
 **Test Workload**:
 ```r
 # Compare fibonacci performance
-source("inst/benchmarks/bench-eval.R")
+source("benchmarks/bench-eval.R")
 
 # Fibonacci(15): Before CPS optimization
 # Expected after: 2-3x faster
@@ -410,7 +410,7 @@ rye_hygienize_single_pass <- function(expr, symbols = NULL, depth = 0) {
 **Test Workload**:
 ```r
 # Profile macro expansion
-source("inst/benchmarks/profile-macro.R")
+source("benchmarks/profile-macro.R")
 
 # Look for time spent in lapply and recursive walks
 ```
@@ -477,7 +477,7 @@ rye_strip_src_cached <- function(expr) {
 **Test Workload**:
 ```r
 # Profile evaluator
-source("inst/benchmarks/profile-eval.R")
+source("benchmarks/profile-eval.R")
 
 # Look for time in rye_strip_src
 ```
@@ -635,19 +635,19 @@ For each optimization:
 
 1. **Establish Baseline**
    ```r
-   source("inst/benchmarks/run-all-benchmarks.R")
+   source("benchmarks/run-all-benchmarks.R")
    # Saves baseline-YYYYMMDD-HHMMSS.rds
    ```
 
 2. **Generate Profiling Report**
    ```r
-   source("inst/benchmarks/run-all-profiles.R")
-   # View HTML: inst/benchmarks/profiles/*.html
+   source("benchmarks/run-all-profiles.R")
+   # View HTML: benchmarks/profiles/*.html
    ```
 
 3. **Identify Hotspot**
    ```r
-   source("inst/benchmarks/analyze-results.R")
+   source("benchmarks/analyze-results.R")
    results <- load_benchmark_results("baseline-*.rds")
    bottlenecks <- identify_bottlenecks(results, threshold = 0.05)
    ```
@@ -658,16 +658,16 @@ For each optimization:
 
 5. **Measure Impact**
    ```r
-   source("inst/benchmarks/run-all-benchmarks.R")
+   source("benchmarks/run-all-benchmarks.R")
    # Saves optimized-YYYYMMDD-HHMMSS.rds
 
-   source("inst/benchmarks/compare-results.R")
+   source("benchmarks/compare-results.R")
    compare_benchmarks("baseline-*.rds", "optimized-*.rds")
    ```
 
 6. **Review Profiling**
    ```r
-   source("inst/benchmarks/run-all-profiles.R")
+   source("benchmarks/run-all-profiles.R")
    # Verify hotspot is reduced or eliminated
    ```
 
@@ -761,46 +761,46 @@ Based on current baseline (2026-01-27):
 
 Run individual benchmarks:
 ```bash
-R -e "source('inst/benchmarks/bench-tokenizer.R')"
-R -e "source('inst/benchmarks/bench-parser.R')"
-R -e "source('inst/benchmarks/bench-macro.R')"
-R -e "source('inst/benchmarks/bench-eval.R')"
-R -e "source('inst/benchmarks/bench-stdlib.R')"
-R -e "source('inst/benchmarks/bench-e2e.R')"
+R -e "source('benchmarks/bench-tokenizer.R')"
+R -e "source('benchmarks/bench-parser.R')"
+R -e "source('benchmarks/bench-macro.R')"
+R -e "source('benchmarks/bench-eval.R')"
+R -e "source('benchmarks/bench-stdlib.R')"
+R -e "source('benchmarks/bench-e2e.R')"
 ```
 
 Run all benchmarks:
 ```bash
-R -e "source('inst/benchmarks/run-all-benchmarks.R')"
+R -e "source('benchmarks/run-all-benchmarks.R')"
 ```
 
 ### Available Profiling
 
 Generate profiling reports:
 ```bash
-R -e "source('inst/benchmarks/profile-tokenizer.R')"
-R -e "source('inst/benchmarks/profile-parser.R')"
-R -e "source('inst/benchmarks/profile-macro.R')"
-R -e "source('inst/benchmarks/profile-eval.R')"
+R -e "source('benchmarks/profile-tokenizer.R')"
+R -e "source('benchmarks/profile-parser.R')"
+R -e "source('benchmarks/profile-macro.R')"
+R -e "source('benchmarks/profile-eval.R')"
 ```
 
 Generate all profiles:
 ```bash
-R -e "source('inst/benchmarks/run-all-profiles.R')"
+R -e "source('benchmarks/run-all-profiles.R')"
 ```
 
 View HTML reports:
 ```bash
-open inst/benchmarks/profiles/eval-fibonacci.html
+open benchmarks/profiles/eval-fibonacci.html
 ```
 
 ### Available Analysis
 
 Analyze results:
 ```r
-source("inst/benchmarks/analyze-results.R")
+source("benchmarks/analyze-results.R")
 
-results <- load_benchmark_results("inst/benchmarks/results/baseline-*.rds")
+results <- load_benchmark_results("benchmarks/results/baseline-*.rds")
 plot_breakdown(results)
 identify_bottlenecks(results, threshold = 0.05)
 memory_summary(results)
@@ -809,7 +809,7 @@ extremes(results, n = 10)
 
 Compare results:
 ```r
-source("inst/benchmarks/compare-results.R")
+source("benchmarks/compare-results.R")
 
 compare_benchmarks("baseline-*.rds", "optimized-*.rds")
 quick_compare()  # Auto-selects latest files

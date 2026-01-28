@@ -2,8 +2,8 @@
 # Functions for analyzing and visualizing benchmark results
 
 # Source benchmark helpers (works from different working directories)
-if (file.exists("inst/benchmarks/benchmark-helpers.R")) {
-  source("inst/benchmarks/benchmark-helpers.R")
+if (file.exists("benchmarks/benchmark-helpers.R")) {
+  source("benchmarks/benchmark-helpers.R")
 } else if (file.exists("benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {
@@ -328,7 +328,7 @@ if (!interactive() && !exists(".benchmark_analysis_loaded")) {
   cat("  - memory_summary(results)\n")
   cat("  - extremes(results, n = 5)\n\n")
   cat("Example usage:\n")
-  cat("  results <- load_benchmark_results('inst/benchmarks/results/baseline-YYYYMMDD-HHMMSS.rds')\n")
+  cat("  results <- load_benchmark_results('benchmarks/results/baseline-YYYYMMDD-HHMMSS.rds')\n")
   cat("  plot_breakdown(results)\n")
   cat("  bottlenecks <- identify_bottlenecks(results)\n")
   cat("  print(bottlenecks)\n\n")

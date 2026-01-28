@@ -11,7 +11,7 @@ if (!requireNamespace("bench", quietly = TRUE)) {
 }
 
 # Create output directory
-output_dir <- "inst/benchmarks/results"
+output_dir <- "benchmarks/results"
 if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)
   cat("Created directory:", output_dir, "\n\n")
@@ -34,7 +34,7 @@ all_results <- list()
 script_timings <- list()
 
 for (script in scripts) {
-  script_path <- file.path("inst/benchmarks", script)
+  script_path <- file.path("benchmarks", script)
 
   if (!file.exists(script_path)) {
     cat(sprintf("WARNING: Script not found: %s\n\n", script))
@@ -198,11 +198,11 @@ cat("\n========================================\n")
 cat("Next Steps\n")
 cat("========================================\n\n")
 cat("1. Review HTML profiling reports:\n")
-cat("   source('inst/benchmarks/run-all-profiles.R')\n\n")
+cat("   source('benchmarks/run-all-profiles.R')\n\n")
 cat("2. Analyze results:\n")
-cat("   source('inst/benchmarks/analyze-results.R')\n\n")
+cat("   source('benchmarks/analyze-results.R')\n\n")
 cat("3. Compare with previous baseline:\n")
-cat("   source('inst/benchmarks/compare-results.R')\n\n")
+cat("   source('benchmarks/compare-results.R')\n\n")
 
 cat("========================================\n")
 

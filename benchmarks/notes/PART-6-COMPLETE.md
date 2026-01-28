@@ -6,7 +6,7 @@ Part 6 of the performance profiling plan has been successfully completed with th
 
 ## File Created
 
-**inst/benchmarks/PERFORMANCE.md** - Comprehensive performance analysis and optimization guide (21KB, 600+ lines)
+**benchmarks/PERFORMANCE.md** - Comprehensive performance analysis and optimization guide (21KB, 600+ lines)
 
 ## Documentation Contents
 
@@ -123,8 +123,8 @@ Actual results from 2026-01-27 baseline run:
 
 Complete workflow for each optimization:
 
-1. **Establish Baseline**: `source("inst/benchmarks/run-all-benchmarks.R")`
-2. **Generate Profiling**: `source("inst/benchmarks/run-all-profiles.R")`
+1. **Establish Baseline**: `source("benchmarks/run-all-benchmarks.R")`
+2. **Generate Profiling**: `source("benchmarks/run-all-profiles.R")`
 3. **Identify Hotspot**: Analyze bottlenecks with threshold
 4. **Implement Fix**: Make targeted changes
 5. **Measure Impact**: Run benchmarks and compare

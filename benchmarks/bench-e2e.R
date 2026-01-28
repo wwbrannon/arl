@@ -2,8 +2,8 @@
 # Full pipeline benchmarks (tokenize → parse → eval) with component breakdown
 
 library(rye)
-source("inst/benchmarks/benchmark-helpers.R")
-source("inst/benchmarks/workloads.R")
+source("benchmarks/benchmark-helpers.R")
+source("benchmarks/workloads.R")
 
 cat("=== End-to-End Benchmarks ===\n\n")
 

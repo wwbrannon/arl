@@ -4,8 +4,8 @@
 library(rye)
 
 # Source helpers (works from different working directories)
-if (file.exists("inst/benchmarks/benchmark-helpers.R")) {
-  source("inst/benchmarks/benchmark-helpers.R")
+if (file.exists("benchmarks/benchmark-helpers.R")) {
+  source("benchmarks/benchmark-helpers.R")
 } else if (file.exists("benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {
@@ -13,8 +13,8 @@ if (file.exists("inst/benchmarks/benchmark-helpers.R")) {
   if (helpers_path != "") source(helpers_path)
 }
 
-if (file.exists("inst/benchmarks/workloads.R")) {
-  source("inst/benchmarks/workloads.R")
+if (file.exists("benchmarks/workloads.R")) {
+  source("benchmarks/workloads.R")
 } else if (file.exists("workloads.R")) {
   source("workloads.R")
 } else {
@@ -88,4 +88,4 @@ profile_component({
 
 
 cat("=== Tokenizer Profiling Complete ===\n")
-cat("View HTML reports in inst/benchmarks/profiles/\n")
+cat("View HTML reports in benchmarks/profiles/\n")

@@ -11,7 +11,7 @@ if (!requireNamespace("profvis", quietly = TRUE)) {
 }
 
 # Create output directory
-output_dir <- "inst/benchmarks/profiles"
+output_dir <- "benchmarks/profiles"
 if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)
   cat("Created directory:", output_dir, "\n\n")
@@ -31,7 +31,7 @@ scripts <- c(
 results <- list()
 
 for (script in scripts) {
-  script_path <- file.path("inst/benchmarks", script)
+  script_path <- file.path("benchmarks", script)
 
   if (!file.exists(script_path)) {
     cat(sprintf("WARNING: Script not found: %s\n\n", script))
@@ -98,10 +98,10 @@ if (length(html_files) > 0) {
   cat("To generate profiles, run individual profile scripts interactively:\n\n")
   cat("  # In R console:\n")
   cat("  library(rye)\n")
-  cat("  source('inst/benchmarks/profile-tokenizer.R')\n")
-  cat("  source('inst/benchmarks/profile-parser.R')\n")
-  cat("  source('inst/benchmarks/profile-macro.R')\n")
-  cat("  source('inst/benchmarks/profile-eval.R')\n\n")
+  cat("  source('benchmarks/profile-tokenizer.R')\n")
+  cat("  source('benchmarks/profile-parser.R')\n")
+  cat("  source('benchmarks/profile-macro.R')\n")
+  cat("  source('benchmarks/profile-eval.R')\n\n")
   cat("Or use make bench for automated performance measurement.\n")
 }
 

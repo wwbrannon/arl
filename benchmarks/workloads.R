@@ -2,8 +2,8 @@
 # Standard workloads for testing Rye performance
 
 # Source benchmark helpers (works from different working directories)
-if (file.exists("inst/benchmarks/benchmark-helpers.R")) {
-  source("inst/benchmarks/benchmark-helpers.R")
+if (file.exists("benchmarks/benchmark-helpers.R")) {
+  source("benchmarks/benchmark-helpers.R")
 } else if (file.exists("benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {

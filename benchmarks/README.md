@@ -10,7 +10,7 @@ make bench      # Run all benchmarks
 make profile    # Note: profvis requires interactive R
 
 # Or via R console
-R -e "source('inst/benchmarks/run-all-benchmarks.R')"
+R -e "source('benchmarks/run-all-benchmarks.R')"
 ```
 
 ```r
@@ -18,16 +18,16 @@ R -e "source('inst/benchmarks/run-all-benchmarks.R')"
 install.packages(c("bench", "profvis"))
 
 # Benchmarking (works in all contexts)
-source("inst/benchmarks/run-all-benchmarks.R")
-source("inst/benchmarks/bench-tokenizer.R")  # Individual components
+source("benchmarks/run-all-benchmarks.R")
+source("benchmarks/bench-tokenizer.R")  # Individual components
 
 # Profiling (requires interactive session)
 # Note: profvis doesn't work from sourced scripts - run interactively
 library(rye)
-source("inst/benchmarks/profile-tokenizer.R")
-source("inst/benchmarks/profile-parser.R")
-source("inst/benchmarks/profile-macro.R")
-source("inst/benchmarks/profile-eval.R")
+source("benchmarks/profile-tokenizer.R")
+source("benchmarks/profile-parser.R")
+source("benchmarks/profile-macro.R")
+source("benchmarks/profile-eval.R")
 ```
 
 ## Files
@@ -117,18 +117,18 @@ Each benchmark script measures different aspects of Rye performance:
 
 ```r
 # Run tokenizer benchmarks
-source("inst/benchmarks/bench-tokenizer.R")
+source("benchmarks/bench-tokenizer.R")
 
 # Run end-to-end with component breakdown
-source("inst/benchmarks/bench-e2e.R")
+source("benchmarks/bench-e2e.R")
 
 # Load and analyze saved results
-source("inst/benchmarks/benchmark-helpers.R")
-results <- load_benchmark_results("inst/benchmarks/results/baseline-20260127-123456.rds")
+source("benchmarks/benchmark-helpers.R")
+results <- load_benchmark_results("benchmarks/results/baseline-20260127-123456.rds")
 summarize_benchmark(results)
 
 # Profile a specific component
-source("inst/benchmarks/benchmark-helpers.R")
+source("benchmarks/benchmark-helpers.R")
 profile_component({
   tokens <- rye:::rye_tokenize(paste(rep("x", 10000), collapse = ""))
 }, "large-string")
