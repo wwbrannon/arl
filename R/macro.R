@@ -686,6 +686,7 @@ get_macro <- function(name, env = parent.frame()) {
 #'
 #' @param expr Expression to expand
 #' @param env Environment for evaluation
+#' @param preserve_src Logical. If TRUE, preserves source location information in the expanded expression. Defaults to FALSE.
 #' @return Expanded expression
 #' @examples
 #' rye_eval(rye_read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]])

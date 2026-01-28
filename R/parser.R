@@ -5,6 +5,7 @@
 #' `(quasiquote ...)` forms during parsing.
 #'
 #' @param tokens A list of tokens from rye_tokenize
+#' @param source_name Optional character string naming the source (e.g., filename) for error messages and source tracking. Defaults to NULL.
 #' @return A list of parsed expressions as R calls
 #' @examples
 #' tokens <- rye_tokenize("(+ 1 2)")
@@ -187,6 +188,7 @@ rye_parse <- function(tokens, source_name = NULL) {
 #' Convenience helper that combines tokenization and parsing.
 #'
 #' @param source A string containing Rye source code
+#' @param source_name Optional character string naming the source (e.g., filename) for error messages and source tracking. Defaults to NULL.
 #' @return A list of parsed expressions
 #' @examples
 #' rye_read("(define x 10) (+ x 5)")

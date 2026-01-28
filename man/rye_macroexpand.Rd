@@ -10,6 +10,8 @@ rye_macroexpand(expr, env = parent.frame(), preserve_src = FALSE)
 \item{expr}{Expression to expand}
 
 \item{env}{Environment for evaluation}
+
+\item{preserve_src}{Logical. If TRUE, preserves source location information in the expanded expression. Defaults to FALSE.}
 }
 \value{
 Expanded expression

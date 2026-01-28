@@ -8,6 +8,8 @@ rye_parse(tokens, source_name = NULL)
 }
 \arguments{
 \item{tokens}{A list of tokens from rye_tokenize}
+
+\item{source_name}{Optional character string naming the source (e.g., filename) for error messages and source tracking. Defaults to NULL.}
 }
 \value{
 A list of parsed expressions as R calls

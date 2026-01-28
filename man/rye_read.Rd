@@ -8,6 +8,8 @@ rye_read(source, source_name = NULL)
 }
 \arguments{
 \item{source}{A string containing Rye source code}
+
+\item{source_name}{Optional character string naming the source (e.g., filename) for error messages and source tracking. Defaults to NULL.}
 }
 \value{
 A list of parsed expressions
