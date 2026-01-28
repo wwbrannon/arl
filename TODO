@@ -1,4 +1,7 @@
 o) failing benchmark results for stdlib and e2e
+o) we have a code-smell TODO from `make check`
+
+o) performance optimizations: use profiling and benchmarking (once fixed)
 
 o) should the macro and module registries really be user-visible variables?
 
@@ -12,7 +15,3 @@ o) Look for any R code that can be refactored to make it simpler
 o) How to calculate test coverage of .rye code
 
 o) More tests for .rye code
-
-o) fix everything in `make check`
-
-o) this is awfully slow
