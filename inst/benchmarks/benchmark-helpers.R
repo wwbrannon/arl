@@ -47,6 +47,10 @@ profile_component <- function(expr, name, output_dir = "inst/benchmarks/profiles
     stop("Package 'profvis' is required for profiling. Install with: install.packages('profvis')")
   }
 
+  # profvis wants this if run noninteractively
+  old <- options(keep.source = TRUE)
+  on.exit(options(old), add = TRUE)
+
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
@@ -55,17 +59,17 @@ profile_component <- function(expr, name, output_dir = "inst/benchmarks/profiles
 
   # Note: profvis has limitations when running from sourced scripts
   # It works best in interactive sessions
-  result <- tryCatch({
-    prof <- profvis::profvis(expr)
+  result <- {
+    expr <- substitute(expr)
+
+    prof <- profvis::profvis({
+        eval(expr, envir = parent.frame())
+    }, rerun=TRUE)  # rerun helps if expr finishes too fast to sample
     htmlwidgets::saveWidget(prof, output_file, selfcontained = TRUE)
     cat(sprintf("  ✓ Generated: %s\n", output_file))
+
     output_file
-  }, error = function(e) {
-    # Profvis often fails with "cannot set attribute on symbol" in non-interactive contexts
-    cat(sprintf("  ✗ Skipped: %s\n", name))
-    cat(sprintf("    (profvis requires interactive R session)\n"))
-    NULL
-  })
+  }
 
   invisible(result)
 }
