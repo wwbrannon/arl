@@ -38,18 +38,6 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$`call/cc` <- rye_make_builtin_callcc()
   env$`call-with-current-continuation` <- env$`call/cc`
 
-  # Arithmetic operators
-  # Provide aliases for common R operators
-  env$`+` <- base::`+`
-  env$`-` <- base::`-`
-  env$`*` <- base::`*`
-  env$`/` <- base::`/`
-  env$`<` <- base::`<`
-  env$`<=` <- base::`<=`
-  env$`>` <- base::`>`
-  env$`>=` <- base::`>=`
-  # Additional arithmetic/equality helpers come from stdlib files
-
   # Output
   env$display <- rye_stdlib_display
   env$println <- rye_stdlib_display
