@@ -1,7 +1,13 @@
 ;;; Rye Standard Library - List Helpers
 
 (module list-core
-  (export __as-list __list-last __list-head car cdr cons list* append reverse first rest last nth)
+  (export __as-list __list-last __list-head
+          car cdr
+          caar cadr cdar cddr
+          caaar caadr cadar caddr
+          cdaar cdadr cddar cdddr
+          cadddr cddddr
+          cons list* append reverse first rest last nth)
 
   (define __as-list
     (lambda (x)
@@ -47,6 +53,26 @@
             (r/call "[" (list lst (seq 2 (length lst))))
             (list))
           (list)))))
+
+  ;; Common composed list accessors
+  ;; These intentionally compose the semantics of car/cdr (including #nil / empty list handling).
+  (define caar (lambda (x) "car of car." (car (car x))))
+  (define cadr (lambda (x) "car of cdr." (car (cdr x))))
+  (define cdar (lambda (x) "cdr of car." (cdr (car x))))
+  (define cddr (lambda (x) "cdr of cdr." (cdr (cdr x))))
+
+  (define caaar (lambda (x) "car of car of car." (car (car (car x)))))
+  (define caadr (lambda (x) "car of car of cdr." (car (car (cdr x)))))
+  (define cadar (lambda (x) "car of cdr of car." (car (cdr (car x)))))
+  (define caddr (lambda (x) "car of cdr of cdr." (car (cdr (cdr x)))))
+
+  (define cdaar (lambda (x) "cdr of car of car." (cdr (car (car x)))))
+  (define cdadr (lambda (x) "cdr of car of cdr." (cdr (car (cdr x)))))
+  (define cddar (lambda (x) "cdr of cdr of car." (cdr (cdr (car x)))))
+  (define cdddr (lambda (x) "cdr of cdr of cdr." (cdr (cdr (cdr x)))))
+
+  (define cadddr (lambda (x) "car of cdr of cdr of cdr." (car (cdr (cdr (cdr x))))))
+  (define cddddr (lambda (x) "cdr of cdr of cdr of cdr." (cdr (cdr (cdr (cdr x))))))
 
   (define cons
     (lambda (item lst)
