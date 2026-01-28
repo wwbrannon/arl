@@ -697,10 +697,21 @@ rye_eval_seq_cps <- function(exprs, env, k) {
 }
 
 rye_eval_args_cps <- function(expr, env, k) {
-  args <- list()
-  arg_names <- character(0)
+  # Pre-allocate to avoid O(n^2) vector growing, but handle NULL values correctly
+  # Note: args[[i]] <- NULL doesn't work (removes element), so we pre-allocate
+  max_args <- max(0, length(expr) - 1)
+  args <- vector("list", max_args)
+  arg_names <- character(max_args)
+  arg_idx <- 1
   step <- function(i) {
     if (i > length(expr)) {
+      # Trim to actual size
+      actual_size <- arg_idx - 1
+      if (actual_size == 0) {
+        return(rye_call_k(k, list(args = list(), arg_names = character(0))))
+      }
+      args <- args[1:actual_size]
+      arg_names <- arg_names[1:actual_size]
       return(rye_call_k(k, list(args = args, arg_names = arg_names)))
     }
     arg_expr <- expr[[i]]
@@ -710,14 +721,16 @@ rye_eval_args_cps <- function(expr, env, k) {
       }
       keyword_name <- as.character(arg_expr)
       return(rye_eval_cps(expr[[i + 1]], env, function(value) {
-        args <<- c(args, list(rye_strip_src(value)))
-        arg_names <<- c(arg_names, keyword_name)
+        args[[arg_idx]] <<- rye_strip_src(value)
+        arg_names[[arg_idx]] <<- keyword_name
+        arg_idx <<- arg_idx + 1
         step(i + 2)
       }))
     }
     rye_eval_cps(arg_expr, env, function(value) {
-      args <<- c(args, list(rye_strip_src(value)))
-      arg_names <<- c(arg_names, "")
+      args[[arg_idx]] <<- rye_strip_src(value)
+      arg_names[[arg_idx]] <<- ""
+      arg_idx <<- arg_idx + 1
       step(i + 1)
     })
   }

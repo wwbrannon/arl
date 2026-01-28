@@ -93,7 +93,8 @@ rye_tokenize <- function(source) {
       start_col <- col
       i <- i + 1
       col <- col + 1
-      str_chars <- character(0)
+      str_chars <- list()
+      str_idx <- 1
 
       while (i <= n && substr(source, i, i) != '"') {
         ch <- substr(source, i, i)
@@ -102,18 +103,25 @@ rye_tokenize <- function(source) {
           if (i + 1 <= n) {
             next_ch <- substr(source, i + 1, i + 1)
             if (next_ch == "n") {
-              str_chars <- c(str_chars, "\n")
+              str_chars[[str_idx]] <- "\n"
+              str_idx <- str_idx + 1
             } else if (next_ch == "t") {
-              str_chars <- c(str_chars, "\t")
+              str_chars[[str_idx]] <- "\t"
+              str_idx <- str_idx + 1
             } else if (next_ch == "r") {
-              str_chars <- c(str_chars, "\r")
+              str_chars[[str_idx]] <- "\r"
+              str_idx <- str_idx + 1
             } else if (next_ch == '"') {
-              str_chars <- c(str_chars, '"')
+              str_chars[[str_idx]] <- '"'
+              str_idx <- str_idx + 1
             } else if (next_ch == "\\") {
-              str_chars <- c(str_chars, "\\")
+              str_chars[[str_idx]] <- "\\"
+              str_idx <- str_idx + 1
             } else {
               # Preserve unknown escapes as literal backslash + char
-              str_chars <- c(str_chars, "\\", next_ch)
+              str_chars[[str_idx]] <- "\\"
+              str_chars[[str_idx + 1]] <- next_ch
+              str_idx <- str_idx + 2
             }
             i <- i + 2
             col <- col + 2
@@ -127,7 +135,8 @@ rye_tokenize <- function(source) {
           } else {
             col <- col + 1
           }
-          str_chars <- c(str_chars, ch)
+          str_chars[[str_idx]] <- ch
+          str_idx <- str_idx + 1
           i <- i + 1
         }
       }
@@ -138,7 +147,7 @@ rye_tokenize <- function(source) {
 
       tokens[[length(tokens) + 1]] <- list(
         type = "STRING",
-        value = paste(str_chars, collapse = ""),
+        value = paste(unlist(str_chars), collapse = ""),
         line = line,
         col = start_col
       )

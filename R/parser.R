@@ -126,12 +126,28 @@ rye_parse <- function(tokens, source_name = NULL) {
     if (token$type == "LPAREN") {
       pos <<- pos + 1
       start_token <- token
+      # Use c() with list() to preserve NULL values (elements[[i]] <- NULL doesn't work)
+      # But collect in chunks to avoid O(n^2) behavior
       elements <- list()
+      chunk <- vector("list", 32)  # Collect in chunks of 32
+      chunk_idx <- 1
 
       while (pos <= length(tokens) && tokens[[pos]]$type != "RPAREN") {
-        # Use c() with list() to preserve NULL values
         elem <- parse_expr()
-        elements <- c(elements, list(elem))
+        chunk[[chunk_idx]] <- elem
+        chunk_idx <- chunk_idx + 1
+
+        # Flush chunk when full
+        if (chunk_idx > 32) {
+          elements <- c(elements, chunk)
+          chunk <- vector("list", 32)
+          chunk_idx <- 1
+        }
+      }
+
+      # Flush remaining chunk
+      if (chunk_idx > 1) {
+        elements <- c(elements, chunk[1:(chunk_idx - 1)])
       }
 
       if (pos > length(tokens)) {
