@@ -132,7 +132,7 @@ WORKLOAD_DEEP_RECURSION <- '
     acc
     (deep (- n 1) (+ acc 1)))))
 
-(deep 1000 0)
+(deep 500 0)
 '
 
 # Many arguments workload
