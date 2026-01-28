@@ -1,4 +1,5 @@
 o) failing benchmark results for stdlib and e2e
+o) not all the profiles run either
 o) we have a code-smell TODO from `make check`
 
 o) performance optimizations: use profiling and benchmarking (once fixed)
