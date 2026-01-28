@@ -3,6 +3,7 @@
 
 (import binding)
 (import control)
+(import higher-order)
 (import looping)
 (import threading)
 

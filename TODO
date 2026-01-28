@@ -3,6 +3,7 @@ o) not all the profiles run either
 o) we have a code-smell TODO from `make check`
 
 o) performance optimizations: use profiling and benchmarking (once fixed)
+o) TCO?
 
 o) should the macro and module registries really be user-visible variables?
 
