@@ -625,7 +625,7 @@ rye_format_error <- function(e, include_r_stack = TRUE) {
         max_frames <- 20
         calls <- r_stack
         if (length(calls) > max_frames) {
-          calls <- tail(calls, max_frames)
+          calls <- utils::tail(calls, max_frames)
         }
         for (call in rev(calls)) {
           lines <- c(lines, paste0("  ", paste(deparse(call), collapse = "")))
