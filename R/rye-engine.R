@@ -202,9 +202,6 @@ RyeEngine <- R6::R6Class(
     },
     repl = function() {
       rye_repl(engine = self)
-    },
-    translate = function(source, is_file = NULL) {
-      rye_translate(source, is_file = is_file)
     }
   )
 )

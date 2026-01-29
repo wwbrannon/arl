@@ -27,7 +27,7 @@ Suggests:
     bench (>= 1.1.2),
     knitr,
     rmarkdown
-URL: https://wwbrannon.github.io/rye, https://github.com/wwbrannon/rye
+URL: https://github.com/wwbrannon/rye
 BugReports: https://github.com/wwbrannon/rye/issues
 Encoding: UTF-8
 ByteCompile: true

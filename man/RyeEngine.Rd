@@ -25,7 +25,6 @@ evaluation, and environment management.
 \item \href{#method-RyeEngine-macroexpand_1}{\code{RyeEngine$macroexpand_1()}}
 \item \href{#method-RyeEngine-help}{\code{RyeEngine$help()}}
 \item \href{#method-RyeEngine-repl}{\code{RyeEngine$repl()}}
-\item \href{#method-RyeEngine-translate}{\code{RyeEngine$translate()}}
 \item \href{#method-RyeEngine-clone}{\code{RyeEngine$clone()}}
 }
 }
@@ -161,15 +160,6 @@ evaluation, and environment management.
 \subsection{Method \code{repl()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$repl()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RyeEngine-translate"></a>}}
-\if{latex}{\out{\hypertarget{method-RyeEngine-translate}{}}}
-\subsection{Method \code{translate()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$translate(source, is_file = NULL)}\if{html}{\out{</div>}}
 }
 
 }
