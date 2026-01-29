@@ -58,6 +58,12 @@ engine$repl()
 
 ## Command Line
 
+Install the CLI wrapper once after installing the package:
+
+``` r
+rye::rye_install_cli()
+```
+
 ``` bash
 # Start REPL
 rye
@@ -72,11 +78,10 @@ rye --eval "(+ 1 2)"
 rye script.rye other.rye
 ```
 
-If the installer cannot write to `R_HOME/bin`, locate the script and add
-it to your `PATH`:
+If the install path is not on your `PATH`, add it:
 
 ``` r
-system.file("exec", "rye", package = "rye")
+dirname(system.file("exec", "rye", package = "rye"))
 ```
 
 ``` bash

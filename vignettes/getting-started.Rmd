@@ -42,7 +42,13 @@ At the prompt, you can enter Rye expressions:
 
 ## Run from the command line
 
-If you installed the CLI wrapper, you can evaluate code without opening R:
+Install the CLI wrapper once after installing the package:
+
+```{r eval=FALSE}
+rye::rye_install_cli()
+```
+
+Then you can evaluate code without opening R:
 
 ```bash
 rye --eval "(+ 1 2)"

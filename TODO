@@ -1,8 +1,9 @@
-o) unbreak configure script
-o) OO refactor of repl
-o) rewrite cli to use docopt
+o) rewrite cli to use docopt and generally simplify cli
+o) move cli_load_env into a classmethod ctor of RyeEngine / retire load_stdlib
 
 o) move out the rest of stdlib.R
+
+o) OO refactor of repl
 
 o) classes that have instances of other classes horizontally as attributes
 o) do we still need to assign these macro registry etc into the environment?

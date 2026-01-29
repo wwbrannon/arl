@@ -35,14 +35,14 @@ test_that("promise? detects promises", {
 })
 
 test_that("delay is lazy until forced", {
-  env <- new.env()
+  env <- engine$load_stdlib()
   engine$eval(
     engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  counter)")[[1]],
     env
   )
   expect_equal(env$counter, 0)
 
-  rye_stdlib_force(env$p)
+  engine$eval(engine$read("(force p)")[[1]], env)
   expect_equal(env$counter, 1)
 })
 
@@ -179,4 +179,3 @@ test_that("set! modifies existing bindings", {
   env$f()
   expect_equal(env$y, 15)
 })
-

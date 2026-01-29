@@ -1,23 +1,24 @@
-cli_help_text <- function() {
-  paste(
-    "Usage: rye [--repl] [--file <path>] [--eval <expr>]",
-    "            [--version] [--help] [files...]",
-    "",
-    "Options:",
-    "  -r, --repl           Start the Rye REPL (default).",
-    "  -f, --file <path>    Evaluate a Rye source file.",
-    "  -e, --eval <expr>    Evaluate a single Rye expression.",
-    "  -v, --version        Print version and exit.",
-    "  -h, --help           Show this help message.",
-    "",
-    "Examples:",
-    "  rye",
-    "  rye --file script.rye",
-    "  rye script.rye",
-    "  rye --eval \"(+ 1 2)\"",
-    sep = "\n"
-  )
-}
+CLI_HELP_TEXT <- paste(
+  "Rye: A Lisp dialect for R.",
+  "",
+  "Usage:",
+  "  rye [--file <path>...] [--eval <expr>] [<files>...]",
+  "  rye --version",
+  "  rye --help",
+  "",
+  "Options:",
+  "  -f, --file <path>    Evaluate a Rye source file (repeatable).",
+  "  -e, --eval <expr>    Evaluate a single Rye expression.",
+  "  -v, --version        Print version and exit.",
+  "  -h, --help           Show this help message.",
+  "",
+  "Examples:",
+  "  rye",
+  "  rye --file script.rye",
+  "  rye script.rye",
+  "  rye --eval \"(+ 1 2)\"",
+  sep = "\n"
+)
 
 parse_cli_args <- function(args) {
   state <- list(
@@ -27,97 +28,79 @@ parse_cli_args <- function(args) {
     errors = character(0)
   )
 
-  i <- 1
-  while (i <= length(args)) {
-    arg <- args[[i]]
-
-    if (arg == "--args") {
-      i <- i + 1
-      next
+  args <- args[args != "--args"]
+  terminator_index <- match("--", args)
+  args_after <- character(0)
+  if (!is.na(terminator_index)) {
+    if (terminator_index < length(args)) {
+      args_after <- args[(terminator_index + 1):length(args)]
     }
-
-    if (arg == "--") {
-      if (i < length(args)) {
-        state$files <- c(state$files, args[(i + 1):length(args)])
-      }
-      break
+    args <- if (terminator_index > 1) {
+      args[1:(terminator_index - 1)]
+    } else {
+      character(0)
     }
+  }
 
-    if (arg %in% c("--help", "-h")) {
-      state$action <- "help"
-      i <- i + 1
-      next
+  parsed <- tryCatch(
+    {
+      value <- NULL
+      utils::capture.output(
+        {
+          value <- docopt::docopt(
+            CLI_HELP_TEXT,
+            args = args,
+            help = FALSE,
+            version = NULL,
+            strict = TRUE
+          )
+        },
+        type = "output"
+      )
+      value
+    },
+    error = function(e) {
+      state$errors <<- c(state$errors, conditionMessage(e))
+      return(NULL)
     }
+  )
 
-    if (arg %in% c("--version", "-v")) {
-      state$action <- "version"
-      i <- i + 1
-      next
-    }
+  if (is.null(parsed)) {
+    return(state)
+  }
 
-    if (arg %in% c("--repl", "-r")) {
-      state$action <- "repl"
-      i <- i + 1
-      next
-    }
+  files_flag <- parsed[["--file"]]
+  files_pos <- parsed[["<files>"]]
+  expr <- parsed[["--eval"]]
 
-    if (arg %in% c("--file", "-f")) {
-      if (i + 1 > length(args)) {
-        state$errors <- c(state$errors, "--file requires a path.")
-        i <- i + 1
-        next
-      }
-      state$files <- c(state$files, args[[i + 1]])
-      i <- i + 2
-      next
-    }
-
-    if (arg %in% c("--eval", "-e")) {
-      if (!is.null(state$expr)) {
-        state$errors <- c(state$errors, "Only one --eval value is allowed.")
-        i <- i + 1
-        next
-      }
-      if (i + 1 > length(args)) {
-        state$errors <- c(state$errors, "--eval requires an expression.")
-        i <- i + 1
-        next
-      }
-      state$expr <- args[[i + 1]]
-      i <- i + 2
-      next
-    }
-
-    if (startsWith(arg, "-")) {
-      state$errors <- c(state$errors, paste("Unknown argument:", arg))
-      i <- i + 1
-      next
-    }
-
-    state$files <- c(state$files, arg)
-    i <- i + 1
+  if (!is.null(files_flag) && length(files_flag) > 0) {
+    state$files <- c(state$files, files_flag)
+  }
+  if (!is.null(files_pos) && length(files_pos) > 0) {
+    state$files <- c(state$files, files_pos)
+  }
+  if (length(args_after) > 0) {
+    state$files <- c(state$files, args_after)
+  }
+  if (!is.null(expr) && !identical(expr, FALSE) && length(expr) > 0) {
+    state$expr <- expr[[1]]
   }
 
   if (length(state$files) > 0 && !is.null(state$expr)) {
     state$errors <- c(state$errors, "Use only one of --file/files or --eval.")
   }
 
-  if (length(state$files) > 0) {
-    state$action <- "file"
-  }
-  if (!is.null(state$expr)) {
+  if (isTRUE(parsed[["--help"]])) {
+    state$action <- "help"
+  } else if (isTRUE(parsed[["--version"]])) {
+    state$action <- "version"
+  } else if (!is.null(state$expr)) {
     state$action <- "eval"
+  } else if (length(state$files) > 0) {
+    state$action <- "file"
   }
 
   state
-}
-
-cli_print_version <- function() {
-  version <- tryCatch(
-    as.character(utils::packageVersion("rye")),
-    error = function(...) "unknown"
-  )
-  cat("rye ", version, "\n", sep = "")
 }
 
 cli_load_env <- function() {
@@ -126,45 +109,25 @@ cli_load_env <- function() {
   engine
 }
 
-cli_eval_and_maybe_print <- function(fn, env, on_error, printer = NULL) {
+cli_eval_with_engine <- function(engine, fn) {
   result <- tryCatch(
     fn(),
     error = function(e) {
-      on_error(e)
+      cli_print_error(e, engine)
+      quit(save = "no", status = 1)
       return(invisible(NULL))
     }
   )
-  if (!is.null(result) && !is.null(printer)) {
-    printer(result, env)
+  if (!is.null(result)) {
+    cat(engine$env$format_value(result), "\n", sep = "")
   }
   invisible(result)
 }
 
-cli_eval_exprs <- function(exprs, engine) {
-  cli_eval_and_maybe_print(
-    function() engine$eval_exprs(exprs, engine$env$env),
-    engine$env$env,
-    on_error = function(e) {
-      cli_print_error(e, engine)
-      quit(save = "no", status = 1)
-    },
-    printer = function(result, env) {
-      cat(engine$env$format_value(result), "\n", sep = "")
-    }
-  )
-}
-
 cli_eval_text <- function(text, engine, source_name = "<cli>") {
-  cli_eval_and_maybe_print(
-    function() engine$eval_text(text, engine$env$env, source_name = source_name),
-    engine$env$env,
-    on_error = function(e) {
-      cli_print_error(e, engine)
-      quit(save = "no", status = 1)
-    },
-    printer = function(result, env) {
-      cat(engine$env$format_value(result), "\n", sep = "")
-    }
+  cli_eval_with_engine(
+    engine,
+    function() engine$eval_text(text, engine$env$env, source_name = source_name)
   )
 }
 
@@ -194,10 +157,6 @@ cli_read_stdin <- function() {
   readLines("stdin", warn = FALSE)
 }
 
-cli_error <- function(message) {
-  cat("Error: ", message, "\n", sep = "", file = stderr())
-}
-
 cli_print_error <- function(e, engine) {
   engine$source_tracker$print_error(e, file = stderr())
 }
@@ -208,66 +167,130 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
   if (length(parsed$errors) > 0) {
     if (!isTRUE(getOption("rye.cli_quiet", FALSE))) {
       for (err in parsed$errors) {
-        cli_error(err)
+        cat("Error: ", err, "\n", sep = "", file = stderr())
       }
-      cat(cli_help_text(), "\n", sep = "")
+      cat(CLI_HELP_TEXT, "\n", sep = "")
     }
     quit(save = "no", status = 1)
     return(invisible(NULL))
   }
 
-  if (parsed$action == "help") {
-    cat(cli_help_text(), "\n", sep = "")
-    return(invisible(NULL))
-  }
-
-  if (parsed$action == "version") {
-    cli_print_version()
-    return(invisible(NULL))
-  }
-
-  if (parsed$action == "repl") {
-    if (!cli_isatty()) {
+  action_handlers <- list(
+    help = function() {
+      cat(CLI_HELP_TEXT, "\n", sep = "")
+      invisible(NULL)
+    },
+    version = function() {
+      version <- tryCatch(
+        as.character(utils::packageVersion("rye")),
+        error = function(...) "unknown"
+      )
+      cat("rye ", version, "\n", sep = "")
+      invisible(NULL)
+    },
+    repl = function() {
+      if (!cli_isatty()) {
+        engine <- cli_load_env()
+        text <- paste(cli_read_stdin(), collapse = "\n")
+        if (trimws(text) != "") {
+          cli_eval_text(text, engine, source_name = "<stdin>")
+        }
+        return(invisible(NULL))
+      }
+      rye_repl()
+      invisible(NULL)
+    },
+    file = function() {
       engine <- cli_load_env()
-      text <- paste(cli_read_stdin(), collapse = "\n")
-      if (trimws(text) != "") { # nolint: object_usage_linter
-        cli_eval_text(text, engine, source_name = "<stdin>")
-      }
-      return(invisible(NULL))
-    }
-    rye_repl()
-    return(invisible(NULL))
-  }
-
-  engine <- cli_load_env()
-
-  if (parsed$action == "file") {
-    for (path in parsed$files) {
-      if (!file.exists(path)) {
-        cli_error(paste("File not found:", path))
-        quit(save = "no", status = 1)
-      }
-    }
-    for (path in parsed$files) {
-      result <- tryCatch(
-        engine$load_file(path, engine$env$env),
-        error = function(e) {
-          cli_print_error(e, engine)
+      for (path in parsed$files) {
+        if (!file.exists(path)) {
+          cat("Error: File not found: ", path, "\n", sep = "", file = stderr())
           quit(save = "no", status = 1)
         }
-      )
-      if (!is.null(result)) {
-        cat(engine$env$format_value(result), "\n", sep = "")
       }
+      for (path in parsed$files) {
+        cli_eval_with_engine(
+          engine,
+          function() engine$load_file(path, engine$env$env)
+        )
+      }
+      invisible(NULL)
+    },
+    eval = function() {
+      engine <- cli_load_env()
+      cli_eval_text(parsed$expr, engine, source_name = "<cli>")
+      invisible(NULL)
     }
-    return(invisible(NULL))
+  )
+
+  handler <- action_handlers[[parsed$action]]
+  if (is.null(handler)) {
+    cat("Error: Unknown action: ", parsed$action, "\n", sep = "", file = stderr())
+    quit(save = "no", status = 1)
+  }
+  handler()
+}
+
+#' Install the Rye CLI wrapper
+#'
+#' Copies the packaged CLI wrapper into a writable bin directory and makes it
+#' executable so it can be run from the shell.
+#'
+#' @param target_dir Directory for the `rye` executable. Defaults to the
+#'   `RYE_BIN_DIR` environment variable, then `~/.local/bin`, then `~/bin`.
+#' @param overwrite Whether to overwrite an existing `rye` executable.
+#' @return The installed path, invisibly.
+#' @export
+rye_install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), overwrite = FALSE) {
+  source <- system.file("exec", "rye", package = "rye")
+  if (!nzchar(source)) {
+    stop("CLI script not found. Is the rye package installed?")
   }
 
-  if (parsed$action == "eval") {
-    cli_eval_text(parsed$expr, engine, source_name = "<cli>")
-    return(invisible(NULL))
+  candidates <- if (nzchar(target_dir)) {
+    target_dir
+  } else {
+    c("~/.local/bin", "~/bin")
   }
 
-  cli_error(paste("Unknown action:", parsed$action))
-  quit(save = "no", status = 1)
+  chosen <- NULL
+  for (dir in candidates) {
+    dir_path <- path.expand(dir)
+    if (!dir.exists(dir_path)) {
+      dir.create(dir_path, recursive = TRUE, showWarnings = FALSE)
+    }
+    if (dir.exists(dir_path) && file.access(dir_path, 2) == 0) {
+      chosen <- dir_path
+      break
+    }
+  }
+
+  if (is.null(chosen)) {
+    stop(
+      "No writable bin directory found. Set RYE_BIN_DIR or create one of: ",
+      paste(candidates, collapse = ", ")
+    )
+  }
+
+  target <- file.path(chosen, "rye")
+  if (file.exists(target) && !isTRUE(overwrite)) {
+    stop("CLI already exists at ", target, ". Use overwrite = TRUE to replace it.")
+  }
+
+  if (!file.copy(source, target, overwrite = TRUE)) {
+    stop("Failed to install CLI to ", target)
+  }
+
+  Sys.chmod(target, mode = "0755")
+
+  message("Installed rye CLI to ", target)
+
+  path_entries <- strsplit(Sys.getenv("PATH"), .Platform$path.sep, fixed = TRUE)[[1]]
+  normalized_entries <- normalizePath(path_entries, winslash = "/", mustWork = FALSE)
+  normalized_target <- normalizePath(chosen, winslash = "/", mustWork = FALSE)
+  if (!any(normalized_entries == normalized_target)) {
+    message("Add ", chosen, " to your PATH to run `rye` from the shell.")
+  }
+
+  invisible(target)
 }

@@ -17,7 +17,8 @@ License: MIT + file LICENSE
 Depends:
     R (>= 3.6)
 Imports:
-    R6 (>= 2.5.0)
+    R6 (>= 2.5.0),
+    docopt
 Suggests:
     testthat (>= 3.0.0),
     covr (>= 3.6.0),
