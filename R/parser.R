@@ -1,6 +1,7 @@
 #' Parser for Rye tokens
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 Parser <- R6::R6Class(
   "Parser",
   public = list(

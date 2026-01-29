@@ -1,6 +1,7 @@
 #' Tokenizer for Rye source code
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 Tokenizer <- R6::R6Class(
   "Tokenizer",
   public = list(

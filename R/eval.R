@@ -9,7 +9,8 @@ rye_promise_eval_key <- ".rye_promise_eval"
 
 #' Evaluator for Rye expressions
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 Evaluator <- R6::R6Class(
   "Evaluator",
   public = list(

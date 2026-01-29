@@ -1,6 +1,7 @@
 #' Rye environment wrapper
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 RyeEnv <- R6::R6Class(
   "RyeEnv",
   public = list(

@@ -4,8 +4,32 @@
 \alias{RyeEngine}
 \title{Core Rye engine}
 \description{
+Core Rye engine
+
+Core Rye engine
+}
+\details{
 Provides class-based organization for tokenization, parsing, macro expansion,
 evaluation, and environment management.
+}
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{tokenizer}}{Tokenizer instance used to lex source text.}
+
+\item{\code{parser}}{Parser instance used to read expressions.}
+
+\item{\code{macro_expander}}{Macro expander for Rye macros.}
+
+\item{\code{evaluator}}{Evaluator used for expression execution.}
+
+\item{\code{help_system}}{Help system for Rye topics.}
+
+\item{\code{env}}{RyeEnv backing the engine.}
+
+\item{\code{source_tracker}}{Source tracker used for error context.}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -32,132 +56,271 @@ evaluation, and environment management.
 \if{html}{\out{<a id="method-RyeEngine-new"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-new}{}}}
 \subsection{Method \code{new()}}{
+Initialize engine components and base environment.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$new(env = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-read"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-read}{}}}
 \subsection{Method \code{read()}}{
+Tokenize and parse source into expressions.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$read(source, source_name = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{source}}{Character string containing Rye source.}
+
+\item{\code{source_name}}{Optional source name for error reporting.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-tokenize"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-tokenize}{}}}
 \subsection{Method \code{tokenize()}}{
+Tokenize source into Rye tokens.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$tokenize(source)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{source}}{Character string containing Rye source.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-parse"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-parse}{}}}
 \subsection{Method \code{parse()}}{
+Parse tokens into expressions.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$parse(tokens, source_name = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{tokens}}{Token list produced by the tokenizer.}
+
+\item{\code{source_name}}{Optional source name for error reporting.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-eval"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-eval}{}}}
 \subsection{Method \code{eval()}}{
+Evaluate a single expression.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval(expr, env = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-eval_seq"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-eval_seq}{}}}
 \subsection{Method \code{eval_seq()}}{
+Evaluate expressions in order.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_seq(exprs, env = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{exprs}}{List of Rye expressions to evaluate.}
+
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-eval_exprs"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-eval_exprs}{}}}
 \subsection{Method \code{eval_exprs()}}{
+Evaluate expressions with source tracking.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_exprs(exprs, env = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{exprs}}{List of Rye expressions to evaluate.}
+
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-eval_text"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-eval_text}{}}}
 \subsection{Method \code{eval_text()}}{
+Read and evaluate text.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_text(text, env = NULL, source_name = "<eval>")}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{text}}{Character string of Rye code to read/eval.}
+
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{source_name}}{Optional source name for error reporting.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-initialize_environment"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-initialize_environment}{}}}
 \subsection{Method \code{initialize_environment()}}{
+Populate standard bindings in an environment.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$initialize_environment(env = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-load_file"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-load_file}{}}}
 \subsection{Method \code{load_file()}}{
+Load and evaluate a Rye source file.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_file(path, env = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{path}}{File path to load.}
+
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-load_stdlib"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-load_stdlib}{}}}
 \subsection{Method \code{load_stdlib()}}{
+Initialize the standard library in an environment.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_stdlib(env = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-macroexpand"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-macroexpand}{}}}
 \subsection{Method \code{macroexpand()}}{
+Expand macros recursively.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$macroexpand(expr, env = NULL, preserve_src = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-macroexpand_1"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-macroexpand_1}{}}}
 \subsection{Method \code{macroexpand_1()}}{
+Expand a single macro layer.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$macroexpand_1(expr, env = NULL, preserve_src = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-help"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-help}{}}}
 \subsection{Method \code{help()}}{
+Show help for a topic.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$help(topic, env = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{topic}}{Help topic as a single string.}
+
+\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-repl"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-repl}{}}}
 \subsection{Method \code{repl()}}{
+Start the Rye REPL using this engine.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$repl()}\if{html}{\out{</div>}}
 }

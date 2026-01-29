@@ -3,6 +3,24 @@
 #' Provides class-based organization for tokenization, parsing, macro expansion,
 #' evaluation, and environment management.
 #'
+#' @importFrom R6 R6Class
+#' @field tokenizer Tokenizer instance used to lex source text.
+#' @field parser Parser instance used to read expressions.
+#' @field macro_expander Macro expander for Rye macros.
+#' @field evaluator Evaluator used for expression execution.
+#' @field help_system Help system for Rye topics.
+#' @field env RyeEnv backing the engine.
+#' @field source_tracker Source tracker used for error context.
+#' @param env Optional environment or RyeEnv used as the engine base.
+#' @param source Character string containing Rye source.
+#' @param source_name Optional source name for error reporting.
+#' @param tokens Token list produced by the tokenizer.
+#' @param expr Rye expression (symbol/call/atomic value).
+#' @param exprs List of Rye expressions to evaluate.
+#' @param text Character string of Rye code to read/eval.
+#' @param path File path to load.
+#' @param preserve_src Logical; keep source metadata when macroexpanding.
+#' @param topic Help topic as a single string.
 #' @export
 RyeEngine <- R6::R6Class(
   "RyeEngine",
@@ -14,6 +32,8 @@ RyeEngine <- R6::R6Class(
     help_system = NULL,
     env = NULL,
     source_tracker = NULL,
+    #' @description
+    #' Initialize engine components and base environment.
     initialize = function(env = NULL) {
       self$env <- RyeEnv$new(env)
       self$source_tracker <- SourceTracker$new()
@@ -24,32 +44,48 @@ RyeEngine <- R6::R6Class(
       self$macro_expander$evaluator <- self$evaluator
       self$help_system <- HelpSystem$new(self)
     },
+    #' @description
+    #' Tokenize and parse source into expressions.
     read = function(source, source_name = NULL) {
       tokens <- self$tokenizer$tokenize(source)
       self$parser$parse(tokens, source_name = source_name)
     },
+    #' @description
+    #' Tokenize source into Rye tokens.
     tokenize = function(source) {
       self$tokenizer$tokenize(source)
     },
+    #' @description
+    #' Parse tokens into expressions.
     parse = function(tokens, source_name = NULL) {
       self$parser$parse(tokens, source_name = source_name)
     },
+    #' @description
+    #' Evaluate a single expression.
     eval = function(expr, env = NULL) {
       self$evaluator$eval(expr, env)
     },
+    #' @description
+    #' Evaluate expressions in order.
     eval_seq = function(exprs, env = NULL) {
       self$evaluator$eval_seq(exprs, env)
     },
+    #' @description
+    #' Evaluate expressions with source tracking.
     eval_exprs = function(exprs, env = NULL) {
       target_env <- rye_env_resolve(env, fallback = self$env)
       self$source_tracker$with_error_context(function() {
         self$eval_seq(exprs, target_env)
       })
     },
+    #' @description
+    #' Read and evaluate text.
     eval_text = function(text, env = NULL, source_name = "<eval>") {
       exprs <- self$read(text, source_name = source_name)
       self$eval_exprs(exprs, env = env)
     },
+    #' @description
+    #' Populate standard bindings in an environment.
     initialize_environment = function(env = NULL) {
       if (inherits(env, "RyeEnv")) {
         env <- env$env
@@ -172,6 +208,8 @@ RyeEngine <- R6::R6Class(
 
       env
     },
+    #' @description
+    #' Load and evaluate a Rye source file.
     load_file = function(path, env = NULL) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
@@ -185,21 +223,31 @@ RyeEngine <- R6::R6Class(
         self$eval_seq(self$read(text, source_name = path), target_env)
       })
     },
+    #' @description
+    #' Initialize the standard library in an environment.
     load_stdlib = function(env = NULL) {
       target_env <- rye_env_resolve(env, fallback = self$env)
       self$initialize_environment(target_env)
     },
+    #' @description
+    #' Expand macros recursively.
     macroexpand = function(expr, env = NULL, preserve_src = FALSE) {
       target_env <- rye_env_resolve(env, fallback = self$env)
       self$macro_expander$macroexpand(expr, env = target_env, preserve_src = preserve_src)
     },
+    #' @description
+    #' Expand a single macro layer.
     macroexpand_1 = function(expr, env = NULL, preserve_src = FALSE) {
       target_env <- rye_env_resolve(env, fallback = self$env)
       self$macro_expander$macroexpand_1(expr, env = target_env, preserve_src = preserve_src)
     },
+    #' @description
+    #' Show help for a topic.
     help = function(topic, env = NULL) {
       self$help_system$help(topic, env = env)
     },
+    #' @description
+    #' Start the Rye REPL using this engine.
     repl = function() {
       rye_repl(engine = self)
     }

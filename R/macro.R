@@ -1,6 +1,7 @@
 #' Macro expander
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 MacroExpander <- R6::R6Class(
   "MacroExpander",
   public = list(

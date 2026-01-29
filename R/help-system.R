@@ -1,6 +1,7 @@
 # Help system for Rye
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 HelpSystem <- R6::R6Class(
   "HelpSystem",
   public = list(

@@ -1,6 +1,7 @@
 #' Source tracking for errors
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 SourceTracker <- R6::R6Class(
   "SourceTracker",
   private = list(

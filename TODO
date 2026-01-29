@@ -1,7 +1,11 @@
+o) address most make check output
+o) pkgdown warning about site url
+
 o) the cli, repl might benefit from oo refactoring
 
 o) classes that have instances of other classes horizontally as attributes
 o) do we still need to assign these macro registry etc into the environment?
+o) unlockBinding note
 
 o) performance optimizations: use profiling and benchmarking
 o) Look for any R code that’s left over or not used

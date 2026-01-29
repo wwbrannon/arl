@@ -1,6 +1,7 @@
 #' Module registry wrapper
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 ModuleRegistry <- R6::R6Class(
   "ModuleRegistry",
   public = list(

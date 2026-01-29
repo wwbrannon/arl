@@ -15,13 +15,6 @@ reference:
   - title: Core engine
     contents:
       - RyeEngine
-      - RyeEnv
-      - Tokenizer
-      - Parser
-      - MacroExpander
-      - Evaluator
-      - SourceTracker
-      - ModuleRegistry
       - rye_default_engine
   # - title: Macros  # FIXME?
   #   contents:
