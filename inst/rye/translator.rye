@@ -28,6 +28,13 @@
   (lambda (item items)
     (isTRUE (r/call "%in%" (list item items)))))
 
+(define __r-name
+  (lambda (name)
+    (define made (as.character (r/call "make.names" (list name))))
+    (if (isTRUE (r/call "identical" (list made name)))
+      name
+      (paste0 "`" name "`"))))
+
 (define translate-expr
   (lambda (expr (indent 0))
     "Translate a Rye AST expression to R code."
@@ -35,7 +42,7 @@
     (if (is.null expr)
       "NULL"
       (if (keyword? expr)
-        (paste0 (as.character expr) " =")
+        (paste0 (__r-name (as.character expr)) " =")
         (if (is.numeric expr)
           (as.character expr)
           (if (and (is.character expr) (not (symbol? expr)))
@@ -53,12 +60,7 @@
                       "-Inf"
                       (if (= sym-name "#nan")
                         "NaN"
-                        (if (__string-in? sym-name
-                                          (c "+" "-" "*" "/" "%%" "%/%" "^"
-                                             "<" ">" "<=" ">=" "==" "!="
-                                             "&" "|" "!"))
-                          (paste0 "`" sym-name "`")
-                          sym-name)))))
+                        (__r-name sym-name)))))
                 (if (and (is.call expr) (= (length expr) 0))
                   "list()"
                   (if (is.call expr)
@@ -133,7 +135,7 @@
                                    (if (not (symbol? rest-arg))
                                      (stop "Rest parameter must be a symbol")
                                      #nil)
-                                   (set! rest-param (as.character rest-arg))
+                                   (set! rest-param (__r-name (as.character rest-arg)))
                                    (if (> dot-pos 1)
                                      (set! arg-items (__slice arg-items 1 (- dot-pos 1)))
                                      (set! arg-items (list))))
@@ -145,12 +147,12 @@
                            (define i 1)
                            (while (<= i (length arg-items))
                              (begin
-                               (define arg (__at arg-items i))
-                               (if (symbol? arg)
-                                 (begin
-                                   (define name (as.character arg))
-                                   (set! param-names (c param-names name))
-                                   (set! arg-parts (c arg-parts name)))
+                              (define arg (__at arg-items i))
+                              (if (symbol? arg)
+                                (begin
+                                  (define name (__r-name (as.character arg)))
+                                  (set! param-names (c param-names name))
+                                  (set! arg-parts (c arg-parts name)))
                                  (if (or (is.call arg) (is.list arg))
                                    (begin
                                      (define arg-list (if (is.call arg) (as.list arg) arg))
@@ -160,7 +162,7 @@
                                      (if (not (symbol? (__at arg-list 1)))
                                        (stop "lambda default argument name must be a symbol")
                                        #nil)
-                                     (define name (as.character (__at arg-list 1)))
+                                     (define name (__r-name (as.character (__at arg-list 1))))
                                      (set! param-names (c param-names name))
                                      (define default-expr (translate-expr (__at arg-list 2) indent))
                                      (set! arg-parts (c arg-parts (paste0 name " = " default-expr))))
@@ -220,7 +222,7 @@
                            (if (!= (length expr) 3)
                              (stop "define requires exactly 2 arguments")
                              #nil)
-                           (define name (as.character (__at expr 2)))
+                           (define name (__r-name (as.character (__at expr 2))))
                            (define value (translate-expr (__at expr 3) indent))
                            (paste0 name " <- " value)))
 
@@ -317,7 +319,7 @@
                                      #nil)
                                    (define keyword-name (as.character arg-expr))
                                    (define value (translate-expr (__at expr (+ j 1)) indent))
-                                   (set! args (c args (paste0 keyword-name " = " value)))
+                                   (set! args (c args (paste0 (__r-name keyword-name) " = " value)))
                                    (set! j (+ j 2)))
                                  (begin
                                    (define value (translate-expr arg-expr indent))

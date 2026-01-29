@@ -1,15 +1,4 @@
-o) performance optimizations: use profiling and benchmarking
-
-o) Look for any R code that’s left over or not used
-o) Look for any R code that can be refactored to make it simpler
-
-o) How to calculate test coverage of .rye code
-
-o) More tests for .rye code
-
 o) remove translate R api
-
-o) translate doesn't correctly backtick-quote bad idents
 
 o) the cli, repl might benefit from oo refactoring
 
@@ -20,3 +9,9 @@ o) this default engine stuff is bad, certainly when used in these functions inte
 o) classes that have instances of other classes horizontally as attributes
 
 o) do we still need to assign these macro registry etc into the environment?
+
+o) performance optimizations: use profiling and benchmarking
+o) Look for any R code that’s left over or not used
+o) Look for any R code that can be refactored to make it simpler
+o) How to calculate test coverage of .rye code
+o) More tests for .rye code

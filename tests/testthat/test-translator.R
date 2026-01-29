@@ -34,6 +34,18 @@ test_that("engine$translate handles keywords for named arguments", {
   expect_true(grepl('col = "red"', result, fixed = TRUE))
 })
 
+test_that("engine$translate backticks non-syntactic identifiers", {
+  result <- engine$translate("(define foo-bar 1)", is_file = FALSE)
+  expect_true(grepl("`foo-bar` <- 1", result, fixed = TRUE))
+
+  result <- engine$translate("(plot x y :foo-bar 1)", is_file = FALSE)
+  expect_true(grepl("`foo-bar` = 1", result, fixed = TRUE))
+
+  result <- engine$translate("(lambda (foo-bar) foo-bar)", is_file = FALSE)
+  expect_true(grepl("function\\(`foo-bar`\\)", result))
+  expect_true(grepl("`foo-bar`", result, fixed = TRUE))
+})
+
 test_that("engine$translate handles package accessors", {
   rye_code <- "(dplyr::filter df)"
   result <- engine$translate(rye_code, is_file = FALSE)
