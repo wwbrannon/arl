@@ -25,29 +25,43 @@
         ""
         (string-join parts " "))))
 
+  (define __format-function
+    (lambda (x)
+      "Format functions/macros/closures."
+      (if (r/call "inherits" (list x "rye_closure"))
+        "<closure>"
+        (if (r/call "is.function" (list x))
+          (if (r/call "is.null" (list (r/call "attr" (list x "rye_macro" :exact #t))))
+            "<function>"
+            "<macro>")
+          #nil))))
+
   (define format-value
     (lambda (x)
       "Format value for display."
-      (if (values? x)
-        (begin
-          (define inner (r/call "unclass" (list x)))
-          (if (= (length inner) 0)
-            "(values)"
-            (string-join (append (list "(values") (lapply inner format-value) (list ")")) " ")))
-        (if (dict? x)
+      (define fn-tag (__format-function x))
+      (if (not (is.null fn-tag))
+        fn-tag
+        (if (values? x)
           (begin
-            (define keys (dict-keys x))
-            (define values (lapply keys (lambda (k) (dict-get x k))))
-            (__format-seq values))
-          (if (set? x)
-            (__format-seq (r/call "as.list" (list x :all.names #t)))
-            (if (promise? x)
-              "<promise>"
-              (if (is.symbol x)
-                (as.character x)
-                (if (or (is.call x) (is.list x))
-                  (__format-seq x)
-                  (__format-atomic x)))))))))
+            (define inner (r/call "unclass" (list x)))
+            (if (= (length inner) 0)
+              "(values)"
+              (string-join (append (list "(values") (lapply inner format-value) (list ")")) " ")))
+          (if (dict? x)
+            (begin
+              (define keys (dict-keys x))
+              (define values (lapply keys (lambda (k) (dict-get x k))))
+              (__format-seq values))
+            (if (set? x)
+              (__format-seq (r/call "as.list" (list x :all.names #t)))
+              (if (promise? x)
+                "<promise>"
+                (if (is.symbol x)
+                  (as.character x)
+                  (if (or (is.call x) (is.list x))
+                    (__format-seq x)
+                    (__format-atomic x))))))))))
 
   (define display
     (lambda (x)
@@ -75,4 +89,5 @@
         #nil
         (r/call "cat" (list (format-value label) ": ")))
       (r/call "cat" (list (format-value x) "\n"))
-      x)))
+      x))
+)
