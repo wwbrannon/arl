@@ -21,6 +21,12 @@ if (file.exists("benchmarks/benchmark-helpers.R")) {
 #' @param regression_threshold Percentage slowdown to flag as regression (default: 5)
 #' @return Comparison data frame
 compare_benchmarks <- function(old_file, new_file, regression_threshold = 5) {
+  quiet <- nzchar(Sys.getenv("TESTTHAT"))
+  if (quiet) {
+    sink(nullfile())
+    on.exit(sink(), add = TRUE)
+  }
+
   # Load results
   cat("Loading benchmark results...\n")
   old_results <- load_benchmark_results(old_file)
@@ -286,8 +292,8 @@ quick_compare <- function(old_pattern = "baseline", new_pattern = NULL) {
   compare_benchmarks(old_file, new_file)
 }
 
-# Interactive usage if run directly
-if (!interactive() && !exists(".comparison_loaded")) {
+# Interactive usage if run directly (skip banner when running under testthat)
+if (!interactive() && !exists(".comparison_loaded") && !nzchar(Sys.getenv("TESTTHAT"))) {
   cat("Benchmark Comparison Functions Loaded\n\n")
   cat("Available functions:\n")
   cat("  - compare_benchmarks(old_file, new_file, regression_threshold = 5)\n")

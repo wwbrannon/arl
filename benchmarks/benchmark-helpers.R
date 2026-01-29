@@ -66,7 +66,9 @@ profile_component <- function(expr, name, output_dir = "benchmarks/profiles") {
         eval(expr, envir = parent.frame())
     }, rerun=TRUE)  # rerun helps if expr finishes too fast to sample
     htmlwidgets::saveWidget(prof, output_file, selfcontained = TRUE)
-    cat(sprintf("  ✓ Generated: %s\n", output_file))
+    if (!nzchar(Sys.getenv("TESTTHAT"))) {
+      cat(sprintf("  ✓ Generated: %s\n", output_file))
+    }
 
     output_file
   }
@@ -147,7 +149,9 @@ save_benchmark_results <- function(results, name = "benchmark",
   output_file <- file.path(output_dir, filename)
 
   saveRDS(results, output_file)
-  message("Results saved to: ", output_file)
+  if (!nzchar(Sys.getenv("TESTTHAT"))) {
+    message("Results saved to: ", output_file)
+  }
   invisible(output_file)
 }
 

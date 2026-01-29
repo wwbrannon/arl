@@ -318,8 +318,8 @@ extremes <- function(results, n = 5) {
   invisible(list(fastest = fastest, slowest = slowest))
 }
 
-# Interactive analysis if run directly
-if (!interactive() && !exists(".benchmark_analysis_loaded")) {
+# Interactive analysis if run directly (skip banner when running under testthat)
+if (!interactive() && !exists(".benchmark_analysis_loaded") && !nzchar(Sys.getenv("TESTTHAT"))) {
   cat("Benchmark Analysis Functions Loaded\n\n")
   cat("Available functions:\n")
   cat("  - identify_bottlenecks(results, threshold = 0.05)\n")
