@@ -1,5 +1,6 @@
-o) address most make check output
-o) pkgdown warning about site url
+o) no more readme.html
+o) Look for any R code that’s left over or not used
+o) Look for any R code that can be refactored to make it simpler
 
 o) the cli, repl might benefit from oo refactoring
 
@@ -8,7 +9,6 @@ o) do we still need to assign these macro registry etc into the environment?
 o) unlockBinding note
 
 o) performance optimizations: use profiling and benchmarking
-o) Look for any R code that’s left over or not used
-o) Look for any R code that can be refactored to make it simpler
 o) How to calculate test coverage of .rye code
 o) More tests for .rye code
+o) pkgdown warning about site url

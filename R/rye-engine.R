@@ -109,7 +109,9 @@ RyeEngine <- R6::R6Class(
         }
         self$evaluator$do_call(fn, args)
       }
-      attr(env$apply, "rye_doc") <- attr(rye_stdlib_apply, "rye_doc", exact = TRUE)
+      attr(env$apply, "rye_doc") <- list(
+        description = "Apply fn to the elements of lst as arguments."
+      )
 
       env$`try*` <- rye_stdlib_try
 
@@ -138,7 +140,9 @@ RyeEngine <- R6::R6Class(
       env$eval <- function(expr, env = parent.frame()) {
         self$eval(expr, env)
       }
-      attr(env$eval, "rye_doc") <- attr(rye_stdlib_eval, "rye_doc", exact = TRUE)
+      attr(env$eval, "rye_doc") <- list(
+        description = "Evaluate expr in the current environment."
+      )
 
       env$`current-env` <- rye_stdlib_current_env
       env$`promise?` <- rye_stdlib_promise_p
@@ -168,7 +172,9 @@ RyeEngine <- R6::R6Class(
         fn_obj <- rye_resolve_r_callable(fn_name, stdlib_env = stdlib_env, max_frames = 5)
         self$evaluator$do_call(fn_obj, rye_as_list(args))
       }
-      attr(env$`r/call`, "rye_doc") <- attr(rye_stdlib_r_call, "rye_doc", exact = TRUE)
+      attr(env$`r/call`, "rye_doc") <- list(
+        description = "Call an R function with list arguments."
+      )
 
       env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
@@ -201,7 +207,6 @@ RyeEngine <- R6::R6Class(
         eval(expr, env)
       }
       attr(env$`r/eval`, "rye_no_quote") <- TRUE
-      attr(env$`r/eval`, "rye_doc") <- attr(rye_stdlib_r_eval, "rye_doc", exact = TRUE)
 
       loader_path <- rye_resolve_module_path("_stdlib_loader")
       self$eval(self$read(sprintf('(load "%s")', loader_path))[[1]], env)
