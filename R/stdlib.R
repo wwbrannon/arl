@@ -27,26 +27,8 @@ rye_stdlib_current_env <- function() {
   globalenv()
 }
 
-rye_stdlib_promise_p <- function(x) {
-  is.environment(x) && inherits(x, "rye_promise")
-}
-
-rye_stdlib_force <- function(x) {
-  if (!rye_stdlib_promise_p(x)) {
-    return(x)
-  }
-  get(rye_promise_value_key, envir = x, inherits = FALSE)
-}
-
 #' @export
 print.rye_promise <- function(x, ...) {
   cat("<promise>\n")
   invisible(x)
 }
-
-attr(rye_stdlib_promise_p, "rye_doc") <- list(
-  description = "Return TRUE if x is a promise."
-)
-attr(rye_stdlib_force, "rye_doc") <- list(
-  description = "Force a promise or return x unchanged."
-)

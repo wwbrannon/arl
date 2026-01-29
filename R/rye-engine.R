@@ -143,10 +143,23 @@ RyeEngine <- R6::R6Class(
       )
 
       env$`current-env` <- rye_stdlib_current_env
-      env$`promise?` <- rye_stdlib_promise_p
-      env$force <- rye_stdlib_force
-      attr(env$force, "rye_doc") <- attr(rye_stdlib_force, "rye_doc", exact = TRUE)
-      attr(env$`promise?`, "rye_doc") <- attr(rye_stdlib_promise_p, "rye_doc", exact = TRUE)
+
+      env$`promise?` <- function(x) {
+        is.environment(x) && inherits(x, "rye_promise")
+      }
+      env$force <- function(x) {
+        if (!is.environment(x) || !inherits(x, "rye_promise")) {
+            return(x)
+        }
+        get(rye_promise_value_key, envir = x, inherits = FALSE)
+      }
+
+      attr(env$`promise?`, "rye_doc") <- list(
+        description = "Return TRUE if x is a promise."
+      )
+      attr(env$force, "rye_doc") <- list(
+        description = "Force a promise or return x unchanged."
+      )
 
       env$rye_read <- function(source, source_name = NULL) {
         self$read(source, source_name = source_name)
