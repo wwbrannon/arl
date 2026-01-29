@@ -27,6 +27,7 @@ rye_env_module_registry <- function(env, create = TRUE) {
   if (is.null(registry) && create) {
     registry <- new.env(parent = emptyenv())
     assign(".rye_module_registry", registry, envir = env)
+    lockBinding(".rye_module_registry", env)
   }
   registry
 }
@@ -39,6 +40,7 @@ rye_env_macro_registry <- function(env, create = TRUE) {
   if (is.null(registry) && create) {
     registry <- new.env(parent = emptyenv())
     assign(".rye_macros", registry, envir = env)
+    lockBinding(".rye_macros", env)
   }
   registry
 }
@@ -157,6 +159,7 @@ rye_module_register <- function(name, env, exports, path = NULL, registry_env = 
   }
   entry <- list(env = env, exports = exports, path = path)
   assign(name, entry, envir = registry)
+  lockBinding(name, registry)
   entry
 }
 
@@ -173,7 +176,11 @@ rye_module_update_exports <- function(name, exports, registry_env = parent.frame
   }
   entry$exports <- exports
   registry <- rye_env_module_registry(registry_env, create = TRUE)
+  if (bindingIsLocked(name, registry)) {
+    unlockBinding(name, registry)
+  }
   assign(name, entry, envir = registry)
+  lockBinding(name, registry)
   entry
 }
 
@@ -183,6 +190,9 @@ rye_module_unregister <- function(name, registry_env = parent.frame()) {
   }
   registry <- rye_env_module_registry(registry_env, create = FALSE)
   if (!is.null(registry) && exists(name, envir = registry, inherits = FALSE)) {
+    if (bindingIsLocked(name, registry)) {
+      unlockBinding(name, registry)
+    }
     rm(list = name, envir = registry)
   }
   invisible(NULL)
@@ -204,6 +214,7 @@ rye_module_attach <- function(name, target_env) {
         # Copy macro to target environment's macro registry
         macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
         assign(export_name, macro_fn, envir = target_macro_registry)
+        lockBinding(export_name, target_macro_registry)
         next
       }
       stop(sprintf("module '%s' does not export '%s'", name, export_name))

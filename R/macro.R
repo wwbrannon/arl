@@ -649,8 +649,13 @@ rye_defmacro <- function(name, params, body, env, docstring = NULL) {
 
   # Store in macro registry (env-local)
   registry <- rye_env_macro_registry(env, create = TRUE)
-  registry[[as.character(name)]] <- macro_fn
-  assign(as.character(name), macro_fn, envir = env)
+  name_str <- as.character(name)
+  if (exists(name_str, envir = registry, inherits = FALSE) && bindingIsLocked(name_str, registry)) {
+    unlockBinding(name_str, registry)
+  }
+  registry[[name_str]] <- macro_fn
+  lockBinding(name_str, registry)
+  assign(name_str, macro_fn, envir = env)
 }
 
 #' Check if a symbol names a macro
