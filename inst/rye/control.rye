@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Control Flow Macros
 
 (module control
-  (export when unless and or cond case)
+  (export when unless and or cond case try*)
 
   (import predicates)
   (import list)
@@ -57,4 +57,31 @@
       (if (and (symbol? datum) (= (as.character datum) "else"))
         `(begin ,@body)
         `(if (= ,key ,datum) (begin ,@body) (case ,key ,@rest))))))
+
+;;; Error handling helper
+
+(define try*
+  (lambda (thunk (error_handler #f) (finally_handler #f))
+    "Evaluate thunk with error/finally handlers."
+    (if (not (is.function thunk))
+      (stop "try* expects a function as first argument"))
+    (if (and error_handler (not (is.function error_handler)))
+      (stop "try* error handler must be a function"))
+    (if (and finally_handler (not (is.function finally_handler)))
+      (stop "try* finally handler must be a function"))
+    (define thunk-expr (call (list thunk)))
+    (if (not error_handler)
+      (if (not finally_handler)
+        (thunk)
+        (r/eval (call (list 'tryCatch thunk-expr
+                            :finally (call (list finally_handler))))
+                (current-env)))
+      (if (not finally_handler)
+        (r/eval (call (list 'tryCatch thunk-expr
+                            :error error_handler))
+                (current-env))
+        (r/eval (call (list 'tryCatch thunk-expr
+                            :error error_handler
+                            :finally (call (list finally_handler))))
+                (current-env))))))
 )

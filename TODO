@@ -1,7 +1,8 @@
 o) unbreak configure script
-
 o) OO refactor of repl
 o) rewrite cli to use docopt
+
+o) move out the rest of stdlib.R
 
 o) classes that have instances of other classes horizontally as attributes
 o) do we still need to assign these macro registry etc into the environment?

@@ -113,8 +113,6 @@ RyeEngine <- R6::R6Class(
         description = "Apply fn to the elements of lst as arguments."
       )
 
-      env$`try*` <- rye_stdlib_try
-
       env$gensym <- function(prefix = "G") {
         self$macro_expander$gensym(prefix = prefix)
       }

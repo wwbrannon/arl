@@ -1,27 +1,3 @@
-rye_stdlib_try <- function(thunk, error_handler = NULL, finally_handler = NULL) {
-  if (!is.function(thunk)) {
-    stop("try* expects a function as first argument")
-  }
-  if (!is.null(error_handler) && !is.function(error_handler)) {
-    stop("try* error handler must be a function")
-  }
-  if (!is.null(finally_handler) && !is.function(finally_handler)) {
-    stop("try* finally handler must be a function")
-  }
-  if (!is.null(finally_handler)) {
-    on.exit(finally_handler(), add = TRUE)
-  }
-  if (is.null(error_handler)) {
-    return(thunk())
-  }
-  tryCatch(
-    thunk(),
-    error = function(e) {
-      error_handler(e)
-    }
-  )
-}
-
 rye_stdlib_current_env <- function() {
   for (i in 0:20) {
     frame_env <- parent.frame(i + 1)
@@ -68,9 +44,6 @@ print.rye_promise <- function(x, ...) {
   invisible(x)
 }
 
-attr(rye_stdlib_try, "rye_doc") <- list(
-  description = "Evaluate thunk with error/finally handlers."
-)
 attr(rye_stdlib_promise_p, "rye_doc") <- list(
   description = "Return TRUE if x is a promise."
 )
