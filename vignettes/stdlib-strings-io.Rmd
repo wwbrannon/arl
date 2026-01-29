@@ -313,4 +313,8 @@ Equality test.
 (= 1 2)           ; => #f
 ```
 
-**Note:** All other R arithmetic operators (`+`, `-`, `*`, `/`, `<`, `>`, etc.) are available directly.
+**Note:** Standard arithmetic helpers (`+`, `-`, `*`, `/`, `%`, `min`, `max`) and numeric predicates
+(`even?`, `odd?`, `zero?`, `positive?`, `negative?`, `non-negative?`, `non-positive?`,
+`integer?`, `natural?`, `finite?`, `infinite?`, `nan?`) are defined in `inst/rye/math.rye`
+and loaded as part of the base stdlib. All other R arithmetic operators (`<`, `>`, `<=`, `>=`, etc.)
+are available directly.

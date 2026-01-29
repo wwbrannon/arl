@@ -2,6 +2,7 @@
 
 (module list-core
   (export __as-list __list-last __list-head
+          call
           car cdr
           caar cadr cdar cddr
           caaar caadr cadar caddr
@@ -32,6 +33,13 @@
       (if (<= (length lst) 1)
         (list)
         (r/call "[" (list lst (seq 1 (- (length lst) 1)))))))
+
+  (define call
+    (lambda (lst)
+      "Convert a list to a callable form."
+      (if (is.call lst)
+        lst
+        (as.call (__as-list lst)))))
 
   (define car
     (lambda (lst)

@@ -54,7 +54,10 @@
       "Print value with newline."
       (r/call "cat" (list (format-value x) "\n"))))
 
-  (define println display)
+  (define println
+    (lambda (x)
+      "Alias for display."
+      (display x)))
 
   (define str
     (lambda (. args)

@@ -4,10 +4,6 @@
   (export list? pair? null? nil?
           symbol? keyword? number? string? vector?
           true? false? boolean? fn? callable? not xor
-          even? odd? zero?
-          positive? negative? non-negative? non-positive?
-          integer? natural?
-          finite? infinite? nan?
           empty?
           length= length> length<)
 
@@ -103,69 +99,6 @@
         (if b #f #t)
         (if b #t #f))))
 
-  (define even?
-    (lambda (x)
-      "Return #t if x is an even number."
-      (isTRUE (== (%% x 2) 0))))
-
-  (define odd?
-    (lambda (x)
-      "Return #t if x is an odd number."
-      (isTRUE (== (%% x 2) 1))))
-
-  (define zero?
-    (lambda (x)
-      "Return #t if x is zero."
-      (isTRUE (== x 0))))
-
-  (define positive?
-    (lambda (x)
-      "Return #t if x is greater than zero."
-      (isTRUE (> x 0))))
-
-  (define negative?
-    (lambda (x)
-      "Return #t if x is less than zero."
-      (isTRUE (< x 0))))
-
-  (define non-negative?
-    (lambda (x)
-      "Return #t if x is greater than or equal to zero."
-      (isTRUE (>= x 0))))
-
-  (define non-positive?
-    (lambda (x)
-      "Return #t if x is less than or equal to zero."
-      (isTRUE (<= x 0))))
-
-  (define integer?
-    (lambda (x)
-      "Return #t if x is an integer-valued number."
-      (if (number? x)
-        (isTRUE (== x (as.integer x)))
-        #f)))
-
-  (define natural?
-    (lambda (x)
-      "Return #t if x is a natural number (integer >= 0)."
-      (if (integer? x)
-        (isTRUE (>= x 0))
-        #f)))
-
-  (define finite?
-    (lambda (x)
-      "Return #t if x is finite."
-      (isTRUE (is.finite x))))
-
-  (define infinite?
-    (lambda (x)
-      "Return #t if x is infinite."
-      (isTRUE (is.infinite x))))
-
-  (define nan?
-    (lambda (x)
-      "Return #t if x is NaN."
-      (isTRUE (is.nan x))))
 
   (define empty?
     (lambda (x)

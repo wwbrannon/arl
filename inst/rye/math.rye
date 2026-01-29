@@ -1,0 +1,160 @@
+;;; Rye Standard Library - Math Helpers
+
+(module math
+  (export % + * - / min max
+          inc dec clamp within?
+          even? odd? zero?
+          positive? negative? non-negative? non-positive?
+          integer? natural?
+          finite? infinite? nan?)
+
+  (define __r+ (get "+" :envir (baseenv)))
+  (define __r* (get "*" :envir (baseenv)))
+  (define __r- (get "-" :envir (baseenv)))
+  (define __r/ (get "/" :envir (baseenv)))
+  (define __rmin (get "min" :envir (baseenv)))
+  (define __rmax (get "max" :envir (baseenv)))
+
+  (define %
+    (lambda (x y)
+      "Modulo helper using R %%."
+      (%% x y)))
+
+  (define +
+    (lambda (. args)
+      "Variadic addition."
+      (if (= (length args) 0)
+        0
+        (if (= (length args) 1)
+          (r/call "[[" (list args 1))
+          (Reduce __r+ args)))))
+
+  (define *
+    (lambda (. args)
+      "Variadic multiplication."
+      (if (= (length args) 0)
+        1
+        (if (= (length args) 1)
+          (r/call "[[" (list args 1))
+          (Reduce __r* args)))))
+
+  (define -
+    (lambda (. args)
+      "Variadic subtraction."
+      (if (= (length args) 0)
+        (stop "- requires at least one argument")
+        (if (= (length args) 1)
+          (__r- 0 (r/call "[[" (list args 1)))
+          (Reduce __r- args)))))
+
+  (define /
+    (lambda (. args)
+      "Variadic division."
+      (if (= (length args) 0)
+        (stop "/ requires at least one argument")
+        (if (= (length args) 1)
+          (__r/ 1 (r/call "[[" (list args 1)))
+          (Reduce __r/ args)))))
+
+  (define min
+    (lambda (. args)
+      "Variadic min."
+      (if (= (length args) 0)
+        (stop "min requires at least one argument")
+        (do.call __rmin args))))
+
+  (define max
+    (lambda (. args)
+      "Variadic max."
+      (if (= (length args) 0)
+        (stop "max requires at least one argument")
+        (do.call __rmax args))))
+
+  (define inc
+    (lambda (x (n 1))
+      "Increment numeric value by n (default 1)."
+      (+ x n)))
+
+  (define dec
+    (lambda (x (n 1))
+      "Decrement numeric value by n (default 1)."
+      (- x n)))
+
+  (define clamp
+    (lambda (x lo hi)
+      "Clamp numeric value x to the inclusive range [lo, hi]."
+      (if (< x lo)
+        lo
+        (if (> x hi) hi x))))
+
+  (define within?
+    (lambda (x lo hi)
+      "Return #t if x is within the inclusive range [lo, hi]."
+      (if (< x lo)
+        #f
+        (if (> x hi) #f #t))))
+
+  (define even?
+    (lambda (x)
+      "Return #t if x is an even number."
+      (isTRUE (== (%% x 2) 0))))
+
+  (define odd?
+    (lambda (x)
+      "Return #t if x is an odd number."
+      (isTRUE (== (%% x 2) 1))))
+
+  (define zero?
+    (lambda (x)
+      "Return #t if x is zero."
+      (isTRUE (== x 0))))
+
+  (define positive?
+    (lambda (x)
+      "Return #t if x is greater than zero."
+      (isTRUE (> x 0))))
+
+  (define negative?
+    (lambda (x)
+      "Return #t if x is less than zero."
+      (isTRUE (< x 0))))
+
+  (define non-negative?
+    (lambda (x)
+      "Return #t if x is greater than or equal to zero."
+      (isTRUE (>= x 0))))
+
+  (define non-positive?
+    (lambda (x)
+      "Return #t if x is less than or equal to zero."
+      (isTRUE (<= x 0))))
+
+  (define integer?
+    (lambda (x)
+      "Return #t if x is an integer-valued number."
+      (if (is.numeric x)
+        (isTRUE (== x (as.integer x)))
+        #f)))
+
+  (define natural?
+    (lambda (x)
+      "Return #t if x is a natural number (integer >= 0)."
+      (if (integer? x)
+        (isTRUE (>= x 0))
+        #f)))
+
+  (define finite?
+    (lambda (x)
+      "Return #t if x is finite."
+      (isTRUE (is.finite x))))
+
+  (define infinite?
+    (lambda (x)
+      "Return #t if x is infinite."
+      (isTRUE (is.infinite x))))
+
+  (define nan?
+    (lambda (x)
+      "Return #t if x is NaN."
+      (isTRUE (is.nan x))))
+)

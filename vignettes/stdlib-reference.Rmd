@@ -110,6 +110,7 @@ The base R parts of the stdlib implementation live in `R/stdlib.R`. The rye
 parts are organized by topic in `inst/rye/` (each file defines a module):
 
 - `stdlib-core.rye`
+- `math.rye`
 - `predicates.rye`
 - `list-core.rye`
 - `higher-order.rye`

@@ -30,30 +30,12 @@ rye_load_stdlib_base <- function(env = NULL) {
   rye_env_module_registry(env, create = TRUE)
   rye_env_macro_registry(env, create = TRUE)
   # Core helpers implemented in R
-  env$call <- rye_stdlib_call
   env$apply <- rye_stdlib_apply
-  env$values <- rye_stdlib_values
-  env$`values?` <- rye_values_p
-  env$`call-with-values` <- rye_stdlib_call_with_values
   env$`call/cc` <- callCC
   env$`call-with-current-continuation` <- callCC
 
-  # Variadic arithmetic operators
-  env$`+` <- rye_stdlib_add
-  env$`*` <- rye_stdlib_multiply
-  env$`-` <- rye_stdlib_subtract
-  env$`/` <- rye_stdlib_divide
-  env$min <- rye_stdlib_min
-  env$max <- rye_stdlib_max
-
-  # Output
-  env$display <- rye_stdlib_display
-  env$println <- rye_stdlib_display
-  env$str <- rye_stdlib_str
-
   # Errors and debugging
   # Error helpers provided by stdlib files
-  env$trace <- rye_stdlib_trace
   env$`try*` <- rye_stdlib_try
 
   # Macro and eval helpers
@@ -101,6 +83,7 @@ rye_load_stdlib_base <- function(env = NULL) {
 rye_load_stdlib_files <- function(env = parent.frame()) {
   base_modules <- c(
     "stdlib-core",
+    "math",
     "predicates",
     "list-core",
     "higher-order",
@@ -143,15 +126,6 @@ rye_as_list <- function(x) {
   as.list(x)
 }
 
-rye_stdlib_call <- function(lst) {
-  if (is.call(lst)) {
-    lst
-  } else {
-    as.call(rye_as_list(lst))
-  }
-}
-
-
 rye_stdlib_apply <- function(fn, args) {
   args <- rye_as_list(args)
   if (length(args) > 2 &&
@@ -162,38 +136,11 @@ rye_stdlib_apply <- function(fn, args) {
   rye_do_call(fn, args)
 }
 
-rye_stdlib_values <- function(...) {
-  rye_values_new(list(...))
-}
-
-rye_stdlib_call_with_values <- function(producer, consumer) {
-  if (!is.function(producer)) {
-    stop("call-with-values expects a function as the producer")
-  }
-  if (!is.function(consumer)) {
-    stop("call-with-values expects a function as the consumer")
-  }
-  produced <- producer()
-  args <- rye_values_list(produced)
-  rye_do_call(consumer, args)
-}
-
-
 rye_stdlib_str <- function(...) {
   args <- list(...)
   env <- parent.frame()
   formatted <- lapply(args, function(arg) rye_env_format_value(env, arg))
   do.call(paste0, formatted)
-}
-
-
-rye_stdlib_trace <- function(x, label = NULL) {
-  if (!is.null(label)) {
-    cat(rye_env_format_value(parent.frame(), label), ": ", sep = "")
-  }
-  env <- parent.frame()
-  cat(rye_env_format_value(env, x), "\n", sep = "")
-  x
 }
 
 rye_stdlib_try <- function(thunk, error_handler = NULL, finally_handler = NULL) {
@@ -397,23 +344,11 @@ rye_stdlib_max <- function(...) {
 attr(rye_stdlib_apply, "rye_doc") <- list(
   description = "Apply fn to the elements of lst as arguments."
 )
-attr(rye_stdlib_values, "rye_doc") <- list(
-  description = "Return multiple values to a call-with-values consumer."
-)
-attr(rye_stdlib_call_with_values, "rye_doc") <- list(
-  description = "Call producer and pass its values to consumer."
-)
-attr(rye_stdlib_call, "rye_doc") <- list(
-  description = "Convert a list to a callable form."
-)
 attr(rye_stdlib_display, "rye_doc") <- list(
   description = "Print x without formatting."
 )
 attr(rye_stdlib_str, "rye_doc") <- list(
   description = "Display structure of x."
-)
-attr(rye_stdlib_trace, "rye_doc") <- list(
-  description = "Print x and return it."
 )
 attr(rye_stdlib_try, "rye_doc") <- list(
   description = "Evaluate thunk with error/finally handlers."

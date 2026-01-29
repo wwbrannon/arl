@@ -1,12 +1,7 @@
 ;;; Rye Standard Library - Core Functions
 
 (module stdlib-core
-  (export % = error warn assert identity inc dec clamp within?)
-
-  (define %
-    (lambda (x y)
-      "Modulo helper using R %%."
-      (%% x y)))
+  (export = error warn assert identity values values? call-with-values)
 
   (define =
     (lambda (x y)
@@ -35,26 +30,29 @@
       "Return argument."
       x))
 
-  (define inc
-    (lambda (x (n 1))
-      "Increment numeric value by n (default 1)."
-      (+ x n)))
+  (define values
+    (lambda (. args)
+      "Return multiple values to a call-with-values consumer."
+      (r/call "structure" (list args :class "rye_values"))))
 
-  (define dec
-    (lambda (x (n 1))
-      "Decrement numeric value by n (default 1)."
-      (- x n)))
+  (define values?
+    (lambda (x)
+      "Return #t if x is a multiple-values container."
+      (if (is.list x)
+        (isTRUE (inherits x "rye_values"))
+        #f)))
 
-  (define clamp
-    (lambda (x lo hi)
-      "Clamp numeric value x to the inclusive range [lo, hi]."
-      (if (< x lo)
-        lo
-        (if (> x hi) hi x))))
-
-  (define within?
-    (lambda (x lo hi)
-      "Return #t if x is within the inclusive range [lo, hi]."
-      (if (< x lo)
-        #f
-        (if (> x hi) #f #t)))))
+  (define call-with-values
+    (lambda (producer consumer)
+      "Call producer and pass its values to consumer."
+      (if (not (is.function producer))
+        (stop "call-with-values expects a function as the producer"))
+      (if (not (is.function consumer))
+        (stop "call-with-values expects a function as the consumer"))
+      (define produced (producer))
+      (define args
+        (if (values? produced)
+          (r/call "unclass" (list produced))
+          (list produced)))
+      (apply consumer args)))
+)
