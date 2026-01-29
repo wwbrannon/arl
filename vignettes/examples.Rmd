@@ -2,8 +2,7 @@
 title: "Examples"
 output:
   rmarkdown::html_vignette:
-    highlight: null
-    pandoc_args: ["--syntax-highlighting=tango"]
+    highlight: tango
 vignette: >
   %\VignetteIndexEntry{Examples}
   %\VignetteEngine{knitr::rmarkdown}
