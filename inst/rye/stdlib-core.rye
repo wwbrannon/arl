@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Core Functions
 
 (module stdlib-core
-  (export % = error warn assert identity)
+  (export % = error warn assert identity inc dec clamp within?)
 
   (define %
     (lambda (x y)
@@ -33,4 +33,28 @@
   (define identity
     (lambda (x)
       "Return argument."
-      x)))
+      x))
+
+  (define inc
+    (lambda (x (n 1))
+      "Increment numeric value by n (default 1)."
+      (+ x n)))
+
+  (define dec
+    (lambda (x (n 1))
+      "Decrement numeric value by n (default 1)."
+      (- x n)))
+
+  (define clamp
+    (lambda (x lo hi)
+      "Clamp numeric value x to the inclusive range [lo, hi]."
+      (if (< x lo)
+        lo
+        (if (> x hi) hi x))))
+
+  (define within?
+    (lambda (x lo hi)
+      "Return #t if x is within the inclusive range [lo, hi]."
+      (if (< x lo)
+        #f
+        (if (> x hi) #f #t)))))

@@ -126,6 +126,19 @@ test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", 
   )
 })
 
+test_that("ordinal list accessors work (second, third, fourth)", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_equal(env$second(list(1, 2, 3)), 2)
+  expect_equal(env$third(list(1, 2, 3, 4)), 3)
+  expect_equal(env$fourth(list(1, 2, 3, 4)), 4)
+
+  expect_null(env$second(list(1)))
+  expect_null(env$third(list(1, 2)))
+  expect_null(env$fourth(list(1, 2, 3)))
+})
+
 test_that("cons adds element to front", {
   env <- new.env()
   rye_load_stdlib(env)
@@ -214,6 +227,53 @@ test_that("predicates work correctly", {
   expect_false(rye_eval(rye_read("(null? 42)")[[1]], env))
 })
 
+test_that("extended predicates work correctly", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_true(env$`boolean?`(TRUE))
+  expect_true(env$`boolean?`(FALSE))
+  expect_false(env$`boolean?`(c(TRUE, FALSE)))
+  expect_false(env$`boolean?`(1))
+
+  expect_true(rye_eval(rye_read("(xor #t #f)")[[1]], env))
+  expect_false(rye_eval(rye_read("(xor #t #t)")[[1]], env))
+  expect_false(rye_eval(rye_read("(xor #f #f)")[[1]], env))
+
+  expect_true(env$`even?`(4))
+  expect_true(env$`odd?`(5))
+  expect_true(env$`zero?`(0))
+  expect_true(env$`positive?`(3))
+  expect_true(env$`negative?`(-1))
+  expect_true(env$`non-negative?`(0))
+  expect_true(env$`non-positive?`(0))
+
+  expect_true(env$`integer?`(2))
+  expect_false(env$`integer?`(2.5))
+  expect_true(env$`natural?`(0))
+  expect_false(env$`natural?`(-1))
+
+  expect_true(env$`finite?`(1))
+  expect_false(env$`finite?`(Inf))
+  expect_true(env$`infinite?`(Inf))
+  expect_false(env$`infinite?`(1))
+  expect_true(env$`nan?`(NaN))
+  expect_false(env$`nan?`(1))
+
+  expect_true(env$`empty?`(list()))
+  expect_true(env$`empty?`(NULL))
+  expect_false(env$`empty?`(""))
+  expect_true(env$`empty?`(character()))
+  expect_true(env$`empty?`(c()))
+  expect_false(env$`empty?`(list(1)))
+  expect_false(env$`empty?`("x"))
+  expect_false(env$`empty?`(c(1)))
+
+  expect_true(env$`length=`(list(1, 2, 3), 3))
+  expect_true(env$`length>`(list(1, 2, 3), 2))
+  expect_true(env$`length<`(list(1, 2, 3), 4))
+})
+
 test_that("and macro works", {
   env <- new.env()
 
@@ -265,6 +325,48 @@ test_that("variadic and/or short-circuit correctly", {
   result <- rye_eval(rye_read("(or #t (begin (set! x 2) x))")[[1]], env)
   expect_true(result)
   expect_equal(env$x, 0)
+})
+
+test_that("binding macros when-let and if-let work", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+  import_stdlib_modules(env, c("binding"))
+
+  result <- rye_eval(rye_read("(when-let (x 10) (+ x 1))")[[1]], env)
+  expect_equal(result, 11)
+
+  result <- rye_eval(rye_read("(when-let (x #f) (+ x 1))")[[1]], env)
+  expect_null(result)
+
+  result <- rye_eval(rye_read("(when-let ((a b) (list 1 2)) (+ a b))")[[1]], env)
+  expect_equal(result, 3)
+
+  result <- rye_eval(rye_read("(if-let (x 5) (+ x 1) 0)")[[1]], env)
+  expect_equal(result, 6)
+
+  result <- rye_eval(rye_read("(if-let (x #nil) 1 2)")[[1]], env)
+  expect_equal(result, 2)
+
+  result <- rye_eval(rye_read("(if-let (x #f) 1 2)")[[1]], env)
+  expect_equal(result, 2)
+
+  result <- rye_eval(rye_read("(if-let (x #f) 1)")[[1]], env)
+  expect_null(result)
+
+  result <- rye_eval(rye_read("(if-let ((a b) (list 3 4)) (+ a b) 0)")[[1]], env)
+  expect_equal(result, 7)
+})
+
+test_that("until macro repeats until test is truthy", {
+  env <- new.env(parent = baseenv())
+  rye_load_stdlib(env)
+  import_stdlib_modules(env, c("looping"))
+
+  result <- rye_eval(
+    rye_read("(begin (define i 0) (until (= i 3) (set! i (+ i 1))) i)")[[1]],
+    env
+  )
+  expect_equal(result, 3)
 })
 
 test_that("not function works", {
@@ -327,6 +429,35 @@ test_that("sequence helpers work", {
   expect_equal(env$`drop-while`(function(x) x < 3, list(1, 2, 3, 1)), list(3, 1))
   expect_equal(env$partition(2, list(1, 2, 3, 4)), list(list(1, 2), list(3, 4)))
   expect_equal(env$flatten(list(1, list(2, list(3)), 4)), list(1, 2, 3, 4))
+})
+
+test_that("member and contains? sequence helpers work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_equal(env$member(2, list(1, 2, 3)), list(2, 3))
+  expect_false(env$member(5, list(1, 2, 3)))
+
+  expect_true(env$`contains?`(2, list(1, 2, 3)))
+  expect_false(env$`contains?`(5, list(1, 2, 3)))
+})
+
+test_that("numeric helpers inc/dec/clamp/within? work", {
+  env <- new.env()
+  rye_load_stdlib(env)
+
+  expect_equal(env$inc(5), 6)
+  expect_equal(env$inc(5, 2), 7)
+  expect_equal(env$dec(5), 4)
+  expect_equal(env$dec(5, 2), 3)
+
+  expect_equal(env$clamp(5, 1, 10), 5)
+  expect_equal(env$clamp(-1, 0, 10), 0)
+  expect_equal(env$clamp(11, 0, 10), 10)
+
+  expect_true(env$`within?`(5, 1, 10))
+  expect_false(env$`within?`(0, 1, 10))
+  expect_false(env$`within?`(11, 1, 10))
 })
 
 test_that("predicates and interop helpers work", {

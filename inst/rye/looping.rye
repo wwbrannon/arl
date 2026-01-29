@@ -1,28 +1,33 @@
 ;;; Rye Standard Library - Looping Macros
 
 (module looping
-  (export while for)
+  (export while until for)
 
   (import higher-order)
   (import list-core)
+  (import predicates)
 
-(defmacro while (test . body)
-  "Repeat body while test is truthy."
-  (begin
-    (define loop (gensym "while"))
-    `(begin
-       (define ,loop
-         (lambda ()
-         "Run loop body while test is true."
-           (if ,test
-             (begin ,@body (,loop))
-             #nil)))
-       (,loop))))
+  (defmacro while (test . body)
+    "Repeat body while test is truthy."
+    (begin
+      (define loop (gensym "while"))
+      `(begin
+         (define ,loop
+           (lambda ()
+           "Run loop body while test is true."
+             (if ,test
+               (begin ,@body (,loop))
+               #nil)))
+         (,loop))))
 
-(defmacro for (binding . body)
-  "Map body over seq, binding var."
-  (begin
-    (define var (car binding))
-    (define seq (car (cdr binding)))
-    `(map (lambda (,var) (begin ,@body)) ,seq)))
-)
+  (defmacro until (test . body)
+    "Repeat body until test is truthy."
+    `(while (not ,test) ,@body))
+
+  (defmacro for (binding . body)
+    "Map body over seq, binding var."
+    (begin
+      (define var (car binding))
+      (define seq (car (cdr binding)))
+      `(map (lambda (,var) (begin ,@body)) ,seq)))
+  )

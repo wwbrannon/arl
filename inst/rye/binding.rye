@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Binding Macros
 
 (module binding
-  (export pattern-symbols destructuring-bind let let* letrec)
+  (export pattern-symbols destructuring-bind let let* letrec when-let if-let)
 
   (import predicates)
   (import list-core)
@@ -65,4 +65,31 @@
   `(let ,(map (lambda (n) `(,n (list))) names)
      ,@(map (lambda (b) `(set! ,(car b) ,(car (cdr b)))) bindings)
      (begin ,@body)))
+
+(defmacro when-let (binding . body)
+  "Bind pattern to value and evaluate body when value is truthy."
+  (begin
+    (define pattern (car binding))
+    (define value (car (cdr binding)))
+    (define tmp (gensym "when-let"))
+    `((lambda (,tmp)
+        (if (car ,tmp)
+          (destructuring-bind ,pattern (car ,tmp)
+            (begin ,@body))
+          #nil))
+      (list ,value))))
+
+(defmacro if-let (binding then . rest)
+  "Bind pattern to value and choose branch based on its truthiness."
+  (begin
+    (define pattern (car binding))
+    (define value (car (cdr binding)))
+    (define else (if (null? rest) #nil (car rest)))
+    (define tmp (gensym "if-let"))
+    `((lambda (,tmp)
+        (if (car ,tmp)
+          (destructuring-bind ,pattern (car ,tmp)
+            ,then)
+          ,else))
+      (list ,value))))
 )

@@ -7,7 +7,8 @@
           caaar caadr cadar caddr
           cdaar cdadr cddar cdddr
           cadddr cddddr
-          cons list* append reverse first rest last nth)
+          cons list* append reverse
+          first second third fourth rest last nth)
 
   (define __as-list
     (lambda (x)
@@ -118,6 +119,21 @@
     (lambda (lst)
       "Alias for car."
       (car lst)))
+
+  (define second
+    (lambda (lst)
+      "Return second element or #nil."
+      (cadr lst)))
+
+  (define third
+    (lambda (lst)
+      "Return third element or #nil."
+      (caddr lst)))
+
+  (define fourth
+    (lambda (lst)
+      "Return fourth element or #nil."
+      (cadddr lst)))
 
   (define rest
     (lambda (lst)

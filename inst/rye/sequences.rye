@@ -1,7 +1,9 @@
 ;;; Rye Standard Library - Sequence Helpers
 
 (module sequences
-  (export take drop take-while drop-while partition flatten repeatedly repeat zip)
+  (export take drop take-while drop-while
+          partition flatten repeatedly repeat zip
+          member contains?)
 
   (import list-core)
   (import predicates)
@@ -116,4 +118,23 @@
                 (lambda (i)
                   "Collect ith elements from lists."
                   (lapply items (lambda (lst) (r/call "[[" (list lst i))))))
-              (lapply (seq_len min-len) zip-at))))))))
+              (lapply (seq_len min-len) zip-at)))))))
+
+  (define member
+    (lambda (x lst)
+      "Return sublist of lst starting at first element equal to x, or #f if not found."
+      (define items (__as-list lst))
+      (define loop
+        (lambda (remaining)
+          "Search for element in list."
+          (if (= (length remaining) 0)
+            #f
+            (if (identical (car remaining) x)
+              remaining
+              (loop (cdr remaining))))))
+      (loop items)))
+
+  (define contains?
+    (lambda (x lst)
+      "Return #t if lst contains element equal to x."
+      (if (member x lst) #t #f))))
