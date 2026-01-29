@@ -61,10 +61,6 @@ RyeEngine <- R6::R6Class(
       if (!exists(".rye_env", envir = env, inherits = FALSE)) {
         assign(".rye_env", TRUE, envir = env)
       }
-      if (!exists(".rye_engine", envir = env, inherits = FALSE)) {
-        assign(".rye_engine", self, envir = env)
-      }
-
       rye_env_registry(env, ".rye_module_registry", create = TRUE)
       rye_env_registry(env, ".rye_macros", create = TRUE)
 
@@ -212,3 +208,17 @@ RyeEngine <- R6::R6Class(
     }
   )
 )
+
+.rye_engine_state <- new.env(parent = emptyenv())
+
+#' Get the default Rye engine
+#'
+#' @export
+rye_default_engine <- function() {
+  engine <- get0("engine", envir = .rye_engine_state, inherits = FALSE)
+  if (is.null(engine)) {
+    engine <- RyeEngine$new()
+    assign("engine", engine, envir = .rye_engine_state)
+  }
+  engine
+}

@@ -45,12 +45,11 @@ rye_stdlib_try <- function(thunk, error_handler = NULL, finally_handler = NULL) 
   )
 }
 
-rye_stdlib_eval <- function(expr, env = parent.frame()) {
-  engine <- get0(".rye_engine", envir = env, inherits = TRUE)
+rye_stdlib_eval <- function(expr, env = parent.frame(), engine = NULL) {
   if (inherits(engine, "RyeEngine")) {
     return(engine$eval(expr, env))
   }
-  stop("rye_stdlib_eval requires a RyeEngine-backed environment")
+  stop("rye_stdlib_eval requires a RyeEngine; use the eval function installed in a Rye environment")
 }
 
 rye_resolve_r_callable <- function(fn_name, stdlib_env = NULL, max_frames = 10) {
@@ -104,13 +103,12 @@ rye_stdlib_current_env <- function() {
   globalenv()
 }
 
-rye_stdlib_r_eval <- function(expr, env = NULL) {
+rye_stdlib_r_eval <- function(expr, env = NULL, macro_expander = NULL) {
   if (is.null(env)) {
     env <- rye_stdlib_current_env()
   }
-  engine <- get0(".rye_engine", envir = env, inherits = TRUE)
-  if (inherits(engine, "RyeEngine")) {
-    expr <- engine$macro_expander$hygiene_unwrap(expr)
+  if (!is.null(macro_expander) && inherits(macro_expander, "MacroExpander")) {
+    expr <- macro_expander$hygiene_unwrap(expr)
   }
   saved <- list()
   if (is.call(expr) && length(expr) > 0) {
