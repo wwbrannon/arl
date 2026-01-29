@@ -1,4 +1,4 @@
-engine <- new_engine()
+engine <- RyeEngine$new()
 
 test_that("evaluator handles simple arithmetic", {
   expect_equal(engine$eval(engine$read("(+ 1 2)")[[1]]), 3)

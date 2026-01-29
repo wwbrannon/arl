@@ -52,9 +52,10 @@ library(rye)
 
 # Start the REPL
 engine <- RyeEngine$new()
-engine$load_stdlib()
 engine$repl()
 ```
+
+The engine loads the base stdlib automatically.
 
 ## Command Line
 

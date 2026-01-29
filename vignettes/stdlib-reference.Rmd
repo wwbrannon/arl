@@ -14,8 +14,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 Rye ships with a small standard library implemented in R, plus additional Rye
-source modules. `engine$load_stdlib()` loads the base R stdlib and the Rye modules
-from `inst/rye/` by default.
+source modules. The engine loads the base R stdlib and the Rye modules from
+`inst/rye/` by default.
 
 For the full, per-function reference, see the individual stdlib reference pages:
 
@@ -37,11 +37,10 @@ For the full, per-function reference, see the individual stdlib reference pages:
 (load "error")     ; try/catch/finally
 ```
 
-From R, you can load the full stdlib with:
+From R, you can create an engine with the stdlib already loaded:
 
 ```r
 engine <- RyeEngine$new()
-engine$load_stdlib()
 ```
 
 ## Core list operations

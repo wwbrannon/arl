@@ -1,5 +1,5 @@
-engine <- new_engine(load_stdlib = TRUE)
-translator_env <- import_stdlib_modules(engine, "translator", engine_env(engine))
+engine <- RyeEngine$new()
+translator_env <- import_stdlib_modules(engine, "translator", engine$env$env)
 translate_source <- translator_env$`translate-source`
 
 translate <- function(source, is_file = NULL) {

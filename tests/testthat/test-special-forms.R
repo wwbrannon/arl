@@ -1,4 +1,4 @@
-engine <- new_engine()
+engine <- RyeEngine$new()
 
 test_that("quote returns unevaluated expression", {
   result <- engine$eval(engine$read("(quote x)")[[1]])
@@ -26,7 +26,7 @@ test_that("delay creates a promise", {
 })
 
 test_that("promise? detects promises", {
-  env <- engine$load_stdlib()
+  env <- stdlib_env(engine)
   result <- engine$eval(engine$read("(promise? (delay 1))")[[1]], env)
   expect_true(isTRUE(result))
 
@@ -35,7 +35,7 @@ test_that("promise? detects promises", {
 })
 
 test_that("delay is lazy until forced", {
-  env <- engine$load_stdlib()
+  env <- stdlib_env(engine)
   engine$eval(
     engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  counter)")[[1]],
     env

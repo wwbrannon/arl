@@ -1,8 +1,8 @@
-engine <- new_engine()
+engine <- RyeEngine$new()
 
 test_that("stdlib loads successfully", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_true(exists("car", envir = env))
   expect_true(exists("cdr", envir = env))
@@ -12,13 +12,13 @@ test_that("stdlib loads successfully", {
 })
 
 test_that("force evaluates promises", {
-  env <- engine$load_stdlib(new.env())
+  env <- stdlib_env(engine, new.env())
   forced <- engine$eval(engine$read("(force (delay (+ 1 2)))")[[1]], env)
   expect_equal(forced, 3)
 })
 
 test_that("force memoizes delayed expressions", {
-  env <- engine$load_stdlib(new.env())
+  env <- stdlib_env(engine, new.env())
   engine$eval(
     engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  (force p)\n  (force p)\n  counter)")[[1]],
     env
@@ -27,13 +27,13 @@ test_that("force memoizes delayed expressions", {
 })
 
 test_that("force returns non-promises unchanged", {
-  env <- engine$load_stdlib()
+  env <- stdlib_env(engine)
   result <- engine$eval(engine$read("(force 42)")[[1]], env)
   expect_equal(result, 42)
 })
 
 test_that("call/cc exits to current continuation", {
-  env <- engine$load_stdlib()
+  env <- stdlib_env(engine)
   result <- engine$eval(
     engine$read("(call/cc (lambda (k) (+ 1 (k 42) 3)))")[[1]],
     env
@@ -42,7 +42,7 @@ test_that("call/cc exits to current continuation", {
 })
 
 test_that("call/cc is downward-only (R's callCC behavior)", {
-  env <- engine$load_stdlib()
+  env <- stdlib_env(engine)
   # R's callCC is one-shot and downward-only
   result <- engine$eval(
     engine$read("(call/cc (lambda (k) (k 5)))")[[1]],
@@ -59,7 +59,7 @@ test_that("call/cc is downward-only (R's callCC behavior)", {
 })
 
 test_that("call/cc is first-class and has an alias", {
-  env <- engine$load_stdlib()
+  env <- stdlib_env(engine)
   engine$eval(engine$read("(define cc call/cc)")[[1]], env)
   result <- engine$eval(engine$read("(cc (lambda (k) (k 7)))")[[1]], env)
   expect_equal(result, 7)
@@ -72,7 +72,7 @@ test_that("call/cc is first-class and has an alias", {
 
 test_that("car returns first element", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Test with R list
   expect_equal(env$car(list(1, 2, 3)), 1)
@@ -84,7 +84,7 @@ test_that("car returns first element", {
 
 test_that("cdr returns rest of list", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Test with R list
   result <- env$cdr(list(1, 2, 3))
@@ -94,7 +94,7 @@ test_that("cdr returns rest of list", {
 })
 
 test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", {
-  env <- engine$load_stdlib(new.env())
+  env <- stdlib_env(engine, new.env())
 
   # From list values
   expect_equal(engine$eval(engine$read("(begin (import list) (cadr (list 1 2 3 4)))")[[1]], env), 2)
@@ -130,7 +130,7 @@ test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", 
 
 test_that("ordinal list accessors work (second, third, fourth)", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_equal(env$second(list(1, 2, 3)), 2)
   expect_equal(env$third(list(1, 2, 3, 4)), 3)
@@ -143,7 +143,7 @@ test_that("ordinal list accessors work (second, third, fourth)", {
 
 test_that("cons adds element to front", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   result <- env$cons(1, list(2, 3))
   expect_equal(result[[1]], 1)
@@ -153,7 +153,7 @@ test_that("cons adds element to front", {
 
 test_that("map applies function to list", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   double <- function(x) x * 2
   result <- env$map(double, list(1, 2, 3))
@@ -165,7 +165,7 @@ test_that("map applies function to list", {
 
 test_that("filter selects matching elements", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   is_even <- function(x) x %% 2 == 0
   result <- env$filter(is_even, list(1, 2, 3, 4, 5, 6))
@@ -178,7 +178,7 @@ test_that("filter selects matching elements", {
 
 test_that("reduce combines list elements", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   result <- env$reduce(`+`, list(1, 2, 3, 4))
   expect_equal(result, 10)
@@ -189,7 +189,7 @@ test_that("reduce combines list elements", {
 
 test_that("map works from Rye code", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Define a doubling function in Rye
   engine$eval(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env)
@@ -204,7 +204,7 @@ test_that("map works from Rye code", {
 
 test_that("filter works from Rye code", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Define a predicate in Rye
   engine$eval(engine$read("(define even? (lambda (x) (= (% x 2) 0)))")[[1]], env)
@@ -217,7 +217,7 @@ test_that("filter works from Rye code", {
 
 test_that("predicates work correctly", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_true(engine$eval(engine$read("(number? 42)")[[1]], env))
   expect_false(engine$eval(engine$read("(number? \"hello\")")[[1]], env))
@@ -231,7 +231,7 @@ test_that("predicates work correctly", {
 
 test_that("extended predicates work correctly", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_true(env$`boolean?`(TRUE))
   expect_true(env$`boolean?`(FALSE))
@@ -310,7 +310,7 @@ test_that("or macro works", {
 
 test_that("variadic and/or short-circuit correctly", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("control"), env)
 
   result <- engine$eval(engine$read("(and #t 1 2 3)")[[1]], env)
@@ -331,7 +331,7 @@ test_that("variadic and/or short-circuit correctly", {
 
 test_that("binding macros when-let and if-let work", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   result <- engine$eval(engine$read("(when-let (x 10) (+ x 1))")[[1]], env)
@@ -361,7 +361,7 @@ test_that("binding macros when-let and if-let work", {
 
 test_that("until macro repeats until test is truthy", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("looping"), env)
 
   result <- engine$eval(
@@ -373,7 +373,7 @@ test_that("until macro repeats until test is truthy", {
 
 test_that("loop/recur iterates with rebinding", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("looping"), env)
 
   result <- engine$eval(
@@ -409,7 +409,7 @@ test_that("loop/recur iterates with rebinding", {
 
 test_that("recur errors outside loop", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("looping"), env)
 
   expect_error(engine$eval(engine$read("(recur 1)")[[1]], env), "recur can only be used inside loop")
@@ -417,7 +417,7 @@ test_that("recur errors outside loop", {
 
 test_that("not function works", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_false(engine$eval(engine$read("(not #t)")[[1]], env))
   expect_true(engine$eval(engine$read("(not #f)")[[1]], env))
@@ -426,7 +426,7 @@ test_that("not function works", {
 
 test_that("list helpers work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_equal(env$`list*`(1, list(2, 3)), list(1, 2, 3))
   expect_equal(env$append(list(1, 2), list(3)), list(1, 2, 3))
@@ -436,7 +436,7 @@ test_that("list helpers work", {
 
 test_that("values and call-with-values work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   result <- engine$eval(engine$read("(call-with-values (lambda () (values)) (lambda () 42))")[[1]], env)
   expect_equal(result, 42)
@@ -453,7 +453,7 @@ test_that("values and call-with-values work", {
 
 test_that("sequence helpers work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   result <- env$mapcat(function(x) list(x, x + 10), list(1, 2))
   expect_equal(result, list(1, 11, 2, 12))
@@ -479,7 +479,7 @@ test_that("sequence helpers work", {
 
 test_that("member and contains? sequence helpers work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_equal(env$member(2, list(1, 2, 3)), list(2, 3))
   expect_false(env$member(5, list(1, 2, 3)))
@@ -490,7 +490,7 @@ test_that("member and contains? sequence helpers work", {
 
 test_that("numeric helpers inc/dec/clamp/within? work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_equal(env$inc(5), 6)
   expect_equal(env$inc(5, 2), 7)
@@ -508,7 +508,7 @@ test_that("numeric helpers inc/dec/clamp/within? work", {
 
 test_that("predicates and interop helpers work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_true(env$`pair?`(list(1)))
   expect_false(env$`pair?`(list()))
@@ -529,7 +529,7 @@ test_that("predicates and interop helpers work", {
 
 test_that("string and io helpers work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_equal(env$str("a", 1, "b"), "a1b")
   expect_equal(env$`format-value`(list(1, 2, 3)), "1 2 3")
@@ -550,7 +550,7 @@ test_that("string and io helpers work", {
 
 test_that("string match helpers work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_true(env$`string-contains?`("hello", "ell"))
   expect_false(env$`string-contains?`("hello", "^ell"))
@@ -570,7 +570,7 @@ test_that("string match helpers work", {
 
 test_that("file io helpers work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   path <- tempfile(fileext = ".txt")
   env$`write-file`(path, "hello")
@@ -586,7 +586,7 @@ test_that("file io helpers work", {
 
 test_that("dict and set helpers work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   dict <- env$dict(a = 1, b = 2)
   expect_equal(env$`dict-get`(dict, "a"), 1)
@@ -641,7 +641,7 @@ test_that("dict and set helpers work", {
 
 test_that("defstruct macro defines constructor and accessors", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("struct"), env)
 
   engine$eval(engine$read("(defstruct Point (x y))")[[1]], env)
@@ -654,7 +654,7 @@ test_that("defstruct macro defines constructor and accessors", {
 
 test_that("error and debug helpers work", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_error(env$error("boom"), "boom")
   expect_warning(env$warn("warn"))
@@ -667,7 +667,7 @@ test_that("error and debug helpers work", {
 
 test_that("call function converts lists to calls", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Convert list to call
   lst <- list(quote(`+`), 1, 2)
@@ -687,7 +687,7 @@ test_that("call function converts lists to calls", {
 
 test_that("eval function evaluates Rye expressions", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Eval simple arithmetic
   result <- env$eval(engine$read("(+ 1 2)")[[1]], env)
@@ -706,7 +706,7 @@ test_that("eval function evaluates Rye expressions", {
 
 test_that("gensym generates unique symbols", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Generate unique symbols
   sym1 <- env$gensym()
@@ -724,7 +724,7 @@ test_that("gensym generates unique symbols", {
 
 test_that("try* with only error handler works", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Success case
   result <- env$`try*`(
@@ -743,7 +743,7 @@ test_that("try* with only error handler works", {
 
 test_that("try* with only finally handler works", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Track whether finally ran
   finally_ran <- FALSE
@@ -771,7 +771,7 @@ test_that("try* with only finally handler works", {
 
 test_that("try* with both handlers works", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Track execution
   finally_ran <- FALSE
@@ -798,7 +798,7 @@ test_that("try* with both handlers works", {
 
 test_that("r/call invokes R functions with arguments", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Call R function by name (string)
   result <- env$`r/call`("sum", list(1, 2, 3, 4))
@@ -819,7 +819,7 @@ test_that("r/call invokes R functions with arguments", {
 
 test_that("macroexpand-1 expands macros one level", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Define a simple macro
   engine$eval(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env)
@@ -835,7 +835,7 @@ test_that("macroexpand-1 expands macros one level", {
 
 test_that("macroexpand fully expands nested macros", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Define nested macros
   engine$eval(engine$read("(defmacro inner (x) `(* ,x 2))")[[1]], env)
@@ -852,7 +852,7 @@ test_that("macroexpand fully expands nested macros", {
 
 test_that("macro? predicate identifies macros", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Define a macro
   engine$eval(engine$read("(defmacro test-macro (x) x)")[[1]], env)
@@ -869,7 +869,7 @@ test_that("macro? predicate identifies macros", {
 
 test_that("identity returns its argument", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_equal(env$identity(42), 42)
   expect_equal(env$identity("hello"), "hello")
@@ -879,7 +879,7 @@ test_that("identity returns its argument", {
 
 test_that("first is an alias for car", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_equal(env$first(list(1, 2, 3)), 1)
   expect_null(env$first(list()))
@@ -888,7 +888,7 @@ test_that("first is an alias for car", {
 
 test_that("rest is an alias for cdr", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_equal(env$rest(list(1, 2, 3)), list(2, 3))
   expect_equal(env$rest(list(1)), list())
@@ -897,7 +897,7 @@ test_that("rest is an alias for cdr", {
 
 test_that("last returns last element", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   expect_equal(env$last(list(1, 2, 3)), 3)
   expect_equal(env$last(list(42)), 42)
@@ -907,7 +907,7 @@ test_that("last returns last element", {
 
 test_that("nth returns element at index", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   lst <- list(10, 20, 30, 40)
 
@@ -924,7 +924,7 @@ test_that("nth returns element at index", {
 
 test_that("complement negates predicate", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   is_even <- function(x) x %% 2 == 0
   is_odd <- env$complement(is_even)
@@ -941,7 +941,7 @@ test_that("complement negates predicate", {
 
 test_that("compose combines functions", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   double <- function(x) x * 2
   add_one <- function(x) x + 1
@@ -958,7 +958,7 @@ test_that("compose combines functions", {
 
 test_that("repeatedly calls function n times", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   counter <- 0
   increment <- function() {
@@ -974,7 +974,7 @@ test_that("repeatedly calls function n times", {
 
 test_that("repeat creates list with repeated value", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   result <- env$`repeat`(5, "x")
   expect_equal(length(result), 5)
@@ -993,7 +993,7 @@ test_that("repeat creates list with repeated value", {
 
 test_that("zip combines lists element-wise", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Two lists
   result <- env$zip(list(1, 2, 3), list("a", "b", "c"))
@@ -1019,7 +1019,7 @@ test_that("zip combines lists element-wise", {
 
 test_that("partial applies arguments partially", {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   # Partial application
   add <- function(a, b) a + b

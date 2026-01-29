@@ -20,167 +20,104 @@ CLI_HELP_TEXT <- paste(
   sep = "\n"
 )
 
-parse_cli_args <- function(args) {
-  state <- list(
-    action = "repl",
-    files = character(0),
-    expr = NULL,
-    errors = character(0)
-  )
-
-  args <- args[args != "--args"]
-  terminator_index <- match("--", args)
-  args_after <- character(0)
-  if (!is.na(terminator_index)) {
-    if (terminator_index < length(args)) {
-      args_after <- args[(terminator_index + 1):length(args)]
-    }
-    args <- if (terminator_index > 1) {
-      args[1:(terminator_index - 1)]
-    } else {
-      character(0)
-    }
-  }
-
-  parsed <- tryCatch(
-    {
-      value <- NULL
-      utils::capture.output(
-        {
-          value <- docopt::docopt(
-            CLI_HELP_TEXT,
-            args = args,
-            help = FALSE,
-            version = NULL,
-            strict = TRUE
-          )
-        },
-        type = "output"
-      )
-      value
+RyeCLI <- R6::R6Class(
+  "RyeCLI",
+  public = list(
+    args = NULL,
+    parsed = NULL,
+    initialize = function(args = commandArgs(trailingOnly = TRUE)) {
+      self$args <- args
     },
-    error = function(e) {
-      state$errors <<- c(state$errors, conditionMessage(e))
-      return(NULL)
-    }
-  )
+    parse = function() {
+      state <- list(
+        action = "repl",
+        files = character(0),
+        expr = NULL,
+        errors = character(0)
+      )
 
-  if (is.null(parsed)) {
-    return(state)
-  }
-
-  files_flag <- parsed[["--file"]]
-  files_pos <- parsed[["<files>"]]
-  expr <- parsed[["--eval"]]
-
-  if (!is.null(files_flag) && length(files_flag) > 0) {
-    state$files <- c(state$files, files_flag)
-  }
-  if (!is.null(files_pos) && length(files_pos) > 0) {
-    state$files <- c(state$files, files_pos)
-  }
-  if (length(args_after) > 0) {
-    state$files <- c(state$files, args_after)
-  }
-  if (!is.null(expr) && !identical(expr, FALSE) && length(expr) > 0) {
-    state$expr <- expr[[1]]
-  }
-
-  if (length(state$files) > 0 && !is.null(state$expr)) {
-    state$errors <- c(state$errors, "Use only one of --file/files or --eval.")
-  }
-
-  if (isTRUE(parsed[["--help"]])) {
-    state$action <- "help"
-  } else if (isTRUE(parsed[["--version"]])) {
-    state$action <- "version"
-  } else if (!is.null(state$expr)) {
-    state$action <- "eval"
-  } else if (length(state$files) > 0) {
-    state$action <- "file"
-  }
-
-  state
-}
-
-cli_load_env <- function() {
-  engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
-  engine$load_stdlib()
-  engine
-}
-
-cli_eval_with_engine <- function(engine, fn) {
-  result <- tryCatch(
-    fn(),
-    error = function(e) {
-      cli_print_error(e, engine)
-      quit(save = "no", status = 1)
-      return(invisible(NULL))
-    }
-  )
-  if (!is.null(result)) {
-    cat(engine$env$format_value(result), "\n", sep = "")
-  }
-  invisible(result)
-}
-
-cli_eval_text <- function(text, engine, source_name = "<cli>") {
-  cli_eval_with_engine(
-    engine,
-    function() engine$eval_text(text, engine$env$env, source_name = source_name)
-  )
-}
-
-cli_isatty <- function() {
-  override <- getOption("rye.cli_isatty_override", NULL)
-  if (!is.null(override)) {
-    if (is.function(override)) {
-      return(isTRUE(override()))
-    }
-    return(isTRUE(override))
-  }
-  tty <- tryCatch(isatty(stdin()), error = function(...) FALSE)
-  if (!isTRUE(tty)) {
-    tty <- tryCatch(isatty(0), error = function(...) FALSE)
-  }
-  isTRUE(tty)
-}
-
-cli_read_stdin <- function() {
-  override <- getOption("rye.cli_read_stdin_override", NULL)
-  if (!is.null(override)) {
-    if (is.function(override)) {
-      return(override())
-    }
-    return(override)
-  }
-  readLines("stdin", warn = FALSE)
-}
-
-cli_print_error <- function(e, engine) {
-  engine$source_tracker$print_error(e, file = stderr())
-}
-
-rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
-  parsed <- parse_cli_args(args)
-
-  if (length(parsed$errors) > 0) {
-    if (!isTRUE(getOption("rye.cli_quiet", FALSE))) {
-      for (err in parsed$errors) {
-        cat("Error: ", err, "\n", sep = "", file = stderr())
+      args <- self$args
+      args <- args[args != "--args"]
+      terminator_index <- match("--", args)
+      args_after <- character(0)
+      if (!is.na(terminator_index)) {
+        if (terminator_index < length(args)) {
+          args_after <- args[(terminator_index + 1):length(args)]
+        }
+        args <- if (terminator_index > 1) {
+          args[1:(terminator_index - 1)]
+        } else {
+          character(0)
+        }
       }
-      cat(CLI_HELP_TEXT, "\n", sep = "")
-    }
-    quit(save = "no", status = 1)
-    return(invisible(NULL))
-  }
 
-  action_handlers <- list(
-    help = function() {
+      parsed <- tryCatch(
+        {
+          value <- NULL
+          utils::capture.output(
+            {
+              value <- docopt::docopt(
+                CLI_HELP_TEXT,
+                args = args,
+                help = FALSE,
+                version = NULL,
+                strict = TRUE
+              )
+            },
+            type = "output"
+          )
+          value
+        },
+        error = function(e) {
+          state$errors <<- c(state$errors, conditionMessage(e))
+          return(NULL)
+        }
+      )
+
+      if (is.null(parsed)) {
+        self$parsed <- state
+        return(state)
+      }
+
+      files_flag <- parsed[["--file"]]
+      files_pos <- parsed[["<files>"]]
+      expr <- parsed[["--eval"]]
+
+      if (!is.null(files_flag) && length(files_flag) > 0) {
+        state$files <- c(state$files, files_flag)
+      }
+      if (!is.null(files_pos) && length(files_pos) > 0) {
+        state$files <- c(state$files, files_pos)
+      }
+      if (length(args_after) > 0) {
+        state$files <- c(state$files, args_after)
+      }
+      if (!is.null(expr) && !identical(expr, FALSE) && length(expr) > 0) {
+        state$expr <- expr[[1]]
+      }
+
+      if (length(state$files) > 0 && !is.null(state$expr)) {
+        state$errors <- c(state$errors, "Use only one of --file/files or --eval.")
+      }
+
+      if (isTRUE(parsed[["--help"]])) {
+        state$action <- "help"
+      } else if (isTRUE(parsed[["--version"]])) {
+        state$action <- "version"
+      } else if (!is.null(state$expr)) {
+        state$action <- "eval"
+      } else if (length(state$files) > 0) {
+        state$action <- "file"
+      }
+
+      self$parsed <- state
+      state
+    },
+    do_help = function() {
       cat(CLI_HELP_TEXT, "\n", sep = "")
       invisible(NULL)
     },
-    version = function() {
+    do_version = function() {
       version <- tryCatch(
         as.character(utils::packageVersion("rye")),
         error = function(...) "unknown"
@@ -188,20 +125,21 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
       cat("rye ", version, "\n", sep = "")
       invisible(NULL)
     },
-    repl = function() {
-      if (!cli_isatty()) {
-        engine <- cli_load_env()
-        text <- paste(cli_read_stdin(), collapse = "\n")
+    do_repl = function() {
+      if (!self$cli_isatty()) {
+        engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
+        text <- paste(self$cli_read_stdin(), collapse = "\n")
         if (trimws(text) != "") {
-          cli_eval_text(text, engine, source_name = "<stdin>")
+          self$cli_eval_text(text, engine, source_name = "<stdin>")
         }
         return(invisible(NULL))
       }
-      rye_repl()
+      engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
+      rye_repl(engine = engine)
       invisible(NULL)
     },
-    file = function() {
-      engine <- cli_load_env()
+    do_file = function(parsed) {
+      engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
       for (path in parsed$files) {
         if (!file.exists(path)) {
           cat("Error: File not found: ", path, "\n", sep = "", file = stderr())
@@ -209,26 +147,105 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
         }
       }
       for (path in parsed$files) {
-        cli_eval_with_engine(
-          engine,
-          function() engine$load_file(path, engine$env$env)
-        )
+        self$cli_eval_with_engine(engine, function() engine$load_file(path, engine$env$env))
       }
       invisible(NULL)
     },
-    eval = function() {
-      engine <- cli_load_env()
-      cli_eval_text(parsed$expr, engine, source_name = "<cli>")
+    do_eval = function(parsed) {
+      engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
+      self$cli_eval_text(parsed$expr, engine, source_name = "<cli>")
       invisible(NULL)
+    },
+    cli_eval_with_engine = function(engine, fn) {
+      result <- tryCatch(
+        fn(),
+        error = function(e) {
+          engine$source_tracker$print_error(e, file = stderr())
+          quit(save = "no", status = 1)
+          return(invisible(NULL))
+        }
+      )
+      if (!is.null(result)) {
+        cat(engine$env$format_value(result), "\n", sep = "")
+      }
+      invisible(result)
+    },
+    cli_eval_text = function(text, engine, source_name = "<cli>") {
+      self$cli_eval_with_engine(
+        engine,
+        function() engine$eval_text(text, engine$env$env, source_name = source_name)
+      )
+    },
+    cli_isatty = function() {
+      # we need this among other things to make tests work
+      override <- getOption("rye.cli_isatty_override", NULL)
+      if (!is.null(override)) {
+        if (is.function(override)) {
+          return(isTRUE(override()))
+        }
+        return(isTRUE(override))
+      }
+      tty <- tryCatch(isatty(stdin()), error = function(...) FALSE)
+      if (!isTRUE(tty)) {
+        tty <- tryCatch(isatty(0), error = function(...) FALSE)
+      }
+      isTRUE(tty)
+    },
+    cli_read_stdin = function() {
+      override <- getOption("rye.cli_read_stdin_override", NULL)
+      if (!is.null(override)) {
+        if (is.function(override)) {
+          return(override())
+        }
+        return(override)
+      }
+      readLines("stdin", warn = FALSE)
+    },
+    run = function() {
+      parsed <- self$parsed
+      if (is.null(parsed)) {
+        parsed <- self$parse()
+      }
+
+      if (length(parsed$errors) > 0) {
+        if (!isTRUE(getOption("rye.cli_quiet", FALSE))) {
+          for (err in parsed$errors) {
+            cat("Error: ", err, "\n", sep = "", file = stderr())
+          }
+          cat(CLI_HELP_TEXT, "\n", sep = "")
+        }
+        quit(save = "no", status = 1)
+        return(invisible(NULL))
+      }
+
+      handlers <- list(
+        help = self$do_help,
+        version = self$do_version,
+        repl = self$do_repl,
+        file = function() self$do_file(parsed),
+        eval = function() self$do_eval(parsed)
+      )
+
+      handler <- handlers[[parsed$action]]
+      if (is.null(handler)) {
+        cat("Error: Unknown action: ", parsed$action, "\n", sep = "", file = stderr())
+        quit(save = "no", status = 1)
+      }
+      handler()
     }
   )
+)
 
-  handler <- action_handlers[[parsed$action]]
-  if (is.null(handler)) {
-    cat("Error: Unknown action: ", parsed$action, "\n", sep = "", file = stderr())
-    quit(save = "no", status = 1)
-  }
-  handler()
+#' Run the Rye CLI
+#'
+#' Entry point for the Rye command-line interface. Parses arguments and runs
+#' the requested action (REPL, file evaluation, or expression evaluation).
+#'
+#' @param args Command-line arguments to parse (defaults to \code{commandArgs(trailingOnly = TRUE)}).
+#' @return Invisibly returns \code{NULL}.
+#' @export
+rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
+  RyeCLI$new(args)$run()
 }
 
 #' Install the Rye CLI wrapper

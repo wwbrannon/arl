@@ -2,6 +2,7 @@
 
 S3method(print,rye_promise)
 export(RyeEngine)
-export(rye_install_cli)
+export(rye_cli)
 export(rye_default_engine)
+export(rye_install_cli)
 importFrom(R6,R6Class)

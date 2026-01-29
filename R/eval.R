@@ -342,7 +342,7 @@ Evaluator <- R6::R6Class(
             stop("help requires a symbol or string")
           }
           if (is.null(self$engine)) {
-            stop("help requires an engine; initialize the environment with RyeEngine$load_stdlib()")
+            stop("help requires an engine")
           }
           self$engine$help(topic, env = env)
           NULL

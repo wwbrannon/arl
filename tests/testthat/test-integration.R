@@ -1,4 +1,4 @@
-engine <- new_engine()
+engine <- RyeEngine$new()
 
 test_that("factorial function works", {
   env <- new.env()

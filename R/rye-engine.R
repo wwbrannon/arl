@@ -43,6 +43,8 @@ RyeEngine <- R6::R6Class(
       self$evaluator <- Evaluator$new(self$env, self$macro_expander, self$source_tracker, engine = self)
       self$macro_expander$evaluator <- self$evaluator
       self$help_system <- HelpSystem$new(self)
+
+      self$initialize_environment()
     },
     #' @description
     #' Tokenize and parse source into expressions.
@@ -85,14 +87,9 @@ RyeEngine <- R6::R6Class(
       self$eval_exprs(exprs, env = env)
     },
     #' @description
-    #' Populate standard bindings in an environment.
-    initialize_environment = function(env = NULL) {
-      if (inherits(env, "RyeEnv")) {
-        env <- env$env
-      }
-      if (is.null(env)) {
-        env <- new.env(parent = baseenv())
-      }
+    #' Populate standard bindings
+    initialize_environment = function() {
+      env <- self$env$env
 
       if (!exists(".rye_env", envir = env, inherits = FALSE)) {
         assign(".rye_env", TRUE, envir = env)
@@ -238,12 +235,6 @@ RyeEngine <- R6::R6Class(
       self$source_tracker$with_error_context(function() {
         self$eval_seq(self$read(text, source_name = path), target_env)
       })
-    },
-    #' @description
-    #' Initialize the standard library in an environment.
-    load_stdlib = function(env = NULL) {
-      target_env <- rye_env_resolve(env, fallback = self$env)
-      self$initialize_environment(target_env)
     },
     #' @description
     #' Expand macros recursively.

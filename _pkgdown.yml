@@ -16,6 +16,10 @@ reference:
     contents:
       - RyeEngine
       - rye_default_engine
+  - title: CLI
+    contents:
+      - rye_cli
+      - rye_install_cli
   # - title: Macros  # FIXME?
   #   contents:
   #     - gensym

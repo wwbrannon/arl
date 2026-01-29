@@ -18,7 +18,7 @@ run_example <- function(example_name) {
 
   env <- new.env()
   engine <- rye::RyeEngine$new()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
 
   out_dir <- tempfile("rye-example-")
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)

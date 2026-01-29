@@ -28,9 +28,10 @@ devtools::install()
 ```{r eval=FALSE}
 library(rye)
 engine <- RyeEngine$new()
-engine$load_stdlib()
 engine$repl()
 ```
+
+The engine loads the base stdlib automatically.
 
 At the prompt, you can enter Rye expressions:
 
@@ -64,7 +65,6 @@ expressions directly:
 
 ```{r eval=FALSE}
 engine <- RyeEngine$new()
-engine$load_stdlib()
 exprs <- engine$read("(define x 10) (+ x 5)")
 engine$eval(exprs[[1]])
 engine$eval(exprs[[2]])
@@ -85,13 +85,12 @@ From R, use `engine$load_file()`:
 
 ```{r eval=FALSE}
 engine <- RyeEngine$new()
-engine$load_stdlib()
 engine$load_file("script.rye")
 ```
 
 ## Loading stdlib modules
 
-The REPL loads the base stdlib. You can load extra modules from `inst/rye`:
+The engine loads the base stdlib. You can load extra modules from `inst/rye`:
 
 ```lisp
 (load "control")

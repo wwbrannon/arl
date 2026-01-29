@@ -1,13 +1,16 @@
 o) rewrite cli to use docopt and generally simplify cli
 o) move cli_load_env into a classmethod ctor of RyeEngine / retire load_stdlib
-
-o) move out the rest of stdlib.R
+o) I think we can ditch rye_env_resolve and env arguments to various methods
+o) remove engine test helpers
 
 o) OO refactor of repl
+o) we don't need both CLI and engine calling repl
 
 o) classes that have instances of other classes horizontally as attributes
 o) do we still need to assign these macro registry etc into the environment?
 o) unlockBinding note
+
+o) move out the rest of stdlib.R
 
 o) performance optimizations: use profiling and benchmarking
 o) Look for any R code that’s left over or not used

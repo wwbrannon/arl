@@ -1,4 +1,4 @@
-engine <- new_engine()
+engine <- RyeEngine$new()
 
 test_that("named arguments work with keywords", {
   env <- new.env()

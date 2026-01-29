@@ -10,8 +10,8 @@ run_example <- function(example_name) {
   testthat::skip_if_not(file.exists(example_path), "Example file not found")
 
   engine <- RyeEngine$new(env = new.env())
-  engine$load_stdlib()
-  env <- engine_env(engine)
+  stdlib_env(engine)
+  env <- engine$env$env
 
   out_dir <- tempfile("rye-example-")
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)

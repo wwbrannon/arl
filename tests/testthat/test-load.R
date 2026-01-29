@@ -1,6 +1,6 @@
 test_that("engine$load_file evaluates source into environment", {
-  engine <- new_engine(load_stdlib = TRUE)
-  env <- engine_env(engine)
+  engine <- RyeEngine$new()
+  env <- engine$env$env
 
   path <- tempfile(fileext = ".rye")
   writeLines(c("(define foo 42)", "(define bar (+ foo 1))"), path)
@@ -13,8 +13,8 @@ test_that("engine$load_file evaluates source into environment", {
 })
 
 test_that("(load ...) evaluates file in current environment", {
-  engine <- new_engine(load_stdlib = TRUE)
-  env <- engine_env(engine)
+  engine <- RyeEngine$new()
+  env <- engine$env$env
 
   path <- tempfile(fileext = ".rye")
   writeLines("(define foo 7)", path)
@@ -28,8 +28,8 @@ test_that("(load ...) evaluates file in current environment", {
 })
 
 test_that("(load ...) resolves stdlib entries by name", {
-  engine <- new_engine(load_stdlib = TRUE)
-  env <- engine_env(engine)
+  engine <- RyeEngine$new()
+  env <- engine$env$env
 
   exprs <- engine$read("(load \"control\")")
 
@@ -38,9 +38,9 @@ test_that("(load ...) resolves stdlib entries by name", {
   expect_true(engine$macro_expander$is_macro(as.symbol("unless"), env = env))
 })
 
-test_that("engine$load_stdlib registers stdlib macros", {
-  engine <- new_engine(load_stdlib = TRUE)
-  env <- engine_env(engine)
+test_that("stdlib modules register macros", {
+  engine <- RyeEngine$new()
+  env <- engine$env$env
   import_stdlib_modules(engine, c("control", "binding", "threading", "error"))
 
   expect_true(engine$macro_expander$is_macro(as.symbol("when"), env = env))
@@ -51,8 +51,8 @@ test_that("engine$load_stdlib registers stdlib macros", {
 })
 
 test_that("(import ...) loads module exports into environment", {
-  engine <- new_engine(load_stdlib = TRUE)
-  env <- engine_env(engine)
+  engine <- RyeEngine$new()
+  env <- engine$env$env
 
   module_name <- paste0("math", sample.int(100000, 1))
   tmp_dir <- tempfile()
@@ -80,8 +80,8 @@ test_that("(import ...) loads module exports into environment", {
 })
 
 test_that("(import ...) does not re-evaluate loaded modules", {
-  engine <- new_engine(load_stdlib = TRUE)
-  env <- engine_env(engine)
+  engine <- RyeEngine$new()
+  env <- engine$env$env
 
   module_name <- paste0("counter", sample.int(100000, 1))
   tmp_dir <- tempfile()
@@ -114,8 +114,8 @@ test_that("(import ...) does not re-evaluate loaded modules", {
 })
 
 test_that("(import ...) errors on missing modules and exports", {
-  engine <- new_engine(load_stdlib = TRUE)
-  env <- engine_env(engine)
+  engine <- RyeEngine$new()
+  env <- engine$env$env
 
   missing_name <- paste0("missing", sample.int(100000, 1))
   exprs <- engine$read(sprintf("(import %s)", missing_name))

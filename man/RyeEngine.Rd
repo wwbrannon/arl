@@ -44,7 +44,6 @@ evaluation, and environment management.
 \item \href{#method-RyeEngine-eval_text}{\code{RyeEngine$eval_text()}}
 \item \href{#method-RyeEngine-initialize_environment}{\code{RyeEngine$initialize_environment()}}
 \item \href{#method-RyeEngine-load_file}{\code{RyeEngine$load_file()}}
-\item \href{#method-RyeEngine-load_stdlib}{\code{RyeEngine$load_stdlib()}}
 \item \href{#method-RyeEngine-macroexpand}{\code{RyeEngine$macroexpand()}}
 \item \href{#method-RyeEngine-macroexpand_1}{\code{RyeEngine$macroexpand_1()}}
 \item \href{#method-RyeEngine-help}{\code{RyeEngine$help()}}
@@ -206,18 +205,11 @@ Read and evaluate text.
 \if{html}{\out{<a id="method-RyeEngine-initialize_environment"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-initialize_environment}{}}}
 \subsection{Method \code{initialize_environment()}}{
-Populate standard bindings in an environment.
+Populate standard bindings
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$initialize_environment(env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$initialize_environment()}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
-}
-\if{html}{\out{</div>}}
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-load_file"></a>}}
@@ -233,23 +225,6 @@ Load and evaluate a Rye source file.
 \describe{
 \item{\code{path}}{File path to load.}
 
-\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RyeEngine-load_stdlib"></a>}}
-\if{latex}{\out{\hypertarget{method-RyeEngine-load_stdlib}{}}}
-\subsection{Method \code{load_stdlib()}}{
-Initialize the standard library in an environment.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_stdlib(env = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
 }
 \if{html}{\out{</div>}}

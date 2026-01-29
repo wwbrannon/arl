@@ -1,4 +1,4 @@
-engine <- new_engine()
+engine <- RyeEngine$new()
 
 make_repl_input <- function(lines) {
   i <- 0
@@ -204,14 +204,14 @@ test_that("repl_add_history handles missing addHistory", {
 # Print Value Function ----
 
 test_that("repl_print_value handles NULL", {
-  env <- rye:::cli_load_env()
+  env <- RyeEngine$new()
   result <- capture.output(val <- rye:::repl_print_value(NULL, env))
   expect_length(result, 0)
   expect_null(val)
 })
 
 test_that("repl_print_value handles calls with str", {
-  env <- rye:::cli_load_env()
+  env <- RyeEngine$new()
   call_obj <- quote(f(a, b))
   output <- capture.output(val <- rye:::repl_print_value(call_obj, env))
   expect_true(length(output) > 0)
@@ -219,7 +219,7 @@ test_that("repl_print_value handles calls with str", {
 })
 
 test_that("repl_print_value handles lists with str", {
-  engine <- rye:::cli_load_env()
+  engine <- RyeEngine$new()
   list_obj <- list(a = 1, b = 2)
   output <- capture.output(val <- rye:::repl_print_value(list_obj, engine))
   expect_true(length(output) > 0)
@@ -227,7 +227,7 @@ test_that("repl_print_value handles lists with str", {
 })
 
 test_that("repl_print_value handles vectors with print", {
-  engine <- rye:::cli_load_env()
+  engine <- RyeEngine$new()
   output <- capture.output(val <- rye:::repl_print_value(c(1, 2, 3), engine))
   expect_true(any(grepl("1.*2.*3", output)))
   expect_equal(val, c(1, 2, 3))
@@ -333,7 +333,7 @@ test_that("engine$repl prints each expression result in input", {
     repl_read_form = function(...) {
       call_count <<- call_count + 1
       if (call_count == 1) {
-        list(text = "1 + 2", exprs = engine$read("1 + 2"))
+        list(text = "(+ 1 2)", exprs = engine$read("(+ 1 2)"))
       } else {
         NULL
       }
@@ -341,7 +341,7 @@ test_that("engine$repl prints each expression result in input", {
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
   )
-  expect_true(any(grepl("1 \\+ 2", output)))
+  expect_true(any(grepl("3", output)))
 })
 
 test_that("engine$repl handles evaluation errors gracefully", {

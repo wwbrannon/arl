@@ -1,65 +1,65 @@
-test_that("parse_cli_args defaults to repl", {
-  parsed <- rye:::parse_cli_args(character(0))
+test_that("RyeCLI parse defaults to repl", {
+  parsed <- rye:::RyeCLI$new(character(0))$parse()
   expect_equal(parsed$action, "repl")
   expect_length(parsed$files, 0)
   expect_null(parsed$expr)
   expect_length(parsed$errors, 0)
 })
 
-test_that("parse_cli_args handles file and eval", {
-  parsed <- rye:::parse_cli_args(c("--file", "script.rye"))
+test_that("RyeCLI parse handles file and eval", {
+  parsed <- rye:::RyeCLI$new(c("--file", "script.rye"))$parse()
   expect_equal(parsed$action, "file")
   expect_equal(parsed$files, "script.rye")
   expect_null(parsed$expr)
 
-  parsed <- rye:::parse_cli_args(c("--eval", "(+ 1 2)"))
+  parsed <- rye:::RyeCLI$new(c("--eval", "(+ 1 2)"))$parse()
   expect_equal(parsed$action, "eval")
   expect_equal(parsed$expr, "(+ 1 2)")
   expect_length(parsed$files, 0)
 })
 
-test_that("parse_cli_args handles help and version", {
-  parsed <- rye:::parse_cli_args(c("--help"))
+test_that("RyeCLI parse handles help and version", {
+  parsed <- rye:::RyeCLI$new(c("--help"))$parse()
   expect_equal(parsed$action, "help")
   expect_length(parsed$errors, 0)
 
-  parsed <- rye:::parse_cli_args(c("--version"))
+  parsed <- rye:::RyeCLI$new(c("--version"))$parse()
   expect_equal(parsed$action, "version")
   expect_length(parsed$errors, 0)
 })
 
-test_that("parse_cli_args errors on invalid input", {
-  parsed <- rye:::parse_cli_args(c("--file", "a.rye", "--eval", "(+ 1 2)"))
+test_that("RyeCLI parse errors on invalid input", {
+  parsed <- rye:::RyeCLI$new(c("--file", "a.rye", "--eval", "(+ 1 2)"))$parse()
   expect_true(any(grepl("Use only one of --file/files or --eval", parsed$errors)))
 
-  parsed <- rye:::parse_cli_args(c("--unknown"))
+  parsed <- rye:::RyeCLI$new(c("--unknown"))$parse()
   expect_true(length(parsed$errors) > 0)
 })
 
-test_that("parse_cli_args supports short options", {
-  parsed <- rye:::parse_cli_args(c("-f", "a.rye"))
+test_that("RyeCLI parse supports short options", {
+  parsed <- rye:::RyeCLI$new(c("-f", "a.rye"))$parse()
   expect_equal(parsed$action, "file")
   expect_equal(parsed$files, "a.rye")
 
-  parsed <- rye:::parse_cli_args(c("-e", "(+ 1 2)"))
+  parsed <- rye:::RyeCLI$new(c("-e", "(+ 1 2)"))$parse()
   expect_equal(parsed$action, "eval")
   expect_equal(parsed$expr, "(+ 1 2)")
 
-  parsed <- rye:::parse_cli_args(c("-h"))
+  parsed <- rye:::RyeCLI$new(c("-h"))$parse()
   expect_equal(parsed$action, "help")
 
-  parsed <- rye:::parse_cli_args(c("-v"))
+  parsed <- rye:::RyeCLI$new(c("-v"))$parse()
   expect_equal(parsed$action, "version")
 })
 
-test_that("parse_cli_args treats positional args as files", {
-  parsed <- rye:::parse_cli_args(c("a.rye", "b.rye"))
+test_that("RyeCLI parse treats positional args as files", {
+  parsed <- rye:::RyeCLI$new(c("a.rye", "b.rye"))$parse()
   expect_equal(parsed$action, "file")
   expect_equal(parsed$files, c("a.rye", "b.rye"))
 })
 
-test_that("parse_cli_args ignores --args from wrappers", {
-  parsed <- rye:::parse_cli_args(c("--args", "--eval", "(+ 1 2)"))
+test_that("RyeCLI parse ignores --args from wrappers", {
+  parsed <- rye:::RyeCLI$new(c("--args", "--eval", "(+ 1 2)"))$parse()
   expect_equal(parsed$action, "eval")
   expect_equal(parsed$expr, "(+ 1 2)")
 })
@@ -133,41 +133,42 @@ test_that("rye_install_cli installs wrapper to target dir", {
 
 # Environment Loading ----
 
-test_that("cli_load_env creates environment with stdlib", {
-  engine <- rye:::cli_load_env()
-  env <- engine_env(engine)
+test_that("RyeEngine initializes environment with stdlib", {
+  engine <- RyeEngine$new()
+  env <- engine$env$env
   expect_true(is.environment(env))
-  expect_true(identical(parent.env(env), .GlobalEnv))
   expect_true(exists("map", envir = env))  # stdlib function
 })
 
 # Evaluation Functions ----
 
 test_that("cli_eval_text prints non-NULL results", {
-  engine <- rye:::cli_load_env()
-  output <- capture.output(result <- rye:::cli_eval_text("(+ 2 3)", engine))
+  engine <- RyeEngine$new()
+  cli <- rye:::RyeCLI$new()
+  output <- capture.output(result <- cli$cli_eval_text("(+ 2 3)", engine))
   expect_equal(result, 5)
   expect_true(any(grepl("5", output)))
 })
 
 test_that("cli_eval_text does not print NULL results", {
-  engine <- rye:::cli_load_env()
-  output <- capture.output(result <- rye:::cli_eval_text("(define y 10)", engine))
+  engine <- RyeEngine$new()
+  cli <- rye:::RyeCLI$new()
+  output <- capture.output(result <- cli$cli_eval_text("(define y 10)", engine))
   expect_null(result)
   expect_length(output, 0)
 })
 
 # I/O Helper Functions ----
 
-test_that("cli_isatty wraps isatty", {
-  result <- rye:::cli_isatty()
+test_that("RyeCLI cli_isatty wraps isatty", {
+  result <- rye:::RyeCLI$new()$cli_isatty()
   expect_type(result, "logical")
 })
 
-test_that("cli_read_stdin reads from stdin", {
-  # Test that the function exists and returns a character vector
+test_that("RyeCLI cli_read_stdin reads from stdin", {
+  # Test that the method exists and returns a character vector
   # Actual stdin testing requires process redirection
-  expect_true(is.function(rye:::cli_read_stdin))
+  expect_true(is.function(rye:::RyeCLI$new()$cli_read_stdin))
 })
 
 # Main CLI Function - Error Paths ----
@@ -194,7 +195,7 @@ test_that("rye_cli shows version with -v flag", {
 
 test_that("rye_cli errors on missing file", {
   # Test that non-existent files are detected
-  parsed <- rye:::parse_cli_args(c("--file", "nonexistent.rye"))
+  parsed <- rye:::RyeCLI$new(c("--file", "nonexistent.rye"))$parse()
   expect_equal(parsed$action, "file")
   expect_equal(parsed$files, "nonexistent.rye")
 
@@ -268,23 +269,23 @@ test_that("rye_cli handles multiple files", {
   unlink(c(file_a, file_b, file_c))
 })
 
-test_that("parse_cli_args handles -- argument terminator", {
-  parsed <- rye:::parse_cli_args(c("--", "file1.rye", "-v"))
+test_that("RyeCLI parse handles -- argument terminator", {
+  parsed <- rye:::RyeCLI$new(c("--", "file1.rye", "-v"))$parse()
   expect_equal(parsed$files, c("file1.rye", "-v"))
   expect_equal(parsed$action, "file")
 })
 
-test_that("parse_cli_args errors on --file without path", {
-  parsed <- rye:::parse_cli_args(c("--file"))
+test_that("RyeCLI parse errors on --file without path", {
+  parsed <- rye:::RyeCLI$new(c("--file"))$parse()
   expect_true(length(parsed$errors) > 0)
 })
 
-test_that("parse_cli_args errors on --eval without expression", {
-  parsed <- rye:::parse_cli_args(c("--eval"))
+test_that("RyeCLI parse errors on --eval without expression", {
+  parsed <- rye:::RyeCLI$new(c("--eval"))$parse()
   expect_true(length(parsed$errors) > 0)
 })
 
-test_that("parse_cli_args errors on multiple --eval flags", {
-  parsed <- rye:::parse_cli_args(c("--eval", "(+ 1 2)", "--eval", "(+ 3 4)"))
+test_that("RyeCLI parse errors on multiple --eval flags", {
+  parsed <- rye:::RyeCLI$new(c("--eval", "(+ 1 2)", "--eval", "(+ 3 4)"))$parse()
   expect_true(length(parsed$errors) > 0)
 })

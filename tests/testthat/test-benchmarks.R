@@ -1,7 +1,7 @@
 # Test Benchmark Infrastructure
 # Smoke tests to ensure benchmark and profiling infrastructure works
 
-engine <- new_engine()
+engine <- RyeEngine$new()
 
 # Helper to find benchmark directory
 find_bench_dir <- function() {

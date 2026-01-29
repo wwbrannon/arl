@@ -1,4 +1,4 @@
-engine <- new_engine()
+engine <- RyeEngine$new()
 
 test_that("gensym generates unique symbols", {
   s1 <- engine$macro_expander$gensym()
@@ -173,7 +173,7 @@ test_that("macros with unquote-splicing work", {
 
 test_that("macro-introduced bindings are hygienic", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   engine$eval(engine$read("(define tmp 100)")[[1]], env)
@@ -185,7 +185,7 @@ test_that("macro-introduced bindings are hygienic", {
 
 test_that("capture allows intentional binding capture", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   engine$eval(
@@ -202,7 +202,7 @@ test_that("capture allows intentional binding capture", {
 
 test_that("stdlib macros from files work", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("control", "binding", "looping", "threading", "error"), env)
 
   result <- engine$eval(engine$read("(cond ((> 1 2) 1) ((< 1 2) 2) (else 3))")[[1]], env)
@@ -277,7 +277,7 @@ test_that("stdlib macros from files work", {
 
 test_that("letrec supports mutual recursion", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   result <- engine$eval(
@@ -294,7 +294,7 @@ test_that("letrec supports mutual recursion", {
 
 test_that("destructuring bindings work for define and let forms", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   engine$eval(engine$read("(define (a b . rest) (list 1 2 3 4))")[[1]], env)
@@ -330,7 +330,7 @@ test_that("destructuring bindings work for define and let forms", {
 
 test_that("destructuring errors on arity mismatch", {
   env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   expect_error(

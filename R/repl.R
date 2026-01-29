@@ -168,14 +168,13 @@ repl_print_value <- function(value, engine) {
 }
 
 # Internal REPL entrypoint (RyeEngine$repl delegates here).
-rye_repl <- function(engine = NULL) {
+rye_repl <- function(engine) {
   cat(repl_version(), "\n", sep = "")
   cat("Type (quit) or press Ctrl+C to exit\n")
   cat("Builtin readline support:", ifelse(isTRUE(capabilities("readline")), "yes", "no"), "\n\n")
 
   if (is.null(engine)) {
-    engine <- RyeEngine$new()
-    engine$load_stdlib()
+    stop("Must provide RyeEngine instance")
   }
   repl_env <- engine$env$env
 

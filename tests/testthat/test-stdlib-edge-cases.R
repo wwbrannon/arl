@@ -1,12 +1,12 @@
 # Edge case tests for Rye standard library
 # Tests boundary conditions, empty inputs, and unusual scenarios
 
-engine <- new_engine()
+engine <- RyeEngine$new()
 
 # Helper to create test env with stdlib
 setup_env <- function() {
   env <- new.env()
-  engine$load_stdlib(env)
+  stdlib_env(engine, env)
   env
 }
 

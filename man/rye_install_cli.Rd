@@ -4,13 +4,14 @@
 \alias{rye_install_cli}
 \title{Install the Rye CLI wrapper}
 \usage{
-rye_install_cli(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""),
-  overwrite = FALSE)
+rye_install_cli(
+  target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""),
+  overwrite = FALSE
+)
 }
 \arguments{
 \item{target_dir}{Directory for the \code{rye} executable. Defaults to the
-\code{RYE_BIN_DIR} environment variable, then \code{~/.local/bin}, then
-\code{~/bin}.}
+\code{RYE_BIN_DIR} environment variable, then \verb{~/.local/bin}, then \verb{~/bin}.}
 
 \item{overwrite}{Whether to overwrite an existing \code{rye} executable.}
 }
