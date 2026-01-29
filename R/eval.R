@@ -2,6 +2,11 @@ rye_missing_default <- function() {
   structure(list(), class = "rye_missing_default")
 }
 
+rye_promise_value_key <- ".rye_promise_value"
+rye_promise_expr_key <- ".rye_promise_expr"
+rye_promise_env_key <- ".rye_promise_env"
+rye_promise_eval_key <- ".rye_promise_eval"
+
 #' Evaluator for Rye expressions
 #'
 #' @export

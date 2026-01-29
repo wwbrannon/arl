@@ -7,9 +7,6 @@ o) How to calculate test coverage of .rye code
 
 o) More tests for .rye code
 
-rye> translate-str
-Error: cannot coerce type 'closure' to vector of type 'character'
-
 o) remove translate R api
 
 o) translate doesn't correctly backtick-quote bad idents

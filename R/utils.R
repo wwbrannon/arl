@@ -11,18 +11,6 @@ rye_env_registry <- function(env, name, create = TRUE) {
   registry
 }
 
-rye_promise_value_key <- ".rye_promise_value"
-rye_promise_expr_key <- ".rye_promise_expr"
-rye_promise_env_key <- ".rye_promise_env"
-rye_promise_eval_key <- ".rye_promise_eval"
-
-rye_promise_force <- function(promise_env) {
-  if (!is.environment(promise_env) || !inherits(promise_env, "rye_promise")) {
-    stop("not a Rye promise")
-  }
-  get(rye_promise_value_key, envir = promise_env, inherits = FALSE)
-}
-
 rye_resolve_stdlib_path <- function(name) {
   if (!is.character(name) || length(name) != 1) {
     return(NULL)
