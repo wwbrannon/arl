@@ -157,23 +157,18 @@ are not rewound.
 ### Tail Call Optimization
 
 Rye does not provide automatic tail-call optimization. For efficient
-tail-recursive patterns, use the `while` macro from the `looping` module,
-which provides iteration-based TCO:
+tail-recursive patterns, use `loop`/`recur` from the `looping` module,
+which expands to an R while loop:
 
 ```lisp
 (import looping)
 
 (define factorial
   (lambda (n)
-    (if (< n 2)
-      1
-      (begin
-        (define acc 1)
-        (define i n)
-        (while (> i 1)
-          (set! acc (* acc i))
-          (set! i (- i 1)))
-        acc))))
+    (loop ((i n) (acc 1))
+      (if (< i 2)
+        acc
+        (recur (- i 1) (* acc i))))))
 ```
 
 ### Standard Library

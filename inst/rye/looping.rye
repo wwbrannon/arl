@@ -1,11 +1,12 @@
 ;;; Rye Standard Library - Looping Macros
 
 (module looping
-  (export while while-r until for for-r)
+  (export while while-r until for for-r loop recur)
 
   (import higher-order)
   (import list-core)
   (import predicates)
+  (import sequences)
 
   (defmacro while (test . body)
     "Repeat body while test is truthy."
@@ -54,4 +55,88 @@
             (car body)
             `({ ,@body))))
       `(r/eval (call (list 'for ',var ',seq ',body-expr)) (current-env))))
-  )
+
+  (defmacro recur (. args)
+    "Rebind loop locals and repeat. Only valid inside loop."
+    (stop "recur can only be used inside loop"))
+
+  (defmacro loop (bindings . body)
+    "Clojure-style loop/recur that expands to an R while loop."
+    (begin
+      (define binding-pair?
+        (lambda (pair)
+          (if (pair? pair)
+            (isTRUE (= (length pair) 2))
+            #f)))
+      (define bindings-ok?
+        (lambda (b)
+          (if (list? b)
+            (every? binding-pair? b)
+            #f)))
+      (if (not (bindings-ok? bindings))
+        `((lambda (loop-fn) (loop-fn ,bindings ,@body)) loop)
+        (begin
+      (define vars (map car bindings))
+      (define recur-flag (gensym "recur_flag"))
+      (define recur-vals (gensym "recur_vals"))
+      (define loop-result (gensym "loop_result"))
+      (define loop-step (gensym "loop_step"))
+      (define index-op (as.symbol "[["))
+      (define rewrite
+        (lambda (expr)
+          (if (list? expr)
+            (begin
+              (define head (car expr))
+              (if (and (symbol? head) (= (as.character head) "recur"))
+                (begin
+                  (define args (cdr expr))
+                  (if (not (= (length args) (length vars)))
+                    (stop (sprintf "recur expects %d argument(s)" (length vars))))
+                  `(begin
+                     (set! ,recur-flag #t)
+                     (set! ,recur-vals (list ,@args))
+                     (return #nil)))
+                (begin
+                  (define skip?
+                    (if (symbol? head)
+                      (if (= (as.character head) "quote")
+                        #t
+                        (if (= (as.character head) "quasiquote")
+                          #t
+                          (if (= (as.character head) "lambda")
+                            #t
+                            (if (= (as.character head) "defmacro")
+                              #t
+                              (if (= (as.character head) "loop")
+                                #t
+                                #f)))))
+                      #f))
+                  (if skip?
+                    expr
+                    (call (cons head (map rewrite (cdr expr))))))))
+            expr)))
+      (define rewritten-body (map rewrite body))
+      (define rebinds
+        (map (lambda (pair)
+               (define var (car pair))
+               (define idx (car (cdr pair)))
+               (define nth-expr (call (list index-op recur-vals idx)))
+               `(<- ,var ,nth-expr))
+             (zip vars (seq_len (length vars)))))
+      (define brace-op (as.symbol "{"))
+      (define rebind-block (call (cons brace-op rebinds)))
+      `(begin
+         ,@(map (lambda (pair) `(define ,(car pair) ,(car (cdr pair)))) bindings)
+         (define ,recur-flag #f)
+         (define ,recur-vals (list))
+         (define ,loop-result #f)
+         (define ,loop-step (lambda () (begin ,@rewritten-body)))
+         (while-r #t
+           (<- ,recur-flag #f)
+           (<- ,loop-result (,loop-step))
+           (if ,recur-flag
+             ,rebind-block
+             (break)))
+         ,loop-result)))
+        ))
+)

@@ -258,6 +258,33 @@ Iterates over a sequence.
 
 ---
 
+### loop / recur
+
+Tail-recursive looping with explicit rebinding.
+
+**Signature:** `(loop ((var1 init1) (var2 init2) ...) body...)`
+
+**Signature:** `(recur expr1 expr2 ...)`
+
+**Notes:**
+- `recur` must be used inside `loop`.
+- `recur` must supply one value per loop binding.
+- `recur` is not supported inside nested `lambda` or `defmacro` bodies.
+
+**Examples:**
+```lisp
+(loop ((i 0) (acc 0))
+  (if (< i 5)
+    (recur (+ i 1) (+ acc i))
+    acc))  ; => 10
+```
+
+**Defined in:** `inst/rye/looping.rye`
+
+**See also:** while, for
+
+---
+
 ### while-r
 
 Execute an R `while` loop using R's native control flow.
