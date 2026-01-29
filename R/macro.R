@@ -5,8 +5,9 @@ MacroExpander <- R6::R6Class(
   "MacroExpander",
   public = list(
     env = NULL,
+    evaluator = NULL,
     source_tracker = NULL,
-    initialize = function(env, source_tracker = NULL) {
+    initialize = function(env, source_tracker = NULL, evaluator = NULL) {
       if (!inherits(env, "RyeEnv")) {
         stop("MacroExpander requires a RyeEnv")
       }
@@ -15,6 +16,7 @@ MacroExpander <- R6::R6Class(
         source_tracker <- SourceTracker$new()
       }
       self$source_tracker <- source_tracker
+      self$evaluator <- evaluator
     },
     defmacro = function(name, params, body, docstring = NULL, env = NULL) {
       target_env <- private$resolve_env(env)
@@ -505,7 +507,7 @@ MacroExpander <- R6::R6Class(
           if (length(expr) != 2) {
             stop("unquote requires exactly 1 argument")
           }
-          return(private$hygiene_wrap(rye_eval(expr[[2]], env), "call_site"))
+          return(private$hygiene_wrap(self$evaluator$eval(expr[[2]], env), "call_site"))
         }
         return(as.call(list(as.symbol("unquote"), private$quasiquote_impl(expr[[2]], env, depth - 1))))
       }
@@ -524,7 +526,7 @@ MacroExpander <- R6::R6Class(
             if (length(elem) != 2) {
               stop("unquote-splicing requires exactly 1 argument")
             }
-            spliced <- rye_eval(elem[[2]], env)
+            spliced <- self$evaluator$eval(elem[[2]], env)
             if (is.call(spliced)) {
               spliced <- as.list(spliced)
             }
@@ -600,7 +602,7 @@ MacroExpander <- R6::R6Class(
         }
         result <- NULL
         for (expr in body) {
-          result <- rye_eval(expr, macro_env)
+          result <- self$evaluator$eval(expr, macro_env)
         }
         result
       }

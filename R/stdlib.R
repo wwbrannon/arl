@@ -18,7 +18,7 @@ rye_stdlib_apply <- function(fn, args) {
            identical(fn, base::`-`) || identical(fn, base::`/`))) {
     return(Reduce(fn, args))
   }
-  rye_do_call(fn, args)
+  do.call(fn, args)
 }
 
 rye_stdlib_try <- function(thunk, error_handler = NULL, finally_handler = NULL) {
@@ -46,7 +46,11 @@ rye_stdlib_try <- function(thunk, error_handler = NULL, finally_handler = NULL) 
 }
 
 rye_stdlib_eval <- function(expr, env = parent.frame()) {
-  rye_eval(expr, env)
+  engine <- get0(".rye_engine", envir = env, inherits = TRUE)
+  if (inherits(engine, "RyeEngine")) {
+    return(engine$eval(expr, env))
+  }
+  stop("rye_stdlib_eval requires a RyeEngine-backed environment")
 }
 
 rye_resolve_r_callable <- function(fn_name, stdlib_env = NULL, max_frames = 10) {
@@ -104,7 +108,10 @@ rye_stdlib_r_eval <- function(expr, env = NULL) {
   if (is.null(env)) {
     env <- rye_stdlib_current_env()
   }
-  expr <- rye_hygiene_unwrap(expr)
+  engine <- get0(".rye_engine", envir = env, inherits = TRUE)
+  if (inherits(engine, "RyeEngine")) {
+    expr <- engine$macro_expander$hygiene_unwrap(expr)
+  }
   saved <- list()
   if (is.call(expr) && length(expr) > 0) {
     op <- expr[[1]]
@@ -141,7 +148,7 @@ rye_stdlib_r_call <- function(fn, args = list()) {
     stop("r/call requires a symbol or string function name")
   }
   fn <- rye_resolve_r_callable(fn_name, stdlib_env = NULL, max_frames = 10)
-  rye_do_call(fn, rye_as_list(args))
+  do.call(fn, rye_as_list(args))
 }
 
 rye_stdlib_promise_p <- function(x) {

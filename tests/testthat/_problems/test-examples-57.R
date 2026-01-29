@@ -17,7 +17,8 @@ run_example <- function(example_name) {
   testthat::skip_if_not(file.exists(example_path), "Example file not found")
 
   env <- new.env()
-  rye::rye_load_stdlib(env)
+  engine <- rye::RyeEngine$new()
+  engine$load_stdlib(env)
 
   out_dir <- tempfile("rye-example-")
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
@@ -32,7 +33,7 @@ run_example <- function(example_name) {
   }, add = TRUE)
   Sys.setenv(RYE_OUTPUT_DIR = out_dir)
 
-  output <- capture.output(rye::rye_load_file(example_path, env))
+  output <- capture.output(engine$load_file(example_path, env))
   list(env = env, output = output, out_dir = out_dir, path = example_path)
 }
 

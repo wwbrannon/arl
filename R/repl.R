@@ -149,7 +149,7 @@ repl_eval_exprs <- function(exprs, engine, env) {
 }
 
 repl_eval_and_print_exprs <- function(exprs, engine, env) {
-  rye_with_error_context(function() {
+  engine$source_tracker$with_error_context(function() {
     result <- NULL
     for (expr in exprs) {
       result <- engine$eval(expr, env)
@@ -177,7 +177,7 @@ rye_repl <- function(engine = NULL) {
     engine <- RyeEngine$new()
     engine$load_stdlib()
   }
-  repl_env <- engine_env(engine)
+  repl_env <- engine$env$env
 
   history_path <- repl_history_path()
   repl_load_history(history_path)
@@ -187,7 +187,7 @@ rye_repl <- function(engine = NULL) {
     form <- tryCatch(
       repl_read_form(engine = engine),
       error = function(e) {
-        rye_print_error(e, file = stdout())
+        engine$source_tracker$print_error(e, file = stdout())
         list(error = TRUE)
       }
     )
@@ -210,7 +210,7 @@ rye_repl <- function(engine = NULL) {
     tryCatch({
       repl_eval_and_print_exprs(form$exprs, engine, repl_env)
     }, error = function(e) {
-      rye_print_error(e, file = stdout())
+      engine$source_tracker$print_error(e, file = stdout())
     })
   }
 }

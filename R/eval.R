@@ -11,14 +11,16 @@ Evaluator <- R6::R6Class(
     env = NULL,
     macro_expander = NULL,
     source_tracker = NULL,
+    engine = NULL,
     special_forms = NULL,
-    initialize = function(env, macro_expander, source_tracker) {
+    initialize = function(env, macro_expander, source_tracker, engine = NULL) {
       if (!inherits(env, "RyeEnv")) {
         stop("Evaluator requires a RyeEnv")
       }
       self$env <- env
       self$macro_expander <- macro_expander
       self$source_tracker <- source_tracker
+      self$engine <- engine
       self$special_forms <- self$build_special_forms()
     },
     eval = function(expr, env = NULL) {
@@ -45,7 +47,7 @@ Evaluator <- R6::R6Class(
     },
     eval_inner = function(expr, env) {
       # Source tracking:
-      # We *must not* pop the src stack on error, because `rye_with_error_context()`
+      # We *must not* pop the src stack on error, because `SourceTracker$with_error_context()`
       # captures `source_tracker$get()` to include Location/Rye stack in errors.
       #
       # If we used `on.exit(pop())`, unwinding would pop before the error wrapper
@@ -173,6 +175,21 @@ Evaluator <- R6::R6Class(
     },
     do_call = function(fn, args) {
       private$do_call_impl(fn, args)
+    },
+    promise_new = function(expr, env) {
+      promise_env <- new.env(parent = emptyenv())
+      assign(rye_promise_expr_key, expr, envir = promise_env)
+      assign(rye_promise_env_key, env, envir = promise_env)
+      assign(rye_promise_eval_key, self$eval, envir = promise_env)
+      delayedAssign(
+        rye_promise_value_key,
+        .rye_promise_eval(.rye_promise_expr, .rye_promise_env),
+        eval.env = promise_env,
+        assign.env = promise_env
+      )
+      class(promise_env) <- c("rye_promise", class(promise_env))
+      lockEnvironment(promise_env, bindings = FALSE)
+      promise_env
     },
     apply_closure = function(fn, args, env) {
       info <- attr(fn, "rye_closure")
@@ -305,7 +322,7 @@ Evaluator <- R6::R6Class(
           if (length(expr) != 2) {
             stop("delay requires exactly 1 argument")
           }
-          rye_promise_new(self$source_tracker$strip_src(expr[[2]]), env)
+          self$promise_new(self$source_tracker$strip_src(expr[[2]]), env)
         },
         help = function(expr, env, op_name) {
           if (length(expr) != 2) {
@@ -405,14 +422,14 @@ Evaluator <- R6::R6Class(
           if (!has_separator) {
             stdlib_path <- rye_resolve_stdlib_path(path)
             if (!is.null(stdlib_path)) {
-              return(self$source_tracker$strip_src(rye_load_file(stdlib_path, env)))
+              return(self$source_tracker$strip_src(self$engine$load_file(stdlib_path, env)))
             }
             if (file.exists(path)) {
-              return(self$source_tracker$strip_src(rye_load_file(path, env)))
+              return(self$source_tracker$strip_src(self$engine$load_file(path, env)))
             }
             stop(sprintf("File not found: %s", path))
           }
-          self$source_tracker$strip_src(rye_load_file(path, env))
+          self$source_tracker$strip_src(self$engine$load_file(path, env))
         },
         module = function(expr, env, op_name) {
           if (length(expr) < 3) {
@@ -480,7 +497,7 @@ Evaluator <- R6::R6Class(
             if (is.null(module_path)) {
               stop(sprintf("Module not found: %s", module_name))
             }
-            rye_load_file(module_path, env)
+            self$engine$load_file(module_path, env)
             if (!RyeEnv$new(env)$module_registry$exists(module_name)) {
               stop(sprintf("Module '%s' did not register itself", module_name))
             }

@@ -303,7 +303,7 @@ rye_hygienize <- function(expr) {
   expr <- rename_captured(expr, symbols)
 
   # Third pass: unwrap hygiene markers
-  expr <- rye_hygiene_unwrap(expr)
+  expr <- macro_expander$hygiene_unwrap(expr)
 
   expr
 }

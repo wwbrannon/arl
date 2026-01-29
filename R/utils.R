@@ -16,41 +16,11 @@ rye_promise_expr_key <- ".rye_promise_expr"
 rye_promise_env_key <- ".rye_promise_env"
 rye_promise_eval_key <- ".rye_promise_eval"
 
-rye_promise_new <- function(expr, env) {
-  promise_env <- new.env(parent = emptyenv())
-  assign(rye_promise_expr_key, expr, envir = promise_env)
-  assign(rye_promise_env_key, env, envir = promise_env)
-  assign(rye_promise_eval_key, rye_eval, envir = promise_env)
-  delayedAssign(
-    rye_promise_value_key,
-    .rye_promise_eval(.rye_promise_expr, .rye_promise_env),
-    eval.env = promise_env,
-    assign.env = promise_env
-  )
-  class(promise_env) <- c("rye_promise", class(promise_env))
-  lockEnvironment(promise_env, bindings = FALSE)
-  promise_env
-}
-
 rye_promise_force <- function(promise_env) {
   if (!is.environment(promise_env) || !inherits(promise_env, "rye_promise")) {
     stop("not a Rye promise")
   }
   get(rye_promise_value_key, envir = promise_env, inherits = FALSE)
-}
-
-rye_eval_and_maybe_print <- function(fn, env, on_error, printer = NULL) {
-  result <- tryCatch(
-    fn(),
-    error = function(e) {
-      on_error(e)
-      return(invisible(NULL))
-    }
-  )
-  if (!is.null(result) && !is.null(printer)) {
-    printer(result, env)
-  }
-  invisible(result)
 }
 
 rye_resolve_stdlib_path <- function(name) {
@@ -104,32 +74,6 @@ rye_error <- function(message, src_stack = list(), r_stack = list()) {
   )
 }
 
-rye_with_error_context <- function(fn, tracker = NULL) {
-  if (is.null(tracker)) {
-    tracker <- rye_default_engine()$source_tracker
-  }
-  prev_stack <- tracker$get()
-  on.exit({
-    tracker$reset()
-    if (!is.null(prev_stack) && length(prev_stack) > 0) {
-      for (src in prev_stack) {
-        tracker$push(src)
-      }
-    }
-  }, add = TRUE)
-  tracker$reset()
-  tryCatch(
-    fn(),
-    error = function(e) {
-      if (inherits(e, "rye_error")) {
-        stop(e)
-      }
-      cond <- rye_error(conditionMessage(e), tracker$get(), sys.calls())
-      stop(cond)
-    }
-  )
-}
-
 rye_env_resolve <- function(env, fallback) {
   if (inherits(env, "RyeEnv")) {
     return(env$env)
@@ -141,24 +85,4 @@ rye_env_resolve <- function(env, fallback) {
     return(fallback$env)
   }
   stop("Expected a RyeEnv or environment")
-}
-
-rye_do_call <- function(fn, args) {
-  rye_default_engine()$evaluator$do_call(fn, args)
-}
-
-rye_load_file <- function(path, env = parent.frame()) {
-  rye_default_engine()$load_file(path, env)
-}
-
-rye_hygiene_unwrap <- function(expr) {
-  rye_default_engine()$macro_expander$hygiene_unwrap(expr)
-}
-
-rye_print_error <- function(e, file = stderr()) {
-  rye_default_engine()$source_tracker$print_error(e, file = file)
-}
-
-rye_eval <- function(expr, env = parent.frame()) {
-  rye_default_engine()$eval(expr, env)
 }

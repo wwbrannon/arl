@@ -126,12 +126,26 @@ cli_load_env <- function() {
   engine
 }
 
+cli_eval_and_maybe_print <- function(fn, env, on_error, printer = NULL) {
+  result <- tryCatch(
+    fn(),
+    error = function(e) {
+      on_error(e)
+      return(invisible(NULL))
+    }
+  )
+  if (!is.null(result) && !is.null(printer)) {
+    printer(result, env)
+  }
+  invisible(result)
+}
+
 cli_eval_exprs <- function(exprs, engine) {
-  rye_eval_and_maybe_print(
-    function() engine$eval_exprs(exprs, engine_env(engine)),
-    engine_env(engine),
+  cli_eval_and_maybe_print(
+    function() engine$eval_exprs(exprs, engine$env$env),
+    engine$env$env,
     on_error = function(e) {
-      cli_print_error(e)
+      cli_print_error(e, engine)
       quit(save = "no", status = 1)
     },
     printer = function(result, env) {
@@ -141,11 +155,11 @@ cli_eval_exprs <- function(exprs, engine) {
 }
 
 cli_eval_text <- function(text, engine, source_name = "<cli>") {
-  rye_eval_and_maybe_print(
-    function() engine$eval_text(text, engine_env(engine), source_name = source_name),
-    engine_env(engine),
+  cli_eval_and_maybe_print(
+    function() engine$eval_text(text, engine$env$env, source_name = source_name),
+    engine$env$env,
     on_error = function(e) {
-      cli_print_error(e)
+      cli_print_error(e, engine)
       quit(save = "no", status = 1)
     },
     printer = function(result, env) {
@@ -184,8 +198,8 @@ cli_error <- function(message) {
   cat("Error: ", message, "\n", sep = "", file = stderr())
 }
 
-cli_print_error <- function(e) {
-  rye_print_error(e, file = stderr())
+cli_print_error <- function(e, engine) {
+  engine$source_tracker$print_error(e, file = stderr())
 }
 
 rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
@@ -236,9 +250,9 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
     }
     for (path in parsed$files) {
       result <- tryCatch(
-        engine$load_file(path, engine_env(engine)),
+        engine$load_file(path, engine$env$env),
         error = function(e) {
-          cli_print_error(e)
+          cli_print_error(e, engine)
           quit(save = "no", status = 1)
         }
       )

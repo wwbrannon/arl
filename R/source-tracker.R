@@ -157,6 +157,28 @@ SourceTracker <- R6::R6Class(
     },
     print_error = function(e, file = stderr()) {
       cat(self$format_error(e), "\n", sep = "", file = file)
+    },
+    with_error_context = function(fn) {
+      prev_stack <- self$get()
+      on.exit({
+        self$reset()
+        if (!is.null(prev_stack) && length(prev_stack) > 0) {
+          for (src in prev_stack) {
+            self$push(src)
+          }
+        }
+      }, add = TRUE)
+      self$reset()
+      tryCatch(
+        fn(),
+        error = function(e) {
+          if (inherits(e, "rye_error")) {
+            stop(e)
+          }
+          cond <- rye_error(conditionMessage(e), self$get(), sys.calls())
+          stop(cond)
+        }
+      )
     }
   )
 )

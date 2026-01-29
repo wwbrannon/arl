@@ -19,7 +19,8 @@ RyeEngine <- R6::R6Class(
       self$tokenizer <- Tokenizer$new()
       self$parser <- Parser$new(self$source_tracker)
       self$macro_expander <- MacroExpander$new(self$env, self$source_tracker)
-      self$evaluator <- Evaluator$new(self$env, self$macro_expander, self$source_tracker)
+      self$evaluator <- Evaluator$new(self$env, self$macro_expander, self$source_tracker, engine = self)
+      self$macro_expander$evaluator <- self$evaluator
     },
     read = function(source, source_name = NULL) {
       tokens <- self$tokenizer$tokenize(source)
@@ -39,9 +40,9 @@ RyeEngine <- R6::R6Class(
     },
     eval_exprs = function(exprs, env = NULL) {
       target_env <- rye_env_resolve(env, fallback = self$env)
-      rye_with_error_context(function() {
+      self$source_tracker$with_error_context(function() {
         self$eval_seq(exprs, target_env)
-      }, tracker = self$source_tracker)
+      })
     },
     eval_text = function(text, env = NULL, source_name = "<eval>") {
       exprs <- self$read(text, source_name = source_name)
@@ -57,6 +58,9 @@ RyeEngine <- R6::R6Class(
 
       if (!exists(".rye_env", envir = env, inherits = FALSE)) {
         assign(".rye_env", TRUE, envir = env)
+      }
+      if (!exists(".rye_engine", envir = env, inherits = FALSE)) {
+        assign(".rye_engine", self, envir = env)
       }
 
       rye_env_registry(env, ".rye_module_registry", create = TRUE)
@@ -179,9 +183,9 @@ RyeEngine <- R6::R6Class(
       }
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
       target_env <- rye_env_resolve(env, fallback = self$env)
-      rye_with_error_context(function() {
+      self$source_tracker$with_error_context(function() {
         self$eval_seq(self$read(text, source_name = path), target_env)
-      }, tracker = self$source_tracker)
+      })
     },
     load_stdlib = function(env = NULL) {
       target_env <- rye_env_resolve(env, fallback = self$env)
