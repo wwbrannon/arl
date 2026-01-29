@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Looping Macros
 
 (module looping
-  (export while until for)
+  (export while while-r until for for-r)
 
   (import higher-order)
   (import list-core)
@@ -30,4 +30,28 @@
       (define var (car binding))
       (define seq (car (cdr binding)))
       `(map (lambda (,var) (begin ,@body)) ,seq)))
+
+  (defmacro while-r (test . body)
+    "Execute an R while loop in the current environment."
+    (begin
+      (define body-expr
+        (if (null? body)
+          #nil
+          (if (= (length body) 1)
+            (car body)
+            `({ ,@body))))
+      `(r/eval (call (list 'while ',test ',body-expr)) (current-env))))
+
+  (defmacro for-r (binding . body)
+    "Execute an R for loop in the current environment."
+    (begin
+      (define var (car binding))
+      (define seq (car (cdr binding)))
+      (define body-expr
+        (if (null? body)
+          #nil
+          (if (= (length body) 1)
+            (car body)
+            `({ ,@body))))
+      `(r/eval (call (list 'for ',var ',seq ',body-expr)) (current-env))))
   )

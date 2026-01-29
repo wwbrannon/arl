@@ -231,6 +231,26 @@ test_that("stdlib macros from files work", {
   result <- rye_eval(rye_read("(for (x (list 1 2 3)) (* x 2))")[[1]], env)
   expect_equal(result, list(2, 4, 6))
 
+  result <- rye_eval(
+    rye_read(paste0(
+      "(begin (define x 0) ",
+      "(while-r (< x 3) (<- x (+ x 1))) ",
+      "x)"
+    ))[[1]],
+    env
+  )
+  expect_equal(result, 3)
+
+  result <- rye_eval(
+    rye_read(paste0(
+      "(begin (define acc (list)) ",
+      "(for-r (i (seq 1 3)) (<- acc (append acc (list i)))) ",
+      "acc)"
+    ))[[1]],
+    env
+  )
+  expect_equal(result, list(1, 2, 3))
+
   result <- rye_eval(rye_read("(-> 1 (+ 2) (* 3))")[[1]], env)
   expect_equal(result, 9)
 

@@ -323,7 +323,8 @@ rye_quote_arg <- function(value, quote_symbols = TRUE) {
 rye_do_call <- function(fn, args) {
   quote_symbols <- !identical(fn, base::`$`) &&
     !identical(fn, base::`[`) &&
-    !identical(fn, base::`[[`)
+    !identical(fn, base::`[[`) &&
+    !isTRUE(attr(fn, "rye_no_quote"))
   args <- lapply(args, rye_quote_arg, quote_symbols = quote_symbols)
   do.call(fn, args)
 }

@@ -233,7 +233,7 @@ Executes body repeatedly while test is truthy.
 
 **Defined in:** `inst/rye/looping.rye`
 
-**See also:** for
+**See also:** for, while-r
 
 ---
 
@@ -254,7 +254,57 @@ Iterates over a sequence.
 
 **Defined in:** `inst/rye/looping.rye`
 
-**See also:** while, map
+**See also:** while, for-r, map
+
+---
+
+### while-r
+
+Execute an R `while` loop using R's native control flow.
+
+**Signature:** `(while-r test body...)`
+
+**Notes:**
+- The body is evaluated by R, not Rye.
+- Use R assignment (`<-`, or `assign` with `:envir (environment)`) rather than `set!`.
+
+**Examples:**
+```lisp
+(begin
+  (define i 0)
+  (while-r (< i 3)
+    (<- i (+ i 1)))
+  i)
+```
+
+**Defined in:** `inst/rye/looping.rye`
+
+**See also:** while
+
+---
+
+### for-r
+
+Execute an R `for` loop using R's native control flow.
+
+**Signature:** `(for-r (var seq) body...)`
+
+**Notes:**
+- The body is evaluated by R, not Rye.
+- Use R assignment (`<-`, or `assign` with `:envir (environment)`) rather than `set!`.
+
+**Examples:**
+```lisp
+(begin
+  (define acc (list))
+  (for-r (i (seq 1 3))
+    (<- acc (append acc (list i))))
+  acc)
+```
+
+**Defined in:** `inst/rye/looping.rye`
+
+**See also:** for
 
 ---
 

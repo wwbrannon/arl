@@ -70,6 +70,7 @@ rye_load_stdlib_base <- function(env = NULL) {
   env$`macroexpand-1` <- rye_stdlib_macroexpand_1
   env$`macroexpand-all` <- rye_stdlib_macroexpand
   env$eval <- rye_stdlib_eval
+  env$`current-env` <- rye_stdlib_current_env
   env$`promise?` <- rye_stdlib_promise_p
   env$force <- rye_stdlib_force
   env$rye_read <- rye_read
@@ -106,6 +107,7 @@ rye_load_stdlib_base <- function(env = NULL) {
     }
     rye_do_call(fn_obj, rye_as_list(args))
   }
+  env$`r/eval` <- rye_stdlib_r_eval
 
   # Return the environment
   # All R base functions (+, -, *, /, <, >, print, etc.) are automatically
@@ -268,6 +270,67 @@ rye_stdlib_eval <- function(expr, env = parent.frame()) {
   rye_eval(expr, env)
 }
 
+rye_stdlib_current_env <- function() {
+  for (i in 0:20) {
+    frame_env <- parent.frame(i + 1)
+    if (exists("env", envir = frame_env, inherits = FALSE)) {
+      candidate <- get("env", envir = frame_env, inherits = FALSE)
+      if (is.environment(candidate) &&
+          exists(".rye_env", envir = candidate, inherits = FALSE)) {
+        return(candidate)
+      }
+    }
+    frame_names <- ls(envir = frame_env, all.names = TRUE)
+    if (length(frame_names) > 0) {
+      frame_values <- mget(frame_names, envir = frame_env, inherits = FALSE)
+      for (value in frame_values) {
+        if (is.environment(value) &&
+            exists(".rye_env", envir = value, inherits = FALSE)) {
+          return(value)
+        }
+      }
+    }
+  }
+  fallback <- parent.frame()
+  if (is.environment(fallback) &&
+      exists(".rye_env", envir = fallback, inherits = FALSE)) {
+    return(fallback)
+  }
+  globalenv()
+}
+
+rye_stdlib_r_eval <- function(expr, env = NULL) {
+  if (is.null(env)) {
+    env <- rye_stdlib_current_env()
+  }
+  expr <- rye_hygiene_unwrap(expr)
+  saved <- list()
+  if (is.call(expr) && length(expr) > 0) {
+    op <- expr[[1]]
+    if (is.symbol(op)) {
+      op_name <- as.character(op)
+      if (op_name == "while" && exists("while", envir = env, inherits = FALSE)) {
+        saved[["while"]] <- get("while", envir = env, inherits = FALSE)
+        rm("while", envir = env, inherits = FALSE)
+      }
+      if (op_name == "for" && exists("for", envir = env, inherits = FALSE)) {
+        saved[["for"]] <- get("for", envir = env, inherits = FALSE)
+        rm("for", envir = env, inherits = FALSE)
+      }
+    }
+  }
+  on.exit({
+    if (!is.null(saved[["while"]])) {
+      assign("while", saved[["while"]], envir = env)
+    }
+    if (!is.null(saved[["for"]])) {
+      assign("for", saved[["for"]], envir = env)
+    }
+  }, add = TRUE)
+  eval(expr, env)
+}
+attr(rye_stdlib_r_eval, "rye_no_quote") <- TRUE
+
 
 rye_stdlib_r_call <- function(fn, args = list()) {
   fn_name <- if (is.symbol(fn)) {
@@ -405,4 +468,3 @@ attr(rye_stdlib_force, "rye_doc") <- list(
 attr(rye_stdlib_r_call, "rye_doc") <- list(
   description = "Call an R function with list arguments."
 )
-

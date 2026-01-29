@@ -63,6 +63,29 @@ Evaluates an expression.
 
 ---
 
+### r/eval
+
+Evaluate an R expression in the current Rye environment.
+
+Use this when you need to execute R special forms (like `for` or `while`) that
+cannot be called as regular functions.
+
+**Signature:** `(r/eval expr)` or `(r/eval expr env)`
+
+**Examples:**
+```lisp
+(begin
+  (define i 0)
+  (r/eval (call (list 'while
+                      '(< i 3)
+                      '(<- i (+ i 1)))))
+  i)
+```
+
+**See also:** eval, for-r, while-r
+
+---
+
 ### macroexpand
 
 Fully expands all macros in an expression.

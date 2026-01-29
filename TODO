@@ -1,5 +1,4 @@
 o) loop/recur
-o) should we rename for and while?
 
 o) performance optimizations: use profiling and benchmarking
     o) use R's bytecode compiler
