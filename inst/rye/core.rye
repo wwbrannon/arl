@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Core Functions
 
 (module core
-  (export = error warn assert identity values values? call-with-values)
+  (export = error warn assert identity values values? call-with-values call/cc call-with-current-continuation)
 
   (define =
     (lambda (x y)
@@ -55,4 +55,7 @@
           (r/call "unclass" (list produced))
           (list produced)))
       (apply consumer args)))
+
+  (define call/cc callCC)
+  (define call-with-current-continuation callCC)
 )

@@ -1,0 +1,13 @@
+;;; Load the stdlib modules in the order we need them; called by R code
+
+(import core)
+(import math)
+(import predicates)
+(import list)
+(import higher-order)
+(import sequences)
+(import strings)
+(import display)
+(import io)
+(import dict)
+(import set)

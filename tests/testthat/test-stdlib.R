@@ -95,33 +95,33 @@ test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", 
   env <- rye_load_stdlib(new.env())
 
   # From list values
-  expect_equal(rye_eval(rye_read("(begin (import list-core) (cadr (list 1 2 3 4)))")[[1]], env), 2)
-  expect_equal(rye_eval(rye_read("(begin (import list-core) (caddr (list 1 2 3 4)))")[[1]], env), 3)
-  expect_equal(rye_eval(rye_read("(begin (import list-core) (cadddr (list 1 2 3 4)))")[[1]], env), 4)
+  expect_equal(rye_eval(rye_read("(begin (import list) (cadr (list 1 2 3 4)))")[[1]], env), 2)
+  expect_equal(rye_eval(rye_read("(begin (import list) (caddr (list 1 2 3 4)))")[[1]], env), 3)
+  expect_equal(rye_eval(rye_read("(begin (import list) (cadddr (list 1 2 3 4)))")[[1]], env), 4)
   expect_equal(
-    rye_eval(rye_read("(begin (import list-core) (caar (list (list 10 11) (list 20 21))))")[[1]], env),
+    rye_eval(rye_read("(begin (import list) (caar (list (list 10 11) (list 20 21))))")[[1]], env),
     10
   )
   expect_equal(
-    rye_eval(rye_read("(begin (import list-core) (cdar (list (list 10 11) (list 20 21))))")[[1]], env),
+    rye_eval(rye_read("(begin (import list) (cdar (list (list 10 11) (list 20 21))))")[[1]], env),
     list(11)
   )
   expect_equal(
-    rye_eval(rye_read("(begin (import list-core) (cddr (list 1 2 3 4)))")[[1]], env),
+    rye_eval(rye_read("(begin (import list) (cddr (list 1 2 3 4)))")[[1]], env),
     list(3, 4)
   )
 
   # From quoted calls (call objects)
   expect_equal(
-    rye_eval(rye_read("(begin (import list-core) (cadr '(+ 1 2 3)))")[[1]], env),
+    rye_eval(rye_read("(begin (import list) (cadr '(+ 1 2 3)))")[[1]], env),
     1
   )
   expect_equal(
-    rye_eval(rye_read("(begin (import list-core) (caddr '(+ 1 2 3)))")[[1]], env),
+    rye_eval(rye_read("(begin (import list) (caddr '(+ 1 2 3)))")[[1]], env),
     2
   )
   expect_equal(
-    rye_eval(rye_read("(begin (import list-core) (cadddr '(+ 1 2 3)))")[[1]], env),
+    rye_eval(rye_read("(begin (import list) (cadddr '(+ 1 2 3)))")[[1]], env),
     3
   )
 })

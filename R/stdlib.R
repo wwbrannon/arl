@@ -16,23 +16,17 @@
 #' @importFrom stats setNames
 #' @export
 rye_load_stdlib <- function(env = NULL) {
-  env <- rye_load_stdlib_base(env)
-  rye_load_stdlib_files(env)
-  env
-}
-
-rye_load_stdlib_base <- function(env = NULL) {
   # Create environment with baseenv() as parent if not provided
   # This gives automatic access to all R base functions
   if (is.null(env)) {
     env <- new.env(parent = baseenv())
   }
+
   rye_env_module_registry(env, create = TRUE)
   rye_env_macro_registry(env, create = TRUE)
+
   # Core helpers implemented in R
   env$apply <- rye_stdlib_apply
-  env$`call/cc` <- callCC
-  env$`call-with-current-continuation` <- callCC
 
   # Errors and debugging
   # Error helpers provided by stdlib files
@@ -74,43 +68,14 @@ rye_load_stdlib_base <- function(env = NULL) {
   }
   env$`r/eval` <- rye_stdlib_r_eval
 
+  # load the rest of the stdlib: rye code in files
+  loader_path <- rye_resolve_module_path('_stdlib_loader')
+  rye_eval(rye_read(sprintf('(load "%s")', loader_path))[[1]], env)
+
   # Return the environment
   # All R base functions (+, -, *, /, <, >, print, etc.) are automatically
   # available via the parent environment chain
   env
-}
-
-rye_load_stdlib_files <- function(env = parent.frame()) {
-  base_modules <- c(
-    "stdlib-core",
-    "math",
-    "predicates",
-    "list-core",
-    "higher-order",
-    "sequences",
-    "strings",
-    "display",
-    "io",
-    "dict",
-    "set"
-  )
-
-  for (module_name in base_modules) {
-    rye_module_unregister(module_name, registry_env = env)
-  }
-
-  result <- NULL
-  for (module_name in base_modules) {
-    exprs <- rye_read(sprintf("(import %s)", module_name))
-    result <- rye_eval(exprs[[1]], env)
-  }
-  result
-}
-
-
-rye_stdlib_display <- function(x) {
-  env <- parent.frame()
-  cat(rye_env_format_value(env, x), "\n", sep = "")
 }
 
 rye_as_list <- function(x) {
@@ -136,13 +101,6 @@ rye_stdlib_apply <- function(fn, args) {
   rye_do_call(fn, args)
 }
 
-rye_stdlib_str <- function(...) {
-  args <- list(...)
-  env <- parent.frame()
-  formatted <- lapply(args, function(arg) rye_env_format_value(env, arg))
-  do.call(paste0, formatted)
-}
-
 rye_stdlib_try <- function(thunk, error_handler = NULL, finally_handler = NULL) {
   if (!is.function(thunk)) {
     stop("try* expects a function as first argument")
@@ -165,14 +123,6 @@ rye_stdlib_try <- function(thunk, error_handler = NULL, finally_handler = NULL) 
       error_handler(e)
     }
   )
-}
-
-rye_stdlib_macro_p <- function(x) {
-  if (is.symbol(x)) {
-    is_macro(x, env = parent.frame())
-  } else {
-    FALSE
-  }
 }
 
 rye_stdlib_macroexpand <- function(expr, env = parent.frame()) {
@@ -270,7 +220,6 @@ rye_stdlib_r_eval <- function(expr, env = NULL) {
 }
 attr(rye_stdlib_r_eval, "rye_no_quote") <- TRUE
 
-
 rye_stdlib_r_call <- function(fn, args = list()) {
   fn_name <- if (is.symbol(fn)) {
     as.character(fn)
@@ -291,64 +240,8 @@ rye_stdlib_force <- function(x) {
   rye_promise_force(x)
 }
 
-
-rye_stdlib_deparse_single <- function(x) {
-  paste(deparse(x, width.cutoff = 500), collapse = " ")
-}
-
-rye_stdlib_format_value <- function(x) {
-  rye_env_format_value(parent.frame(), x)
-}
-
-# Variadic arithmetic operators
-rye_stdlib_add <- function(...) {
-  args <- list(...)
-  if (length(args) == 0) return(0)
-  if (length(args) == 1) return(args[[1]])
-  Reduce(base::`+`, args)
-}
-
-rye_stdlib_multiply <- function(...) {
-  args <- list(...)
-  if (length(args) == 0) return(1)
-  if (length(args) == 1) return(args[[1]])
-  Reduce(base::`*`, args)
-}
-
-rye_stdlib_subtract <- function(...) {
-  args <- list(...)
-  if (length(args) == 0) stop("- requires at least one argument")
-  if (length(args) == 1) return(-args[[1]])
-  Reduce(base::`-`, args)
-}
-
-rye_stdlib_divide <- function(...) {
-  args <- list(...)
-  if (length(args) == 0) stop("/ requires at least one argument")
-  if (length(args) == 1) return(1 / args[[1]])
-  Reduce(base::`/`, args)
-}
-
-rye_stdlib_min <- function(...) {
-  args <- list(...)
-  if (length(args) == 0) stop("min requires at least one argument")
-  do.call(base::min, args)
-}
-
-rye_stdlib_max <- function(...) {
-  args <- list(...)
-  if (length(args) == 0) stop("max requires at least one argument")
-  do.call(base::max, args)
-}
-
 attr(rye_stdlib_apply, "rye_doc") <- list(
   description = "Apply fn to the elements of lst as arguments."
-)
-attr(rye_stdlib_display, "rye_doc") <- list(
-  description = "Print x without formatting."
-)
-attr(rye_stdlib_str, "rye_doc") <- list(
-  description = "Display structure of x."
 )
 attr(rye_stdlib_try, "rye_doc") <- list(
   description = "Evaluate thunk with error/finally handlers."
