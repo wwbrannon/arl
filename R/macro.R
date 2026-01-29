@@ -60,16 +60,21 @@ rye_hygiene_unwrap <- function(expr) {
   if (rye_hygiene_is(expr)) {
     return(rye_hygiene_unwrap(expr$expr))
   }
+  rye_map_expr(expr, rye_hygiene_unwrap)
+}
+
+#' @keywords internal
+rye_map_expr <- function(expr, fn, ...) {
   if (is.call(expr)) {
-    stripped <- lapply(as.list(expr), rye_hygiene_unwrap)
-    return(as.call(stripped))
+    mapped <- lapply(as.list(expr), fn, ...)
+    return(as.call(mapped))
   }
   if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
-    stripped <- lapply(expr, rye_hygiene_unwrap)
+    mapped <- lapply(expr, fn, ...)
     if (!is.null(names(expr))) {
-      names(stripped) <- names(expr)
+      names(mapped) <- names(expr)
     }
-    return(stripped)
+    return(mapped)
   }
   expr
 }
@@ -102,18 +107,7 @@ rye_capture_mark <- function(expr, name) {
   if (is.symbol(expr) && identical(as.character(expr), name)) {
     return(rye_hygiene_wrap(expr, "introduced"))
   }
-  if (is.call(expr)) {
-    updated <- lapply(as.list(expr), rye_capture_mark, name = name)
-    return(as.call(updated))
-  }
-  if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
-    updated <- lapply(expr, rye_capture_mark, name = name)
-    if (!is.null(names(expr))) {
-      names(updated) <- names(expr)
-    }
-    return(updated)
-  }
-  expr
+  rye_map_expr(expr, rye_capture_mark, name = name)
 }
 
 #' @keywords internal
@@ -330,6 +324,22 @@ rye_hygienize_lambda <- function(expr, env) {
 }
 
 #' @keywords internal
+rye_hygienize_binding_parts <- function(binding) {
+  parts <- if (is.call(binding)) as.list(binding) else list()
+  name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
+  name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+  list(parts = parts, name_origin = name_origin, name_expr = name_expr)
+}
+
+#' @keywords internal
+rye_hygienize_binding_value <- function(parts, env) {
+  if (length(parts) >= 2) {
+    return(rye_hygienize_expr(parts[[2]], env, protected = FALSE))
+  }
+  NULL
+}
+
+#' @keywords internal
 rye_hygienize_let <- function(expr, env, op_name) {
   if (length(expr) < 3) {
     return(expr)
@@ -343,12 +353,13 @@ rye_hygienize_let <- function(expr, env, op_name) {
     if (length(bindings_list) > 0) {
       for (i in seq_along(bindings_list)) {
         binding <- bindings_list[[i]]
-        parts <- if (is.call(binding)) as.list(binding) else list()
+        info <- rye_hygienize_binding_parts(binding)
+        parts <- info$parts
         if (length(parts) == 0) {
           next
         }
-        name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
-        name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+        name_origin <- info$name_origin
+        name_expr <- info$name_expr
         if (is.symbol(name_expr) && !identical(name_origin, "call_site")) {
           name <- as.character(name_expr)
           body_env[[name]] <- rye_hygiene_gensym(name)
@@ -358,24 +369,21 @@ rye_hygienize_let <- function(expr, env, op_name) {
     if (length(bindings_list) > 0) {
       for (i in seq_along(bindings_list)) {
         binding <- bindings_list[[i]]
-        parts <- if (is.call(binding)) as.list(binding) else list()
+        info <- rye_hygienize_binding_parts(binding)
+        parts <- info$parts
         if (length(parts) == 0) {
           new_bindings[[i]] <- binding
           next
         }
-        name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
-        name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+        name_origin <- info$name_origin
+        name_expr <- info$name_expr
         if (is.symbol(name_expr) && !identical(name_origin, "call_site") &&
             !is.null(body_env[[as.character(name_expr)]])) {
           renamed <- body_env[[as.character(name_expr)]]
-          value <- if (length(parts) >= 2) {
-            rye_hygienize_expr(parts[[2]], body_env, protected = FALSE)
-          } else {
-            NULL
-          }
+          value <- rye_hygienize_binding_value(parts, body_env)
           new_bindings[[i]] <- as.call(list(renamed, value))
         } else {
-          value <- if (length(parts) >= 2) rye_hygienize_expr(parts[[2]], value_env, protected = FALSE) else NULL
+          value <- rye_hygienize_binding_value(parts, value_env)
           new_bindings[[i]] <- as.call(c(list(parts[[1]]), list(value)))
         }
       }
@@ -395,14 +403,15 @@ rye_hygienize_let <- function(expr, env, op_name) {
     if (length(bindings_list) > 0) {
       for (i in seq_along(bindings_list)) {
         binding <- bindings_list[[i]]
-        parts <- if (is.call(binding)) as.list(binding) else list()
+        info <- rye_hygienize_binding_parts(binding)
+        parts <- info$parts
         if (length(parts) == 0) {
           new_bindings[[i]] <- binding
           next
         }
-        name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
-        name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
-        value <- if (length(parts) >= 2) rye_hygienize_expr(parts[[2]], current_env, protected = FALSE) else NULL
+        name_origin <- info$name_origin
+        name_expr <- info$name_expr
+        value <- rye_hygienize_binding_value(parts, current_env)
         if (is.symbol(name_expr) && !identical(name_origin, "call_site")) {
           name <- as.character(name_expr)
           fresh <- rye_hygiene_gensym(name)
@@ -427,12 +436,13 @@ rye_hygienize_let <- function(expr, env, op_name) {
   if (length(bindings_list) > 0) {
     for (i in seq_along(bindings_list)) {
       binding <- bindings_list[[i]]
-      parts <- if (is.call(binding)) as.list(binding) else list()
+      info <- rye_hygienize_binding_parts(binding)
+      parts <- info$parts
       if (length(parts) == 0) {
         next
       }
-      name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
-      name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+      name_origin <- info$name_origin
+      name_expr <- info$name_expr
       if (is.symbol(name_expr) && !identical(name_origin, "call_site")) {
         name <- as.character(name_expr)
         body_env[[name]] <- rye_hygiene_gensym(name)
@@ -442,24 +452,21 @@ rye_hygienize_let <- function(expr, env, op_name) {
   if (length(bindings_list) > 0) {
     for (i in seq_along(bindings_list)) {
       binding <- bindings_list[[i]]
-      parts <- if (is.call(binding)) as.list(binding) else list()
+      info <- rye_hygienize_binding_parts(binding)
+      parts <- info$parts
       if (length(parts) == 0) {
         new_bindings[[i]] <- binding
         next
       }
-      name_origin <- if (length(parts) >= 1) rye_hygiene_origin(parts[[1]]) else NULL
-      name_expr <- if (length(parts) >= 1) rye_hygiene_expr(parts[[1]]) else NULL
+      name_origin <- info$name_origin
+      name_expr <- info$name_expr
       if (is.symbol(name_expr) && !identical(name_origin, "call_site") &&
           !is.null(body_env[[as.character(name_expr)]])) {
         renamed <- body_env[[as.character(name_expr)]]
-        value <- if (length(parts) >= 2) {
-          rye_hygienize_expr(parts[[2]], env, protected = FALSE)
-        } else {
-          NULL
-        }
+        value <- rye_hygienize_binding_value(parts, env)
         new_bindings[[i]] <- as.call(list(renamed, value))
       } else {
-        value <- if (length(parts) >= 2) rye_hygienize_expr(parts[[2]], env, protected = FALSE) else NULL
+        value <- rye_hygienize_binding_value(parts, env)
         new_bindings[[i]] <- as.call(c(list(parts[[1]]), list(value)))
       }
     }
@@ -757,4 +764,27 @@ rye_macroexpand <- function(expr, env = parent.frame(), preserve_src = FALSE) {
     return(expanded)
   }
   rye_strip_src(expanded)
+}
+
+#' Expand a single macro layer in an expression
+#'
+#' @param expr Expression to expand
+#' @param env Environment for evaluation
+#' @return Expanded expression or the original expression
+#' @keywords internal
+rye_macroexpand_1 <- function(expr, env = parent.frame()) {
+  if (!is.call(expr) || length(expr) == 0) {
+    return(expr)
+  }
+  op <- expr[[1]]
+  if (is.symbol(op) && is_macro(op, env = env)) {
+    macro_fn <- get_macro(op, env = env)
+    args <- as.list(expr[-1])
+    expanded <- do.call(macro_fn, args)
+    expanded <- rye_hygienize(expanded)
+    expanded <- rye_hygiene_unwrap(expanded)
+    expanded <- rye_src_inherit(expanded, expr)
+    return(expanded)
+  }
+  expr
 }

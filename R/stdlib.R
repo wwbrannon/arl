@@ -87,24 +87,7 @@ rye_load_stdlib_base <- function(env = NULL) {
     } else {
       stop("r/call requires a symbol or string function name")
     }
-    # First try the stdlib environment (where wrappers are)
-    fn_obj <- get0(fn_name, envir = stdlib_env, inherits = FALSE, ifnotfound = NULL)
-    if (!is.null(fn_obj) && !is.function(fn_obj)) fn_obj <- NULL
-    # Then try parent frames
-    if (is.null(fn_obj)) {
-      for (i in 0:5) {
-        tryCatch({
-          frame_env <- parent.frame(i + 1)
-          fn_obj <- get0(fn_name, envir = frame_env, inherits = TRUE, ifnotfound = NULL)
-          if (!is.null(fn_obj) && is.function(fn_obj)) break
-          fn_obj <- NULL
-        }, error = function(e) NULL)
-      }
-    }
-    # Fall back to baseenv()
-    if (is.null(fn_obj)) {
-      fn_obj <- get(fn_name, envir = baseenv())
-    }
+    fn_obj <- rye_resolve_r_callable(fn_name, stdlib_env = stdlib_env, max_frames = 5)
     rye_do_call(fn_obj, rye_as_list(args))
   }
   env$`r/eval` <- rye_stdlib_r_eval
@@ -250,24 +233,33 @@ rye_stdlib_macroexpand <- function(expr, env = parent.frame()) {
 }
 
 rye_stdlib_macroexpand_1 <- function(expr, env = parent.frame()) {
-  if (!is.call(expr) || length(expr) == 0) {
-    return(expr)
-  }
-  op <- expr[[1]]
-  if (is.symbol(op) && is_macro(op, env = env)) {
-    macro_fn <- get_macro(op, env = env)
-    args <- as.list(expr[-1])
-    expanded <- do.call(macro_fn, args)
-    expanded <- rye_hygienize(expanded)
-    expanded <- rye_hygiene_unwrap(expanded)
-    expanded <- rye_src_inherit(expanded, expr)
-    return(expanded)
-  }
-  expr
+  rye_macroexpand_1(expr, env)
 }
 
 rye_stdlib_eval <- function(expr, env = parent.frame()) {
   rye_eval(expr, env)
+}
+
+rye_resolve_r_callable <- function(fn_name, stdlib_env = NULL, max_frames = 10) {
+  if (!is.character(fn_name) || length(fn_name) != 1 || !nzchar(fn_name)) {
+    stop("r/call requires a symbol or string function name")
+  }
+  if (!is.null(stdlib_env)) {
+    fn_obj <- get0(fn_name, envir = stdlib_env, inherits = FALSE, ifnotfound = NULL)
+    if (!is.null(fn_obj) && is.function(fn_obj)) {
+      return(fn_obj)
+    }
+  }
+  for (i in 0:max_frames) {
+    tryCatch({
+      frame_env <- parent.frame(i + 1)
+      fn_obj <- get0(fn_name, envir = frame_env, inherits = TRUE, ifnotfound = NULL)
+      if (!is.null(fn_obj) && is.function(fn_obj)) {
+        return(fn_obj)
+      }
+    }, error = function(e) NULL)
+  }
+  get(fn_name, envir = baseenv())
 }
 
 rye_stdlib_current_env <- function() {
@@ -340,31 +332,7 @@ rye_stdlib_r_call <- function(fn, args = list()) {
   } else {
     stop("r/call requires a symbol or string function name")
   }
-  # Search for function in parent frames and their parent chains
-  fn <- NULL
-  # Try multiple parent frames
-  for (i in 0:10) {
-    tryCatch({
-      frame_env <- parent.frame(i + 1)
-      # Search this frame and its parent chain
-      fn <- get0(fn_name, envir = frame_env, inherits = TRUE, ifnotfound = NULL)
-      if (!is.null(fn)) break
-      # Also check if this frame has a Rye environment in its parent chain
-      current <- frame_env
-      while (!is.null(current) && !identical(current, baseenv()) && !identical(current, emptyenv())) {
-        if (exists(fn_name, envir = current, inherits = FALSE)) {
-          fn <- get(fn_name, envir = current, inherits = FALSE)
-          break
-        }
-        current <- parent.env(current)
-      }
-      if (!is.null(fn)) break
-    }, error = function(e) NULL)
-  }
-  # Fall back to baseenv() if not found
-  if (is.null(fn)) {
-    fn <- get(fn_name, envir = baseenv())
-  }
+  fn <- rye_resolve_r_callable(fn_name, stdlib_env = NULL, max_frames = 10)
   rye_do_call(fn, rye_as_list(args))
 }
 

@@ -25,6 +25,505 @@ rye_missing_default <- function() {
   structure(list(), class = "rye_missing_default")
 }
 
+rye_collect_body <- function(expr, start_idx) {
+  body <- list()
+  if (length(expr) >= start_idx) {
+    for (i in start_idx:length(expr)) {
+      body[[length(body) + 1]] <- expr[[i]]
+    }
+  }
+  body
+}
+
+rye_extract_docstring <- function(body_exprs) {
+  docstring <- NULL
+  if (length(body_exprs) > 0) {
+    first_expr <- rye_strip_src(body_exprs[[1]])
+    if (is.character(first_expr) && length(first_expr) == 1) {
+      docstring <- first_expr
+      body_exprs <- body_exprs[-1]
+    }
+  }
+  list(body = body_exprs, docstring = docstring)
+}
+
+rye_lambda_arg_items <- function(args_expr) {
+  if (is.null(args_expr)) {
+    return(list())
+  }
+  if (is.call(args_expr)) {
+    if (length(args_expr) > 0) {
+      return(as.list(args_expr))
+    }
+    return(list())
+  }
+  if (is.list(args_expr)) {
+    return(args_expr)
+  }
+  stop("lambda arguments must be a list")
+}
+
+rye_lambda_parse_params <- function(arg_items) {
+  # Handle dotted rest parameter (x y . rest)
+  rest_param <- NULL
+  rest_param_spec <- NULL
+  if (length(arg_items) > 0) {
+    dot_idx <- which(vapply(arg_items, function(arg) {
+      is.symbol(arg) && as.character(arg) == "."
+    }, logical(1)))
+    if (length(dot_idx) > 1) {
+      stop("Dotted parameter list can only contain one '.'")
+    }
+    if (length(dot_idx) == 1) {
+      if (dot_idx != length(arg_items) - 1) {
+        stop("Dotted parameter list must have exactly one parameter after '.'")
+      }
+      rest_arg <- arg_items[[dot_idx + 1]]
+      if (is.symbol(rest_arg)) {
+        rest_param <- as.character(rest_arg)
+        rest_param_spec <- list(type = "name", name = rest_param, pattern = NULL, display = rest_param)
+      } else if (is.call(rest_arg) || (is.list(rest_arg) && is.null(attr(rest_arg, "class", exact = TRUE)))) {
+        rest_list <- if (is.call(rest_arg)) as.list(rest_arg) else rest_arg
+        is_pattern_wrapper <- length(rest_list) >= 2 &&
+          is.symbol(rest_list[[1]]) &&
+          as.character(rest_list[[1]]) %in% c("pattern", "destructure")
+        if (!is_pattern_wrapper) {
+          stop("Rest parameter must be a symbol or (pattern <pat>)")
+        }
+        if (length(rest_list) != 2) {
+          stop("Rest pattern must be (pattern <pat>)")
+        }
+        rest_pattern <- rest_list[[2]]
+        rest_display <- paste(deparse(rest_pattern, width.cutoff = 500), collapse = " ")
+        rest_param_spec <- list(
+          type = "pattern",
+          name = NULL,
+          pattern = rest_pattern,
+          display = rest_display
+        )
+      } else {
+        stop("Rest parameter must be a symbol or (pattern <pat>)")
+      }
+      if (dot_idx > 1) {
+        arg_items <- arg_items[1:(dot_idx - 1)]
+      } else {
+        arg_items <- list()
+      }
+    }
+  }
+
+  # Parse required, defaulted, and destructured parameters
+  param_specs <- list()
+  param_names <- character(0)
+  param_display <- character(0)
+  param_defaults <- list()
+  param_default_exprs <- list()
+  if (length(arg_items) > 0) {
+    for (arg in arg_items) {
+      if (is.symbol(arg)) {
+        name <- as.character(arg)
+        param_names <- c(param_names, name)
+        param_display <- c(param_display, name)
+        param_defaults[[name]] <- quote(expr = )
+        param_default_exprs[[name]] <- list(rye_missing_default())
+        param_specs[[length(param_specs) + 1]] <- list(
+          type = "name",
+          formal = name,
+          pattern = NULL,
+          display = name
+        )
+      } else if (is.call(arg) || (is.list(arg) && is.null(attr(arg, "class", exact = TRUE)))) {
+        arg_list <- if (is.call(arg)) as.list(arg) else arg
+        is_pattern_wrapper <- length(arg_list) >= 2 &&
+          is.symbol(arg_list[[1]]) &&
+          as.character(arg_list[[1]]) %in% c("pattern", "destructure")
+        is_default_pair <- length(arg_list) == 2 && is.symbol(arg_list[[1]])
+        if (is_pattern_wrapper) {
+          if (length(arg_list) != 2 && length(arg_list) != 3) {
+            stop("pattern wrapper must be (pattern <pat>) or (pattern <pat> <default>)")
+          }
+          pattern <- arg_list[[2]]
+          default_expr <- rye_missing_default()
+          if (length(arg_list) == 3) {
+            default_expr <- arg_list[[3]]
+            if (is.null(default_expr)) {
+              default_expr <- quote(NULL)
+            }
+          }
+          tmp_name <- as.character(gensym(".__rye_arg"))
+          display <- paste(deparse(pattern, width.cutoff = 500), collapse = " ")
+          param_names <- c(param_names, tmp_name)
+          param_display <- c(param_display, display)
+          if (inherits(default_expr, "rye_missing_default")) {
+            param_defaults[[tmp_name]] <- quote(expr = )
+            param_default_exprs[[tmp_name]] <- list(rye_missing_default())
+          } else {
+            param_defaults[[tmp_name]] <- default_expr
+            param_default_exprs[[tmp_name]] <- list(default_expr)
+          }
+          param_specs[[length(param_specs) + 1]] <- list(
+            type = "pattern",
+            formal = tmp_name,
+            pattern = pattern,
+            display = display
+          )
+        } else if (is_default_pair) {
+          name <- as.character(arg_list[[1]])
+          default_expr <- arg_list[[2]]
+          if (is.null(default_expr)) {
+            default_expr <- quote(NULL)
+          }
+          param_names <- c(param_names, name)
+          param_display <- c(param_display, name)
+          param_defaults[[name]] <- default_expr
+          param_default_exprs[[name]] <- list(default_expr)
+          param_specs[[length(param_specs) + 1]] <- list(
+            type = "name",
+            formal = name,
+            pattern = NULL,
+            display = name
+          )
+        } else {
+          stop("lambda arguments must be symbols, (name default) pairs, or (pattern <pat> [default])")
+        }
+      } else {
+        stop("lambda arguments must be symbols, (name default) pairs, or (pattern <pat> [default])")
+      }
+    }
+  }
+
+  list(
+    param_specs = param_specs,
+    param_names = param_names,
+    param_display = param_display,
+    param_defaults = param_defaults,
+    param_default_exprs = param_default_exprs,
+    rest_param = rest_param,
+    rest_param_spec = rest_param_spec
+  )
+}
+
+rye_eval_package_access <- function(expr, env, op_name) {
+  if (length(expr) != 3) {
+    stop(sprintf("%s requires exactly 2 arguments: (%s pkg name)", op_name, op_name))
+  }
+
+  pkg_name <- rye_symbol_or_string(expr[[2]], "Package name must be a symbol or string")
+  obj_name <- rye_symbol_or_string(expr[[3]], "Function/object name must be a symbol or string")
+  access_call <- as.call(list(as.symbol(op_name), as.symbol(pkg_name), as.symbol(obj_name)))
+  eval(access_call, envir = env)
+}
+
+rye_special_forms <- list(
+  quote = function(expr, env, op_name) {
+    if (length(expr) != 2) {
+      stop("quote requires exactly 1 argument")
+    }
+    rye_strip_src(expr[[2]])
+  },
+  quasiquote = function(expr, env, op_name) {
+    if (length(expr) != 2) {
+      stop("quasiquote requires exactly 1 argument")
+    }
+    result <- rye_quasiquote(expr[[2]], env)
+    if (!exists(".rye_macroexpanding", envir = env, inherits = TRUE) ||
+        !isTRUE(get(".rye_macroexpanding", envir = env, inherits = TRUE))) {
+      result <- rye_hygiene_unwrap(result)
+    }
+    rye_strip_src(result)
+  },
+  delay = function(expr, env, op_name) {
+    if (length(expr) != 2) {
+      stop("delay requires exactly 1 argument")
+    }
+    rye_promise_new(rye_strip_src(expr[[2]]), env)
+  },
+  help = function(expr, env, op_name) {
+    if (length(expr) != 2) {
+      stop("help requires exactly 1 argument: (help topic)")
+    }
+    topic <- expr[[2]]
+    if (is.symbol(topic)) {
+      topic <- as.character(topic)
+    }
+    if (!is.character(topic) || length(topic) != 1) {
+      stop("help requires a symbol or string")
+    }
+    rye_help(topic, env)
+    NULL
+  },
+  defmacro = function(expr, env, op_name) {
+    if (length(expr) < 4) {
+      stop("defmacro requires at least 3 arguments: (defmacro name (params...) body...)")
+    }
+
+    name <- expr[[2]]
+    if (!is.symbol(name)) {
+      stop("defmacro requires a symbol as the first argument")
+    }
+
+    params_expr <- expr[[3]]
+    params <- list()
+    if (!is.null(params_expr) && is.call(params_expr) && length(params_expr) > 0) {
+      for (i in seq_along(params_expr)) {
+        param <- params_expr[[i]]
+        if (!is.symbol(param)) {
+          stop("defmacro parameters must be symbols")
+        }
+        params[[i]] <- param
+      }
+    } else if (is.null(params_expr) || (is.call(params_expr) && length(params_expr) == 0)) {
+      params <- list()
+    } else {
+      stop("defmacro parameters must be a list")
+    }
+
+    body <- rye_collect_body(expr, 4)
+    doc_out <- rye_extract_docstring(body)
+    body <- doc_out$body
+    docstring <- doc_out$docstring
+
+    rye_defmacro(name, params, body, env, docstring = docstring)
+    NULL
+  },
+  `if` = function(expr, env, op_name) {
+    if (length(expr) < 3 || length(expr) > 4) {
+      stop("if requires 2 or 3 arguments: (if test then [else])")
+    }
+    test <- rye_eval_inner(expr[[2]], env)
+    test <- rye_strip_src(test)
+    if (identical(test, FALSE) || is.null(test)) {
+      if (length(expr) == 4) {
+        return(rye_eval_inner(expr[[4]], env))
+      }
+      return(NULL)
+    }
+    rye_eval_inner(expr[[3]], env)
+  },
+  define = function(expr, env, op_name) {
+    if (length(expr) != 3) {
+      stop("define requires exactly 2 arguments: (define name value)")
+    }
+    name <- expr[[2]]
+    value <- rye_eval_inner(expr[[3]], env)
+    value <- rye_strip_src(value)
+    rye_assign_pattern(name, value, env, mode = "define", context = "define")
+    NULL
+  },
+  `set!` = function(expr, env, op_name) {
+    if (length(expr) != 3) {
+      stop("set! requires exactly 2 arguments: (set! name value)")
+    }
+    name <- expr[[2]]
+    value <- rye_eval_inner(expr[[3]], env)
+    value <- rye_strip_src(value)
+    rye_assign_pattern(name, value, env, mode = "set", context = "set!")
+    NULL
+  },
+  load = function(expr, env, op_name) {
+    if (length(expr) != 2) {
+      stop("load requires exactly 1 argument: (load \"path\")")
+    }
+    path <- rye_eval_inner(expr[[2]], env)
+    path <- rye_strip_src(path)
+    if (!is.character(path) || length(path) != 1) {
+      stop("load requires a single file path string")
+    }
+    if (!grepl("[/\\\\]", path) && rye_module_exists(path, env = env)) {
+      return(NULL)
+    }
+    has_separator <- grepl("[/\\\\]", path)
+    if (!has_separator) {
+      stdlib_path <- rye_resolve_stdlib_path(path)
+      if (!is.null(stdlib_path)) {
+        return(rye_strip_src(rye_load_file(stdlib_path, env)))
+      }
+      if (file.exists(path)) {
+        return(rye_strip_src(rye_load_file(path, env)))
+      }
+      stop(sprintf("File not found: %s", path))
+    }
+    rye_strip_src(rye_load_file(path, env))
+  },
+  module = function(expr, env, op_name) {
+    if (length(expr) < 3) {
+      stop("module requires at least 2 arguments: (module name (export ...) body...)")
+    }
+    module_name <- rye_symbol_or_string(expr[[2]], "module name must be a symbol or string")
+
+    exports_expr <- expr[[3]]
+    if (!is.call(exports_expr) ||
+        length(exports_expr) < 1 ||
+        !is.symbol(exports_expr[[1]])) {
+      stop("module requires an export list: (module name (export ...) body...)")
+    }
+
+    export_tag <- as.character(exports_expr[[1]])
+    export_all <- FALSE
+    exports <- character(0)
+    if (identical(export_tag, "export")) {
+      if (length(exports_expr) > 1) {
+        for (i in 2:length(exports_expr)) {
+          item <- exports_expr[[i]]
+          if (!is.symbol(item)) {
+            stop("module exports must be symbols")
+          }
+          exports <- c(exports, as.character(item))
+        }
+      }
+    } else if (identical(export_tag, "export-all")) {
+      if (length(exports_expr) > 1) {
+        stop("export-all does not take any arguments")
+      }
+      export_all <- TRUE
+    } else {
+      stop("module requires an export list: (module name (export ...) body...)")
+    }
+
+    module_env <- new.env(parent = env)
+    assign(".rye_env", TRUE, envir = module_env)
+    assign(".rye_module", TRUE, envir = module_env)
+    rye_module_register(module_name, module_env, exports, registry_env = env)
+
+    body_exprs <- rye_collect_body(expr, 4)
+    if (length(body_exprs) == 0) {
+      if (export_all) {
+        exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
+        rye_module_update_exports(module_name, exports, registry_env = env)
+      }
+      return(NULL)
+    }
+    result <- rye_eval_seq(body_exprs, module_env)
+    if (export_all) {
+      exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
+      rye_module_update_exports(module_name, exports, registry_env = env)
+    }
+    result
+  },
+  import = function(expr, env, op_name) {
+    if (length(expr) != 2) {
+      stop("import requires exactly 1 argument: (import name)")
+    }
+    module_name <- rye_symbol_or_string(expr[[2]], "import requires a module name symbol or string")
+
+    if (!rye_module_exists(module_name, env = env)) {
+      module_path <- rye_resolve_module_path(module_name)
+      if (is.null(module_path)) {
+        stop(sprintf("Module not found: %s", module_name))
+      }
+      rye_load_file(module_path, env)
+      if (!rye_module_exists(module_name, env = env)) {
+        stop(sprintf("Module '%s' did not register itself", module_name))
+      }
+    }
+
+    rye_module_attach(module_name, env)
+    NULL
+  },
+  lambda = function(expr, env, op_name) {
+    if (length(expr) < 3) {
+      stop("lambda requires at least 2 arguments: (lambda (args...) body...)")
+    }
+
+    args_expr <- expr[[2]]
+    arg_items <- rye_lambda_arg_items(args_expr)
+    params <- rye_lambda_parse_params(arg_items)
+    param_specs <- params$param_specs
+    param_names <- params$param_names
+    param_display <- params$param_display
+    param_defaults <- params$param_defaults
+    param_default_exprs <- params$param_default_exprs
+    rest_param <- params$rest_param
+    rest_param_spec <- params$rest_param_spec
+
+    all_names <- c(param_names, if (!is.null(rest_param)) rest_param)
+    if (length(all_names) > 0 && any(duplicated(all_names))) {
+      stop("lambda argument names must be unique")
+    }
+
+    formals_list <- list()
+    if (length(param_names) > 0) {
+      for (name in param_names) {
+        formals_list[[name]] <- param_defaults[[name]]
+      }
+    }
+    if (!is.null(rest_param) || !is.null(rest_param_spec)) {
+      formals_list[["..."]] <- quote(expr = )
+    }
+
+    body_exprs <- rye_collect_body(expr, 3)
+    doc_out <- rye_extract_docstring(body_exprs)
+    body_exprs <- doc_out$body
+    docstring <- doc_out$docstring
+
+    parent_env <- env
+
+    fn <- function(...) {
+      fn_env <- new.env(parent = parent_env)
+
+      if (length(formals_list) > 0) {
+        for (param_name in names(formals_list)) {
+          if (param_name == "...") {
+            next
+          }
+          assign(param_name, get(param_name, inherits = FALSE), envir = fn_env)
+        }
+      }
+      if (!is.null(rest_param)) {
+        assign(rest_param, list(...), envir = fn_env)
+      }
+
+      result <- NULL
+      if (length(body_exprs) > 0) {
+        for (i in seq_along(body_exprs)) {
+          result <- rye_strip_src(rye_eval(body_exprs[[i]], fn_env))
+        }
+      }
+      result
+    }
+
+    formals(fn) <- formals_list
+    class(fn) <- c("rye_closure", class(fn))
+    attr(fn, "rye_closure") <- list(
+      params = param_names,
+      param_specs = param_specs,
+      param_display = param_display,
+      defaults = param_default_exprs,
+      rest_param = rest_param,
+      rest_param_spec = rest_param_spec,
+      body_exprs = body_exprs,
+      parent_env = parent_env
+    )
+    if (!is.null(docstring)) {
+      attr(fn, "rye_doc") <- list(description = docstring)
+    }
+
+    fn
+  },
+  begin = function(expr, env, op_name) {
+    if (length(expr) == 1) {
+      return(NULL)
+    }
+    rye_eval_seq(as.list(expr)[-1], env)
+  },
+  `~` = function(expr, env, op_name) {
+    formula_parts <- list(as.symbol("~"))
+    if (length(expr) > 1) {
+      for (i in 2:length(expr)) {
+        formula_parts <- c(formula_parts, list(expr[[i]]))
+      }
+    }
+    formula_call <- as.call(formula_parts)
+    eval(formula_call, envir = env)
+  },
+  `::` = function(expr, env, op_name) {
+    rye_eval_package_access(expr, env, op_name)
+  },
+  `:::` = function(expr, env, op_name) {
+    rye_eval_package_access(expr, env, op_name)
+  }
+)
+
 rye_eval_inner <- function(expr, env) {
   # Source tracking:
   # We *must not* pop the src stack on error, because `rye_with_error_context()`
@@ -84,561 +583,11 @@ rye_eval_inner_impl <- function(expr, env) {
 
   # Special forms handling
   op <- expr[[1]]
+  op_name <- if (is.symbol(op)) as.character(op) else NULL
 
-  # quote - return argument unevaluated
-  if (is.symbol(op) && as.character(op) == "quote") {
-    if (length(expr) != 2) {
-      stop("quote requires exactly 1 argument")
-    }
-    return(rye_strip_src(expr[[2]]))
-  }
-
-  # quasiquote - template with selective evaluation
-  if (is.symbol(op) && as.character(op) == "quasiquote") {
-    if (length(expr) != 2) {
-      stop("quasiquote requires exactly 1 argument")
-    }
-    result <- rye_quasiquote(expr[[2]], env)
-    if (!exists(".rye_macroexpanding", envir = env, inherits = TRUE) ||
-        !isTRUE(get(".rye_macroexpanding", envir = env, inherits = TRUE))) {
-      result <- rye_hygiene_unwrap(result)
-    }
-    return(rye_strip_src(result))
-  }
-
-  # delay - create a promise without evaluating the expression
-  if (is.symbol(op) && as.character(op) == "delay") {
-    if (length(expr) != 2) {
-      stop("delay requires exactly 1 argument")
-    }
-    promise <- rye_promise_new(rye_strip_src(expr[[2]]), env)
-    return(promise)
-  }
-
-  # help - show docs without evaluating argument
-  if (is.symbol(op) && as.character(op) == "help") {
-    if (length(expr) != 2) {
-      stop("help requires exactly 1 argument: (help topic)")
-    }
-    topic <- expr[[2]]
-    if (is.symbol(topic)) {
-      topic <- as.character(topic)
-    }
-    if (!is.character(topic) || length(topic) != 1) {
-      stop("help requires a symbol or string")
-    }
-    rye_help(topic, env)
-    return(NULL)
-  }
-
-  # defmacro - define a macro
-  if (is.symbol(op) && as.character(op) == "defmacro") {
-    if (length(expr) < 4) {
-      stop("defmacro requires at least 3 arguments: (defmacro name (params...) body...)")
-    }
-
-    name <- expr[[2]]
-    if (!is.symbol(name)) {
-      stop("defmacro requires a symbol as the first argument")
-    }
-
-    params_expr <- expr[[3]]
-    # Convert params to list of symbols
-    params <- list()
-    if (!is.null(params_expr) && is.call(params_expr) && length(params_expr) > 0) {
-      for (i in seq_along(params_expr)) {
-        param <- params_expr[[i]]
-        if (!is.symbol(param)) {
-          stop("defmacro parameters must be symbols")
-        }
-        params[[i]] <- param
-      }
-    } else if (is.null(params_expr) || (is.call(params_expr) && length(params_expr) == 0)) {
-      params <- list()
-    } else {
-      stop("defmacro parameters must be a list")
-    }
-
-    # Get body expressions
-    body <- list()
-    if (length(expr) >= 4) {
-      for (i in 4:length(expr)) {
-        body[[length(body) + 1]] <- expr[[i]]
-      }
-    }
-
-    # Optional docstring convention: first body form is a string literal
-    docstring <- NULL
-    if (length(body) > 0) {
-      first_expr <- rye_strip_src(body[[1]])
-      if (is.character(first_expr) && length(first_expr) == 1) {
-        docstring <- first_expr
-        body <- body[-1]
-      }
-    }
-
-    rye_defmacro(name, params, body, env, docstring = docstring)
-    return(NULL)
-  }
-
-  # if - conditional evaluation
-  if (is.symbol(op) && as.character(op) == "if") {
-    if (length(expr) < 3 || length(expr) > 4) {
-      stop("if requires 2 or 3 arguments: (if test then [else])")
-    }
-    test <- rye_eval_inner(expr[[2]], env)
-    test <- rye_strip_src(test)
-    # R-style truthiness: NULL and FALSE are falsy
-    if (identical(test, FALSE) || is.null(test)) {
-      # Evaluate else branch if present
-      if (length(expr) == 4) {
-        return(rye_eval_inner(expr[[4]], env))
-      }
-      return(NULL)
-    }
-    return(rye_eval_inner(expr[[3]], env))
-  }
-
-  # define - variable assignment
-  if (is.symbol(op) && as.character(op) == "define") {
-    if (length(expr) != 3) {
-      stop("define requires exactly 2 arguments: (define name value)")
-    }
-    name <- expr[[2]]
-    value <- rye_eval_inner(expr[[3]], env)
-    value <- rye_strip_src(value)
-    rye_assign_pattern(name, value, env, mode = "define", context = "define")
-    return(NULL)
-  }
-
-  # set! - modify existing binding
-  if (is.symbol(op) && as.character(op) == "set!") {
-    if (length(expr) != 3) {
-      stop("set! requires exactly 2 arguments: (set! name value)")
-    }
-    name <- expr[[2]]
-    value <- rye_eval_inner(expr[[3]], env)
-    value <- rye_strip_src(value)
-    rye_assign_pattern(name, value, env, mode = "set", context = "set!")
-    return(NULL)
-  }
-
-  # load - evaluate a Rye source file or stdlib entry
-  if (is.symbol(op) && as.character(op) == "load") {
-    if (length(expr) != 2) {
-      stop("load requires exactly 1 argument: (load \"path\")")
-    }
-    path <- rye_eval_inner(expr[[2]], env)
-    path <- rye_strip_src(path)
-    if (!is.character(path) || length(path) != 1) {
-      stop("load requires a single file path string")
-    }
-    if (!grepl("[/\\\\]", path) && rye_module_exists(path, env = env)) {
-      return(NULL)
-    }
-    has_separator <- grepl("[/\\\\]", path)
-    if (!has_separator) {
-      stdlib_path <- rye_resolve_stdlib_path(path)
-      if (!is.null(stdlib_path)) {
-        return(rye_strip_src(rye_load_file(stdlib_path, env)))
-      }
-      if (file.exists(path)) {
-        return(rye_strip_src(rye_load_file(path, env)))
-      }
-      stop(sprintf("File not found: %s", path))
-    }
-    return(rye_strip_src(rye_load_file(path, env)))
-  }
-
-  # module - define a module with explicit exports
-  if (is.symbol(op) && as.character(op) == "module") {
-    if (length(expr) < 3) {
-      stop("module requires at least 2 arguments: (module name (export ...) body...)")
-    }
-    name_expr <- expr[[2]]
-    if (is.symbol(name_expr)) {
-      module_name <- as.character(name_expr)
-    } else if (is.character(name_expr) && length(name_expr) == 1) {
-      module_name <- name_expr
-    } else {
-      stop("module name must be a symbol or string")
-    }
-
-    exports_expr <- expr[[3]]
-    if (!is.call(exports_expr) ||
-        length(exports_expr) < 1 ||
-        !is.symbol(exports_expr[[1]])) {
-      stop("module requires an export list: (module name (export ...) body...)")
-    }
-
-    export_tag <- as.character(exports_expr[[1]])
-    export_all <- FALSE
-    exports <- character(0)
-    if (identical(export_tag, "export")) {
-      if (length(exports_expr) > 1) {
-        for (i in 2:length(exports_expr)) {
-          item <- exports_expr[[i]]
-          if (!is.symbol(item)) {
-            stop("module exports must be symbols")
-          }
-          exports <- c(exports, as.character(item))
-        }
-      }
-    } else if (identical(export_tag, "export-all")) {
-      if (length(exports_expr) > 1) {
-        stop("export-all does not take any arguments")
-      }
-      export_all <- TRUE
-    } else {
-      stop("module requires an export list: (module name (export ...) body...)")
-    }
-
-    module_env <- new.env(parent = env)
-    assign(".rye_env", TRUE, envir = module_env)
-    assign(".rye_module", TRUE, envir = module_env)
-    rye_module_register(module_name, module_env, exports, registry_env = env)
-
-    body_exprs <- list()
-    if (length(expr) > 3) {
-      for (i in 4:length(expr)) {
-        body_exprs[[length(body_exprs) + 1]] <- expr[[i]]
-      }
-    }
-    if (length(body_exprs) == 0) {
-      if (export_all) {
-        exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
-        rye_module_update_exports(module_name, exports, registry_env = env)
-      }
-      return(NULL)
-    }
-    result <- rye_eval_seq(body_exprs, module_env)
-    if (export_all) {
-      exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
-      rye_module_update_exports(module_name, exports, registry_env = env)
-    }
-    return(result)
-  }
-
-  # import - load module and attach exports
-  if (is.symbol(op) && as.character(op) == "import") {
-    if (length(expr) != 2) {
-      stop("import requires exactly 1 argument: (import name)")
-    }
-    name_expr <- expr[[2]]
-    if (is.symbol(name_expr)) {
-      module_name <- as.character(name_expr)
-    } else if (is.character(name_expr) && length(name_expr) == 1) {
-      module_name <- name_expr
-    } else {
-      stop("import requires a module name symbol or string")
-    }
-
-    if (!rye_module_exists(module_name, env = env)) {
-      module_path <- rye_resolve_module_path(module_name)
-      if (is.null(module_path)) {
-        stop(sprintf("Module not found: %s", module_name))
-      }
-      rye_load_file(module_path, env)
-      if (!rye_module_exists(module_name, env = env)) {
-        stop(sprintf("Module '%s' did not register itself", module_name))
-      }
-    }
-
-    rye_module_attach(module_name, env)
-    return(NULL)
-  }
-
-  # lambda - function creation
-  if (is.symbol(op) && as.character(op) == "lambda") {
-    if (length(expr) < 3) {
-      stop("lambda requires at least 2 arguments: (lambda (args...) body...)")
-    }
-
-    # Parse argument list
-    args_expr <- expr[[2]]
-
-    # Handle argument list which may be a call or list
-    arg_items <- list()
-    if (!is.null(args_expr)) {
-      if (is.call(args_expr)) {
-        if (length(args_expr) > 0) {
-          arg_items <- as.list(args_expr)
-        }
-      } else if (is.list(args_expr)) {
-        arg_items <- args_expr
-      } else {
-        stop("lambda arguments must be a list")
-      }
-    }
-
-    # Handle dotted rest parameter (x y . rest)
-    rest_param <- NULL
-    rest_param_spec <- NULL
-    if (length(arg_items) > 0) {
-      dot_idx <- which(vapply(arg_items, function(arg) {
-        is.symbol(arg) && as.character(arg) == "."
-      }, logical(1)))
-      if (length(dot_idx) > 1) {
-        stop("Dotted parameter list can only contain one '.'")
-      }
-      if (length(dot_idx) == 1) {
-        if (dot_idx != length(arg_items) - 1) {
-          stop("Dotted parameter list must have exactly one parameter after '.'")
-        }
-        rest_arg <- arg_items[[dot_idx + 1]]
-        if (is.symbol(rest_arg)) {
-          rest_param <- as.character(rest_arg)
-          rest_param_spec <- list(type = "name", name = rest_param, pattern = NULL, display = rest_param)
-        } else if (is.call(rest_arg) || (is.list(rest_arg) && is.null(attr(rest_arg, "class", exact = TRUE)))) {
-          rest_list <- if (is.call(rest_arg)) as.list(rest_arg) else rest_arg
-          is_pattern_wrapper <- length(rest_list) >= 2 &&
-            is.symbol(rest_list[[1]]) &&
-            as.character(rest_list[[1]]) %in% c("pattern", "destructure")
-          if (!is_pattern_wrapper) {
-            stop("Rest parameter must be a symbol or (pattern <pat>)")
-          }
-          if (length(rest_list) != 2) {
-            stop("Rest pattern must be (pattern <pat>)")
-          }
-          rest_pattern <- rest_list[[2]]
-          rest_display <- paste(deparse(rest_pattern, width.cutoff = 500), collapse = " ")
-          rest_param_spec <- list(
-            type = "pattern",
-            name = NULL,
-            pattern = rest_pattern,
-            display = rest_display
-          )
-        } else {
-          stop("Rest parameter must be a symbol or (pattern <pat>)")
-        }
-        if (dot_idx > 1) {
-          arg_items <- arg_items[1:(dot_idx - 1)]
-        } else {
-          arg_items <- list()
-        }
-      }
-    }
-
-    # Parse required, defaulted, and destructured parameters
-    param_specs <- list()
-    param_names <- character(0)
-    param_display <- character(0)
-    param_defaults <- list()
-    param_default_exprs <- list()
-    if (length(arg_items) > 0) {
-      for (arg in arg_items) {
-        if (is.symbol(arg)) {
-          name <- as.character(arg)
-          param_names <- c(param_names, name)
-          param_display <- c(param_display, name)
-          param_defaults[[name]] <- quote(expr = )
-          param_default_exprs[[name]] <- list(rye_missing_default())
-          param_specs[[length(param_specs) + 1]] <- list(
-            type = "name",
-            formal = name,
-            pattern = NULL,
-            display = name
-          )
-        } else if (is.call(arg) || (is.list(arg) && is.null(attr(arg, "class", exact = TRUE)))) {
-          arg_list <- if (is.call(arg)) as.list(arg) else arg
-          is_pattern_wrapper <- length(arg_list) >= 2 &&
-            is.symbol(arg_list[[1]]) &&
-            as.character(arg_list[[1]]) %in% c("pattern", "destructure")
-          is_default_pair <- length(arg_list) == 2 && is.symbol(arg_list[[1]])
-          if (is_pattern_wrapper) {
-            if (length(arg_list) != 2 && length(arg_list) != 3) {
-              stop("pattern wrapper must be (pattern <pat>) or (pattern <pat> <default>)")
-            }
-            pattern <- arg_list[[2]]
-            default_expr <- rye_missing_default()
-            if (length(arg_list) == 3) {
-              default_expr <- arg_list[[3]]
-              if (is.null(default_expr)) {
-                default_expr <- quote(NULL)
-              }
-            }
-            tmp_name <- as.character(gensym(".__rye_arg"))
-            display <- paste(deparse(pattern, width.cutoff = 500), collapse = " ")
-            param_names <- c(param_names, tmp_name)
-            param_display <- c(param_display, display)
-            if (inherits(default_expr, "rye_missing_default")) {
-              param_defaults[[tmp_name]] <- quote(expr = )
-              param_default_exprs[[tmp_name]] <- list(rye_missing_default())
-            } else {
-              param_defaults[[tmp_name]] <- default_expr
-              param_default_exprs[[tmp_name]] <- list(default_expr)
-            }
-            param_specs[[length(param_specs) + 1]] <- list(
-              type = "pattern",
-              formal = tmp_name,
-              pattern = pattern,
-              display = display
-            )
-          } else if (is_default_pair) {
-            name <- as.character(arg_list[[1]])
-            default_expr <- arg_list[[2]]
-            if (is.null(default_expr)) {
-              default_expr <- quote(NULL)
-            }
-            param_names <- c(param_names, name)
-            param_display <- c(param_display, name)
-            param_defaults[[name]] <- default_expr
-            param_default_exprs[[name]] <- list(default_expr)
-            param_specs[[length(param_specs) + 1]] <- list(
-              type = "name",
-              formal = name,
-              pattern = NULL,
-              display = name
-            )
-          } else {
-            stop("lambda arguments must be symbols, (name default) pairs, or (pattern <pat> [default])")
-          }
-        } else {
-          stop("lambda arguments must be symbols, (name default) pairs, or (pattern <pat> [default])")
-        }
-      }
-    }
-
-    all_names <- c(param_names, if (!is.null(rest_param)) rest_param)
-    if (length(all_names) > 0 && any(duplicated(all_names))) {
-      stop("lambda argument names must be unique")
-    }
-
-    # Create formals list (support defaults and rest args)
-    formals_list <- list()
-    if (length(param_names) > 0) {
-      for (name in param_names) {
-        formals_list[[name]] <- param_defaults[[name]]
-      }
-    }
-    if (!is.null(rest_param) || !is.null(rest_param_spec)) {
-      formals_list[["..."]] <- quote(expr = )
-    }
-
-    # Get body expressions (everything after the argument list)
-    # Convert to a proper list
-    body_exprs <- list()
-    if (length(expr) >= 3) {
-      for (i in 3:length(expr)) {
-        body_exprs[[length(body_exprs) + 1]] <- expr[[i]]
-      }
-    }
-
-    # Optional docstring convention: first body form is a string literal
-    docstring <- NULL
-    if (length(body_exprs) > 0) {
-      first_expr <- rye_strip_src(body_exprs[[1]])
-      if (is.character(first_expr) && length(first_expr) == 1) {
-        docstring <- first_expr
-        body_exprs <- body_exprs[-1]
-      }
-    }
-
-    # Create a closure that evaluates the body in a new environment
-    # Capture the current environment as the parent
-    parent_env <- env
-
-    # Define function with ... to satisfy codetools when list(...) is used
-    fn <- function(...) {
-      # Create new environment for function execution
-      fn_env <- new.env(parent = parent_env)
-
-      # Bind arguments
-      if (length(formals_list) > 0) {
-        for (param_name in names(formals_list)) {
-          if (param_name == "...") {
-            next
-          }
-          assign(param_name, get(param_name, inherits = FALSE), envir = fn_env)
-        }
-      }
-      if (!is.null(rest_param)) {
-        assign(rest_param, list(...), envir = fn_env)
-      }
-
-      # Evaluate body expressions in sequence
-      result <- NULL
-      if (length(body_exprs) > 0) {
-        for (i in seq_along(body_exprs)) {
-          result <- rye_strip_src(rye_eval(body_exprs[[i]], fn_env))
-        }
-      }
-      result
-    }
-
-    # Set the formals
-    formals(fn) <- formals_list
-    class(fn) <- c("rye_closure", class(fn))
-    attr(fn, "rye_closure") <- list(
-      params = param_names,
-      param_specs = param_specs,
-      param_display = param_display,
-      defaults = param_default_exprs,
-      rest_param = rest_param,
-      rest_param_spec = rest_param_spec,
-      body_exprs = body_exprs,
-      parent_env = parent_env
-    )
-    if (!is.null(docstring)) {
-      attr(fn, "rye_doc") <- list(description = docstring)
-    }
-
-    return(fn)
-  }
-
-  # begin - sequence of expressions
-  if (is.symbol(op) && as.character(op) == "begin") {
-    if (length(expr) == 1) {
-      return(NULL)
-    }
-    return(rye_eval_seq(as.list(expr)[-1], env))
-  }
-
-  # ~ - formula (don't evaluate arguments)
-  if (is.symbol(op) && as.character(op) == "~") {
-    # Build formula without evaluating arguments
-    # R formulas are calls to ~, so we can use R's as.formula or just return the call
-    # But we need to convert our parsed structure to R's formula structure
-    formula_parts <- list(as.symbol("~"))
-    if (length(expr) > 1) {
-      for (i in 2:length(expr)) {
-        formula_parts <- c(formula_parts, list(expr[[i]]))
-      }
-    }
-    formula_call <- as.call(formula_parts)
-    return(eval(formula_call, envir = env))
-  }
-
-  # :: and ::: - package accessors (don't evaluate arguments)
-  if (is.symbol(op) && (as.character(op) == "::" || as.character(op) == ":::")) {
-    if (length(expr) != 3) {
-      stop(sprintf("%s requires exactly 2 arguments: (%s pkg name)", as.character(op), as.character(op)))
-    }
-
-    # Arguments should be symbols or can be strings
-    pkg <- expr[[2]]
-    name <- expr[[3]]
-
-    # Convert to symbols if they aren't already
-    if (!is.symbol(pkg)) {
-      if (is.character(pkg)) {
-        pkg <- as.symbol(pkg)
-      } else {
-        stop("Package name must be a symbol or string")
-      }
-    }
-
-    if (!is.symbol(name)) {
-      if (is.character(name)) {
-        name <- as.symbol(name)
-      } else {
-        stop("Function/object name must be a symbol or string")
-      }
-    }
-
-    # Build and evaluate the call using R's :: or :::
-    access_call <- as.call(list(as.symbol(as.character(op)), pkg, name))
-    return(eval(access_call, envir = env))
+  handler <- if (!is.null(op_name)) rye_special_forms[[op_name]] else NULL
+  if (!is.null(handler)) {
+    return(handler(expr, env, op_name))
   }
 
   # Regular function application

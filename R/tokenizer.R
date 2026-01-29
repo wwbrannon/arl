@@ -15,6 +15,10 @@ rye_tokenize <- function(source) {
   col <- 1
   i <- 1
   n <- nchar(source)
+  delimiters <- c(" ", "\t", "\n", "\r", "(", ")", "'", "`", ",", ";", "@", '"', ":")
+  add_token <- function(type, value, line_pos = line, col_pos = col) {
+    tokens[[length(tokens) + 1]] <<- list(type = type, value = value, line = line_pos, col = col_pos)
+  }
 
   while (i <= n) {
     char <- substr(source, i, i)
@@ -44,7 +48,7 @@ rye_tokenize <- function(source) {
 
     # Left paren
     if (char == "(") {
-      tokens[[length(tokens) + 1]] <- list(type = "LPAREN", value = "(", line = line, col = col)
+      add_token("LPAREN", "(")
       col <- col + 1
       i <- i + 1
       next
@@ -52,7 +56,7 @@ rye_tokenize <- function(source) {
 
     # Right paren
     if (char == ")") {
-      tokens[[length(tokens) + 1]] <- list(type = "RPAREN", value = ")", line = line, col = col)
+      add_token("RPAREN", ")")
       col <- col + 1
       i <- i + 1
       next
@@ -60,7 +64,7 @@ rye_tokenize <- function(source) {
 
     # Quote
     if (char == "'") {
-      tokens[[length(tokens) + 1]] <- list(type = "QUOTE", value = "'", line = line, col = col)
+      add_token("QUOTE", "'")
       col <- col + 1
       i <- i + 1
       next
@@ -68,7 +72,7 @@ rye_tokenize <- function(source) {
 
     # Quasiquote
     if (char == "`") {
-      tokens[[length(tokens) + 1]] <- list(type = "QUASIQUOTE", value = "`", line = line, col = col)
+      add_token("QUASIQUOTE", "`")
       col <- col + 1
       i <- i + 1
       next
@@ -77,11 +81,11 @@ rye_tokenize <- function(source) {
     # Unquote/unquote-splicing
     if (char == ",") {
       if (i + 1 <= n && substr(source, i + 1, i + 1) == "@") {
-        tokens[[length(tokens) + 1]] <- list(type = "UNQUOTE_SPLICING", value = ",@", line = line, col = col)
+        add_token("UNQUOTE_SPLICING", ",@")
         col <- col + 2
         i <- i + 2
       } else {
-        tokens[[length(tokens) + 1]] <- list(type = "UNQUOTE", value = ",", line = line, col = col)
+        add_token("UNQUOTE", ",")
         col <- col + 1
         i <- i + 1
       }
@@ -182,7 +186,6 @@ rye_tokenize <- function(source) {
       col <- col + 1
 
       # Read the keyword name
-      delimiters <- c(" ", "\t", "\n", "\r", "(", ")", "'", "`", ",", ";", "@", '"', ":")
       while (i <= n && !substr(source, i, i) %in% delimiters) {
         i <- i + 1
         col <- col + 1
@@ -199,7 +202,6 @@ rye_tokenize <- function(source) {
 
     # Numbers and symbols (atoms)
     # Check if this is the start of an atom (not a delimiter)
-    delimiters <- c(" ", "\t", "\n", "\r", "(", ")", "'", "`", ",", ";", "@", '"', ":")
     if (!char %in% delimiters) {
       start_col <- col
       start <- i

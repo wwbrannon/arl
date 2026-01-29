@@ -191,7 +191,7 @@ rye_repl <- function() {
     form <- tryCatch(
       repl_read_form(),
       error = function(e) {
-        cat(rye_format_error(e), "\n", sep = "")
+        rye_print_error(e, file = stdout())
         list(error = TRUE)
       }
     )
@@ -214,7 +214,7 @@ rye_repl <- function() {
     tryCatch({
       repl_eval_and_print_exprs(form$exprs, repl_env)
     }, error = function(e) {
-      cat(rye_format_error(e), "\n", sep = "")
+      rye_print_error(e, file = stdout())
     })
   }
 }

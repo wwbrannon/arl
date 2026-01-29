@@ -19,30 +19,25 @@ rye_trimws_shim <- function(x, which = c("both", "left", "right"), whitespace = 
 
 .rye_error_state <- new.env(parent = emptyenv())
 .rye_error_state$src_stack <- list()
-rye_env_module_registry <- function(env, create = TRUE) {
+rye_env_registry <- function(env, name, create = TRUE) {
   if (is.null(env)) {
     env <- parent.frame()
   }
-  registry <- get0(".rye_module_registry", envir = env, inherits = TRUE)
+  registry <- get0(name, envir = env, inherits = TRUE)
   if (is.null(registry) && create) {
     registry <- new.env(parent = emptyenv())
-    assign(".rye_module_registry", registry, envir = env)
-    lockBinding(".rye_module_registry", env)
+    assign(name, registry, envir = env)
+    lockBinding(name, env)
   }
   registry
 }
 
+rye_env_module_registry <- function(env, create = TRUE) {
+  rye_env_registry(env, ".rye_module_registry", create = create)
+}
+
 rye_env_macro_registry <- function(env, create = TRUE) {
-  if (is.null(env)) {
-    env <- parent.frame()
-  }
-  registry <- get0(".rye_macros", envir = env, inherits = TRUE)
-  if (is.null(registry) && create) {
-    registry <- new.env(parent = emptyenv())
-    assign(".rye_macros", registry, envir = env)
-    lockBinding(".rye_macros", env)
-  }
-  registry
+  rye_env_registry(env, ".rye_macros", create = create)
 }
 
 rye_src_new <- function(file, start_line, start_col, end_line = start_line, end_col = start_col) {
@@ -324,6 +319,30 @@ rye_eval_text <- function(text, env, source_name = "<eval>") {
   rye_eval_exprs(exprs, env)
 }
 
+rye_eval_and_maybe_print <- function(fn, env, on_error, printer = NULL) {
+  result <- tryCatch(
+    fn(),
+    error = function(e) {
+      on_error(e)
+      return(invisible(NULL))
+    }
+  )
+  if (!is.null(result) && !is.null(printer)) {
+    printer(result, env)
+  }
+  invisible(result)
+}
+
+rye_symbol_or_string <- function(value, message) {
+  if (is.symbol(value)) {
+    return(as.character(value))
+  }
+  if (is.character(value) && length(value) == 1) {
+    return(value)
+  }
+  stop(message)
+}
+
 rye_quote_arg <- function(value, quote_symbols = TRUE) {
   if (is.call(value) || (quote_symbols && is.symbol(value))) {
     return(as.call(list(as.symbol("quote"), value)))
@@ -351,16 +370,14 @@ rye_env_format_value <- function(env, value) {
   )
 }
 
-rye_assign <- function(name, value, env) {
+rye_find_define_env <- function(name, env) {
   if (isTRUE(get0(".rye_module", envir = env, inherits = FALSE))) {
-    assign(name, value, envir = env)
-    return(invisible(NULL))
+    return(env)
   }
   target <- env
   repeat {
     if (exists(name, envir = target, inherits = FALSE)) {
-      assign(name, value, envir = target)
-      return(invisible(NULL))
+      return(target)
     }
     parent_env <- parent.env(target)
     if (!exists(".rye_env", envir = parent_env, inherits = FALSE)) {
@@ -368,11 +385,10 @@ rye_assign <- function(name, value, env) {
     }
     target <- parent_env
   }
-  assign(name, value, envir = env)
-  invisible(NULL)
+  env
 }
 
-rye_assign_existing <- function(name, value, env) {
+rye_find_existing_env <- function(name, env) {
   if (!exists(name, envir = env, inherits = TRUE)) {
     stop(sprintf("set!: variable '%s' is not defined", name))
   }
@@ -383,6 +399,17 @@ rye_assign_existing <- function(name, value, env) {
     }
     target_env <- parent.env(target_env)
   }
+  target_env
+}
+
+rye_assign <- function(name, value, env) {
+  target <- rye_find_define_env(name, env)
+  assign(name, value, envir = target)
+  invisible(NULL)
+}
+
+rye_assign_existing <- function(name, value, env) {
+  target_env <- rye_find_existing_env(name, env)
   assign(name, value, envir = target_env)
   invisible(NULL)
 }
@@ -649,4 +676,8 @@ rye_format_error <- function(e, include_r_stack = TRUE) {
     }
   }
   paste(lines, collapse = "\n")
+}
+
+rye_print_error <- function(e, file = stderr()) {
+  cat(rye_format_error(e), "\n", sep = "", file = file)
 }

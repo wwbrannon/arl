@@ -127,31 +127,31 @@ cli_load_env <- function() {
 }
 
 cli_eval_exprs <- function(exprs, env) {
-  result <- tryCatch(
-    rye_eval_exprs(exprs, env),
-    error = function(e) {
+  rye_eval_and_maybe_print(
+    function() rye_eval_exprs(exprs, env),
+    env,
+    on_error = function(e) {
       cli_print_error(e)
       quit(save = "no", status = 1)
+    },
+    printer = function(result, env) {
+      cat(rye_env_format_value(env, result), "\n", sep = "")
     }
   )
-  if (!is.null(result)) {
-    cat(rye_env_format_value(env, result), "\n", sep = "")
-  }
-  invisible(result)
 }
 
 cli_eval_text <- function(text, env, source_name = "<cli>") {
-  result <- tryCatch(
-    rye_eval_text(text, env, source_name = source_name),
-    error = function(e) {
+  rye_eval_and_maybe_print(
+    function() rye_eval_text(text, env, source_name = source_name),
+    env,
+    on_error = function(e) {
       cli_print_error(e)
       quit(save = "no", status = 1)
+    },
+    printer = function(result, env) {
+      cat(rye_env_format_value(env, result), "\n", sep = "")
     }
   )
-  if (!is.null(result)) {
-    cat(rye_env_format_value(env, result), "\n", sep = "")
-  }
-  invisible(result)
 }
 
 cli_isatty <- function() {
@@ -185,7 +185,7 @@ cli_error <- function(message) {
 }
 
 cli_print_error <- function(e) {
-  cat(rye_format_error(e), "\n", sep = "", file = stderr())
+  rye_print_error(e, file = stderr())
 }
 
 rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {

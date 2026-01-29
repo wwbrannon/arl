@@ -21,6 +21,12 @@ rye_parse <- function(tokens, source_name = NULL) {
     }
 
     token <- tokens[[pos]]
+    sugar_map <- list(
+      QUOTE = "quote",
+      QUASIQUOTE = "quasiquote",
+      UNQUOTE = "unquote",
+      UNQUOTE_SPLICING = "unquote-splicing"
+    )
 
     make_src <- function(start_token, end_src = NULL) {
       end_line <- start_token$line
@@ -36,36 +42,13 @@ rye_parse <- function(tokens, source_name = NULL) {
       rye_src_new(source_name, start_token$line, start_token$col, end_line, end_col)
     }
 
-    # Quote sugar
-    if (token$type == "QUOTE") {
+    # Quote/quasiquote/unquote sugar
+    if (token$type %in% names(sugar_map)) {
       pos <<- pos + 1
       quoted <- parse_expr()
-      expr <- as.call(list(as.symbol("quote"), quoted))
+      op <- sugar_map[[token$type]]
+      expr <- as.call(list(as.symbol(op), quoted))
       return(rye_src_set(expr, make_src(token, rye_src_get(quoted))))
-    }
-
-    # Quasiquote sugar
-    if (token$type == "QUASIQUOTE") {
-      pos <<- pos + 1
-      quoted <- parse_expr()
-      expr <- as.call(list(as.symbol("quasiquote"), quoted))
-      return(rye_src_set(expr, make_src(token, rye_src_get(quoted))))
-    }
-
-    # Unquote sugar
-    if (token$type == "UNQUOTE") {
-      pos <<- pos + 1
-      unquoted <- parse_expr()
-      expr <- as.call(list(as.symbol("unquote"), unquoted))
-      return(rye_src_set(expr, make_src(token, rye_src_get(unquoted))))
-    }
-
-    # Unquote-splicing sugar
-    if (token$type == "UNQUOTE_SPLICING") {
-      pos <<- pos + 1
-      unquoted <- parse_expr()
-      expr <- as.call(list(as.symbol("unquote-splicing"), unquoted))
-      return(rye_src_set(expr, make_src(token, rye_src_get(unquoted))))
     }
 
     # Atoms

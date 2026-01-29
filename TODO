@@ -1,8 +1,8 @@
-o) performance optimizations: use profiling and benchmarking
-    o) other things
-
 o) Can we rewrite any of the current code in rye? Any functionality that can be streamlined?
 * Stdlib
+
+o) performance optimizations: use profiling and benchmarking
+    o) other things
 
 o) Look for any R code that’s left over or not used
 
