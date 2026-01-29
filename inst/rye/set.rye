@@ -4,7 +4,7 @@
   (export set set? set-add set-remove set-contains? set-union set-intersection set-difference)
 
   (import predicates)
-  (import list-core)
+  (import list)
   (import looping)
 
 ;;; Internal helpers (defined early for use in constructors)

@@ -4,7 +4,7 @@
   (export while while-r until for for-r loop recur)
 
   (import higher-order)
-  (import list-core)
+  (import list)
   (import predicates)
   (import sequences)
 

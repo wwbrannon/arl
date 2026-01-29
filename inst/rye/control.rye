@@ -4,7 +4,7 @@
   (export when unless and or cond case)
 
   (import predicates)
-  (import list-core)
+  (import list)
 
 ;;; Control flow macros
 

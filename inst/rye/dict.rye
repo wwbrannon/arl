@@ -4,7 +4,7 @@
   (export dict hash dict? dict-get dict-set dict-remove dict-keys dict-values dict-has? dict-merge)
 
   (import predicates)
-  (import list-core)
+  (import list)
   (import looping)
 
 ;;; Internal helpers (defined early for use in constructors)

@@ -4,7 +4,7 @@
   (export try)
 
   (import predicates)
-  (import list-core)
+  (import list)
   (import control)
 
 (defmacro try (body . clauses)

@@ -3,7 +3,7 @@
 (module strings
   (export string-join string-split trim format string-contains? string-match? string-find string-replace string-replace-all)
 
-  (import list-core)
+  (import list)
 
   (define string-join
     (lambda (x (sep ""))

@@ -4,7 +4,7 @@
   (export -> ->>)
 
   (import higher-order)
-  (import list-core)
+  (import list)
   (import predicates)
 
 (defmacro -> (value . forms)

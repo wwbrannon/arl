@@ -3,7 +3,7 @@
 (module display
   (export __format-atomic __format-seq format-value display println str trace)
 
-  (import list-core)
+  (import list)
   (import strings)
   (import control)
 

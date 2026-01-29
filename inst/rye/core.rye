@@ -1,6 +1,6 @@
 ;;; Rye Standard Library - Core Functions
 
-(module stdlib-core
+(module core
   (export = error warn assert identity values values? call-with-values)
 
   (define =

@@ -4,7 +4,7 @@
   (export pattern-symbols destructuring-bind let let* letrec when-let if-let)
 
   (import predicates)
-  (import list-core)
+  (import list)
   (import higher-order)
   (import sequences)
   (import control)

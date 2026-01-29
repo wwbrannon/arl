@@ -1,6 +1,6 @@
 ;;; Rye Standard Library - List Helpers
 
-(module list-core
+(module list
   (export __as-list __list-last __list-head
           call
           car cdr

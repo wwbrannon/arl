@@ -5,7 +5,7 @@
           partition flatten repeatedly repeat zip
           member contains?)
 
-  (import list-core)
+  (import list)
   (import predicates)
 
   (define take

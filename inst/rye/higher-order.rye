@@ -3,7 +3,7 @@
 (module higher-order
   (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial)
 
-  (import list-core)
+  (import list)
   (import predicates)
 
   (define map

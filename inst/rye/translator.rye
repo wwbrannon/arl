@@ -4,7 +4,7 @@
   (export __indent __at __slice __string-in? translate-expr translate-str translate-file translate-source)
 
   (import predicates)
-  (import list-core)
+  (import list)
   (import strings)
   (import io)
   (import control)
