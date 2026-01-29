@@ -46,24 +46,24 @@ test_that("rye_do_call quotes symbols except for accessors", {
   expect_equal(rye:::rye_do_call(base::`[[`, list(list(1, 2), 2)), 2)
 })
 
-test_that("rye_assign targets nearest rye environment", {
+test_that("RyeEnv$assign targets nearest rye environment", {
   root <- new.env(parent = emptyenv())
   assign(".rye_env", TRUE, envir = root)
   root$x <- 1
   child <- new.env(parent = root)
   assign(".rye_env", TRUE, envir = child)
 
-  rye:::rye_assign("x", 2, child)
+  RyeEnv$new(child)$assign("x", 2)
   expect_equal(root$x, 2)
   expect_false(exists("x", envir = child, inherits = FALSE))
 })
 
-test_that("rye_assign falls back to current env", {
+test_that("RyeEnv$assign falls back to current env", {
   parent_env <- new.env(parent = emptyenv())
   child <- new.env(parent = parent_env)
   assign(".rye_env", TRUE, envir = child)
 
-  rye:::rye_assign("z", 3, child)
+  RyeEnv$new(child)$assign("z", 3)
   expect_true(exists("z", envir = child, inherits = FALSE))
   expect_false(exists("z", envir = parent_env, inherits = FALSE))
 })

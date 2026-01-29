@@ -3,6 +3,8 @@
 
 library(rye)
 
+engine <- RyeEngine$new()
+
 # Source helpers (works from different working directories)
 if (file.exists("benchmarks/benchmark-helpers.R")) {
   source("benchmarks/benchmark-helpers.R")
@@ -27,11 +29,11 @@ cat("=== Profiling Parser ===\n\n")
 # Profile 1: Large flat list (tests list growing)
 cat("Profile 1: Large flat list (1000 elements)\n")
 flat_1000 <- paste0("(list ", paste(seq_len(1000), collapse = " "), ")")
-tokens_flat_1000 <- rye_tokenize(flat_1000)
+tokens_flat_1000 <- engine$tokenize(flat_1000)
 
 profile_component({
   for (i in 1:100) {
-    rye_parse(tokens_flat_1000)
+    engine$parse(tokens_flat_1000)
   }
 }, "parser-flat-list")
 
@@ -40,11 +42,11 @@ profile_component({
 cat("Profile 2: Deep nesting (50 levels)\n")
 nested_50 <- paste(rep("(list ", 50), collapse = "")
 nested_50 <- paste0(nested_50, "1", paste(rep(")", 50), collapse = ""))
-tokens_nested_50 <- rye_tokenize(nested_50)
+tokens_nested_50 <- engine$tokenize(nested_50)
 
 profile_component({
   for (i in 1:100) {
-    rye_parse(tokens_nested_50)
+    engine$parse(tokens_nested_50)
   }
 }, "parser-deep-nesting")
 
@@ -54,11 +56,11 @@ cat("Profile 3: Real example file (quicksort.rye)\n")
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0 && "quicksort" %in% names(real_workloads)) {
-  tokens_qs <- rye_tokenize(real_workloads$quicksort)
+  tokens_qs <- engine$tokenize(real_workloads$quicksort)
 
   profile_component({
     for (i in 1:100) {
-      rye_parse(tokens_qs)
+      engine$parse(tokens_qs)
     }
   }, "parser-quicksort")
 
@@ -71,11 +73,11 @@ cat("Profile 4: Quote sugar expansion\n")
 quote_heavy <- "(list 'x 'y 'z `(a ,b ,@c) :key1 val1 :key2 val2)"
 quote_heavy <- paste(rep(quote_heavy, 100), collapse = " ")
 quote_heavy <- paste0("(begin ", quote_heavy, ")")
-tokens_quote <- rye_tokenize(quote_heavy)
+tokens_quote <- engine$tokenize(quote_heavy)
 
 profile_component({
   for (i in 1:50) {
-    rye_parse(tokens_quote)
+    engine$parse(tokens_quote)
   }
 }, "parser-quote-sugar")
 
@@ -83,11 +85,11 @@ profile_component({
 # Profile 5: Many NULL values
 cat("Profile 5: Many NULL values\n")
 many_nulls <- paste0("(list ", paste(rep("#nil", 500), collapse = " "), ")")
-tokens_nulls <- rye_tokenize(many_nulls)
+tokens_nulls <- engine$tokenize(many_nulls)
 
 profile_component({
   for (i in 1:100) {
-    rye_parse(tokens_nulls)
+    engine$parse(tokens_nulls)
   }
 }, "parser-nulls")
 

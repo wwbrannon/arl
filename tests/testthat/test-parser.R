@@ -1,19 +1,21 @@
+engine <- new_engine()
+
 test_that("parser handles simple expressions", {
-  exprs <- rye_read("(+ 1 2)")
+  exprs <- engine$read("(+ 1 2)")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
   expect_equal(as.character(exprs[[1]][[1]]), "+")
 })
 
 test_that("parser handles nested expressions", {
-  exprs <- rye_read("(+ 1 (* 2 3))")
+  exprs <- engine$read("(+ 1 (* 2 3))")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
   expect_true(is.call(exprs[[1]][[3]]))
 })
 
 test_that("parser handles quote sugar", {
-  exprs <- rye_read("'x")
+  exprs <- engine$read("'x")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
   expect_equal(as.character(exprs[[1]][[1]]), "quote")
@@ -21,7 +23,7 @@ test_that("parser handles quote sugar", {
 })
 
 test_that("parser converts :: sugar to function call", {
-  exprs <- rye_read("base::mean")
+  exprs <- engine$read("base::mean")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
   expect_equal(as.character(exprs[[1]][[1]]), "::")
@@ -30,7 +32,7 @@ test_that("parser converts :: sugar to function call", {
 })
 
 test_that("parser converts ::: sugar to function call", {
-  exprs <- rye_read("stats:::fitted.default")
+  exprs <- engine$read("stats:::fitted.default")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
   expect_equal(as.character(exprs[[1]][[1]]), ":::")
@@ -39,14 +41,14 @@ test_that("parser converts ::: sugar to function call", {
 })
 
 test_that(":: can still be used in explicit form", {
-  exprs <- rye_read("(:: base mean)")
+  exprs <- engine$read("(:: base mean)")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
   expect_equal(as.character(exprs[[1]][[1]]), "::")
 })
 
 test_that(":: sugar works in expressions", {
-  exprs <- rye_read("(base::mean (c 1 2 3))")
+  exprs <- engine$read("(base::mean (c 1 2 3))")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
   # First element should be the base::mean call

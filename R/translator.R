@@ -1,9 +1,11 @@
 rye_translate_env <- local({
   env <- NULL
+  engine <- NULL
   function() {
     if (is.null(env)) {
-      env <- rye_load_stdlib()
-      rye_eval(rye_read("(import translator)")[[1]], env)
+      engine <- RyeEngine$new()
+      env <- engine$load_stdlib()
+      engine$eval(engine$read("(import translator)")[[1]], env)
     }
     env
   }
@@ -27,17 +29,7 @@ rye_translate_file <- function(path) {
   translator(path)
 }
 
-#' Translate Rye code to R code
-#'
-#' Translates Rye source into equivalent R code without evaluating it.
-#'
-#' @param source Either a file path to a .rye file or a string containing Rye code
-#' @param is_file Logical indicating whether source is a file path (default: TRUE if source ends with .rye)
-#' @return A character string containing the translated R code
-#' @examples
-#' rye_translate("(+ 1 2)", is_file = FALSE)
-#' #> [1] "1 + 2"
-#' @export
+# Internal translation helper (RyeEngine$translate delegates here).
 rye_translate <- function(source, is_file = NULL) {
   env <- rye_translate_env()
   translator <- env$`translate-source`

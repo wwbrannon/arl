@@ -1,5 +1,7 @@
+engine <- new_engine()
+
 test_that("tokenizer handles basic tokens", {
-  tokens <- rye_tokenize("(+ 1 2)")
+  tokens <- engine$tokenize("(+ 1 2)")
   expect_equal(length(tokens), 5)
   expect_equal(tokens[[1]]$type, "LPAREN")
   expect_equal(tokens[[2]]$type, "SYMBOL")
@@ -12,24 +14,24 @@ test_that("tokenizer handles basic tokens", {
 })
 
 test_that("tokenizer handles strings", {
-  tokens <- rye_tokenize('"hello world"')
+  tokens <- engine$tokenize('"hello world"')
   expect_equal(length(tokens), 1)
   expect_equal(tokens[[1]]$type, "STRING")
   expect_equal(tokens[[1]]$value, "hello world")
 })
 
 test_that("tokenizer handles escape sequences", {
-  tokens <- rye_tokenize('"hello\\nworld"')
+  tokens <- engine$tokenize('"hello\\nworld"')
   expect_equal(tokens[[1]]$value, "hello\nworld")
 })
 
 test_that("tokenizer preserves unknown escapes", {
-  tokens <- rye_tokenize('"C:\\\\Users\\\\runner\\\\file.rye"')
+  tokens <- engine$tokenize('"C:\\\\Users\\\\runner\\\\file.rye"')
   expect_equal(tokens[[1]]$value, "C:\\Users\\runner\\file.rye")
 })
 
 test_that("tokenizer handles booleans and nil", {
-  tokens <- rye_tokenize("#t #f #nil")
+  tokens <- engine$tokenize("#t #f #nil")
   expect_equal(tokens[[1]]$type, "BOOLEAN")
   expect_equal(tokens[[1]]$value, TRUE)
   expect_equal(tokens[[2]]$type, "BOOLEAN")
@@ -39,41 +41,41 @@ test_that("tokenizer handles booleans and nil", {
 })
 
 test_that("tokenizer handles comments", {
-  tokens <- rye_tokenize("; comment\n(+ 1 2)")
+  tokens <- engine$tokenize("; comment\n(+ 1 2)")
   expect_equal(length(tokens), 5)
   expect_equal(tokens[[1]]$type, "LPAREN")
 })
 
 test_that("tokenizer handles quote syntax", {
-  tokens <- rye_tokenize("'x")
+  tokens <- engine$tokenize("'x")
   expect_equal(tokens[[1]]$type, "QUOTE")
   expect_equal(tokens[[2]]$type, "SYMBOL")
   expect_equal(tokens[[2]]$value, "x")
 })
 
 test_that("tokenizer handles :: operator in symbols", {
-  tokens <- rye_tokenize("base::mean")
+  tokens <- engine$tokenize("base::mean")
   expect_equal(length(tokens), 1)
   expect_equal(tokens[[1]]$type, "SYMBOL")
   expect_equal(tokens[[1]]$value, "base::mean")
 })
 
 test_that("tokenizer handles ::: operator in symbols", {
-  tokens <- rye_tokenize("pkg:::internal")
+  tokens <- engine$tokenize("pkg:::internal")
   expect_equal(length(tokens), 1)
   expect_equal(tokens[[1]]$type, "SYMBOL")
   expect_equal(tokens[[1]]$value, "pkg:::internal")
 })
 
 test_that("keywords are tokenized correctly", {
-  tokens <- rye_tokenize(":data")
+  tokens <- engine$tokenize(":data")
   expect_equal(length(tokens), 1)
   expect_equal(tokens[[1]]$type, "KEYWORD")
   expect_equal(tokens[[1]]$value, "data")
 })
 
 test_that("keywords in expressions", {
-  tokens <- rye_tokenize("(plot x y :col \"red\")")
+  tokens <- engine$tokenize("(plot x y :col \"red\")")
   expect_equal(tokens[[5]]$type, "KEYWORD")
   expect_equal(tokens[[5]]$value, "col")
 })

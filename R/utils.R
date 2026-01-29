@@ -17,8 +17,6 @@ rye_trimws_shim <- function(x, which = c("both", "left", "right"), whitespace = 
   rye_trimws_compat(x, which = which, whitespace = whitespace)
 }
 
-.rye_error_state <- new.env(parent = emptyenv())
-.rye_error_state$src_stack <- list()
 rye_env_registry <- function(env, name, create = TRUE) {
   if (is.null(env)) {
     env <- parent.frame()
@@ -32,192 +30,27 @@ rye_env_registry <- function(env, name, create = TRUE) {
   registry
 }
 
-rye_env_module_registry <- function(env, create = TRUE) {
-  rye_env_registry(env, ".rye_module_registry", create = create)
-}
-
-rye_env_macro_registry <- function(env, create = TRUE) {
-  rye_env_registry(env, ".rye_macros", create = create)
-}
 
 rye_src_new <- function(file, start_line, start_col, end_line = start_line, end_col = start_col) {
-  structure(
-    list(
-      file = file,
-      start_line = start_line,
-      start_col = start_col,
-      end_line = end_line,
-      end_col = end_col
-    ),
-    class = "rye_src"
-  )
+  rye_default_engine()$source_tracker$src_new(file, start_line, start_col, end_line = end_line, end_col = end_col)
 }
 
 rye_src_get <- function(expr) {
-  if (is.null(expr)) {
-    return(NULL)
-  }
-  attr(expr, "rye_src", exact = TRUE)
+  rye_default_engine()$source_tracker$src_get(expr)
 }
 
 rye_src_set <- function(expr, src) {
-  if (is.null(expr) || is.null(src)) {
-    return(expr)
-  }
-  if (is.symbol(expr)) {
-    return(expr)
-  }
-  attr(expr, "rye_src") <- src
-  expr
+  rye_default_engine()$source_tracker$src_set(expr, src)
 }
 
 rye_src_inherit <- function(expr, from) {
-  src <- rye_src_get(from)
-  if (is.null(src)) {
-    return(expr)
-  }
-  if (!is.null(rye_src_get(expr))) {
-    return(expr)
-  }
-  rye_src_set(expr, src)
+  rye_default_engine()$source_tracker$src_inherit(expr, from)
 }
 
 rye_strip_src <- function(value) {
-  # Fast paths for common cases
-  if (is.null(value) || is.symbol(value)) {
-    return(value)
-  }
-
-  # Check for rye_src attribute
-  has_src_attr <- !is.null(attr(value, "rye_src", exact = TRUE))
-
-  # For non-recursive types (atomic vectors, environments, functions, etc.)
-  # just remove the attribute if present and return
-  if (!is.call(value) && (!is.list(value) || !is.null(attr(value, "class", exact = TRUE)))) {
-    if (has_src_attr) {
-      attr(value, "rye_src") <- NULL
-    }
-    return(value)
-  }
-
-  # For calls and plain lists, we need to recurse
-  # But first check if there's anything to do
-  if (!has_src_attr && length(value) == 0) {
-    # Empty call/list with no attribute - nothing to do
-    return(value)
-  }
-
-  # Remove attribute from current level
-  if (has_src_attr) {
-    attr(value, "rye_src") <- NULL
-  }
-
-  # Recursively strip children
-  if (is.call(value)) {
-    stripped <- lapply(as.list(value), rye_strip_src)
-    return(as.call(stripped))
-  }
-
-  # Plain list
-  if (is.list(value) && is.null(attr(value, "class", exact = TRUE))) {
-    stripped <- lapply(value, rye_strip_src)
-    if (!is.null(names(value))) {
-      names(stripped) <- names(value)
-    }
-    return(stripped)
-  }
-
-  value
+  rye_default_engine()$source_tracker$strip_src(value)
 }
 
-rye_module_exists <- function(name, env = parent.frame()) {
-  registry <- rye_env_module_registry(env, create = FALSE)
-  is.character(name) && length(name) == 1 && !is.null(registry) &&
-    exists(name, envir = registry, inherits = FALSE)
-}
-
-rye_module_get <- function(name, env = parent.frame()) {
-  if (!rye_module_exists(name, env = env)) {
-    return(NULL)
-  }
-  registry <- rye_env_module_registry(env, create = FALSE)
-  get(name, envir = registry, inherits = FALSE)
-}
-
-rye_module_register <- function(name, env, exports, path = NULL, registry_env = parent.frame()) {
-  if (!is.character(name) || length(name) != 1) {
-    stop("module name must be a single string")
-  }
-  registry <- rye_env_module_registry(registry_env, create = TRUE)
-  if (rye_module_exists(name, env = registry_env)) {
-    stop(sprintf("module '%s' is already defined", name))
-  }
-  entry <- list(env = env, exports = exports, path = path)
-  assign(name, entry, envir = registry)
-  lockBinding(name, registry)
-  entry
-}
-
-rye_module_update_exports <- function(name, exports, registry_env = parent.frame()) {
-  if (!is.character(name) || length(name) != 1) {
-    stop("module name must be a single string")
-  }
-  entry <- rye_module_get(name, env = registry_env)
-  if (is.null(entry)) {
-    stop(sprintf("module '%s' is not loaded", name))
-  }
-  if (!is.character(exports)) {
-    exports <- as.character(exports)
-  }
-  entry$exports <- exports
-  registry <- rye_env_module_registry(registry_env, create = TRUE)
-  if (bindingIsLocked(name, registry)) {
-    unlockBinding(name, registry)
-  }
-  assign(name, entry, envir = registry)
-  lockBinding(name, registry)
-  entry
-}
-
-rye_module_unregister <- function(name, registry_env = parent.frame()) {
-  if (!is.character(name) || length(name) != 1) {
-    stop("module name must be a single string")
-  }
-  registry <- rye_env_module_registry(registry_env, create = FALSE)
-  if (!is.null(registry) && exists(name, envir = registry, inherits = FALSE)) {
-    if (bindingIsLocked(name, registry)) {
-      unlockBinding(name, registry)
-    }
-    rm(list = name, envir = registry)
-  }
-  invisible(NULL)
-}
-
-rye_module_attach <- function(name, target_env) {
-  entry <- rye_module_get(name, env = target_env)
-  if (is.null(entry)) {
-    stop(sprintf("module '%s' is not loaded", name))
-  }
-  exports <- entry$exports
-  module_env <- entry$env
-  target_macro_registry <- rye_env_macro_registry(target_env, create = TRUE)
-  module_macro_registry <- rye_env_macro_registry(module_env, create = FALSE)
-  
-  for (export_name in exports) {
-    if (!exists(export_name, envir = module_env, inherits = FALSE)) {
-      if (!is.null(module_macro_registry) && exists(export_name, envir = module_macro_registry, inherits = FALSE)) {
-        # Copy macro to target environment's macro registry
-        macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
-        assign(export_name, macro_fn, envir = target_macro_registry)
-        lockBinding(export_name, target_macro_registry)
-        next
-      }
-      stop(sprintf("module '%s' does not export '%s'", name, export_name))
-    }
-    assign(export_name, get(export_name, envir = module_env, inherits = FALSE), envir = target_env)
-  }
-  invisible(NULL)
-}
 
 rye_promise_value_key <- ".rye_promise_value"
 rye_promise_expr_key <- ".rye_promise_expr"
@@ -240,45 +73,11 @@ rye_promise_new <- function(expr, env) {
   promise_env
 }
 
-rye_src_stack_get <- function() {
-  .rye_error_state$src_stack
-}
-
-rye_src_stack_reset <- function() {
-  .rye_error_state$src_stack <- list()
-  invisible(NULL)
-}
-
-rye_src_stack_push <- function(src) {
-  if (is.null(src)) {
-    return(invisible(NULL))
+rye_promise_force <- function(promise_env) {
+  if (!is.environment(promise_env) || !inherits(promise_env, "rye_promise")) {
+    stop("not a Rye promise")
   }
-  .rye_error_state$src_stack <- c(.rye_error_state$src_stack, list(src))
-  invisible(NULL)
-}
-
-rye_src_stack_pop <- function() {
-  stack <- .rye_error_state$src_stack
-  if (length(stack) == 0) {
-    return(invisible(NULL))
-  }
-  .rye_error_state$src_stack <- stack[-length(stack)]
-  invisible(NULL)
-}
-
-rye_eval_exprs <- function(exprs, env) {
-  rye_with_error_context(function() {
-    result <- NULL
-    for (expr in exprs) {
-      result <- rye_eval(expr, env)
-    }
-    result
-  })
-}
-
-rye_eval_text <- function(text, env, source_name = "<eval>") {
-  exprs <- rye_read(text, source_name = source_name)
-  rye_eval_exprs(exprs, env)
+  get(rye_promise_value_key, envir = promise_env, inherits = FALSE)
 }
 
 rye_eval_and_maybe_print <- function(fn, env, on_error, printer = NULL) {
@@ -295,202 +94,15 @@ rye_eval_and_maybe_print <- function(fn, env, on_error, printer = NULL) {
   invisible(result)
 }
 
-rye_symbol_or_string <- function(value, message) {
-  if (is.symbol(value)) {
-    return(as.character(value))
-  }
-  if (is.character(value) && length(value) == 1) {
-    return(value)
-  }
-  stop(message)
-}
 
 rye_quote_arg <- function(value, quote_symbols = TRUE) {
-  if (is.call(value) || (quote_symbols && is.symbol(value))) {
-    return(as.call(list(as.symbol("quote"), value)))
-  }
-  value
+  rye_default_engine()$evaluator$quote_arg(value, quote_symbols = quote_symbols)
 }
 
 rye_do_call <- function(fn, args) {
-  quote_symbols <- !identical(fn, base::`$`) &&
-    !identical(fn, base::`[`) &&
-    !identical(fn, base::`[[`) &&
-    !isTRUE(attr(fn, "rye_no_quote"))
-  args <- lapply(args, rye_quote_arg, quote_symbols = quote_symbols)
-  do.call(fn, args)
+  rye_default_engine()$evaluator$do_call(fn, args)
 }
 
-rye_env_format_value <- function(env, value) {
-  formatter <- get0("format-value", envir = env, inherits = TRUE)
-  if (!is.function(formatter)) {
-    return(paste(as.character(value), collapse = " "))
-  }
-  tryCatch(
-    do.call(formatter, list(value)),
-    error = function(e) paste(as.character(value), collapse = " ")
-  )
-}
-
-rye_find_define_env <- function(name, env) {
-  if (isTRUE(get0(".rye_module", envir = env, inherits = FALSE))) {
-    return(env)
-  }
-  target <- env
-  repeat {
-    if (exists(name, envir = target, inherits = FALSE)) {
-      return(target)
-    }
-    parent_env <- parent.env(target)
-    if (!exists(".rye_env", envir = parent_env, inherits = FALSE)) {
-      break
-    }
-    target <- parent_env
-  }
-  env
-}
-
-rye_find_existing_env <- function(name, env) {
-  if (!exists(name, envir = env, inherits = TRUE)) {
-    stop(sprintf("set!: variable '%s' is not defined", name))
-  }
-  target_env <- env
-  while (!exists(name, envir = target_env, inherits = FALSE)) {
-    if (identical(target_env, emptyenv())) {
-      stop(sprintf("set!: variable '%s' not found", name))
-    }
-    target_env <- parent.env(target_env)
-  }
-  target_env
-}
-
-rye_assign <- function(name, value, env) {
-  target <- rye_find_define_env(name, env)
-  assign(name, value, envir = target)
-  invisible(NULL)
-}
-
-rye_assign_existing <- function(name, value, env) {
-  target_env <- rye_find_existing_env(name, env)
-  assign(name, value, envir = target_env)
-  invisible(NULL)
-}
-
-rye_pattern_symbols <- function(pattern) {
-  if (is.symbol(pattern)) {
-    name <- as.character(pattern)
-    if (identical(name, ".")) {
-      return(character(0))
-    }
-    return(name)
-  }
-  if (is.null(pattern)) {
-    return(character(0))
-  }
-  if (is.call(pattern) || (is.list(pattern) && is.null(attr(pattern, "class", exact = TRUE)))) {
-    parts <- if (is.call(pattern)) as.list(pattern) else pattern
-    names <- character(0)
-    for (part in parts) {
-      names <- c(names, rye_pattern_symbols(part))
-    }
-    return(names)
-  }
-  character(0)
-}
-
-rye_assign_pattern <- function(pattern, value, env, mode = c("define", "set"), context = "define") {
-  mode <- match.arg(mode)
-  if (is.symbol(pattern)) {
-    name <- as.character(pattern)
-    if (identical(mode, "define")) {
-      rye_assign(name, value, env)
-    } else {
-      rye_assign_existing(name, value, env)
-    }
-    return(invisible(NULL))
-  }
-  if (is.call(pattern) || (is.list(pattern) && is.null(attr(pattern, "class", exact = TRUE)))) {
-    rye_destructure_bind(pattern, value, env, mode = mode)
-    return(invisible(NULL))
-  }
-  stop(sprintf("%s requires a symbol or list pattern as the first argument", context))
-}
-
-rye_destructure_bind <- function(pattern, value, env, mode = c("define", "set")) {
-  mode <- match.arg(mode)
-  bind_symbol <- function(symbol, val) {
-    name <- as.character(symbol)
-    if (identical(name, ".")) {
-      stop("Invalid destructuring pattern: '.'")
-    }
-    if (identical(mode, "define")) {
-      rye_assign(name, val, env)
-    } else {
-      rye_assign_existing(name, val, env)
-    }
-    invisible(NULL)
-  }
-
-  if (is.symbol(pattern)) {
-    return(bind_symbol(pattern, value))
-  }
-  if (is.null(pattern)) {
-    value_list <- rye_as_list(value)
-    if (length(value_list) != 0) {
-      stop(sprintf("Destructuring pattern expects empty list, got %d item(s)", length(value_list)))
-    }
-    return(invisible(NULL))
-  }
-  if (is.call(pattern) || (is.list(pattern) && is.null(attr(pattern, "class", exact = TRUE)))) {
-    parts <- if (is.call(pattern)) as.list(pattern) else pattern
-    dot_idx <- which(vapply(parts, function(x) {
-      is.symbol(x) && identical(as.character(x), ".")
-    }, logical(1)))
-    if (length(dot_idx) > 1) {
-      stop("Destructuring pattern can only contain one '.'")
-    }
-    value_list <- rye_as_list(value)
-    if (length(dot_idx) == 1) {
-      if (dot_idx == 1 || dot_idx == length(parts)) {
-        stop("Destructuring '.' must appear between head and rest")
-      }
-      if (dot_idx != length(parts) - 1) {
-        stop("Destructuring '.' must be followed by a single rest pattern")
-      }
-      head_patterns <- parts[1:(dot_idx - 1)]
-      rest_pattern <- parts[[dot_idx + 1]]
-      if (length(value_list) < length(head_patterns)) {
-        stop(sprintf(
-          "Destructuring pattern expects at least %d item(s), got %d",
-          length(head_patterns),
-          length(value_list)
-        ))
-      }
-      for (i in seq_along(head_patterns)) {
-        rye_destructure_bind(head_patterns[[i]], value_list[[i]], env, mode)
-      }
-      rest_values <- if (length(value_list) > length(head_patterns)) {
-        value_list[(length(head_patterns) + 1):length(value_list)]
-      } else {
-        list()
-      }
-      rye_destructure_bind(rest_pattern, rest_values, env, mode)
-      return(invisible(NULL))
-    }
-    if (length(value_list) != length(parts)) {
-      stop(sprintf(
-        "Destructuring pattern expects %d item(s), got %d",
-        length(parts),
-        length(value_list)
-      ))
-    }
-    for (i in seq_along(parts)) {
-      rye_destructure_bind(parts[[i]], value_list[[i]], env, mode)
-    }
-    return(invisible(NULL))
-  }
-  stop("Invalid destructuring pattern")
-}
 
 rye_resolve_stdlib_path <- function(name) {
   if (!is.character(name) || length(name) != 1) {
@@ -536,27 +148,9 @@ rye_resolve_module_path <- function(name) {
   NULL
 }
 
-#' Load and evaluate a Rye source file
-#'
-#' Reads a `.rye` file, parses it, and evaluates each expression in order.
-#'
-#' @param path Path to a Rye source file
-#' @param env Environment in which to evaluate the file
-#' @return The result of the final expression in the file
-#' @examples
-#' tmp <- tempfile(fileext = ".rye")
-#' writeLines("(+ 1 2)", tmp)
-#' rye_load_file(tmp)
-#' @export
+# Internal wrapper for default engine file loading.
 rye_load_file <- function(path, env = parent.frame()) {
-  if (!is.character(path) || length(path) != 1) {
-    stop("load requires a single file path string")
-  }
-  if (!file.exists(path)) {
-    stop(sprintf("File not found: %s", path))
-  }
-  text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-  rye_eval_text(text, env, source_name = path)
+  rye_default_engine()$load_file(path, env)
 }
 
 rye_error <- function(message, src_stack = list(), r_stack = list()) {
@@ -566,80 +160,40 @@ rye_error <- function(message, src_stack = list(), r_stack = list()) {
   )
 }
 
-rye_with_error_context <- function(fn) {
-  prev_stack <- rye_src_stack_get()
+rye_with_error_context <- function(fn, tracker = NULL) {
+  if (is.null(tracker)) {
+    tracker <- rye_default_engine()$source_tracker
+  }
+  prev_stack <- tracker$get()
   on.exit({
-    .rye_error_state$src_stack <- prev_stack
+    tracker$reset()
+    if (!is.null(prev_stack) && length(prev_stack) > 0) {
+      for (src in prev_stack) {
+        tracker$push(src)
+      }
+    }
   }, add = TRUE)
-  rye_src_stack_reset()
+  tracker$reset()
   tryCatch(
     fn(),
     error = function(e) {
       if (inherits(e, "rye_error")) {
         stop(e)
       }
-      cond <- rye_error(conditionMessage(e), rye_src_stack_get(), sys.calls())
+      cond <- rye_error(conditionMessage(e), tracker$get(), sys.calls())
       stop(cond)
     }
   )
 }
 
 rye_format_src <- function(src) {
-  if (is.null(src)) {
-    return(NULL)
-  }
-  file <- src$file
-  if (is.null(file) || !is.character(file) || length(file) != 1 || !nzchar(file)) {
-    file <- "<input>"
-  }
-  start <- paste0(src$start_line, ":", src$start_col)
-  end <- paste0(src$end_line, ":", src$end_col)
-  if (identical(start, end)) {
-    return(paste0(file, ":", start))
-  }
-  paste0(file, ":", start, "-", end)
+  rye_default_engine()$source_tracker$format_src(src)
 }
 
 rye_format_error <- function(e, include_r_stack = TRUE) {
-  lines <- c(paste0("Error: ", conditionMessage(e)))
-  if (inherits(e, "rye_error")) {
-    src_stack <- e$src_stack
-    if (!is.null(src_stack) && length(src_stack) > 0) {
-      loc <- rye_format_src(src_stack[[length(src_stack)]])
-      if (!is.null(loc)) {
-        lines <- c(lines, paste0("Location: ", loc))
-      }
-      if (length(src_stack) > 1) {
-        lines <- c(lines, "Rye stack:")
-        for (src in rev(src_stack)) {
-          loc <- rye_format_src(src)
-          if (!is.null(loc)) {
-            lines <- c(lines, paste0("  at ", loc))
-          }
-        }
-      }
-    }
-    if (isTRUE(include_r_stack)) {
-      r_stack <- e$r_stack
-      if (!is.null(r_stack) && length(r_stack) > 0) {
-        lines <- c(lines, "R stack:")
-        max_frames <- 20
-        calls <- r_stack
-        if (length(calls) > max_frames) {
-          calls <- utils::tail(calls, max_frames)
-        }
-        for (call in rev(calls)) {
-          lines <- c(lines, paste0("  ", paste(deparse(call), collapse = "")))
-        }
-        if (length(r_stack) > max_frames) {
-          lines <- c(lines, "  ...")
-        }
-      }
-    }
-  }
-  paste(lines, collapse = "\n")
+  rye_default_engine()$source_tracker$format_error(e, include_r_stack = include_r_stack)
 }
 
 rye_print_error <- function(e, file = stderr()) {
-  cat(rye_format_error(e), "\n", sep = "", file = file)
+  rye_default_engine()$source_tracker$print_error(e, file = file)
 }

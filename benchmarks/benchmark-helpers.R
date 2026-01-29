@@ -1,18 +1,17 @@
 # Benchmark Infrastructure Helpers
 # Helper functions for running benchmarks and profiling Rye components
 
-#' Evaluate Rye code from text (wrapper for non-exported function)
+#' Evaluate Rye code from text using an engine
 #'
 #' @param text Rye code as string
-#' @param env Environment to evaluate in
+#' @param engine RyeEngine instance
+#' @param env Environment to evaluate in (defaults to engine env)
 #' @return Result of last expression
-eval_text <- function(text, env) {
-  exprs <- rye::rye_read(text)
-  result <- NULL
-  for (expr in exprs) {
-    result <- rye::rye_eval(expr, env)
+eval_text <- function(text, engine, env = NULL) {
+  if (is.null(env)) {
+    env <- engine$env$env
   }
-  result
+  engine$eval_text(text, env)
 }
 
 #' Benchmark a component with standard settings

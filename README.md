@@ -51,7 +51,9 @@ devtools::load_all()
 library(rye)
 
 # Start the REPL
-rye_repl()
+engine <- RyeEngine$new()
+engine$load_stdlib()
+engine$repl()
 ```
 
 ## Command Line

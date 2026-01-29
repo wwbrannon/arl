@@ -17,7 +17,7 @@
 # ```r
 # Translate a Rye AST expression to R code
 #
-# @param expr A parsed Rye expression (from rye_parse)
+# @param expr A parsed Rye expression (from engine$parse)
 # @param indent Current indentation level (used internally)
 # @return A character string containing R code
 # @keywords internal

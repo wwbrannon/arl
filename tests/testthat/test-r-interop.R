@@ -1,3 +1,5 @@
+engine <- new_engine()
+
 test_that("named arguments work with keywords", {
   env <- new.env()
 
@@ -7,7 +9,7 @@ test_that("named arguments work with keywords", {
   }
 
   # Call with keyword argument
-  result <- rye_eval(rye_read("(test_fn 1 :c 30)")[[1]], env)
+  result <- engine$eval(engine$read("(test_fn 1 :c 30)")[[1]], env)
 
   expect_equal(result$a, 1)
   expect_equal(result$b, 10)  # default value
@@ -21,7 +23,7 @@ test_that("multiple keyword arguments", {
     list(a = a, b = b, c = c, d = d)
   }
 
-  result <- rye_eval(rye_read("(test_fn :b 20 :d 40)")[[1]], env)
+  result <- engine$eval(engine$read("(test_fn :b 20 :d 40)")[[1]], env)
 
   expect_equal(result$a, 1)   # default
   expect_equal(result$b, 20)  # keyword
@@ -36,7 +38,7 @@ test_that("mixing positional and keyword arguments", {
     list(a = a, b = b, c = c)
   }
 
-  result <- rye_eval(rye_read("(test_fn 10 20 :c 30)")[[1]], env)
+  result <- engine$eval(engine$read("(test_fn 10 20 :c 30)")[[1]], env)
 
   expect_equal(result$a, 10)
   expect_equal(result$b, 20)
@@ -47,7 +49,7 @@ test_that("dollar operator for list access", {
   env <- new.env()
   env$mylist <- list(x = 10, y = 20)
 
-  result <- rye_eval(rye_read("($ mylist 'x)")[[1]], env)
+  result <- engine$eval(engine$read("($ mylist 'x)")[[1]], env)
   expect_equal(result, 10)
 })
 
@@ -55,7 +57,7 @@ test_that("bracket operator for vector access", {
   env <- new.env()
   env$vec <- c(10, 20, 30, 40)
 
-  result <- rye_eval(rye_read("([ vec 2)")[[1]], env)
+  result <- engine$eval(engine$read("([ vec 2)")[[1]], env)
   expect_equal(result, 20)
 })
 
@@ -63,7 +65,7 @@ test_that("double bracket operator for list extraction", {
   env <- new.env()
   env$mylist <- list(a = 1, b = 2, c = 3)
 
-  result <- rye_eval(rye_read('([[ mylist "b")')[[1]], env)
+  result <- engine$eval(engine$read('([[ mylist "b")')[[1]], env)
   expect_equal(result, 2)
 })
 
@@ -73,7 +75,7 @@ test_that("tilde operator for formulas", {
   env$y <- 1:10
   env$x <- 1:10
 
-  result <- rye_eval(rye_read("(~ y x)")[[1]], env)
+  result <- engine$eval(engine$read("(~ y x)")[[1]], env)
 
   expect_true(inherits(result, "formula"))
   expect_equal(as.character(result), c("~", "y", "x"))
@@ -86,7 +88,7 @@ test_that("lm with formula and data argument", {
   env$df <- data.frame(x = 1:10, y = 2 * (1:10) + rnorm(10))
 
   # Fit linear model
-  result <- rye_eval(rye_read("(lm (~ y x) :data df)")[[1]], env)
+  result <- engine$eval(engine$read("(lm (~ y x) :data df)")[[1]], env)
 
   expect_true(inherits(result, "lm"))
   expect_equal(length(coef(result)), 2)
@@ -94,7 +96,7 @@ test_that("lm with formula and data argument", {
 
 test_that("R functions with named arguments", {
   # Test seq with named arguments
-  result <- rye_eval(rye_read("(seq :from 1 :to 10 :by 2)")[[1]])
+  result <- engine$eval(engine$read("(seq :from 1 :to 10 :by 2)")[[1]])
 
   expect_equal(result, seq(from = 1, to = 10, by = 2))
 })
@@ -107,7 +109,7 @@ test_that("plot with named arguments would work", {
   env$y <- 1:10
 
   # This should parse without error
-  expr <- rye_read("(plot x y :main \"Test Plot\" :col \"red\")")[[1]]
+  expr <- engine$read("(plot x y :main \"Test Plot\" :col \"red\")")[[1]]
   expect_true(is.call(expr))
 
   # We won't actually run plot to avoid creating graphics in tests

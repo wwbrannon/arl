@@ -3,6 +3,8 @@
 
 library(rye)
 
+engine <- RyeEngine$new()
+
 # Source helpers (works from different working directories)
 if (file.exists("benchmarks/benchmark-helpers.R")) {
   source("benchmarks/benchmark-helpers.R")
@@ -27,7 +29,7 @@ cat("=== Profiling Evaluator ===\n\n")
 # Set up environment
 setup_env <- function() {
   env <- new.env(parent = baseenv())
-  rye_load_stdlib(env)
+  engine$load_stdlib(env)
   env
 }
 
@@ -40,11 +42,11 @@ eval_text('
   (if (< n 2)
     n
     (+ (fib (- n 1)) (fib (- n 2))))))
-', env1)
+', engine, env1)
 
 profile_component({
   for (i in 1:20) {
-    rye_eval(rye_read("(fib 15)")[[1]], env1)
+    engine$eval(engine$read("(fib 15)")[[1]], env1)
   }
 }, "eval-fibonacci")
 
@@ -56,11 +58,11 @@ env2 <- setup_env()
 eval_text('
 (define sum-many (lambda (a b c d e f g h i j k l m n o p q r s t)
   (+ a b c d e f g h i j k l m n o p q r s t)))
-', env2)
+', engine, env2)
 
 profile_component({
   for (i in 1:1000) {
-    rye_eval(rye_read("(sum-many 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)")[[1]], env2)
+    engine$eval(engine$read("(sum-many 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)")[[1]], env2)
   }
 }, "eval-many-args")
 
@@ -72,11 +74,11 @@ env3 <- setup_env()
 eval_text('
 (define inc (lambda (x) (+ x 1)))
 (define list1000 (range 1 1000))
-', env3)
+', engine, env3)
 
 profile_component({
   for (i in 1:20) {
-    rye_eval(rye_read("(map inc list1000)")[[1]], env3)
+    engine$eval(engine$read("(map inc list1000)")[[1]], env3)
   }
 }, "eval-map")
 
@@ -88,12 +90,12 @@ env4 <- setup_env()
 eval_text('
 (define make-adder (lambda (n)
   (lambda (x) (+ x n))))
-', env4)
+', engine, env4)
 
 profile_component({
   for (i in 1:1000) {
     # Call closure by evaluating the full expression
-    rye_eval(rye_read("((make-adder 10) 5)")[[1]], env4)
+    engine$eval(engine$read("((make-adder 10) 5)")[[1]], env4)
   }
 }, "eval-closures")
 
@@ -107,7 +109,7 @@ if (length(real_workloads) > 0 && "quicksort" %in% names(real_workloads)) {
 
   profile_component({
     for (i in 1:20) {
-      eval_text(real_workloads$quicksort, env6)
+      eval_text(real_workloads$quicksort, engine, env6)
     }
   }, "eval-quicksort")
 
@@ -121,7 +123,7 @@ env7 <- setup_env()
 
 profile_component({
   for (i in 1:5000) {
-    rye_eval(rye_read("(+ (+ 1 2) (+ 3 4))")[[1]], env7)
+    engine$eval(engine$read("(+ (+ 1 2) (+ 3 4))")[[1]], env7)
   }
 }, "eval-cps-overhead")
 

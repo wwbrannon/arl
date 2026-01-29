@@ -1,3 +1,5 @@
+engine <- new_engine()
+
 test_that("factorial function works", {
   env <- new.env()
 
@@ -10,18 +12,18 @@ test_that("factorial function works", {
           (* n (factorial (- n 1))))))
   "
 
-  rye_eval(rye_read(factorial_def)[[1]], env)
+  engine$eval(engine$read(factorial_def)[[1]], env)
 
   # Test factorial
-  result <- rye_eval(rye_read("(factorial 5)")[[1]], env)
+  result <- engine$eval(engine$read("(factorial 5)")[[1]], env)
   expect_equal(result, 120)
 
-  result <- rye_eval(rye_read("(factorial 0)")[[1]], env)
+  result <- engine$eval(engine$read("(factorial 0)")[[1]], env)
   expect_equal(result, 1)
 
-  result <- rye_eval(rye_read("(factorial 1)")[[1]], env)
+  result <- engine$eval(engine$read("(factorial 1)")[[1]], env)
   expect_equal(result, 1)
 
-  result <- rye_eval(rye_read("(factorial 10)")[[1]], env)
+  result <- engine$eval(engine$read("(factorial 10)")[[1]], env)
   expect_equal(result, 3628800)
 })

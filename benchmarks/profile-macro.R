@@ -3,6 +3,8 @@
 
 library(rye)
 
+engine <- RyeEngine$new()
+
 # Source helpers (works from different working directories)
 if (file.exists("benchmarks/benchmark-helpers.R")) {
   source("benchmarks/benchmark-helpers.R")
@@ -27,7 +29,7 @@ cat("=== Profiling Macro Expansion ===\n\n")
 # Set up environment with macros
 setup_macro_env <- function() {
   env <- new.env(parent = baseenv())
-  rye_load_stdlib(env)
+  engine$load_stdlib(env)
   env
 }
 
@@ -38,13 +40,13 @@ env1 <- setup_macro_env()
 eval_text('
 (defmacro complex (x . rest)
   `(list ,x ,@rest (+ ,x 1) ,@rest))
-', env1)
+', engine, env1)
 
-complex_expr <- rye_read("(complex 1 2 3 4 5)")[[1]]
+complex_expr <- engine$read("(complex 1 2 3 4 5)")[[1]]
 
 profile_component({
   for (i in 1:1000) {
-    rye_macroexpand(complex_expr, env1)
+    engine$macroexpand(complex_expr, env1)
   }
 }, "macro-complex-quasiquote")
 
@@ -62,13 +64,13 @@ eval_text('
 
 (defmacro inner (x)
   `(+ ,x 1))
-', env2)
+', engine, env2)
 
-nested_expr <- rye_read("(outer (outer (outer 42)))")[[1]]
+nested_expr <- engine$read("(outer (outer (outer 42)))")[[1]]
 
 profile_component({
   for (i in 1:1000) {
-    rye_macroexpand(nested_expr, env2)
+    engine$macroexpand(nested_expr, env2)
   }
 }, "macro-nested")
 
@@ -81,13 +83,13 @@ eval_text('
 (defmacro let-like (bindings . body)
   `((lambda ,(map car bindings) ,@body)
     ,@(map (lambda (b) (car (cdr b))) bindings)))
-', env3)
+', engine, env3)
 
-hygiene_expr <- rye_read("(let-like ((x 1) (y 2) (z 3) (a 4) (b 5)) (+ x y z a b))")[[1]]
+hygiene_expr <- engine$read("(let-like ((x 1) (y 2) (z 3) (a 4) (b 5)) (+ x y z a b))")[[1]]
 
 profile_component({
   for (i in 1:500) {
-    rye_macroexpand(hygiene_expr, env3)
+    engine$macroexpand(hygiene_expr, env3)
   }
 }, "macro-hygiene")
 
@@ -100,17 +102,17 @@ if (length(real_workloads) > 0 && "macro_examples" %in% names(real_workloads)) {
   env4 <- setup_macro_env()
   tryCatch({
     # Load stdlib (exported function)
-    rye_load_stdlib(env4)
+    engine$load_stdlib(env4)
   }, error = function(e) {
     message("Could not load stdlib modules: ", e$message)
   })
 
   profile_component({
     for (i in 1:20) {
-      exprs <- rye_read(real_workloads$macro_examples)
+      exprs <- engine$read(real_workloads$macro_examples)
       for (expr in exprs) {
         tryCatch({
-          rye_eval(expr, env4)
+          engine$eval(expr, env4)
         }, error = function(e) {
           # Ignore errors in profiling
         })
@@ -134,11 +136,11 @@ eval_text('
 # Large body with many expressions
 large_body_exprs <- paste(sprintf("(+ %d %d)", seq_len(50), seq_len(50) + 1), collapse = " ")
 large_body <- paste0("(when #t ", large_body_exprs, ")")
-large_body_expr <- rye_read(large_body)[[1]]
+large_body_expr <- engine$read(large_body)[[1]]
 
 profile_component({
   for (i in 1:500) {
-    rye_macroexpand(large_body_expr, env5)
+    engine$macroexpand(large_body_expr, env5)
   }
 }, "macro-tree-walk")
 

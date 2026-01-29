@@ -1,13 +1,26 @@
-o) Can we rewrite any of the current code in rye? Any functionality that can be streamlined?
-* Stdlib
-
 o) performance optimizations: use profiling and benchmarking
-    o) other things
 
 o) Look for any R code that’s left over or not used
-
 o) Look for any R code that can be refactored to make it simpler
 
 o) How to calculate test coverage of .rye code
 
 o) More tests for .rye code
+
+rye> translate-str
+Error: cannot coerce type 'closure' to vector of type 'character'
+
+o) remove translate R api
+
+o) translate doesn't correctly backtick-quote bad idents
+
+o) too many functions left around being called from these new classes that implement basically all functionality, defeats the purpose
+
+o) the cli, repl, help might benefit from oo refactoring
+
+o) functions like rye_parse should not refer to a default env, that entangles evaluation with a different engine instance
+o) rather the rye_load_stdlib function should become a method of one of the classes
+o) gensym should also be local to the macroexpander for closely related reasons, right now it's package-global state and doesn't behave reasonably in the context of multiple engine instances
+o) do we still need the globals.R file?
+o) split new classes into multiple files
+o) this default engine stuff is bad, certainly when used in these functions internally

@@ -121,35 +121,35 @@ cli_print_version <- function() {
 }
 
 cli_load_env <- function() {
-  env <- new.env(parent = .GlobalEnv)
-  rye_load_stdlib(env)
-  env
+  engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
+  engine$load_stdlib()
+  engine
 }
 
-cli_eval_exprs <- function(exprs, env) {
+cli_eval_exprs <- function(exprs, engine) {
   rye_eval_and_maybe_print(
-    function() rye_eval_exprs(exprs, env),
-    env,
+    function() engine$eval_exprs(exprs, engine_env(engine)),
+    engine_env(engine),
     on_error = function(e) {
       cli_print_error(e)
       quit(save = "no", status = 1)
     },
     printer = function(result, env) {
-      cat(rye_env_format_value(env, result), "\n", sep = "")
+      cat(engine$env$format_value(result), "\n", sep = "")
     }
   )
 }
 
-cli_eval_text <- function(text, env, source_name = "<cli>") {
+cli_eval_text <- function(text, engine, source_name = "<cli>") {
   rye_eval_and_maybe_print(
-    function() rye_eval_text(text, env, source_name = source_name),
-    env,
+    function() engine$eval_text(text, engine_env(engine), source_name = source_name),
+    engine_env(engine),
     on_error = function(e) {
       cli_print_error(e)
       quit(save = "no", status = 1)
     },
     printer = function(result, env) {
-      cat(rye_env_format_value(env, result), "\n", sep = "")
+      cat(engine$env$format_value(result), "\n", sep = "")
     }
   )
 }
@@ -214,10 +214,10 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   if (parsed$action == "repl") {
     if (!cli_isatty()) {
-      env <- cli_load_env()
+      engine <- cli_load_env()
       text <- paste(cli_read_stdin(), collapse = "\n")
       if (rye_trimws_shim(text) != "") { # nolint: object_usage_linter
-        cli_eval_text(text, env, source_name = "<stdin>")
+        cli_eval_text(text, engine, source_name = "<stdin>")
       }
       return(invisible(NULL))
     }
@@ -225,7 +225,7 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
     return(invisible(NULL))
   }
 
-  env <- cli_load_env()
+  engine <- cli_load_env()
 
   if (parsed$action == "file") {
     for (path in parsed$files) {
@@ -236,21 +236,21 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
     }
     for (path in parsed$files) {
       result <- tryCatch(
-        rye_load_file(path, env),
+        engine$load_file(path, engine_env(engine)),
         error = function(e) {
           cli_print_error(e)
           quit(save = "no", status = 1)
         }
       )
       if (!is.null(result)) {
-        cat(rye_env_format_value(env, result), "\n", sep = "")
+        cat(engine$env$format_value(result), "\n", sep = "")
       }
     }
     return(invisible(NULL))
   }
 
   if (parsed$action == "eval") {
-    cli_eval_text(parsed$expr, env, source_name = "<cli>")
+    cli_eval_text(parsed$expr, engine, source_name = "<cli>")
     return(invisible(NULL))
   }
 

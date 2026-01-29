@@ -15,7 +15,9 @@ Description: Rye is a Lisp dialect implemented in and with access to R,
     been tested.
 License: MIT + file LICENSE
 Depends:
-    R (>= 3.0.2)
+    R (>= 3.6)
+Imports:
+    R6 (>= 2.5.0)
 Suggests:
     testthat (>= 3.0.0),
     covr (>= 3.6.0),

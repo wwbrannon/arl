@@ -184,8 +184,9 @@ rye_help <- function(topic, env = parent.frame()) {
   }
 
   macro_symbol <- as.symbol(topic)
-  if (is_macro(macro_symbol, env = env)) {
-    macro_fn <- get_macro(macro_symbol, env = env)
+  macro_expander <- rye_default_engine()$macro_expander
+  if (macro_expander$is_macro(macro_symbol, env = env)) {
+    macro_fn <- macro_expander$get_macro(macro_symbol, env = env)
     macro_doc <- attr(macro_fn, "rye_doc", exact = TRUE)
     usage <- rye_help_usage_from_macro(macro_fn, topic)
     if (!is.null(macro_doc)) {

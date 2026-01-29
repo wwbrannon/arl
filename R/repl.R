@@ -104,7 +104,7 @@ repl_input_line <- function(prompt) {
   line
 }
 
-repl_read_form <- function(input_fn = repl_input_line, prompt = "rye> ", cont_prompt = "...> ") {
+repl_read_form <- function(input_fn = repl_input_line, prompt = "rye> ", cont_prompt = "...> ", engine = NULL) {
   override <- getOption("rye.repl_read_form_override", NULL)
   if (!is.null(override)) {
     if (is.function(override)) {
@@ -129,7 +129,7 @@ repl_read_form <- function(input_fn = repl_input_line, prompt = "rye> ", cont_pr
     text <- paste(buffer, collapse = "\n")
 
     parsed <- tryCatch(
-      rye_read(text, source_name = "<repl>"),
+      engine$read(text, source_name = "<repl>"),
       error = function(e) e
     )
 
@@ -144,44 +144,40 @@ repl_read_form <- function(input_fn = repl_input_line, prompt = "rye> ", cont_pr
   }
 }
 
-repl_eval_exprs <- function(exprs, env) {
-  rye_eval_exprs(exprs, env)
+repl_eval_exprs <- function(exprs, engine, env) {
+  engine$eval_exprs(exprs, env)
 }
 
-repl_eval_and_print_exprs <- function(exprs, env) {
+repl_eval_and_print_exprs <- function(exprs, engine, env) {
   rye_with_error_context(function() {
     result <- NULL
     for (expr in exprs) {
-      result <- rye_eval(expr, env)
-      repl_print_value(result, env)
+      result <- engine$eval(expr, env)
+      repl_print_value(result, engine)
     }
     invisible(result)
   })
 }
 
-repl_print_value <- function(value, env) {
+repl_print_value <- function(value, engine) {
   if (is.null(value)) {
     return(invisible(NULL))
   }
-  cat(rye_env_format_value(env, value), "\n", sep = "")
+  cat(engine$env$format_value(value), "\n", sep = "")
   invisible(value)
 }
 
-#' Start the Rye REPL (Read-Eval-Print Loop)
-#'
-#' Launches an interactive Rye session with command history.
-#'
-#' @examples
-#' if (interactive()) {
-#'   rye_repl()
-#' }
-#' @export
-rye_repl <- function() {
+# Internal REPL entrypoint (RyeEngine$repl delegates here).
+rye_repl <- function(engine = NULL) {
   cat(repl_version(), "\n", sep = "")
   cat("Type (quit) or press Ctrl+C to exit\n")
   cat("Builtin readline support:", ifelse(isTRUE(capabilities("readline")), "yes", "no"), "\n\n")
 
-  repl_env <- cli_load_env()
+  if (is.null(engine)) {
+    engine <- RyeEngine$new()
+    engine$load_stdlib()
+  }
+  repl_env <- engine_env(engine)
 
   history_path <- repl_history_path()
   repl_load_history(history_path)
@@ -189,7 +185,7 @@ rye_repl <- function() {
 
   repeat {
     form <- tryCatch(
-      repl_read_form(),
+      repl_read_form(engine = engine),
       error = function(e) {
         rye_print_error(e, file = stdout())
         list(error = TRUE)
@@ -212,7 +208,7 @@ rye_repl <- function() {
     repl_add_history(input_text)
 
     tryCatch({
-      repl_eval_and_print_exprs(form$exprs, repl_env)
+      repl_eval_and_print_exprs(form$exprs, engine, repl_env)
     }, error = function(e) {
       rye_print_error(e, file = stdout())
     })

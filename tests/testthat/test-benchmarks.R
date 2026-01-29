@@ -1,6 +1,8 @@
 # Test Benchmark Infrastructure
 # Smoke tests to ensure benchmark and profiling infrastructure works
 
+engine <- new_engine()
+
 # Helper to find benchmark directory
 find_bench_dir <- function() {
   # Try installed package first
@@ -57,10 +59,10 @@ test_that("workload generation produces valid Rye code", {
 
   # Workloads should be parseable
   micro <- create_workload("micro", "arithmetic")
-  expect_no_error(rye_read(micro))
+  expect_no_error(engine$read(micro))
 
   small <- create_workload("small", "arithmetic")
-  expect_no_error(rye_read(small))
+  expect_no_error(engine$read(small))
 })
 
 test_that("benchmark helper functions work", {
@@ -72,7 +74,7 @@ test_that("benchmark helper functions work", {
   source(file.path(bench_dir, "benchmark-helpers.R"), local = TRUE)
 
   # quick_time should work
-  result <- quick_time(rye_read("(+ 1 2)")[[1]], n = 5)
+  result <- quick_time(engine$read("(+ 1 2)")[[1]], n = 5)
   expect_type(result, "double")
   expect_gte(result, 0)  # May be 0 for very fast operations
 
@@ -152,8 +154,9 @@ test_that("profiling helper functions work", {
   # May fail in some environments due to profvis limitations
   output_path <- tryCatch({
     profile_component({
+      engine <- RyeEngine$new()
       for (i in 1:10) {
-        rye_read("(+ 1 2)")
+        engine$read("(+ 1 2)")
       }
     }, "test", temp_dir)
   }, error = function(e) {
@@ -354,7 +357,7 @@ test_that("real workloads can be loaded", {
       expect_gt(nchar(real[[workload_name]]), 0)
 
       # Should be valid Rye code
-      expect_no_error(rye_read(real[[workload_name]]))
+      expect_no_error(engine$read(real[[workload_name]]))
     }
   }
 })

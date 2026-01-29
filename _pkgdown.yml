@@ -12,21 +12,19 @@ home:
   description: A Lisp dialect implemented in and with access to R.
 
 reference:
-  - title: Evaluation and parsing
+  - title: Core engine
     contents:
-      - rye_read
-      - rye_tokenize
-      - rye_parse
-      - rye_eval
-      - rye_translate
-  - title: REPL and loading
-    contents:
-      - rye_repl
-      - rye_load_file
-      - rye_load_stdlib
+      - RyeEngine
+      - RyeEnv
+      - Tokenizer
+      - Parser
+      - MacroExpander
+      - Evaluator
+      - SourceTracker
+      - ModuleRegistry
+      - rye_default_engine
   - title: Macros
     contents:
-      - rye_macroexpand
       - gensym
 
 articles:

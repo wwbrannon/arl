@@ -5,12 +5,14 @@ library(rye)
 source("benchmarks/benchmark-helpers.R")
 source("benchmarks/workloads.R")
 
+engine <- RyeEngine$new()
+
 cat("=== Macro Benchmarks ===\n\n")
 
 # Set up environment with macros
 setup_macro_env <- function() {
   env <- new.env(parent = baseenv())
-  rye_load_stdlib(env)
+  engine$load_stdlib(env)
   env
 }
 
@@ -19,15 +21,15 @@ cat("Benchmark 1: Simple macro expansion\n")
 env1 <- setup_macro_env()
 
 # Define simple macro
-rye:::rye_eval_text('
+engine$eval_text('
 (defmacro simple (x)
   `(+ ,x 1))
 ', env1)
 
-simple_expr <- rye_read("(simple 42)")[[1]]
+simple_expr <- engine$read("(simple 42)")[[1]]
 
 bench_simple <- benchmark_component(
-  "Simple macro" = rye_macroexpand(simple_expr, env1),
+  "Simple macro" = engine$macroexpand(simple_expr, env1),
   iterations = 1000,
   check = FALSE
 )
@@ -38,15 +40,15 @@ cat("\n")
 cat("Benchmark 2: Complex quasiquote\n")
 env2 <- setup_macro_env()
 
-rye:::rye_eval_text('
+engine$eval_text('
 (defmacro complex (x . rest)
   `(list ,x ,@rest (+ ,x 1)))
 ', env2)
 
-complex_expr <- rye_read("(complex 1 2 3 4 5)")[[1]]
+complex_expr <- engine$read("(complex 1 2 3 4 5)")[[1]]
 
 bench_complex <- benchmark_component(
-  "Complex macro" = rye_macroexpand(complex_expr, env2),
+  "Complex macro" = engine$macroexpand(complex_expr, env2),
   iterations = 1000,
   check = FALSE
 )
@@ -57,7 +59,7 @@ cat("\n")
 cat("Benchmark 3: Nested macro expansion\n")
 env3 <- setup_macro_env()
 
-rye:::rye_eval_text('
+engine$eval_text('
 (defmacro outer (x)
   `(inner ,x))
 
@@ -65,10 +67,10 @@ rye:::rye_eval_text('
   `(+ ,x 1))
 ', env3)
 
-nested_expr <- rye_read("(outer (outer 42))")[[1]]
+nested_expr <- engine$read("(outer (outer 42))")[[1]]
 
 bench_nested <- benchmark_component(
-  "Nested macros" = rye_macroexpand(nested_expr, env3),
+  "Nested macros" = engine$macroexpand(nested_expr, env3),
   iterations = 1000,
   check = FALSE
 )
@@ -79,16 +81,16 @@ cat("\n")
 cat("Benchmark 4: Hygiene processing\n")
 env4 <- setup_macro_env()
 
-rye:::rye_eval_text('
+engine$eval_text('
 (defmacro let-macro (bindings . body)
   `((lambda ,(map car bindings) ,@body)
     ,@(map (lambda (b) (car (cdr b))) bindings)))
 ', env4)
 
-hygiene_expr <- rye_read("(let-macro ((x 1) (y 2)) (+ x y))")[[1]]
+hygiene_expr <- engine$read("(let-macro ((x 1) (y 2)) (+ x y))")[[1]]
 
 bench_hygiene <- benchmark_component(
-  "With hygiene" = rye_macroexpand(hygiene_expr, env4),
+  "With hygiene" = engine$macroexpand(hygiene_expr, env4),
   iterations = 1000,
   check = FALSE
 )
@@ -112,10 +114,10 @@ tryCatch({
       (else 3))))
 '
 
-  macro_heavy_exprs <- rye_read(macro_heavy)
+  macro_heavy_exprs <- engine$read(macro_heavy)
 
   bench_heavy <- benchmark_component(
-    "Macro-heavy" = lapply(macro_heavy_exprs, function(e) rye_macroexpand(e, env5)),
+    "Macro-heavy" = lapply(macro_heavy_exprs, function(e) engine$macroexpand(e, env5)),
     iterations = 500,
     check = FALSE
   )
@@ -134,9 +136,9 @@ if (length(real_workloads) > 0 && "macro_examples" %in% names(real_workloads)) {
 
   bench_real <- benchmark_component(
     "macro-examples.rye" = {
-      exprs <- rye_read(real_workloads$macro_examples)
+      exprs <- engine$read(real_workloads$macro_examples)
       for (expr in exprs) {
-        rye_eval(expr, env6)
+        engine$eval(expr, env6)
       }
     },
     iterations = 10,

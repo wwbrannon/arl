@@ -3,6 +3,8 @@
 
 library(rye)
 
+engine <- RyeEngine$new()
+
 # Source helpers (works from different working directories)
 if (file.exists("benchmarks/benchmark-helpers.R")) {
   source("benchmarks/benchmark-helpers.R")
@@ -30,7 +32,7 @@ large_string <- paste0('"', paste(rep("x", 10000), collapse = ""), '"')
 
 result <- profile_component({
   for (i in 1:100) {
-    rye_tokenize(large_string)
+    engine$tokenize(large_string)
   }
 }, "tokenizer-large-string")
 
@@ -44,7 +46,7 @@ nested_100 <- paste0(nested_100, "x", paste(rep(")", 100), collapse = ""))
 
 profile_component({
   for (i in 1:100) {
-    rye_tokenize(nested_100)
+    engine$tokenize(nested_100)
   }
 }, "tokenizer-deep-nesting")
 
@@ -56,7 +58,7 @@ real_workloads <- get_real_workloads()
 if (length(real_workloads) > 0 && "fibonacci" %in% names(real_workloads)) {
   profile_component({
     for (i in 1:100) {
-      rye_tokenize(real_workloads$fibonacci)
+      engine$tokenize(real_workloads$fibonacci)
     }
   }, "tokenizer-fibonacci")
 
@@ -70,7 +72,7 @@ many_escapes <- paste0('"', paste(rep('\\n\\t\\r\\"\\\\', 200), collapse = ""), 
 
 profile_component({
   for (i in 1:100) {
-    rye_tokenize(many_escapes)
+    engine$tokenize(many_escapes)
   }
 }, "tokenizer-escapes")
 
@@ -82,7 +84,7 @@ mixed_large <- paste(rep(mixed, 100), collapse = " ")
 
 profile_component({
   for (i in 1:50) {
-    rye_tokenize(mixed_large)
+    engine$tokenize(mixed_large)
   }
 }, "tokenizer-mixed")
 

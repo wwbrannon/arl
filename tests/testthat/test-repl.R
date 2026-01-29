@@ -1,3 +1,5 @@
+engine <- new_engine()
+
 make_repl_input <- function(lines) {
   i <- 0
   function(prompt = "") {
@@ -17,7 +19,7 @@ test_that("repl_is_incomplete_error detects incomplete parse errors", {
 
 test_that("repl_read_form collects multiline input", {
   input_fn <- make_repl_input(c("(+ 1", "2)"))
-  form <- rye:::repl_read_form(input_fn = input_fn)
+  form <- rye:::repl_read_form(input_fn = input_fn, engine = engine)
 
   expect_equal(form$text, "(+ 1\n2)")
   expect_length(form$exprs, 1)
@@ -25,7 +27,7 @@ test_that("repl_read_form collects multiline input", {
 
 test_that("repl_read_form skips leading blank lines", {
   input_fn <- make_repl_input(c("", "(+ 1 2)"))
-  form <- rye:::repl_read_form(input_fn = input_fn)
+  form <- rye:::repl_read_form(input_fn = input_fn, engine = engine)
 
   expect_equal(form$text, "(+ 1 2)")
   expect_length(form$exprs, 1)
@@ -33,24 +35,24 @@ test_that("repl_read_form skips leading blank lines", {
 
 test_that("repl_read_form surfaces non-incomplete parse errors", {
   input_fn <- make_repl_input(c(")"))
-  expect_error(rye:::repl_read_form(input_fn = input_fn), "Unexpected")
+  expect_error(rye:::repl_read_form(input_fn = input_fn, engine = engine), "Unexpected")
 })
 
 test_that("repl_read_form supports override option", {
   withr::local_options(list(
     rye.repl_read_form_override = function(...) list(text = "override", exprs = list(quote(1)))
   ))
-  form <- rye:::repl_read_form()
+  form <- rye:::repl_read_form(engine = engine)
   expect_equal(form$text, "override")
   expect_length(form$exprs, 1)
 
   withr::local_options(list(rye.repl_read_form_override = "static"))
-  expect_equal(rye:::repl_read_form(), "static")
+  expect_equal(rye:::repl_read_form(engine = engine), "static")
 })
 
 test_that("repl_read_form returns NULL on EOF", {
   input_fn <- function(...) NULL
-  expect_null(rye:::repl_read_form(input_fn = input_fn))
+  expect_null(rye:::repl_read_form(input_fn = input_fn, engine = engine))
 })
 
 # Version and History Path Functions ----
@@ -217,36 +219,36 @@ test_that("repl_print_value handles calls with str", {
 })
 
 test_that("repl_print_value handles lists with str", {
-  env <- rye:::cli_load_env()
+  engine <- rye:::cli_load_env()
   list_obj <- list(a = 1, b = 2)
-  output <- capture.output(val <- rye:::repl_print_value(list_obj, env))
+  output <- capture.output(val <- rye:::repl_print_value(list_obj, engine))
   expect_true(length(output) > 0)
   expect_equal(val, list_obj)
 })
 
 test_that("repl_print_value handles vectors with print", {
-  env <- rye:::cli_load_env()
-  output <- capture.output(val <- rye:::repl_print_value(c(1, 2, 3), env))
+  engine <- rye:::cli_load_env()
+  output <- capture.output(val <- rye:::repl_print_value(c(1, 2, 3), engine))
   expect_true(any(grepl("1.*2.*3", output)))
   expect_equal(val, c(1, 2, 3))
 })
 
 # Eval Wrapper Function ----
 
-test_that("repl_eval_exprs delegates to rye_eval_exprs", {
+test_that("repl_eval_exprs delegates to engine$eval_exprs", {
   env <- new.env()
-  exprs <- rye_read("(+ 1 2)")
-  result <- rye:::repl_eval_exprs(exprs, env)
+  exprs <- engine$read("(+ 1 2)")
+  result <- rye:::repl_eval_exprs(exprs, engine, env)
   expect_equal(result, 3)
 })
 
-# Main REPL Loop (rye_repl) ----
+# Main REPL Loop (engine$repl) ----
 
-test_that("rye_repl exits on (quit) command", {
+test_that("engine$repl exits on (quit) command", {
   output <- testthat::with_mocked_bindings(
-    capture.output(rye_repl()),
+    capture.output(engine$repl()),
     repl_read_form = function(...) {
-      list(text = "(quit)", exprs = rye_read("(quit)"))
+      list(text = "(quit)", exprs = engine$read("(quit)"))
     },
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
@@ -254,11 +256,11 @@ test_that("rye_repl exits on (quit) command", {
   expect_true(any(grepl("^Rye REPL", output)))
 })
 
-test_that("rye_repl exits on (exit) command", {
+test_that("engine$repl exits on (exit) command", {
   output <- testthat::with_mocked_bindings(
-    capture.output(rye_repl()),
+    capture.output(engine$repl()),
     repl_read_form = function(...) {
-      list(text = "(exit)", exprs = rye_read("(exit)"))
+      list(text = "(exit)", exprs = engine$read("(exit)"))
     },
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
@@ -266,11 +268,11 @@ test_that("rye_repl exits on (exit) command", {
   expect_true(any(grepl("^Rye REPL", output)))
 })
 
-test_that("rye_repl exits on quit command", {
+test_that("engine$repl exits on quit command", {
   output <- testthat::with_mocked_bindings(
-    capture.output(rye_repl()),
+    capture.output(engine$repl()),
     repl_read_form = function(...) {
-      list(text = "quit", exprs = rye_read("(list)"))
+      list(text = "quit", exprs = engine$read("(list)"))
     },
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
@@ -278,9 +280,9 @@ test_that("rye_repl exits on quit command", {
   expect_true(any(grepl("^Rye REPL", output)))
 })
 
-test_that("rye_repl exits on NULL from read_form", {
+test_that("engine$repl exits on NULL from read_form", {
   output <- testthat::with_mocked_bindings(
-    capture.output(rye_repl()),
+    capture.output(engine$repl()),
     repl_read_form = function(...) NULL,
     repl_can_use_history = function() FALSE,
     .env = asNamespace("rye")
@@ -288,10 +290,10 @@ test_that("rye_repl exits on NULL from read_form", {
   expect_true(any(grepl("^Rye REPL", output)))
 })
 
-test_that("rye_repl handles parse errors gracefully", {
+test_that("engine$repl handles parse errors gracefully", {
   call_count <- 0
   output <- testthat::with_mocked_bindings(
-    capture.output(rye_repl()),
+    capture.output(engine$repl()),
     repl_read_form = function(...) {
       call_count <<- call_count + 1
       if (call_count == 1) {
@@ -306,14 +308,14 @@ test_that("rye_repl handles parse errors gracefully", {
   expect_true(any(grepl("^Rye REPL", output)))
 })
 
-test_that("rye_repl evaluates expressions and prints results", {
+test_that("engine$repl evaluates expressions and prints results", {
   call_count <- 0
   output <- testthat::with_mocked_bindings(
-    capture.output(rye_repl()),
+    capture.output(engine$repl()),
     repl_read_form = function(...) {
       call_count <<- call_count + 1
       if (call_count == 1) {
-        list(text = "(+ 1 2)", exprs = rye_read("(+ 1 2)"))
+        list(text = "(+ 1 2)", exprs = engine$read("(+ 1 2)"))
       } else {
         NULL
       }
@@ -324,14 +326,14 @@ test_that("rye_repl evaluates expressions and prints results", {
   expect_true(any(grepl("3", output)))
 })
 
-test_that("rye_repl prints each expression result in input", {
+test_that("engine$repl prints each expression result in input", {
   call_count <- 0
   output <- testthat::with_mocked_bindings(
-    capture.output(rye_repl()),
+    capture.output(engine$repl()),
     repl_read_form = function(...) {
       call_count <<- call_count + 1
       if (call_count == 1) {
-        list(text = "1 + 2", exprs = rye_read("1 + 2"))
+        list(text = "1 + 2", exprs = engine$read("1 + 2"))
       } else {
         NULL
       }
@@ -342,14 +344,14 @@ test_that("rye_repl prints each expression result in input", {
   expect_true(any(grepl("1 \\+ 2", output)))
 })
 
-test_that("rye_repl handles evaluation errors gracefully", {
+test_that("engine$repl handles evaluation errors gracefully", {
   call_count <- 0
   output <- testthat::with_mocked_bindings(
-    capture.output(rye_repl()),
+    capture.output(engine$repl()),
     repl_read_form = function(...) {
       call_count <<- call_count + 1
       if (call_count == 1) {
-        list(text = "(undefined-fn)", exprs = rye_read("(undefined-fn)"))
+        list(text = "(undefined-fn)", exprs = engine$read("(undefined-fn)"))
       } else {
         NULL
       }

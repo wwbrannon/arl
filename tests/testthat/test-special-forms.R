@@ -1,41 +1,43 @@
+engine <- new_engine()
+
 test_that("quote returns unevaluated expression", {
-  result <- rye_eval(rye_read("(quote x)")[[1]])
+  result <- engine$eval(engine$read("(quote x)")[[1]])
   expect_true(is.symbol(result))
   expect_equal(as.character(result), "x")
 
-  result <- rye_eval(rye_read("(quote (+ 1 2))")[[1]])
+  result <- engine$eval(engine$read("(quote (+ 1 2))")[[1]])
   expect_true(is.call(result))
   expect_equal(as.character(result[[1]]), "+")
 })
 
 test_that("quote sugar works", {
-  result <- rye_eval(rye_read("'x")[[1]])
+  result <- engine$eval(engine$read("'x")[[1]])
   expect_true(is.symbol(result))
   expect_equal(as.character(result), "x")
 
-  result <- rye_eval(rye_read("'(+ 1 2)")[[1]])
+  result <- engine$eval(engine$read("'(+ 1 2)")[[1]])
   expect_true(is.call(result))
 })
 
 test_that("delay creates a promise", {
-  result <- rye_eval(rye_read("(delay (+ 1 2))")[[1]])
+  result <- engine$eval(engine$read("(delay (+ 1 2))")[[1]])
   expect_true(is.environment(result))
   expect_true(inherits(result, "rye_promise"))
 })
 
 test_that("promise? detects promises", {
-  env <- rye_load_stdlib()
-  result <- rye_eval(rye_read("(promise? (delay 1))")[[1]], env)
+  env <- engine$load_stdlib()
+  result <- engine$eval(engine$read("(promise? (delay 1))")[[1]], env)
   expect_true(isTRUE(result))
 
-  non_promise <- rye_eval(rye_read("(promise? 1)")[[1]], env)
+  non_promise <- engine$eval(engine$read("(promise? 1)")[[1]], env)
   expect_false(isTRUE(non_promise))
 })
 
 test_that("delay is lazy until forced", {
   env <- new.env()
-  rye_eval(
-    rye_read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  counter)")[[1]],
+  engine$eval(
+    engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  counter)")[[1]],
     env
   )
   expect_equal(env$counter, 0)
@@ -46,110 +48,110 @@ test_that("delay is lazy until forced", {
 
 
 test_that("if evaluates conditionally", {
-  result <- rye_eval(rye_read("(if #t 1 2)")[[1]])
+  result <- engine$eval(engine$read("(if #t 1 2)")[[1]])
   expect_equal(result, 1)
 
-  result <- rye_eval(rye_read("(if #f 1 2)")[[1]])
+  result <- engine$eval(engine$read("(if #f 1 2)")[[1]])
   expect_equal(result, 2)
 
-  result <- rye_eval(rye_read("(if #nil 1 2)")[[1]])
+  result <- engine$eval(engine$read("(if #nil 1 2)")[[1]])
   expect_equal(result, 2)
 })
 
 test_that("if with no else branch returns NULL", {
-  result <- rye_eval(rye_read("(if #f 1)")[[1]])
+  result <- engine$eval(engine$read("(if #f 1)")[[1]])
   expect_null(result)
 })
 
 test_that("if evaluates test expression", {
-  result <- rye_eval(rye_read("(if (> 5 3) 'yes 'no)")[[1]])
+  result <- engine$eval(engine$read("(if (> 5 3) 'yes 'no)")[[1]])
   expect_equal(as.character(result), "yes")
 
-  result <- rye_eval(rye_read("(if (< 5 3) 'yes 'no)")[[1]])
+  result <- engine$eval(engine$read("(if (< 5 3) 'yes 'no)")[[1]])
   expect_equal(as.character(result), "no")
 })
 
 test_that("define creates variables", {
   env <- new.env()
-  rye_eval(rye_read("(define x 42)")[[1]], env)
+  engine$eval(engine$read("(define x 42)")[[1]], env)
   expect_equal(env$x, 42)
 
-  rye_eval(rye_read("(define y (+ 1 2))")[[1]], env)
+  engine$eval(engine$read("(define y (+ 1 2))")[[1]], env)
   expect_equal(env$y, 3)
 })
 
 test_that("lambda creates functions", {
   env <- new.env()
-  rye_eval(rye_read("(define add (lambda (a b) (+ a b)))")[[1]], env)
+  engine$eval(engine$read("(define add (lambda (a b) (+ a b)))")[[1]], env)
   expect_true(is.function(env$add))
 
-  result <- rye_eval(rye_read("(add 3 4)")[[1]], env)
+  result <- engine$eval(engine$read("(add 3 4)")[[1]], env)
   expect_equal(result, 7)
 })
 
 test_that("lambda with no arguments", {
   env <- new.env()
-  rye_eval(rye_read("(define get-five (lambda () 5))")[[1]], env)
-  result <- rye_eval(rye_read("(get-five)")[[1]], env)
+  engine$eval(engine$read("(define get-five (lambda () 5))")[[1]], env)
+  result <- engine$eval(engine$read("(get-five)")[[1]], env)
   expect_equal(result, 5)
 })
 
 test_that("lambda supports default arguments", {
   env <- new.env()
-  rye_eval(rye_read("(define add-default (lambda ((x 10) (y 5)) (+ x y)))")[[1]], env)
-  expect_equal(rye_eval(rye_read("(add-default)")[[1]], env), 15)
-  expect_equal(rye_eval(rye_read("(add-default 2)")[[1]], env), 7)
-  expect_equal(rye_eval(rye_read("(add-default 2 3)")[[1]], env), 5)
+  engine$eval(engine$read("(define add-default (lambda ((x 10) (y 5)) (+ x y)))")[[1]], env)
+  expect_equal(engine$eval(engine$read("(add-default)")[[1]], env), 15)
+  expect_equal(engine$eval(engine$read("(add-default 2)")[[1]], env), 7)
+  expect_equal(engine$eval(engine$read("(add-default 2 3)")[[1]], env), 5)
 })
 
 test_that("lambda supports destructuring arguments", {
   env <- new.env()
-  rye_eval(rye_read("(define sum-pair (lambda ((pattern (a b))) (+ a b)))")[[1]], env)
-  expect_equal(rye_eval(rye_read("(sum-pair (list 2 3))")[[1]], env), 5)
+  engine$eval(engine$read("(define sum-pair (lambda ((pattern (a b))) (+ a b)))")[[1]], env)
+  expect_equal(engine$eval(engine$read("(sum-pair (list 2 3))")[[1]], env), 5)
 
-  rye_eval(rye_read("(define nested (lambda ((pattern (a (b c)))) (+ a (+ b c))))")[[1]], env)
-  expect_equal(rye_eval(rye_read("(nested (list 1 (list 2 3)))")[[1]], env), 6)
+  engine$eval(engine$read("(define nested (lambda ((pattern (a (b c)))) (+ a (+ b c))))")[[1]], env)
+  expect_equal(engine$eval(engine$read("(nested (list 1 (list 2 3)))")[[1]], env), 6)
 
-  rye_eval(rye_read("(define sum-default (lambda ((pattern (a b) (list 4 5))) (+ a b)))")[[1]], env)
-  expect_equal(rye_eval(rye_read("(sum-default)")[[1]], env), 9)
-  expect_equal(rye_eval(rye_read("(sum-default (list 1 2))")[[1]], env), 3)
+  engine$eval(engine$read("(define sum-default (lambda ((pattern (a b) (list 4 5))) (+ a b)))")[[1]], env)
+  expect_equal(engine$eval(engine$read("(sum-default)")[[1]], env), 9)
+  expect_equal(engine$eval(engine$read("(sum-default (list 1 2))")[[1]], env), 3)
 
-  rye_eval(rye_read("(define rest-pair (lambda (x . (pattern (a b))) (list x a b)))")[[1]], env)
-  expect_equal(rye_eval(rye_read("(rest-pair 1 2 3)")[[1]], env), list(1, 2, 3))
+  engine$eval(engine$read("(define rest-pair (lambda (x . (pattern (a b))) (list x a b)))")[[1]], env)
+  expect_equal(engine$eval(engine$read("(rest-pair 1 2 3)")[[1]], env), list(1, 2, 3))
 })
 
 test_that("lambda supports dotted rest arguments", {
   env <- new.env()
-  rye_eval(rye_read("(define count-rest (lambda (x . rest) (length rest)))")[[1]], env)
-  expect_equal(rye_eval(rye_read("(count-rest 1)")[[1]], env), 0)
-  expect_equal(rye_eval(rye_read("(count-rest 1 2 3 4)")[[1]], env), 3)
+  engine$eval(engine$read("(define count-rest (lambda (x . rest) (length rest)))")[[1]], env)
+  expect_equal(engine$eval(engine$read("(count-rest 1)")[[1]], env), 0)
+  expect_equal(engine$eval(engine$read("(count-rest 1 2 3 4)")[[1]], env), 3)
 })
 
 test_that("lambda with multiple body expressions", {
   env <- new.env()
-  rye_eval(rye_read("(define f (lambda (x) (define y 10) (+ x y)))")[[1]], env)
-  result <- rye_eval(rye_read("(f 5)")[[1]], env)
+  engine$eval(engine$read("(define f (lambda (x) (define y 10) (+ x y)))")[[1]], env)
+  result <- engine$eval(engine$read("(f 5)")[[1]], env)
   expect_equal(result, 15)
 })
 
 test_that("lambda captures environment", {
   env <- new.env()
-  rye_eval(rye_read("(define x 10)")[[1]], env)
-  rye_eval(rye_read("(define add-x (lambda (y) (+ x y)))")[[1]], env)
-  result <- rye_eval(rye_read("(add-x 5)")[[1]], env)
+  engine$eval(engine$read("(define x 10)")[[1]], env)
+  engine$eval(engine$read("(define add-x (lambda (y) (+ x y)))")[[1]], env)
+  result <- engine$eval(engine$read("(add-x 5)")[[1]], env)
   expect_equal(result, 15)
 })
 
 test_that("begin evaluates expressions in sequence", {
   env <- new.env()
-  result <- rye_eval(rye_read("(begin (define x 1) (define y 2) (+ x y))")[[1]], env)
+  result <- engine$eval(engine$read("(begin (define x 1) (define y 2) (+ x y))")[[1]], env)
   expect_equal(result, 3)
   expect_equal(env$x, 1)
   expect_equal(env$y, 2)
 })
 
 test_that("begin returns last expression", {
-  result <- rye_eval(rye_read("(begin 1 2 3)")[[1]])
+  result <- engine$eval(engine$read("(begin 1 2 3)")[[1]])
   expect_equal(result, 3)
 })
 
@@ -157,22 +159,22 @@ test_that("set! modifies existing bindings", {
   env <- new.env()
 
   # Define a variable
-  rye_eval(rye_read("(define x 10)")[[1]], env)
+  engine$eval(engine$read("(define x 10)")[[1]], env)
   expect_equal(env$x, 10)
 
   # Modify it with set!
-  rye_eval(rye_read("(set! x 20)")[[1]], env)
+  engine$eval(engine$read("(set! x 20)")[[1]], env)
   expect_equal(env$x, 20)
 
   # set! should error on undefined variable
   expect_error(
-    rye_eval(rye_read("(set! undefined-var 42)")[[1]], env),
+    engine$eval(engine$read("(set! undefined-var 42)")[[1]], env),
     "variable 'undefined-var' is not defined"
   )
 
   # set! in a lambda should modify parent scope
-  rye_eval(rye_read("(define y 5)")[[1]], env)
-  rye_eval(rye_read("(define f (lambda () (set! y 15)))")[[1]], env)
+  engine$eval(engine$read("(define y 5)")[[1]], env)
+  engine$eval(engine$read("(define f (lambda () (set! y 15)))")[[1]], env)
   expect_equal(env$y, 5)
   env$f()
   expect_equal(env$y, 15)

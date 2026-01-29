@@ -1,7 +1,10 @@
-import_stdlib_modules <- function(env, modules) {
+import_stdlib_modules <- function(engine, modules, env = NULL) {
+  if (is.null(env)) {
+    env <- engine_env(engine)
+  }
   for (module in modules) {
-    exprs <- rye_read(sprintf("(import %s)", module))
-    rye_eval(exprs[[1]], env)
+    exprs <- engine$read(sprintf("(import %s)", module))
+    engine$eval(exprs[[1]], env)
   }
   env
 }

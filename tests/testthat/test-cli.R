@@ -117,7 +117,8 @@ test_that("cli_print_version handles missing package version", {
 # Environment Loading ----
 
 test_that("cli_load_env creates environment with stdlib", {
-  env <- rye:::cli_load_env()
+  engine <- rye:::cli_load_env()
+  env <- engine_env(engine)
   expect_true(is.environment(env))
   expect_true(identical(parent.env(env), .GlobalEnv))
   expect_true(exists("map", envir = env))  # stdlib function
@@ -126,31 +127,31 @@ test_that("cli_load_env creates environment with stdlib", {
 # Evaluation Functions ----
 
 test_that("cli_eval_exprs prints non-NULL results", {
-  env <- rye:::cli_load_env()
-  exprs <- rye_read("(+ 1 2)")
-  output <- capture.output(result <- rye:::cli_eval_exprs(exprs, env))
+  engine <- rye:::cli_load_env()
+  exprs <- engine$read("(+ 1 2)")
+  output <- capture.output(result <- rye:::cli_eval_exprs(exprs, engine))
   expect_equal(result, 3)
   expect_true(any(grepl("3", output)))
 })
 
 test_that("cli_eval_exprs does not print NULL results", {
-  env <- rye:::cli_load_env()
-  exprs <- rye_read("(define x 5)")
-  output <- capture.output(result <- rye:::cli_eval_exprs(exprs, env))
+  engine <- rye:::cli_load_env()
+  exprs <- engine$read("(define x 5)")
+  output <- capture.output(result <- rye:::cli_eval_exprs(exprs, engine))
   expect_null(result)
   expect_length(output, 0)
 })
 
 test_that("cli_eval_text prints non-NULL results", {
-  env <- rye:::cli_load_env()
-  output <- capture.output(result <- rye:::cli_eval_text("(+ 2 3)", env))
+  engine <- rye:::cli_load_env()
+  output <- capture.output(result <- rye:::cli_eval_text("(+ 2 3)", engine))
   expect_equal(result, 5)
   expect_true(any(grepl("5", output)))
 })
 
 test_that("cli_eval_text does not print NULL results", {
-  env <- rye:::cli_load_env()
-  output <- capture.output(result <- rye:::cli_eval_text("(define y 10)", env))
+  engine <- rye:::cli_load_env()
+  output <- capture.output(result <- rye:::cli_eval_text("(define y 10)", engine))
   expect_null(result)
   expect_length(output, 0)
 })

@@ -1,75 +1,11 @@
-#' Load the Rye standard library
-#'
-#' Loads the base Rye stdlib functions and core Rye stdlib modules from
-#' the package's `inst/rye` directory.
-#'
-#' @details
-#' The returned environment uses `baseenv()` as its parent so that core R
-#' functions remain available alongside Rye helpers. Additional Rye stdlib
-#' modules can be loaded via `(import ...)`.
-#'
-#' @param env An environment to populate. If NULL, creates a new one.
-#' @return An environment containing the Rye standard library
-#' @examples
-#' env <- rye_load_stdlib()
-#' rye_eval(rye_read('(+ 1 2)'), env)
+# Internal stdlib loader (used by RyeEngine).
+#' @noRd
 #' @importFrom stats setNames
-#' @export
-rye_load_stdlib <- function(env = NULL) {
-  # Create environment with baseenv() as parent if not provided
-  # This gives automatic access to all R base functions
-  if (is.null(env)) {
-    env <- new.env(parent = baseenv())
+rye_load_stdlib <- function(env = NULL, engine = NULL) {
+  if (is.null(engine)) {
+    engine <- rye_default_engine()
   }
-
-  rye_env_module_registry(env, create = TRUE)
-  rye_env_macro_registry(env, create = TRUE)
-
-  # Core helpers implemented in R
-  env$apply <- rye_stdlib_apply
-
-  # Errors and debugging
-  # Error helpers provided by stdlib files
-  env$`try*` <- rye_stdlib_try
-
-  # Macro and eval helpers
-  env$gensym <- gensym
-  env$capture <- rye_capture
-  env$`macro?` <- function(x) { is.symbol(x) && is_macro(x, env=env) }
-  env$macroexpand <- rye_macroexpand
-  env$`macroexpand-1` <- rye_macroexpand_1
-  env$`macroexpand-all` <- rye_macroexpand
-  env$eval <- rye_stdlib_eval
-  env$`current-env` <- rye_stdlib_current_env
-  env$`promise?` <- rye_stdlib_promise_p
-  env$force <- rye_stdlib_force
-  env$rye_read <- rye_read
-  env$rye_parse <- rye_parse
-  env$rye_tokenize <- rye_tokenize
-
-  # Create r/call with closure that captures the stdlib environment
-  stdlib_env <- env
-  env$`r/call` <- function(fn, args = list()) {
-    fn_name <- if (is.symbol(fn)) {
-      as.character(fn)
-    } else if (is.character(fn)) {
-      fn
-    } else {
-      stop("r/call requires a symbol or string function name")
-    }
-    fn_obj <- rye_resolve_r_callable(fn_name, stdlib_env = stdlib_env, max_frames = 5)
-    rye_do_call(fn_obj, rye_as_list(args))
-  }
-  env$`r/eval` <- rye_stdlib_r_eval
-
-  # load the rest of the stdlib: rye code in files
-  loader_path <- rye_resolve_module_path('_stdlib_loader')
-  rye_eval(rye_read(sprintf('(load "%s")', loader_path))[[1]], env)
-
-  # Return the environment
-  # All R base functions (+, -, *, /, <, >, print, etc.) are automatically
-  # available via the parent environment chain
-  env
+  engine$load_stdlib(env)
 }
 
 rye_as_list <- function(x) {

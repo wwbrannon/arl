@@ -27,7 +27,9 @@ devtools::install()
 
 ```{r eval=FALSE}
 library(rye)
-rye_repl()
+engine <- RyeEngine$new()
+engine$load_stdlib()
+engine$repl()
 ```
 
 At the prompt, you can enter Rye expressions:
@@ -55,12 +57,14 @@ If you want to evaluate Rye inside an R script, you can parse and evaluate
 expressions directly:
 
 ```{r eval=FALSE}
-exprs <- rye_read("(define x 10) (+ x 5)")
-rye_eval(exprs[[1]])
-rye_eval(exprs[[2]])
+engine <- RyeEngine$new()
+engine$load_stdlib()
+exprs <- engine$read("(define x 10) (+ x 5)")
+engine$eval(exprs[[1]])
+engine$eval(exprs[[2]])
 ```
 
-If you have multiple expressions, `rye_eval_exprs()` will evaluate them
+If you have multiple expressions, `engine$eval_exprs()` will evaluate them
 sequentially and return the last value.
 
 ## Run Rye files
@@ -71,10 +75,12 @@ You can execute a file from the REPL using `load`:
 (load "script.rye")
 ```
 
-From R, use `rye_load_file()`:
+From R, use `engine$load_file()`:
 
 ```{r eval=FALSE}
-rye_load_file("script.rye")
+engine <- RyeEngine$new()
+engine$load_stdlib()
+engine$load_file("script.rye")
 ```
 
 ## Loading stdlib modules
