@@ -1,5 +1,6 @@
 # Help utilities for Rye
-rye_special_forms_help <- list(
+rye_specials_builtins_help <- list(
+  ## Special forms
   quote = list(
     usage = "(quote expr)",
     description = "Return expr without evaluation."
@@ -71,6 +72,17 @@ rye_special_forms_help <- list(
   `~` = list(
     usage = "(~ lhs rhs)",
     description = "Build an R formula without evaluating arguments."
+  ),
+
+  ## Builtin functions set directly in R/stdlib.R
+  macroexpand = list(
+    description = "Recursively expand macros in expr."
+  ),
+  `macroexpand-1` = list(
+    description = "Expand a single macro layer in expr."
+  ),
+  `macroexpand-all` = list(
+    description = "Recursively expand macros in expr."
   )
 )
 
@@ -165,7 +177,7 @@ rye_help <- function(topic, env = parent.frame()) {
     stop("help requires a symbol or string")
   }
 
-  doc <- rye_special_forms_help[[topic]]
+  doc <- rye_specials_builtins_help[[topic]]
   if (!is.null(doc)) {
     rye_help_print(topic, doc)
     return(invisible(NULL))

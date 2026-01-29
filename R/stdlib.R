@@ -35,16 +35,10 @@ rye_load_stdlib <- function(env = NULL) {
   # Macro and eval helpers
   env$gensym <- gensym
   env$capture <- rye_capture
-  env$`macro?` <- function(x) {
-    if (is.symbol(x)) {
-      is_macro(x, env = env)
-    } else {
-      FALSE
-    }
-  }
-  env$macroexpand <- rye_stdlib_macroexpand
-  env$`macroexpand-1` <- rye_stdlib_macroexpand_1
-  env$`macroexpand-all` <- rye_stdlib_macroexpand
+  env$`macro?` <- function(x) { is.symbol(x) && is_macro(x, env=env) }
+  env$macroexpand <- rye_macroexpand
+  env$`macroexpand-1` <- rye_macroexpand_1
+  env$`macroexpand-all` <- rye_macroexpand
   env$eval <- rye_stdlib_eval
   env$`current-env` <- rye_stdlib_current_env
   env$`promise?` <- rye_stdlib_promise_p
@@ -123,14 +117,6 @@ rye_stdlib_try <- function(thunk, error_handler = NULL, finally_handler = NULL) 
       error_handler(e)
     }
   )
-}
-
-rye_stdlib_macroexpand <- function(expr, env = parent.frame()) {
-  rye_macroexpand(expr, env)
-}
-
-rye_stdlib_macroexpand_1 <- function(expr, env = parent.frame()) {
-  rye_macroexpand_1(expr, env)
 }
 
 rye_stdlib_eval <- function(expr, env = parent.frame()) {
@@ -233,11 +219,20 @@ rye_stdlib_r_call <- function(fn, args = list()) {
 }
 
 rye_stdlib_promise_p <- function(x) {
-  rye_promise_p(x)
+  is.environment(x) && inherits(x, "rye_promise")
 }
 
 rye_stdlib_force <- function(x) {
-  rye_promise_force(x)
+  if (!rye_stdlib_promise_p(x)) {
+    return(x)
+  }
+  get(rye_promise_value_key, envir = x, inherits = FALSE)
+}
+
+#' @export
+print.rye_promise <- function(x, ...) {
+  cat("<promise>\n")
+  invisible(x)
 }
 
 attr(rye_stdlib_apply, "rye_doc") <- list(
@@ -245,12 +240,6 @@ attr(rye_stdlib_apply, "rye_doc") <- list(
 )
 attr(rye_stdlib_try, "rye_doc") <- list(
   description = "Evaluate thunk with error/finally handlers."
-)
-attr(rye_stdlib_macroexpand, "rye_doc") <- list(
-  description = "Recursively expand macros in expr."
-)
-attr(rye_stdlib_macroexpand_1, "rye_doc") <- list(
-  description = "Expand a single macro layer in expr."
 )
 attr(rye_stdlib_eval, "rye_doc") <- list(
   description = "Evaluate expr in the current environment."

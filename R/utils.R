@@ -240,23 +240,6 @@ rye_promise_new <- function(expr, env) {
   promise_env
 }
 
-rye_promise_p <- function(x) {
-  is.environment(x) && inherits(x, "rye_promise")
-}
-
-rye_promise_force <- function(x) {
-  if (!rye_promise_p(x)) {
-    return(x)
-  }
-  get(rye_promise_value_key, envir = x, inherits = FALSE)
-}
-
-#' @export
-print.rye_promise <- function(x, ...) {
-  cat("<promise>\n")
-  invisible(x)
-}
-
 rye_src_stack_get <- function() {
   .rye_error_state$src_stack
 }
