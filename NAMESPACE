@@ -2,6 +2,7 @@
 
 S3method(print,rye_promise)
 export(Evaluator)
+export(HelpSystem)
 export(MacroExpander)
 export(ModuleRegistry)
 export(Parser)

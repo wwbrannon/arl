@@ -23,6 +23,7 @@ Source tracking for errors
 \item \href{#method-SourceTracker-format_src}{\code{SourceTracker$format_src()}}
 \item \href{#method-SourceTracker-format_error}{\code{SourceTracker$format_error()}}
 \item \href{#method-SourceTracker-print_error}{\code{SourceTracker$print_error()}}
+\item \href{#method-SourceTracker-with_error_context}{\code{SourceTracker$with_error_context()}}
 \item \href{#method-SourceTracker-clone}{\code{SourceTracker$clone()}}
 }
 }
@@ -137,6 +138,15 @@ Source tracking for errors
 \subsection{Method \code{print_error()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SourceTracker$print_error(e, file = stderr())}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-SourceTracker-with_error_context"></a>}}
+\if{latex}{\out{\hypertarget{method-SourceTracker-with_error_context}{}}}
+\subsection{Method \code{with_error_context()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{SourceTracker$with_error_context(fn)}\if{html}{\out{</div>}}
 }
 
 }

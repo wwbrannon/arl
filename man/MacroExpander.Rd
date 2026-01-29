@@ -29,7 +29,7 @@ Macro expander
 \if{latex}{\out{\hypertarget{method-MacroExpander-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MacroExpander$new(env, source_tracker = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MacroExpander$new(env, source_tracker = NULL, evaluator = NULL)}\if{html}{\out{</div>}}
 }
 
 }

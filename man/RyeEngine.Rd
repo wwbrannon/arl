@@ -23,6 +23,7 @@ evaluation, and environment management.
 \item \href{#method-RyeEngine-load_stdlib}{\code{RyeEngine$load_stdlib()}}
 \item \href{#method-RyeEngine-macroexpand}{\code{RyeEngine$macroexpand()}}
 \item \href{#method-RyeEngine-macroexpand_1}{\code{RyeEngine$macroexpand_1()}}
+\item \href{#method-RyeEngine-help}{\code{RyeEngine$help()}}
 \item \href{#method-RyeEngine-repl}{\code{RyeEngine$repl()}}
 \item \href{#method-RyeEngine-translate}{\code{RyeEngine$translate()}}
 \item \href{#method-RyeEngine-clone}{\code{RyeEngine$clone()}}
@@ -142,6 +143,15 @@ evaluation, and environment management.
 \subsection{Method \code{macroexpand_1()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$macroexpand_1(expr, env = NULL, preserve_src = FALSE)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-help"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-help}{}}}
+\subsection{Method \code{help()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$help(topic, env = NULL)}\if{html}{\out{</div>}}
 }
 
 }

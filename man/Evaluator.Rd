@@ -20,6 +20,7 @@ Evaluator for Rye expressions
 \item \href{#method-Evaluator-apply}{\code{Evaluator$apply()}}
 \item \href{#method-Evaluator-quote_arg}{\code{Evaluator$quote_arg()}}
 \item \href{#method-Evaluator-do_call}{\code{Evaluator$do_call()}}
+\item \href{#method-Evaluator-promise_new}{\code{Evaluator$promise_new()}}
 \item \href{#method-Evaluator-apply_closure}{\code{Evaluator$apply_closure()}}
 \item \href{#method-Evaluator-eval_package_access}{\code{Evaluator$eval_package_access()}}
 \item \href{#method-Evaluator-build_special_forms}{\code{Evaluator$build_special_forms()}}
@@ -31,7 +32,7 @@ Evaluator for Rye expressions
 \if{latex}{\out{\hypertarget{method-Evaluator-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Evaluator$new(env, macro_expander, source_tracker)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Evaluator$new(env, macro_expander, source_tracker, engine = NULL)}\if{html}{\out{</div>}}
 }
 
 }
@@ -104,6 +105,15 @@ Evaluator for Rye expressions
 \subsection{Method \code{do_call()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Evaluator$do_call(fn, args)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Evaluator-promise_new"></a>}}
+\if{latex}{\out{\hypertarget{method-Evaluator-promise_new}{}}}
+\subsection{Method \code{promise_new()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Evaluator$promise_new(expr, env)}\if{html}{\out{</div>}}
 }
 
 }
