@@ -19,6 +19,7 @@ Macro expander
 \item \href{#method-MacroExpander-get_macro}{\code{MacroExpander$get_macro()}}
 \item \href{#method-MacroExpander-capture}{\code{MacroExpander$capture()}}
 \item \href{#method-MacroExpander-hygiene_unwrap}{\code{MacroExpander$hygiene_unwrap()}}
+\item \href{#method-MacroExpander-gensym}{\code{MacroExpander$gensym()}}
 \item \href{#method-MacroExpander-quasiquote}{\code{MacroExpander$quasiquote()}}
 \item \href{#method-MacroExpander-clone}{\code{MacroExpander$clone()}}
 }
@@ -92,6 +93,15 @@ Macro expander
 \subsection{Method \code{hygiene_unwrap()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MacroExpander$hygiene_unwrap(expr)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MacroExpander-gensym"></a>}}
+\if{latex}{\out{\hypertarget{method-MacroExpander-gensym}{}}}
+\subsection{Method \code{gensym()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MacroExpander$gensym(prefix = "G")}\if{html}{\out{</div>}}
 }
 
 }

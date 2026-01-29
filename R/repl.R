@@ -72,7 +72,7 @@ repl_add_history <- function(text) {
   if (!isTRUE(repl_history_state$enabled)) {
     return(invisible(NULL))
   }
-  if (rye_trimws_shim(text) == "") { # nolint: object_usage_linter
+  if (trimws(text) == "") { # nolint: object_usage_linter
     return(invisible(NULL))
   }
   add_history <- tryCatch(
@@ -121,7 +121,7 @@ repl_read_form <- function(input_fn = repl_input_line, prompt = "rye> ", cont_pr
     if (is.null(line)) {
       return(NULL)
     }
-    if (length(buffer) == 0 && rye_trimws_shim(line) == "") { # nolint: object_usage_linter
+    if (length(buffer) == 0 && trimws(line) == "") { # nolint: object_usage_linter
       next
     }
 
@@ -201,7 +201,7 @@ rye_repl <- function(engine = NULL) {
     }
 
     input_text <- form$text
-    if (rye_trimws_shim(input_text) %in% c("(quit)", "(exit)", "quit", "exit")) { # nolint: object_usage_linter
+    if (trimws(input_text) %in% c("(quit)", "(exit)", "quit", "exit")) { # nolint: object_usage_linter
       break
     }
 

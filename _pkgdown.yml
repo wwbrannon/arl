@@ -23,9 +23,9 @@ reference:
       - SourceTracker
       - ModuleRegistry
       - rye_default_engine
-  - title: Macros
-    contents:
-      - gensym
+  # - title: Macros  # FIXME?
+  #   contents:
+  #     - gensym
 
 articles:
   - title: Guides

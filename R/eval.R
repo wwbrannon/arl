@@ -2,11 +2,6 @@ rye_missing_default <- function() {
   structure(list(), class = "rye_missing_default")
 }
 
-# Internal wrapper for default engine evaluation.
-rye_eval <- function(expr, env = parent.frame()) {
-  rye_default_engine()$eval(expr, env)
-}
-
 #' Evaluator for Rye expressions
 #'
 #' @export

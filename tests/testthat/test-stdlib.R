@@ -679,7 +679,10 @@ test_that("call function converts lists to calls", {
 
   # Already a call should be returned as-is
   call_obj <- engine$read("(+ 1 2)")[[1]]
-  expect_equal(rye:::rye_strip_src(env$call(call_obj)), rye:::rye_strip_src(call_obj))
+  expect_equal(
+    engine$source_tracker$strip_src(env$call(call_obj)),
+    engine$source_tracker$strip_src(call_obj)
+  )
 })
 
 test_that("eval function evaluates Rye expressions", {

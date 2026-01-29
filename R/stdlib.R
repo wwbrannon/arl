@@ -1,13 +1,3 @@
-# Internal stdlib loader (used by RyeEngine).
-#' @noRd
-#' @importFrom stats setNames
-rye_load_stdlib <- function(env = NULL, engine = NULL) {
-  if (is.null(engine)) {
-    engine <- rye_default_engine()
-  }
-  engine$load_stdlib(env)
-}
-
 rye_as_list <- function(x) {
   if (is.call(x)) {
     return(as.list(x))

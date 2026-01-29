@@ -1,39 +1,3 @@
-test_that("rye_trimws_compat trims whitespace", {
-  input <- c("  hello  ", "\tgoodbye", "see ya\n")
-  expect_equal(rye:::rye_trimws_compat(input), c("hello", "goodbye", "see ya"))
-  expect_equal(rye:::rye_trimws_compat(input, which = "left"), c("hello  ", "goodbye", "see ya\n"))
-  expect_equal(rye:::rye_trimws_compat(input, which = "right"), c("  hello", "\tgoodbye", "see ya"))
-})
-
-test_that("rye_trimws_shim matches base trimws when available", {
-  if (!exists("trimws", mode = "function", inherits = TRUE)) {
-    skip("base trimws not available")
-  }
-  input <- c("  hello  ", "\tgoodbye", "see ya\n")
-  expect_equal(rye:::rye_trimws_shim(input), trimws(input))
-  expect_equal(rye:::rye_trimws_shim(input, which = "left"), trimws(input, which = "left"))
-  expect_equal(rye:::rye_trimws_shim(input, which = "right"), trimws(input, which = "right"))
-})
-
-test_that("rye_quote_arg quotes symbols and calls by default", {
-  result <- rye:::rye_quote_arg(as.symbol("x"))
-  expect_true(is.call(result))
-  expect_equal(as.character(result[[1]]), "quote")
-  expect_equal(result[[2]], as.symbol("x"))
-
-  call_result <- rye:::rye_quote_arg(quote(f(1)))
-  expect_true(is.call(call_result))
-
-  literal_result <- rye:::rye_quote_arg(42)
-  expect_equal(literal_result, 42)
-})
-
-test_that("rye_quote_arg can skip symbol quoting", {
-  result <- rye:::rye_quote_arg(as.symbol("x"), quote_symbols = FALSE)
-  expect_true(is.symbol(result))
-  expect_equal(as.character(result), "x")
-})
-
 test_that("rye_do_call quotes symbols except for accessors", {
   a <- 10
   result <- rye:::rye_do_call(base::list, list(as.symbol("a")))

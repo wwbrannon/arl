@@ -217,16 +217,3 @@ rye_default_engine <- function() {
   }
   engine
 }
-
-rye_env_resolve <- function(env, fallback) {
-  if (inherits(env, "RyeEnv")) {
-    return(env$env)
-  }
-  if (is.environment(env)) {
-    return(env)
-  }
-  if (is.null(env)) {
-    return(fallback$env)
-  }
-  stop("Expected a RyeEnv or environment")
-}

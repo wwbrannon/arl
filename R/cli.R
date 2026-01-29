@@ -216,7 +216,7 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
     if (!cli_isatty()) {
       engine <- cli_load_env()
       text <- paste(cli_read_stdin(), collapse = "\n")
-      if (rye_trimws_shim(text) != "") { # nolint: object_usage_linter
+      if (trimws(text) != "") { # nolint: object_usage_linter
         cli_eval_text(text, engine, source_name = "<stdin>")
       }
       return(invisible(NULL))

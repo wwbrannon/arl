@@ -18,6 +18,7 @@ evaluation, and environment management.
 \item \href{#method-RyeEngine-eval_seq}{\code{RyeEngine$eval_seq()}}
 \item \href{#method-RyeEngine-eval_exprs}{\code{RyeEngine$eval_exprs()}}
 \item \href{#method-RyeEngine-eval_text}{\code{RyeEngine$eval_text()}}
+\item \href{#method-RyeEngine-initialize_environment}{\code{RyeEngine$initialize_environment()}}
 \item \href{#method-RyeEngine-load_file}{\code{RyeEngine$load_file()}}
 \item \href{#method-RyeEngine-load_stdlib}{\code{RyeEngine$load_stdlib()}}
 \item \href{#method-RyeEngine-macroexpand}{\code{RyeEngine$macroexpand()}}
@@ -96,6 +97,15 @@ evaluation, and environment management.
 \subsection{Method \code{eval_text()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_text(text, env = NULL, source_name = "<eval>")}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-initialize_environment"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-initialize_environment}{}}}
+\subsection{Method \code{initialize_environment()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$initialize_environment(env = NULL)}\if{html}{\out{</div>}}
 }
 
 }

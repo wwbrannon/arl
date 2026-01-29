@@ -1,15 +1,15 @@
 engine <- new_engine()
 
 test_that("gensym generates unique symbols", {
-  s1 <- gensym()
-  s2 <- gensym()
+  s1 <- engine$macro_expander$gensym()
+  s2 <- engine$macro_expander$gensym()
   expect_true(is.symbol(s1))
   expect_true(is.symbol(s2))
   expect_false(identical(s1, s2))
 })
 
 test_that("gensym accepts prefix", {
-  s <- gensym("temp")
+  s <- engine$macro_expander$gensym("temp")
   expect_true(grepl("^temp__", as.character(s)))
 })
 

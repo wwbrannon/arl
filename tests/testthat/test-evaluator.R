@@ -105,8 +105,28 @@ test_that("eval text errors include source and stack context", {
   )
   expect_s3_class(err, "rye_error")
 
-  formatted <- rye_format_error(err)
+  formatted <- engine$source_tracker$format_error(err)
   expect_match(formatted, "test\\.rye:1:1-1:10")
   expect_match(formatted, "R stack:")
   expect_match(formatted, "eval_text")
 })
+
+test_that("quote_arg quotes symbols and calls by default", {
+  result <- engine$evaluator$quote_arg(as.symbol("x"))
+  expect_true(is.call(result))
+  expect_equal(as.character(result[[1]]), "quote")
+  expect_equal(result[[2]], as.symbol("x"))
+
+  call_result <- engine$evaluator$quote_arg(quote(f(1)))
+  expect_true(is.call(call_result))
+
+  literal_result <- engine$evaluator$quote_arg(42)
+  expect_equal(literal_result, 42)
+})
+
+test_that("quote_arg can skip symbol quoting", {
+  result <- engine$evaluator$quote_arg(as.symbol("x"), quote_symbols = FALSE)
+  expect_true(is.symbol(result))
+  expect_equal(as.character(result), "x")
+})
+

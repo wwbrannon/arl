@@ -168,13 +168,3 @@ Parser <- R6::R6Class(
     }
   )
 )
-
-# Internal wrapper for default engine parsing.
-rye_parse <- function(tokens, source_name = NULL) {
-  rye_default_engine()$parser$parse(tokens, source_name = source_name)
-}
-
-# Internal wrapper for default engine read.
-rye_read <- function(source, source_name = NULL) {
-  rye_default_engine()$read(source, source_name = source_name)
-}

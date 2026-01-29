@@ -279,8 +279,3 @@ Tokenizer <- R6::R6Class(
     }
   )
 )
-
-# Internal wrapper for default engine tokenization.
-rye_tokenize <- function(source) {
-  rye_default_engine()$tokenizer$tokenize(source)
-}
