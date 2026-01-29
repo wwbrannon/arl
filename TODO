@@ -1,13 +1,6 @@
 o) remove translate R api
-
 o) the cli, repl might benefit from oo refactoring
-
-o) too many functions left around being called from these new classes that implement basically all functionality, defeats the purpose
-o) do we still need the globals.R file?
-o) this default engine stuff is bad, certainly when used in these functions internally
-
 o) classes that have instances of other classes horizontally as attributes
-
 o) do we still need to assign these macro registry etc into the environment?
 
 o) performance optimizations: use profiling and benchmarking
