@@ -10,8 +10,8 @@ vignette: >
 ---
 
 These examples are complete Rye programs from `inst/examples`. Each section
-includes the full source with syntax highlighting, plus a link back to the
-repository version.
+pulls in the full source from the corresponding file at build time, with
+syntax highlighting, plus a link back to the repository version.
 
 ## Fibonacci
 
@@ -19,142 +19,14 @@ Recursive, iterative, and sequence-based Fibonacci implementations.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/fibonacci.rye>
 
-```lisp
-;; Fibonacci Sequence Implementations
-;; Demonstrates recursion, iteration, and functional approaches
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-;; ============================================================================
-;; Classic Recursive Implementation
-;; ============================================================================
-
-(define fib-recursive
-  (lambda (n)
-    (cond
-      ((= n 0) 0)
-      ((= n 1) 1)
-      (else (+ (fib-recursive (- n 1))
-               (fib-recursive (- n 2)))))))
-
-(println "Recursive Fibonacci:")
-(println (str "fib(0) = " (fib-recursive 0)))
-(println (str "fib(1) = " (fib-recursive 1)))
-(println (str "fib(5) = " (fib-recursive 5)))
-(println (str "fib(10) = " (fib-recursive 10)))
-
-;; ============================================================================
-;; Iterative Implementation with While Loop
-;; ============================================================================
-
-(define fib-iterative
-  (lambda (n)
-    (if (< n 2)
-        n
-        (begin
-          (define a 0)
-          (define b 1)
-          (define i 2)
-          (while (<= i n)
-            (define temp b)
-            (set! b (+ a b))
-            (set! a temp)
-            (set! i (+ i 1)))
-          b))))
-
-(println "\nIterative Fibonacci:")
-(println (str "fib(10) = " (fib-iterative 10)))
-(println (str "fib(15) = " (fib-iterative 15)))
-
-;; ============================================================================
-;; Sequence Generation using unfold-like pattern
-;; ============================================================================
-
-(define fib-sequence
-  (lambda (n)
-    (if (< n 1)
-        ()
-        (if (= n 1)
-            (list 0)
-            (if (= n 2)
-                (list 0 1)
-                (let* ((init (list 0 1)))
-                  (letrec ((generate-next
-                            (lambda (lst count)
-                              (if (>= count n)
-                                  lst
-                                  (let* ((len (length lst))
-                                         (a (nth lst (- len 2)))
-                                         (b (nth lst (- len 1)))
-                                         (next (+ a b)))
-                                    (generate-next (append lst (list next))
-                                                  (+ count 1)))))))
-                    (generate-next init 2))))))))
-
-(println "\nFibonacci Sequence:")
-(println (str "First 10: " (fib-sequence 10)))
-(println (str "First 15: " (fib-sequence 15)))
-
-;; ============================================================================
-;; Using reduce to sum fibonacci sequence
-;; ============================================================================
-
-(define sum-fib
-  (lambda (n)
-    (reduce + (fib-sequence n))))
-
-(println "\nSum of Fibonacci:")
-(println (str "Sum of first 10: " (sum-fib 10)))
-
-;; ============================================================================
-;; Memoized Fibonacci (using R environment for cache)
-;; ============================================================================
-
-(define make-memoized-fib
-  (lambda ()
-    (let ((cache (r/call "new.env" ())))
-      (lambda (n)
-        (if (< n 2)
-            n
-            (let ((cached (r/call "get" (list (str n) cache))))
-              (if (null? cached)
-                  (let ((result (+ (fib-recursive (- n 1))
-                                  (fib-recursive (- n 2)))))
-                    (r/call "assign" (list (str n) result cache))
-                    result)
-                  cached)))))))
-
-;; Note: Full memoization would require modifying recursive calls to use cache
-;; This is a simplified demonstration of the concept
-
-(define fib10 (fib-recursive 10))
-(define fib15 (fib-iterative 15))
-(define seq10 (fib-sequence 10))
-(define sum10 (sum-fib 10))
-
-(define example-result
-  (dict
-   :fib10 fib10
-   :fib15 fib15
-   :seq10 seq10
-   :sum10 sum10))
-
-(define report-path (r/call "file.path" (list *output-dir* "fibonacci-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "fib10=" fib10)
-                           (str "fib15=" fib15)
-                           (str "sum10=" sum10)
-                           (str "seq10=" seq10)))
-         report-path))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "fibonacci.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "fibonacci.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
 
 ## Quicksort
 
@@ -162,140 +34,14 @@ Quicksort and mergesort, with list operations and helpers.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/quicksort.rye>
 
-```lisp
-;; Quicksort Implementation
-;; Demonstrates list operations, filtering, and recursive algorithms
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-;; ============================================================================
-;; Classic Quicksort
-;; ============================================================================
-
-(define quicksort
-  (lambda (lst)
-    (if (null? lst)
-        (list)
-        (let* ((pivot (car lst))
-               (rest-lst (cdr lst))
-               (smaller (filter (lambda (x) (< x pivot)) rest-lst))
-               (greater (filter (lambda (x) (>= x pivot)) rest-lst)))
-          (append (append (quicksort smaller)
-                         (list pivot))
-                  (quicksort greater))))))
-
-(println "Quicksort Examples:")
-(println (str "Sort [3 1 4 1 5 9 2 6]: " (quicksort (list 3 1 4 1 5 9 2 6))))
-(println (str "Sort [5 4 3 2 1]: " (quicksort (list 5 4 3 2 1))))
-(println (str "Sort [1]: " (quicksort (list 1))))
-(println (str "Sort []: " (quicksort (list))))
-
-;; ============================================================================
-;; Three-way Partition Quicksort (handles duplicates better)
-;; ============================================================================
-
-(define quicksort-3way
-  (lambda (lst)
-    (if (null? lst)
-        (list)
-        (let* ((pivot (car lst))
-               (rest-lst (cdr lst))
-               (smaller (filter (lambda (x) (< x pivot)) rest-lst))
-               (equal (filter (lambda (x) (= x pivot)) rest-lst))
-               (greater (filter (lambda (x) (> x pivot)) rest-lst)))
-          (append (append (quicksort-3way smaller)
-                          (cons pivot equal))
-                  (quicksort-3way greater))))))
-
-(println "\nThree-way Quicksort:")
-(println (str "Sort [3 1 4 1 5 9 2 6 5 3]: "
-              (quicksort-3way (list 3 1 4 1 5 9 2 6 5 3))))
-
-;; ============================================================================
-;; Using partition to split list
-;; ============================================================================
-
-(define partition-by-pivot
-  (lambda (pivot lst)
-    (let ((smaller (filter (lambda (x) (< x pivot)) lst))
-          (greater (filter (lambda (x) (>= x pivot)) lst)))
-      (list smaller greater))))
-
-(println "\nPartition Example:")
-(let ((result (partition-by-pivot 5 (list 3 7 2 9 1 5 8 4))))
-  (println (str "Partition by 5: smaller=" (car result)
-                " greater=" (car (cdr result)))))
-
-;; ============================================================================
-;; Demonstrating list operations
-;; ============================================================================
-
-(println "\nList Operations Demo:")
-
-;; take and drop
-(define data (list 10 20 30 40 50))
-(println (str "Original: " data))
-(println (str "Take 3: " (take 3 data)))
-(println (str "Drop 3: " (drop 3 data)))
-
-;; reverse
-(println (str "Reversed: " (reverse data)))
-
-;; map to transform
-(println (str "Double all: " (map (lambda (x) (* x 2)) data)))
-
-;; reduce to aggregate
-(println (str "Sum: " (reduce + data)))
-(println (str "Product: " (reduce * data)))
-
-;; ============================================================================
-;; Merge Sort for comparison
-;; ============================================================================
-
-(define merge
-  (lambda (left right)
-    (cond
-      ((null? left) right)
-      ((null? right) left)
-      ((< (car left) (car right))
-       (cons (car left) (merge (cdr left) right)))
-      (else
-       (cons (car right) (merge left (cdr right)))))))
-
-(define mergesort
-  (lambda (lst)
-    (if (<= (length lst) 1)
-        lst
-        (let* ((mid (/ (length lst) 2))
-               (left (take mid lst))
-               (right (drop mid lst)))
-          (merge (mergesort left) (mergesort right))))))
-
-(println "\nMergesort Example:")
-(println (str "Sort [3 1 4 1 5 9 2 6]: " (mergesort (list 3 1 4 1 5 9 2 6))))
-
-(define sorted-small (quicksort (list 3 1 4)))
-(define merge-sorted (mergesort (list 3 1 4 1 5 9 2 6)))
-
-(define example-result
-  (dict
-   :sorted_small sorted-small
-   :merge_sort merge-sorted))
-
-(define report-path (r/call "file.path" (list *output-dir* "quicksort-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "sorted_small=" sorted-small)
-                           (str "merge_sort=" merge-sorted)))
-         report-path))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "quicksort.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "quicksort.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
 
 ## FizzBuzz
 
@@ -303,153 +49,14 @@ Multiple FizzBuzz variations showing control flow and list processing.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/fizzbuzz.rye>
 
-```lisp
-;; FizzBuzz Implementations
-;; Demonstrates control flow, looping, and conditionals
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-;; ============================================================================
-;; Classic FizzBuzz using cond
-;; ============================================================================
-
-(define fizzbuzz
-  (lambda (n)
-    (cond
-      ((= (% n 15) 0) "FizzBuzz")
-      ((= (% n 3) 0) "Fizz")
-      ((= (% n 5) 0) "Buzz")
-      (else (str n)))))
-
-(println "Classic FizzBuzz (1-20):")
-(define i 1)
-(while (<= i 20)
-  (println (fizzbuzz i))
-  (set! i (+ i 1)))
-
-;; ============================================================================
-;; Using for loop
-;; ============================================================================
-
-(println "\nUsing for loop (1-15):")
-(for (n (r/call "seq" (list 1 15)))
-  (println (fizzbuzz n)))
-
-;; ============================================================================
-;; Functional approach with map
-;; ============================================================================
-
-(println "\nFunctional approach (1-10):")
-(define fizzbuzz-list
-  (lambda (n)
-    (map fizzbuzz (r/call "seq" (list 1 n)))))
-
-(println (fizzbuzz-list 10))
-
-;; ============================================================================
-;; FizzBuzz with when/unless
-;; ============================================================================
-
-(define fizzbuzz-when
-  (lambda (n)
-    (let ((result ""))
-      (when (= (% n 3) 0)
-        (set! result (str result "Fizz")))
-      (when (= (% n 5) 0)
-        (set! result (str result "Buzz")))
-      (when (= result "")
-        (set! result (str n)))
-      result)))
-
-(println "\nUsing when (1-10):")
-(for (n (r/call "seq" (list 1 10)))
-  (println (fizzbuzz-when n)))
-
-;; ============================================================================
-;; Case statement version
-;; ============================================================================
-
-(define fizzbuzz-case
-  (lambda (n)
-    (case (% n 15)
-      (0 "FizzBuzz")
-      (3 "Fizz")
-      (5 "Buzz")
-      (6 "Fizz")
-      (9 "Fizz")
-      (10 "Buzz")
-      (12 "Fizz")
-      (else (str n)))))
-
-(println "\nUsing case (note: case checks exact value, not pattern):")
-(println "1-15 with case-based FizzBuzz:")
-(for (n (r/call "seq" (list 1 15)))
-  (println (fizzbuzz-case n)))
-
-;; ============================================================================
-;; Filter to find Fizz, Buzz, and FizzBuzz numbers
-;; ============================================================================
-
-(println "\nFiltering FizzBuzz numbers:")
-
-(define range-1-30 (r/call "seq" (list 1 30)))
-
-(define fizz-numbers
-  (filter (lambda (n) (= (% n 3) 0)) range-1-30))
-
-(define buzz-numbers
-  (filter (lambda (n) (= (% n 5) 0)) range-1-30))
-
-(define fizzbuzz-numbers
-  (filter (lambda (n) (= (% n 15) 0)) range-1-30))
-
-(println (str "Fizz numbers (1-30): " fizz-numbers))
-(println (str "Buzz numbers (1-30): " buzz-numbers))
-(println (str "FizzBuzz numbers (1-30): " fizzbuzz-numbers))
-
-;; ============================================================================
-;; Count FizzBuzz occurrences
-;; ============================================================================
-
-(define count-fizzbuzz
-  (lambda (n)
-    (let ((results (map fizzbuzz (r/call "seq" (list 1 n)))))
-      (dict
-       :fizz (length (filter (lambda (x) (= x "Fizz")) results))
-       :buzz (length (filter (lambda (x) (= x "Buzz")) results))
-       :fizzbuzz (length (filter (lambda (x) (= x "FizzBuzz")) results))
-       :numbers (length (filter (lambda (x) (not (or (= x "Fizz")
-                                                       (= x "Buzz")
-                                                       (= x "FizzBuzz"))))
-                                results))))))
-
-(println "\nCounts for 1-100:")
-(println (count-fizzbuzz 100))
-
-(define counts-100 (count-fizzbuzz 100))
-(define example-result
-  (dict
-   :count_fizz (r/call "get" (list "fizz" counts-100))
-   :count_buzz (r/call "get" (list "buzz" counts-100))
-   :count_fizzbuzz (r/call "get" (list "fizzbuzz" counts-100))
-   :count_numbers (r/call "get" (list "numbers" counts-100))))
-
-(define report-path (r/call "file.path" (list *output-dir* "fizzbuzz-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "fizz=" (r/call "get" (list "fizz" counts-100)))
-                           (str "buzz=" (r/call "get" (list "buzz" counts-100)))
-                           (str "fizzbuzz=" (r/call "get" (list "fizzbuzz" counts-100)))
-                           (str "numbers=" (r/call "get" (list "numbers" counts-100)))))
-         report-path))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "fizzbuzz.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "fizzbuzz.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
 
 ## Macro Examples
 
@@ -457,246 +64,14 @@ Macro definitions, quasiquote, expansion, and DSL-style helpers.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples.rye>
 
-```lisp
-;; Macro System Examples
-;; Demonstrates defmacro, quasiquote, unquote, and macro expansion
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-;; ============================================================================
-;; Simple Macros
-;; ============================================================================
-
-(println "=== Simple Macros ===\n")
-
-;; A macro that doubles its argument
-(defmacro double (x)
-  "Multiply x by 2 at macro expansion time."
-  `(* 2 ,x))
-
-(println (str "(double 5) = " (double 5)))
-(println (str "(double (+ 1 2)) = " (double (+ 1 2))))
-
-;; A macro that creates a variable with a default value
-(defmacro defvar (name value)
-  "Define a variable with a value."
-  `(define ,name ,value))
-
-(defvar x 42)
-(println (str "x = " x))
-
-;; ============================================================================
-;; Macros with Multiple Expressions
-;; ============================================================================
-
-(println "\n=== Macros with Multiple Expressions ===\n")
-
-;; A macro that executes multiple forms and returns the last
-(defmacro progn (first . rest)
-  "Evaluate forms in order and return the last."
-  `(begin ,first ,@rest))
-
-(println "Using progn:")
-(progn
-  (println "First")
-  (println "Second")
-  (println "Third"))
-
-;; ============================================================================
-;; Control Flow Macros
-;; ============================================================================
-
-(println "\n=== Control Flow Macros ===\n")
-
-;; Custom when-not macro
-(defmacro when-not (test . body)
-  "Evaluate body when test is falsy."
-  `(if (not ,test)
-       (begin ,@body)
-       #nil))
-
-(when-not #f
-  (println "This should print"))
-
-(when-not #t
-  (println "This should not print"))
-
-;; A do-times macro
-(defmacro do-times (n . body)
-  "Repeat body n times."
-  (let ((counter (gensym "counter")))
-    `(let ((,counter 0))
-       (while (< ,counter ,n)
-         (begin ,@body)
-         (set! ,counter (+ ,counter 1))))))
-
-(println "do-times example:")
-(define count 0)
-(do-times 5
-  (set! count (+ count 1))
-  (println (str "Count: " count)))
-
-;; ============================================================================
-;; Macro Expansion Examples
-;; ============================================================================
-
-(println "\n=== Macro Expansion ===\n")
-
-(println "Original: (when (> 5 3) (println \"yes\"))")
-(println "Expanded:")
-(println (macroexpand-1 '(when (> 5 3) (println "yes"))))
-
-(println "\nOriginal: (let ((x 1)) (+ x 2))")
-(println "Expanded:")
-(println (macroexpand-1 '(let ((x 1)) (+ x 2))))
-
-;; ============================================================================
-;; Anaphoric Macros (macros that capture a name)
-;; ============================================================================
-
-(println "\n=== Anaphoric Macros ===\n")
-
-;; An anaphoric if that binds result to 'it'
-(defmacro aif (test then alt)
-  "Bind test result to it and select then/alt."
-  `(let ((it ,test))
-     (if it ,then ,alt)))
-
-(println "Anaphoric if example:")
-(aif (+ 2 3)
-     (println (str "Result is: " it))
-     (println "No result"))
-
-;; ============================================================================
-;; Building DSLs with Macros
-;; ============================================================================
-
-(println "\n=== Simple DSL Example ===\n")
-
-;; A macro for defining test cases
-(defmacro deftest (name . body)
-  "Define and run a simple test case."
-  `(begin
-     (println (str "Running test: " (quote ,name)))
-     ,@body
-     (println "Test passed!\n")))
-
-(deftest addition-works
-  (assert (= (+ 1 2) 3) "1 + 2 should equal 3")
-  (assert (= (+ 5 5) 10) "5 + 5 should equal 10"))
-
-(deftest string-operations
-  (assert (= (str "hello" " " "world") "hello world")
-          "String concatenation works"))
-
-;; ============================================================================
-;; Hygiene with gensym
-;; ============================================================================
-
-(println "\n=== Macro Hygiene ===\n")
-
-;; Without hygiene (could capture user variables)
-(defmacro bad-swap (a b)
-  "Swap two bindings without gensym."
-  `(let ((temp ,a))
-     (set! ,a ,b)
-     (set! ,b temp)))
-
-;; With hygiene (uses gensym)
-(defmacro good-swap (a b)
-  "Swap two bindings with a fresh temp."
-  (let ((temp-var (gensym "temp")))
-    `(let ((,temp-var ,a))
-       (set! ,a ,b)
-       (set! ,b ,temp-var))))
-
-(println "Demonstrating gensym:")
-(println (str "Generated symbol 1: " (gensym)))
-(println (str "Generated symbol 2: " (gensym)))
-(println (str "Generated symbol with prefix: " (gensym "my-prefix")))
-
-;; ============================================================================
-;; Quasiquote Examples
-;; ============================================================================
-
-(println "\n=== Quasiquote Examples ===\n")
-
-(define x 10)
-(define y 20)
-
-(println "Without quasiquote:")
-(println (list '+ 1 2))
-
-(println "\nWith quasiquote and unquote:")
-(println `(+ ,x ,y))
-
-(println "\nWith unquote-splicing:")
-(define nums (list 1 2 3))
-(println `(+ ,@nums))  ; Should expand to (+ 1 2 3)
-
-;; ============================================================================
-;; Recursive Macros
-;; ============================================================================
-
-(println "\n=== Recursive Macro Example ===\n")
-
-;; A macro that chains function calls
-(defmacro -> (value . forms)
-  "Thread value through forms (first argument)."
-  (if (null? forms)
-      value
-      (let ((first-form (car forms))
-            (rest-forms (cdr forms)))
-        (if (pair? first-form)
-            `(-> (,(car first-form) ,value ,@(cdr first-form)) ,@rest-forms)
-            `(-> (,first-form ,value) ,@rest-forms)))))
-
-(println "Threading macro example:")
-(println (str "Result: " (-> 5
-                              (+ 3)
-                              (* 2)
-                              (- 1))))  ; ((5 + 3) * 2) - 1 = 15
-
-;; ============================================================================
-;; Compile-Time Computation
-;; ============================================================================
-
-(println "\n=== Compile-Time Computation ===\n")
-
-;; A macro that computes at macro expansion time
-(defmacro const-multiply (a b)
-  "Compute the product of a and b at expand time."
-  (let ((result (* a b)))
-    `(quote ,result)))
-
-(println (str "(const-multiply 6 7) = " (const-multiply 6 7)))
-(println "This multiplication happened at macro expansion time!")
-
-(define threading-result (-> 5 (+ 3) (* 2) (- 1)))
-(define aif-result (aif (+ 2 3) it #nil))
-(define expanded-when (macroexpand-1 '(when (> 5 3) (println "yes"))))
-
-(define example-result
-  (dict
-   :threading_result threading-result
-   :aif_result aif-result
-   :expanded_when expanded-when))
-
-(define report-path (r/call "file.path" (list *output-dir* "macro-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "threading_result=" threading-result)
-                           (str "aif_result=" aif-result)
-                           (str "expanded_when=" expanded-when)))
-         report-path))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "macro-examples.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "macro-examples.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
 
 ## Pipeline Macros
 
@@ -704,63 +79,14 @@ Threading a value through a custom pipeline macro.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/pipeline-macros.rye>
 
-```lisp
-;; Pipeline Macros Example
-;; Demonstrates a small macro-driven data pipeline
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-;; Pipeline macro: threads a value through a sequence of steps
-(defmacro pipeline (value . steps)
-  "Thread value through steps (last argument)."
-  (if (null? steps)
-      value
-      (let ((step (car steps))
-            (rest-steps (cdr steps)))
-        (if (pair? step)
-            `(pipeline (,(car step) ,@(cdr step) ,value) ,@rest-steps)
-            `(pipeline (,step ,value) ,@rest-steps)))))
-
-(define data (list 1 2 3 4 5 6 7 8 9))
-
-(define pipeline-result
-  (pipeline data
-            (filter (lambda (x) (> x 0)))
-            (map (lambda (x) x))
-            (reduce +)))
-
-(println "=== Pipeline Output ===")
-(println (str "Input: " data))
-(println (str "Pipeline result: " pipeline-result))
-
-(define expanded (macroexpand-1
-                  '(pipeline data
-                             (filter (lambda (x) (> x 0)))
-                             (map (lambda (x) x))
-                             (reduce +))))
-
-(println "\nExpanded form:")
-(println expanded)
-
-(define example-result
-  (dict
-   :pipeline_total pipeline-result
-   :expanded_steps 3))
-
-(define report-path (r/call "file.path" (list *output-dir* "pipeline-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "pipeline_total=" pipeline-result)
-                           (str "expanded_steps=3")))
-         report-path))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "pipeline-macros.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "pipeline-macros.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
 
 ## Data Analysis
 
@@ -768,225 +94,14 @@ R interoperability and data transformations.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/data-analysis.rye>
 
-```lisp
-;; Data Analysis with R Interop
-;; Demonstrates seamless integration between Rye and R
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-;; Deterministic randomness for reproducible examples
-(r/call "set.seed" (list 123))
-
-;; ============================================================================
-;; Working with R Vectors and Lists
-;; ============================================================================
-
-(println "=== R Interop Basics ===\n")
-
-;; Create R vectors using r/call
-(define nums (r/call "c" (list 1 2 3 4 5 6 7 8 9 10)))
-(println (str "R vector: " nums))
-
-;; Use R statistical functions
-(define mean-val (r/call "mean" (list nums)))
-(define median-val ((:: stats median) nums))
-(define sd-val ((:: stats sd) nums))
-
-(println (str "Mean: " mean-val))
-(println (str "Median: " median-val))
-(println (str "SD: " sd-val))
-
-;; ============================================================================
-;; Generating Data with R
-;; ============================================================================
-
-(println "\n=== Generating Data ===\n")
-
-;; Generate random normal data
-(define random-data ((:: stats rnorm) 100))
-(println (str "Generated 100 random numbers"))
-(println (str "First 10: " ((:: utils head) random-data 10)))
-
-;; Summary statistics
-(println "\nSummary:")
-(println (r/call "summary" (list random-data)))
-
-;; ============================================================================
-;; Data Transformation Pipeline
-;; ============================================================================
-
-(println "\n=== Data Transformation Pipeline ===\n")
-
-;; Create sample data
-(define scores (r/call "c" (list 85 92 78 90 88 76 95 89 91 87)))
-(println (str "Original scores: " scores))
-
-;; Transform data using Rye's higher-order functions
-(define score-list (r/call "as.list" (list scores)))
-
-;; Add 5 points to each score
-(define adjusted-scores (map (lambda (x) (+ x 5)) score-list))
-(println (str "After adding 5 points: " adjusted-scores))
-
-;; Filter passing scores (>= 80)
-(define passing (filter (lambda (x) (>= x 80)) adjusted-scores))
-(println (str "Passing scores: " passing))
-
-;; Calculate average of passing scores
-(define passing-avg (/ (reduce + passing) (length passing)))
-(println (str "Average of passing scores: " passing-avg))
-
-;; ============================================================================
-;; Working with Named Lists (Data Frames)
-;; ============================================================================
-
-(println "\n=== Working with Named Lists ===\n")
-
-;; Create a named list (similar to R's named vector)
-(define student-data
-  (dict
-   :names (list "Alice" "Bob" "Carol" "Dave" "Eve")
-   :scores (list 85 92 78 90 88)
-   :ages (list 20 21 19 22 20)))
-
-(println "Student data:")
-(println student-data)
-
-;; Extract and process names
-(define names (r/call "get" (list "names" student-data)))
-(println (str "\nStudent names: " names))
-
-;; Extract and analyze scores
-(define scores-data (r/call "get" (list "scores" student-data)))
-(println (str "Scores: " scores-data))
-
-;; ============================================================================
-;; Statistical Analysis
-;; ============================================================================
-
-(println "\n=== Statistical Analysis ===\n")
-
-;; Create two groups
-(define group-a (r/call "c" (list 23 25 21 24 22 26 20)))
-(define group-b (r/call "c" (list 30 32 28 31 29 33 27)))
-
-(println (str "Group A mean: " (r/call "mean" (list group-a))))
-(println (str "Group B mean: " (r/call "mean" (list group-b))))
-
-;; Combine groups for comparison
-(define all-values (r/call "c" (list group-a group-b)))
-(println (str "\nCombined range: " (r/call "range" (list all-values))))
-(println (str "Combined quantiles: " ((:: stats quantile) all-values)))
-
-;; ============================================================================
-;; Using R's seq and rep functions
-;; ============================================================================
-
-(println "\n=== Sequences and Repetition ===\n")
-
-;; Create sequences
-(define seq-1-10 (r/call "seq" (list 1 10)))
-(println (str "Sequence 1-10: " seq-1-10))
-
-(define seq-by-2 (r/call "seq" (list 0 20 2)))
-(println (str "Even numbers 0-20: " seq-by-2))
-
-;; Repeat values
-(define repeated (r/call "rep" (list 5 10)))
-(println (str "Repeat 5 ten times: " repeated))
-
-;; ============================================================================
-;; Combining Rye and R for Data Processing
-;; ============================================================================
-
-(println "\n=== Hybrid Processing ===\n")
-
-;; Generate data in R
-(define raw-data ((:: stats rnorm) 20 50 10))
-
-;; Convert to list for Rye processing
-(define data-list (r/call "as.list" (list raw-data)))
-
-;; Process with Rye functions
-(define filtered (filter (lambda (x) (> x 50)) data-list))
-(define squared (map (lambda (x) (* x x)) filtered))
-
-(println (str "Values > 50: " filtered))
-(println (str "Squared: " squared))
-
-;; Convert back to R vector for R functions
-(define result-vec (r/call "unlist" (list squared)))
-(println (str "Mean of squared values: " (r/call "mean" (list result-vec))))
-
-;; ============================================================================
-;; Using keyword arguments (R named arguments)
-;; ============================================================================
-
-(println "\n=== Keyword Arguments ===\n")
-
-;; R functions can be called with named arguments using keywords
-;; Note: This feature depends on keyword argument implementation
-
-;; Example: creating a sequence with named arguments
-(println "Creating sequences with named arguments:")
-(define seq-named (r/call "seq" (dict :from 1 :to 10 :by 2)))
-(println (str "seq(from=1, to=10, by=2): " seq-named))
-
-;; ============================================================================
-;; Data Aggregation Example
-;; ============================================================================
-
-(println "\n=== Data Aggregation ===\n")
-
-;; Sample transaction data
-(define transactions
-  (list
-   (dict :id 1 :amount 100 :category "food")
-   (dict :id 2 :amount 50 :category "transport")
-   (dict :id 3 :amount 75 :category "food")
-   (dict :id 4 :amount 200 :category "housing")
-   (dict :id 5 :amount 30 :category "transport")))
-
-(println "Sample transactions:")
-(println transactions)
-
-;; Extract all amounts
-(define amounts (map (lambda (t) (r/call "get" (list "amount" t))) transactions))
-(println (str "\nAll amounts: " amounts))
-
-;; Calculate total
-(define total (reduce + amounts))
-(println (str "Total spent: $" total))
-
-;; Filter food transactions
-(define food-trans (filter (lambda (t)
-                             (= (r/call "get" (list "category" t)) "food"))
-                           transactions))
-(println (str "\nFood transactions: " (length food-trans) " items"))
-
-(define food-total (reduce + (map (lambda (t) (r/call "get" (list "amount" t)))
-                                  food-trans)))
-(println (str "Food total: $" food-total))
-
-(define example-result
-  (dict
-   :passing_avg passing-avg
-   :food_total food-total))
-
-(define report-path (r/call "file.path" (list *output-dir* "data-analysis-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "passing_avg=" passing-avg)
-                           (str "food_total=" food-total)))
-         report-path))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "data-analysis.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "data-analysis.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
 
 ## Graph Paths
 
@@ -994,130 +109,14 @@ BFS traversal and Dijkstra shortest paths.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/graph-paths.rye>
 
-```lisp
-;; Graph Paths Example
-;; Demonstrates BFS traversal and Dijkstra shortest paths
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-(define contains?
-  (lambda (lst value)
-    (any? (lambda (x) (= x value)) lst)))
-
-(define remove-value
-  (lambda (lst value)
-    (filter (lambda (x) (not (= x value))) lst)))
-
-(define bfs
-  (lambda (graph start)
-    (define queue (list start))
-    (define visited (list start))
-    (define order (list start))
-    (while (not (null? queue))
-      (define node (car queue))
-      (set! queue (cdr queue))
-      (define edges (r/call "get" (list node graph)))
-      (for (edge edges)
-        (define neighbor (car edge))
-        (if (not (contains? visited neighbor))
-            (begin
-              (set! visited (append visited (list neighbor)))
-              (set! order (append order (list neighbor)))
-              (set! queue (append queue (list neighbor)))))))
-    order))
-
-(define min-distance
-  (lambda (nodes dist-env)
-    (reduce (lambda (best node)
-              (if (< (r/call "get" (list node dist-env))
-                     (r/call "get" (list best dist-env)))
-                  node
-                  best))
-            nodes)))
-
-(define dijkstra
-  (lambda (graph nodes start)
-    (define dist (r/call "new.env" ()))
-    (define prev (r/call "new.env" ()))
-    (for (n nodes)
-      (r/call "assign" (list n 9999 dist))
-      (r/call "assign" (list n #nil prev)))
-    (r/call "assign" (list start 0 dist))
-    (define unvisited nodes)
-    (while (not (null? unvisited))
-      (define current (min-distance unvisited dist))
-      (set! unvisited (remove-value unvisited current))
-      (define edges (r/call "get" (list current graph)))
-      (for (edge edges)
-        (define neighbor (car edge))
-        (define weight (car (cdr edge)))
-        (define alt (+ (r/call "get" (list current dist)) weight))
-        (if (< alt (r/call "get" (list neighbor dist)))
-            (begin
-              (r/call "assign" (list neighbor alt dist))
-              (r/call "assign" (list neighbor current prev))))))
-    (dict :dist dist :prev prev)))
-
-(define reconstruct-path
-  (lambda (prev-env start goal)
-    (define current goal)
-    (define path (list current))
-    (while (not (= current start))
-      (define parent (r/call "get" (list current prev-env)))
-      (if (null? parent)
-          (begin
-            (set! path (list))
-            (set! current start))
-          (begin
-            (set! path (cons parent path))
-            (set! current parent))))
-    path))
-
-(define graph
-  (dict
-   :A (list (list "B" 1) (list "C" 2))
-   :B (list (list "C" 1) (list "D" 4) (list "E" 6))
-   :C (list (list "D" 5) (list "E" 7))
-   :D (list (list "E" 2))
-   :E (list)))
-
-(define nodes (list "A" "B" "C" "D" "E"))
-
-(println "=== Graph Traversal ===")
-(define bfs-order (bfs graph "A"))
-(println (str "BFS order from A: " bfs-order))
-
-(println "\n=== Shortest Paths ===")
-(define dijkstra-result (dijkstra graph nodes "A"))
-(define dist-env (r/call "get" (list "dist" dijkstra-result)))
-(define prev-env (r/call "get" (list "prev" dijkstra-result)))
-(define shortest-path (reconstruct-path prev-env "A" "E"))
-(define shortest-cost (r/call "get" (list "E" dist-env)))
-
-(println (str "Shortest path A -> E: " shortest-path))
-(println (str "Total cost: " shortest-cost))
-
-(define example-result
-  (dict
-   :bfs_order bfs-order
-   :shortest_path shortest-path
-   :shortest_cost shortest-cost))
-
-(define report-path (r/call "file.path" (list *output-dir* "graph-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "bfs_order=" bfs-order)
-                           (str "shortest_path=" shortest-path)
-                           (str "shortest_cost=" shortest-cost)))
-         report-path))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "graph-paths.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "graph-paths.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
 
 ## Log Parser
 
@@ -1125,64 +124,14 @@ Parsing logs, aggregating status counts, and computing averages.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/log-parser.rye>
 
-```lisp
-;; Log Parser Example
-;; Demonstrates text processing and simple analytics
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-(define log-lines
-  (list
-   "2026-01-01 GET /api/users 200 100"
-   "2026-01-01 POST /api/login 500 110"
-   "2026-01-01 GET /api/users 200 120"
-   "2026-01-01 PUT /api/users 200 130"
-   "2026-01-01 GET /api/orders 500 140"
-   "2026-01-01 GET /api/orders 200 120"))
-
-(define parse-line
-  (lambda (line)
-    (define parts (string-split line " "))
-    (dict
-     :date (nth parts 0)
-     :method (nth parts 1)
-     :path (nth parts 2)
-     :status (r/call "as.numeric" (list (nth parts 3)))
-     :latency (r/call "as.numeric" (list (nth parts 4))))))
-
-(define parsed (map parse-line log-lines))
-
-(define statuses (map (lambda (row) (r/call "get" (list "status" row))) parsed))
-(define latencies (map (lambda (row) (r/call "get" (list "latency" row))) parsed))
-
-(define status-500 (length (filter (lambda (s) (= s 500)) statuses)))
-(define avg-latency (/ (reduce + latencies) (length latencies)))
-
-(println "=== Log Summary ===")
-(println (str "Total lines: " (length log-lines)))
-(println (str "HTTP 500 count: " status-500))
-(println (str "Average latency: " avg-latency))
-
-(define report-path (r/call "file.path" (list *output-dir* "log-summary.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "lines=" (length log-lines))
-                           (str "status_500=" status-500)
-                           (str "avg_latency=" avg-latency)))
-         report-path))
-
-(define example-result
-  (dict
-   :status_500 status-500
-   :avg_latency avg-latency))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "log-parser.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "log-parser.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
 
 ## Sales Report
 
@@ -1190,88 +139,14 @@ Data wrangling and CSV output using R interop.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/sales-report.rye>
 
-```lisp
-;; Sales Report Example
-;; Demonstrates data wrangling with R interop and file output
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-(define transactions
-  (list
-   (dict :product "beta" :region "east" :amount 120)
-   (dict :product "alpha" :region "west" :amount 80)
-   (dict :product "beta" :region "north" :amount 150)
-   (dict :product "gamma" :region "east" :amount 60)
-   (dict :product "beta" :region "west" :amount 90)
-   (dict :product "alpha" :region "north" :amount 110)
-   (dict :product "gamma" :region "south" :amount 50)
-   (dict :product "beta" :region "south" :amount 30)))
-
-(println "=== Sales Transactions ===")
-(println transactions)
-
-(define products (map (lambda (t) (r/call "get" (list "product" t))) transactions))
-(define regions (map (lambda (t) (r/call "get" (list "region" t))) transactions))
-(define amounts (map (lambda (t) (r/call "get" (list "amount" t))) transactions))
-(define products-vec (r/call "unlist" (list products)))
-(define regions-vec (r/call "unlist" (list regions)))
-(define amounts-vec (r/call "unlist" (list amounts)))
-
-(define total-sales (reduce + amounts))
-
-(define totals-env
-  (r/call "new.env" (dict :parent (r/call "emptyenv" ()))))
-(for (t transactions)
-  (define product (r/call "get" (list "product" t)))
-  (define amount (r/call "get" (list "amount" t)))
-  (define has (r/call "exists" (dict :x product :envir totals-env :inherits #f)))
-  (if has
-      (r/call "assign"
-              (list product (+ (r/call "get" (dict :x product :envir totals-env :inherits #f)) amount)
-                    totals-env))
-      (r/call "assign" (list product amount totals-env))))
-
-(define product-names (r/call "ls" (list totals-env)))
-(define product-names-list (r/call "as.list" (list product-names)))
-(define totals-list
-  (map (lambda (name)
-         (r/call "get" (dict :x name :envir totals-env :inherits #f)))
-       product-names-list))
-(define totals-vec (r/call "unlist" (list totals-list)))
-(define top-index (r/call "which.max" (list totals-vec)))
-(define top-product (r/call "[" (list product-names top-index)))
-
-(define totals-by-product (list))
-(for (name product-names-list)
-  (set! totals-by-product
-        (append totals-by-product
-                (list (dict :product name
-                            :total (r/call "get" (dict :x name :envir totals-env :inherits #f)))))))
-
-(println "\n=== Summary ===")
-(println (str "Total sales: " total-sales))
-(println (str "Totals by product: " totals-by-product))
-(println (str "Top product: " top-product))
-
-(define sales-df
-  (r/call "data.frame"
-          (dict :product products-vec :region regions-vec :amount amounts-vec)))
-
-(define report-path (r/call "file.path" (list *output-dir* "sales-report.csv")))
-((:: utils write.csv) sales-df report-path #f)
-
-(define example-result
-  (dict
-   :total_sales total-sales
-   :top_product top-product))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "sales-report.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "sales-report.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
 
 ## Task Runner
 
@@ -1279,62 +154,11 @@ Dependency ordering and execution sequencing.
 
 Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/task-runner.rye>
 
-```lisp
-;; Task Runner Example
-;; Demonstrates simple dependency resolution and execution ordering
-
-;; Output directory for reports (set via RYE_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "RYE_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
-
-(define contains?
-  (lambda (lst value)
-    (any? (lambda (x) (= x value)) lst)))
-
-(define tasks
-  (list
-   (dict :name "clean" :deps (list))
-   (dict :name "compile" :deps (list "clean"))
-   (dict :name "test" :deps (list "compile"))
-   (dict :name "package" :deps (list "test"))
-   (dict :name "deploy" :deps (list "package"))))
-
-(define task-by-name
-  (lambda (name)
-    (car (filter (lambda (t) (= (r/call "get" (list "name" t)) name)) tasks))))
-
-(define visited (list))
-(define run-order (list))
-
-(define visit
-  (lambda (name)
-    (if (contains? visited name)
-        #nil
-        (begin
-          (set! visited (append visited (list name)))
-          (define task (task-by-name name))
-          (define deps (r/call "get" (list "deps" task)))
-          (for (dep deps)
-            (visit dep))
-          (set! run-order (append run-order (list name)))))))
-
-(println "=== Task Runner ===")
-(for (t tasks)
-  (visit (r/call "get" (list "name" t))))
-(println (str "Execution order: " run-order))
-
-(define log-path (r/call "file.path" (list *output-dir* "task-runner.log")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "order=" run-order)))
-         log-path))
-
-(define example-result
-  (dict
-   :run_order run-order))
-
-(println "\nExample complete!")
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "task-runner.rye", package = "rye")
+if (path == "") path <- file.path("..", "inst", "examples", "task-runner.rye")
+cat("```lisp\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
 ```
+
