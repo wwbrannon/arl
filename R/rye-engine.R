@@ -11,6 +11,7 @@ RyeEngine <- R6::R6Class(
     parser = NULL,
     macro_expander = NULL,
     evaluator = NULL,
+    help_system = NULL,
     env = NULL,
     source_tracker = NULL,
     initialize = function(env = NULL) {
@@ -21,6 +22,7 @@ RyeEngine <- R6::R6Class(
       self$macro_expander <- MacroExpander$new(self$env, self$source_tracker)
       self$evaluator <- Evaluator$new(self$env, self$macro_expander, self$source_tracker, engine = self)
       self$macro_expander$evaluator <- self$evaluator
+      self$help_system <- HelpSystem$new(self)
     },
     read = function(source, source_name = NULL) {
       tokens <- self$tokenizer$tokenize(source)
@@ -199,6 +201,9 @@ RyeEngine <- R6::R6Class(
       target_env <- rye_env_resolve(env, fallback = self$env)
       self$macro_expander$macroexpand_1(expr, env = target_env, preserve_src = preserve_src)
     },
+    help = function(topic, env = NULL) {
+      self$help_system$help(topic, env = env)
+    },
     repl = function() {
       rye_repl(engine = self)
     },
@@ -207,17 +212,3 @@ RyeEngine <- R6::R6Class(
     }
   )
 )
-
-.rye_engine_state <- new.env(parent = emptyenv())
-
-#' Get the default Rye engine
-#'
-#' @export
-rye_default_engine <- function() {
-  engine <- get0("engine", envir = .rye_engine_state, inherits = FALSE)
-  if (is.null(engine)) {
-    engine <- RyeEngine$new()
-    assign("engine", engine, envir = .rye_engine_state)
-  }
-  engine
-}

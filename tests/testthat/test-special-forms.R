@@ -42,7 +42,7 @@ test_that("delay is lazy until forced", {
   )
   expect_equal(env$counter, 0)
 
-  rye_promise_force(env$p)
+  rye_stdlib_force(env$p)
   expect_equal(env$counter, 1)
 })
 

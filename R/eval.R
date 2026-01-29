@@ -340,7 +340,14 @@ Evaluator <- R6::R6Class(
           if (!is.character(topic) || length(topic) != 1) {
             stop("help requires a symbol or string")
           }
-          rye_help(topic, env)
+          engine <- self$engine
+          if (is.null(engine) && exists(".rye_engine", envir = env, inherits = FALSE)) {
+            engine <- get(".rye_engine", envir = env, inherits = FALSE)
+          }
+          if (is.null(engine)) {
+            stop("help requires an engine; initialize the environment with RyeEngine$load_stdlib()")
+          }
+          engine$help(topic, env = env)
           NULL
         },
         defmacro = function(expr, env, op_name) {
