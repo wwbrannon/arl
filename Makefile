@@ -79,7 +79,7 @@ bench-compare: ## Compare benchmark results (usage: make bench-compare OLD=basel
 clean: ## Remove build artifacts
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
-	rm -rf site/ docs/ doc/ Meta/
+	rm -rf site/ doc/ Meta/
 
 .PHONY: cran-prep
 cran-prep: ## Prepare docs and run CRAN check
