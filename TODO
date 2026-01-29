@@ -1,6 +1,10 @@
+o) even? and odd?
+o) stop printing benchmarks in test results
+
+o) loop/recur
+o) should we rename for and while?
+
 o) performance optimizations: use profiling and benchmarking
-    o) we should probably take out full call/cc and just use R's downward-only
-    o) tail-call optimization (will also fix failing profile case)
     o) use R's bytecode compiler
     o) other things
 
