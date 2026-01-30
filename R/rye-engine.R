@@ -21,6 +21,9 @@
 #' @param path File path to load.
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
 #' @param topic Help topic as a single string.
+#' @examples
+#' engine <- RyeEngine$new()
+#' engine$eval_text("(+ 1 2 3)")
 #' @export
 RyeEngine <- R6::R6Class(
   "RyeEngine",

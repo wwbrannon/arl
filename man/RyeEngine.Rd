@@ -12,6 +12,10 @@ Core Rye engine
 Provides class-based organization for tokenization, parsing, macro expansion,
 evaluation, and environment management.
 }
+\examples{
+engine <- RyeEngine$new()
+engine$eval_text("(+ 1 2 3)")
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
