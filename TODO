@@ -1,6 +1,3 @@
-o) OO refactor of repl
-o) we don't need both CLI and engine calling repl
-
 o) classes that have instances of other classes horizontally as attributes
 o) do we still need to assign these macro registry etc into the environment?
 o) unlockBinding note

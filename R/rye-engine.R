@@ -300,7 +300,7 @@ RyeEngine <- R6::R6Class(
     #' @description
     #' Start the Rye REPL using this engine.
     repl = function() {
-      rye_repl(engine = self)
+      RyeREPL$new(engine = self)$run()
     }
   ),
   private = list(

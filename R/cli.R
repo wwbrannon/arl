@@ -135,7 +135,7 @@ RyeCLI <- R6::R6Class(
         return(invisible(NULL))
       }
       engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
-      rye_repl(engine = engine)
+      engine$repl()
       invisible(NULL)
     },
     do_file = function(parsed) {

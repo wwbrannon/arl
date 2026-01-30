@@ -1,92 +1,3 @@
-# REPL helpers (non-exported)
-repl_version <- function() {
-  version <- tryCatch(
-    as.character(utils::packageVersion("rye")),
-    error = function(...) "unknown"
-  )
-  paste0("Rye REPL ", version)
-}
-
-repl_history_path <- function() {
-  path.expand("~/.rye_history")
-}
-
-repl_history_state <- new.env(parent = emptyenv())
-repl_history_state$enabled <- FALSE
-repl_history_state$path <- NULL
-repl_history_state$snapshot <- NULL
-
-repl_can_use_history <- function() {
-  override <- getOption("rye.repl_can_use_history_override", NULL)
-  if (!is.null(override)) {
-    if (is.function(override)) {
-      return(isTRUE(override()))
-    }
-    return(isTRUE(override))
-  }
-  isTRUE(interactive()) && isTRUE(capabilities("readline"))
-}
-
-repl_load_history <- function(path, state = repl_history_state) {
-  RyeREPL$new(engine = NULL, history_state = state, history_path = path)$load_history(path)
-}
-
-repl_save_history <- function(state = repl_history_state) {
-  RyeREPL$new(engine = NULL, history_state = state)$save_history()
-}
-
-repl_add_history <- function(text, state = repl_history_state) {
-  RyeREPL$new(engine = NULL, history_state = state)$add_history(text)
-}
-
-repl_is_incomplete_error <- function(e) {
-  msg <- conditionMessage(e)
-  grepl("Unexpected end of input|Unclosed parenthesis", msg)
-}
-
-repl_input_line <- function(prompt) {
-  if (isTRUE(interactive()) && isTRUE(capabilities("readline"))) {
-    return(readline(prompt))
-  }
-  cat(prompt)
-  utils::flush.console()
-  line <- readLines("stdin", n = 1, warn = FALSE)
-  if (length(line) == 0) {
-    return(NULL)
-  }
-  line
-}
-
-repl_read_form <- function(
-  input_fn = repl_input_line,
-  prompt = "rye> ",
-  cont_prompt = "...> ",
-  engine = NULL,
-  repl = NULL
-) {
-  if (!is.null(repl)) {
-    return(repl$read_form())
-  }
-  RyeREPL$new(
-    engine = engine,
-    input_fn = input_fn,
-    prompt = prompt,
-    cont_prompt = cont_prompt
-  )$read_form()
-}
-
-repl_eval_exprs <- function(exprs, engine) {
-  engine$eval_exprs(exprs)
-}
-
-repl_eval_and_print_exprs <- function(exprs, engine) {
-  RyeREPL$new(engine = engine)$eval_and_print_exprs(exprs)
-}
-
-repl_print_value <- function(value, engine) {
-  RyeREPL$new(engine = engine)$print_value(value)
-}
-
 #' Stateful Rye REPL
 RyeREPL <- R6::R6Class(
   "RyeREPL",
@@ -102,18 +13,48 @@ RyeREPL <- R6::R6Class(
       engine = NULL,
       prompt = "rye> ",
       cont_prompt = "...> ",
-      input_fn = repl_input_line,
+      input_fn = NULL,
       output_fn = cat,
-      history_state = repl_history_state,
+      history_state = new.env(parent = emptyenv()),
       history_path = NULL
     ) {
       self$engine <- engine
       self$prompt <- prompt
       self$cont_prompt <- cont_prompt
-      self$input_fn <- input_fn
+      self$input_fn <- if (is.null(input_fn)) self$input_line else input_fn
       self$output_fn <- output_fn
       self$history_state <- history_state
-      self$history_path <- if (is.null(history_path)) repl_history_path() else history_path
+      self$history_path <- if (is.null(history_path)) self$history_path_default() else history_path
+      private$ensure_history_state()
+    },
+    input_line = function(prompt) {
+      if (isTRUE(interactive()) && isTRUE(capabilities("readline"))) {
+        return(readline(prompt))
+      }
+      cat(prompt)
+      utils::flush.console()
+      line <- readLines("stdin", n = 1, warn = FALSE)
+      if (length(line) == 0) {
+        return(NULL)
+      }
+      line
+    },
+    history_path_default = function() {
+      path.expand("~/.rye_history")
+    },
+    can_use_history = function() {
+      override <- getOption("rye.repl_can_use_history_override", NULL)
+      if (!is.null(override)) {
+        if (is.function(override)) {
+          return(isTRUE(override()))
+        }
+        return(isTRUE(override))
+      }
+      isTRUE(interactive()) && isTRUE(capabilities("readline"))
+    },
+    is_incomplete_error = function(e) {
+      msg <- conditionMessage(e)
+      grepl("Unexpected end of input|Unclosed parenthesis", msg)
     },
     read_form = function() {
       private$require_engine()
@@ -150,7 +91,7 @@ RyeREPL <- R6::R6Class(
         )
 
         if (inherits(parsed, "error")) {
-          if (repl_is_incomplete_error(parsed)) {
+          if (self$is_incomplete_error(parsed)) {
             next
           }
           stop(parsed)
@@ -179,7 +120,7 @@ RyeREPL <- R6::R6Class(
       invisible(value)
     },
     load_history = function(path = self$history_path) {
-      if (!repl_can_use_history()) {
+      if (!self$can_use_history()) {
         return(invisible(FALSE))
       }
       snapshot <- tempfile("rye_rhistory_")
@@ -199,7 +140,7 @@ RyeREPL <- R6::R6Class(
       invisible(TRUE)
     },
     save_history = function() {
-      if (!repl_can_use_history()) {
+      if (!self$can_use_history()) {
         return(invisible(NULL))
       }
       if (!isTRUE(self$history_state$enabled)) {
@@ -215,7 +156,7 @@ RyeREPL <- R6::R6Class(
       invisible(NULL)
     },
     add_history = function(text) {
-      if (!repl_can_use_history()) {
+      if (!self$can_use_history()) {
         return(invisible(NULL))
       }
       if (!isTRUE(self$history_state$enabled)) {
@@ -236,7 +177,8 @@ RyeREPL <- R6::R6Class(
     },
     run = function() {
       private$require_engine()
-      self$output_fn(repl_version(), "\n", sep = "")
+
+      self$output_fn(paste0("Rye REPL ", rye_version()), "\n", sep = "")
       self$output_fn("Type (quit) or press Ctrl+C to exit\n")
       self$output_fn(
         "Builtin readline support:",
@@ -250,13 +192,7 @@ RyeREPL <- R6::R6Class(
 
       repeat {
         form <- tryCatch(
-          repl_read_form(
-            repl = self,
-            input_fn = self$input_fn,
-            prompt = self$prompt,
-            cont_prompt = self$cont_prompt,
-            engine = self$engine
-          ),
+          self$read_form(),
           error = function(e) {
             self$engine$source_tracker$print_error(e, file = stdout())
             list(error = TRUE)
@@ -291,11 +227,17 @@ RyeREPL <- R6::R6Class(
       if (is.null(self$engine)) {
         stop("Must provide RyeEngine instance")
       }
+    },
+    ensure_history_state = function() {
+      if (!exists("enabled", envir = self$history_state, inherits = FALSE)) {
+        self$history_state$enabled <- FALSE
+      }
+      if (!exists("path", envir = self$history_state, inherits = FALSE)) {
+        self$history_state$path <- NULL
+      }
+      if (!exists("snapshot", envir = self$history_state, inherits = FALSE)) {
+        self$history_state$snapshot <- NULL
+      }
     }
   )
 )
-
-# Internal REPL entrypoint (RyeEngine$repl delegates here).
-rye_repl <- function(engine) {
-  RyeREPL$new(engine = engine)$run()
-}

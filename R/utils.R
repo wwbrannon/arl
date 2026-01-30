@@ -1,3 +1,10 @@
+rye_version <- function() {
+  tryCatch(
+    as.character(utils::packageVersion("rye")),
+    error = function(...) "unknown"
+  )
+}
+
 rye_env_registry <- function(env, name, create = TRUE) {
   if (is.null(env)) {
     env <- parent.frame()
