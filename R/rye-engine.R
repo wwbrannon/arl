@@ -215,6 +215,10 @@ RyeEngine <- R6::R6Class(
           env <- self$env$current_env()
         }
         expr <- self$macro_expander$hygiene_unwrap(expr)
+        # Unwrap (quote x) so we evaluate x in env; R's eval(quote(x), env) would look up x
+        if (is.call(expr) && length(expr) == 2L && identical(expr[[1L]], quote(quote))) {
+          expr <- expr[[2L]]
+        }
         saved <- list()
         if (is.call(expr) && length(expr) > 0) {
           op <- expr[[1]]
@@ -238,7 +242,13 @@ RyeEngine <- R6::R6Class(
             assign("for", saved[["for"]], envir = env)
           }
         }, add = TRUE)
-        eval(expr, env)
+        # R's eval(symbol, envir) can look up in the wrong env when called from
+        # do.call; use get() for symbols so lookup is explicitly in env.
+        if (is.symbol(expr)) {
+          get(as.character(expr), envir = env, inherits = TRUE)
+        } else {
+          eval(expr, envir = env)
+        }
       }
       attr(env$`r/eval`, "rye_no_quote") <- TRUE
 

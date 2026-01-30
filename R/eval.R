@@ -76,6 +76,8 @@ Evaluator <- R6::R6Class(
       if (length(exprs) == 0) {
         return(NULL)
       }
+      self$env$push_env(env)
+      on.exit(self$env$pop_env(), add = TRUE)
       result <- NULL
       for (i in seq_along(exprs)) {
         result <- self$eval_inner(exprs[[i]], env)
@@ -204,14 +206,17 @@ Evaluator <- R6::R6Class(
       if (!is.function(fn)) {
         stop("attempt to call non-function")
       }
-      result <- private$do_call_impl(fn, args)
+      result <- private$do_call_impl(fn, args, env)
       return(result)
     },
     quote_arg = function(value, quote_symbols = TRUE) {
       private$quote_arg_impl(value, quote_symbols = quote_symbols)
     },
-    do_call = function(fn, args) {
-      private$do_call_impl(fn, args)
+    do_call = function(fn, args, env = NULL) {
+      if (is.null(env)) {
+        env <- self$env$env
+      }
+      private$do_call_impl(fn, args, env)
     },
     promise_new = function(expr, env) {
       promise_env <- new.env(parent = emptyenv())
@@ -830,12 +835,23 @@ Evaluator <- R6::R6Class(
       }
       value
     },
-    do_call_impl = function(fn, args) {
-      quote_symbols <- !identical(fn, base::`$`) &&
-        !identical(fn, base::`[`) &&
-        !identical(fn, base::`[[`) &&
-        !isTRUE(attr(fn, "rye_no_quote"))
-      args <- lapply(args, private$quote_arg_impl, quote_symbols = quote_symbols)
+    do_call_impl = function(fn, args, env) {
+      # Special handling for $, [, [[ - don't quote symbols
+      if (identical(fn, base::`$`) || identical(fn, base::`[`) || identical(fn, base::`[[`)) {
+        args <- lapply(args, private$quote_arg_impl, quote_symbols = FALSE)
+        return(do.call(fn, args))
+      }
+
+      # For rye_no_quote functions, always quote symbols and calls to prevent
+      # premature evaluation during promise forcing, but do it in the Rye environment
+      # so symbols are looked up correctly.
+      if (isTRUE(attr(fn, "rye_no_quote"))) {
+        args <- lapply(args, private$quote_arg_impl, quote_symbols = TRUE)
+        return(do.call(fn, args, envir = env))
+      }
+
+      # For other functions, quote symbols and calls as usual
+      args <- lapply(args, private$quote_arg_impl, quote_symbols = TRUE)
       do.call(fn, args)
     }
   )
