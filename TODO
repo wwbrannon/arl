@@ -5,8 +5,8 @@ o) unlockBinding note
 o) move out the rest of stdlib.R
 
 o) performance optimizations: use profiling and benchmarking
-o) Look for any R code that’s left over or not used
-o) Look for any R code that can be refactored to make it simpler
+
 o) How to calculate test coverage of .rye code
 o) More tests for .rye code
+
 o) pkgdown warning about site url
