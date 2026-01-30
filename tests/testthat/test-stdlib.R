@@ -13,13 +13,13 @@ test_that("stdlib loads successfully", {
 
 test_that("force evaluates promises", {
   env <- stdlib_env(engine, new.env())
-  forced <- engine$eval(engine$read("(force (delay (+ 1 2)))")[[1]], env)
+  forced <- engine$eval_in_env(engine$read("(force (delay (+ 1 2)))")[[1]], env)
   expect_equal(forced, 3)
 })
 
 test_that("force memoizes delayed expressions", {
   env <- stdlib_env(engine, new.env())
-  engine$eval(
+  engine$eval_in_env(
     engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  (force p)\n  (force p)\n  counter)")[[1]],
     env
   )
@@ -28,13 +28,13 @@ test_that("force memoizes delayed expressions", {
 
 test_that("force returns non-promises unchanged", {
   env <- stdlib_env(engine)
-  result <- engine$eval(engine$read("(force 42)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(force 42)")[[1]], env)
   expect_equal(result, 42)
 })
 
 test_that("call/cc exits to current continuation", {
   env <- stdlib_env(engine)
-  result <- engine$eval(
+  result <- engine$eval_in_env(
     engine$read("(call/cc (lambda (k) (+ 1 (k 42) 3)))")[[1]],
     env
   )
@@ -44,14 +44,14 @@ test_that("call/cc exits to current continuation", {
 test_that("call/cc is downward-only (R's callCC behavior)", {
   env <- stdlib_env(engine)
   # R's callCC is one-shot and downward-only
-  result <- engine$eval(
+  result <- engine$eval_in_env(
     engine$read("(call/cc (lambda (k) (k 5)))")[[1]],
     env
   )
   expect_equal(result, 5)
   
   # Test that it works as a regular function
-  result2 <- engine$eval(
+  result2 <- engine$eval_in_env(
     engine$read("(call/cc (lambda (exit) (if (> 2 1) (exit 10) 20)))")[[1]],
     env
   )
@@ -60,10 +60,10 @@ test_that("call/cc is downward-only (R's callCC behavior)", {
 
 test_that("call/cc is first-class and has an alias", {
   env <- stdlib_env(engine)
-  engine$eval(engine$read("(define cc call/cc)")[[1]], env)
-  result <- engine$eval(engine$read("(cc (lambda (k) (k 7)))")[[1]], env)
+  engine$eval_in_env(engine$read("(define cc call/cc)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(cc (lambda (k) (k 7)))")[[1]], env)
   expect_equal(result, 7)
-  alias_result <- engine$eval(
+  alias_result <- engine$eval_in_env(
     engine$read("(call-with-current-continuation (lambda (k) (k 9)))")[[1]],
     env
   )
@@ -97,33 +97,33 @@ test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", 
   env <- stdlib_env(engine, new.env())
 
   # From list values
-  expect_equal(engine$eval(engine$read("(begin (import list) (cadr (list 1 2 3 4)))")[[1]], env), 2)
-  expect_equal(engine$eval(engine$read("(begin (import list) (caddr (list 1 2 3 4)))")[[1]], env), 3)
-  expect_equal(engine$eval(engine$read("(begin (import list) (cadddr (list 1 2 3 4)))")[[1]], env), 4)
+  expect_equal(engine$eval_in_env(engine$read("(begin (import list) (cadr (list 1 2 3 4)))")[[1]], env), 2)
+  expect_equal(engine$eval_in_env(engine$read("(begin (import list) (caddr (list 1 2 3 4)))")[[1]], env), 3)
+  expect_equal(engine$eval_in_env(engine$read("(begin (import list) (cadddr (list 1 2 3 4)))")[[1]], env), 4)
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (caar (list (list 10 11) (list 20 21))))")[[1]], env),
+    engine$eval_in_env(engine$read("(begin (import list) (caar (list (list 10 11) (list 20 21))))")[[1]], env),
     10
   )
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (cdar (list (list 10 11) (list 20 21))))")[[1]], env),
+    engine$eval_in_env(engine$read("(begin (import list) (cdar (list (list 10 11) (list 20 21))))")[[1]], env),
     list(11)
   )
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (cddr (list 1 2 3 4)))")[[1]], env),
+    engine$eval_in_env(engine$read("(begin (import list) (cddr (list 1 2 3 4)))")[[1]], env),
     list(3, 4)
   )
 
   # From quoted calls (call objects)
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (cadr '(+ 1 2 3)))")[[1]], env),
+    engine$eval_in_env(engine$read("(begin (import list) (cadr '(+ 1 2 3)))")[[1]], env),
     1
   )
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (caddr '(+ 1 2 3)))")[[1]], env),
+    engine$eval_in_env(engine$read("(begin (import list) (caddr '(+ 1 2 3)))")[[1]], env),
     2
   )
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (cadddr '(+ 1 2 3)))")[[1]], env),
+    engine$eval_in_env(engine$read("(begin (import list) (cadddr '(+ 1 2 3)))")[[1]], env),
     3
   )
 })
@@ -192,10 +192,10 @@ test_that("map works from Rye code", {
   stdlib_env(engine, env)
 
   # Define a doubling function in Rye
-  engine$eval(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env)
+  engine$eval_in_env(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env)
 
   # Use map with the Rye function
-  result <- engine$eval(engine$read("(map double (list 1 2 3))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(map double (list 1 2 3))")[[1]], env)
 
   expect_equal(result[[1]], 2)
   expect_equal(result[[2]], 4)
@@ -207,10 +207,10 @@ test_that("filter works from Rye code", {
   stdlib_env(engine, env)
 
   # Define a predicate in Rye
-  engine$eval(engine$read("(define even? (lambda (x) (= (% x 2) 0)))")[[1]], env)
+  engine$eval_in_env(engine$read("(define even? (lambda (x) (= (% x 2) 0)))")[[1]], env)
 
   # Use filter
-  result <- engine$eval(engine$read("(filter even? (list 1 2 3 4 5 6))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(filter even? (list 1 2 3 4 5 6))")[[1]], env)
 
   expect_equal(length(result), 3)
 })
@@ -219,14 +219,14 @@ test_that("predicates work correctly", {
   env <- new.env()
   stdlib_env(engine, env)
 
-  expect_true(engine$eval(engine$read("(number? 42)")[[1]], env))
-  expect_false(engine$eval(engine$read("(number? \"hello\")")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(number? 42)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(number? \"hello\")")[[1]], env))
 
-  expect_true(engine$eval(engine$read("(string? \"hello\")")[[1]], env))
-  expect_false(engine$eval(engine$read("(string? 42)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(string? \"hello\")")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(string? 42)")[[1]], env))
 
-  expect_true(engine$eval(engine$read("(null? #nil)")[[1]], env))
-  expect_false(engine$eval(engine$read("(null? 42)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(null? #nil)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(null? 42)")[[1]], env))
 })
 
 test_that("extended predicates work correctly", {
@@ -238,9 +238,9 @@ test_that("extended predicates work correctly", {
   expect_false(env$`boolean?`(c(TRUE, FALSE)))
   expect_false(env$`boolean?`(1))
 
-  expect_true(engine$eval(engine$read("(xor #t #f)")[[1]], env))
-  expect_false(engine$eval(engine$read("(xor #t #t)")[[1]], env))
-  expect_false(engine$eval(engine$read("(xor #f #f)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(xor #t #f)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(xor #t #t)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(xor #f #f)")[[1]], env))
 
   expect_true(env$`even?`(4))
   expect_true(env$`odd?`(5))
@@ -280,15 +280,15 @@ test_that("and macro works", {
   env <- new.env()
 
   # Define and macro
-  engine$eval(engine$read("(defmacro and2 (first second) `(if ,first ,second #f))")[[1]], env)
+  engine$eval_in_env(engine$read("(defmacro and2 (first second) `(if ,first ,second #f))")[[1]], env)
 
-  result <- engine$eval(engine$read("(and2 #t #t)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(and2 #t #t)")[[1]], env)
   expect_true(result)
 
-  result <- engine$eval(engine$read("(and2 #t #f)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(and2 #t #f)")[[1]], env)
   expect_false(result)
 
-  result <- engine$eval(engine$read("(and2 #f #t)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(and2 #f #t)")[[1]], env)
   expect_false(result)
 })
 
@@ -296,15 +296,15 @@ test_that("or macro works", {
   env <- new.env()
 
   # Define or macro
-  engine$eval(engine$read("(defmacro or2 (first second) `(if ,first #t ,second))")[[1]], env)
+  engine$eval_in_env(engine$read("(defmacro or2 (first second) `(if ,first #t ,second))")[[1]], env)
 
-  result <- engine$eval(engine$read("(or2 #t #f)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(or2 #t #f)")[[1]], env)
   expect_true(result)
 
-  result <- engine$eval(engine$read("(or2 #f #t)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(or2 #f #t)")[[1]], env)
   expect_true(result)
 
-  result <- engine$eval(engine$read("(or2 #f #f)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(or2 #f #f)")[[1]], env)
   expect_false(result)
 })
 
@@ -313,18 +313,18 @@ test_that("variadic and/or short-circuit correctly", {
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("control"), env)
 
-  result <- engine$eval(engine$read("(and #t 1 2 3)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(and #t 1 2 3)")[[1]], env)
   expect_equal(result, 3)
 
-  result <- engine$eval(engine$read("(or #f 1 2)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(or #f 1 2)")[[1]], env)
   expect_equal(result, 1)
 
-  engine$eval(engine$read("(define x 0)")[[1]], env)
-  result <- engine$eval(engine$read("(and #f (begin (set! x 1) x))")[[1]], env)
+  engine$eval_in_env(engine$read("(define x 0)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(and #f (begin (set! x 1) x))")[[1]], env)
   expect_false(result)
   expect_equal(env$x, 0)
 
-  result <- engine$eval(engine$read("(or #t (begin (set! x 2) x))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(or #t (begin (set! x 2) x))")[[1]], env)
   expect_true(result)
   expect_equal(env$x, 0)
 })
@@ -334,28 +334,28 @@ test_that("binding macros when-let and if-let work", {
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
-  result <- engine$eval(engine$read("(when-let (x 10) (+ x 1))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(when-let (x 10) (+ x 1))")[[1]], env)
   expect_equal(result, 11)
 
-  result <- engine$eval(engine$read("(when-let (x #f) (+ x 1))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(when-let (x #f) (+ x 1))")[[1]], env)
   expect_null(result)
 
-  result <- engine$eval(engine$read("(when-let ((a b) (list 1 2)) (+ a b))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(when-let ((a b) (list 1 2)) (+ a b))")[[1]], env)
   expect_equal(result, 3)
 
-  result <- engine$eval(engine$read("(if-let (x 5) (+ x 1) 0)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(if-let (x 5) (+ x 1) 0)")[[1]], env)
   expect_equal(result, 6)
 
-  result <- engine$eval(engine$read("(if-let (x #nil) 1 2)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(if-let (x #nil) 1 2)")[[1]], env)
   expect_equal(result, 2)
 
-  result <- engine$eval(engine$read("(if-let (x #f) 1 2)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(if-let (x #f) 1 2)")[[1]], env)
   expect_equal(result, 2)
 
-  result <- engine$eval(engine$read("(if-let (x #f) 1)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(if-let (x #f) 1)")[[1]], env)
   expect_null(result)
 
-  result <- engine$eval(engine$read("(if-let ((a b) (list 3 4)) (+ a b) 0)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(if-let ((a b) (list 3 4)) (+ a b) 0)")[[1]], env)
   expect_equal(result, 7)
 })
 
@@ -364,7 +364,7 @@ test_that("until macro repeats until test is truthy", {
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("looping"), env)
 
-  result <- engine$eval(
+  result <- engine$eval_in_env(
     engine$read("(begin (define i 0) (until (= i 3) (set! i (+ i 1))) i)")[[1]],
     env
   )
@@ -376,31 +376,31 @@ test_that("loop/recur iterates with rebinding", {
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("looping"), env)
 
-  result <- engine$eval(
+  result <- engine$eval_in_env(
     engine$read("(loop ((i 0) (acc 0)) (if (< i 5) (recur (+ i 1) (+ acc i)) acc))")[[1]],
     env
   )
   expect_equal(result, 10)
 
-  result <- engine$eval(
+  result <- engine$eval_in_env(
     engine$read("(loop ((x 1)) (+ x 2))")[[1]],
     env
   )
   expect_equal(result, 3)
 
-  result <- engine$eval(
+  result <- engine$eval_in_env(
     engine$read("(loop ((i 0) (sum 0)) (if (< i 3) (recur (+ i 1) (+ sum (loop ((j 0) (acc 0)) (if (< j 2) (recur (+ j 1) (+ acc 1)) acc)))) sum))")[[1]],
     env
   )
   expect_equal(result, 6)
 
-  result <- engine$eval(
+  result <- engine$eval_in_env(
     engine$read("(loop ((n 5) (acc 1)) (if (< n 2) acc (recur (- n 1) (* acc n))))")[[1]],
     env
   )
   expect_equal(result, 120)
 
-  result <- engine$eval(
+  result <- engine$eval_in_env(
     engine$read("(loop ((xs (list 1 2 3)) (sum 0)) (if (null? xs) sum (recur (cdr xs) (+ sum (car xs)))))")[[1]],
     env
   )
@@ -412,16 +412,16 @@ test_that("recur errors outside loop", {
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("looping"), env)
 
-  expect_error(engine$eval(engine$read("(recur 1)")[[1]], env), "recur can only be used inside loop")
+  expect_error(engine$eval_in_env(engine$read("(recur 1)")[[1]], env), "recur can only be used inside loop")
 })
 
 test_that("not function works", {
   env <- new.env()
   stdlib_env(engine, env)
 
-  expect_false(engine$eval(engine$read("(not #t)")[[1]], env))
-  expect_true(engine$eval(engine$read("(not #f)")[[1]], env))
-  expect_false(engine$eval(engine$read("(not 42)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(not #t)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(not #f)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(not 42)")[[1]], env))
 })
 
 test_that("list helpers work", {
@@ -438,16 +438,16 @@ test_that("values and call-with-values work", {
   env <- new.env()
   stdlib_env(engine, env)
 
-  result <- engine$eval(engine$read("(call-with-values (lambda () (values)) (lambda () 42))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () (values)) (lambda () 42))")[[1]], env)
   expect_equal(result, 42)
 
-  result <- engine$eval(engine$read("(call-with-values (lambda () (values 1)) (lambda (x) (+ x 1)))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () (values 1)) (lambda (x) (+ x 1)))")[[1]], env)
   expect_equal(result, 2)
 
-  result <- engine$eval(engine$read("(call-with-values (lambda () (values 1 2)) (lambda (a b) (+ a b)))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () (values 1 2)) (lambda (a b) (+ a b)))")[[1]], env)
   expect_equal(result, 3)
 
-  result <- engine$eval(engine$read("(call-with-values (lambda () 5) (lambda (x) (* x 2)))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () 5) (lambda (x) (* x 2)))")[[1]], env)
   expect_equal(result, 10)
 })
 
@@ -644,12 +644,12 @@ test_that("defstruct macro defines constructor and accessors", {
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("struct"), env)
 
-  engine$eval(engine$read("(defstruct Point (x y))")[[1]], env)
-  engine$eval(engine$read("(define p (make-Point 1 2))")[[1]], env)
+  engine$eval_in_env(engine$read("(defstruct Point (x y))")[[1]], env)
+  engine$eval_in_env(engine$read("(define p (make-Point 1 2))")[[1]], env)
 
-  expect_true(engine$eval(engine$read("(Point? p)")[[1]], env))
-  expect_equal(engine$eval(engine$read("(Point-x p)")[[1]], env), 1)
-  expect_equal(engine$eval(engine$read("(Point-y p)")[[1]], env), 2)
+  expect_true(engine$eval_in_env(engine$read("(Point? p)")[[1]], env))
+  expect_equal(engine$eval_in_env(engine$read("(Point-x p)")[[1]], env), 1)
+  expect_equal(engine$eval_in_env(engine$read("(Point-y p)")[[1]], env), 2)
 })
 
 test_that("error and debug helpers work", {
@@ -822,11 +822,11 @@ test_that("macroexpand-1 expands macros one level", {
   stdlib_env(engine, env)
 
   # Define a simple macro
-  engine$eval(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env)
+  engine$eval_in_env(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env)
 
   # Expand once
   expr <- engine$read("(my-when #t 42)")[[1]]
-  expanded <- env$`macroexpand-1`(expr, env)
+  expanded <- env$`macroexpand-1`(expr)
 
   # Should be an if expression
   expect_true(is.call(expanded))
@@ -838,12 +838,12 @@ test_that("macroexpand fully expands nested macros", {
   stdlib_env(engine, env)
 
   # Define nested macros
-  engine$eval(engine$read("(defmacro inner (x) `(* ,x 2))")[[1]], env)
-  engine$eval(engine$read("(defmacro outer (y) `(inner (+ ,y 1)))")[[1]], env)
+  engine$eval_in_env(engine$read("(defmacro inner (x) `(* ,x 2))")[[1]], env)
+  engine$eval_in_env(engine$read("(defmacro outer (y) `(inner (+ ,y 1)))")[[1]], env)
 
   # Fully expand
   expr <- engine$read("(outer 5)")[[1]]
-  expanded <- env$macroexpand(expr, env)
+  expanded <- env$macroexpand(expr)
 
   # Should be fully expanded to arithmetic
   expect_true(is.call(expanded))
@@ -855,7 +855,7 @@ test_that("macro? predicate identifies macros", {
   stdlib_env(engine, env)
 
   # Define a macro
-  engine$eval(engine$read("(defmacro test-macro (x) x)")[[1]], env)
+  engine$eval_in_env(engine$read("(defmacro test-macro (x) x)")[[1]], env)
 
   # Test predicate
   expect_true(env$`macro?`(quote(`test-macro`)))

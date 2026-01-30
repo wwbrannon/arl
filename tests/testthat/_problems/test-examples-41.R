@@ -33,7 +33,7 @@ run_example <- function(example_name) {
   }, add = TRUE)
   Sys.setenv(RYE_OUTPUT_DIR = out_dir)
 
-  output <- capture.output(engine$load_file(example_path, env))
+  output <- capture.output(engine$load_file_in_env(example_path, env))
   list(env = env, output = output, out_dir = out_dir, path = example_path)
 }
 

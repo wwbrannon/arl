@@ -1,8 +1,3 @@
-o) rewrite cli to use docopt and generally simplify cli
-o) move cli_load_env into a classmethod ctor of RyeEngine / retire load_stdlib
-o) I think we can ditch rye_env_resolve and env arguments to various methods
-o) remove engine test helpers
-
 o) OO refactor of repl
 o) we don't need both CLI and engine calling repl
 

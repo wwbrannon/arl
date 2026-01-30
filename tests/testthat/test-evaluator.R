@@ -19,10 +19,10 @@ test_that("evaluator handles nested calls", {
 
 test_that("evaluator evaluates arguments left-to-right", {
   env <- new.env(parent = baseenv())
-  engine$eval(engine$read("(define x 0)")[[1]], env)
-  engine$eval(engine$read("(define collect (lambda (a b) (list a b)))")[[1]], env)
+  engine$eval_in_env(engine$read("(define x 0)")[[1]], env)
+  engine$eval_in_env(engine$read("(define collect (lambda (a b) (list a b)))")[[1]], env)
 
-  result <- engine$eval(
+  result <- engine$eval_in_env(
     engine$read("(collect (begin (set! x (+ x 1)) x) (begin (set! x (+ x 1)) x))")[[1]],
     env
   )
@@ -56,9 +56,9 @@ test_that("evaluator handles set! scoping and missing bindings", {
   child <- new.env(parent = env)
   assign(".rye_env", TRUE, envir = child)
 
-  engine$eval(engine$read("(set! x 2)")[[1]], child)
+  engine$eval_in_env(engine$read("(set! x 2)")[[1]], child)
   expect_equal(env$x, 2)
-  expect_error(engine$eval(engine$read("(set! y 1)")[[1]], child), "variable 'y' is not defined")
+  expect_error(engine$eval_in_env(engine$read("(set! y 1)")[[1]], child), "variable 'y' is not defined")
 })
 
 test_that("evaluator validates load arguments and missing files", {
@@ -69,7 +69,7 @@ test_that("evaluator validates load arguments and missing files", {
 test_that("evaluator builds formulas without evaluating arguments", {
   env <- new.env(parent = baseenv())
   env$x <- 10
-  result <- engine$eval(engine$read("(~ x y)")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(~ x y)")[[1]], env)
   expect_s3_class(result, "formula")
   expect_equal(as.character(result)[2], "x")
   expect_equal(as.character(result)[3], "y")
@@ -100,7 +100,7 @@ test_that("evaluator validates lambda argument lists", {
 test_that("eval text errors include source and stack context", {
   env <- new.env(parent = baseenv())
   err <- tryCatch(
-    engine$eval_text("(+ 1 nope)", env, source_name = "test.rye"),
+    engine$eval_text_in_env("(+ 1 nope)", env, source_name = "test.rye"),
     error = function(e) e
   )
   expect_s3_class(err, "rye_error")
@@ -129,4 +129,3 @@ test_that("quote_arg can skip symbol quoting", {
   expect_true(is.symbol(result))
   expect_equal(as.character(result), "x")
 })
-

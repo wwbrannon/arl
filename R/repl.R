@@ -144,15 +144,15 @@ repl_read_form <- function(input_fn = repl_input_line, prompt = "rye> ", cont_pr
   }
 }
 
-repl_eval_exprs <- function(exprs, engine, env) {
-  engine$eval_exprs(exprs, env)
+repl_eval_exprs <- function(exprs, engine) {
+  engine$eval_exprs(exprs)
 }
 
-repl_eval_and_print_exprs <- function(exprs, engine, env) {
+repl_eval_and_print_exprs <- function(exprs, engine) {
   engine$source_tracker$with_error_context(function() {
     result <- NULL
     for (expr in exprs) {
-      result <- engine$eval(expr, env)
+      result <- engine$eval(expr)
       repl_print_value(result, engine)
     }
     invisible(result)
@@ -176,8 +176,6 @@ rye_repl <- function(engine) {
   if (is.null(engine)) {
     stop("Must provide RyeEngine instance")
   }
-  repl_env <- engine$env$env
-
   history_path <- repl_history_path()
   repl_load_history(history_path)
   on.exit(repl_save_history(), add = TRUE)
@@ -207,7 +205,7 @@ rye_repl <- function(engine) {
     repl_add_history(input_text)
 
     tryCatch({
-      repl_eval_and_print_exprs(form$exprs, engine, repl_env)
+      repl_eval_and_print_exprs(form$exprs, engine)
     }, error = function(e) {
       engine$source_tracker$print_error(e, file = stdout())
     })

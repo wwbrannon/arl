@@ -20,24 +20,24 @@ MacroExpander <- R6::R6Class(
       self$evaluator <- evaluator
     },
     defmacro = function(name, params, body, docstring = NULL, env = NULL) {
-      target_env <- private$resolve_env(env)
+      target_env <- private$normalize_env(env)
       private$define_macro(name, params, body, target_env, docstring = docstring)
       invisible(NULL)
     },
     macroexpand = function(expr, env = NULL, preserve_src = FALSE) {
-      target_env <- private$resolve_env(env)
+      target_env <- private$normalize_env(env)
       private$macroexpand_impl(expr, target_env, preserve_src, max_depth = Inf, walk = TRUE)
     },
     macroexpand_1 = function(expr, env = NULL, preserve_src = FALSE) {
-      target_env <- private$resolve_env(env)
+      target_env <- private$normalize_env(env)
       private$macroexpand_impl(expr, target_env, preserve_src, max_depth = 1, walk = FALSE)
     },
     is_macro = function(name, env = NULL) {
-      target_env <- private$resolve_env(env)
+      target_env <- private$normalize_env(env)
       private$is_macro_impl(name, target_env)
     },
     get_macro = function(name, env = NULL) {
-      target_env <- private$resolve_env(env)
+      target_env <- private$normalize_env(env)
       private$get_macro_impl(name, target_env)
     },
     capture = function(symbol, expr) {
@@ -50,15 +50,24 @@ MacroExpander <- R6::R6Class(
       private$gensym_impl(prefix = prefix)
     },
     quasiquote = function(expr, env, depth = 1) {
-      target_env <- private$resolve_env(env)
+      target_env <- private$normalize_env(env)
       private$quasiquote_impl(expr, target_env, depth = depth)
     }
   ),
   private = list(
     gensym_counter = 0,
     hygiene_counter = 0,
-    resolve_env = function(env) {
-      rye_env_resolve(env, fallback = self$env)
+    normalize_env = function(env) {
+      if (inherits(env, "RyeEnv")) {
+        return(env$env)
+      }
+      if (is.environment(env)) {
+        return(env)
+      }
+      if (is.null(env)) {
+        return(self$env$env)
+      }
+      stop("Expected a RyeEnv or environment")
     },
     macro_registry = function(env, create = TRUE) {
       rye_env_registry(env, ".rye_macros", create = create)
@@ -508,7 +517,7 @@ MacroExpander <- R6::R6Class(
           if (length(expr) != 2) {
             stop("unquote requires exactly 1 argument")
           }
-          return(private$hygiene_wrap(self$evaluator$eval(expr[[2]], env), "call_site"))
+          return(private$hygiene_wrap(self$evaluator$eval_in_env(expr[[2]], env), "call_site"))
         }
         return(as.call(list(as.symbol("unquote"), private$quasiquote_impl(expr[[2]], env, depth - 1))))
       }
@@ -527,7 +536,7 @@ MacroExpander <- R6::R6Class(
             if (length(elem) != 2) {
               stop("unquote-splicing requires exactly 1 argument")
             }
-            spliced <- self$evaluator$eval(elem[[2]], env)
+            spliced <- self$evaluator$eval_in_env(elem[[2]], env)
             if (is.call(spliced)) {
               spliced <- as.list(spliced)
             }
@@ -603,7 +612,7 @@ MacroExpander <- R6::R6Class(
         }
         result <- NULL
         for (expr in body) {
-          result <- self$evaluator$eval(expr, macro_env)
+          result <- self$evaluator$eval_in_env(expr, macro_env)
         }
         result
       }

@@ -236,9 +236,8 @@ test_that("repl_print_value handles vectors with print", {
 # Eval Wrapper Function ----
 
 test_that("repl_eval_exprs delegates to engine$eval_exprs", {
-  env <- new.env()
   exprs <- engine$read("(+ 1 2)")
-  result <- rye:::repl_eval_exprs(exprs, engine, env)
+  result <- rye:::repl_eval_exprs(exprs, engine)
   expect_equal(result, 3)
 })
 

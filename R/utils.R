@@ -62,19 +62,6 @@ rye_error <- function(message, src_stack = list(), r_stack = list()) {
   )
 }
 
-rye_env_resolve <- function(env, fallback) {
-  if (inherits(env, "RyeEnv")) {
-    return(env$env)
-  }
-  if (is.environment(env)) {
-    return(env)
-  }
-  if (is.null(env)) {
-    return(fallback$env)
-  }
-  stop("Expected a RyeEnv or environment")
-}
-
 rye_as_list <- function(x) {
   if (is.call(x)) {
     return(as.list(x))

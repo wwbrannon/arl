@@ -64,27 +64,50 @@ RyeEngine <- R6::R6Class(
     },
     #' @description
     #' Evaluate a single expression.
-    eval = function(expr, env = NULL) {
-      self$evaluator$eval(expr, env)
+    eval = function(expr) {
+      self$evaluator$eval(expr)
+    },
+    #' @description
+    #' Evaluate a single expression in an explicit environment.
+    eval_in_env = function(expr, env) {
+      target_env <- private$resolve_env_arg(env)
+      self$evaluator$eval_in_env(expr, target_env)
     },
     #' @description
     #' Evaluate expressions in order.
-    eval_seq = function(exprs, env = NULL) {
-      self$evaluator$eval_seq(exprs, env)
+    eval_seq = function(exprs) {
+      self$evaluator$eval_seq(exprs)
+    },
+    #' @description
+    #' Evaluate expressions in order in an explicit environment.
+    eval_seq_in_env = function(exprs, env) {
+      target_env <- private$resolve_env_arg(env)
+      self$evaluator$eval_seq_in_env(exprs, target_env)
     },
     #' @description
     #' Evaluate expressions with source tracking.
-    eval_exprs = function(exprs, env = NULL) {
-      target_env <- rye_env_resolve(env, fallback = self$env)
+    eval_exprs = function(exprs) {
+      self$eval_exprs_in_env(exprs, self$env$env)
+    },
+    #' @description
+    #' Evaluate expressions with source tracking in an explicit environment.
+    eval_exprs_in_env = function(exprs, env) {
+      target_env <- private$resolve_env_arg(env)
       self$source_tracker$with_error_context(function() {
-        self$eval_seq(exprs, target_env)
+        self$evaluator$eval_seq_in_env(exprs, target_env)
       })
     },
     #' @description
     #' Read and evaluate text.
-    eval_text = function(text, env = NULL, source_name = "<eval>") {
+    eval_text = function(text, source_name = "<eval>") {
       exprs <- self$read(text, source_name = source_name)
-      self$eval_exprs(exprs, env = env)
+      self$eval_exprs(exprs)
+    },
+    #' @description
+    #' Read and evaluate text in an explicit environment.
+    eval_text_in_env = function(text, env, source_name = "<eval>") {
+      exprs <- self$read(text, source_name = source_name)
+      self$eval_exprs_in_env(exprs, env)
     },
     #' @description
     #' Populate standard bindings
@@ -133,7 +156,7 @@ RyeEngine <- R6::R6Class(
       env$`macroexpand-all` <- env$macroexpand
 
       env$eval <- function(expr, env = parent.frame()) {
-        self$eval(expr, env)
+        self$eval_in_env(expr, env)
       }
       attr(env$eval, "rye_doc") <- list(
         description = "Evaluate expr in the current environment."
@@ -217,13 +240,18 @@ RyeEngine <- R6::R6Class(
       attr(env$`r/eval`, "rye_no_quote") <- TRUE
 
       loader_path <- rye_resolve_module_path("_stdlib_loader")
-      self$eval(self$read(sprintf('(load "%s")', loader_path))[[1]], env)
+      self$eval_in_env(self$read(sprintf('(load "%s")', loader_path))[[1]], env)
 
       env
     },
     #' @description
     #' Load and evaluate a Rye source file.
-    load_file = function(path, env = NULL) {
+    load_file = function(path) {
+      self$load_file_in_env(path, self$env$env)
+    },
+    #' @description
+    #' Load and evaluate a Rye source file in an explicit environment.
+    load_file_in_env = function(path, env) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
       }
@@ -231,32 +259,62 @@ RyeEngine <- R6::R6Class(
         stop(sprintf("File not found: %s", path))
       }
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-      target_env <- rye_env_resolve(env, fallback = self$env)
+      target_env <- private$resolve_env_arg(env)
       self$source_tracker$with_error_context(function() {
-        self$eval_seq(self$read(text, source_name = path), target_env)
+        self$evaluator$eval_seq_in_env(self$read(text, source_name = path), target_env)
       })
     },
     #' @description
     #' Expand macros recursively.
-    macroexpand = function(expr, env = NULL, preserve_src = FALSE) {
-      target_env <- rye_env_resolve(env, fallback = self$env)
+    macroexpand = function(expr, preserve_src = FALSE) {
+      self$macro_expander$macroexpand(expr, env = self$env$env, preserve_src = preserve_src)
+    },
+    #' @description
+    #' Expand macros recursively in an explicit environment.
+    macroexpand_in_env = function(expr, env, preserve_src = FALSE) {
+      target_env <- private$resolve_env_arg(env)
       self$macro_expander$macroexpand(expr, env = target_env, preserve_src = preserve_src)
     },
     #' @description
     #' Expand a single macro layer.
-    macroexpand_1 = function(expr, env = NULL, preserve_src = FALSE) {
-      target_env <- rye_env_resolve(env, fallback = self$env)
+    macroexpand_1 = function(expr, preserve_src = FALSE) {
+      self$macro_expander$macroexpand_1(expr, env = self$env$env, preserve_src = preserve_src)
+    },
+    #' @description
+    #' Expand a single macro layer in an explicit environment.
+    macroexpand_1_in_env = function(expr, env, preserve_src = FALSE) {
+      target_env <- private$resolve_env_arg(env)
       self$macro_expander$macroexpand_1(expr, env = target_env, preserve_src = preserve_src)
     },
     #' @description
     #' Show help for a topic.
-    help = function(topic, env = NULL) {
-      self$help_system$help(topic, env = env)
+    help = function(topic) {
+      self$help_system$help(topic)
+    },
+    #' @description
+    #' Show help for a topic in an explicit environment.
+    help_in_env = function(topic, env) {
+      target_env <- private$resolve_env_arg(env)
+      self$help_system$help_in_env(topic, target_env)
     },
     #' @description
     #' Start the Rye REPL using this engine.
     repl = function() {
       rye_repl(engine = self)
+    }
+  ),
+  private = list(
+    resolve_env_arg = function(env) {
+      if (inherits(env, "RyeEnv")) {
+        return(env$env)
+      }
+      if (is.environment(env)) {
+        return(env)
+      }
+      if (is.null(env)) {
+        return(self$env$env)
+      }
+      stop("Expected a RyeEnv or environment")
     }
   )
 )

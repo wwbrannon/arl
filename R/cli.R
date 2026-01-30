@@ -147,7 +147,7 @@ RyeCLI <- R6::R6Class(
         }
       }
       for (path in parsed$files) {
-        self$cli_eval_with_engine(engine, function() engine$load_file(path, engine$env$env))
+        self$cli_eval_with_engine(engine, function() engine$load_file(path))
       }
       invisible(NULL)
     },
@@ -173,7 +173,7 @@ RyeCLI <- R6::R6Class(
     cli_eval_text = function(text, engine, source_name = "<cli>") {
       self$cli_eval_with_engine(
         engine,
-        function() engine$eval_text(text, engine$env$env, source_name = source_name)
+        function() engine$eval_text(text, source_name = source_name)
       )
     },
     cli_isatty = function() {

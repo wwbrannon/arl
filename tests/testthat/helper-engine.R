@@ -11,7 +11,7 @@ stdlib_env <- function(engine, env = NULL) {
     stop("stdlib loader not found")
   }
   expr <- engine$read(sprintf('(load "%s")', loader_path))[[1]]
-  engine$eval(expr, env)
+  engine$eval_in_env(expr, env)
   core_env <- engine$env$env
   for (name in ls(core_env, all.names = TRUE)) {
     if (!exists(name, envir = env, inherits = FALSE)) {

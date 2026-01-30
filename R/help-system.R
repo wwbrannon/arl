@@ -10,12 +10,23 @@ HelpSystem <- R6::R6Class(
       self$engine <- engine
       private$specials_help <- private$build_specials_help()
     },
-    help = function(topic, env = NULL) {
+    help = function(topic) {
+      self$help_in_env(topic, self$engine$env$env)
+    },
+    help_in_env = function(topic, env) {
       if (!is.character(topic) || length(topic) != 1) {
         stop("help requires a symbol or string")
       }
 
-      target_env <- rye_env_resolve(env, fallback = self$engine$env)
+      if (inherits(env, "RyeEnv")) {
+        env <- env$env
+      } else if (is.null(env)) {
+        env <- self$engine$env$env
+      }
+      if (!is.environment(env)) {
+        stop("Expected a RyeEnv or environment")
+      }
+      target_env <- env
 
       doc <- private$specials_help[[topic]]
       if (!is.null(doc)) {

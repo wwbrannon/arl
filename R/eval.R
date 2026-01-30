@@ -29,25 +29,48 @@ Evaluator <- R6::R6Class(
       self$engine <- engine
       self$special_forms <- self$build_special_forms()
     },
-    eval = function(expr, env = NULL) {
-      target_env <- rye_env_resolve(env, fallback = self$env)
-      if (!exists(".rye_env", envir = target_env, inherits = FALSE)) {
-        assign(".rye_env", TRUE, envir = target_env)
+    eval = function(expr) {
+      self$eval_in_env(expr, self$env$env)
+    },
+    eval_in_env = function(expr, env) {
+      if (inherits(env, "RyeEnv")) {
+        env <- env$env
+      } else if (is.null(env)) {
+        env <- self$env$env
+      }
+      if (!is.environment(env)) {
+        stop("Expected a RyeEnv or environment")
+      }
+      if (!exists(".rye_env", envir = env, inherits = FALSE)) {
+        assign(".rye_env", TRUE, envir = env)
       }
       withCallingHandlers({
-        self$eval_inner(expr, target_env)
+        self$eval_inner(expr, env)
       }, error = function(e) {
         stop(e)
       })
     },
-    eval_seq = function(exprs, env = NULL) {
-      target_env <- rye_env_resolve(env, fallback = self$env)
+    eval_seq = function(exprs) {
+      self$eval_seq_in_env(exprs, self$env$env)
+    },
+    eval_seq_in_env = function(exprs, env) {
+      if (inherits(env, "RyeEnv")) {
+        env <- env$env
+      } else if (is.null(env)) {
+        env <- self$env$env
+      }
+      if (!is.environment(env)) {
+        stop("Expected a RyeEnv or environment")
+      }
+      if (!exists(".rye_env", envir = env, inherits = FALSE)) {
+        assign(".rye_env", TRUE, envir = env)
+      }
       if (length(exprs) == 0) {
         return(NULL)
       }
       result <- NULL
       for (i in seq_along(exprs)) {
-        result <- self$eval_inner(exprs[[i]], target_env)
+        result <- self$eval_inner(exprs[[i]], env)
       }
       result
     },
@@ -186,7 +209,7 @@ Evaluator <- R6::R6Class(
       promise_env <- new.env(parent = emptyenv())
       assign(rye_promise_expr_key, expr, envir = promise_env)
       assign(rye_promise_env_key, env, envir = promise_env)
-      assign(rye_promise_eval_key, self$eval, envir = promise_env)
+      assign(rye_promise_eval_key, self$eval_in_env, envir = promise_env)
       delayedAssign(
         rye_promise_value_key,
         .rye_promise_eval(.rye_promise_expr, .rye_promise_env),
@@ -293,7 +316,7 @@ Evaluator <- R6::R6Class(
       }
 
       # Evaluate body expressions
-      return(self$eval_seq(info$body_exprs, fn_env))
+      return(self$eval_seq_in_env(info$body_exprs, fn_env))
     },
     eval_package_access = function(expr, env, op_name) {
       if (length(expr) != 3) {
@@ -344,7 +367,7 @@ Evaluator <- R6::R6Class(
           if (is.null(self$engine)) {
             stop("help requires an engine")
           }
-          self$engine$help(topic, env = env)
+          self$engine$help_in_env(topic, env)
           NULL
         },
         defmacro = function(expr, env, op_name) {
@@ -431,14 +454,14 @@ Evaluator <- R6::R6Class(
           if (!has_separator) {
             stdlib_path <- rye_resolve_stdlib_path(path)
             if (!is.null(stdlib_path)) {
-              return(self$source_tracker$strip_src(self$engine$load_file(stdlib_path, env)))
+              return(self$source_tracker$strip_src(self$engine$load_file_in_env(stdlib_path, env)))
             }
             if (file.exists(path)) {
-              return(self$source_tracker$strip_src(self$engine$load_file(path, env)))
+              return(self$source_tracker$strip_src(self$engine$load_file_in_env(path, env)))
             }
             stop(sprintf("File not found: %s", path))
           }
-          self$source_tracker$strip_src(self$engine$load_file(path, env))
+          self$source_tracker$strip_src(self$engine$load_file_in_env(path, env))
         },
         module = function(expr, env, op_name) {
           if (length(expr) < 3) {
@@ -488,7 +511,7 @@ Evaluator <- R6::R6Class(
             }
             return(NULL)
           }
-          result <- self$eval_seq(body_exprs, module_env)
+          result <- self$eval_seq_in_env(body_exprs, module_env)
           if (export_all) {
             exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
             RyeEnv$new(env)$module_registry$update_exports(module_name, exports)
@@ -506,7 +529,7 @@ Evaluator <- R6::R6Class(
             if (is.null(module_path)) {
               stop(sprintf("Module not found: %s", module_name))
             }
-            self$engine$load_file(module_path, env)
+            self$engine$load_file_in_env(module_path, env)
             if (!RyeEnv$new(env)$module_registry$exists(module_name)) {
               stop(sprintf("Module '%s' did not register itself", module_name))
             }
@@ -571,7 +594,7 @@ Evaluator <- R6::R6Class(
             result <- NULL
             if (length(body_exprs) > 0) {
               for (i in seq_along(body_exprs)) {
-                result <- self$source_tracker$strip_src(self$eval(body_exprs[[i]], fn_env))
+                result <- self$source_tracker$strip_src(self$eval_in_env(body_exprs[[i]], fn_env))
               }
             }
             result
@@ -599,7 +622,7 @@ Evaluator <- R6::R6Class(
           if (length(expr) == 1) {
             return(NULL)
           }
-          self$eval_seq(as.list(expr)[-1], env)
+          self$eval_seq_in_env(as.list(expr)[-1], env)
         },
         `~` = function(expr, env, op_name) {
           formula_parts <- list(as.symbol("~"))
