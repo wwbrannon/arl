@@ -51,10 +51,8 @@ test_that("evaluator validates special form arity and types", {
 
 test_that("evaluator handles set! scoping and missing bindings", {
   env <- new.env(parent = emptyenv())
-  assign(".rye_env", TRUE, envir = env)
   env$x <- 1
   child <- new.env(parent = env)
-  assign(".rye_env", TRUE, envir = child)
 
   engine$eval_in_env(engine$read("(set! x 2)")[[1]], child)
   expect_equal(env$x, 2)
@@ -138,7 +136,6 @@ test_that("current-env returns the active evaluation environment", {
   engine$eval(engine$read("(define _ce_test 123)")[[1]])
   curr <- engine$eval(engine$read("(current-env)")[[1]])
   expect_true(is.environment(curr))
-  expect_true(exists(".rye_env", envir = curr, inherits = FALSE))
   expect_equal(get("_ce_test", envir = curr, inherits = FALSE), 123)
 })
 

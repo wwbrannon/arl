@@ -17,9 +17,6 @@ RyeEnv <- R6::R6Class(
         stop("RyeEnv requires an environment")
       }
       self$env <- env
-      if (!exists(".rye_env", envir = env, inherits = FALSE)) {
-        assign(".rye_env", TRUE, envir = env)
-      }
       self$macro_registry <- self$macro_registry_env(env, create = TRUE)
       self$module_registry <- ModuleRegistry$new(self)
       self$env_stack <- list()
@@ -95,10 +92,16 @@ RyeEnv <- R6::R6Class(
       target <- self$env
       repeat {
         if (exists(name, envir = target, inherits = FALSE)) {
+          # Found the binding - check if it's locked
+          if (bindingIsLocked(name, target)) {
+            # Skip locked bindings and create new binding in original env
+            break
+          }
           return(target)
         }
         parent_env <- parent.env(target)
-        if (!exists(".rye_env", envir = parent_env, inherits = FALSE)) {
+        # Stop at baseenv or emptyenv - these are the natural boundaries
+        if (identical(parent_env, baseenv()) || identical(parent_env, emptyenv())) {
           break
         }
         target <- parent_env

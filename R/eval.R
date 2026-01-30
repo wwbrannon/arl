@@ -47,9 +47,6 @@ Evaluator <- R6::R6Class(
       if (!is.environment(env)) {
         stop("Expected a RyeEnv or environment")
       }
-      if (!exists(".rye_env", envir = env, inherits = FALSE)) {
-        assign(".rye_env", TRUE, envir = env)
-      }
       self$env$push_env(env)
       on.exit(self$env$pop_env(), add = TRUE)
       withCallingHandlers({
@@ -69,9 +66,6 @@ Evaluator <- R6::R6Class(
       }
       if (!is.environment(env)) {
         stop("Expected a RyeEnv or environment")
-      }
-      if (!exists(".rye_env", envir = env, inherits = FALSE)) {
-        assign(".rye_env", TRUE, envir = env)
       }
       if (length(exprs) == 0) {
         return(NULL)
@@ -512,21 +506,20 @@ Evaluator <- R6::R6Class(
           }
 
           module_env <- new.env(parent = env)
-          assign(".rye_env", TRUE, envir = module_env)
           assign(".rye_module", TRUE, envir = module_env)
           RyeEnv$new(env)$module_registry$register(module_name, module_env, exports)
 
           body_exprs <- private$collect_body(expr, 4)
           if (length(body_exprs) == 0) {
             if (export_all) {
-              exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
+              exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
               RyeEnv$new(env)$module_registry$update_exports(module_name, exports)
             }
             return(NULL)
           }
           result <- self$eval_seq_in_env(body_exprs, module_env)
           if (export_all) {
-            exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_env")
+            exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
             RyeEnv$new(env)$module_registry$update_exports(module_name, exports)
           }
           result

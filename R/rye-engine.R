@@ -117,9 +117,6 @@ RyeEngine <- R6::R6Class(
     initialize_environment = function() {
       env <- self$env$env
 
-      if (!exists(".rye_env", envir = env, inherits = FALSE)) {
-        assign(".rye_env", TRUE, envir = env)
-      }
       rye_env_registry(env, ".rye_module_registry", create = TRUE)
       rye_env_registry(env, ".rye_macros", create = TRUE)
 
