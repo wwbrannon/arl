@@ -1,9 +1,9 @@
-o) classes that have instances of other classes horizontally as attributes
-o) do we still need to assign these macro registry etc into the environment?
 o) unlockBinding note
+o) classes that have instances of other classes horizontally as attributes
+
+o) More tests for .rye code: download the hy test suite locally and compare to it
 
 o) How to calculate test coverage of .rye code? this is probably too complicated
-o) More tests for .rye code: download the hy test suite locally and compare to it
 
 o) performance optimizations: use profiling and benchmarking
 
