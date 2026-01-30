@@ -50,6 +50,8 @@ Evaluator <- R6::R6Class(
       if (!exists(".rye_env", envir = env, inherits = FALSE)) {
         assign(".rye_env", TRUE, envir = env)
       }
+      self$env$push_env(env)
+      on.exit(self$env$pop_env(), add = TRUE)
       withCallingHandlers({
         self$eval_inner(expr, env)
       }, error = function(e) {

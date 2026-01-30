@@ -165,7 +165,7 @@ RyeEngine <- R6::R6Class(
         description = "Evaluate expr in the current environment."
       )
 
-      env$`current-env` <- rye_current_env
+      env$`current-env` <- function() self$env$current_env()
 
       env$`promise?` <- function(x) {
         is.environment(x) && inherits(x, "rye_promise")
@@ -212,7 +212,7 @@ RyeEngine <- R6::R6Class(
 
       env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
-          env <- rye_current_env()
+          env <- self$env$current_env()
         }
         expr <- self$macro_expander$hygiene_unwrap(expr)
         saved <- list()

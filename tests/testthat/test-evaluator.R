@@ -129,3 +129,35 @@ test_that("quote_arg can skip symbol quoting", {
   expect_true(is.symbol(result))
   expect_equal(as.character(result), "x")
 })
+
+# =============================================================================
+# current-env and r/eval (per-engine env stack, no global state)
+# =============================================================================
+
+test_that("current-env returns the active evaluation environment", {
+  engine$eval(engine$read("(define _ce_test 123)")[[1]])
+  curr <- engine$eval(engine$read("(current-env)")[[1]])
+  expect_true(is.environment(curr))
+  expect_true(exists(".rye_env", envir = curr, inherits = FALSE))
+  expect_equal(get("_ce_test", envir = curr, inherits = FALSE), 123)
+})
+
+test_that("r/eval with no env uses current environment", {
+  # + is in the env (from base); r/eval (quote +) should return it
+  result <- engine$eval(engine$read("(r/eval (quote +))")[[1]])
+  expect_identical(result, base::`+`)
+})
+
+test_that("multiple engines have independent current-env", {
+  engine_a <- RyeEngine$new()
+  engine_b <- RyeEngine$new()
+  engine_a$eval(engine_a$read("(define _eng_x 1)")[[1]])
+  engine_b$eval(engine_b$read("(define _eng_x 2)")[[1]])
+  curr_a <- engine_a$eval(engine_a$read("(current-env)")[[1]])
+  curr_b <- engine_b$eval(engine_b$read("(current-env)")[[1]])
+  expect_equal(get("_eng_x", envir = curr_a, inherits = FALSE), 1)
+  expect_equal(get("_eng_x", envir = curr_b, inherits = FALSE), 2)
+  # r/eval (quote +) works in each engine (each has its own current-env closure)
+  expect_identical(engine_a$eval(engine_a$read("(r/eval (quote +))")[[1]]), base::`+`)
+  expect_identical(engine_b$eval(engine_b$read("(r/eval (quote +))")[[1]]), base::`+`)
+})
