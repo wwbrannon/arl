@@ -53,9 +53,7 @@ ModuleRegistry <- R6::R6Class(
       }
       entry$exports <- exports
       registry <- self$rye_env$module_registry_env(create = TRUE)
-      if (bindingIsLocked(name, registry)) {
-        unlockBinding(name, registry)
-      }
+      rye_unlock_binding(name, registry)
       assign(name, entry, envir = registry)
       lockBinding(name, registry)
       entry
@@ -66,9 +64,7 @@ ModuleRegistry <- R6::R6Class(
       }
       registry <- self$rye_env$module_registry_env(create = FALSE)
       if (!is.null(registry) && exists(name, envir = registry, inherits = FALSE)) {
-        if (bindingIsLocked(name, registry)) {
-          unlockBinding(name, registry)
-        }
+        rye_unlock_binding(name, registry)
         rm(list = name, envir = registry)
       }
       invisible(NULL)

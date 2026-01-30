@@ -1,4 +1,3 @@
-o) unlockBinding note
 o) classes that have instances of other classes horizontally as attributes
 
 o) More tests for .rye code: download the hy test suite locally and compare to it

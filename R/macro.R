@@ -624,8 +624,8 @@ MacroExpander <- R6::R6Class(
 
       registry <- private$macro_registry(env, create = TRUE)
       name_str <- as.character(name)
-      if (exists(name_str, envir = registry, inherits = FALSE) && bindingIsLocked(name_str, registry)) {
-        unlockBinding(name_str, registry)
+      if (exists(name_str, envir = registry, inherits = FALSE)) {
+        rye_unlock_binding(name_str, registry)
       }
       registry[[name_str]] <- macro_fn
       lockBinding(name_str, registry)

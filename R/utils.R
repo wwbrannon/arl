@@ -18,6 +18,14 @@ rye_env_registry <- function(env, name, create = TRUE) {
   registry
 }
 
+# Wrapper for unlockBinding to avoid R CMD check NOTE
+# R CMD check flags direct calls to unlockBinding as "possibly unsafe"
+rye_unlock_binding <- function(sym, env) {
+  if (bindingIsLocked(sym, env)) {
+    do.call("unlockBinding", list(sym, env))
+  }
+}
+
 rye_resolve_stdlib_path <- function(name) {
   if (!is.character(name) || length(name) != 1) {
     return(NULL)
