@@ -20,6 +20,11 @@ CLI_HELP_TEXT <- paste(
   sep = "\n"
 )
 
+#' Core CLI implementation class
+#'
+#' @keywords internal
+#' @noRd
+#' @importFrom docopt docopt
 RyeCLI <- R6::R6Class(
   "RyeCLI",
   public = list(

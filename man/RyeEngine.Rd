@@ -39,14 +39,22 @@ evaluation, and environment management.
 \item \href{#method-RyeEngine-tokenize}{\code{RyeEngine$tokenize()}}
 \item \href{#method-RyeEngine-parse}{\code{RyeEngine$parse()}}
 \item \href{#method-RyeEngine-eval}{\code{RyeEngine$eval()}}
+\item \href{#method-RyeEngine-eval_in_env}{\code{RyeEngine$eval_in_env()}}
 \item \href{#method-RyeEngine-eval_seq}{\code{RyeEngine$eval_seq()}}
+\item \href{#method-RyeEngine-eval_seq_in_env}{\code{RyeEngine$eval_seq_in_env()}}
 \item \href{#method-RyeEngine-eval_exprs}{\code{RyeEngine$eval_exprs()}}
+\item \href{#method-RyeEngine-eval_exprs_in_env}{\code{RyeEngine$eval_exprs_in_env()}}
 \item \href{#method-RyeEngine-eval_text}{\code{RyeEngine$eval_text()}}
+\item \href{#method-RyeEngine-eval_text_in_env}{\code{RyeEngine$eval_text_in_env()}}
 \item \href{#method-RyeEngine-initialize_environment}{\code{RyeEngine$initialize_environment()}}
 \item \href{#method-RyeEngine-load_file}{\code{RyeEngine$load_file()}}
+\item \href{#method-RyeEngine-load_file_in_env}{\code{RyeEngine$load_file_in_env()}}
 \item \href{#method-RyeEngine-macroexpand}{\code{RyeEngine$macroexpand()}}
+\item \href{#method-RyeEngine-macroexpand_in_env}{\code{RyeEngine$macroexpand_in_env()}}
 \item \href{#method-RyeEngine-macroexpand_1}{\code{RyeEngine$macroexpand_1()}}
+\item \href{#method-RyeEngine-macroexpand_1_in_env}{\code{RyeEngine$macroexpand_1_in_env()}}
 \item \href{#method-RyeEngine-help}{\code{RyeEngine$help()}}
+\item \href{#method-RyeEngine-help_in_env}{\code{RyeEngine$help_in_env()}}
 \item \href{#method-RyeEngine-repl}{\code{RyeEngine$repl()}}
 \item \href{#method-RyeEngine-clone}{\code{RyeEngine$clone()}}
 }
@@ -129,7 +137,24 @@ Parse tokens into expressions.
 \subsection{Method \code{eval()}}{
 Evaluate a single expression.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval(expr, env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval(expr)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-eval_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-eval_in_env}{}}}
+\subsection{Method \code{eval_in_env()}}{
+Evaluate a single expression in an explicit environment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_in_env(expr, env)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -148,7 +173,24 @@ Evaluate a single expression.
 \subsection{Method \code{eval_seq()}}{
 Evaluate expressions in order.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_seq(exprs, env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_seq(exprs)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{exprs}}{List of Rye expressions to evaluate.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-eval_seq_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-eval_seq_in_env}{}}}
+\subsection{Method \code{eval_seq_in_env()}}{
+Evaluate expressions in order in an explicit environment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_seq_in_env(exprs, env)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -167,7 +209,24 @@ Evaluate expressions in order.
 \subsection{Method \code{eval_exprs()}}{
 Evaluate expressions with source tracking.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_exprs(exprs, env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_exprs(exprs)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{exprs}}{List of Rye expressions to evaluate.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-eval_exprs_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-eval_exprs_in_env}{}}}
+\subsection{Method \code{eval_exprs_in_env()}}{
+Evaluate expressions with source tracking in an explicit environment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_exprs_in_env(exprs, env)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -186,7 +245,26 @@ Evaluate expressions with source tracking.
 \subsection{Method \code{eval_text()}}{
 Read and evaluate text.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_text(text, env = NULL, source_name = "<eval>")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_text(text, source_name = "<eval>")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{text}}{Character string of Rye code to read/eval.}
+
+\item{\code{source_name}}{Optional source name for error reporting.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-eval_text_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-eval_text_in_env}{}}}
+\subsection{Method \code{eval_text_in_env()}}{
+Read and evaluate text in an explicit environment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_text_in_env(text, env, source_name = "<eval>")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -217,7 +295,24 @@ Populate standard bindings
 \subsection{Method \code{load_file()}}{
 Load and evaluate a Rye source file.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_file(path, env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_file(path)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{path}}{File path to load.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-load_file_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-load_file_in_env}{}}}
+\subsection{Method \code{load_file_in_env()}}{
+Load and evaluate a Rye source file in an explicit environment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_file_in_env(path, env)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -236,7 +331,26 @@ Load and evaluate a Rye source file.
 \subsection{Method \code{macroexpand()}}{
 Expand macros recursively.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$macroexpand(expr, env = NULL, preserve_src = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$macroexpand(expr, preserve_src = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+
+\item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-macroexpand_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-macroexpand_in_env}{}}}
+\subsection{Method \code{macroexpand_in_env()}}{
+Expand macros recursively in an explicit environment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$macroexpand_in_env(expr, env, preserve_src = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -257,7 +371,26 @@ Expand macros recursively.
 \subsection{Method \code{macroexpand_1()}}{
 Expand a single macro layer.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$macroexpand_1(expr, env = NULL, preserve_src = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$macroexpand_1(expr, preserve_src = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+
+\item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-macroexpand_1_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-macroexpand_1_in_env}{}}}
+\subsection{Method \code{macroexpand_1_in_env()}}{
+Expand a single macro layer in an explicit environment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$macroexpand_1_in_env(expr, env, preserve_src = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -278,7 +411,24 @@ Expand a single macro layer.
 \subsection{Method \code{help()}}{
 Show help for a topic.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$help(topic, env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$help(topic)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{topic}}{Help topic as a single string.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-help_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-help_in_env}{}}}
+\subsection{Method \code{help_in_env()}}{
+Show help for a topic in an explicit environment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$help_in_env(topic, env)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

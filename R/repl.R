@@ -1,4 +1,31 @@
 #' Stateful Rye REPL
+#'
+#' Provides an interactive loop for reading Rye forms, evaluating them, and
+#' printing results with optional readline history support.
+#'
+#' @keywords internal
+#' @noRd
+#'
+#' @importFrom R6 R6Class
+#' @field engine RyeEngine instance used for parsing/evaluation.
+#' @field prompt Primary prompt string.
+#' @field cont_prompt Continuation prompt for multi-line input.
+#' @field input_fn Function used to read a single line of input.
+#' @field output_fn Function used to emit output messages.
+#' @field history_state Environment tracking history state.
+#' @field history_path Path to history file used for readline integration.
+#' @param engine RyeEngine instance; required for evaluation.
+#' @param prompt Prompt string shown for new forms and passed to `input_line`.
+#' @param cont_prompt Prompt string shown for continuation lines.
+#' @param input_fn Optional function to read a line (defaults to `input_line`).
+#' @param output_fn Output function for REPL banners/messages.
+#' @param history_state Environment storing history state.
+#' @param history_path Optional history file path; defaults to `~/.rye_history`.
+#' @param e Condition object to inspect for incomplete input.
+#' @param exprs List of Rye expressions to evaluate.
+#' @param value Value to print using the engine formatter.
+#' @param path History file path to load.
+#' @param text Line of input to add to readline history.
 RyeREPL <- R6::R6Class(
   "RyeREPL",
   public = list(
@@ -9,6 +36,8 @@ RyeREPL <- R6::R6Class(
     output_fn = NULL,
     history_state = NULL,
     history_path = NULL,
+    #' @description
+    #' Initialize the REPL state.
     initialize = function(
       engine = NULL,
       prompt = "rye> ",
@@ -27,6 +56,8 @@ RyeREPL <- R6::R6Class(
       self$history_path <- if (is.null(history_path)) self$history_path_default() else history_path
       private$ensure_history_state()
     },
+    #' @description
+    #' Read a single input line, using readline when available.
     input_line = function(prompt) {
       if (isTRUE(interactive()) && isTRUE(capabilities("readline"))) {
         return(readline(prompt))
@@ -39,9 +70,13 @@ RyeREPL <- R6::R6Class(
       }
       line
     },
+    #' @description
+    #' Return the default history file path.
     history_path_default = function() {
       path.expand("~/.rye_history")
     },
+    #' @description
+    #' Determine whether readline history can be used.
     can_use_history = function() {
       override <- getOption("rye.repl_can_use_history_override", NULL)
       if (!is.null(override)) {
@@ -52,10 +87,14 @@ RyeREPL <- R6::R6Class(
       }
       isTRUE(interactive()) && isTRUE(capabilities("readline"))
     },
+    #' @description
+    #' Detect parse errors that indicate incomplete input.
     is_incomplete_error = function(e) {
       msg <- conditionMessage(e)
       grepl("Unexpected end of input|Unclosed parenthesis", msg)
     },
+    #' @description
+    #' Read a complete Rye form from the input stream.
     read_form = function() {
       private$require_engine()
       override <- getOption("rye.repl_read_form_override", NULL)
@@ -100,6 +139,8 @@ RyeREPL <- R6::R6Class(
         return(list(text = text, exprs = parsed))
       }
     },
+    #' @description
+    #' Evaluate expressions and print each resulting value.
     eval_and_print_exprs = function(exprs) {
       private$require_engine()
       self$engine$source_tracker$with_error_context(function() {
@@ -111,6 +152,8 @@ RyeREPL <- R6::R6Class(
         invisible(result)
       })
     },
+    #' @description
+    #' Print a formatted value using the engine formatter.
     print_value = function(value) {
       private$require_engine()
       if (is.null(value)) {
@@ -119,6 +162,8 @@ RyeREPL <- R6::R6Class(
       cat(self$engine$env$format_value(value), "\n", sep = "")
       invisible(value)
     },
+    #' @description
+    #' Load readline history into the current session.
     load_history = function(path = self$history_path) {
       if (!self$can_use_history()) {
         return(invisible(FALSE))
@@ -139,6 +184,8 @@ RyeREPL <- R6::R6Class(
       self$history_state$snapshot <- snapshot
       invisible(TRUE)
     },
+    #' @description
+    #' Save readline history for the current session.
     save_history = function() {
       if (!self$can_use_history()) {
         return(invisible(NULL))
@@ -155,6 +202,8 @@ RyeREPL <- R6::R6Class(
       self$history_state$snapshot <- NULL
       invisible(NULL)
     },
+    #' @description
+    #' Add a line of input to readline history.
     add_history = function(text) {
       if (!self$can_use_history()) {
         return(invisible(NULL))
@@ -175,6 +224,8 @@ RyeREPL <- R6::R6Class(
       try(add_history(text), silent = TRUE)
       invisible(NULL)
     },
+    #' @description
+    #' Run the interactive REPL loop.
     run = function() {
       private$require_engine()
 
