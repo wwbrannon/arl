@@ -7,6 +7,12 @@ rye_promise_expr_key <- ".rye_promise_expr"
 rye_promise_env_key <- ".rye_promise_env"
 rye_promise_eval_key <- ".rye_promise_eval"
 
+#' @export
+print.rye_promise <- function(x, ...) {
+  cat("<promise>\n")
+  invisible(x)
+}
+
 #' Evaluator for Rye expressions
 #'
 #' @keywords internal
