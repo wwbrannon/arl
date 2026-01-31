@@ -1,0 +1,418 @@
+---
+title: "Modules and Imports"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Modules and Imports}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Rye provides a module system for organizing code into reusable, encapsulated units. This guide covers how to create modules, import them, and understand how the module system resolves paths.
+
+## Overview
+
+Rye has two main mechanisms for loading code:
+
+- **`load`**: Evaluates a file directly into the current environment (all definitions become available)
+- **`import`**: Loads a module and imports only its exported symbols
+
+## The `load` Special Form
+
+`load` is the simpler mechanism - it reads and evaluates a file in the current environment.
+
+### Signature
+
+```lisp
+(load "path")
+```
+
+### Examples
+
+```lisp
+; Load a file from the current directory
+(load "utils.rye")
+
+; Load a stdlib module by name
+(load "control")
+
+; Load with an absolute path
+(load "/path/to/my/script.rye")
+
+; Load with a relative path
+(load "lib/helpers.rye")
+```
+
+### Path Resolution
+
+When you call `(load "name")`, Rye resolves the path in this order:
+
+1. **Path separator check**: If the name contains `/` or `\`, it's treated as a file path and checked directly
+2. **Stdlib lookup**: If no path separator, checks the stdlib directory (`inst/rye/`) for:
+   - `<name>` (exact match)
+   - `<name>.rye` (with extension)
+3. **Current directory lookup**: If not in stdlib, checks the current working directory for:
+   - `<name>` (exact match)
+   - `<name>.rye` (with extension)
+
+### Caching Behavior
+
+`load` includes simple caching to prevent re-evaluation:
+- Files with path separators are cached by their full path
+- Files without separators (potential stdlib modules) are cached by name if found in stdlib
+
+## The `module` Special Form
+
+The `module` special form defines a named module with explicit exports.
+
+### Signature
+
+```lisp
+(module name
+  (export symbol1 symbol2 ...)
+  body...)
+
+; Or export everything defined in the module
+(module name
+  (export-all)
+  body...)
+```
+
+### Examples
+
+```lisp
+; File: math-utils.rye
+(module math-utils
+  (export square cube)
+
+  (define square
+    (lambda (x) (* x x)))
+
+  (define cube
+    (lambda (x) (* x x x)))
+
+  ; This is private - not exported
+  (define helper
+    (lambda (x) (+ x 1))))
+```
+
+### Export Strategies
+
+**Explicit exports** (recommended):
+```lisp
+(module mymodule
+  (export func1 func2 var1)
+  (define func1 (lambda (x) (* x 2)))
+  (define func2 (lambda (x) (+ x 1)))
+  (define var1 42)
+  (define private-helper (lambda (x) (/ x 2))))  ; Not exported
+```
+
+**Export all**:
+```lisp
+(module mymodule
+  (export-all)
+  (define func1 (lambda (x) (* x 2)))
+  (define func2 (lambda (x) (+ x 1))))
+```
+
+## The `import` Special Form
+
+The `import` special form loads a module and makes its exports available in the current environment.
+
+### Signature
+
+```lisp
+(import name)
+; or
+(import "name")
+```
+
+### Examples
+
+```lisp
+; Import a module from the current directory
+(import math-utils)
+(square 5)  ; => 25
+(cube 3)    ; => 27
+
+; Import a stdlib module
+(import control)
+(when #t (println "hello"))
+
+; Import with string name
+(import "my-module")
+```
+
+### Path Resolution
+
+`import` uses the same path resolution as `load`:
+
+1. **Path separator check**: If the name contains `/` or `\`, treats it as a file path
+2. **Stdlib lookup**: Checks `inst/rye/` for stdlib modules
+3. **Current directory lookup**: Checks the current working directory
+
+### Module Registration
+
+When you `import` a module:
+
+1. If the module isn't already registered, Rye loads the file containing the module
+2. The file must contain a `(module ...)` form that registers itself
+3. `import` then copies the module's exports into the current environment
+4. Subsequent imports of the same module use the cached version
+
+### Error Handling
+
+```lisp
+; Module not found
+(import non-existent-module)
+; Error: Module not found: non-existent-module
+
+; Module file doesn't register itself
+; File: bad.rye containing just (define x 10)
+(import bad)
+; Error: Module 'bad' did not register itself
+
+; Accessing unexported symbol
+; File: restricted.rye
+(module restricted
+  (export public-fn)
+  (define public-fn (lambda () "visible"))
+  (define private-fn (lambda () "hidden")))
+
+(import restricted)
+public-fn   ; Works
+private-fn  ; Error: object 'private-fn' not found
+```
+
+## Creating User Modules
+
+### Basic Module Structure
+
+Create a file `mymodule.rye`:
+
+```lisp
+(module mymodule
+  (export greet farewell)
+
+  (define greet
+    (lambda (name)
+      (str "Hello, " name "!")))
+
+  (define farewell
+    (lambda (name)
+      (str "Goodbye, " name "!"))))
+```
+
+Then import it:
+
+```lisp
+(import mymodule)
+(greet "Alice")     ; => "Hello, Alice!"
+(farewell "Bob")    ; => "Goodbye, Bob!"
+```
+
+### Module with Private Helpers
+
+```lisp
+; File: calculator.rye
+(module calculator
+  (export add subtract)
+
+  ; Private helper
+  (define validate-number
+    (lambda (x)
+      (if (number? x)
+        x
+        (error "Not a number"))))
+
+  ; Public functions
+  (define add
+    (lambda (a b)
+      (+ (validate-number a)
+         (validate-number b))))
+
+  (define subtract
+    (lambda (a b)
+      (- (validate-number a)
+         (validate-number b)))))
+```
+
+### Nested Module Loading
+
+Modules can load other modules:
+
+```lisp
+; File: string-helpers.rye
+(module string-helpers
+  (export upcase downcase)
+  (define upcase (lambda (s) (toupper s)))
+  (define downcase (lambda (s) (tolower s))))
+
+; File: text-utils.rye
+(module text-utils
+  (export format-name)
+
+  (import string-helpers)
+
+  (define format-name
+    (lambda (first last)
+      (str (upcase first) " " (upcase last)))))
+
+; Usage:
+(import text-utils)
+(format-name "john" "doe")  ; => "JOHN DOE"
+```
+
+## Standard Library Modules
+
+Rye's standard library is organized into modules that you can load as needed:
+
+```lisp
+; Control flow macros
+(import control)    ; when, unless, and, or, cond, case
+
+; Binding forms
+(import binding)    ; let, let*, letrec
+
+; Looping constructs
+(import looping)    ; while, for, loop, recur
+
+; Threading macros
+(import threading)  ; ->, ->>
+
+; Error handling
+(import error)      ; try, catch, finally
+
+; Higher-order functions
+(import higher-order)  ; map, filter, reduce, etc.
+
+; String operations
+(import strings)    ; str, string-join, string-split, etc.
+
+; I/O operations
+(import io)         ; display, println, read-line
+
+; Dictionaries
+(import dict)       ; dict operations
+
+; Sets
+(import set)        ; set operations
+```
+
+The base stdlib (loaded automatically) includes core functions like `car`, `cdr`, `cons`, `list`, basic arithmetic, and predicates.
+
+## Best Practices
+
+### 1. Use Explicit Exports
+
+Prefer `(export symbol1 symbol2 ...)` over `(export-all)` to maintain clear module interfaces:
+
+```lisp
+; Good - clear interface
+(module utils
+  (export public-fn1 public-fn2)
+  (define public-fn1 ...)
+  (define private-helper ...))
+
+; Avoid - exposes everything
+(module utils
+  (export-all)
+  ...)
+```
+
+### 2. Organize Related Functionality
+
+Group related functions into logical modules:
+
+```lisp
+; Good organization
+(module validation
+  (export validate-email validate-phone validate-zipcode)
+  ...)
+
+; Rather than one large utils module
+```
+
+### 3. Document Module Purpose
+
+Use docstrings to document your modules:
+
+```lisp
+(module string-utils
+  "String manipulation utilities for text processing."
+  (export trim upcase downcase)
+  ...)
+```
+
+### 4. Avoid Circular Dependencies
+
+Circular module imports will cause infinite recursion errors:
+
+```lisp
+; File: a.rye
+(module a
+  (export fn-a)
+  (import b)  ; Depends on b
+  ...)
+
+; File: b.rye
+(module b
+  (export fn-b)
+  (import a)  ; Depends on a - circular!
+  ...)
+```
+
+### 5. Use Load Path Conventions
+
+Organize modules in a predictable directory structure:
+
+```
+project/
+  lib/
+    utils.rye
+    validators.rye
+  app.rye
+```
+
+Then load with relative paths:
+
+```lisp
+; In app.rye
+(import "lib/utils")
+(import "lib/validators")
+```
+
+## Differences from Other Lisps
+
+### vs. Common Lisp
+
+- Rye doesn't have package namespaces - imports bring symbols into the current environment
+- No `use-package` or package-qualified symbols like `package::symbol`
+- Simpler, file-based module system
+
+### vs. Scheme
+
+- Rye's `module` is similar to R6RS libraries but simpler
+- No renaming or prefix imports
+- Path resolution is more straightforward
+
+### vs. Clojure
+
+- No namespace aliases (`require [module :as alias]`)
+- No selective imports (`require [module :refer [fn1 fn2]]`)
+- Simpler import mechanism - all exports are imported
+
+## Summary
+
+- **`load`**: Evaluates a file into the current environment
+- **`module`**: Defines a module with explicit exports
+- **`import`**: Loads a module and imports its exports
+- Path resolution checks: path separators → stdlib → current directory
+- Modules are cached after first load
+- Use explicit exports for maintainable module interfaces

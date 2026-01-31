@@ -144,6 +144,9 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 - `begin` - Sequence of expressions
 - `defmacro` - Define macros
 - `quasiquote` / `` ` `` - Template with selective evaluation
+- `load` - Load and evaluate a file
+- `import` - Import a module’s exports
+- `module` - Define a module with exports
 - `~` - Formula (for R modeling)
 
 ### Continuations
@@ -228,6 +231,10 @@ what you need:
 (load "threading") ; -> and ->>
 (load "error")     ; try/catch/finally
 ```
+
+You can also create your own modules with the `module` and `import`
+special forms. See the [Modules and Imports](articles/modules.html)
+guide for details.
 
 ### Examples
 
