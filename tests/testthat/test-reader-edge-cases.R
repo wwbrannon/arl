@@ -66,20 +66,171 @@ test_that("numeric literals - floats", {
 
 test_that("numeric literals - scientific notation", {
   engine <- RyeEngine$new()
-  # Rye may not support scientific notation - skip this test
-  skip("Scientific notation not supported in Rye")
+
+  # Basic scientific notation
+  result <- engine$eval_text("1e5")
+  expect_equal(result, 1e5)
+
+  result <- engine$eval_text("2.5e3")
+  expect_equal(result, 2.5e3)
+
+  # Uppercase E
+  result <- engine$eval_text("1E5")
+  expect_equal(result, 1E5)
+
+  # Negative exponents
+  result <- engine$eval_text("1e-5")
+  expect_equal(result, 1e-5)
+
+  result <- engine$eval_text("3.14e-2")
+  expect_equal(result, 3.14e-2)
+
+  # Positive exponents with explicit sign
+  result <- engine$eval_text("1e+5")
+  expect_equal(result, 1e+5)
+
+  # Negative numbers with scientific notation
+  result <- engine$eval_text("-2.5e3")
+  expect_equal(result, -2.5e3)
+
+  result <- engine$eval_text("-1e-5")
+  expect_equal(result, -1e-5)
+
+  result <- engine$eval_text("-3.14e+10")
+  expect_equal(result, -3.14e+10)
+
+  # Zero with exponents
+  result <- engine$eval_text("0e0")
+  expect_equal(result, 0)
+
+  result <- engine$eval_text("0.0e10")
+  expect_equal(result, 0)
+
+  result <- engine$eval_text("0e-5")
+  expect_equal(result, 0)
+
+  # Integer part with exponent (no decimal)
+  result <- engine$eval_text("123e2")
+  expect_equal(result, 123e2)
+
+  # Decimal without integer part is not valid in standard notation,
+  # but our regex requires at least one digit before optional decimal
+  result <- engine$eval_text("5.0e0")
+  expect_equal(result, 5.0)
+
+  # Works in expressions
+  result <- engine$eval_text("(+ 1e2 2e2)")
+  expect_equal(result, 300)
+
+  result <- engine$eval_text("(* 2e3 3e2)")
+  expect_equal(result, 2e3 * 3e2)
+})
+
+test_that("scientific notation - more edge cases", {
+  engine <- RyeEngine$new()
+
+  # Multiple digit exponents
+  result <- engine$eval_text("1e10")
+  expect_equal(result, 1e10)
+
+  result <- engine$eval_text("1e100")
+  expect_equal(result, 1e100)
+
+  result <- engine$eval_text("1e-10")
+  expect_equal(result, 1e-10)
+
+  # Negative base with various exponents
+  result <- engine$eval_text("-1e0")
+  expect_equal(result, -1)
+
+  result <- engine$eval_text("-9.99e99")
+  expect_equal(result, -9.99e99)
+
+  result <- engine$eval_text("-1.23e-45")
+  expect_equal(result, -1.23e-45)
+
+  # Positive sign on base
+  result <- engine$eval_text("+1e5")
+  expect_equal(result, 1e5)
+
+  result <- engine$eval_text("+2.5e-3")
+  expect_equal(result, 2.5e-3)
+})
+
+test_that("scientific notation - invalid formats treated as symbols", {
+  engine <- RyeEngine$new()
+
+  # These should be parsed as symbols, not numbers
+
+  # Missing exponent digits (e with no digits after)
+  # This will be tokenized as two separate tokens or fail
+  expect_error(engine$eval_text("1e"))
+
+  # Double e
+  expect_error(engine$eval_text("1ee5"))
+
+  # Decimal in exponent
+  expect_error(engine$eval_text("1e5.5"))
+
+  # Space in scientific notation
+  expect_error(engine$eval_text("1e 5"))
+
+  # Multiple signs
+  expect_error(engine$eval_text("1e+-5"))
+  expect_error(engine$eval_text("1e++5"))
 })
 
 test_that("numeric edge cases - very large numbers", {
   engine <- RyeEngine$new()
-  # Scientific notation not supported - skip
-  skip("Scientific notation not supported in Rye")
+
+  # Very large numbers using scientific notation
+  result <- engine$eval_text("1e100")
+  expect_equal(result, 1e100)
+
+  result <- engine$eval_text("9.99e307")
+  expect_equal(result, 9.99e307)
+
+  # Avogadro's number
+  result <- engine$eval_text("6.022e23")
+  expect_equal(result, 6.022e23)
+
+  # Should work in arithmetic
+  result <- engine$eval_text("(+ 1e10 1e10)")
+  expect_equal(result, 2e10)
+
+  # Comparisons
+  result <- engine$eval_text("(> 1e100 1e99)")
+  expect_equal(result, TRUE)
+
+  result <- engine$eval_text("(< 1e100 1e101)")
+  expect_equal(result, TRUE)
 })
 
 test_that("numeric edge cases - very small numbers", {
   engine <- RyeEngine$new()
-  # Scientific notation not supported - skip
-  skip("Scientific notation not supported in Rye")
+
+  # Very small numbers using scientific notation
+  result <- engine$eval_text("1e-100")
+  expect_equal(result, 1e-100)
+
+  result <- engine$eval_text("2.5e-308")
+  expect_equal(result, 2.5e-308)
+
+  # Planck's constant (approximately)
+  result <- engine$eval_text("6.626e-34")
+  expect_equal(result, 6.626e-34)
+
+  # Should work in arithmetic
+  result <- engine$eval_text("(+ 1e-10 1e-10)")
+  expect_equal(result, 2e-10)
+
+  # Multiplication with very small numbers
+  result <- engine$eval_text("(* 2e-5 3e-5)")
+  expect_equal(result, 2e-5 * 3e-5)
+
+  # Division creating small numbers
+  result <- engine$eval_text("(/ 1 1e10)")
+  expect_equal(result, 1e-10)
 })
 
 test_that("special numeric values", {

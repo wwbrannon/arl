@@ -246,8 +246,8 @@ Tokenizer <- R6::R6Class(
           token_type <- "SYMBOL"
           token_value <- token_text
 
-          # Try to parse as number
-          if (grepl("^[-+]?\\d+(\\.\\d+)?$", token_text)) {
+          # Try to parse as number (including scientific notation)
+          if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$", token_text)) {
             token_type <- "NUMBER"
             token_value <- as.numeric(token_text)
           }
