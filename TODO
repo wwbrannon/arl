@@ -1,7 +1,13 @@
 o) tests
-    o) can we run tests directly as .rye code? the way hy does .hy files?
     o) More tests for .rye code: download the hy test suite locally and compare to it
+    o) look at the test behavior: any tests that look obviously bad? anywhere it's not what a lisp should do? identify questionable choices that may reflect encoding bugs into tests
 
+o) add scientific notation support
+o) clean up what in the stdlib is loaded by default
+
+o) bench-eval and bench-e2e fail
+o) "Failed" profiling section
 o) performance optimizations: use profiling and benchmarking
 
+o) FIXME in tests about keyword arg syntax
 o) minor pkgdown warning about site url
