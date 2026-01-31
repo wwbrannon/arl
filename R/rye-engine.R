@@ -205,6 +205,11 @@ RyeEngine <- R6::R6Class(
       }
 
       env$rye_set_doc <- function(fn, docstring) {
+        # If fn is a primitive, wrap it in a regular function
+        if (is.primitive(fn)) {
+          prim <- fn
+          fn <- function(...) prim(...)
+        }
         attr(fn, "rye_doc") <- list(description = docstring)
         fn
       }
