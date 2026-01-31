@@ -38,7 +38,7 @@
 
 (define totals-env
   (r/call "new.env" (dict :parent (r/call "emptyenv" ()))))
-(for (t transactions)
+(for* (t transactions)
   (define product (r/call "get" (list "product" t)))
   (define amount (r/call "get" (list "amount" t)))
   (define has (r/call "exists" (dict :x product :envir totals-env :inherits #f)))
@@ -59,7 +59,7 @@
 (define top-product (r/call "[" (list product-names top-index)))
 
 (define totals-by-product (list))
-(for (name product-names-list)
+(for* (name product-names-list)
   (set! totals-by-product
         (append totals-by-product
                 (list (dict :product name

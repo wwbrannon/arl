@@ -1,14 +1,14 @@
 ;;; Rye Standard Library - Looping Macros
 
 (module looping
-  (export while while-r until for for-r loop recur)
+  (export while* while-r until for* for-r loop recur)
 
   (import higher-order)
   (import list)
   (import predicates)
   (import sequences)
 
-  (defmacro while (test . body)
+  (defmacro while* (test . body)
     "Repeat body while test is truthy."
     (begin
       (define loop (gensym "while"))
@@ -23,9 +23,9 @@
 
   (defmacro until (test . body)
     "Repeat body until test is truthy."
-    `(while (not ,test) ,@body))
+    `(while* (not ,test) ,@body))
 
-  (defmacro for (binding . body)
+  (defmacro for* (binding . body)
     "Map body over seq, binding var."
     (begin
       (define var (car binding))
@@ -41,7 +41,7 @@
           (if (= (length body) 1)
             (car body)
             `({ ,@body))))
-      `(r/eval (call (list 'while ',test ',body-expr)) (current-env))))
+      `(r/eval (call (list (get "while" (as.environment "package:base")) ',test ',body-expr)) (current-env))))
 
   (defmacro for-r (binding . body)
     "Execute an R for loop in the current environment."
@@ -54,7 +54,7 @@
           (if (= (length body) 1)
             (car body)
             `({ ,@body))))
-      `(r/eval (call (list 'for ',var ',seq ',body-expr)) (current-env))))
+      `(r/eval (call (list (get "for" (as.environment "package:base")) ',var ',seq ',body-expr)) (current-env))))
 
   (defmacro recur (. args)
     "Rebind loop locals and repeat. Only valid inside loop."

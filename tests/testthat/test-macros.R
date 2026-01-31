@@ -223,14 +223,14 @@ test_that("stdlib macros from files work", {
   result <- engine$eval_in_env(
     engine$read(paste0(
       "(begin (define x 0) (define acc 0) ",
-      "(while (< x 3) (set! acc (+ acc x)) (set! x (+ x 1))) ",
+      "(while* (< x 3) (set! acc (+ acc x)) (set! x (+ x 1))) ",
       "acc)"
     ))[[1]],
     env
   )
   expect_equal(result, 3)
 
-  result <- engine$eval_in_env(engine$read("(for (x (list 1 2 3)) (* x 2))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(for* (x (list 1 2 3)) (* x 2))")[[1]], env)
   expect_equal(result, list(2, 4, 6))
 
   result <- engine$eval_in_env(

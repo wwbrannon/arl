@@ -40,12 +40,12 @@
           (set! visited (append visited (list name)))
           (define task (task-by-name name))
           (define deps (r/call "get" (list "deps" task)))
-          (for (dep deps)
+          (for* (dep deps)
             (visit dep))
           (set! run-order (append run-order (list name)))))))
 
 (println "=== Task Runner ===")
-(for (t tasks)
+(for* (t tasks)
   (visit (r/call "get" (list "name" t))))
 (println (str "Execution order: " run-order))
 
