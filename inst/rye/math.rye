@@ -283,22 +283,23 @@
 
   ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
   ;; (define func __rfunc) rather than lambda wrappers to avoid unnecessary stack frames.
-  ;; Docstrings are placed as string literals after the definition for documentation;
-  ;; a future helper will attach them properly to the function objects.
+  ;; Docstrings are attached using (doc! func "...") after definition.
   ;; Functions with multiple arguments, optional parameters, or custom logic remain as lambdas.
+
+  (import core)  ; for doc!
 
   ;; Rounding and truncation
   (define abs __rabs)
-  "Return absolute value of x."
+  (doc! abs "Return absolute value of x.")
 
   (define floor __rfloor)
-  "Return floor (round down) of x."
+  (doc! floor "Return floor (round down) of x.")
 
   (define ceiling __rceiling)
-  "Return ceiling (round up) of x."
+  (doc! ceiling "Return ceiling (round up) of x.")
 
   (define truncate __rtrunc)
-  "Return truncated (towards zero) value of x."
+  (doc! truncate "Return truncated (towards zero) value of x.")
 
   (define round
     (lambda (x (digits 0))
@@ -306,11 +307,11 @@
       (__rround x digits)))
 
   (define signum __rsign)
-  "Return sign of x: -1, 0, or 1."
+  (doc! signum "Return sign of x: -1, 0, or 1.")
 
   ;; Power and roots
   (define sqrt __rsqrt)
-  "Return square root of x."
+  (doc! sqrt "Return square root of x.")
 
   (define expt
     (lambda (base power)
@@ -322,7 +323,7 @@
   ;; module system issue - optional params don't survive module export when
   ;; overriding existing functions. Using separate 'logb' function as workaround.
   (define log __rlog)
-  "Return natural logarithm of x."
+  (doc! log "Return natural logarithm of x.")
 
   (define logb
     (lambda (x base)
@@ -330,32 +331,32 @@
       (__rlog x base)))
 
   (define exp __rexp)
-  "Return e raised to power x."
+  (doc! exp "Return e raised to power x.")
 
   (define log10 __rlog10)
-  "Return base-10 logarithm of x."
+  (doc! log10 "Return base-10 logarithm of x.")
 
   (define log2 __rlog2)
-  "Return base-2 logarithm of x."
+  (doc! log2 "Return base-2 logarithm of x.")
 
   ;; Trigonometric functions
   (define sin __rsin)
-  "Return sine of x (in radians)."
+  (doc! sin "Return sine of x (in radians).")
 
   (define cos __rcos)
-  "Return cosine of x (in radians)."
+  (doc! cos "Return cosine of x (in radians).")
 
   (define tan __rtan)
-  "Return tangent of x (in radians)."
+  (doc! tan "Return tangent of x (in radians).")
 
   (define asin __rasin)
-  "Return arcsine of x (in radians)."
+  (doc! asin "Return arcsine of x (in radians).")
 
   (define acos __racos)
-  "Return arccosine of x (in radians)."
+  (doc! acos "Return arccosine of x (in radians).")
 
   (define atan __ratan)
-  "Return arctangent of x (in radians)."
+  (doc! atan "Return arctangent of x (in radians).")
 
   (define atan2
     (lambda (y x)

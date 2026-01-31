@@ -13,10 +13,10 @@
           type-of)
 
   (import list)
+  (import core)  ; for doc!
 
   ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
-  ;; to avoid unnecessary stack frames. Docstrings placed as string literals after
-  ;; definitions; a future helper will attach them properly.
+  ;; to avoid unnecessary stack frames. Docstrings attached using doc!.
 
   (define list?
     (lambda (x)
@@ -45,7 +45,7 @@
       (null? x)))
 
   (define symbol? is.symbol)
-  "Return #t if x is a symbol."
+  (doc! symbol? "Return #t if x is a symbol.")
 
   (define keyword?
     (lambda (x)
@@ -53,10 +53,10 @@
       (isTRUE (inherits x "rye_keyword"))))
 
   (define number? is.numeric)
-  "Return #t if x is numeric."
+  (doc! number? "Return #t if x is numeric.")
 
   (define string? is.character)
-  "Return #t if x is character."
+  (doc! string? "Return #t if x is character.")
 
   (define vector?
     (lambda (x)
@@ -83,10 +83,10 @@
         #f)))
 
   (define fn? is.function)
-  "Return #t if x is a function."
+  (doc! fn? "Return #t if x is a function.")
 
-  (define callable? is.function)
-  "Alias for fn?."
+  (define callable? fn?)
+  (doc! callable? "Alias for fn?.")
 
   (define not
     (lambda (x)

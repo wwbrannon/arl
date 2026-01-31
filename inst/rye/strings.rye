@@ -23,11 +23,12 @@
       (unname (r/call "[[" (list (strsplit x :split sep :fixed #t) 1)))))
 
   ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
-  ;; to avoid unnecessary stack frames. Docstrings placed as string literals after
-  ;; definitions; a future helper will attach them properly.
+  ;; to avoid unnecessary stack frames. Docstrings attached using doc!.
+
+  (import core)  ; for doc!
 
   (define trim trimws)
-  "Trim leading and trailing whitespace."
+  (doc! trim "Trim leading and trailing whitespace.")
 
   (define format
     (lambda (fmt . args)
@@ -69,7 +70,7 @@
         (r/call "paste0" args))))
 
   (define ->string as.character)
-  "Convert value to string representation."
+  (doc! ->string "Convert value to string representation.")
 
   ;; ============================================================================
   ;; Phase 3: Extended String Operations

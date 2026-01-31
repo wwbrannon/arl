@@ -204,6 +204,16 @@ RyeEngine <- R6::R6Class(
         self$tokenize(source)
       }
 
+      env$rye_set_doc <- function(fn, docstring) {
+        attr(fn, "rye_doc") <- list(description = docstring)
+        fn
+      }
+
+      env$rye_get_doc <- function(fn) {
+        doc_attr <- attr(fn, "rye_doc", exact = TRUE)
+        if (is.null(doc_attr)) NULL else doc_attr$description
+      }
+
       stdlib_env <- env
       env$`r/call` <- function(fn, args = list()) {
         fn_name <- if (is.symbol(fn)) {

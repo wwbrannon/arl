@@ -1,7 +1,8 @@
 ;;; Rye Standard Library - Core Functions
 
 (module core
-  (export = error warn assert identity values values? call-with-values call/cc call-with-current-continuation)
+  (export = error warn assert identity values values? call-with-values call/cc call-with-current-continuation
+          doc! doc get-doc)
 
   (define =
     (lambda (x y)
@@ -58,4 +59,18 @@
 
   (define call/cc callCC)
   (define call-with-current-continuation callCC)
-)
+
+  ;; Documentation helpers
+  (defmacro doc! (sym docstring)
+    "Attach docstring to function. Usage: (doc! function-name \"docstring\")"
+    `(set! ,sym (rye_set_doc ,sym ,docstring)))
+
+  (define doc
+    (lambda (fn)
+      "Retrieve docstring from function's rye_doc attribute."
+      (rye_get_doc fn)))
+
+  (define get-doc doc))
+
+
+
