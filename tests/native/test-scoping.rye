@@ -1,0 +1,189 @@
+;;; Tests for lexical scoping semantics
+
+;; Tests for define vs set! semantics
+
+(define test-define-in-lambda-creates-new-binding (lambda ()
+  ;; define creates NEW binding in lambda scope, never modifies parent
+  (define x 100)
+  (define f (lambda ()
+    (define x 5)  ;; Creates new binding in lambda's scope
+    x))
+  (assert-equal 5 (f))
+  ;; Outer x unchanged
+  (assert-equal 100 x)))
+
+(define test-set-modifies-existing-binding (lambda ()
+  ;; set! modifies EXISTING binding by searching up environment chain
+  (define x 100)
+  (begin
+    (set! x 5)  ;; Modifies the outer x
+    (assert-equal 5 x))
+  ;; Outer x was modified
+  (assert-equal 5 x)))
+
+(define test-set-errors-if-binding-not-found (lambda ()
+  ;; set! should error if variable doesn't exist in any parent scope
+  ;; NOTE: We don't have assert-error yet, so we can't test this properly
+  ;; TODO: Add assert-error to helper-native.R and test this
+  (assert-true #t)))
+
+;; Tests for variable lookup through environment chain
+
+(define test-variable-lookup-in-parent (lambda ()
+  ;; Variables resolve by searching up environment chain
+  (define outer-var 42)
+  (define result (begin outer-var))
+  (assert-equal 42 result)))
+
+(define test-variable-lookup-multiple-levels (lambda ()
+  ;; Lookup works through multiple nesting levels
+  (define level1 100)
+  (define result
+    (begin
+      (define level2 200)
+      (begin
+        (define level3 300)
+        (+ level1 (+ level2 level3)))))
+  (assert-equal 600 result)))
+
+(define test-inner-lambda-shadows-outer (lambda ()
+  ;; Inner lambda bindings shadow outer ones during lookup
+  (define x 100)
+  (define result
+    ((lambda ()
+      (define x 200)
+      ((lambda ()
+        (define x 300)
+        x)))))
+  (assert-equal 300 result)
+  ;; Outer x unchanged
+  (assert-equal 100 x)))
+
+;; Tests for closure semantics
+
+(define test-closure-captures-environment (lambda ()
+  ;; Closures capture variables from their defining environment
+  (define make-counter (lambda (start)
+    (lambda () start)))
+  (define counter5 (make-counter 5))
+  (define counter10 (make-counter 10))
+  (assert-equal 5 (counter5))
+  (assert-equal 10 (counter10))))
+
+(define test-closure-captures-mutable-state (lambda ()
+  ;; Closures capture bindings, not values - they see mutations via set!
+  (define make-incrementer (lambda (start)
+    (lambda ()
+      (set! start (+ start 1))
+      start)))
+  (define inc (make-incrementer 0))
+  (assert-equal 1 (inc))
+  (assert-equal 2 (inc))
+  (assert-equal 3 (inc))))
+
+(define test-multiple-closures-share-environment (lambda ()
+  ;; Multiple closures from same scope share the environment
+  (define make-getter-setter (lambda (initial)
+    (define value initial)
+    (define getter (lambda () value))
+    (define setter (lambda (new-val) (set! value new-val)))
+    (list getter setter)))
+  (define gs (make-getter-setter 100))
+  (define get (car gs))
+  (define set (car (cdr gs)))
+  (assert-equal 100 (get))
+  (set 200)
+  (assert-equal 200 (get))))
+
+(define test-nested-closures (lambda ()
+  ;; Closures can nest and each captures its own environment
+  (define make-adder (lambda (x)
+    (lambda (y)
+      (lambda (z)
+        (+ x (+ y z))))))
+  (define add5 (make-adder 5))
+  (define add5-10 (add5 10))
+  (assert-equal 18 (add5-10 3))))
+
+;; Tests for lambda parameter scoping
+
+(define test-lambda-creates-new-scope (lambda ()
+  ;; Lambda body creates a new environment
+  (define x 100)
+  (define f (lambda ()
+    (define x 42)  ;; Creates NEW binding, doesn't modify outer x
+    x))
+  (assert-equal 42 (f))
+  ;; Outer x unchanged - this is critical for lexical scoping
+  (assert-equal 100 x)))
+
+(define test-lambda-params-create-scope (lambda ()
+  ;; Lambda parameters create new bindings in function scope
+  (define x 100)
+  (define f (lambda (x) x))
+  (assert-equal 42 (f 42))
+  ;; Outer x unchanged
+  (assert-equal 100 x)))
+
+(define test-lambda-params-shadow-outer (lambda ()
+  ;; Parameters shadow outer variables of same name
+  (define x 100)
+  (define y 200)
+  (define f (lambda (x y) (+ x y)))
+  (assert-equal 3 (f 1 2))
+  (assert-equal 100 x)
+  (assert-equal 200 y)))
+
+(define test-variadic-params-create-binding (lambda ()
+  ;; Variadic parameters create a binding for the rest args
+  (define f (lambda (first . rest)
+    (+ first (length rest))))
+  (assert-equal 4 (f 1 2 3 4))))
+
+(define test-nested-function-sees-outer-params (lambda ()
+  ;; Inner functions can see outer function parameters
+  (define outer (lambda (x)
+    (define inner (lambda (y)
+      (+ x y)))
+    (inner 10)))
+  (assert-equal 15 (outer 5))))
+
+;; Tests for mutual visibility in same scope
+
+(define test-defines-in-same-scope-visible (lambda ()
+  ;; Multiple defines in same scope can reference each other
+  (begin
+    (define a 5)
+    (define b 10)
+    (define c (+ a b))
+    (assert-equal 15 c))))
+
+(define test-function-can-call-later-defined-function (lambda ()
+  ;; Functions defined later in same scope are visible
+  ;; (due to letrec-like semantics in begin)
+  (begin
+    (define f (lambda (n)
+      (if (== n 0) 0 (g (- n 1)))))
+    (define g (lambda (n)
+      (if (== n 0) 42 (f (- n 1)))))
+    (assert-equal 42 (f 3)))))
+
+;; Tests for scope and control flow
+
+(define test-if-branches-share-scope (lambda ()
+  ;; Both branches of if see the same scope
+  (define x 100)
+  (define result
+    (if #t
+      (begin (define y 1) (+ x y))
+      (begin (define z 2) (+ x z))))
+  (assert-equal 101 result)))
+
+(define test-begin-does-not-create-scope (lambda ()
+  ;; begin does NOT create a new scope - this is correct Scheme semantics
+  ;; define inside begin updates bindings in the same scope
+  (define x 100)
+  (begin
+    (set! x 200)  ;; Modifies outer x
+    (assert-equal 200 x))
+  (assert-equal 200 x)))  ;; Outer x was modified

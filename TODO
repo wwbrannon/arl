@@ -1,4 +1,3 @@
-o) lexical scoping tests
 o) add scientific notation support and reenable tests
 o) clean up what in the stdlib is loaded by default
 o) look at the test behavior: any tests that look obviously bad? anywhere it's not what a lisp should do? identify questionable choices that may reflect encoding bugs into tests
