@@ -14,6 +14,10 @@
 
   (import list)
 
+  ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
+  ;; to avoid unnecessary stack frames. Docstrings placed as string literals after
+  ;; definitions; a future helper will attach them properly.
+
   (define list?
     (lambda (x)
       "Return #t if x is a list or call."
@@ -40,25 +44,19 @@
       "Alias for null?."
       (null? x)))
 
-  (define symbol?
-    (lambda (x)
-      "Return #t if x is a symbol."
-      (is.symbol x)))
+  (define symbol? is.symbol)
+  "Return #t if x is a symbol."
 
   (define keyword?
     (lambda (x)
       "Return #t if x is a Rye keyword."
       (isTRUE (inherits x "rye_keyword"))))
 
-  (define number?
-    (lambda (x)
-      "Return #t if x is numeric."
-      (is.numeric x)))
+  (define number? is.numeric)
+  "Return #t if x is numeric."
 
-  (define string?
-    (lambda (x)
-      "Return #t if x is character."
-      (is.character x)))
+  (define string? is.character)
+  "Return #t if x is character."
 
   (define vector?
     (lambda (x)
@@ -84,15 +82,11 @@
         (isTRUE (== (length x) 1))
         #f)))
 
-  (define fn?
-    (lambda (x)
-      "Return #t if x is a function."
-      (is.function x)))
+  (define fn? is.function)
+  "Return #t if x is a function."
 
-  (define callable?
-    (lambda (x)
-      "Alias for fn?."
-      (is.function x)))
+  (define callable? is.function)
+  "Alias for fn?."
 
   (define not
     (lambda (x)
