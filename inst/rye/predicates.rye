@@ -5,7 +5,14 @@
           symbol? keyword? number? string? vector?
           true? false? boolean? fn? callable? not xor
           empty?
-          length= length> length<)
+          length= length> length<
+          eq? eqv? equal?
+          atom? procedure? rational? real? complex?
+          symbol->string string->symbol
+          ->symbol ->number ->list ->vector
+          type-of)
+
+  (import list)
 
   (define list?
     (lambda (x)
@@ -128,4 +135,170 @@
   (define length<
     (lambda (x n)
       "Return #t if length of x is less than n."
-      (isTRUE (< (length x) n)))))
+      (isTRUE (< (length x) n))))
+
+  ;; ============================================================================
+  ;; Phase 4: Enhanced Equality & Type Predicates
+  ;; ============================================================================
+
+  ;; Equality predicates
+  (define eq?
+    (lambda (a b)
+      "Pointer/reference equality (R's identical)."
+      (identical a b)))
+
+  (define eqv?
+    (lambda (a b)
+      "Value equality for primitives, identity for objects."
+      ;; Numbers and characters: compare by value
+      ;; Everything else: compare by identity
+      (if (number? a)
+        (if (number? b) (isTRUE (== a b)) #f)
+        (if (string? a)
+          (if (string? b) (isTRUE (== a b)) #f)
+          (if (boolean? a)
+            (if (boolean? b) (identical a b) #f)
+            (identical a b))))))
+
+  (define equal?
+    (lambda (a b)
+      "Deep structural equality - recursively compare structure."
+      (if (eq? a b)
+        #t
+        (if (list? a)
+          (if (list? b)
+            ;; Both lists: compare element by element
+            (if (== (length a) (length b))
+              (begin
+                (define compare-lists
+                  (lambda (lst1 lst2)
+                    (if (null? lst1)
+                      #t
+                      (if (equal? (car lst1) (car lst2))
+                        (compare-lists (cdr lst1) (cdr lst2))
+                        #f))))
+                (compare-lists a b))
+              #f)
+            #f)
+          (if (vector? a)
+            (if (vector? b)
+              ;; Both vectors: use R's all.equal
+              (isTRUE (r/call "isTRUE" (list (r/call "all.equal" (list a b :check.attributes #f)))))
+              #f)
+            ;; Not lists or vectors: use eqv?
+            (eqv? a b))))))
+
+  ;; Additional type predicates
+  (define atom?
+    (lambda (x)
+      "Return #t if x is not a pair (i.e., not a non-empty list)."
+      (not (pair? x))))
+
+  (define procedure?
+    (lambda (x)
+      "Alias for fn? - return #t if x is a function."
+      (fn? x)))
+
+  (define rational?
+    (lambda (x)
+      "Return #t if x is a rational number (all R numerics are rational or special)."
+      ;; In R, all finite numerics can be considered rational
+      (if (number? x)
+        (if (is.finite x) #t #f)
+        #f)))
+
+  (define real?
+    (lambda (x)
+      "Return #t if x is a real number."
+      ;; R's is.numeric includes integers and doubles
+      (if (is.numeric x)
+        (if (is.complex x) #f #t)
+        #f)))
+
+  (define complex?
+    (lambda (x)
+      "Return #t if x is a complex number."
+      (is.complex x)))
+
+  ;; Symbol conversions
+  (define symbol->string
+    (lambda (sym)
+      "Convert symbol to string."
+      (if (symbol? sym)
+        (as.character sym)
+        (stop "symbol->string: argument must be a symbol"))))
+
+  (define string->symbol
+    (lambda (str)
+      "Convert string to symbol."
+      (if (string? str)
+        (as.symbol str)
+        (stop "string->symbol: argument must be a string"))))
+
+  ;; General type conversions
+  (define ->symbol
+    (lambda (x)
+      "Convert value to symbol."
+      (if (symbol? x)
+        x
+        (as.symbol (as.character x)))))
+
+  (define ->number
+    (lambda (x)
+      "Convert value to number."
+      (if (number? x)
+        x
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.numeric x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to number" x))
+              result))
+          (stop "->number: cannot convert to number")))))
+
+  (define ->list
+    (lambda (x)
+      "Convert value to list."
+      (if (list? x)
+        x
+        (as.list x))))
+
+  (define ->vector
+    (lambda (x)
+      "Convert value to vector."
+      (if (vector? x)
+        x
+        (if (list? x)
+          (unlist x)
+          (if (is.atomic x)
+            x
+            (stop "->vector: cannot convert to vector"))))))
+
+  ;; Type introspection
+  (define type-of
+    (lambda (x)
+      "Return type name of value as string."
+      (if (null? x)
+        "null"
+        (if (is.symbol x)
+          "symbol"
+          (if (is.character x)
+            "character"
+            (if (is.numeric x)
+              (if (is.integer x)
+                "integer"
+                (if (is.double x)
+                  "numeric"
+                  (if (is.complex x)
+                    "complex"
+                    "numeric")))
+              (if (is.logical x)
+                "logical"
+                (if (is.list x)
+                  "list"
+                  (if (is.call x)
+                    "call"
+                    (if (is.function x)
+                      "closure"
+                      (r/call "typeof" (list x))))))))))))
+)

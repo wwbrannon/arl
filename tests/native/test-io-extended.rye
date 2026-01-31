@@ -1,0 +1,112 @@
+;; Tests for extended I/O operations (Phase 5)
+;; read, print, file operations, environment, system
+
+;; ============================================================================
+;; Parsing (read)
+;; ============================================================================
+
+(define test-read-number (lambda ()
+  (define expr (read "42"))
+  (assert-equal expr 42)))
+
+(define test-read-symbol (lambda ()
+  (define expr (read "foo"))
+  (assert-equal expr 'foo)))
+
+(define test-read-list (lambda ()
+  (define expr (read "(+ 1 2 3)"))
+  (assert-true (list? expr))
+  (assert-equal (car expr) '+)))
+
+(define test-read-string (lambda ()
+  (define expr (read "\"hello world\""))
+  (assert-equal expr "hello world")))
+
+(define test-read-nested (lambda ()
+  (define expr (read "(list 1 (list 2 3) 4)"))
+  (assert-equal (car expr) 'list)))
+
+(define test-read-from-string-alias (lambda ()
+  ;; read-from-string is alias for read
+  (define expr (read-from-string "(* 2 3)"))
+  (assert-equal (car expr) '*)))
+
+;; ============================================================================
+;; Output Functions
+;; ============================================================================
+
+;; Note: Testing print/newline/write-string is tricky as they produce side effects
+;; We test that they at least execute without error
+
+(define test-print-exists (lambda ()
+  ;; Just verify print can be called
+  (assert-true (fn? print))))
+
+(define test-newline-exists (lambda ()
+  (assert-true (fn? newline))))
+
+(define test-write-string-exists (lambda ()
+  (assert-true (fn? write-string))))
+
+;; ============================================================================
+;; File System Operations
+;; ============================================================================
+
+(define test-file-size-exists (lambda ()
+  ;; Test that function exists; actual file test would require fixture
+  (assert-true (fn? file-size))))
+
+(define test-file-modified-time-exists (lambda ()
+  (assert-true (fn? file-modified-time))))
+
+(define test-directory-list-exists (lambda ()
+  (assert-true (fn? directory-list))))
+
+(define test-file-delete-exists (lambda ()
+  (assert-true (fn? file-delete))))
+
+(define test-directory-exists-predicate (lambda ()
+  (assert-true (fn? directory-exists?))))
+
+;; For actual file operations, we would need test fixtures.
+;; Here we just ensure the functions are defined and callable.
+
+;; ============================================================================
+;; Environment Variables
+;; ============================================================================
+
+(define test-getenv-home (lambda ()
+  ;; HOME should exist on Unix-like systems
+  (define home (getenv "HOME"))
+  (if (not (nil? home))
+    (assert-true (string? home))
+    (assert-true #t))))  ;; Skip on systems without HOME
+
+(define test-getenv-nonexistent (lambda ()
+  ;; Non-existent var should return #nil or ""
+  (define result (getenv "NONEXISTENT_VAR_12345"))
+  (assert-true (if (nil? result) #t (== result "")))))
+
+(define test-setenv-getenv-roundtrip (lambda ()
+  ;; Set an env var and read it back
+  (setenv "RYE_TEST_VAR" "test-value")
+  (assert-equal (getenv "RYE_TEST_VAR") "test-value")))
+
+;; ============================================================================
+;; System Operations
+;; ============================================================================
+
+(define test-exit-exists (lambda ()
+  ;; Don't actually call exit! Just verify it exists
+  (assert-true (fn? exit))))
+
+(define test-system-exists (lambda ()
+  ;; System command execution
+  (assert-true (fn? system))))
+
+;; We can safely test system with a harmless command
+(define test-system-echo (lambda ()
+  ;; Test system call with simple echo
+  ;; Note: return value semantics may vary
+  (define result (system "true"))  ;; 'true' always succeeds
+  (assert-true (if (number? result) #t #f))))

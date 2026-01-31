@@ -1,7 +1,8 @@
 ;;; Rye Standard Library - Higher-Order Functions
 
 (module higher-order
-  (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial)
+  (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial
+          curry juxt constantly iterate iterate-until memoize repeatedly)
 
   (import list)
   (import predicates)
@@ -80,4 +81,78 @@
     (lambda (fn . captured)
       "Partially apply function."
       (lambda (. more)
-        (do.call fn (append captured more))))))
+        (do.call fn (append captured more)))))
+
+  ;; ============================================================================
+  ;; Phase 6: Advanced Functional Programming
+  ;; ============================================================================
+
+  (define curry
+    (lambda (fn)
+      "Curry a function - enables partial application."
+      ;; Get the number of parameters the function expects
+      (define arity (length (formals fn)))
+      (define curry-helper
+        (lambda (collected-args)
+          (lambda (. new-args)
+            (define all-args (append collected-args new-args))
+            (if (>= (length all-args) arity)
+              ;; Have enough args, call the function
+              (do.call fn all-args)
+              ;; Need more args, return another curried function
+              (curry-helper all-args)))))
+      (curry-helper (list))))
+
+  (define juxt
+    (lambda (. fns)
+      "Juxtaposition - apply multiple functions to same args, return list of results."
+      (lambda (. args)
+        (map (lambda (f) (do.call f args)) fns))))
+
+  (define constantly
+    (lambda (value)
+      "Return a function that always returns the given value."
+      (lambda (. args)
+        value)))
+
+  (define iterate
+    (lambda (fn n init)
+      "Apply function n times to initial value."
+      (if (<= n 0)
+        init
+        (iterate fn (- n 1) (fn init)))))
+
+  (define iterate-until
+    (lambda (fn pred init)
+      "Apply function until predicate is true."
+      (if (pred init)
+        init
+        (iterate-until fn pred (fn init)))))
+
+  (define memoize
+    (lambda (fn)
+      "Memoize function - cache results for previously seen arguments."
+      ;; Use an environment to store cached results
+      (define cache (r/call "new.env" (list)))
+      (lambda (. args)
+        ;; Create a key from the arguments
+        (define key (r/call "paste" (list args :collapse "|")))
+        ;; Check if we have a cached result
+        (if (r/call "exists" (list key :envir cache))
+          ;; Return cached result
+          (r/call "get" (list key :envir cache))
+          ;; Compute and cache result
+          (begin
+            (define result (do.call fn args))
+            (r/call "assign" (list key result :envir cache))
+            result)))))
+
+  (define repeatedly
+    (lambda (fn n)
+      "Call function n times, return list of results."
+      (define helper
+        (lambda (count acc)
+          (if (<= count 0)
+            acc
+            (helper (- count 1) (append acc (list (fn)))))))
+      (helper n (list)))))

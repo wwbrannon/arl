@@ -7,12 +7,19 @@
           even? odd? zero?
           positive? negative? non-negative? non-positive?
           integer? natural?
-          finite? infinite? nan?)
+          finite? infinite? nan?
+          abs floor ceiling truncate round signum
+          sqrt expt
+          log logb exp log10 log2
+          sin cos tan asin acos atan atan2
+          quotient remainder modulo
+          gcd lcm)
 
   (define __r+ (get "+" :envir (baseenv)))
   (define __r* (get "*" :envir (baseenv)))
   (define __r- (get "-" :envir (baseenv)))
   (define __r/ (get "/" :envir (baseenv)))
+  (define __r^ (get "^" :envir (baseenv)))
   (define __rmin (get "min" :envir (baseenv)))
   (define __rmax (get "max" :envir (baseenv)))
   (define __r< (get "<" :envir (baseenv)))
@@ -20,6 +27,27 @@
   (define __r<= (get "<=" :envir (baseenv)))
   (define __r>= (get ">=" :envir (baseenv)))
   (define __r== (get "==" :envir (baseenv)))
+
+  ;; Phase 1: R base function bindings
+  (define __rabs (get "abs" :envir (baseenv)))
+  (define __rfloor (get "floor" :envir (baseenv)))
+  (define __rceiling (get "ceiling" :envir (baseenv)))
+  (define __rtrunc (get "trunc" :envir (baseenv)))
+  (define __rround (get "round" :envir (baseenv)))
+  (define __rsign (get "sign" :envir (baseenv)))
+  (define __rsqrt (get "sqrt" :envir (baseenv)))
+  (define __rlog (get "log" :envir (baseenv)))
+  (define __rexp (get "exp" :envir (baseenv)))
+  (define __rlog10 (get "log10" :envir (baseenv)))
+  (define __rlog2 (get "log2" :envir (baseenv)))
+  (define __rsin (get "sin" :envir (baseenv)))
+  (define __rcos (get "cos" :envir (baseenv)))
+  (define __rtan (get "tan" :envir (baseenv)))
+  (define __rasin (get "asin" :envir (baseenv)))
+  (define __racos (get "acos" :envir (baseenv)))
+  (define __ratan (get "atan" :envir (baseenv)))
+  (define __ratan2 (get "atan2" :envir (baseenv)))
+  (define __ras.integer (get "as.integer" :envir (baseenv)))
 
   (define %
     (lambda (x y)
@@ -248,4 +276,164 @@
     (lambda (x)
       "Return #t if x is NaN."
       (isTRUE (is.nan x))))
+
+  ;; ============================================================================
+  ;; Phase 1: Extended Numeric Operations
+  ;; ============================================================================
+
+  ;; Rounding and truncation
+  (define abs
+    (lambda (x)
+      "Return absolute value of x."
+      (__rabs x)))
+
+  (define floor
+    (lambda (x)
+      "Return floor (round down) of x."
+      (__rfloor x)))
+
+  (define ceiling
+    (lambda (x)
+      "Return ceiling (round up) of x."
+      (__rceiling x)))
+
+  (define truncate
+    (lambda (x)
+      "Return truncated (towards zero) value of x."
+      (__rtrunc x)))
+
+  (define round
+    (lambda (x (digits 0))
+      "Round x to given number of decimal places (default 0)."
+      (__rround x digits)))
+
+  (define signum
+    (lambda (x)
+      "Return sign of x: -1, 0, or 1."
+      (__rsign x)))
+
+  ;; Power and roots
+  (define sqrt
+    (lambda (x)
+      "Return square root of x."
+      (__rsqrt x)))
+
+  (define expt
+    (lambda (base power)
+      "Return base raised to power."
+      (__r^ base power)))
+
+  ;; Logarithmic and exponential
+  ;; FIXME: Cannot override R's primitive 'log' with optional parameters due to
+  ;; module system issue - optional params don't survive module export when
+  ;; overriding existing functions. Using separate 'logb' function as workaround.
+  (define log
+    (lambda (x)
+      "Return natural logarithm of x."
+      (__rlog x)))
+
+  (define logb
+    (lambda (x base)
+      "Return logarithm of x with given base."
+      (__rlog x base)))
+
+  (define exp
+    (lambda (x)
+      "Return e raised to power x."
+      (__rexp x)))
+
+  (define log10
+    (lambda (x)
+      "Return base-10 logarithm of x."
+      (__rlog10 x)))
+
+  (define log2
+    (lambda (x)
+      "Return base-2 logarithm of x."
+      (__rlog2 x)))
+
+  ;; Trigonometric functions
+  (define sin
+    (lambda (x)
+      "Return sine of x (in radians)."
+      (__rsin x)))
+
+  (define cos
+    (lambda (x)
+      "Return cosine of x (in radians)."
+      (__rcos x)))
+
+  (define tan
+    (lambda (x)
+      "Return tangent of x (in radians)."
+      (__rtan x)))
+
+  (define asin
+    (lambda (x)
+      "Return arcsine of x (in radians)."
+      (__rasin x)))
+
+  (define acos
+    (lambda (x)
+      "Return arccosine of x (in radians)."
+      (__racos x)))
+
+  (define atan
+    (lambda (x)
+      "Return arctangent of x (in radians)."
+      (__ratan x)))
+
+  (define atan2
+    (lambda (y x)
+      "Return arctangent of y/x (in radians), respecting quadrant."
+      (__ratan2 y x)))
+
+  ;; Integer division
+  (define quotient
+    (lambda (x y)
+      "Return integer quotient of x divided by y."
+      (__ras.integer (__rfloor (__r/ x y)))))
+
+  (define remainder
+    (lambda (x y)
+      "Return remainder of x divided by y (same sign as x)."
+      (__r- x (__r* y (quotient x y)))))
+
+  (define modulo
+    (lambda (x y)
+      "Return modulo of x and y (same sign as y)."
+      (%% x y)))
+
+  ;; Number theory
+  (define gcd
+    (lambda (. args)
+      "Return greatest common divisor of arguments."
+      (if (__r< (length args) 1)
+        (stop "gcd requires at least one argument")
+        (if (__r== (length args) 1)
+          (__rabs (r/call "[[" (list args 1)))
+          (begin
+            (define gcd-two
+              (lambda (a b)
+                "GCD of two numbers using Euclidean algorithm."
+                (if (__r== b 0)
+                  (__rabs a)
+                  (gcd-two b (modulo a b)))))
+            (Reduce gcd-two args))))))
+
+  (define lcm
+    (lambda (. args)
+      "Return least common multiple of arguments."
+      (if (__r< (length args) 1)
+        (stop "lcm requires at least one argument")
+        (if (__r== (length args) 1)
+          (__rabs (r/call "[[" (list args 1)))
+          (begin
+            (define lcm-two
+              (lambda (a b)
+                "LCM of two numbers using a*b/gcd(a,b)."
+                (if (if (__r== a 0) #t (__r== b 0))
+                  0
+                  (__r/ (__rabs (__r* a b)) (gcd a b)))))
+            (Reduce lcm-two args))))))
 )

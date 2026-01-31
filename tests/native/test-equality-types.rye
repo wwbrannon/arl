@@ -1,0 +1,166 @@
+;; Tests for equality predicates and type conversions (Phase 4)
+;; eq?, eqv?, equal?, type predicates, and conversions
+
+;; ============================================================================
+;; Equality Predicates
+;; ============================================================================
+
+(define test-eq-same-object (lambda ()
+  ;; Same object in memory
+  (define x (list 1 2 3))
+  (define y x)
+  (assert-true (eq? x y))))
+
+(define test-eq-different-objects (lambda ()
+  ;; Different objects with same content
+  (define x (list 1 2 3))
+  (define y (list 1 2 3))
+  (assert-false (eq? x y))))
+
+(define test-eq-symbols (lambda ()
+  ;; Symbols with same name should be eq?
+  (assert-true (eq? 'foo 'foo))))
+
+(define test-eq-numbers-not-guaranteed (lambda ()
+  ;; Numbers might not be eq? even if equal
+  ;; This is implementation-dependent, but we test the semantics
+  (assert-true (eq? 5 5))))  ;; In R, small integers are cached
+
+(define test-eqv-numbers (lambda ()
+  ;; eqv? should work for number value equality
+  (assert-true (eqv? 5 5))
+  (assert-false (eqv? 5 6))))
+
+(define test-eqv-symbols (lambda ()
+  (assert-true (eqv? 'hello 'hello))
+  (assert-false (eqv? 'hello 'goodbye))))
+
+(define test-eqv-different-types (lambda ()
+  ;; Different types should not be eqv?
+  (assert-false (eqv? 5 "5"))))
+
+(define test-equal-lists (lambda ()
+  ;; Deep structural equality
+  (define x (list 1 2 3))
+  (define y (list 1 2 3))
+  (assert-true (equal? x y))))
+
+(define test-equal-nested-lists (lambda ()
+  (define x (list 1 (list 2 3) 4))
+  (define y (list 1 (list 2 3) 4))
+  (assert-true (equal? x y))))
+
+(define test-equal-different-structure (lambda ()
+  (define x (list 1 2 3))
+  (define y (list 1 2 4))
+  (assert-false (equal? x y))))
+
+(define test-equal-strings (lambda ()
+  (assert-true (equal? "hello" "hello"))
+  (assert-false (equal? "hello" "world"))))
+
+(define test-equal-vs-eq (lambda ()
+  ;; equal? should return true for same content, eq? might not
+  (define x (list 1 2))
+  (define y (list 1 2))
+  (assert-false (eq? x y))
+  (assert-true (equal? x y))))
+
+;; ============================================================================
+;; Type Predicates
+;; ============================================================================
+
+(define test-atom-numbers (lambda ()
+  (assert-true (atom? 5))
+  (assert-true (atom? 3.14))))
+
+(define test-atom-strings (lambda ()
+  (assert-true (atom? "hello"))))
+
+(define test-atom-symbols (lambda ()
+  (assert-true (atom? 'foo))))
+
+(define test-atom-not-pair (lambda ()
+  (assert-false (atom? (list 1 2)))
+  (assert-false (atom? (cons 1 2)))))
+
+(define test-atom-empty-list (lambda ()
+  ;; Empty list is atomic (not a pair)
+  (assert-true (atom? (list)))))
+
+(define test-procedure-predicate (lambda ()
+  ;; procedure? is alias for fn?
+  (assert-true (procedure? (lambda (x) x)))
+  (assert-false (procedure? 42))))
+
+(define test-rational-numbers (lambda ()
+  (assert-true (rational? 5))
+  (assert-true (rational? 3.5))))
+
+(define test-real-numbers (lambda ()
+  (assert-true (real? 5))
+  (assert-true (real? 3.14))
+  (assert-true (real? -2.5))))
+
+(define test-complex-numbers (lambda ()
+  ;; R supports complex numbers
+  (assert-true (complex? (complex :real 3 :imaginary 4)))))
+
+;; ============================================================================
+;; Symbol Conversions
+;; ============================================================================
+
+(define test-symbol-to-string-basic (lambda ()
+  (assert-equal (symbol->string 'foo) "foo")))
+
+(define test-symbol-to-string-hyphenated (lambda ()
+  (assert-equal (symbol->string 'hello-world) "hello-world")))
+
+(define test-string-to-symbol-basic (lambda ()
+  (assert-equal (string->symbol "foo") 'foo)))
+
+(define test-string-to-symbol-roundtrip (lambda ()
+  (define sym 'test-symbol)
+  (assert-eq (string->symbol (symbol->string sym)) sym)))
+
+;; ============================================================================
+;; General Type Conversions
+;; ============================================================================
+
+(define test-to-symbol (lambda ()
+  (assert-equal (->symbol "hello") 'hello)))
+
+(define test-to-number (lambda ()
+  (assert-equal (->number "42") 42)
+  (assert-equal (->number "3.14") 3.14)))
+
+(define test-to-list-from-vector (lambda ()
+  (define vec (c 1 2 3))
+  (define lst (->list vec))
+  (assert-true (list? lst))
+  (assert-equal (car lst) 1)))
+
+(define test-to-vector-from-list (lambda ()
+  (define lst (list 1 2 3))
+  (define vec (->vector lst))
+  (assert-true (vector? vec))))
+
+;; ============================================================================
+;; Type Introspection
+;; ============================================================================
+
+(define test-type-of-number (lambda ()
+  (assert-equal (type-of 42) "numeric")))
+
+(define test-type-of-string (lambda ()
+  (assert-equal (type-of "hello") "character")))
+
+(define test-type-of-symbol (lambda ()
+  (assert-equal (type-of 'foo) "symbol")))
+
+(define test-type-of-list (lambda ()
+  (assert-equal (type-of (list 1 2 3)) "list")))
+
+(define test-type-of-function (lambda ()
+  (define f (lambda (x) x))
+  (assert-equal (type-of f) "closure")))

@@ -9,7 +9,11 @@
           cdaar cdadr cddar cdddr
           cadddr cddddr
           cons list* append reverse
-          first second third fourth rest last nth)
+          first second third fourth rest last nth
+          assoc assq assv rassoc
+          sort sort-by merge stable-sort
+          range iota make-list
+          list-ref list-tail)
 
   (define __as-list
     (lambda (x)
@@ -162,4 +166,189 @@
         (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
         (if (>= n (length items))
           (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
-          (r/call "[[" (list items (+ n 1))))))))
+          (r/call "[[" (list items (+ n 1)))))))
+
+  ;; ============================================================================
+  ;; Phase 2: Extended List Operations
+  ;; ============================================================================
+
+  ;; Association lists (alists)
+  (define assoc
+    (lambda (key alist)
+      "Find first pair in alist with matching key (uses equal?)."
+      (define search
+        (lambda (lst)
+          (if (null? lst)
+            #nil
+            (begin
+              (define pair (car lst))
+              (if (list? pair)
+                (if (>= (length pair) 1)
+                  (if (equal? (car pair) key)
+                    pair
+                    (search (cdr lst)))
+                  (search (cdr lst)))
+                (search (cdr lst)))))))
+      (search (__as-list alist))))
+
+  (define assq
+    (lambda (key alist)
+      "Find first pair in alist with matching key (uses eq?/identical)."
+      (define search
+        (lambda (lst)
+          (if (null? lst)
+            #nil
+            (begin
+              (define pair (car lst))
+              (if (list? pair)
+                (if (>= (length pair) 1)
+                  (if (identical (car pair) key)
+                    pair
+                    (search (cdr lst)))
+                  (search (cdr lst)))
+                (search (cdr lst)))))))
+      (search (__as-list alist))))
+
+  (define assv
+    (lambda (key alist)
+      "Find first pair in alist with matching key (uses eqv? - value equality)."
+      (define search
+        (lambda (lst)
+          (if (null? lst)
+            #nil
+            (begin
+              (define pair (car lst))
+              (if (list? pair)
+                (if (>= (length pair) 1)
+                  (if (eqv? (car pair) key)
+                    pair
+                    (search (cdr lst)))
+                  (search (cdr lst)))
+                (search (cdr lst)))))))
+      (search (__as-list alist))))
+
+  (define rassoc
+    (lambda (value alist)
+      "Find first pair in alist with matching value (searches cdr of pairs)."
+      (define search
+        (lambda (lst)
+          (if (null? lst)
+            #nil
+            (begin
+              (define pair (car lst))
+              (if (list? pair)
+                (if (>= (length pair) 2)
+                  (if (equal? (cadr pair) value)
+                    pair
+                    (search (cdr lst)))
+                  (search (cdr lst)))
+                (search (cdr lst)))))))
+      (search (__as-list alist))))
+
+  ;; Sorting
+  (define sort
+    (lambda (lst comparator)
+      "Sort list using comparison function (simple quicksort implementation)."
+      (define items (__as-list lst))
+      (if (<= (length items) 1)
+        items
+        (begin
+          ;; Simple quicksort
+          (define pivot (car items))
+          (define rest-items (cdr items))
+          ;; Partition into less and greater
+          (define partition
+            (lambda (lst less greater)
+              (if (null? lst)
+                (list less greater)
+                (if (comparator (car lst) pivot)
+                  (partition (cdr lst) (append less (list (car lst))) greater)
+                  (partition (cdr lst) less (append greater (list (car lst))))))))
+          (define parts (partition rest-items (list) (list)))
+          (append (sort (car parts) comparator)
+                  (list pivot)
+                  (sort (cadr parts) comparator))))))
+
+  (define sort-by
+    (lambda (lst key-fn comparator)
+      "Sort list by applying key-fn to each element, then comparing."
+      (define items (__as-list lst))
+      (if (<= (length items) 1)
+        items
+        (begin
+          ;; Create pairs of (key . value)
+          (define pairs (lapply items (lambda (x) (list (key-fn x) x))))
+          ;; Sort by first element of pair
+          (define sorted-pairs (sort pairs (lambda (a b) (comparator (car a) (car b)))))
+          ;; Extract values
+          (lapply sorted-pairs cadr)))))
+
+  (define merge
+    (lambda (list1 list2 comparator)
+      "Merge two sorted lists into one sorted list."
+      (define merge-loop
+        (lambda (l1 l2 acc)
+          (if (null? l1)
+            (append (reverse acc) l2)
+            (if (null? l2)
+              (append (reverse acc) l1)
+              (if (comparator (car l1) (car l2))
+                (merge-loop (cdr l1) l2 (cons (car l1) acc))
+                (merge-loop l1 (cdr l2) (cons (car l2) acc)))))))
+      (merge-loop (__as-list list1) (__as-list list2) (list))))
+
+  (define stable-sort
+    (lambda (lst comparator)
+      "Stable sort - preserves order of equal elements."
+      ;; R's sort is already stable, so this is an alias
+      (sort lst comparator)))
+
+  ;; List generation
+  (define range
+    (lambda (start end . step-args)
+      "Generate numeric range from start to end (exclusive) with optional step."
+      (define step (if (> (length step-args) 0) (car step-args) 1))
+      (if (= step 0)
+        (stop "range: step cannot be zero")
+        (if (> step 0)
+          ;; Positive step: start < end
+          (if (>= start end)
+            (list)
+            (as.list (seq start (- end 1) step)))
+          ;; Negative step: start > end
+          (if (<= start end)
+            (list)
+            (as.list (seq start (+ end 1) step)))))))
+
+  (define iota
+    (lambda (count . args)
+      "Generate sequence of count numbers starting from start (default 0) with step (default 1)."
+      (define start (if (> (length args) 0) (car args) 0))
+      (define step (if (> (length args) 1) (cadr args) 1))
+      (if (<= count 0)
+        (list)
+        (as.list (seq start (+ start (* (- count 1) step)) step)))))
+
+  (define make-list
+    (lambda (n value)
+      "Create list of n copies of value."
+      (if (<= n 0)
+        (list)
+        (as.list (rep value n)))))
+
+  ;; Additional list accessors
+  (define list-ref
+    (lambda (lst index)
+      "Scheme-style list accessor (alias for nth)."
+      (nth lst index)))
+
+  (define list-tail
+    (lambda (lst k)
+      "Return list without first k elements."
+      (define items (__as-list lst))
+      (if (<= k 0)
+        items
+        (if (>= k (length items))
+          (list)
+          (as.list (r/call "[" (list items (seq (+ k 1) (length items)))))))))
+)

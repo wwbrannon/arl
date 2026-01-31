@@ -1,9 +1,16 @@
 ;;; Rye Standard Library - String Helpers
 
 (module strings
-  (export string-join string-split trim format string-contains? string-match? string-find string-replace string-replace-all string-append ->string)
+  (export string-join string-split trim format string-contains? string-match? string-find string-replace string-replace-all string-append ->string
+          char-at string-ref
+          substring string-length
+          string-upcase string-downcase string-titlecase
+          string<? string>? string=? string<=? string>=?
+          string->list list->string
+          number->string string->number)
 
   (import list)
+  (import math)
 
   (define string-join
     (lambda (x (sep ""))
@@ -62,4 +69,190 @@
   (define ->string
     (lambda (x)
       "Convert value to string representation."
-      (as.character x))))
+      (as.character x)))
+
+  ;; ============================================================================
+  ;; Phase 3: Extended String Operations
+  ;; ============================================================================
+
+  ;; Character access
+  (define char-at
+    (lambda (str index)
+      "Get character at index (0-based)."
+      (if (< index 0)
+        (stop (sprintf "Index %d out of bounds" index))
+        (if (>= index (nchar str))
+          (stop (sprintf "Index %d out of bounds for string of length %d" index (nchar str)))
+          (substr str (+ index 1) (+ index 1))))))
+
+  (define string-ref
+    (lambda (str index)
+      "Scheme-style character accessor (alias for char-at)."
+      (char-at str index)))
+
+  ;; Substring
+  (define substring
+    (lambda (str start end)
+      "Extract substring from start (inclusive) to end (exclusive), 0-based."
+      (if (< start 0)
+        (stop "substring: start index cannot be negative")
+        (if (> end (nchar str))
+          (stop (sprintf "substring: end index %d exceeds string length %d" end (nchar str)))
+          (if (> start end)
+            (stop "substring: start index must be <= end index")
+            (if (== start end)
+              ""
+              (substr str (+ start 1) end)))))))
+
+  ;; String length
+  (define string-length
+    (lambda (str)
+      "Return length of string."
+      (nchar str)))
+
+  ;; Case conversion
+  (define string-upcase
+    (lambda (str)
+      "Convert string to uppercase."
+      (toupper str)))
+
+  (define string-downcase
+    (lambda (str)
+      "Convert string to lowercase."
+      (tolower str)))
+
+  (define string-titlecase
+    (lambda (str)
+      "Convert string to title case (capitalize first letter of each word)."
+      ;; Simple implementation: split on spaces, capitalize each word
+      (begin
+        (define words (r/call "[[" (list (strsplit str " ") 1)))
+        (define capitalize-word
+          (lambda (word)
+            (if (== (nchar word) 0)
+              word
+              (paste0 (toupper (substr word 1 1))
+                     (tolower (substr word 2 (nchar word)))))))
+        (paste (vapply words capitalize-word (character 1)) :collapse " "))))
+
+  ;; String comparisons
+  (define string<?
+    (lambda (a b)
+      "Lexicographic less-than comparison."
+      (isTRUE (< a b))))
+
+  (define string>?
+    (lambda (a b)
+      "Lexicographic greater-than comparison."
+      (isTRUE (> a b))))
+
+  (define string=?
+    (lambda (a b)
+      "String equality comparison."
+      (isTRUE (== a b))))
+
+  (define string<=?
+    (lambda (a b)
+      "Lexicographic less-than-or-equal comparison."
+      (isTRUE (<= a b))))
+
+  (define string>=?
+    (lambda (a b)
+      "Lexicographic greater-than-or-equal comparison."
+      (isTRUE (>= a b))))
+
+  ;; String/List conversions
+  (define string->list
+    (lambda (str)
+      "Convert string to list of characters."
+      (if (== (nchar str) 0)
+        (list)
+        (as.list (r/call "[[" (list (strsplit str "") 1))))))
+
+  (define list->string
+    (lambda (lst)
+      "Convert list of characters to string."
+      (paste (unlist (__as-list lst)) :collapse "")))
+
+  ;; Number/String conversions
+  (define number->string
+    (lambda (num . base-args)
+      "Convert number to string with optional base (2-36)."
+      (if (> (length base-args) 0)
+        (begin
+          (define base (car base-args))
+          (if (if (< base 2) #t (> base 36))
+            (stop "number->string: base must be between 2 and 36")
+            (if (== base 10)
+              (as.character num)
+              (if (== base 16)
+                (tolower (r/call "as.hexmode" (list (as.integer num))))
+                (if (== base 8)
+                  (r/call "as.octmode" (list (as.integer num)))
+                  (if (== base 2)
+                    ;; Binary conversion
+                    (begin
+                      (define n (as.integer num))
+                      (if (== n 0)
+                        "0"
+                        (begin
+                          (define binary-digits (list))
+                          (define temp n)
+                          (define make-binary
+                            (lambda (x)
+                              (if (> x 0)
+                                (begin
+                                  (set! binary-digits (cons (as.character (%% x 2)) binary-digits))
+                                  (make-binary (quotient x 2)))
+                                #nil)))
+                          (make-binary temp)
+                          (paste (unlist binary-digits) :collapse ""))))
+                    ;; Other bases - use R's built-in
+                    (stop (sprintf "number->string: base %d not yet implemented" base))))))))
+        (as.character num))))
+
+  (define string->number
+    (lambda (str . base-args)
+      "Parse string to number with optional base (2-36)."
+      (if (> (length base-args) 0)
+        (begin
+          (define base (car base-args))
+          (if (if (< base 2) #t (> base 36))
+            (stop "string->number: base must be between 2 and 36")
+            (begin
+              ;; Handle different bases
+              (if (== base 10)
+                (begin
+                  (define result (suppressWarnings (as.numeric str)))
+                  (if (is.na result) #f result))
+                (if (== base 16)
+                  (begin
+                    (define result (suppressWarnings (as.integer (paste0 "0x" str))))
+                    (if (is.na result) #f result))
+                  (if (== base 8)
+                    (begin
+                      (define result (suppressWarnings (as.integer (paste0 "0" str))))
+                      (if (is.na result) #f result))
+                    (if (== base 2)
+                      ;; Binary parsing
+                      (begin
+                        (define chars (r/call "[[" (list (strsplit str "") 1)))
+                        (define parse-binary
+                          (lambda (digits acc)
+                            (if (== (length digits) 0)
+                              acc
+                              (begin
+                                (define d (r/call "[[" (list digits 1)))
+                                (define rest (if (> (length digits) 1)
+                                              (r/call "[" (list digits (seq 2 (length digits))))
+                                              (list)))
+                                (if (if (== d "0") #t (== d "1"))
+                                  (parse-binary rest (+ (* acc 2) (as.integer d)))
+                                  #f)))))
+                        (parse-binary chars 0))
+                      ;; Other bases not implemented
+                      (stop (sprintf "string->number: base %d not yet implemented" base)))))))))
+        (begin
+          (define result (suppressWarnings (as.numeric str)))
+          (if (is.na result) #f result)))))
+)

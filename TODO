@@ -1,6 +1,7 @@
 o) any core functions hy or other lisps have that we're missing? any really obvious additions?
     o) anything that's added should be added in phases
     o) each phase: first, add tests,nformed by what's common in lisps (with adaptations to R as needed),  then add code to verify against the tests
+    o) do we need these math functions? they're very thin wrappers. and/or should they take variable arguments? more generally, there are many functions in the inst/rye files that are the thinest possible wrappers around R functions but add more complexity and another stack frame. can we drop them and add a long comment listing the functions provided by base R that we use? Or even just say (define log __rlog) to skip the needless lambda?
 o) look at the test behavior: any tests that look obviously bad? anywhere it's not what a lisp should do? identify questionable choices that may reflect encoding bugs into tests
 
 o) bench-eval and bench-e2e fail

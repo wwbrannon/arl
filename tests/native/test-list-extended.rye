@@ -1,0 +1,155 @@
+;; Tests for extended list operations (Phase 2)
+;; Association lists, sorting, and list generation
+
+;; ============================================================================
+;; Association Lists
+;; ============================================================================
+
+(define test-assoc-found (lambda ()
+  (define alist (list (list 'a 1) (list 'b 2) (list 'c 3)))
+  (assert-equal (assoc 'b alist) (list 'b 2))))
+
+(define test-assoc-not-found (lambda ()
+  (define alist (list (list 'a 1) (list 'b 2)))
+  (assert-equal (assoc 'z alist) #nil)))
+
+(define test-assoc-first-match (lambda ()
+  ;; Should return first matching pair
+  (define alist (list (list 'a 1) (list 'a 2) (list 'a 3)))
+  (assert-equal (assoc 'a alist) (list 'a 1))))
+
+(define test-assoc-empty-list (lambda ()
+  (assert-equal (assoc 'a (list)) #nil)))
+
+(define test-assq-symbol-identity (lambda ()
+  ;; assq uses eq? (identity comparison)
+  (define key 'test)
+  (define alist (list (list key 1)))
+  (assert-equal (assq 'test alist) (list 'test 1))))
+
+(define test-assv-value-equality (lambda ()
+  ;; assv uses eqv? (value equality)
+  (define alist (list (list 5 "five") (list 10 "ten")))
+  (assert-equal (assv 5 alist) (list 5 "five"))))
+
+(define test-rassoc-value-search (lambda ()
+  ;; rassoc searches by value (cdr of pair)
+  (define alist (list (list 'a 1) (list 'b 2) (list 'c 3)))
+  (assert-equal (rassoc 2 alist) (list 'b 2))))
+
+(define test-rassoc-not-found (lambda ()
+  (define alist (list (list 'a 1) (list 'b 2)))
+  (assert-equal (rassoc 99 alist) #nil)))
+
+;; ============================================================================
+;; Sorting
+;; ============================================================================
+
+(define test-sort-numbers-ascending (lambda ()
+  (define unsorted (list 3 1 4 1 5 9 2 6))
+  (define sorted (list 1 1 2 3 4 5 6 9))
+  (assert-equal (sort unsorted <) sorted)))
+
+(define test-sort-numbers-descending (lambda ()
+  (define unsorted (list 3 1 4 1 5))
+  (define sorted (list 5 4 3 1 1))
+  (assert-equal (sort unsorted >) sorted)))
+
+(define test-sort-empty (lambda ()
+  (assert-equal (sort (list) <) (list))))
+
+(define test-sort-single (lambda ()
+  (assert-equal (sort (list 42) <) (list 42))))
+
+(define test-sort-by-length (lambda ()
+  ;; Sort strings by length
+  (define words (list "hello" "hi" "goodbye" "bye"))
+  (define sorted (list "hi" "bye" "hello" "goodbye"))
+  (assert-equal (sort-by words string-length <) sorted)))
+
+(define test-sort-by-first-element (lambda ()
+  ;; Sort pairs by first element
+  (define pairs (list (list 3 "c") (list 1 "a") (list 2 "b")))
+  (define sorted (list (list 1 "a") (list 2 "b") (list 3 "c")))
+  (assert-equal (sort-by pairs car <) sorted)))
+
+(define test-merge-sorted-lists (lambda ()
+  (define list1 (list 1 3 5 7))
+  (define list2 (list 2 4 6 8))
+  (define merged (list 1 2 3 4 5 6 7 8))
+  (assert-equal (merge list1 list2 <) merged)))
+
+(define test-merge-one-empty (lambda ()
+  (define list1 (list 1 2 3))
+  (define list2 (list))
+  (assert-equal (merge list1 list2 <) list1)))
+
+(define test-stable-sort-preserves-order (lambda ()
+  ;; When elements are equal, preserve original order
+  (define pairs (list (list 1 "a") (list 2 "b") (list 1 "c") (list 2 "d")))
+  (define sorted (stable-sort pairs (lambda (a b) (< (car a) (car b)))))
+  ;; First elements with key 1 should be (1 "a") then (1 "c")
+  (assert-equal (car sorted) (list 1 "a"))
+  (assert-equal (car (cdr sorted)) (list 1 "c"))))
+
+;; ============================================================================
+;; List Generation
+;; ============================================================================
+
+(define test-range-basic (lambda ()
+  (assert-equal (range 0 5) (list 0 1 2 3 4))))
+
+(define test-range-start-end (lambda ()
+  (assert-equal (range 3 7) (list 3 4 5 6))))
+
+(define test-range-with-step (lambda ()
+  (assert-equal (range 0 10 2) (list 0 2 4 6 8))))
+
+(define test-range-negative-step (lambda ()
+  (assert-equal (range 10 0 -2) (list 10 8 6 4 2))))
+
+(define test-range-empty (lambda ()
+  (assert-equal (range 5 5) (list))))
+
+(define test-iota-basic (lambda ()
+  ;; iota n generates 0, 1, ..., n-1
+  (assert-equal (iota 5) (list 0 1 2 3 4))))
+
+(define test-iota-zero (lambda ()
+  (assert-equal (iota 0) (list))))
+
+(define test-iota-with-start (lambda ()
+  ;; iota n start generates start, start+1, ..., start+n-1
+  (assert-equal (iota 5 10) (list 10 11 12 13 14))))
+
+(define test-iota-with-start-and-step (lambda ()
+  ;; iota count start step
+  (assert-equal (iota 5 0 2) (list 0 2 4 6 8))))
+
+(define test-make-list-basic (lambda ()
+  (define result (make-list 3 'x))
+  (assert-equal result (list 'x 'x 'x))))
+
+(define test-make-list-zero (lambda ()
+  (assert-equal (make-list 0 'a) (list))))
+
+(define test-make-list-with-values (lambda ()
+  (define result (make-list 4 0))
+  (assert-equal result (list 0 0 0 0))))
+
+;; ============================================================================
+;; Additional List Accessors
+;; ============================================================================
+
+(define test-list-ref-zero-indexed (lambda ()
+  (define lst (list 'a 'b 'c 'd))
+  (assert-equal (list-ref lst 0) 'a)
+  (assert-equal (list-ref lst 2) 'c)))
+
+(define test-list-tail-drop (lambda ()
+  (define lst (list 1 2 3 4 5))
+  (assert-equal (list-tail lst 2) (list 3 4 5))))
+
+(define test-list-tail-all (lambda ()
+  (define lst (list 1 2 3))
+  (assert-equal (list-tail lst 3) (list))))
