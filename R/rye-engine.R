@@ -42,10 +42,23 @@ RyeEngine <- R6::R6Class(
       self$source_tracker <- SourceTracker$new()
       self$tokenizer <- Tokenizer$new()
       self$parser <- Parser$new(self$source_tracker)
-      self$macro_expander <- MacroExpander$new(self$env, self$source_tracker)
-      self$evaluator <- Evaluator$new(self$env, self$macro_expander, self$source_tracker, engine = self)
-      self$macro_expander$evaluator <- self$evaluator
-      self$help_system <- HelpSystem$new(self)
+
+      # Create shared evaluation context
+      context <- EvalContext$new(self$env, self$source_tracker)
+
+      # Create components with context
+      self$macro_expander <- MacroExpander$new(context)
+      self$evaluator <- Evaluator$new(
+        context,
+        load_file_fn = function(path, env) self$load_file_in_env(path, env),
+        help_fn = function(topic, env) self$help_in_env(topic, env)
+      )
+
+      # Link components in context
+      context$evaluator <- self$evaluator
+      context$macro_expander <- self$macro_expander
+
+      self$help_system <- HelpSystem$new(self$env, self$macro_expander)
 
       self$initialize_environment()
     },

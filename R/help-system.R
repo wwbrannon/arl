@@ -5,13 +5,15 @@
 HelpSystem <- R6::R6Class(
   "HelpSystem",
   public = list(
-    engine = NULL,
-    initialize = function(engine) {
-      self$engine <- engine
+    env = NULL,
+    macro_expander = NULL,
+    initialize = function(env, macro_expander) {
+      self$env <- env
+      self$macro_expander <- macro_expander
       private$specials_help <- private$build_specials_help()
     },
     help = function(topic) {
-      self$help_in_env(topic, self$engine$env$env)
+      self$help_in_env(topic, self$env$env)
     },
     help_in_env = function(topic, env) {
       if (!is.character(topic) || length(topic) != 1) {
@@ -21,7 +23,7 @@ HelpSystem <- R6::R6Class(
       if (inherits(env, "RyeEnv")) {
         env <- env$env
       } else if (is.null(env)) {
-        env <- self$engine$env$env
+        env <- self$env$env
       }
       if (!is.environment(env)) {
         stop("Expected a RyeEnv or environment")
@@ -35,9 +37,8 @@ HelpSystem <- R6::R6Class(
       }
 
       macro_symbol <- as.symbol(topic)
-      macro_expander <- self$engine$macro_expander
-      if (macro_expander$is_macro(macro_symbol, env = target_env)) {
-        macro_fn <- macro_expander$get_macro(macro_symbol, env = target_env)
+      if (self$macro_expander$is_macro(macro_symbol, env = target_env)) {
+        macro_fn <- self$macro_expander$get_macro(macro_symbol, env = target_env)
         macro_doc <- attr(macro_fn, "rye_doc", exact = TRUE)
         usage <- private$usage_from_macro(macro_fn, topic)
         if (!is.null(macro_doc)) {

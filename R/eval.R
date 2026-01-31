@@ -13,6 +13,27 @@ print.rye_promise <- function(x, ...) {
   invisible(x)
 }
 
+#' Evaluation context shared between Evaluator and MacroExpander
+#'
+#' @keywords internal
+#' @noRd
+EvalContext <- R6::R6Class(
+  "EvalContext",
+  public = list(
+    env = NULL,
+    source_tracker = NULL,
+    evaluator = NULL,
+    macro_expander = NULL,
+    initialize = function(env, source_tracker) {
+      if (!inherits(env, "RyeEnv")) {
+        stop("EvalContext requires a RyeEnv")
+      }
+      self$env <- env
+      self$source_tracker <- source_tracker
+    }
+  )
+)
+
 #' Evaluator for Rye expressions
 #'
 #' @keywords internal
@@ -20,35 +41,33 @@ print.rye_promise <- function(x, ...) {
 Evaluator <- R6::R6Class(
   "Evaluator",
   public = list(
-    env = NULL,
-    macro_expander = NULL,
-    source_tracker = NULL,
-    engine = NULL,
+    context = NULL,
+    load_file_fn = NULL,
+    help_fn = NULL,
     special_forms = NULL,
-    initialize = function(env, macro_expander, source_tracker, engine = NULL) {
-      if (!inherits(env, "RyeEnv")) {
-        stop("Evaluator requires a RyeEnv")
+    initialize = function(context, load_file_fn = NULL, help_fn = NULL) {
+      if (!inherits(context, "EvalContext")) {
+        stop("Evaluator requires an EvalContext")
       }
-      self$env <- env
-      self$macro_expander <- macro_expander
-      self$source_tracker <- source_tracker
-      self$engine <- engine
+      self$context <- context
+      self$load_file_fn <- load_file_fn
+      self$help_fn <- help_fn
       self$special_forms <- self$build_special_forms()
     },
     eval = function(expr) {
-      self$eval_in_env(expr, self$env$env)
+      self$eval_in_env(expr, self$context$env$env)
     },
     eval_in_env = function(expr, env) {
       if (inherits(env, "RyeEnv")) {
         env <- env$env
       } else if (is.null(env)) {
-        env <- self$env$env
+        env <- self$context$env$env
       }
       if (!is.environment(env)) {
         stop("Expected a RyeEnv or environment")
       }
-      self$env$push_env(env)
-      on.exit(self$env$pop_env(), add = TRUE)
+      self$context$env$push_env(env)
+      on.exit(self$context$env$pop_env(), add = TRUE)
       withCallingHandlers({
         self$eval_inner(expr, env)
       }, error = function(e) {
@@ -56,13 +75,13 @@ Evaluator <- R6::R6Class(
       })
     },
     eval_seq = function(exprs) {
-      self$eval_seq_in_env(exprs, self$env$env)
+      self$eval_seq_in_env(exprs, self$context$env$env)
     },
     eval_seq_in_env = function(exprs, env) {
       if (inherits(env, "RyeEnv")) {
         env <- env$env
       } else if (is.null(env)) {
-        env <- self$env$env
+        env <- self$context$env$env
       }
       if (!is.environment(env)) {
         stop("Expected a RyeEnv or environment")
@@ -70,8 +89,8 @@ Evaluator <- R6::R6Class(
       if (length(exprs) == 0) {
         return(NULL)
       }
-      self$env$push_env(env)
-      on.exit(self$env$pop_env(), add = TRUE)
+      self$context$env$push_env(env)
+      on.exit(self$context$env$pop_env(), add = TRUE)
       result <- NULL
       for (i in seq_along(exprs)) {
         result <- self$eval_inner(exprs[[i]], env)
@@ -85,16 +104,16 @@ Evaluator <- R6::R6Class(
       #
       # If we used `on.exit(pop())`, unwinding would pop before the error wrapper
       # runs, losing location context (see `tests/testthat/test-evaluator.R`).
-      src <- self$source_tracker$src_get(expr)
+      src <- self$context$source_tracker$src_get(expr)
       if (is.null(src)) {
         return(self$eval_inner_impl(expr, env))
       }
-      self$source_tracker$push(src)
+      self$context$source_tracker$push(src)
       result <- tryCatch(
         self$eval_inner_impl(expr, env),
         error = function(e) stop(e)
       )
-      self$source_tracker$pop()
+      self$context$source_tracker$pop()
       result
     },
     eval_inner_impl = function(expr, env) {
@@ -106,12 +125,12 @@ Evaluator <- R6::R6Class(
       # Handle atoms (self-evaluating)
       if (!is.call(expr) && !is.symbol(expr)) {
         # Keywords are self-evaluating (return as-is for now)
-        return(self$source_tracker$strip_src(expr))
+        return(self$context$source_tracker$strip_src(expr))
       }
 
       # Handle keywords (they pass through as-is for use in function calls)
       if (inherits(expr, "rye_keyword")) {
-        return(self$source_tracker$strip_src(expr))
+        return(self$context$source_tracker$strip_src(expr))
       }
 
       # Handle symbols (variable lookup)
@@ -127,8 +146,8 @@ Evaluator <- R6::R6Class(
       # Macro expansion (before special forms)
       # Must happen before we check special forms
       if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]])) {
-        if (self$macro_expander$is_macro(expr[[1]], env = env)) {
-          expanded <- self$macro_expander$macroexpand(expr, env = env, preserve_src = TRUE)
+        if (self$context$macro_expander$is_macro(expr[[1]], env = env)) {
+          expanded <- self$context$macro_expander$macroexpand(expr, env = env, preserve_src = TRUE)
           return(self$eval_inner(expanded, env))
         }
       }
@@ -145,14 +164,14 @@ Evaluator <- R6::R6Class(
       # Regular function application
       # Evaluate operator
       fn <- self$eval_inner(op, env)
-      fn <- self$source_tracker$strip_src(fn)
+      fn <- self$context$source_tracker$strip_src(fn)
       args_info <- self$eval_args(expr, env)
       args <- args_info$args
       if (length(args_info$arg_names) > 0) {
         names(args) <- args_info$arg_names
       }
       result <- self$apply(fn, args, env)
-      return(self$source_tracker$strip_src(result))
+      return(self$context$source_tracker$strip_src(result))
     },
     eval_args = function(expr, env) {
       # Pre-allocate to avoid O(n^2) vector growing, but handle NULL values correctly
@@ -171,13 +190,13 @@ Evaluator <- R6::R6Class(
           }
           keyword_name <- as.character(arg_expr)
           value <- self$eval_inner(expr[[i + 1]], env)
-          args[[arg_idx]] <- self$source_tracker$strip_src(value)
+          args[[arg_idx]] <- self$context$source_tracker$strip_src(value)
           arg_names[[arg_idx]] <- keyword_name
           arg_idx <- arg_idx + 1
           i <- i + 2
         } else {
           value <- self$eval_inner(arg_expr, env)
-          args[[arg_idx]] <- self$source_tracker$strip_src(value)
+          args[[arg_idx]] <- self$context$source_tracker$strip_src(value)
           arg_names[[arg_idx]] <- ""
           arg_idx <- arg_idx + 1
           i <- i + 1
@@ -208,7 +227,7 @@ Evaluator <- R6::R6Class(
     },
     do_call = function(fn, args, env = NULL) {
       if (is.null(env)) {
-        env <- self$env$env
+        env <- self$context$env$env
       }
       private$do_call_impl(fn, args, env)
     },
@@ -256,7 +275,7 @@ Evaluator <- R6::R6Class(
         for (idx in seq_along(matched_args)) {
           name <- matched_names[[idx]]
           if (!nzchar(name) || !(name %in% formal_params)) {
-            rest_args <- c(rest_args, list(self$source_tracker$strip_src(matched_args[[idx]])))
+            rest_args <- c(rest_args, list(self$context$source_tracker$strip_src(matched_args[[idx]])))
             if (nzchar(name)) {
               names(rest_args)[length(rest_args)] <- name
             }
@@ -289,7 +308,7 @@ Evaluator <- R6::R6Class(
 
         if (name %in% matched_names) {
           value <- matched_args[[name]]
-          value <- self$source_tracker$strip_src(value)
+          value <- self$context$source_tracker$strip_src(value)
           if (identical(spec$type, "pattern")) {
             RyeEnv$new(fn_env)$destructure_bind(spec$pattern, value, mode = "define")
           } else {
@@ -301,7 +320,7 @@ Evaluator <- R6::R6Class(
             stop(sprintf("lambda missing argument: %s", display))
           }
           value <- self$eval_inner(default_expr, fn_env)
-          value <- self$source_tracker$strip_src(value)
+          value <- self$context$source_tracker$strip_src(value)
           if (identical(spec$type, "pattern")) {
             RyeEnv$new(fn_env)$destructure_bind(spec$pattern, value, mode = "define")
           } else {
@@ -341,24 +360,24 @@ Evaluator <- R6::R6Class(
           if (length(expr) != 2) {
             stop("quote requires exactly 1 argument")
           }
-          self$source_tracker$strip_src(expr[[2]])
+          self$context$source_tracker$strip_src(expr[[2]])
         },
         quasiquote = function(expr, env, op_name) {
           if (length(expr) != 2) {
             stop("quasiquote requires exactly 1 argument")
           }
-          result <- self$macro_expander$quasiquote(expr[[2]], env)
+          result <- self$context$macro_expander$quasiquote(expr[[2]], env)
           if (!exists(".rye_macroexpanding", envir = env, inherits = TRUE) ||
               !isTRUE(get(".rye_macroexpanding", envir = env, inherits = TRUE))) {
-            result <- self$macro_expander$hygiene_unwrap(result)
+            result <- self$context$macro_expander$hygiene_unwrap(result)
           }
-          self$source_tracker$strip_src(result)
+          self$context$source_tracker$strip_src(result)
         },
         delay = function(expr, env, op_name) {
           if (length(expr) != 2) {
             stop("delay requires exactly 1 argument")
           }
-          self$promise_new(self$source_tracker$strip_src(expr[[2]]), env)
+          self$promise_new(self$context$source_tracker$strip_src(expr[[2]]), env)
         },
         help = function(expr, env, op_name) {
           if (length(expr) != 2) {
@@ -371,10 +390,10 @@ Evaluator <- R6::R6Class(
           if (!is.character(topic) || length(topic) != 1) {
             stop("help requires a symbol or string")
           }
-          if (is.null(self$engine)) {
-            stop("help requires an engine")
+          if (is.null(self$help_fn)) {
+            stop("help requires a help function")
           }
-          self$engine$help_in_env(topic, env)
+          self$help_fn(topic, env)
           NULL
         },
         defmacro = function(expr, env, op_name) {
@@ -408,7 +427,7 @@ Evaluator <- R6::R6Class(
           body <- doc_out$body
           docstring <- doc_out$docstring
 
-          self$macro_expander$defmacro(name, params, body, docstring = docstring, env = env)
+          self$context$macro_expander$defmacro(name, params, body, docstring = docstring, env = env)
           NULL
         },
         `if` = function(expr, env, op_name) {
@@ -416,7 +435,7 @@ Evaluator <- R6::R6Class(
             stop("if requires 2 or 3 arguments: (if test then [else])")
           }
           test <- self$eval_inner(expr[[2]], env)
-          test <- self$source_tracker$strip_src(test)
+          test <- self$context$source_tracker$strip_src(test)
           if (identical(test, FALSE) || is.null(test)) {
             if (length(expr) == 4) {
               return(self$eval_inner(expr[[4]], env))
@@ -431,7 +450,7 @@ Evaluator <- R6::R6Class(
           }
           name <- expr[[2]]
           value <- self$eval_inner(expr[[3]], env)
-          value <- self$source_tracker$strip_src(value)
+          value <- self$context$source_tracker$strip_src(value)
           RyeEnv$new(env)$assign_pattern(name, value, mode = "define", context = "define")
           NULL
         },
@@ -441,7 +460,7 @@ Evaluator <- R6::R6Class(
           }
           name <- expr[[2]]
           value <- self$eval_inner(expr[[3]], env)
-          value <- self$source_tracker$strip_src(value)
+          value <- self$context$source_tracker$strip_src(value)
           RyeEnv$new(env)$assign_pattern(name, value, mode = "set", context = "set!")
           NULL
         },
@@ -450,7 +469,7 @@ Evaluator <- R6::R6Class(
             stop("load requires exactly 1 argument: (load \"path\")")
           }
           path <- self$eval_inner(expr[[2]], env)
-          path <- self$source_tracker$strip_src(path)
+          path <- self$context$source_tracker$strip_src(path)
           if (!is.character(path) || length(path) != 1) {
             stop("load requires a single file path string")
           }
@@ -461,14 +480,23 @@ Evaluator <- R6::R6Class(
           if (!has_separator) {
             stdlib_path <- rye_resolve_stdlib_path(path)
             if (!is.null(stdlib_path)) {
-              return(self$source_tracker$strip_src(self$engine$load_file_in_env(stdlib_path, env)))
+              if (is.null(self$load_file_fn)) {
+                stop("load requires a load_file function")
+              }
+              return(self$context$source_tracker$strip_src(self$load_file_fn(stdlib_path, env)))
             }
             if (file.exists(path)) {
-              return(self$source_tracker$strip_src(self$engine$load_file_in_env(path, env)))
+              if (is.null(self$load_file_fn)) {
+                stop("load requires a load_file function")
+              }
+              return(self$context$source_tracker$strip_src(self$load_file_fn(path, env)))
             }
             stop(sprintf("File not found: %s", path))
           }
-          self$source_tracker$strip_src(self$engine$load_file_in_env(path, env))
+          if (is.null(self$load_file_fn)) {
+            stop("load requires a load_file function")
+          }
+          self$context$source_tracker$strip_src(self$load_file_fn(path, env))
         },
         module = function(expr, env, op_name) {
           if (length(expr) < 3) {
@@ -535,7 +563,10 @@ Evaluator <- R6::R6Class(
             if (is.null(module_path)) {
               stop(sprintf("Module not found: %s", module_name))
             }
-            self$engine$load_file_in_env(module_path, env)
+            if (is.null(self$load_file_fn)) {
+              stop("import requires a load_file function")
+            }
+            self$load_file_fn(module_path, env)
             if (!RyeEnv$new(env)$module_registry$exists(module_name)) {
               stop(sprintf("Module '%s' did not register itself", module_name))
             }
@@ -600,7 +631,7 @@ Evaluator <- R6::R6Class(
             result <- NULL
             if (length(body_exprs) > 0) {
               for (i in seq_along(body_exprs)) {
-                result <- self$source_tracker$strip_src(self$eval_in_env(body_exprs[[i]], fn_env))
+                result <- self$context$source_tracker$strip_src(self$eval_in_env(body_exprs[[i]], fn_env))
               }
             }
             result
@@ -662,7 +693,7 @@ Evaluator <- R6::R6Class(
     extract_docstring = function(body_exprs) {
       docstring <- NULL
       if (length(body_exprs) > 0) {
-        first_expr <- self$source_tracker$strip_src(body_exprs[[1]])
+        first_expr <- self$context$source_tracker$strip_src(body_exprs[[1]])
         if (is.character(first_expr) && length(first_expr) == 1) {
           docstring <- first_expr
           body_exprs <- body_exprs[-1]
@@ -770,7 +801,7 @@ Evaluator <- R6::R6Class(
                   default_expr <- quote(NULL)
                 }
               }
-              tmp_name <- as.character(self$macro_expander$gensym(".__rye_arg"))
+              tmp_name <- as.character(self$context$macro_expander$gensym(".__rye_arg"))
               display <- paste(deparse(pattern, width.cutoff = 500), collapse = " ")
               param_names <- c(param_names, tmp_name)
               param_display <- c(param_display, display)

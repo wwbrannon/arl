@@ -5,19 +5,12 @@
 MacroExpander <- R6::R6Class(
   "MacroExpander",
   public = list(
-    env = NULL,
-    evaluator = NULL,
-    source_tracker = NULL,
-    initialize = function(env, source_tracker = NULL, evaluator = NULL) {
-      if (!inherits(env, "RyeEnv")) {
-        stop("MacroExpander requires a RyeEnv")
+    context = NULL,
+    initialize = function(context) {
+      if (!inherits(context, "EvalContext")) {
+        stop("MacroExpander requires an EvalContext")
       }
-      self$env <- env
-      if (is.null(source_tracker)) {
-        source_tracker <- SourceTracker$new()
-      }
-      self$source_tracker <- source_tracker
-      self$evaluator <- evaluator
+      self$context <- context
     },
     defmacro = function(name, params, body, docstring = NULL, env = NULL) {
       target_env <- private$normalize_env(env)
@@ -65,7 +58,7 @@ MacroExpander <- R6::R6Class(
         return(env)
       }
       if (is.null(env)) {
-        return(self$env$env)
+        return(self$context$env$env)
       }
       stop("Expected a RyeEnv or environment")
     },
@@ -517,7 +510,7 @@ MacroExpander <- R6::R6Class(
           if (length(expr) != 2) {
             stop("unquote requires exactly 1 argument")
           }
-          return(private$hygiene_wrap(self$evaluator$eval_in_env(expr[[2]], env), "call_site"))
+          return(private$hygiene_wrap(self$context$evaluator$eval_in_env(expr[[2]], env), "call_site"))
         }
         return(as.call(list(as.symbol("unquote"), private$quasiquote_impl(expr[[2]], env, depth - 1))))
       }
@@ -536,7 +529,7 @@ MacroExpander <- R6::R6Class(
             if (length(elem) != 2) {
               stop("unquote-splicing requires exactly 1 argument")
             }
-            spliced <- self$evaluator$eval_in_env(elem[[2]], env)
+            spliced <- self$context$evaluator$eval_in_env(elem[[2]], env)
             if (is.call(spliced)) {
               spliced <- as.list(spliced)
             }
@@ -612,7 +605,7 @@ MacroExpander <- R6::R6Class(
         }
         result <- NULL
         for (expr in body) {
-          result <- self$evaluator$eval_in_env(expr, macro_env)
+          result <- self$context$evaluator$eval_in_env(expr, macro_env)
         }
         result
       }
@@ -636,7 +629,7 @@ MacroExpander <- R6::R6Class(
         if (!walk || isTRUE(preserve_src)) {
           return(expr)
         }
-        return(self$source_tracker$strip_src(expr))
+        return(self$context$source_tracker$strip_src(expr))
       }
 
       op <- expr[[1]]
@@ -647,14 +640,14 @@ MacroExpander <- R6::R6Class(
         expanded <- do.call(macro_fn, args)
         expanded <- private$hygienize(expanded)
         expanded <- private$hygiene_unwrap_impl(expanded)
-        expanded <- self$source_tracker$src_inherit(expanded, expr)
+        expanded <- self$context$source_tracker$src_inherit(expanded, expr)
 
         if (max_depth <= 1 || !walk) {
           if (isTRUE(preserve_src)) {
             return(expanded)
           }
           if (walk) {
-            return(self$source_tracker$strip_src(expanded))
+            return(self$context$source_tracker$strip_src(expanded))
           }
           return(expanded)
         }
@@ -672,13 +665,13 @@ MacroExpander <- R6::R6Class(
           if (isTRUE(preserve_src)) {
             return(expr)
           }
-          return(self$source_tracker$strip_src(expr))
+          return(self$context$source_tracker$strip_src(expr))
         }
         if (op_name == "quasiquote") {
           if (isTRUE(preserve_src)) {
             return(expr)
           }
-          return(self$source_tracker$strip_src(expr))
+          return(self$context$source_tracker$strip_src(expr))
         }
       }
 
@@ -689,11 +682,11 @@ MacroExpander <- R6::R6Class(
         }
       }
 
-      expanded <- self$source_tracker$src_inherit(as.call(result), expr)
+      expanded <- self$context$source_tracker$src_inherit(as.call(result), expr)
       if (isTRUE(preserve_src)) {
         return(expanded)
       }
-      self$source_tracker$strip_src(expanded)
+      self$context$source_tracker$strip_src(expanded)
     }
   )
 )
