@@ -1,8 +1,7 @@
 ;;; Rye Standard Library - Core Functions
 
 (module core
-  (export = error warn assert identity values values? call-with-values call/cc call-with-current-continuation
-          doc! doc get-doc)
+  (export = error warn assert identity values values? call-with-values call/cc call-with-current-continuation doc! doc)
 
   (define =
     (lambda (x y)
@@ -69,8 +68,4 @@
     (lambda (fn)
       "Retrieve docstring from function's rye_doc attribute."
       (rye_get_doc fn)))
-
-  (define get-doc doc))
-
-
-
+)

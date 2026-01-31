@@ -27,21 +27,6 @@ test_that("doc returns NULL for undocumented functions", {
   expect_null(result)
 })
 
-test_that("get-doc is an alias for doc", {
-  engine <- RyeEngine$new()
-  env <- engine$env$env
-
-  engine$eval_in_env(engine$read('(import core)')[[1]], env)
-  engine$eval_in_env(engine$read('(define my-fn (lambda (x) x))')[[1]], env)
-  engine$eval_in_env(engine$read('(doc! my-fn "Identity function")')[[1]], env)
-
-  doc_result <- engine$eval_in_env(engine$read('(doc my-fn)')[[1]], env)
-  get_doc_result <- engine$eval_in_env(engine$read('(get-doc my-fn)')[[1]], env)
-
-  expect_equal(doc_result, get_doc_result)
-  expect_equal(doc_result, "Identity function")
-})
-
 test_that("doc! works with direct assignment functions", {
   engine <- RyeEngine$new()
   env <- engine$env$env
