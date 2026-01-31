@@ -39,3 +39,95 @@
         1
         (* n (fact (- n 1))))))
   (assert-equal 120 (fact 5))))
+
+;; Let binding tests
+
+(define test-let-basic (lambda ()
+  ;; Basic let binding
+  (define result (let ((x 5) (y 10)) (+ x y)))
+  (assert-equal 15 result)))
+
+(define test-let-returns-value (lambda ()
+  ;; Let evaluates its body and returns the result
+  (define result (let ((x 5) (y 10)) (+ x y)))
+  (assert-equal 15 result)))
+
+(define test-let-scope-isolation (lambda ()
+  ;; Let creates a new scope - outer bindings should not be modified
+  (define x 100)
+  (define result (let ((x 5)) x))
+  (assert-equal 5 result)
+  ;; outer x should be unchanged
+  (assert-equal 100 x)))
+
+(define test-let-bindings-independent (lambda ()
+  ;; In let, bindings don't see each other (simultaneous binding)
+  (define x 1)
+  ;; Both bindings see the outer x (not each other)
+  (define result (let ((y x) (z x)) (+ y z)))
+  (assert-equal 2 result)))
+
+;; Let* sequential binding tests
+
+(define test-let*-sequential (lambda ()
+  ;; In let*, later bindings can see earlier ones
+  (define result (let* ((x 5) (y (+ x 1))) y))
+  (assert-equal 6 result)))
+
+(define test-let*-shadowing (lambda ()
+  ;; Let* can shadow previous bindings
+  (define x 1)
+  (define result (let* ((x 5) (y (+ x 1)) (x (+ y 1))) x))
+  ;; x=5, y=6, x=7
+  (assert-equal 7 result)))
+
+(define test-let*-multiple-steps (lambda ()
+  ;; Test multiple sequential dependencies
+  (define result
+    (let* ((a 1)
+           (b (+ a 2))
+           (c (+ b 3))
+           (d (+ c 4)))
+      d))
+  ;; a=1, b=3, c=6, d=10
+  (assert-equal 10 result)))
+
+;; Letrec recursive binding tests
+
+(define test-letrec-mutual-recursion (lambda ()
+  ;; Letrec allows mutually recursive bindings
+  (define result
+    (letrec ((even? (lambda (n)
+                      (if (== n 0) #t (odd? (- n 1)))))
+             (odd? (lambda (n)
+                     (if (== n 0) #f (even? (- n 1))))))
+      (even? 10)))
+  (assert-true result)))
+
+(define test-letrec-self-reference (lambda ()
+  ;; Letrec allows self-referential bindings
+  (define result
+    (letrec ((fact (lambda (n)
+                     (if (<= n 1)
+                         1
+                         (* n (fact (- n 1)))))))
+      (fact 5)))
+  (assert-equal 120 result)))
+
+(define test-letrec-multiple-references (lambda ()
+  ;; Test letrec with multiple mutually dependent functions
+  (define result
+    (letrec ((is-even? (lambda (n)
+                         (if (== n 0)
+                             #t
+                             (is-odd? (- n 1)))))
+             (is-odd? (lambda (n)
+                        (if (== n 0)
+                            #f
+                            (is-even? (- n 1))))))
+      (list (is-even? 4) (is-odd? 4) (is-even? 7) (is-odd? 7))))
+  ;; Should be (#t #f #f #t)
+  (assert-equal #t (car result))
+  (assert-equal #f (car (cdr result)))
+  (assert-equal #f (car (cdr (cdr result))))
+  (assert-equal #t (car (cdr (cdr (cdr result)))))))

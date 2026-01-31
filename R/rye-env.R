@@ -86,26 +86,8 @@ RyeEnv <- R6::R6Class(
       rye_env_registry(target_env, ".rye_module_registry", create = create)
     },
     find_define_env = function(name) {
-      if (isTRUE(get0(".rye_module", envir = self$env, inherits = FALSE))) {
-        return(self$env)
-      }
-      target <- self$env
-      repeat {
-        if (exists(name, envir = target, inherits = FALSE)) {
-          # Found the binding - check if it's locked
-          if (bindingIsLocked(name, target)) {
-            # Skip locked bindings and create new binding in original env
-            break
-          }
-          return(target)
-        }
-        parent_env <- parent.env(target)
-        # Stop at baseenv or emptyenv - these are the natural boundaries
-        if (identical(parent_env, baseenv()) || identical(parent_env, emptyenv())) {
-          break
-        }
-        target <- parent_env
-      }
+      # Define always creates a binding in the current environment,
+      # never modifies parent environments (proper lexical scoping)
       self$env
     },
     find_existing_env = function(name) {

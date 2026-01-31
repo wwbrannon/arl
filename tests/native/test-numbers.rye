@@ -1,0 +1,77 @@
+;; Native tests for numeric edge cases
+;; Tests Inf, NaN, and special numeric operations
+
+;; Division by zero tests
+
+(define test-division-by-zero-positive (lambda ()
+  ;; 1/0 should give Inf
+  (define result (/ 1 0))
+  (assert-true (is.infinite result))))
+
+(define test-division-by-zero-negative (lambda ()
+  ;; -1/0 should give -Inf
+  (define result (/ -1 0))
+  (assert-true (is.infinite result))))
+
+(define test-zero-div-zero (lambda ()
+  ;; 0/0 should give NaN
+  (define result (/ 0 0))
+  ;; In R, NaN == NaN returns NA, so use is.nan
+  (assert-true (is.nan result))))
+
+;; Inf arithmetic tests
+
+(define test-inf-addition (lambda ()
+  ;; Inf + number = Inf
+  (define result (+ Inf 1))
+  (assert-true (is.infinite result))))
+
+(define test-inf-multiplication (lambda ()
+  ;; Inf * positive = Inf
+  (define result (* Inf 2))
+  (assert-true (is.infinite result))))
+
+(define test-inf-minus-inf (lambda ()
+  ;; Inf - Inf = NaN
+  (define result (- Inf Inf))
+  (assert-true (is.nan result))))
+
+(define test-inf-times-zero (lambda ()
+  ;; Inf * 0 = NaN
+  (define result (* Inf 0))
+  (assert-true (is.nan result))))
+
+;; NaN propagation tests
+
+(define test-nan-addition (lambda ()
+  ;; NaN + anything = NaN
+  (define result (+ NaN 1))
+  (assert-true (is.nan result))))
+
+(define test-nan-not-equal-self (lambda ()
+  ;; In R: NaN == NaN returns NA (not FALSE or TRUE)
+  (define comparison (== NaN NaN))
+  ;; The comparison should return NA
+  (assert-true (is.na comparison))))
+
+;; Inf literal tests
+
+(define test-inf-literal (lambda ()
+  ;; Test that Inf can be used as a literal
+  (assert-true (is.infinite Inf))
+  (assert-equal Inf (/ 1 0))))
+
+(define test-negative-inf-literal (lambda ()
+  ;; Test that -Inf works
+  (assert-true (is.infinite -Inf))
+  (assert-true (< -Inf 0))))
+
+(define test-nan-literal (lambda ()
+  ;; Test that NaN can be used as a literal
+  (assert-true (is.nan NaN))))
+
+(define test-inf-comparison (lambda ()
+  ;; Inf > any finite number
+  (assert-true (> Inf 999999))
+  ;; -Inf < any finite number
+  (assert-true (< -Inf -999999))))

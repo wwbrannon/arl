@@ -107,7 +107,7 @@ run_native_tests <- function(dir = "tests/native") {
   env <- engine$env$env
 
   # Load core stdlib modules needed for tests
-  for (module in c("control", "binding")) {
+  for (module in c("control", "binding", "strings", "math")) {
     exprs <- engine$read(sprintf('(load "%s")', module))
     engine$eval_in_env(exprs[[1]], env)
   }

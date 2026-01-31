@@ -88,3 +88,39 @@
   (assert-equal 8 (^ 2 3))
   (assert-equal 1 (^ 5 0))
   (assert-equal 5 (^ 5 1))))
+
+(define test-power-chaining (lambda ()
+  ;; Test chained exponentiation: 2^(3^2) = 2^9 = 512
+  (assert-equal 512 (^ 2 (^ 3 2)))
+  ;; Verify this is different from (2^3)^2 = 8^2 = 64
+  (assert-equal 64 (^ (^ 2 3) 2))))
+
+;; Chained comparison tests
+
+(define test-less-than-chained (lambda ()
+  ;; Test that comparisons can chain: 1 < 2 < 3
+  (assert-true (< 1 2 3))
+  (assert-true (< 1 2 3 4 5))
+  ;; 1 < 3 but not 3 < 2
+  (assert-true (! (< 1 3 2)))
+  ;; 1 < 2 but not 2 < 2
+  (assert-true (! (< 1 2 2)))))
+
+(define test-less-equal-chained (lambda ()
+  (assert-true (<= 1 2 3))
+  ;; allows equality
+  (assert-true (<= 1 2 2 3))
+  (assert-true (! (<= 1 3 2)))))
+
+(define test-greater-than-chained (lambda ()
+  (assert-true (> 3 2 1))
+  (assert-true (! (> 1 2 3)))))
+
+(define test-greater-equal-chained (lambda ()
+  (assert-true (>= 3 2 1))
+  (assert-true (>= 3 2 2 1))
+  (assert-true (! (>= 1 2 3)))))
+
+(define test-equality-chained (lambda ()
+  (assert-true (== 2 2 2))
+  (assert-true (! (== 1 1 2)))))

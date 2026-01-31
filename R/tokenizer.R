@@ -264,6 +264,52 @@ Tokenizer <- R6::R6Class(
             token_value <- NULL
           }
 
+          # R special constants (reserved words that are literals)
+          if (token_text == "Inf") {
+            token_type <- "NUMBER"
+            token_value <- Inf
+          }
+          if (token_text == "-Inf") {
+            token_type <- "NUMBER"
+            token_value <- -Inf
+          }
+          if (token_text == "NaN") {
+            token_type <- "NUMBER"
+            token_value <- NaN
+          }
+          if (token_text == "NA") {
+            token_type <- "NA"
+            token_value <- NA
+          }
+          if (token_text == "NA_real_") {
+            token_type <- "NA"
+            token_value <- NA_real_
+          }
+          if (token_text == "NA_integer_") {
+            token_type <- "NA"
+            token_value <- NA_integer_
+          }
+          if (token_text == "NA_character_") {
+            token_type <- "NA"
+            token_value <- NA_character_
+          }
+          if (token_text == "NA_complex_") {
+            token_type <- "NA"
+            token_value <- NA_complex_
+          }
+          if (token_text == "TRUE") {
+            token_type <- "BOOLEAN"
+            token_value <- TRUE
+          }
+          if (token_text == "FALSE") {
+            token_type <- "BOOLEAN"
+            token_value <- FALSE
+          }
+          if (token_text == "NULL") {
+            token_type <- "NIL"
+            token_value <- NULL
+          }
+
           tokens[[length(tokens) + 1]] <- list(
             type = token_type,
             value = token_value,

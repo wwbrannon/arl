@@ -223,7 +223,7 @@ test_that("stdlib macros from files work", {
   result <- engine$eval_in_env(
     engine$read(paste0(
       "(begin (define x 0) (define acc 0) ",
-      "(while (< x 3) (define acc (+ acc x)) (define x (+ x 1))) ",
+      "(while (< x 3) (set! acc (+ acc x)) (set! x (+ x 1))) ",
       "acc)"
     ))[[1]],
     env
@@ -265,9 +265,9 @@ test_that("stdlib macros from files work", {
   result <- engine$eval_in_env(
     engine$read(paste0(
       "(begin (define x 0) ",
-      "(try (begin (define x 1) (error \"boom\")) ",
-      "(catch e (define x 2)) ",
-      "(finally (define x 3))) ",
+      "(try (begin (set! x 1) (error \"boom\")) ",
+      "(catch e (set! x 2)) ",
+      "(finally (set! x 3))) ",
       "x)"
     ))[[1]],
     env

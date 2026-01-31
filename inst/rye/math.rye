@@ -2,6 +2,7 @@
 
 (module math
   (export % + * - / min max
+          < > <= >= ==
           inc dec clamp within?
           even? odd? zero?
           positive? negative? non-negative? non-positive?
@@ -14,11 +15,101 @@
   (define __r/ (get "/" :envir (baseenv)))
   (define __rmin (get "min" :envir (baseenv)))
   (define __rmax (get "max" :envir (baseenv)))
+  (define __r< (get "<" :envir (baseenv)))
+  (define __r> (get ">" :envir (baseenv)))
+  (define __r<= (get "<=" :envir (baseenv)))
+  (define __r>= (get ">=" :envir (baseenv)))
+  (define __r== (get "==" :envir (baseenv)))
 
   (define %
     (lambda (x y)
       "Modulo helper using R %%."
       (%% x y)))
+
+  (define <
+    (lambda (. args)
+      "Variadic less-than comparison. Checks all adjacent pairs."
+      (if (__r< (length args) 2)
+        (stop "< requires at least two arguments")
+        (if (__r== (length args) 2)
+          (__r< (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+          (begin
+            (define check-pairs
+              (lambda (lst)
+                (if (__r<= (length lst) 1)
+                  #t
+                  (if (__r< (car lst) (car (cdr lst)))
+                    (check-pairs (cdr lst))
+                    #f))))
+            (check-pairs args))))))
+
+  (define >
+    (lambda (. args)
+      "Variadic greater-than comparison. Checks all adjacent pairs."
+      (if (__r< (length args) 2)
+        (stop "> requires at least two arguments")
+        (if (__r== (length args) 2)
+          (__r> (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+          (begin
+            (define check-pairs
+              (lambda (lst)
+                (if (__r<= (length lst) 1)
+                  #t
+                  (if (__r> (car lst) (car (cdr lst)))
+                    (check-pairs (cdr lst))
+                    #f))))
+            (check-pairs args))))))
+
+  (define <=
+    (lambda (. args)
+      "Variadic less-than-or-equal comparison. Checks all adjacent pairs."
+      (if (__r< (length args) 2)
+        (stop "<= requires at least two arguments")
+        (if (__r== (length args) 2)
+          (__r<= (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+          (begin
+            (define check-pairs
+              (lambda (lst)
+                (if (__r<= (length lst) 1)
+                  #t
+                  (if (__r<= (car lst) (car (cdr lst)))
+                    (check-pairs (cdr lst))
+                    #f))))
+            (check-pairs args))))))
+
+  (define >=
+    (lambda (. args)
+      "Variadic greater-than-or-equal comparison. Checks all adjacent pairs."
+      (if (__r< (length args) 2)
+        (stop ">= requires at least two arguments")
+        (if (__r== (length args) 2)
+          (__r>= (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+          (begin
+            (define check-pairs
+              (lambda (lst)
+                (if (__r<= (length lst) 1)
+                  #t
+                  (if (__r>= (car lst) (car (cdr lst)))
+                    (check-pairs (cdr lst))
+                    #f))))
+            (check-pairs args))))))
+
+  (define ==
+    (lambda (. args)
+      "Variadic equality comparison. Checks all adjacent pairs."
+      (if (__r< (length args) 2)
+        (stop "== requires at least two arguments")
+        (if (__r== (length args) 2)
+          (__r== (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+          (begin
+            (define check-pairs
+              (lambda (lst)
+                (if (__r<= (length lst) 1)
+                  #t
+                  (if (__r== (car lst) (car (cdr lst)))
+                    (check-pairs (cdr lst))
+                    #f))))
+            (check-pairs args))))))
 
   (define +
     (lambda (. args)

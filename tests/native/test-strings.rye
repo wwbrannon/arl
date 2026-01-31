@@ -1,0 +1,52 @@
+;; Native tests for string functions
+;; Tests string-append and ->string
+
+;; string-append tests
+
+(define test-string-append-empty (lambda ()
+  ;; No arguments should give empty string
+  (define result (string-append))
+  (assert-equal "" result)))
+
+(define test-string-append-single (lambda ()
+  ;; Single argument
+  (define result (string-append "hello"))
+  (assert-equal "hello" result)))
+
+(define test-string-append-multiple (lambda ()
+  ;; Multiple arguments
+  (define result (string-append "hello" " " "world"))
+  (assert-equal "hello world" result)))
+
+(define test-string-append-numbers (lambda ()
+  ;; Numbers should be coerced to strings
+  (define result (string-append "value: " 42))
+  (assert-equal "value: 42" result)))
+
+(define test-string-append-mixed (lambda ()
+  ;; Mixed types
+  (define result (string-append "x=" 5 " y=" 10))
+  (assert-equal "x=5 y=10" result)))
+
+;; ->string tests
+
+(define test-to-string-number (lambda ()
+  ;; Convert number to string
+  (define result (->string 42))
+  (assert-equal "42" result)))
+
+(define test-to-string-boolean (lambda ()
+  ;; Convert boolean to string
+  (define result (->string #t))
+  (assert-equal "TRUE" result)))
+
+(define test-to-string-string (lambda ()
+  ;; String to string (identity)
+  (define result (->string "hello"))
+  (assert-equal "hello" result)))
+
+(define test-to-string-list (lambda ()
+  ;; Convert list to string representation
+  (define result (->string (list 1 2 3)))
+  ;; R represents this as "c(1, 2, 3)" or similar
+  (assert-true (> (length (as.character result)) 0))))

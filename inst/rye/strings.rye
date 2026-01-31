@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - String Helpers
 
 (module strings
-  (export string-join string-split trim format string-contains? string-match? string-find string-replace string-replace-all)
+  (export string-join string-split trim format string-contains? string-match? string-find string-replace string-replace-all string-append ->string)
 
   (import list)
 
@@ -50,4 +50,16 @@
   (define string-replace-all
     (lambda (str pattern replacement (fixed #f))
       "Replace all matches."
-      (gsub pattern replacement str :fixed fixed))))
+      (gsub pattern replacement str :fixed fixed)))
+
+  (define string-append
+    (lambda (. args)
+      "Concatenate strings together."
+      (if (r/call "==" (list (length args) 0))
+        ""
+        (r/call "paste0" args))))
+
+  (define ->string
+    (lambda (x)
+      "Convert value to string representation."
+      (as.character x))))

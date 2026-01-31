@@ -11,14 +11,17 @@ test_that("rye_do_call quotes symbols except for accessors", {
   expect_equal(engine$evaluator$do_call(base::`[[`, list(list(1, 2), 2)), 2)
 })
 
-test_that("RyeEnv$assign targets nearest environment with binding", {
+test_that("RyeEnv$assign creates binding in current environment (lexical scoping)", {
   root <- new.env(parent = emptyenv())
   root$x <- 1
   child <- new.env(parent = root)
 
+  # assign (used by define) should create a NEW binding in the current env,
+  # not modify the parent env - this is proper lexical scoping
   RyeEnv$new(child)$assign("x", 2)
-  expect_equal(root$x, 2)
-  expect_false(exists("x", envir = child, inherits = FALSE))
+  expect_equal(root$x, 1)  # parent unchanged
+  expect_true(exists("x", envir = child, inherits = FALSE))  # new binding in child
+  expect_equal(child$x, 2)  # child has value 2
 })
 
 test_that("RyeEnv$assign falls back to current env when binding not found", {
