@@ -1,4 +1,3 @@
-o) clean up what in the stdlib is loaded by default
 o) any core functions hy or other lisps have that we're missing? any really obvious additions?
     o) anything that's added should be added in phases
     o) each phase: first, add tests,nformed by what's common in lisps (with adaptations to R as needed),  then add code to verify against the tests
