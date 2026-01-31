@@ -1,7 +1,6 @@
 o) tests
     o) can we run tests directly as .rye code? the way hy does .hy files?
     o) More tests for .rye code: download the hy test suite locally and compare to it
-    o) How to calculate test coverage of .rye code? this is probably too complicated
 
 o) performance optimizations: use profiling and benchmarking
 

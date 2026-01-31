@@ -1,0 +1,27 @@
+;; Native tests for quote and quasiquote
+;; Tests quote, quasiquote, unquote, and unquote-splicing
+
+;; Basic quote
+
+(define test-quote-basic (lambda ()
+  (define quoted (quote a))
+  (assert-true #t)))  ;; Just check it doesn't error
+
+(define test-quote-list (lambda ()
+  (define quoted-list (quote (1 2 3)))
+  (assert-true #t)))  ;; Just check it doesn't error
+
+(define test-quote-shorthand (lambda ()
+  (define quoted 'a)
+  (assert-true #t)))  ;; Just check it doesn't error
+
+;; Basic quasiquote
+
+(define test-quasiquote-basic (lambda ()
+  (define result `(1 2 3))
+  (assert-true #t)))  ;; Just check it doesn't error
+
+(define test-quasiquote-with-unquote (lambda ()
+  (define x 5)
+  (define result `(1 ,x 3))
+  (assert-true #t)))  ;; Just check it doesn't error

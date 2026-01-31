@@ -1,0 +1,46 @@
+;; Native tests for control flow
+;; Tests if and basic control structures
+
+;; Basic if
+
+(define test-if-true (lambda ()
+  (assert-equal 1 (if #t 1 2))))
+
+(define test-if-false (lambda ()
+  (assert-equal 2 (if #f 1 2))))
+
+(define test-if-truthy (lambda ()
+  (assert-equal 1 (if 1 1 2))
+  (assert-equal 1 (if "string" 1 2))))
+
+(define test-if-no-else (lambda ()
+  (assert-equal 1 (if #t 1))))
+
+(define test-if-nested (lambda ()
+  (assert-equal 1 (if #t (if #t 1 2) 3))
+  (assert-equal 2 (if #t (if #f 1 2) 3))
+  (assert-equal 3 (if #f (if #t 1 2) 3))))
+
+;; Begin for sequencing
+
+(define test-begin-basic (lambda ()
+  (assert-equal 3 (begin 1 2 3))))
+
+(define test-begin-with-define (lambda ()
+  (assert-equal 10 (begin
+    (define temp-x 5)
+    (+ temp-x 5)))))
+
+;; Lambda
+
+(define test-lambda-basic (lambda ()
+  (assert-equal 10 ((lambda (x) (* x 2)) 5))))
+
+(define test-lambda-multiple-args (lambda ()
+  (assert-equal 15 ((lambda (x y z) (+ x y z)) 3 5 7))))
+
+(define test-lambda-closure (lambda ()
+  (define make-adder (lambda (x)
+    (lambda (y) (+ x y))))
+  (define add5 (make-adder 5))
+  (assert-equal 12 (add5 7))))

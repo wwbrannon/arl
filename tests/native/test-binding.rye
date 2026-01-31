@@ -1,0 +1,41 @@
+;; Native tests for binding forms
+;; Tests define and lambda
+
+;; Basic define
+
+(define test-define-number (lambda ()
+  (define test-num 42)
+  (assert-equal 42 test-num)))
+
+(define test-define-string (lambda ()
+  (define test-str "hello")
+  (assert-equal "hello" test-str)))
+
+(define test-define-function (lambda ()
+  (define double (lambda (x) (* x 2)))
+  (assert-equal 10 (double 5))))
+
+(define test-define-multiple (lambda ()
+  (define a 1)
+  (define b 2)
+  (define c 3)
+  (assert-equal 6 (+ a b c))))
+
+;; Lambda functions
+
+(define test-lambda-identity (lambda ()
+  (define id (lambda (x) x))
+  (assert-equal 42 (id 42))))
+
+(define test-lambda-nested (lambda ()
+  (define outer (lambda (x)
+    (define inner (lambda (y) (+ x y)))
+    (inner 10)))
+  (assert-equal 15 (outer 5))))
+
+(define test-lambda-recursive (lambda ()
+  (define fact (lambda (n)
+    (if (<= n 1)
+        1
+        (* n (fact (- n 1))))))
+  (assert-equal 120 (fact 5))))
