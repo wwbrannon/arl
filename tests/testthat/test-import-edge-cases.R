@@ -191,10 +191,10 @@ test_that("circular module dependency detection", {
   engine <- RyeEngine$new()
   env <- stdlib_env(engine)
 
-  # Circular dependencies should error with recursion limit
+  # Circular dependencies should error (recursion limit or C stack limit on older R)
   expect_error(
     engine$eval_text(sprintf('(load "%s")', module_a_path)),
-    "nested too deeply|infinite recursion|expressions"
+    "nested too deeply|infinite recursion|expressions|stack.*limit|too close to the limit"
   )
 
   # Clean up
