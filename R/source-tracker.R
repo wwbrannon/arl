@@ -170,8 +170,8 @@ SourceTracker <- R6::R6Class(
         }
       }, add = TRUE)
       self$reset()
-      tryCatch(
-        fn(),
+      result_with_vis <- tryCatch(
+        withVisible(fn()),
         error = function(e) {
           if (inherits(e, "rye_error")) {
             stop(e)
@@ -180,6 +180,12 @@ SourceTracker <- R6::R6Class(
           stop(cond)
         }
       )
+      # Preserve invisibility
+      if (result_with_vis$visible) {
+        result_with_vis$value
+      } else {
+        invisible(result_with_vis$value)
+      }
     }
   )
 )

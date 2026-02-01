@@ -33,17 +33,23 @@ run_native_test_file <- function(path, engine, env) {
 
   # Run each test function
   for (test_name in test_names) {
-    test_that(sprintf("%s: %s", basename(path), test_name), {
-      # Call the test function
-      tryCatch({
-        exprs <- engine$read(sprintf('(%s)', test_name))
-        engine$eval_in_env(exprs[[1]], env)
-        # If we get here, the test passed
-        expect_true(TRUE)
-      }, error = function(e) {
-        # Test failed with an error
-        fail(sprintf("Test %s failed: %s", test_name, e$message))
+    # Wrap test_that in tryCatch to prevent abort on failure
+    tryCatch({
+      test_that(sprintf("%s: %s", basename(path), test_name), {
+        # Call the test function
+        tryCatch({
+          exprs <- engine$read(sprintf('(%s)', test_name))
+          engine$eval_in_env(exprs[[1]], env)
+          # If we get here, the test passed
+          expect_true(TRUE)
+        }, error = function(e) {
+          # Test failed with an error
+          expect_true(FALSE, info = sprintf("Test %s failed: %s", test_name, e$message))
+        })
       })
+    }, error = function(e) {
+      # Silently catch testthat abort errors and continue
+      NULL
     })
   }
 

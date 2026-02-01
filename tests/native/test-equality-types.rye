@@ -4,40 +4,33 @@
 ;; ============================================================================
 ;; Equality Predicates
 ;; ============================================================================
+;; NOTE: R does not support true Scheme eq?/eqv? semantics.
+;; Tests use identical? (R's native equality) and equal? (deep structural equality).
 
-(define test-eq-same-object (lambda ()
-  ;; Same object in memory
+(define test-identical-same-reference (lambda ()
+  ;; Same variable reference
   (define x (list 1 2 3))
   (define y x)
-  (assert-true (eq? x y))))
+  (assert-true (identical? x y))))
 
-(define test-eq-different-objects (lambda ()
-  ;; Different objects with same content
+(define test-identical-equal-lists (lambda ()
+  ;; In R, identical() does structural comparison for lists
   (define x (list 1 2 3))
   (define y (list 1 2 3))
-  (assert-false (eq? x y))))
+  (assert-true (identical? x y))))  ;; R behavior: structural equality
 
-(define test-eq-symbols (lambda ()
-  ;; Symbols with same name should be eq?
-  (assert-true (eq? 'foo 'foo))))
+(define test-identical-symbols (lambda ()
+  ;; Symbols with same name
+  (assert-true (identical? 'foo 'foo))))
 
-(define test-eq-numbers-not-guaranteed (lambda ()
-  ;; Numbers might not be eq? even if equal
-  ;; This is implementation-dependent, but we test the semantics
-  (assert-true (eq? 5 5))))  ;; In R, small integers are cached
+(define test-identical-numbers (lambda ()
+  ;; Numbers with same value
+  (assert-true (identical? 5 5))
+  (assert-false (identical? 5 6))))
 
-(define test-eqv-numbers (lambda ()
-  ;; eqv? should work for number value equality
-  (assert-true (eqv? 5 5))
-  (assert-false (eqv? 5 6))))
-
-(define test-eqv-symbols (lambda ()
-  (assert-true (eqv? 'hello 'hello))
-  (assert-false (eqv? 'hello 'goodbye))))
-
-(define test-eqv-different-types (lambda ()
-  ;; Different types should not be eqv?
-  (assert-false (eqv? 5 "5"))))
+(define test-identical-different-types (lambda ()
+  ;; Different types
+  (assert-false (identical? 5 "5"))))
 
 (define test-equal-lists (lambda ()
   ;; Deep structural equality
@@ -59,12 +52,14 @@
   (assert-true (equal? "hello" "hello"))
   (assert-false (equal? "hello" "world"))))
 
-(define test-equal-vs-eq (lambda ()
-  ;; equal? should return true for same content, eq? might not
-  (define x (list 1 2))
-  (define y (list 1 2))
-  (assert-false (eq? x y))
-  (assert-true (equal? x y))))
+(define test-equal-with-environments (lambda ()
+  ;; equal? should handle reference-semantic types like environments
+  (define env1 (r/call "new.env" (list)))
+  (define env2 (r/call "new.env" (list)))
+  (r/call "assign" (list "x" 1 :envir env1))
+  (r/call "assign" (list "x" 1 :envir env2))
+  (assert-false (identical? env1 env2))  ;; Different objects
+  (assert-true (equal? env1 env2))))     ;; Same contents
 
 ;; ============================================================================
 ;; Type Predicates

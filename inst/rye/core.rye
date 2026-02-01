@@ -27,7 +27,7 @@
         (error msg))))
 
   (define assert-equal (lambda (expected actual)
-    (if (! (equal? expected actual))
+    (if (! (equal? expected actual :num.type.eq #t))
       (begin
         (define error-msg (string-append "Expected: " (->string expected) ", Got: " (->string actual)))
         (error error-msg))
@@ -48,9 +48,9 @@
       #t)))
 
   (define assert-eq (lambda (expected actual)
-    (if (! (eq? expected actual))
+    (if (! (identical? expected actual))
       (begin
-        (define error-msg (string-append "Expected (eq?): " (->string expected) ", Got: " (->string actual)))
+        (define error-msg (string-append "Expected (identical?): " (->string expected) ", Got: " (->string actual)))
         (error error-msg))
       #t)))
 

@@ -219,6 +219,40 @@ RyeEngine <- R6::R6Class(
         if (is.null(doc_attr)) NULL else doc_attr$description
       }
 
+      # identical? - R's native equality test with optional numeric type coercion
+      #
+      # Does structural comparison for value-semantic types (lists, vectors, S3, S4)
+      # Does pointer comparison for reference-semantic types (environments, RC, R6, external pointers)
+      #
+      # Parameters:
+      #   a, b: Values to compare
+      #   num.type.eq: When TRUE, use == for numeric comparisons (allows 4 == 4L to be TRUE)
+      #                When FALSE (default), use identical() which distinguishes types (4 != 4L)
+      #   ...: Additional arguments passed to R's identical()
+      #
+      # Examples:
+      #   (identical? 4 4L)              ; FALSE - different types
+      #   (identical? 4 4L :num.type.eq #t)  ; TRUE - numeric equality
+      env$`identical?` <- function(a, b, num.type.eq = FALSE, ...) {
+        if (isTRUE(num.type.eq) && is.numeric(a) && is.numeric(b)) {
+          # Use == for numeric comparison with type coercion
+          if (length(a) != length(b)) {
+            return(FALSE)
+          }
+          if (length(a) == 1) {
+            return(isTRUE(a == b))
+          } else {
+            return(isTRUE(all(a == b)))
+          }
+        } else {
+          # Use R's identical, passing through any additional arguments
+          return(identical(a, b, ...))
+        }
+      }
+      attr(env$`identical?`, "rye_doc") <- list(
+        description = "R's native equality test. Structural comparison for value types, pointer comparison for reference types. Optional keyword argument :num.type.eq #t enables numeric type coercion (e.g., 4 == 4L)."
+      )
+
       stdlib_env <- env
       env$`r/call` <- function(fn, args = list()) {
         fn_name <- if (is.symbol(fn)) {

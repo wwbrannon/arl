@@ -211,7 +211,7 @@
 
   (define assv
     (lambda (key alist)
-      "Find first pair in alist with matching key (uses eqv? - value equality)."
+      "Find first pair in alist with matching key (uses identical? - R's native equality)."
       (define search
         (lambda (lst)
           (if (null? lst)
@@ -220,7 +220,7 @@
               (define pair (car lst))
               (if (list? pair)
                 (if (>= (length pair) 1)
-                  (if (eqv? (car pair) key)
+                  (if (identical? (car pair) key)
                     pair
                     (search (cdr lst)))
                   (search (cdr lst)))
@@ -338,7 +338,7 @@
         (begin
           (define result (list))
           (define i 0)
-          (while (< i n)
+          (while* (< i n)
             (begin
               (set! result (cons value result))
               (set! i (+ i 1))))

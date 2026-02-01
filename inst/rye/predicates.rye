@@ -136,51 +136,124 @@
   ;; ============================================================================
 
   ;; Equality predicates
+  ;;
+  ;; NOTE: True Scheme eq? and eqv? semantics cannot be properly implemented in R
+  ;; because R does not provide reliable pointer equality for all object types.
+  ;; R's identical() does structural comparison for some types (lists, vectors)
+  ;; but pointer comparison for others (environments, reference classes).
+
   (define eq?
     (lambda (a b)
-      "Pointer/reference equality (R's identical)."
-      (identical a b)))
+      "eq? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality."
+      (error "eq? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality.")))
 
   (define eqv?
     (lambda (a b)
-      "Value equality for primitives, identity for objects."
-      ;; Numbers and characters: compare by value
-      ;; Everything else: compare by identity
-      (if (number? a)
-        (if (number? b) (isTRUE (== a b)) #f)
-        (if (string? a)
-          (if (string? b) (isTRUE (== a b)) #f)
-          (if (boolean? a)
-            (if (boolean? b) (identical a b) #f)
-            (identical a b))))))
+      "eqv? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality."
+      (error "eqv? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality.")))
 
+  ;; identical? is implemented natively in R (see R/rye-engine.R)
+  ;; We don't redefine it, it's already in the environment
+
+  ;; Helper predicates for equal?
+  (define environment?
+    (lambda (x)
+      "Test if x is an environment (including R6 objects)."
+      (r/call "is.environment" (list x))))
+
+  (define is-refclass?
+    (lambda (x)
+      "Test if x is a Reference Class object."
+      (and (r/call "isS4" (list x))
+           (r/call "is" (list x "refClass")))))
+
+  ;; Helper: compare environment contents
+  (define env-equal?
+    (lambda (env1 env2)
+      "Compare two environments by their bindings and values."
+      (define names1 (sort (r/call "ls" (list env1 :all.names #t)) string<?))
+      (define names2 (sort (r/call "ls" (list env2 :all.names #t)) string<?))
+      (if (equal? names1 names2)
+        ;; Same names - recursively compare values
+        (begin
+          (define check-values
+            (lambda (names)
+              (if (null? names)
+                #t
+                (if (equal? (r/call "get" (list (car names) :envir env1))
+                            (r/call "get" (list (car names) :envir env2)))
+                  (check-values (cdr names))
+                  #f))))
+          (check-values names1))
+        #f)))
+
+  ;; Helper: compare Reference Class field values
+  (define refclass-equal?
+    (lambda (rc1 rc2)
+      "Compare two Reference Class objects by their field values."
+      ;; Must be same class
+      (if (equal? (r/call "class" (list rc1)) (r/call "class" (list rc2)))
+        (begin
+          (define refclass (r/call "$" (list rc1 "getRefClass")))
+          (define fields (r/call "$" (list refclass "fields")))
+          (define field-names (r/call "names" (list fields)))
+          (define check-fields
+            (lambda (fnames)
+              (if (null? fnames)
+                #t
+                (if (equal? (r/call "$" (list rc1 "field") (car fnames))
+                            (r/call "$" (list rc2 "field") (car fnames)))
+                  (check-fields (cdr fnames))
+                  #f))))
+          (check-fields (as.list field-names))))
+        #f))
+
+  ;; Helper: recursively compare lists
+  (define list-equal?
+    (lambda (lst1 lst2)
+      "Recursively compare list elements."
+      (if (== (length lst1) (length lst2))
+        (begin
+          (define compare-elements
+            (lambda (l1 l2)
+              (if (null? l1)
+                #t
+                (if (equal? (car l1) (car l2))
+                  (compare-elements (cdr l1) (cdr l2))
+                  #f))))
+          (compare-elements lst1 lst2))
+        #f)))
+
+  ;; equal? - proper deep structural equality
+  ;; Handles reference-semantic types (environments, RC) by comparing contents
+  ;; Handles containers (lists, including data.frames and list-arrays) recursively
   (define equal?
-    (lambda (a b)
-      "Deep structural equality - recursively compare structure."
-      (if (eq? a b)
+    (lambda (a b . kwargs)
+      "Deep structural equality - recursively compare structure and contents.
+       Optional keyword argument :num.type.eq #t enables numeric type coercion (e.g., 4 == 4L)."
+      ;; Call identical? once with kwargs and reuse the result to avoid overhead
+      (define id-result (apply identical? (list* a b kwargs)))
+      (if id-result
         #t
-        (if (list? a)
-          (if (list? b)
-            ;; Both lists: compare element by element
-            (if (== (length a) (length b))
-              (begin
-                (define compare-lists
-                  (lambda (lst1 lst2)
-                    (if (null? lst1)
-                      #t
-                      (if (equal? (car lst1) (car lst2))
-                        (compare-lists (cdr lst1) (cdr lst2))
-                        #f))))
-                (compare-lists a b))
-              #f)
-            #f)
-          (if (vector? a)
-            (if (vector? b)
-              ;; Both vectors: use R's all.equal
-              (isTRUE (r/call "isTRUE" (list (r/call "all.equal" (list a b :check.attributes #f)))))
-              #f)
-            ;; Not lists or vectors: use eqv?
-            (eqv? a b))))))
+        (cond
+          ;; Environments (including R6 objects) - compare contents
+          ;; R6 objects are currently implemented as environments, so they're
+          ;; caught here. If R6 switches to a compiled implementation in the
+          ;; future, we may need to add special handling.
+          ((and (environment? a) (environment? b)) (env-equal? a b))
+
+          ;; Reference Classes - compare field values
+          ((and (is-refclass? a) (is-refclass? b)) (refclass-equal? a b))
+
+          ;; Lists (including data.frames, list-arrays) - recursive comparison
+          ;; This handles lists containing reference-semantic objects correctly
+          ((and (list? a) (list? b)) (list-equal? a b))
+
+          ;; Everything else: atomic vectors, arrays, S3, S4, external pointers
+          ;; For external pointers, identical() does pointer comparison, which is
+          ;; the best we can do (we can't inspect arbitrary C struct contents).
+          ;; For value-semantic types, identical() does structural comparison.
+          (else id-result)))))
 
   ;; Additional type predicates
   (define atom?

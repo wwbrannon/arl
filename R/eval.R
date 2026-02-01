@@ -91,11 +91,16 @@ Evaluator <- R6::R6Class(
       }
       self$context$env$push_env(env)
       on.exit(self$context$env$pop_env(), add = TRUE)
-      result <- NULL
+      result_with_vis <- list(value = NULL, visible = TRUE)
       for (i in seq_along(exprs)) {
-        result <- self$eval_inner(exprs[[i]], env)
+        result_with_vis <- withVisible(self$eval_inner(exprs[[i]], env))
       }
-      result
+      # Preserve invisibility of the last expression
+      if (result_with_vis$visible) {
+        result_with_vis$value
+      } else {
+        invisible(result_with_vis$value)
+      }
     },
     eval_inner = function(expr, env) {
       # Source tracking:
@@ -106,15 +111,22 @@ Evaluator <- R6::R6Class(
       # runs, losing location context (see `tests/testthat/test-evaluator.R`).
       src <- self$context$source_tracker$src_get(expr)
       if (is.null(src)) {
-        return(self$eval_inner_impl(expr, env))
+        # Don't use return() as it strips invisibility
+        self$eval_inner_impl(expr, env)
+      } else {
+        self$context$source_tracker$push(src)
+        result_with_vis <- tryCatch(
+          withVisible(self$eval_inner_impl(expr, env)),
+          error = function(e) stop(e)
+        )
+        self$context$source_tracker$pop()
+        # Preserve invisibility
+        if (result_with_vis$visible) {
+          result_with_vis$value
+        } else {
+          invisible(result_with_vis$value)
+        }
       }
-      self$context$source_tracker$push(src)
-      result <- tryCatch(
-        self$eval_inner_impl(expr, env),
-        error = function(e) stop(e)
-      )
-      self$context$source_tracker$pop()
-      result
     },
     eval_inner_impl = function(expr, env) {
       # Handle NULL (empty list or #nil)
@@ -157,21 +169,27 @@ Evaluator <- R6::R6Class(
       op_name <- if (is.symbol(op)) as.character(op) else NULL
 
       handler <- if (!is.null(op_name)) self$special_forms[[op_name]] else NULL
-      if (!is.null(handler)) {
-        return(handler(expr, env, op_name))
+      result_with_vis <- if (!is.null(handler)) {
+        withVisible(handler(expr, env, op_name))
+      } else {
+        # Continue with regular function application
+        # Evaluate operator
+        fn <- self$eval_inner(op, env)
+        fn <- self$context$source_tracker$strip_src(fn)
+        args_info <- self$eval_args(expr, env)
+        args <- args_info$args
+        if (length(args_info$arg_names) > 0) {
+          names(args) <- args_info$arg_names
+        }
+        result <- self$apply(fn, args, env)
+        list(value = self$context$source_tracker$strip_src(result), visible = TRUE)
       }
-
-      # Regular function application
-      # Evaluate operator
-      fn <- self$eval_inner(op, env)
-      fn <- self$context$source_tracker$strip_src(fn)
-      args_info <- self$eval_args(expr, env)
-      args <- args_info$args
-      if (length(args_info$arg_names) > 0) {
-        names(args) <- args_info$arg_names
+      # Preserve invisibility
+      if (result_with_vis$visible) {
+        result_with_vis$value
+      } else {
+        invisible(result_with_vis$value)
       }
-      result <- self$apply(fn, args, env)
-      return(self$context$source_tracker$strip_src(result))
     },
     eval_args = function(expr, env) {
       # Pre-allocate to avoid O(n^2) vector growing, but handle NULL values correctly

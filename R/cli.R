@@ -162,15 +162,17 @@ RyeCLI <- R6::R6Class(
       invisible(NULL)
     },
     cli_eval_with_engine = function(engine, fn) {
-      result <- tryCatch(
-        fn(),
+      result_with_vis <- tryCatch(
+        withVisible(fn()),
         error = function(e) {
           engine$source_tracker$print_error(e, file = stderr())
           quit(save = "no", status = 1)
-          return(invisible(NULL))
+          return(list(value = NULL, visible = FALSE))
         }
       )
-      if (!is.null(result)) {
+      result <- result_with_vis$value
+      # Only print if the result is visible and not NULL
+      if (!is.null(result) && result_with_vis$visible) {
         cat(engine$env$format_value(result), "\n", sep = "")
       }
       invisible(result)
