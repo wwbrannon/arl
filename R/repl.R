@@ -231,6 +231,8 @@ RyeREPL <- R6::R6Class(
 
       self$output_fn(paste0("Rye REPL ", rye_version()), "\n", sep = "")
       self$output_fn("Type (quit) or press Ctrl+C to exit\n")
+      self$output_fn("This is free software; see the source for copying conditions.\n")
+      self$output_fn("There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n")
       self$output_fn(
         "Builtin readline support:",
         ifelse(isTRUE(capabilities("readline")), "yes", "no"),

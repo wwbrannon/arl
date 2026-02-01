@@ -453,15 +453,15 @@ Evaluator <- R6::R6Class(
           value <- self$context$source_tracker$strip_src(value)
           RyeEnv$new(env)$assign_pattern(name, value, mode = "define", context = "define")
 
-          # Return the defined value (not NULL or the symbol name).
+          # Return the defined value wrapped in invisible() for clean CLI output.
           # This differs from most Scheme implementations which return an unspecified value,
           # but is compliant with R7RS which explicitly states the return value is unspecified.
           # Returning the value enables functional patterns like:
           #   - Immediate use: (map (define f (lambda (x) (* x 2))) nums)
           #   - Chaining: (filter even? (define nums (range 1 10)))
           #   - Implicit returns: (define (make-adder n) (define adder (lambda (x) (+ x n))))
-          # This reduces boilerplate and supports more compositional code.
-          value
+          # Using invisible() prevents cluttering CLI output while keeping the value accessible.
+          invisible(value)
         },
         `set!` = function(expr, env, op_name) {
           if (length(expr) != 3) {

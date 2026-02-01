@@ -88,8 +88,8 @@
   ;; ============================================================================
 
   (define curry
-    (lambda (fn)
-      "Curry a function - enables partial application."
+    (lambda (fn . initial-args)
+      "Curry a function - enables partial application with optional initial arguments."
       ;; Get the number of parameters the function expects
       (define arity (length (formals fn)))
       (define curry-helper
@@ -101,7 +101,7 @@
               (do.call fn all-args)
               ;; Need more args, return another curried function
               (curry-helper all-args)))))
-      (curry-helper (list))))
+      (curry-helper initial-args)))
 
   (define juxt
     (lambda (. fns)
@@ -123,11 +123,17 @@
         (iterate fn (- n 1) (fn init)))))
 
   (define iterate-until
-    (lambda (fn pred init)
-      "Apply function until predicate is true."
-      (if (pred init)
-        init
-        (iterate-until fn pred (fn init)))))
+    (lambda (fn init pred)
+      "Apply function starting from init, collecting values until predicate becomes true.
+       Includes all values where predicate is false, stops when next value would satisfy predicate."
+      (define helper
+        (lambda (current acc)
+          (define new-acc (c acc current))
+          (define next (fn current))
+          (if (pred next)
+            new-acc
+            (helper next new-acc))))
+      (helper init (list))))
 
   (define memoize
     (lambda (fn)

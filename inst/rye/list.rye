@@ -334,7 +334,15 @@
       "Create list of n copies of value."
       (if (<= n 0)
         (list)
-        (as.list (rep value n)))))
+        ;; Use explicit loop to avoid stack overflow and handle symbols
+        (begin
+          (define result (list))
+          (define i 0)
+          (while (< i n)
+            (begin
+              (set! result (cons value result))
+              (set! i (+ i 1))))
+          result))))
 
   ;; Additional list accessors
   (define list-ref

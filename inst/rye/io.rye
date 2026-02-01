@@ -3,6 +3,7 @@
 (module io
   (export __normalize-line-vector __normalize-lines read-line read-file read-lines write-file write-lines append-file file-exists?
           read print newline
+          read-from-string write-string
           file-size file-modified-time file-delete
           directory-exists? directory-list directory-delete
           getenv setenv
@@ -100,12 +101,20 @@
         (r/call "[[" (list exprs 1))
         #nil)))
 
+  (define read-from-string read)  ;; Alias for read
+
   ;; Output operations
   (define print
     (lambda (x)
       "Print value in Rye representation."
       (__rprint x)
       x))
+
+  (define write-string
+    (lambda (x)
+      "Write string to output (alias for cat)."
+      (cat x)
+      #nil))
 
   (define newline
     (lambda ()

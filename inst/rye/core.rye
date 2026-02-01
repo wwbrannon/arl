@@ -1,7 +1,8 @@
 ;;; Rye Standard Library - Core Functions
 
 (module core
-  (export = error warn assert identity values values? call-with-values call/cc call-with-current-continuation doc! doc)
+  (export = error warn assert assert-equal assert-true assert-false assert-eq assert-error
+            identity values values? call-with-values call/cc call-with-current-continuation doc! doc)
 
   (define =
     (lambda (x y)
@@ -24,6 +25,44 @@
       (if cond
         #t
         (error msg))))
+
+  (define assert-equal (lambda (expected actual)
+    (if (! (equal? expected actual))
+      (begin
+        (define error-msg (string-append "Expected: " (->string expected) ", Got: " (->string actual)))
+        (error error-msg))
+      #t)))
+
+  (define assert-true (lambda (value)
+    (if (! value)
+      (begin
+        (define error-msg (string-append "Expected truthy value, got: " (->string value)))
+        (error error-msg))
+      #t)))
+
+  (define assert-false (lambda (value)
+    (if value
+      (begin
+        (define error-msg (string-append "Expected falsy value, got: " (->string value)))
+        (error error-msg))
+      #t)))
+
+  (define assert-eq (lambda (expected actual)
+    (if (! (eq? expected actual))
+      (begin
+        (define error-msg (string-append "Expected (eq?): " (->string expected) ", Got: " (->string actual)))
+        (error error-msg))
+      #t)))
+
+  (define assert-error (lambda (thunk)
+    (define result
+      (r/call "tryCatch"
+        (dict
+          :expr (thunk)
+          :error (lambda (e) #t))))
+    (if (! (== result #t))
+      (error "Expected an error to be thrown, but none was")
+      #t)))
 
   (define identity
     (lambda (x)

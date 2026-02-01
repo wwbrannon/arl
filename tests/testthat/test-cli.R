@@ -150,12 +150,12 @@ test_that("cli_eval_text prints non-NULL results", {
   expect_true(any(grepl("5", output)))
 })
 
-test_that("cli_eval_text does not print NULL results", {
+test_that("cli_eval_text does not print define results", {
   engine <- RyeEngine$new()
   cli <- rye:::RyeCLI$new()
   output <- capture.output(result <- cli$cli_eval_text("(define y 10)", engine))
-  expect_null(result)
-  expect_length(output, 0)
+  expect_equal(result, 10)  # define returns the value (invisibly)
+  expect_length(output, 0)  # but doesn't print
 })
 
 # I/O Helper Functions ----

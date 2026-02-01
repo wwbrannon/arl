@@ -1,38 +1,6 @@
 # Native test infrastructure for running .rye test files
 # Tests are functions named `test-*` in .rye files
 
-#' Load test assertion functions into the engine environment
-#'
-#' Defines assert-equal, assert-true, assert-error for use in native tests
-#'
-#' @param engine A Rye engine instance
-#' @param env Environment to load assertions into
-load_test_assertions <- function(engine, env) {
-  # Define assert-equal
-  exprs <- engine$read('
-    (define assert-equal (lambda (expected actual)
-      (if (! (== expected actual))
-        (begin
-          (define error-msg (string-append "Expected: " (->string expected) ", Got: " (->string actual)))
-          (error error-msg))
-        #t)))
-  ')
-  engine$eval_in_env(exprs[[1]], env)
-
-  # Define assert-true
-  exprs <- engine$read('
-    (define assert-true (lambda (value)
-      (if (! value)
-        (begin
-          (define error-msg (string-append "Expected truthy value, got: " (->string value)))
-          (error error-msg))
-        #t)))
-  ')
-  engine$eval_in_env(exprs[[1]], env)
-
-  invisible(NULL)
-}
-
 #' Run a single native test file
 #'
 #' Loads a .rye file and executes all functions named test-*
@@ -107,13 +75,10 @@ run_native_tests <- function(dir = "tests/native") {
   env <- engine$env$env
 
   # Load core stdlib modules needed for tests
-  for (module in c("control", "binding", "strings", "math")) {
+  for (module in c("control", "binding", "strings", "math", "predicates", "list", "higher-order", "sequences")) {
     exprs <- engine$read(sprintf('(load "%s")', module))
     engine$eval_in_env(exprs[[1]], env)
   }
-
-  # Load test assertions (after stdlib is loaded)
-  load_test_assertions(engine, env)
 
   # Run each test file
   for (test_file in test_files) {

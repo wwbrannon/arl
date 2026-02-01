@@ -13,7 +13,8 @@
   (assert-equal (add5 7) 15)))
 
 (define test-curry-single-arg (lambda ()
-  (define add3 (curry + 3))
+  (define add (lambda (a b c) (+ a b c)))
+  (define add3 (curry add 3))
   (define result ((add3 5) 7))  ;; Should be (+ 3 5 7)
   (assert-equal result 15)))
 
@@ -71,17 +72,15 @@
 ;; ============================================================================
 
 (define test-iterate-basic (lambda ()
-  ;; iterate generates infinite sequence by repeatedly applying function
-  ;; Take first 5: 0, 1, 2, 3, 4
-  (define counter (iterate (lambda (x) (+ x 1)) 0))
-  (define first-five (take 5 counter))
-  (assert-equal first-five (list 0 1 2 3 4))))
+  ;; iterate applies function n times to initial value
+  ;; Start at 0, apply +1 five times: 0 -> 1 -> 2 -> 3 -> 4 -> 5
+  (define result (iterate (lambda (x) (+ x 1)) 5 0))
+  (assert-equal result 5)))
 
 (define test-iterate-double (lambda ()
-  ;; Powers of 2: 1, 2, 4, 8, 16
-  (define powers (iterate (lambda (x) (* x 2)) 1))
-  (define first-five (take 5 powers))
-  (assert-equal first-five (list 1 2 4 8 16))))
+  ;; Powers of 2: starting from 1, apply *2 four times to get 16
+  (define result (iterate (lambda (x) (* x 2)) 4 1))
+  (assert-equal result 16)))
 
 (define test-iterate-until (lambda ()
   ;; iterate-until stops when predicate is true
