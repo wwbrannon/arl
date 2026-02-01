@@ -1,5 +1,4 @@
 o) can we get rid of evaluator$do_call and evaluator$do_call_impl?
-o) rework r/call
 o) format-value should support environments (and subclasses like dict?)
 
 o) improve variadic argument handling -- utilities?

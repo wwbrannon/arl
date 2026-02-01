@@ -3,7 +3,7 @@
 (module core
   (export = error warn assert assert-equal assert-true assert-false assert-eq assert-error
             identity values values? call-with-values call/cc call-with-current-continuation doc! doc
-            funcall)
+            funcall r/call)
 
   ;; Documentation helpers
   (defmacro doc! (sym docstring)
@@ -19,6 +19,18 @@
     (lambda (fn args)
       "Apply a function with a provided list of arguments."
       (do.call fn args :quote #t)))
+
+  (define r/call
+    (lambda (fn (args (list)) (envir (globalenv)))
+      "Call an R function with optional environment. Searches from .GlobalEnv by default, finding base and loaded package functions."
+      (define fn-name
+        (if (is.symbol fn)
+          (as.character fn)
+          (if (is.character fn)
+            fn
+            (error "r/call requires a symbol or string function name"))))
+      (define fn-obj (get fn-name :envir envir :inherits #t))
+      (funcall fn-obj (as.list args))))  ; as.list handles environments
 
   (define =
     (lambda (x y)

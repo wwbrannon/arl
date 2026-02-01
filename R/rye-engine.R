@@ -244,24 +244,6 @@ RyeEngine <- R6::R6Class(
         description = "R's native equality test. Structural comparison for value types, pointer comparison for reference types. Optional keyword argument :num.type.eq #t enables numeric type coercion (e.g., 4 == 4L)."
       )
 
-      env$`r/call` <- function(fn, args = list(), envir = NULL) {
-        if (is.null(envir)) {
-          envir <- .GlobalEnv
-        }
-        fn_name <- if (is.symbol(fn)) {
-          as.character(fn)
-        } else if (is.character(fn)) {
-          fn
-        } else {
-          stop("r/call requires a symbol or string function name")
-        }
-        fn_obj <- get(fn_name, envir = envir, inherits = TRUE)
-        self$evaluator$do_call(fn_obj, as.list(args))
-      }
-      attr(env$`r/call`, "rye_doc") <- list(
-        description = "Call an R function with optional environment. Searches from .GlobalEnv by default, finding base and loaded package functions."
-      )
-
       env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
           env <- self$env$current_env()
