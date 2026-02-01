@@ -137,7 +137,7 @@ RyeEngine <- R6::R6Class(
       rye_env_registry(env, ".rye_macros", create = TRUE)
 
       env$apply <- function(fn, args) {
-        args <- rye_as_list(args)
+        args <- as.list(args)
         if (length(args) > 2 &&
               (identical(fn, base::`+`) || identical(fn, base::`*`) ||
                  identical(fn, base::`-`) || identical(fn, base::`/`))) {
@@ -269,7 +269,7 @@ RyeEngine <- R6::R6Class(
           stop("r/call requires a symbol or string function name")
         }
         fn_obj <- get(fn_name, envir = envir, inherits = TRUE)
-        self$evaluator$do_call(fn_obj, rye_as_list(args))
+        self$evaluator$do_call(fn_obj, as.list(args))
       }
       attr(env$`r/call`, "rye_doc") <- list(
         description = "Call an R function with optional environment. Searches from .GlobalEnv by default, finding base and loaded package functions."

@@ -76,17 +76,3 @@ rye_error <- function(message, src_stack = list(), r_stack = list()) {
     class = c("rye_error", "error", "condition")
   )
 }
-
-rye_as_list <- function(x) {
-  if (is.call(x)) {
-    return(as.list(x))
-  }
-  if (is.list(x)) {
-    return(x)
-  }
-  if (length(x) == 0) {
-    return(list())
-  }
-  as.list(x)
-}
-

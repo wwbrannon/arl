@@ -144,7 +144,7 @@ RyeEnv <- R6::R6Class(
         return(bind_symbol(pattern, value))
       }
       if (is.null(pattern)) {
-        value_list <- rye_as_list(value)
+        value_list <- as.list(value)
         if (length(value_list) != 0) {
           stop(sprintf("Destructuring pattern expects empty list, got %d item(s)", length(value_list)))
         }
@@ -158,7 +158,7 @@ RyeEnv <- R6::R6Class(
         if (length(dot_idx) > 1) {
           stop("Destructuring pattern can only contain one '.'")
         }
-        value_list <- rye_as_list(value)
+        value_list <- as.list(value)
         if (length(dot_idx) == 1) {
           if (dot_idx == 1 || dot_idx == length(parts)) {
             stop("Destructuring '.' must appear between head and rest")
