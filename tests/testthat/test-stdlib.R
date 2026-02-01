@@ -548,6 +548,41 @@ test_that("string and io helpers work", {
   expect_equal(env$`read-line`(), "hello")
 })
 
+test_that("format-value handles environments correctly", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  # Plain environment should format as <environment>
+  plain_env <- new.env(hash = TRUE)
+  expect_equal(env$`format-value`(plain_env), "<environment>")
+
+  # Environment with class should show class name
+  classed_env <- new.env()
+  class(classed_env) <- c("MyClass", "environment")
+  expect_equal(env$`format-value`(classed_env), "<MyClass, environment>")
+
+  # Dict should still format as values (regression test)
+  dict <- env$dict(a = 1, b = 2)
+  formatted_dict <- env$`format-value`(dict)
+  expect_true(grepl("1", formatted_dict))
+  expect_true(grepl("2", formatted_dict))
+
+  # Set should still format as values (regression test)
+  set_obj <- env$set(1, 2, 3)
+  formatted_set <- env$`format-value`(set_obj)
+  expect_true(grepl("[123]", formatted_set))
+
+  # Promise should still format as <promise> (regression test)
+  promise_obj <- engine$eval_text("(delay 42)")
+  expect_equal(env$`format-value`(promise_obj), "<promise>")
+
+  # R6 class if available
+  if (requireNamespace("R6", quietly = TRUE)) {
+    r6_class <- R6::R6Class("TestClass")
+    expect_true(grepl("R6ClassGenerator", env$`format-value`(r6_class)))
+  }
+})
+
 test_that("string match helpers work", {
   env <- new.env()
   stdlib_env(engine, env)

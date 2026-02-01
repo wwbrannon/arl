@@ -1,5 +1,3 @@
-o) format-value should support environments (and subclasses like dict?)
-
 o) improve variadic argument handling -- utilities?
 o) we can do this with the test case of moving identical? over
 
