@@ -74,6 +74,11 @@ Parser <- R6::R6Class(
           return(NULL)
         }
 
+        if (token$type == "NA") {
+          pos <<- pos + 1
+          return(tracker$src_set(token$value, make_src(token)))
+        }
+
         if (token$type == "SYMBOL") {
           pos <<- pos + 1
 

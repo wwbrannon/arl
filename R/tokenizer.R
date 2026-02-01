@@ -246,8 +246,46 @@ Tokenizer <- R6::R6Class(
           token_type <- "SYMBOL"
           token_value <- token_text
 
-          # Try to parse as number (including scientific notation)
-          if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$", token_text)) {
+          # Try to parse as integer literal (e.g., 4L, 42L)
+          if (grepl("^[-+]?\\d+L$", token_text)) {
+            token_type <- "NUMBER"
+            # Remove the L suffix and convert to integer
+            num_str <- substr(token_text, 1, nchar(token_text) - 1)
+            token_value <- as.integer(num_str)
+          }
+          # Try to parse as complex number with real and imaginary parts (e.g., 2+4i, 3.14-2.5i)
+          else if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?[+-]\\d+(\\.\\d+)?([eE][-+]?\\d+)?i$", token_text)) {
+            token_type <- "NUMBER"
+            # Find the position of the +/- that separates real and imaginary parts
+            # Need to skip the leading sign if present
+            start_pos <- 1
+            if (substr(token_text, 1, 1) %in% c("+", "-")) {
+              start_pos <- 2
+            }
+            # Find the +/- separator (must be after the first character)
+            sep_pos <- NULL
+            for (j in start_pos:nchar(token_text)) {
+              if (substr(token_text, j, j) %in% c("+", "-")) {
+                sep_pos <- j
+                break
+              }
+            }
+            # Extract real and imaginary parts
+            real_str <- substr(token_text, 1, sep_pos - 1)
+            # Imaginary part includes the sign but not the 'i'
+            imag_str <- substr(token_text, sep_pos, nchar(token_text) - 1)
+            token_value <- complex(real = as.numeric(real_str), imaginary = as.numeric(imag_str))
+          }
+          # Try to parse as pure imaginary number (e.g., 4i, 3.14i)
+          else if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?i$", token_text)) {
+            token_type <- "NUMBER"
+            # Remove the i suffix and convert to complex
+            num_str <- substr(token_text, 1, nchar(token_text) - 1)
+            # Create complex number with imaginary part
+            token_value <- complex(real = 0, imaginary = as.numeric(num_str))
+          }
+          # Try to parse as regular number (including scientific notation)
+          else if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$", token_text)) {
             token_type <- "NUMBER"
             token_value <- as.numeric(token_text)
           }

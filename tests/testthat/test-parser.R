@@ -55,3 +55,50 @@ test_that(":: sugar works in expressions", {
   expect_true(is.call(exprs[[1]][[1]]))
   expect_equal(as.character(exprs[[1]][[1]][[1]]), "::")
 })
+
+test_that("parser handles integer literals", {
+  exprs <- engine$read("4L")
+  expect_equal(length(exprs), 1)
+  expect_equal(as.vector(exprs[[1]]), 4L)
+  expect_true(is.integer(exprs[[1]]))
+})
+
+test_that("parser handles pure imaginary numbers", {
+  exprs <- engine$read("4i")
+  expect_equal(length(exprs), 1)
+  expect_equal(as.vector(exprs[[1]]), 0+4i)
+  expect_true(is.complex(exprs[[1]]))
+})
+
+test_that("parser handles full complex number syntax", {
+  exprs <- engine$read("2+4i")
+  expect_equal(length(exprs), 1)
+  expect_equal(as.vector(exprs[[1]]), 2+4i)
+  expect_true(is.complex(exprs[[1]]))
+
+  exprs <- engine$read("3.14-2.5i")
+  expect_equal(length(exprs), 1)
+  expect_equal(as.vector(exprs[[1]]), 3.14-2.5i)
+  expect_true(is.complex(exprs[[1]]))
+
+  exprs <- engine$read("-1+2i")
+  expect_equal(length(exprs), 1)
+  expect_equal(as.vector(exprs[[1]]), -1+2i)
+  expect_true(is.complex(exprs[[1]]))
+})
+
+test_that("parser handles NA values", {
+  exprs <- engine$read("NA")
+  expect_equal(length(exprs), 1)
+  expect_true(is.na(exprs[[1]]))
+
+  exprs <- engine$read("NA_integer_")
+  expect_equal(length(exprs), 1)
+  expect_true(is.na(exprs[[1]]))
+  expect_equal(typeof(exprs[[1]]), "integer")
+
+  exprs <- engine$read("NA_real_")
+  expect_equal(length(exprs), 1)
+  expect_true(is.na(exprs[[1]]))
+  expect_equal(typeof(exprs[[1]]), "double")
+})

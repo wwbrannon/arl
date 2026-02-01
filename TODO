@@ -3,12 +3,11 @@ o) we can do this with the test case of moving identical? over
 
 o) fix 2 warnings in tests
 
-o) the lexer doesn't understand 4L or 4i as numbers
+o) type-of is a bad name because of the similarity to R's typeof. class-of? or actually do we need to redefine this? can it just be an alias for R typeof?
 
 o) we should change the equality system again: identical? doesn't need special handling and can be an alias; rather equal? should take a kwarg identical which says to use identical; otherwise it should use ==; or maybe kwarg strict or kwarg permissive
 
 o) several circularities in the stdlib. equality for example should be in core
-o) type-of is a bad name because of the similarity to R's typeof. class-of? or actually do we need to redefine this? can it just be an alias for typeof?
 o) update the (license) function, should wrap it
 
 o) look for and remove any tail recursive functions: we don't have TCO
