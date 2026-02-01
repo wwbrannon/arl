@@ -1,6 +1,14 @@
-o) fix a number of currently failing tests from recent changes
+o) rework r/call
+o) remove apply, rename to funcall and define in rye
+o) do.call? is this usable directly? why do we have evaluator$do_call and evaluator$do_call_impl?
+
+o) improve variadic argument handling -- utilities?
+
+o) fix 2 warnings in tests
+
 o) the lexer doesn't understand 4L or 4i as numbers
-o) is num.type.eq a good name for this?
+
+o) we should change the equality system again: identical? doesn't need special handling and can be an alias; rather equal? should take a kwarg identical which says to use identical; otherwise it should use ==; or maybe kwarg strict or kwarg permissive
 
 o) several circularities in the stdlib. equality for example should be in core
 o) type-of is a bad name because of the similarity to R's typeof. class-of? or actually do we need to redefine this? can it just be an alias for typeof?
