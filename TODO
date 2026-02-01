@@ -3,15 +3,17 @@ o) we can do this with the test case of moving identical? over
 
 o) fix 2 warnings in tests
 
-o) type-of is a bad name because of the similarity to R's typeof. class-of? or actually do we need to redefine this? can it just be an alias for R typeof?
-
 o) we should change the equality system again: identical? doesn't need special handling and can be an alias; rather equal? should take a kwarg identical which says to use identical; otherwise it should use ==; or maybe kwarg strict or kwarg permissive
 
 o) several circularities in the stdlib. equality for example should be in core
+
 o) update the (license) function, should wrap it
 
-o) look for and remove any tail recursive functions: we don't have TCO
+o) look for and rewrite any tail recursive functions: we don't have TCO
 
+o) FIXME in tests about keyword arg syntax
+
+--------------------------------------
 o) look at the test behavior: any tests that look obviously bad? anywhere it's not what a lisp should do? identify questionable choices that may reflect encoding bugs into tests
 
 o) bench-eval and bench-e2e fail
@@ -20,5 +22,4 @@ o) performance optimizations: use profiling and benchmarking
 
 o) documentation updates / systematizing: make a plan
 
-o) FIXME in tests about keyword arg syntax
 o) minor pkgdown warning about site url

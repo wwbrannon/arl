@@ -319,30 +319,6 @@
             (stop "->vector: cannot convert to vector"))))))
 
   ;; Type introspection
-  (define type-of
-    (lambda (x)
-      "Return type name of value as string."
-      (if (null? x)
-        "null"
-        (if (is.symbol x)
-          "symbol"
-          (if (is.character x)
-            "character"
-            (if (is.numeric x)
-              (if (is.integer x)
-                "integer"
-                (if (is.double x)
-                  "numeric"
-                  (if (is.complex x)
-                    "complex"
-                    "numeric")))
-              (if (is.logical x)
-                "logical"
-                (if (is.list x)
-                  "list"
-                  (if (is.call x)
-                    "call"
-                    (if (is.function x)
-                      "closure"
-                      (r/call "typeof" (list x))))))))))))
+  (define type-of typeof)
+  (doc! type-of "Return the type of value (alias for R's typeof).")
 )

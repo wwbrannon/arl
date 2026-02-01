@@ -145,7 +145,7 @@
 ;; ============================================================================
 
 (define test-type-of-number (lambda ()
-  (assert-equal (type-of 42) "numeric")))
+  (assert-equal (type-of 42) "double")))
 
 (define test-type-of-string (lambda ()
   (assert-equal (type-of "hello") "character")))
