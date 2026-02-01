@@ -1,7 +1,5 @@
 o) fix a number of currently failing tests from recent changes
 o) the lexer doesn't understand 4L or 4i as numbers
-o) R's identical takes various kwargs -- update so we do too
-o) we can drop the test for refclass; it's an environment
 o) is num.type.eq a good name for this?
 
 o) several circularities in the stdlib. equality for example should be in core

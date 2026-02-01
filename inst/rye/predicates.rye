@@ -187,27 +187,6 @@
           (check-values names1))
         #f)))
 
-  ;; Helper: compare Reference Class field values
-  (define refclass-equal?
-    (lambda (rc1 rc2)
-      "Compare two Reference Class objects by their field values."
-      ;; Must be same class
-      (if (equal? (r/call "class" (list rc1)) (r/call "class" (list rc2)))
-        (begin
-          (define refclass (r/call "$" (list rc1 "getRefClass")))
-          (define fields (r/call "$" (list refclass "fields")))
-          (define field-names (r/call "names" (list fields)))
-          (define check-fields
-            (lambda (fnames)
-              (if (null? fnames)
-                #t
-                (if (equal? (r/call "$" (list rc1 "field") (car fnames))
-                            (r/call "$" (list rc2 "field") (car fnames)))
-                  (check-fields (cdr fnames))
-                  #f))))
-          (check-fields (as.list field-names))))
-        #f))
-
   ;; Helper: recursively compare lists
   (define list-equal?
     (lambda (lst1 lst2)
@@ -236,14 +215,12 @@
       (if id-result
         #t
         (cond
-          ;; Environments (including R6 objects) - compare contents
+          ;; Environments (incl. R6 objects + refclasses) - compare contents
           ;; R6 objects are currently implemented as environments, so they're
           ;; caught here. If R6 switches to a compiled implementation in the
-          ;; future, we may need to add special handling.
+          ;; future, we may need to add special handling. Similarly with R's
+          ;; built-in reference class system: these are environments.
           ((and (environment? a) (environment? b)) (env-equal? a b))
-
-          ;; Reference Classes - compare field values
-          ((and (is-refclass? a) (is-refclass? b)) (refclass-equal? a b))
 
           ;; Lists (including data.frames, list-arrays) - recursive comparison
           ;; This handles lists containing reference-semantic objects correctly
