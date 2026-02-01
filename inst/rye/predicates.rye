@@ -211,7 +211,7 @@
       "Deep structural equality - recursively compare structure and contents.
        Optional keyword argument :num.type.eq #t enables numeric type coercion (e.g., 4 == 4L)."
       ;; Call identical? once with kwargs and reuse the result to avoid overhead
-      (define id-result (apply identical? (list* a b kwargs)))
+      (define id-result (funcall identical? (list* a b kwargs)))
       (if id-result
         #t
         (cond

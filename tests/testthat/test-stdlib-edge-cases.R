@@ -441,15 +441,15 @@ test_that("apply handles edge cases", {
   env <- setup_env()
 
   # Single argument
-  expect_equal(env$apply(identity, list(42)), 42)
+  expect_equal(env$funcall(identity, list(42)), 42)
 
   # Empty list (should work if function accepts no args)
   zero_arg_fn <- function() 42
-  expect_equal(env$apply(zero_arg_fn, list()), 42)
+  expect_equal(env$funcall(zero_arg_fn, list()), 42)
 
   # Many arguments
   many_sum <- function(...) sum(...)
-  expect_equal(env$apply(many_sum, as.list(1:100)), 5050)
+  expect_equal(env$funcall(many_sum, as.list(1:100)), 5050)
 })
 
 # ============================================================================

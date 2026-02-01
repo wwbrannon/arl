@@ -17,8 +17,8 @@ test_that("help shows Rye special-form docs", {
 test_that("help shows Rye stdlib docs via attributes", {
   engine <- RyeEngine$new()
   env <- engine$env$env
-  output <- capture.output(engine$eval_text_in_env("(help apply)", env))
-  expect_true(any(grepl("\\(apply fn args\\)", output)))
+  output <- capture.output(engine$eval_text_in_env("(help funcall)", env))
+  expect_true(any(grepl("\\(funcall fn args\\)", output)))
 })
 
 test_that("help shows Rye macro docs from stdlib files", {

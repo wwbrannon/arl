@@ -431,7 +431,7 @@ test_that("list helpers work", {
   expect_equal(env$`list*`(1, list(2, 3)), list(1, 2, 3))
   expect_equal(env$append(list(1, 2), list(3)), list(1, 2, 3))
   expect_equal(env$reverse(list(1, 2, 3)), list(3, 2, 1))
-  expect_equal(env$apply(`+`, list(1, 2, 3)), 6)
+  expect_equal(env$funcall(sum, list(1, 2, 3)), 6)
 })
 
 test_that("values and call-with-values work", {

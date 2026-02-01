@@ -136,19 +136,6 @@ RyeEngine <- R6::R6Class(
       rye_env_registry(env, ".rye_module_registry", create = TRUE)
       rye_env_registry(env, ".rye_macros", create = TRUE)
 
-      env$apply <- function(fn, args) {
-        args <- as.list(args)
-        if (length(args) > 2 &&
-              (identical(fn, base::`+`) || identical(fn, base::`*`) ||
-                 identical(fn, base::`-`) || identical(fn, base::`/`))) {
-          return(Reduce(fn, args))
-        }
-        self$evaluator$do_call(fn, args)
-      }
-      attr(env$apply, "rye_doc") <- list(
-        description = "Apply fn to the elements of lst as arguments."
-      )
-
       env$gensym <- function(prefix = "G") {
         self$macro_expander$gensym(prefix = prefix)
       }
@@ -178,6 +165,7 @@ RyeEngine <- R6::R6Class(
         description = "Evaluate expr in the current environment."
       )
 
+      env$`stdlib-env` <- function() env
       env$`current-env` <- function() self$env$current_env()
 
       env$`promise?` <- function(x) {
@@ -256,7 +244,6 @@ RyeEngine <- R6::R6Class(
         description = "R's native equality test. Structural comparison for value types, pointer comparison for reference types. Optional keyword argument :num.type.eq #t enables numeric type coercion (e.g., 4 == 4L)."
       )
 
-      stdlib_env <- env
       env$`r/call` <- function(fn, args = list(), envir = NULL) {
         if (is.null(envir)) {
           envir <- .GlobalEnv
