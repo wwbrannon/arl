@@ -90,24 +90,3 @@ rye_as_list <- function(x) {
   as.list(x)
 }
 
-rye_resolve_r_callable <- function(fn_name, stdlib_env = NULL, max_frames = 10) {
-  if (!is.character(fn_name) || length(fn_name) != 1 || !nzchar(fn_name)) {
-    stop("r/call requires a symbol or string function name")
-  }
-  if (!is.null(stdlib_env)) {
-    fn_obj <- get0(fn_name, envir = stdlib_env, inherits = FALSE, ifnotfound = NULL)
-    if (!is.null(fn_obj) && is.function(fn_obj)) {
-      return(fn_obj)
-    }
-  }
-  for (i in 0:max_frames) {
-    tryCatch({
-      frame_env <- parent.frame(i + 1)
-      fn_obj <- get0(fn_name, envir = frame_env, inherits = TRUE, ifnotfound = NULL)
-      if (!is.null(fn_obj) && is.function(fn_obj)) {
-        return(fn_obj)
-      }
-    }, error = function(e) NULL)
-  }
-  get(fn_name, envir = baseenv())
-}

@@ -9,9 +9,15 @@ RyeEnv <- R6::R6Class(
     macro_registry = NULL,
     module_registry = NULL,
     env_stack = NULL,
-    initialize = function(env = NULL) {
+    initialize = function(env = NULL, parent = NULL) {
+      if (!is.null(env) && !is.null(parent)) {
+        stop("Cannot specify both 'env' and 'parent' arguments")
+      }
       if (is.null(env)) {
-        env <- new.env(parent = baseenv())
+        if (is.null(parent)) {
+          parent <- baseenv()
+        }
+        env <- new.env(parent = parent)
       }
       if (!is.environment(env)) {
         stop("RyeEnv requires an environment")

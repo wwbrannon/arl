@@ -37,8 +37,11 @@ RyeEngine <- R6::R6Class(
     source_tracker = NULL,
     #' @description
     #' Initialize engine components and base environment.
-    initialize = function(env = NULL) {
-      self$env <- RyeEnv$new(env)
+    #' @param env Optional existing environment to use. If NULL, creates a new environment.
+    #' @param parent Optional parent environment for the new environment. Only used if env is NULL.
+    #'   Defaults to baseenv(). Cannot be specified together with env.
+    initialize = function(env = NULL, parent = NULL) {
+      self$env <- RyeEnv$new(env = env, parent = parent)
       self$source_tracker <- SourceTracker$new()
       self$tokenizer <- Tokenizer$new()
       self$parser <- Parser$new(self$source_tracker)
@@ -254,7 +257,10 @@ RyeEngine <- R6::R6Class(
       )
 
       stdlib_env <- env
-      env$`r/call` <- function(fn, args = list()) {
+      env$`r/call` <- function(fn, args = list(), envir = NULL) {
+        if (is.null(envir)) {
+          envir <- .GlobalEnv
+        }
         fn_name <- if (is.symbol(fn)) {
           as.character(fn)
         } else if (is.character(fn)) {
@@ -262,11 +268,11 @@ RyeEngine <- R6::R6Class(
         } else {
           stop("r/call requires a symbol or string function name")
         }
-        fn_obj <- rye_resolve_r_callable(fn_name, stdlib_env = stdlib_env, max_frames = 5)
+        fn_obj <- get(fn_name, envir = envir, inherits = TRUE)
         self$evaluator$do_call(fn_obj, rye_as_list(args))
       }
       attr(env$`r/call`, "rye_doc") <- list(
-        description = "Call an R function with list arguments."
+        description = "Call an R function with optional environment. Searches from .GlobalEnv by default, finding base and loaded package functions."
       )
 
       env$`r/eval` <- function(expr, env = NULL) {
