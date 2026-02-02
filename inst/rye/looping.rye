@@ -68,62 +68,64 @@
     "Rebind loop locals and repeat. Only valid inside loop."
     (stop "recur can only be used inside loop"))
 
-  (defmacro loop (bindings . body)
-    "Clojure-style loop/recur that expands to an R while loop."
-    (begin
-      (define binding-pair?
-        (lambda (pair)
-          (if (pair? pair)
-            (isTRUE (= (length pair) 2))
-            #f)))
-      (define bindings-ok?
-        (lambda (b)
-          (if (list? b)
-            (every? binding-pair? b)
-            #f)))
-      (if (not (bindings-ok? bindings))
-        `((lambda (loop-fn) (loop-fn ,bindings ,@body)) loop)
+  ;; Helper: Check if a form should skip recur rewriting
+  (define skip-rewrite-form?
+    (lambda (head)
+      (if (symbol? head)
         (begin
-      (define vars (map car bindings))
-      (define recur-flag (gensym "recur_flag"))
-      (define recur-vals (gensym "recur_vals"))
-      (define loop-result (gensym "loop_result"))
-      (define loop-step (gensym "loop_step"))
+          (define name (as.character head))
+          (or (= name "quote")
+              (= name "quasiquote")
+              (= name "lambda")
+              (= name "defmacro")
+              (= name "loop")))
+        #f)))
+
+  ;; Helper: Validate binding pairs
+  (define valid-binding-pair?
+    (lambda (pair)
+      (if (pair? pair)
+        (isTRUE (= (length pair) 2))
+        #f)))
+
+  (define valid-bindings?
+    (lambda (bindings)
+      (if (list? bindings)
+        (every? valid-binding-pair? bindings)
+        #f)))
+
+  ;; Helper: Transform recur calls in an expression
+  (define rewrite-recur
+    (lambda (expr vars recur-flag recur-vals)
+      (if (list? expr)
+        (begin
+          (define head (car expr))
+          (cond
+            ;; Handle recur call
+            ((and (symbol? head) (= (as.character head) "recur"))
+             (begin
+               (define args (cdr expr))
+               (if (not (= (length args) (length vars)))
+                 (stop (sprintf "recur expects %d argument(s)" (length vars))))
+               `(begin
+                  (set! ,recur-flag #t)
+                  (set! ,recur-vals (list ,@args))
+                  (return #nil))))
+
+            ;; Skip forms that create new scopes or shouldn't be transformed
+            ((skip-rewrite-form? head) expr)
+
+            ;; Recursively rewrite other list forms
+            (else
+             (call (cons head (map (lambda (e) (rewrite-recur e vars recur-flag recur-vals))
+                                   (cdr expr)))))))
+        expr)))
+
+  ;; Helper: Generate variable rebinding code
+  (define generate-rebindings
+    (lambda (vars recur-vals)
       (define index-op (as.symbol "[["))
-      (define rewrite
-        (lambda (expr)
-          (if (list? expr)
-            (begin
-              (define head (car expr))
-              (if (and (symbol? head) (= (as.character head) "recur"))
-                (begin
-                  (define args (cdr expr))
-                  (if (not (= (length args) (length vars)))
-                    (stop (sprintf "recur expects %d argument(s)" (length vars))))
-                  `(begin
-                     (set! ,recur-flag #t)
-                     (set! ,recur-vals (list ,@args))
-                     (return #nil)))
-                (begin
-                  (define skip?
-                    (if (symbol? head)
-                      (if (= (as.character head) "quote")
-                        #t
-                        (if (= (as.character head) "quasiquote")
-                          #t
-                          (if (= (as.character head) "lambda")
-                            #t
-                            (if (= (as.character head) "defmacro")
-                              #t
-                              (if (= (as.character head) "loop")
-                                #t
-                                #f)))))
-                      #f))
-                  (if skip?
-                    expr
-                    (call (cons head (map rewrite (cdr expr))))))))
-            expr)))
-      (define rewritten-body (map rewrite body))
+      (define brace-op (as.symbol "{"))
       (define rebinds
         (map (lambda (pair)
                (define var (car pair))
@@ -131,22 +133,48 @@
                (define nth-expr (call (list index-op recur-vals idx)))
                `(<- ,var ,nth-expr))
              (zip vars (seq_len (length vars)))))
-      (define brace-op (as.symbol "{"))
-      (define rebind-block (call (cons brace-op rebinds)))
-      `(begin
-         ,@(map (lambda (pair) `(define ,(car pair) ,(car (cdr pair)))) bindings)
-         (define ,recur-flag #f)
-         (define ,recur-vals (list))
-         (define ,loop-result #f)
-         (define ,loop-step (lambda () (begin ,@rewritten-body)))
-         (while-r #t
-           (<- ,recur-flag #f)
-           (<- ,loop-result (,loop-step))
-           (if ,recur-flag
-             ,rebind-block
-             (break)))
-         ,loop-result)))
-        ))
+      (call (cons brace-op rebinds))))
+
+  (defmacro loop (bindings . body)
+    "Clojure-style loop/recur that expands to an R while loop."
+    (begin
+      ;; Validate bindings or fall back to runtime loop function
+      (if (not (valid-bindings? bindings))
+        `((lambda (loop-fn) (loop-fn ,bindings ,@body)) loop)
+        (begin
+          ;; Extract variables and generate gensyms
+          (define vars (map car bindings))
+          (define recur-flag (gensym "recur_flag"))
+          (define recur-vals (gensym "recur_vals"))
+          (define loop-result (gensym "loop_result"))
+          (define loop-step (gensym "loop_step"))
+
+          ;; Rewrite body to transform recur calls
+          (define rewritten-body
+            (map (lambda (expr) (rewrite-recur expr vars recur-flag recur-vals))
+                 body))
+
+          ;; Generate the rebinding block
+          (define rebind-block (generate-rebindings vars recur-vals))
+
+          ;; Emit the loop structure
+          `(begin
+             ;; Initialize loop variables
+             ,@(map (lambda (pair) `(define ,(car pair) ,(car (cdr pair)))) bindings)
+             (define ,recur-flag #f)
+             (define ,recur-vals (list))
+             (define ,loop-result #f)
+             (define ,loop-step (lambda () (begin ,@rewritten-body)))
+
+             ;; Main loop
+             (while-r #t
+               (<- ,recur-flag #f)
+               (<- ,loop-result (,loop-step))
+               (if ,recur-flag
+                 ,rebind-block
+                 (break)))
+
+             ,loop-result)))))
 
   ;;
   ;; misc loops
