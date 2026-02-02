@@ -1,7 +1,5 @@
 o) what else in base R has this sort of substitute behavior as suppressWarnings that we need to macro-wrap?
 
-o) update the (license) function, should wrap it
-
 o) &optional or similar syntax for lambda
 o) can macros have docstrings?
 o) replace while-r and for-r with appropriate handling of loops in the evaluator?

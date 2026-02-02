@@ -3,7 +3,7 @@
 (module core
   (export = error warn assert assert-equal assert-true assert-false assert-eq assert-error suppressWarnings
             identity values values? call-with-values call/cc call-with-current-continuation doc! doc
-            funcall r/call)
+            funcall r/call license)
 
   ;; Documentation helpers
   (defmacro doc! (sym docstring)
@@ -134,5 +134,16 @@
 
   (define call/cc callCC)
   (define call-with-current-continuation callCC)
+
+  (define license
+    (lambda ()
+      "Display Rye and R license information."
+      (begin
+        (r/call "cat" (list "Rye is licensed under the MIT License:\n\n"))
+        (define license-file (r/call "system.file" (list "LICENSE.md" :package "rye")))
+        (define license-lines (r/call "readLines" (list license-file)))
+        (r/call "cat" (list license-lines :sep "\n"))
+        (r/call "cat" (list "\n\nRye is built on R. R's license:\n\n"))
+        (r/call "license" (list)))))
 
 )
