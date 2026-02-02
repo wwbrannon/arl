@@ -554,55 +554,272 @@ MacroExpander <- R6::R6Class(
       }
       as.call(result)
     },
+    macro_parse_params = function(params) {
+      # Handle rest parameters (. syntax) - similar to lambda
+      rest_param <- NULL
+      rest_param_spec <- NULL
+      arg_items <- as.list(params)
+
+      if (length(arg_items) > 0) {
+        dot_idx <- which(vapply(arg_items, function(arg) {
+          is.symbol(arg) && as.character(arg) == "."
+        }, logical(1)))
+
+        if (length(dot_idx) > 1) {
+          stop("Dotted parameter list can only contain one '.'")
+        }
+
+        if (length(dot_idx) == 1) {
+          if (dot_idx != length(arg_items) - 1) {
+            stop("Dotted parameter list must have exactly one parameter after '.'")
+          }
+
+          rest_arg <- arg_items[[dot_idx + 1]]
+
+          # Rest can be simple symbol or (pattern ...)
+          if (is.symbol(rest_arg)) {
+            rest_param <- as.character(rest_arg)
+            rest_param_spec <- list(
+              type = "name",
+              name = rest_param,
+              pattern = NULL
+            )
+          } else if (is.call(rest_arg) || is.list(rest_arg)) {
+            rest_list <- if (is.call(rest_arg)) as.list(rest_arg) else rest_arg
+            is_pattern <- length(rest_list) >= 2 &&
+              is.symbol(rest_list[[1]]) &&
+              as.character(rest_list[[1]]) %in% c("pattern", "destructure")
+
+            if (!is_pattern) {
+              stop("Rest parameter must be a symbol or (pattern <pat>)")
+            }
+            if (length(rest_list) != 2) {
+              stop("Rest pattern must be (pattern <pat>), defaults not allowed")
+            }
+
+            rest_pattern <- rest_list[[2]]
+            rest_param_spec <- list(
+              type = "pattern",
+              name = NULL,
+              pattern = rest_pattern
+            )
+          } else {
+            stop("Rest parameter must be a symbol or (pattern <pat>)")
+          }
+
+          # Remove . and rest param from regular params
+          if (dot_idx > 1) {
+            arg_items <- arg_items[1:(dot_idx - 1)]
+          } else {
+            arg_items <- list()
+          }
+        }
+      }
+
+      # Parse regular parameters
+      param_specs <- list()
+      param_names <- character(0)
+      param_defaults <- list()
+
+      for (arg in arg_items) {
+        if (is.symbol(arg)) {
+          # Simple required parameter: x
+          name <- as.character(arg)
+          param_names <- c(param_names, name)
+          param_defaults[[name]] <- rye_missing_default()
+          param_specs[[length(param_specs) + 1]] <- list(
+            type = "name",
+            formal = name,
+            pattern = NULL
+          )
+
+        } else if (is.call(arg) || is.list(arg)) {
+          arg_list <- if (is.call(arg)) as.list(arg) else arg
+
+          # Check for incomplete pattern - (pattern) with no actual pattern
+          if (length(arg_list) == 1 && is.symbol(arg_list[[1]]) &&
+              as.character(arg_list[[1]]) %in% c("pattern", "destructure")) {
+            stop("pattern must be (pattern <pat>) or (pattern <pat> <default>)")
+          }
+
+          # Check if pattern wrapper
+          is_pattern <- length(arg_list) >= 2 &&
+            is.symbol(arg_list[[1]]) &&
+            as.character(arg_list[[1]]) %in% c("pattern", "destructure")
+
+          # Check if simple default pair (name default)
+          is_default_pair <- length(arg_list) == 2 &&
+            is.symbol(arg_list[[1]]) &&
+            !is_pattern
+
+          if (is_pattern) {
+            # Pattern: (pattern (a b)) or (pattern (a b) (list 1 2))
+            if (length(arg_list) != 2 && length(arg_list) != 3) {
+              stop("pattern must be (pattern <pat>) or (pattern <pat> <default>)")
+            }
+
+            pattern <- arg_list[[2]]
+            default_expr <- rye_missing_default()
+
+            if (length(arg_list) == 3) {
+              default_expr <- arg_list[[3]]
+              if (is.null(default_expr)) {
+                default_expr <- quote(NULL)
+              }
+            }
+
+            # Generate unique name for internal binding
+            tmp_name <- as.character(self$gensym(".__rye_macro_arg"))
+            param_names <- c(param_names, tmp_name)
+            param_defaults[[tmp_name]] <- default_expr
+            param_specs[[length(param_specs) + 1]] <- list(
+              type = "pattern",
+              formal = tmp_name,
+              pattern = pattern
+            )
+
+          } else if (is_default_pair) {
+            # Simple optional: (x 10)
+            name <- as.character(arg_list[[1]])
+            default_expr <- arg_list[[2]]
+            if (is.null(default_expr)) {
+              default_expr <- quote(NULL)
+            }
+
+            param_names <- c(param_names, name)
+            param_defaults[[name]] <- default_expr
+            param_specs[[length(param_specs) + 1]] <- list(
+              type = "name",
+              formal = name,
+              pattern = NULL
+            )
+
+          } else {
+            stop("defmacro parameters must be symbols, (name default), or (pattern ...)")
+          }
+
+        } else {
+          stop("defmacro parameters must be symbols, (name default), or (pattern ...)")
+        }
+      }
+
+      list(
+        param_specs = param_specs,
+        param_names = param_names,
+        param_defaults = param_defaults,
+        rest_param_spec = rest_param_spec
+      )
+    },
     define_macro = function(name, params, body, env, docstring = NULL) {
+      # Debug: check body
+      if (FALSE && as.character(name) == "empty-pat") {
+        message("DEBUG define_macro for ", as.character(name))
+        message("  body class: ", class(body))
+        message("  body length: ", length(body))
+        if (length(body) > 0) {
+          message("  first body expr: ", deparse(body[[1]]))
+        }
+      }
+
+      # Parse parameters
+      parsed <- private$macro_parse_params(params)
+      param_specs <- parsed$param_specs
+      param_names <- parsed$param_names
+      param_defaults <- parsed$param_defaults
+      rest_param_spec <- parsed$rest_param_spec
+
       macro_fn <- function(...) {
         macro_env <- new.env(parent = env)
         assign(".rye_macroexpanding", TRUE, envir = macro_env)
         args <- match.call(expand.dots = FALSE)$...
-        param_names <- as.character(params)
-        dot_idx <- which(param_names == ".")
-        if (length(dot_idx) > 1) {
-          stop("Dotted parameter list can only contain one '.'")
-        }
-        if (length(dot_idx) == 1) {
-          if (dot_idx == length(param_names)) {
-            if (length(param_names) < 2) {
-              stop("Dotted parameter list must have at least one parameter before .")
-            }
-            rest_param <- param_names[length(param_names) - 1]
-            regular_params <- param_names[1:(length(param_names) - 2)]
-          } else {
-            if (dot_idx != length(param_names) - 1) {
-              stop("Dotted parameter list must have exactly one parameter after '.'")
-            }
-            rest_param <- param_names[dot_idx + 1]
-            if (dot_idx > 1) {
-              regular_params <- param_names[1:(dot_idx - 1)]
-            } else {
-              regular_params <- character(0)
-            }
-          }
-          for (i in seq_along(regular_params)) {
+
+        if (!is.null(rest_param_spec)) {
+          # Extract regular param specs (before rest)
+          regular_param_specs <- param_specs
+
+          # Bind regular parameters
+          for (i in seq_along(regular_param_specs)) {
+            spec <- regular_param_specs[[i]]
+            param_name <- spec$formal
+
             if (i <= length(args)) {
-              assign(regular_params[i], args[[i]], envir = macro_env)
+              # Argument provided
+              value <- args[[i]]
             } else {
-              stop(sprintf("Missing required parameter: %s", regular_params[i]))
+              # Check for default
+              default_expr <- param_defaults[[param_name]]
+              if (inherits(default_expr, "rye_missing_default")) {
+                stop(sprintf("Missing required parameter (position %d)", i))
+              }
+              # Evaluate default
+              value <- self$context$evaluator$eval_in_env(default_expr, env)
+            }
+
+            # Bind the value
+            if (spec$type == "pattern") {
+              # Destructure into macro_env
+              RyeEnv$new(macro_env)$destructure_bind(spec$pattern, value, mode = "define")
+            } else {
+              # Simple binding
+              assign(param_name, value, envir = macro_env)
             }
           }
-          if (length(args) > length(regular_params)) {
-            rest_args <- args[(length(regular_params) + 1):length(args)]
-            assign(rest_param, rest_args, envir = macro_env)
+
+          # Bind rest parameter
+          if (length(args) > length(regular_param_specs)) {
+            rest_args <- args[(length(regular_param_specs) + 1):length(args)]
           } else {
-            assign(rest_param, list(), envir = macro_env)
+            rest_args <- list()
           }
+
+          if (rest_param_spec$type == "pattern") {
+            # Destructure rest args
+            RyeEnv$new(macro_env)$destructure_bind(rest_param_spec$pattern, rest_args, mode = "define")
+          } else {
+            # Simple rest binding
+            assign(rest_param_spec$name, rest_args, envir = macro_env)
+          }
+
         } else {
-          if (length(args) != length(param_names)) {
-            stop(sprintf("Macro %s expects %d arguments, got %d", as.character(name), length(param_names), length(args)))
+          # No rest parameter - bind all regular params
+          for (i in seq_along(param_specs)) {
+            spec <- param_specs[[i]]
+            param_name <- spec$formal
+
+            if (i <= length(args)) {
+              # Argument provided
+              value <- args[[i]]
+            } else {
+              # Check for default
+              default_expr <- param_defaults[[param_name]]
+              if (inherits(default_expr, "rye_missing_default")) {
+                stop(sprintf("Missing required parameter (position %d)", i))
+              }
+              # Evaluate default
+              value <- self$context$evaluator$eval_in_env(default_expr, env)
+            }
+
+            # Bind the value
+            if (spec$type == "pattern") {
+              # Destructure into macro_env
+              RyeEnv$new(macro_env)$destructure_bind(spec$pattern, value, mode = "define")
+            } else {
+              # Simple binding
+              assign(param_name, value, envir = macro_env)
+            }
           }
-          for (i in seq_along(param_names)) {
-            assign(param_names[i], args[[i]], envir = macro_env)
+
+          # Check we didn't get too many args (no rest param to catch them)
+          if (length(args) > length(param_specs)) {
+            # Count required vs provided
+            required_count <- sum(vapply(param_specs, function(spec) {
+              inherits(param_defaults[[spec$formal]], "rye_missing_default")
+            }, logical(1)))
+            stop(sprintf("Macro %s expects %d-%d arguments, got %d",
+                         as.character(name), required_count, length(param_specs), length(args)))
           }
         }
+
         result <- NULL
         for (expr in body) {
           result <- self$context$evaluator$eval_in_env(expr, macro_env)
@@ -610,7 +827,10 @@ MacroExpander <- R6::R6Class(
         result
       }
 
-      attr(macro_fn, "rye_macro") <- list(params = as.character(params))
+      attr(macro_fn, "rye_macro") <- list(
+        params = param_names,
+        param_defaults = param_defaults
+      )
       if (!is.null(docstring)) {
         attr(macro_fn, "rye_doc") <- list(description = docstring)
       }

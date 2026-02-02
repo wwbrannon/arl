@@ -422,11 +422,7 @@ Evaluator <- R6::R6Class(
           params <- list()
           if (!is.null(params_expr) && is.call(params_expr) && length(params_expr) > 0) {
             for (i in seq_along(params_expr)) {
-              param <- params_expr[[i]]
-              if (!is.symbol(param)) {
-                stop("defmacro parameters must be symbols")
-              }
-              params[[i]] <- param
+              params[[i]] <- params_expr[[i]]
             }
           } else if (is.null(params_expr) || (is.call(params_expr) && length(params_expr) == 0)) {
             params <- list()
@@ -439,6 +435,7 @@ Evaluator <- R6::R6Class(
           body <- doc_out$body
           docstring <- doc_out$docstring
 
+          # Pass the raw params list to macro_expander (not parsed yet)
           self$context$macro_expander$defmacro(name, params, body, docstring = docstring, env = env)
           NULL
         },

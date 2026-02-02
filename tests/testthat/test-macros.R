@@ -62,15 +62,15 @@ test_that("get_macro returns registered macro function", {
 
 test_that("defmacro validates dotted parameter lists", {
   env <- new.env()
-  params_multi_dot <- c("a", ".", "b", ".", "c")
-  engine$macro_expander$defmacro(as.symbol("bad"), params_multi_dot, list(as.symbol("a")), env = env)
-  macro_fn <- engine$macro_expander$get_macro(as.symbol("bad"), env = env)
-  expect_error(macro_fn(), "Dotted parameter list can only contain one '\\.'")
+  params_multi_dot <- list(as.symbol("a"), as.symbol("."), as.symbol("b"), as.symbol("."), as.symbol("c"))
+  expect_error(
+    engine$macro_expander$defmacro(as.symbol("bad"), params_multi_dot, list(as.symbol("a")), env = env),
+    "Dotted parameter list can only contain one '\\.'")
 
-  params_bad_position <- c("a", ".", "b", "c")
-  engine$macro_expander$defmacro(as.symbol("bad2"), params_bad_position, list(as.symbol("a")), env = env)
-  macro_fn <- engine$macro_expander$get_macro(as.symbol("bad2"), env = env)
-  expect_error(macro_fn(), "Dotted parameter list must have exactly one parameter after '\\.'")
+  params_bad_position <- list(as.symbol("a"), as.symbol("."), as.symbol("b"), as.symbol("c"))
+  expect_error(
+    engine$macro_expander$defmacro(as.symbol("bad2"), params_bad_position, list(as.symbol("a")), env = env),
+    "Dotted parameter list must have exactly one parameter after '\\.'")
 })
 
 test_that("macros expand correctly", {
@@ -337,4 +337,504 @@ test_that("destructuring errors on arity mismatch", {
     engine$eval_in_env(engine$read("(define (a b) (list 1))")[[1]], env),
     "expects 2 item"
   )
+})
+
+# ==============================================================================
+# A. Simple Optional Parameters (7 tests)
+# ==============================================================================
+
+test_that("defmacro supports single optional parameter", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro opt-test ((x 42)) x)")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(opt-test)")[[1]], env)
+  expect_equal(result, 42)
+
+  result2 <- engine$eval_in_env(engine$read("(opt-test 100)")[[1]], env)
+  expect_equal(result2, 100)
+})
+
+test_that("defmacro mixed required and optional", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro mix (a (b 10)) `(+ ,a ,b))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(mix 5)")[[1]], env)
+  expect_equal(result, 15)
+
+  result2 <- engine$eval_in_env(engine$read("(mix 5 20)")[[1]], env)
+  expect_equal(result2, 25)
+})
+
+test_that("defmacro all optional parameters", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro all-opt ((a 1) (b 2) (c 3)) `(list ,a ,b ,c))")[[1]],
+    env
+  )
+
+  result1 <- engine$eval_in_env(engine$read("(all-opt)")[[1]], env)
+  expect_equal(result1, list(1, 2, 3))
+
+  result2 <- engine$eval_in_env(engine$read("(all-opt 10)")[[1]], env)
+  expect_equal(result2, list(10, 2, 3))
+
+  result3 <- engine$eval_in_env(engine$read("(all-opt 10 20)")[[1]], env)
+  expect_equal(result3, list(10, 20, 3))
+
+  result4 <- engine$eval_in_env(engine$read("(all-opt 10 20 30)")[[1]], env)
+  expect_equal(result4, list(10, 20, 30))
+})
+
+test_that("defmacro optional at different positions", {
+  env <- new.env()
+  # Optional in middle
+  engine$eval_in_env(
+    engine$read("(defmacro mid-opt (a (b 5) c) `(list ,a ,b ,c))")[[1]],
+    env
+  )
+
+  result <- engine$eval_in_env(engine$read("(mid-opt 1 2 3)")[[1]], env)
+  expect_equal(result, list(1, 2, 3))
+
+  # Can't call with just 2 args - c is required
+  expect_error(
+    engine$eval_in_env(engine$read("(mid-opt 1 2)")[[1]], env),
+    "Missing required parameter"
+  )
+})
+
+test_that("defmacro optional with rest", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro opt-rest ((x 1) . rest) `(list ,x ,@rest))")[[1]],
+    env
+  )
+
+  result1 <- engine$eval_in_env(engine$read("(opt-rest)")[[1]], env)
+  expect_equal(result1, list(1))
+
+  result2 <- engine$eval_in_env(engine$read("(opt-rest 2)")[[1]], env)
+  expect_equal(result2, list(2))
+
+  result3 <- engine$eval_in_env(engine$read("(opt-rest 2 3 4)")[[1]], env)
+  expect_equal(result3, list(2, 3, 4))
+})
+
+test_that("defmacro defaults see definition environment", {
+  env <- new.env()
+  env$default_val <- 42
+  engine$eval_in_env(
+    engine$read("(defmacro env-test ((x default_val)) x)")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(env-test)")[[1]], env)
+  expect_equal(result, 42)
+})
+
+test_that("defmacro defaults can be complex expressions", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro complex-default ((x (list 1 2 3))) x)")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(complex-default)")[[1]], env)
+  expect_equal(result, list(1, 2, 3))
+})
+
+# ==============================================================================
+# B. Pattern Destructuring (10 tests)
+# ==============================================================================
+
+test_that("defmacro basic pattern destructuring", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro let-pair ((pattern (name value))) `(define ,name ,value))")[[1]],
+    env
+  )
+  engine$eval_in_env(engine$read("(let-pair (x 10))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("x")[[1]], env)
+  expect_equal(result, 10)
+})
+
+test_that("defmacro empty list pattern", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro empty-pat ((pattern ())) `'empty)")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(empty-pat ())")[[1]], env)
+  expect_equal(result, as.symbol("empty"))
+})
+
+test_that("defmacro single element pattern", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro single ((pattern (x))) x)")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(single (42))")[[1]], env)
+  expect_equal(result, 42)
+})
+
+test_that("defmacro nested patterns", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro nested ((pattern (a (b c)))) `(list ,a ,b ,c))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(
+    engine$read("(nested (1 (2 3)))")[[1]],
+    env
+  )
+  expect_equal(result, list(1, 2, 3))
+})
+
+test_that("defmacro deeply nested patterns", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro deep ((pattern (a (b (c d))))) `(list ,a ,b ,c ,d))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(
+    engine$read("(deep (1 (2 (3 4))))")[[1]],
+    env
+  )
+  expect_equal(result, list(1, 2, 3, 4))
+})
+
+test_that("defmacro pattern with internal rest", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro head-rest ((pattern (first . rest))) `(list ,first ,rest))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(
+    engine$read("(head-rest (1 2 3 4))")[[1]],
+    env
+  )
+  expect_equal(result, list(1, list(2, 3, 4)))
+})
+
+test_that("defmacro multiple patterns", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro two-pairs ((pattern (a b)) (pattern (c d))) `(list ,a ,b ,c ,d))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(
+    engine$read("(two-pairs (1 2) (3 4))")[[1]],
+    env
+  )
+  expect_equal(result, list(1, 2, 3, 4))
+})
+
+test_that("defmacro pattern with default", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro with-point ((pattern (x y) (list 0 0))) `(+ ,x ,y))")[[1]],
+    env
+  )
+
+  result1 <- engine$eval_in_env(engine$read("(with-point)")[[1]], env)
+  expect_equal(result1, 0)
+
+  result2 <- engine$eval_in_env(engine$read("(with-point (3 4))")[[1]], env)
+  expect_equal(result2, 7)
+})
+
+test_that("defmacro pattern with evaluated default", {
+  env <- new.env()
+  env$make_pair <- function() list(5, 10)
+  engine$eval_in_env(
+    engine$read("(defmacro smart-default ((pattern (a b) (make_pair))) `(* ,a ,b))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(smart-default)")[[1]], env)
+  expect_equal(result, 50)
+})
+
+test_that("defmacro mixed patterns and simple params", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro complex (a (pattern (b c)) d) `(list ,a ,b ,c ,d))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(
+    engine$read("(complex 1 (2 3) 4)")[[1]],
+    env
+  )
+  expect_equal(result, list(1, 2, 3, 4))
+})
+
+# ==============================================================================
+# C. Pattern Rest Parameters (5 tests)
+# ==============================================================================
+
+test_that("defmacro pattern rest parameter", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro collect-pair (x . (pattern (a b))) `(list ,x ,a ,b))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(
+    engine$read("(collect-pair 1 2 3)")[[1]],
+    env
+  )
+  expect_equal(result, list(1, 2, 3))
+})
+
+test_that("defmacro pattern rest with nesting", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro nest-rest (x . (pattern ((a b) c))) `(list ,x ,a ,b ,c))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(
+    engine$read("(nest-rest 1 (2 3) 4)")[[1]],
+    env
+  )
+  expect_equal(result, list(1, 2, 3, 4))
+})
+
+test_that("defmacro optional with pattern rest", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro opt-pat-rest ((x 0) . (pattern (a b))) `(list ,x ,a ,b))")[[1]],
+    env
+  )
+
+  result1 <- engine$eval_in_env(engine$read("(opt-pat-rest 1 2 3)")[[1]], env)
+  expect_equal(result1, list(1, 2, 3))
+
+  result2 <- engine$eval_in_env(engine$read("(opt-pat-rest 5 6 7)")[[1]], env)
+  expect_equal(result2, list(5, 6, 7))
+})
+
+test_that("defmacro pattern rest with internal rest", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro double-rest (x . (pattern (a . rest))) `(list ,x ,a ,rest))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(
+    engine$read("(double-rest 1 2 3 4)")[[1]],
+    env
+  )
+  expect_equal(result, list(1, 2, list(3, 4)))
+})
+
+test_that("defmacro empty pattern rest", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro empty-rest (x . (pattern ())) `'empty)")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(empty-rest 1)")[[1]], env)
+  expect_equal(result, as.symbol("empty"))
+})
+
+# ==============================================================================
+# D. Combined Features (5 tests)
+# ==============================================================================
+
+test_that("defmacro all patterns all defaults", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro all-default ((pattern (a b) (list 1 2)) (pattern (c d) (list 3 4))) `(list ,a ,b ,c ,d))")[[1]],
+    env
+  )
+
+  result1 <- engine$eval_in_env(engine$read("(all-default)")[[1]], env)
+  expect_equal(result1, list(1, 2, 3, 4))
+
+  result2 <- engine$eval_in_env(engine$read("(all-default (10 20))")[[1]], env)
+  expect_equal(result2, list(10, 20, 3, 4))
+
+  result3 <- engine$eval_in_env(engine$read("(all-default (10 20) (30 40))")[[1]], env)
+  expect_equal(result3, list(10, 20, 30, 40))
+})
+
+test_that("defmacro complex parameter mixing", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro mega-mix (req (opt 10) (pattern (a b)) (pattern (c d) (list 5 6))) `(list ,req ,opt ,a ,b ,c ,d))")[[1]],
+    env
+  )
+
+  result <- engine$eval_in_env(
+    engine$read("(mega-mix 1 2 (3 4))")[[1]],
+    env
+  )
+  expect_equal(result, list(1, 2, 3, 4, 5, 6))
+})
+
+test_that("defmacro realistic let macro", {
+  env <- new.env(parent = baseenv())
+  stdlib_env(engine, env)
+  import_stdlib_modules(engine, c("core", "list", "higher-order", "binding"), env)
+
+  engine$eval_in_env(
+    engine$read("(defmacro my-let (bindings . body) (begin (define expanded-bindings (map (lambda (b) `(define ,(car b) ,(cadr b))) bindings)) `(begin ,@expanded-bindings ,@body)))")[[1]],
+    env
+  )
+
+  result <- engine$eval_in_env(
+    engine$read("(my-let ((x 10) (y 20)) (+ x y))")[[1]],
+    env
+  )
+  expect_equal(result, 30)
+})
+
+test_that("defmacro realistic cond with default", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro when-else ((pattern (test then) (list #t `'nothing))) `(if ,test ,then #nil))")[[1]],
+    env
+  )
+
+  result1 <- engine$eval_in_env(engine$read("(when-else (#t 42))")[[1]], env)
+  expect_equal(result1, 42)
+
+  result2 <- engine$eval_in_env(engine$read("(when-else)")[[1]], env)
+  expect_equal(result2, as.symbol("nothing"))
+})
+
+test_that("defmacro pattern optional and rest together", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro everything (req (pattern (a b) (list 1 2)) (opt 10) . rest) `(list ,req ,a ,b ,opt ,@rest))")[[1]],
+    env
+  )
+
+  result <- engine$eval_in_env(
+    engine$read("(everything 'x (3 4) 5 6 7)")[[1]],
+    env
+  )
+  expect_equal(result, list(as.symbol("x"), 3, 4, 5, 6, 7))
+})
+
+# ==============================================================================
+# E. Error Cases (8 tests)
+# ==============================================================================
+
+test_that("defmacro error on missing required", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro needs-req (a (b 5)) `(+ ,a ,b))")[[1]],
+    env
+  )
+  expect_error(
+    engine$eval_in_env(engine$read("(needs-req)")[[1]], env),
+    "Missing required parameter"
+  )
+})
+
+test_that("defmacro error on pattern too many elements", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro pair-only ((pattern (a b))) `(+ ,a ,b))")[[1]],
+    env
+  )
+  expect_error(
+    engine$eval_in_env(engine$read("(pair-only (1 2 3))")[[1]], env),
+    "expects 2 item"
+  )
+})
+
+test_that("defmacro error on pattern too few elements", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro triple ((pattern (a b c))) `(+ ,a ,b ,c))")[[1]],
+    env
+  )
+  expect_error(
+    engine$eval_in_env(engine$read("(triple (1 2))")[[1]], env),
+    "expects 3 item"
+  )
+})
+
+test_that("defmacro error on too many arguments", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro two-only (a b) `(+ ,a ,b))")[[1]],
+    env
+  )
+  expect_error(
+    engine$eval_in_env(engine$read("(two-only 1 2 3)")[[1]], env),
+    "expects.*arguments"
+  )
+})
+
+test_that("defmacro error on invalid parameter syntax", {
+  env <- new.env()
+  expect_error(
+    engine$eval_in_env(
+      engine$read("(defmacro bad-param (123) 'x)")[[1]],
+      env
+    ),
+    "must be symbols"
+  )
+})
+
+test_that("defmacro error on invalid pattern wrapper", {
+  env <- new.env()
+  expect_error(
+    engine$eval_in_env(
+      engine$read("(defmacro bad-pattern ((pattern)) 'x)")[[1]],
+      env
+    ),
+    "pattern must be"
+  )
+})
+
+test_that("defmacro error on empty pattern rest with args", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro empty-only (x . (pattern ())) x)")[[1]],
+    env
+  )
+  expect_error(
+    engine$eval_in_env(engine$read("(empty-only 1 2)")[[1]], env),
+    "expects 0 item"
+  )
+})
+
+test_that("defmacro error pattern rest arity", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro pair-rest (x . (pattern (a b))) `(list ,x ,a ,b))")[[1]],
+    env
+  )
+  expect_error(
+    engine$eval_in_env(engine$read("(pair-rest 1 2)")[[1]], env),
+    "expects 2 item"
+  )
+})
+
+# ==============================================================================
+# F. Backward Compatibility (2 tests)
+# ==============================================================================
+
+test_that("defmacro backward compatible simple symbols", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro old-style (a b) `(+ ,a ,b))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(old-style 1 2)")[[1]], env)
+  expect_equal(result, 3)
+})
+
+test_that("defmacro backward compatible simple rest", {
+  env <- new.env()
+  engine$eval_in_env(
+    engine$read("(defmacro old-rest (a . rest) `(list ,a ,@rest))")[[1]],
+    env
+  )
+  result <- engine$eval_in_env(engine$read("(old-rest 1 2 3)")[[1]], env)
+  expect_equal(result, list(1, 2, 3))
 })
