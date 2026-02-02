@@ -114,13 +114,10 @@
 
   (define append
     (lambda (. lists)
-      (define append-loop
-        (lambda (acc rest)
-          "Accumulate list append."
-          (if (= (length rest) 0)
-            acc
-            (append-loop (c acc (__as-list (car rest))) (cdr rest)))))
-      (append-loop (list) lists)))
+      (define result (list))
+      (for* (lst lists)
+        (set! result (c result (__as-list lst))))
+      result))
 
   (define reverse
     (lambda (x)
@@ -176,74 +173,58 @@
   (define assoc
     (lambda (key alist)
       "Find first pair in alist with matching key (uses equal?)."
-      (define search
-        (lambda (lst)
-          (if (null? lst)
-            #nil
-            (begin
-              (define pair (car lst))
-              (if (list? pair)
-                (if (>= (length pair) 1)
-                  (if (equal? (car pair) key)
-                    pair
-                    (search (cdr lst)))
-                  (search (cdr lst)))
-                (search (cdr lst)))))))
-      (search (__as-list alist))))
+      (define result #nil)
+      (define remaining (__as-list alist))
+      (while* (and (not (null? remaining)) (not result))
+        (begin
+          (define pair (car remaining))
+          (when (and (list? pair) (>= (length pair) 1))
+            (when (equal? (car pair) key)
+              (set! result pair)))
+          (set! remaining (cdr remaining))))
+      result))
 
   (define assq
     (lambda (key alist)
       "Find first pair in alist with matching key (uses eq?/identical)."
-      (define search
-        (lambda (lst)
-          (if (null? lst)
-            #nil
-            (begin
-              (define pair (car lst))
-              (if (list? pair)
-                (if (>= (length pair) 1)
-                  (if (identical (car pair) key)
-                    pair
-                    (search (cdr lst)))
-                  (search (cdr lst)))
-                (search (cdr lst)))))))
-      (search (__as-list alist))))
+      (define result #nil)
+      (define remaining (__as-list alist))
+      (while* (and (not (null? remaining)) (not result))
+        (begin
+          (define pair (car remaining))
+          (when (and (list? pair) (>= (length pair) 1))
+            (when (identical (car pair) key)
+              (set! result pair)))
+          (set! remaining (cdr remaining))))
+      result))
 
   (define assv
     (lambda (key alist)
       "Find first pair in alist with matching key (uses identical? - R's native equality)."
-      (define search
-        (lambda (lst)
-          (if (null? lst)
-            #nil
-            (begin
-              (define pair (car lst))
-              (if (list? pair)
-                (if (>= (length pair) 1)
-                  (if (identical? (car pair) key)
-                    pair
-                    (search (cdr lst)))
-                  (search (cdr lst)))
-                (search (cdr lst)))))))
-      (search (__as-list alist))))
+      (define result #nil)
+      (define remaining (__as-list alist))
+      (while* (and (not (null? remaining)) (not result))
+        (begin
+          (define pair (car remaining))
+          (when (and (list? pair) (>= (length pair) 1))
+            (when (identical? (car pair) key)
+              (set! result pair)))
+          (set! remaining (cdr remaining))))
+      result))
 
   (define rassoc
     (lambda (value alist)
       "Find first pair in alist with matching value (searches cdr of pairs)."
-      (define search
-        (lambda (lst)
-          (if (null? lst)
-            #nil
-            (begin
-              (define pair (car lst))
-              (if (list? pair)
-                (if (>= (length pair) 2)
-                  (if (equal? (cadr pair) value)
-                    pair
-                    (search (cdr lst)))
-                  (search (cdr lst)))
-                (search (cdr lst)))))))
-      (search (__as-list alist))))
+      (define result #nil)
+      (define remaining (__as-list alist))
+      (while* (and (not (null? remaining)) (not result))
+        (begin
+          (define pair (car remaining))
+          (when (and (list? pair) (>= (length pair) 2))
+            (when (equal? (cadr pair) value)
+              (set! result pair)))
+          (set! remaining (cdr remaining))))
+      result))
 
   ;; Sorting
   (define sort
@@ -257,17 +238,17 @@
           (define pivot (car items))
           (define rest-items (cdr items))
           ;; Partition into less and greater
-          (define partition
-            (lambda (lst less greater)
-              (if (null? lst)
-                (list less greater)
-                (if (comparator (car lst) pivot)
-                  (partition (cdr lst) (append less (list (car lst))) greater)
-                  (partition (cdr lst) less (append greater (list (car lst))))))))
-          (define parts (partition rest-items (list) (list)))
-          (append (sort (car parts) comparator)
+          (define less (list))
+          (define greater (list))
+          (define remaining rest-items)
+          (while* (not (null? remaining))
+            (if (comparator (car remaining) pivot)
+              (set! less (append less (list (car remaining))))
+              (set! greater (append greater (list (car remaining)))))
+            (set! remaining (cdr remaining)))
+          (append (sort less comparator)
                   (list pivot)
-                  (sort (cadr parts) comparator))))))
+                  (sort greater comparator))))))
 
   (define sort-by
     (lambda (lst key-fn comparator)
@@ -286,16 +267,20 @@
   (define merge
     (lambda (list1 list2 comparator)
       "Merge two sorted lists into one sorted list."
-      (define merge-loop
-        (lambda (l1 l2 acc)
-          (if (null? l1)
-            (append (reverse acc) l2)
-            (if (null? l2)
-              (append (reverse acc) l1)
-              (if (comparator (car l1) (car l2))
-                (merge-loop (cdr l1) l2 (cons (car l1) acc))
-                (merge-loop l1 (cdr l2) (cons (car l2) acc)))))))
-      (merge-loop (__as-list list1) (__as-list list2) (list))))
+      (define l1 (__as-list list1))
+      (define l2 (__as-list list2))
+      (define acc (list))
+      (while* (and (not (null? l1)) (not (null? l2)))
+        (if (comparator (car l1) (car l2))
+          (begin
+            (set! acc (cons (car l1) acc))
+            (set! l1 (cdr l1)))
+          (begin
+            (set! acc (cons (car l2) acc))
+            (set! l2 (cdr l2)))))
+      (if (null? l1)
+        (append (reverse acc) l2)
+        (append (reverse acc) l1))))
 
   (define stable-sort
     (lambda (lst comparator)

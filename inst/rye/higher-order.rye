@@ -16,13 +16,10 @@
     (lambda (fn lst)
       "Map then concatenate results."
       (define results (lapply (__as-list lst) fn))
-      (define flatten-results
-        (lambda (remaining acc)
-          "Concatenate list results."
-          (if (= (length remaining) 0)
-            acc
-            (flatten-results (cdr remaining) (c acc (__as-list (car remaining)))))))
-      (flatten-results results (list))))
+      (define acc (list))
+      (for* (result results)
+        (set! acc (c acc (__as-list result))))
+      acc))
 
   (define filter
     (lambda (pred lst)
@@ -126,14 +123,17 @@
     (lambda (fn init pred)
       "Apply function starting from init, collecting values until predicate becomes true.
        Includes all values where predicate is false, stops when next value would satisfy predicate."
-      (define helper
-        (lambda (current acc)
-          (define new-acc (c acc current))
+      (define current init)
+      (define acc (list))
+      (define done #f)
+      (while* (not done)
+        (begin
+          (set! acc (c acc current))
           (define next (fn current))
           (if (pred next)
-            new-acc
-            (helper next new-acc))))
-      (helper init (list))))
+            (set! done #t)
+            (set! current next))))
+      acc))
 
   (define memoize
     (lambda (fn)
@@ -156,9 +156,10 @@
   (define repeatedly
     (lambda (fn n)
       "Call function n times, return list of results."
-      (define helper
-        (lambda (count acc)
-          (if (<= count 0)
-            acc
-            (helper (- count 1) (append acc (list (fn)))))))
-      (helper n (list)))))
+      (define acc (list))
+      (define count n)
+      (while* (> count 0)
+        (begin
+          (set! acc (append acc (list (fn))))
+          (set! count (- count 1))))
+      acc)))

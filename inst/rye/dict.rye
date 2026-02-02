@@ -164,14 +164,11 @@
                     (set! result-keys (c result-keys (list name)))))))
             (if (> (length keys) 0)
               (r/call "lapply" (list (as.list keys) merge-key)))))))
-    (define merge-loop
-      (lambda (rest)
-        (if (= (length rest) 0)
-          (begin
-            (r/call "assign" (list ".rye_keys" (r/call "as.character" (list result-keys)) :envir result))
-            result)
-          (begin
-            (merge-dict (car rest))
-            (merge-loop (cdr rest))))))
-    (merge-loop dicts)))
+    (define remaining dicts)
+    (while* (> (length remaining) 0)
+      (begin
+        (merge-dict (car remaining))
+        (set! remaining (cdr remaining))))
+    (r/call "assign" (list ".rye_keys" (r/call "as.character" (list result-keys)) :envir result))
+    result))
 )

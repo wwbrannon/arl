@@ -176,15 +176,15 @@
       (if (equal? names1 names2)
         ;; Same names - recursively compare values
         (begin
-          (define check-values
-            (lambda (names)
-              (if (null? names)
-                #t
-                (if (equal? (r/call "get" (list (car names) :envir env1))
-                            (r/call "get" (list (car names) :envir env2)))
-                  (check-values (cdr names))
-                  #f))))
-          (check-values names1))
+          (define result #t)
+          (define remaining names1)
+          (while* (and (not (null? remaining)) result)
+            (begin
+              (when (not (equal? (r/call "get" (list (car remaining) :envir env1))
+                                 (r/call "get" (list (car remaining) :envir env2))))
+                (set! result #f))
+              (set! remaining (cdr remaining))))
+          result)
         #f)))
 
   ;; Helper: recursively compare lists
@@ -193,14 +193,16 @@
       "Recursively compare list elements."
       (if (== (length lst1) (length lst2))
         (begin
-          (define compare-elements
-            (lambda (l1 l2)
-              (if (null? l1)
-                #t
-                (if (equal? (car l1) (car l2))
-                  (compare-elements (cdr l1) (cdr l2))
-                  #f))))
-          (compare-elements lst1 lst2))
+          (define result #t)
+          (define remaining1 lst1)
+          (define remaining2 lst2)
+          (while* (and (not (null? remaining1)) result)
+            (begin
+              (when (not (equal? (car remaining1) (car remaining2)))
+                (set! result #f))
+              (set! remaining1 (cdr remaining1))
+              (set! remaining2 (cdr remaining2))))
+          result)
         #f)))
 
   ;; equal? - proper deep structural equality

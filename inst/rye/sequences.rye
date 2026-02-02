@@ -30,29 +30,22 @@
     (lambda (pred lst)
       "Take items while predicate is true."
       (define items (__as-list lst))
-      (define loop
-        (lambda (remaining acc)
-          "Accumulate items while predicate holds."
-          (if (= (length remaining) 0)
-            acc
-            (if (isTRUE (pred (car remaining)))
-              (loop (cdr remaining) (c acc (list (car remaining))))
-              acc))))
-      (loop items (list))))
+      (define acc (list))
+      (define remaining items)
+      (while* (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
+        (begin
+          (set! acc (c acc (list (car remaining))))
+          (set! remaining (cdr remaining))))
+      acc))
 
   (define drop-while
     (lambda (pred lst)
       "Drop items while predicate is true."
       (define items (__as-list lst))
-      (define loop
-        (lambda (remaining)
-          "Skip items while predicate holds."
-          (if (= (length remaining) 0)
-            (list)
-            (if (isTRUE (pred (car remaining)))
-              (loop (cdr remaining))
-              remaining))))
-      (loop items)))
+      (define remaining items)
+      (while* (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
+        (set! remaining (cdr remaining)))
+      remaining))
 
   (define partition
     (lambda (n lst (step n))
@@ -62,36 +55,27 @@
         (stop "partition requires positive n and step")
         (if (<= step 0)
           (stop "partition requires positive n and step")
-          (begin
-            (define loop
-              (lambda (idx acc)
-                "Build partitions incrementally."
-                (if (> idx (length items))
-                  acc
-                  (begin
-                    (define end (+ idx (- n 1)))
-                    (if (> end (length items))
-                      acc
-                      (loop (+ idx step)
-                        (c acc (list (r/call "[" (list items (seq idx end)))))))))))
-            (loop 1 (list)))))))
+          (if (= (length items) 0)
+            (list)
+            (begin
+              (define acc (list))
+              (for* (idx (seq 1 (length items) step))
+                (begin
+                  (define end (+ idx (- n 1)))
+                  (when (<= end (length items))
+                    (set! acc (c acc (list (r/call "[" (list items (seq idx end)))))))))
+              acc))))))
 
   (define flatten
     (lambda (lst)
       "Flatten nested lists."
       (define items (__as-list lst))
-      (define loop
-        (lambda (remaining acc)
-          "Recursively flatten items."
-          (if (= (length remaining) 0)
-            acc
-            (begin
-              (define item (car remaining))
-              (define rest (cdr remaining))
-              (if (list? item)
-                (loop rest (c acc (flatten item)))
-                (loop rest (c acc (list item))))))))
-      (loop items (list))))
+      (define acc (list))
+      (for* (item items)
+        (if (list? item)
+          (set! acc (c acc (flatten item)))
+          (set! acc (c acc (list item)))))
+      acc))
 
   (define repeatedly
     (lambda (n fn)
@@ -124,15 +108,14 @@
     (lambda (x lst)
       "Return sublist of lst starting at first element equal to x, or #f if not found."
       (define items (__as-list lst))
-      (define loop
-        (lambda (remaining)
-          "Search for element in list."
-          (if (= (length remaining) 0)
-            #f
-            (if (identical (car remaining) x)
-              remaining
-              (loop (cdr remaining))))))
-      (loop items)))
+      (define result #f)
+      (define remaining items)
+      (while* (and (> (length remaining) 0) (not result))
+        (begin
+          (when (identical (car remaining) x)
+            (set! result remaining))
+          (set! remaining (cdr remaining))))
+      result))
 
   (define contains?
     (lambda (x lst)

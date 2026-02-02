@@ -1,5 +1,11 @@
 ;; Fibonacci Sequence Implementations
 ;; Demonstrates recursion, iteration, and functional approaches
+;;
+;; IMPORTANT NOTE: R does not optimize tail calls (TCO). The tail-recursive
+;; implementation in `fib-sequence` using `generate-next` is included here
+;; for educational purposes only to demonstrate the recursive pattern.
+;; In production code, always prefer iterative approaches like `fib-iterative`
+;; to avoid stack overflow on large inputs.
 
 (import binding)
 (import control)
