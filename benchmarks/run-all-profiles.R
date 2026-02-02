@@ -50,7 +50,7 @@ for (script in scripts) {
   }, error = function(e) {
     script_end <- Sys.time()
     elapsed <- difftime(script_end, script_start, units = "secs")
-    results[[script]] <- list(status = "error", time = elapsed, message = e$message)
+    results[[script]] <<- list(status = "error", time = elapsed, message = e$message)
     cat(sprintf("✗ Failed after %.1f seconds: %s\n\n", elapsed, e$message))
   })
 }

@@ -2,7 +2,7 @@
 
 (module math
   (export % + * - / min max
-          < > <= >= ==
+          < > <= >= == =
           inc dec clamp within?
           even? odd? zero?
           positive? negative? non-negative? non-positive?
@@ -27,6 +27,8 @@
   (define __r<= (get "<=" :envir (baseenv)))
   (define __r>= (get ">=" :envir (baseenv)))
   (define __r== (get "==" :envir (baseenv)))
+  (define __r[[ (get "[[" :envir (baseenv)))
+  (define __rlength (get "length" :envir (baseenv)))
 
   ;; Phase 1: R base function bindings
   (define __rabs (get "abs" :envir (baseenv)))
@@ -57,14 +59,14 @@
   (define <
     (lambda (. args)
       "Variadic less-than comparison. Checks all adjacent pairs."
-      (if (__r< (length args) 2)
+      (if (__r< (__rlength args) 2)
         (stop "< requires at least two arguments")
-        (if (__r== (length args) 2)
-          (__r< (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+        (if (__r== (__rlength args) 2)
+          (__r< (__r[[ args 1) (__r[[ args 2))
           (begin
             (define check-pairs
               (lambda (lst)
-                (if (__r<= (length lst) 1)
+                (if (__r<= (__rlength lst) 1)
                   #t
                   (if (__r< (car lst) (car (cdr lst)))
                     (check-pairs (cdr lst))
@@ -74,14 +76,14 @@
   (define >
     (lambda (. args)
       "Variadic greater-than comparison. Checks all adjacent pairs."
-      (if (__r< (length args) 2)
+      (if (__r< (__rlength args) 2)
         (stop "> requires at least two arguments")
-        (if (__r== (length args) 2)
-          (__r> (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+        (if (__r== (__rlength args) 2)
+          (__r> (__r[[ args 1) (__r[[ args 2))
           (begin
             (define check-pairs
               (lambda (lst)
-                (if (__r<= (length lst) 1)
+                (if (__r<= (__rlength lst) 1)
                   #t
                   (if (__r> (car lst) (car (cdr lst)))
                     (check-pairs (cdr lst))
@@ -91,14 +93,14 @@
   (define <=
     (lambda (. args)
       "Variadic less-than-or-equal comparison. Checks all adjacent pairs."
-      (if (__r< (length args) 2)
+      (if (__r< (__rlength args) 2)
         (stop "<= requires at least two arguments")
-        (if (__r== (length args) 2)
-          (__r<= (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+        (if (__r== (__rlength args) 2)
+          (__r<= (__r[[ args 1) (__r[[ args 2))
           (begin
             (define check-pairs
               (lambda (lst)
-                (if (__r<= (length lst) 1)
+                (if (__r<= (__rlength lst) 1)
                   #t
                   (if (__r<= (car lst) (car (cdr lst)))
                     (check-pairs (cdr lst))
@@ -108,14 +110,14 @@
   (define >=
     (lambda (. args)
       "Variadic greater-than-or-equal comparison. Checks all adjacent pairs."
-      (if (__r< (length args) 2)
+      (if (__r< (__rlength args) 2)
         (stop ">= requires at least two arguments")
-        (if (__r== (length args) 2)
-          (__r>= (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+        (if (__r== (__rlength args) 2)
+          (__r>= (__r[[ args 1) (__r[[ args 2))
           (begin
             (define check-pairs
               (lambda (lst)
-                (if (__r<= (length lst) 1)
+                (if (__r<= (__rlength lst) 1)
                   #t
                   (if (__r>= (car lst) (car (cdr lst)))
                     (check-pairs (cdr lst))
@@ -125,67 +127,70 @@
   (define ==
     (lambda (. args)
       "Variadic equality comparison. Checks all adjacent pairs."
-      (if (__r< (length args) 2)
+      (if (__r< (__rlength args) 2)
         (stop "== requires at least two arguments")
-        (if (__r== (length args) 2)
-          (__r== (r/call "[[" (list args 1)) (r/call "[[" (list args 2)))
+        (if (__r== (__rlength args) 2)
+          (__r== (__r[[ args 1) (__r[[ args 2))
           (begin
             (define check-pairs
               (lambda (lst)
-                (if (__r<= (length lst) 1)
+                (if (__r<= (__rlength lst) 1)
                   #t
                   (if (__r== (car lst) (car (cdr lst)))
                     (check-pairs (cdr lst))
                     #f))))
             (check-pairs args))))))
 
+  ;; Alias = to == for convenience
+  (define = ==)
+
   (define +
     (lambda (. args)
       "Variadic addition."
-      (if (= (length args) 0)
+      (if (__r== (__rlength args) 0)
         0
-        (if (= (length args) 1)
-          (r/call "[[" (list args 1))
+        (if (__r== (__rlength args) 1)
+          (__r[[ args 1)
           (Reduce __r+ args)))))
 
   (define *
     (lambda (. args)
       "Variadic multiplication."
-      (if (= (length args) 0)
+      (if (__r== (__rlength args) 0)
         1
-        (if (= (length args) 1)
-          (r/call "[[" (list args 1))
+        (if (__r== (__rlength args) 1)
+          (__r[[ args 1)
           (Reduce __r* args)))))
 
   (define -
     (lambda (. args)
       "Variadic subtraction."
-      (if (= (length args) 0)
+      (if (__r== (__rlength args) 0)
         (stop "- requires at least one argument")
-        (if (= (length args) 1)
-          (__r- 0 (r/call "[[" (list args 1)))
+        (if (__r== (__rlength args) 1)
+          (__r- 0 (__r[[ args 1))
           (Reduce __r- args)))))
 
   (define /
     (lambda (. args)
       "Variadic division."
-      (if (= (length args) 0)
+      (if (__r== (__rlength args) 0)
         (stop "/ requires at least one argument")
-        (if (= (length args) 1)
-          (__r/ 1 (r/call "[[" (list args 1)))
+        (if (__r== (__rlength args) 1)
+          (__r/ 1 (__r[[ args 1))
           (Reduce __r/ args)))))
 
   (define min
     (lambda (. args)
       "Variadic min."
-      (if (= (length args) 0)
+      (if (= (__rlength args) 0)
         (stop "min requires at least one argument")
         (do.call __rmin args))))
 
   (define max
     (lambda (. args)
       "Variadic max."
-      (if (= (length args) 0)
+      (if (= (__rlength args) 0)
         (stop "max requires at least one argument")
         (do.call __rmax args))))
 
@@ -383,10 +388,10 @@
   (define gcd
     (lambda (. args)
       "Return greatest common divisor of arguments."
-      (if (__r< (length args) 1)
+      (if (__r< (__rlength args) 1)
         (stop "gcd requires at least one argument")
-        (if (__r== (length args) 1)
-          (__rabs (r/call "[[" (list args 1)))
+        (if (__r== (__rlength args) 1)
+          (__rabs (__r[[ args 1))
           (begin
             (define gcd-two
               (lambda (a b)
@@ -399,10 +404,10 @@
   (define lcm
     (lambda (. args)
       "Return least common multiple of arguments."
-      (if (__r< (length args) 1)
+      (if (__r< (__rlength args) 1)
         (stop "lcm requires at least one argument")
-        (if (__r== (length args) 1)
-          (__rabs (r/call "[[" (list args 1)))
+        (if (__r== (__rlength args) 1)
+          (__rabs (__r[[ args 1))
           (begin
             (define lcm-two
               (lambda (a b)
