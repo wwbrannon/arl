@@ -178,11 +178,21 @@ RyeEngine <- R6::R6Class(
         get(rye_promise_value_key, envir = x, inherits = FALSE)
       }
 
+      env$`promise-expr` <- function(p) {
+        if (!is.environment(p) || !inherits(p, "rye_promise")) {
+          stop("promise-expr requires a promise (created with delay)")
+        }
+        get(rye_promise_expr_key, envir = p, inherits = FALSE)
+      }
+
       attr(env$`promise?`, "rye_doc") <- list(
         description = "Return TRUE if x is a promise."
       )
       attr(env$force, "rye_doc") <- list(
         description = "Force a promise or return x unchanged."
+      )
+      attr(env$`promise-expr`, "rye_doc") <- list(
+        description = "Extract the unevaluated expression from a promise."
       )
 
       env$rye_read <- function(source, source_name = NULL) {
