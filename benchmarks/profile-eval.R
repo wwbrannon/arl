@@ -3,8 +3,6 @@
 
 library(rye)
 
-engine <- RyeEngine$new()
-
 # Source helpers (works from different working directories)
 if (file.exists("benchmarks/benchmark-helpers.R")) {
   source("benchmarks/benchmark-helpers.R")
@@ -26,76 +24,69 @@ if (file.exists("benchmarks/workloads.R")) {
 
 cat("=== Profiling Evaluator ===\n\n")
 
-# Set up environment
-setup_env <- function() {
-  env <- new.env(parent = baseenv())
-  engine$load_stdlib(env)
-  env
-}
-
 # Profile 1: Fibonacci
 cat("Profile 1: Fibonacci\n")
-env1 <- setup_env()
+engine1 <- RyeEngine$new()
 
-eval_text('
+engine1$eval_text('
 (define fib (lambda (n)
   (if (< n 2)
     n
     (+ (fib (- n 1)) (fib (- n 2))))))
-', engine, env1)
+')
 
 profile_component({
   for (i in 1:20) {
-    engine$eval(engine$read("(fib 15)")[[1]], env1)
+    engine1$eval(engine1$read("(fib 15)")[[1]])
   }
 }, "eval-fibonacci")
 
 
 # Profile 2: Many function arguments (tests arg list growing)
 cat("Profile 2: Many function arguments\n")
-env2 <- setup_env()
+engine2 <- RyeEngine$new()
 
-eval_text('
+engine2$eval_text('
 (define sum-many (lambda (a b c d e f g h i j k l m n o p q r s t)
   (+ a b c d e f g h i j k l m n o p q r s t)))
-', engine, env2)
+')
 
 profile_component({
   for (i in 1:1000) {
-    engine$eval(engine$read("(sum-many 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)")[[1]], env2)
+    engine2$eval(engine2$read("(sum-many 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)")[[1]])
   }
 }, "eval-many-args")
 
 
 # Profile 3: Higher-order functions (map over large list)
 cat("Profile 3: Higher-order functions (map)\n")
-env3 <- setup_env()
+engine3 <- RyeEngine$new()
 
-eval_text('
+engine3$eval_text('
 (define inc (lambda (x) (+ x 1)))
 (define list1000 (range 1 1000))
-', engine, env3)
+')
 
 profile_component({
   for (i in 1:20) {
-    engine$eval(engine$read("(map inc list1000)")[[1]], env3)
+    engine3$eval(engine3$read("(map inc list1000)")[[1]])
   }
 }, "eval-map")
 
 
 # Profile 4: Closure creation and invocation
 cat("Profile 4: Closures\n")
-env4 <- setup_env()
+engine4 <- RyeEngine$new()
 
-eval_text('
+engine4$eval_text('
 (define make-adder (lambda (n)
   (lambda (x) (+ x n))))
-', engine, env4)
+')
 
 profile_component({
   for (i in 1:1000) {
     # Call closure by evaluating the full expression
-    engine$eval(engine$read("((make-adder 10) 5)")[[1]], env4)
+    engine4$eval(engine4$read("((make-adder 10) 5)")[[1]])
   }
 }, "eval-closures")
 
@@ -105,11 +96,11 @@ cat("Profile 6: Real quicksort workload\n")
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0 && "quicksort" %in% names(real_workloads)) {
-  env6 <- setup_env()
+  engine6 <- RyeEngine$new()
 
   profile_component({
     for (i in 1:20) {
-      eval_text(real_workloads$quicksort, engine, env6)
+      engine6$eval_text(real_workloads$quicksort)
     }
   }, "eval-quicksort")
 
@@ -119,11 +110,11 @@ if (length(real_workloads) > 0 && "quicksort" %in% names(real_workloads)) {
 
 # Profile 7: CPS overhead with simple arithmetic
 cat("Profile 7: CPS overhead (simple arithmetic)\n")
-env7 <- setup_env()
+engine7 <- RyeEngine$new()
 
 profile_component({
   for (i in 1:5000) {
-    engine$eval(engine$read("(+ (+ 1 2) (+ 3 4))")[[1]], env7)
+    engine7$eval(engine7$read("(+ (+ 1 2) (+ 3 4))")[[1]])
   }
 }, "eval-cps-overhead")
 
