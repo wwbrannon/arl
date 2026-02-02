@@ -8,6 +8,10 @@
   (import predicates)
   (import sequences)
 
+  ;;
+  ;; while loops
+  ;;
+
   (defmacro while* (test . body)
     "Repeat body while test is truthy."
     (begin
@@ -21,17 +25,6 @@
                #nil)))
          (,loop))))
 
-  (defmacro until (test . body)
-    "Repeat body until test is truthy."
-    `(while* (not ,test) ,@body))
-
-  (defmacro for* (binding . body)
-    "Map body over seq, binding var."
-    (begin
-      (define var (car binding))
-      (define seq (car (cdr binding)))
-      `(map (lambda (,var) (begin ,@body)) ,seq)))
-
   (defmacro while-r (test . body)
     "Execute an R while loop in the current environment."
     (begin
@@ -42,6 +35,17 @@
             (car body)
             `({ ,@body))))
       `(r/eval (call (list (get "while" (as.environment "package:base")) ',test ',body-expr)) (current-env))))
+
+  ;;
+  ;; for loops
+  ;;
+
+  (defmacro for* (binding . body)
+    "Map body over seq, binding var."
+    (begin
+      (define var (car binding))
+      (define seq (car (cdr binding)))
+      `(map (lambda (,var) (begin ,@body)) ,seq)))
 
   (defmacro for-r (binding . body)
     "Execute an R for loop in the current environment."
@@ -55,6 +59,10 @@
             (car body)
             `({ ,@body))))
       `(r/eval (call (list (get "for" (as.environment "package:base")) ',var ',seq ',body-expr)) (current-env))))
+
+  ;;
+  ;; loop/recur, clojure-style
+  ;;
 
   (defmacro recur (. args)
     "Rebind loop locals and repeat. Only valid inside loop."
@@ -139,4 +147,12 @@
              (break)))
          ,loop-result)))
         ))
+
+  ;;
+  ;; misc loops
+  ;;
+
+  (defmacro until (test . body)
+    "Repeat body until test is truthy."
+    `(while* (not ,test) ,@body))
 )
