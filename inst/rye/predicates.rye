@@ -209,12 +209,11 @@
   ;; Handles reference-semantic types (environments, RC) by comparing contents
   ;; Handles containers (lists, including data.frames and list-arrays) recursively
   (define equal?
-    (lambda (a b . kwargs)
-      "Deep structural equality - recursively compare structure and contents.
-       Optional keyword argument :num.type.eq #t enables numeric type coercion (e.g., 4 == 4L)."
-      ;; Call identical? once with kwargs and reuse the result to avoid overhead
-      (define id-result (funcall identical? (list* a b kwargs)))
-      (if id-result
+    (lambda (a b (strict #f))
+      "Optional keyword argument :strict #t uses identical? for atomic comparisons (strict type checking).
+       Default :strict #f uses = for atomic comparisons (allows numeric type coercion, e.g., 4 == 4L)."
+      ;; First check if they're identical (fast path)
+      (if (identical? a b)
         #t
         (cond
           ;; Environments (incl. R6 objects + refclasses) - compare contents
@@ -229,10 +228,22 @@
           ((and (list? a) (list? b)) (list-equal? a b))
 
           ;; Everything else: atomic vectors, arrays, S3, S4, external pointers
+          ;; For atomic types, use = (allows type coercion) unless :strict is #t
           ;; For external pointers, identical() does pointer comparison, which is
           ;; the best we can do (we can't inspect arbitrary C struct contents).
-          ;; For value-semantic types, identical() does structural comparison.
-          (else id-result)))))
+          (else
+            (if strict
+              ;; Strict mode: already checked identical? above, so false
+              #f
+              ;; Default mode: use == for flexible comparison with type coercion
+              ;; For vectors/arrays, need all elements equal
+              (begin
+                (define comp-result (== a b))
+                (if (is.logical comp-result)
+                  (if (> (length comp-result) 1)
+                    (isTRUE (all comp-result))
+                    (isTRUE comp-result))
+                  #f))))))))
 
   ;; Additional type predicates
   (define atom?

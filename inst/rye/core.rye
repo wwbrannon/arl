@@ -56,7 +56,8 @@
         (error msg))))
 
   (define assert-equal (lambda (expected actual)
-    (if (! (equal? expected actual :num.type.eq #t))
+    ;; Use default :strict #f for lenient numeric comparison (4 == 4L)
+    (if (! (equal? expected actual))
       (begin
         (define error-msg (string-append "Expected: " (->string expected) ", Got: " (->string actual)))
         (error error-msg))
