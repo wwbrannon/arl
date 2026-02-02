@@ -14,6 +14,7 @@
 
   (import list)
   (import core)  ; for doc!
+  (import _aliases)
 
   ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
   ;; to avoid unnecessary stack frames. Docstrings attached using doc!.
@@ -26,7 +27,7 @@
   (define pair?
     (lambda (x)
       "Return #t if x is a non-empty list."
-      (if (list? x) (if (> (length x) 0) #t #f) #f)))
+      (if (list? x) (if (__r> (__rlength x) 0) #t #f) #f)))
 
   (define null?
     (lambda (x)
@@ -34,9 +35,9 @@
       (if (is.null x)
         #t
         (if (is.list x)
-          (if (= (length x) 0) #t #f)
+          (if (__r== (__rlength x) 0) #t #f)
           (if (is.call x)
-            (if (= (length x) 0) #t #f)
+            (if (__r== (__rlength x) 0) #t #f)
             #f)))))
 
   (define nil?

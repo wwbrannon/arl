@@ -15,6 +15,8 @@
           range iota make-list
           list-ref list-tail)
 
+  (import _aliases)
+
   (define __as-list
     (lambda (x)
       "Coerce calls and vectors to list."
@@ -22,21 +24,21 @@
         (as.list x)
         (if (is.list x)
           x
-          (if (= (length x) 0)
+          (if (__r== (__rlength x) 0)
             (list)
             (as.list x))))))
 
   (define __list-last
     (lambda (lst)
       "Return last element of list."
-      (r/call "[[" (list lst (length lst)))))
+      (__r[[ lst (__rlength lst))))
 
   (define __list-head
     (lambda (lst)
       "Return list without last element."
-      (if (<= (length lst) 1)
+      (if (__r<= (__rlength lst) 1)
         (list)
-        (r/call "[" (list lst (seq 1 (- (length lst) 1)))))))
+        (r/call "[" (list lst (seq 1 (__r- (__rlength lst) 1)))))))
 
   (define call
     (lambda (lst)
@@ -49,21 +51,21 @@
     (lambda (lst)
       "Return first element or #nil."
       (if (is.call lst)
-        (if (> (length lst) 0) (r/call "[[" (list lst 1)) #nil)
+        (if (__r> (__rlength lst) 0) (__r[[ lst 1) #nil)
         (if (is.list lst)
-          (if (> (length lst) 0) (r/call "[[" (list lst 1)) #nil)
+          (if (__r> (__rlength lst) 0) (__r[[ lst 1) #nil)
           #nil))))
 
   (define cdr
     (lambda (lst)
       "Return list without first element."
       (if (is.call lst)
-        (if (> (length lst) 1)
-          (r/call "[" (list (as.list lst) (seq 2 (length lst))))
+        (if (__r> (__rlength lst) 1)
+          (r/call "[" (list (as.list lst) (seq 2 (__rlength lst))))
           (list))
         (if (is.list lst)
-          (if (> (length lst) 1)
-            (r/call "[" (list lst (seq 2 (length lst))))
+          (if (__r> (__rlength lst) 1)
+            (r/call "[" (list lst (seq 2 (__rlength lst))))
             (list))
           (list)))))
 
@@ -99,9 +101,9 @@
   (define list*
     (lambda (. args)
       "Build list ending with last arg."
-      (if (= (length args) 0)
+      (if (= (__rlength args) 0)
         (list)
-        (if (= (length args) 1)
+        (if (= (__rlength args) 1)
           (car args)
           (begin
             (define last (__list-last args))
@@ -153,16 +155,16 @@
     (lambda (lst)
       "Return last item or #nil."
       (define items (__as-list lst))
-      (if (= (length items) 0) #nil (__list-last items))))
+      (if (= (__rlength items) 0) #nil (__list-last items))))
 
   (define nth
     (lambda (lst n)
       "Return nth item (0-based)."
       (define items (__as-list lst))
       (if (< n 0)
-        (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
-        (if (>= n (length items))
-          (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
+        (stop (sprintf "Index %d out of bounds for list of length %d" n (__rlength items)))
+        (if (>= n (__rlength items))
+          (stop (sprintf "Index %d out of bounds for list of length %d" n (__rlength items)))
           (r/call "[[" (list items (+ n 1)))))))
 
   ;; ============================================================================
@@ -178,7 +180,7 @@
       (while* (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
-          (when (and (list? pair) (>= (length pair) 1))
+          (when (and (list? pair) (>= (__rlength pair) 1))
             (when (equal? (car pair) key)
               (set! result pair)))
           (set! remaining (cdr remaining))))
@@ -192,7 +194,7 @@
       (while* (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
-          (when (and (list? pair) (>= (length pair) 1))
+          (when (and (list? pair) (>= (__rlength pair) 1))
             (when (identical (car pair) key)
               (set! result pair)))
           (set! remaining (cdr remaining))))
@@ -206,7 +208,7 @@
       (while* (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
-          (when (and (list? pair) (>= (length pair) 1))
+          (when (and (list? pair) (>= (__rlength pair) 1))
             (when (identical? (car pair) key)
               (set! result pair)))
           (set! remaining (cdr remaining))))
@@ -220,7 +222,7 @@
       (while* (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
-          (when (and (list? pair) (>= (length pair) 2))
+          (when (and (list? pair) (>= (__rlength pair) 2))
             (when (equal? (cadr pair) value)
               (set! result pair)))
           (set! remaining (cdr remaining))))
@@ -231,7 +233,7 @@
     (lambda (lst comparator)
       "Sort list using comparison function (simple quicksort implementation)."
       (define items (__as-list lst))
-      (if (<= (length items) 1)
+      (if (<= (__rlength items) 1)
         items
         (begin
           ;; Simple quicksort
@@ -254,7 +256,7 @@
     (lambda (lst key-fn comparator)
       "Sort list by applying key-fn to each element, then comparing."
       (define items (__as-list lst))
-      (if (<= (length items) 1)
+      (if (<= (__rlength items) 1)
         items
         (begin
           ;; Create pairs of (key . value)
@@ -292,7 +294,7 @@
   (define range
     (lambda (start end . step-args)
       "Generate numeric range from start to end (exclusive) with optional step."
-      (define step (if (> (length step-args) 0) (car step-args) 1))
+      (define step (if (> (__rlength step-args) 0) (car step-args) 1))
       (if (= step 0)
         (stop "range: step cannot be zero")
         (if (> step 0)
@@ -308,8 +310,8 @@
   (define iota
     (lambda (count . args)
       "Generate sequence of count numbers starting from start (default 0) with step (default 1)."
-      (define start (if (> (length args) 0) (car args) 0))
-      (define step (if (> (length args) 1) (cadr args) 1))
+      (define start (if (> (__rlength args) 0) (car args) 0))
+      (define step (if (> (__rlength args) 1) (cadr args) 1))
       (if (<= count 0)
         (list)
         (as.list (seq start (+ start (* (- count 1) step)) step)))))
@@ -341,7 +343,7 @@
       (define items (__as-list lst))
       (if (<= k 0)
         items
-        (if (>= k (length items))
+        (if (>= k (__rlength items))
           (list)
-          (as.list (r/call "[" (list items (seq (+ k 1) (length items)))))))))
+          (as.list (r/call "[" (list items (seq (+ k 1) (__rlength items)))))))))
 )
