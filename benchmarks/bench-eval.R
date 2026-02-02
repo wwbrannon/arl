@@ -1,5 +1,5 @@
 # Evaluator Benchmarks
-# Benchmarks for the CPS evaluator component
+# Benchmarks for the evaluator component
 
 library(rye)
 
@@ -8,8 +8,8 @@ source("benchmarks/workloads.R")
 
 cat("=== Evaluator Benchmarks ===\n\n")
 
-# Benchmark 1: Simple arithmetic (CPS overhead)
-cat("Benchmark 1: Simple arithmetic (CPS overhead)\n")
+# Benchmark 1: Simple arithmetic
+cat("Benchmark 1: Simple arithmetic\n")
 engine1 <- RyeEngine$new()
 
 bench_arithmetic <- benchmark_component(
@@ -78,16 +78,24 @@ engine4$eval_text('
   (fact-helper n 1)))
 ')
 
+# FIXME: at the moment, we have an evaluator implementation that creates lots
+# and lots of R stack frames (~50) for every rye call. this should be fixed,
+# but in the meantime recursion can't be too deep without allowing more frames
+options(expressions=10000)
+
 bench_recursive <- benchmark_component(
   "fibonacci(10)" = engine4$eval(engine4$read("(fib 10)")[[1]]),
   "fibonacci(12)" = engine4$eval(engine4$read("(fib 12)")[[1]]),
   "factorial(100)" = engine4$eval(engine4$read("(fact 100)")[[1]]),
-  "factorial(500)" = engine4$eval(engine4$read("(fact 500)")[[1]]),
+  # "factorial(500)" = engine4$eval(engine4$read("(fact 500)")[[1]]),  # same FIXME as above, reenable once evaluator fixed
   iterations = 50,
   check = FALSE
 )
 print(bench_recursive[, c("expression", "median", "mem_alloc")])
 cat("\n")
+
+# FIXME: reset this after the stuff above. 5000 is R's default
+options(expressions=5000)
 
 # Benchmark 5: Real workloads
 cat("Benchmark 5: Real workloads\n")
@@ -113,7 +121,7 @@ cat("Benchmark 6: Closures and environments\n")
 engine6 <- RyeEngine$new()
 engine6$eval_text('(import binding)')
 
-engin6e$eval_text('
+engine6$eval_text('
 (define make-counter (lambda ()
   (let ((count 0))
     (lambda ()
@@ -124,7 +132,7 @@ engin6e$eval_text('
 bench_closures <- benchmark_component(
   "Create closure" = engine6$eval(engine6$read("(make-counter)")[[1]]),
   "Call closure" = {
-    counter <- engine$eval(engine$read("(make-counter)")[[1]])
+    counter <- engine6$eval(engine6$read("(make-counter)")[[1]])
     counter()
   },
   iterations = 1000,
@@ -139,7 +147,7 @@ eval_results <- list(
   calls = bench_calls,
   special = bench_special,
   recursive = bench_recursive,
-  tail = bench_tail,
+  tail = bench_real,
   closures = bench_closures
 )
 
