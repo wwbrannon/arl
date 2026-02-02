@@ -1,11 +1,7 @@
-o) replace while-r and for-r with appropriate handling of loops in the evaluator?
-o) for* and while* absolutely should not be tail recursive if they are
-
-o) &optional or similar syntax for lambda/defmacro. update substitute macro as an early test case
-
 o) we should change the equality system again: identical? doesn't need special handling and can be an alias; rather equal? should take a kwarg identical which says to use identical; otherwise it should use ==; or maybe kwarg strict or kwarg permissive
 
-o) FIXME in tests about keyword arg syntax
+o) replace while-r and for-r with appropriate handling of loops in the evaluator?
+o) for* and while* absolutely should not be tail recursive if they are
 
 o) several circularities in the stdlib. equality for example should be in core
 

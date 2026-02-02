@@ -322,29 +322,22 @@ test_that("symbols with special characters", {
 })
 
 test_that("keywords", {
-  # FIXME: Keyword syntax (:foo) works as standalone values but fails when used
-  # as function arguments. Keywords are parsed as strings with class "rye_keyword"
-  # and evaluate correctly on their own (e.g., :foo returns a keyword object).
-  # However, when used in function calls like (== :foo :foo), the evaluator
-  # produces "operator needs two arguments" errors. The issue appears to be in
-  # how keywords interact with R's call mechanism or the strip_src function,
-  # but the exact cause is unclear despite keywords working correctly with
-  # as.call() and do.call() in isolation. This needs deeper investigation into
-  # the evaluation pipeline.
-  skip("Keyword syntax (:foo) not supported in Rye")
-
   engine <- RyeEngine$new()
 
-  # Keywords start with colon
+  # Keywords start with colon and are self-evaluating
   result <- engine$eval_text(":keyword")
   expect_true(!is.null(result))
 
-  # Keywords are self-evaluating
-  result <- engine$eval_text("(= :foo :foo)")
+  # Quoted keywords can be compared as values
+  result <- engine$eval_text("(= ':foo ':foo)")
   expect_equal(result, TRUE)
 
-  result <- engine$eval_text("(= :foo :bar)")
+  result <- engine$eval_text("(= ':foo ':bar)")
   expect_equal(result, FALSE)
+
+  # Bare keywords in argument position are treated as named argument syntax
+  # This should error because = doesn't accept a 'foo' argument
+  expect_error(engine$eval_text("(= :foo :foo)"))
 })
 
 test_that("dotted pairs / improper lists", {

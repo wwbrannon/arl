@@ -25,6 +25,33 @@ structures are shared between Rye and R.
 
 Keywords (`:from`, `:to`) map to named arguments in R.
 
+### Keyword syntax
+
+Keywords starting with `:` serve a dual purpose in Rye:
+
+1. **As named argument syntax**: Bare keywords in function calls become named arguments
+   ```lisp
+   (seq :from 1 :to 10)  ; R: seq(from = 1, to = 10)
+   ```
+
+2. **As self-evaluating values**: Keywords are first-class values that can be bound to variables
+   ```lisp
+   :keyword          ; evaluates to a keyword object
+   (define k :foo)   ; bind a keyword to a variable
+   ```
+
+To pass a keyword as a *value* (rather than as named argument syntax), quote it:
+
+```lisp
+(= ':foo ':bar)     ; compares two keywords as values → FALSE
+(= ':foo ':foo)     ; → TRUE
+
+(= :foo :bar)       ; error: tries to call = with named argument 'foo'
+```
+
+This design allows keywords to work naturally with R's named arguments while
+remaining first-class values when needed.
+
 You can also call functions via `r/call` if you need to pass a name
 programmatically:
 
