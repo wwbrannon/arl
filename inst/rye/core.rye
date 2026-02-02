@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Core Functions
 
 (module core
-  (export = error warn assert assert-equal assert-true assert-false assert-eq assert-error
+  (export = error warn assert assert-equal assert-true assert-false assert-eq assert-error suppressWarnings
             identity values values? call-with-values call/cc call-with-current-continuation doc! doc
             funcall r/call)
 
@@ -91,6 +91,15 @@
     (if (! (== result #t))
       (error "Expected an error to be thrown, but none was")
       #t)))
+
+  ; we need to avoid evaluating the expr before passing it to suppressWarnings,
+  ; because otherwise the warning will already have been generated when we try
+  ; to suppress it. evaluation here is eager by default, so we need to use
+  ; quote, which requires a macro to enable calling it in the usual way
+  (defmacro suppressWarnings (expr)
+    (begin
+      (define sw (get "suppressWarnings" :envir (baseenv)))
+      `(r/eval (call (list ,sw ',expr)) (current-env))))
 
   (define identity
     (lambda (x)

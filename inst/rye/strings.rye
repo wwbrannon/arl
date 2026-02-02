@@ -9,6 +9,7 @@
           string->list list->string
           number->string string->number)
 
+  (import core)
   (import list)
   (import math)
 
