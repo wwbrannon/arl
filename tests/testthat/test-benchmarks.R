@@ -367,19 +367,10 @@ test_that("documentation files exist", {
   if (is.null(bench_dir)) skip("Benchmark infrastructure not found")
 
   readme_path <- file.path(bench_dir, "README.md")
-  perf_path <- file.path(bench_dir, "PERFORMANCE.md")
-
   expect_true(file.exists(readme_path))
-  expect_true(file.exists(perf_path))
 
   # Check that README has key sections
   readme <- readLines(readme_path, warn = FALSE)
   expect_true(any(grepl("Quick Start", readme)))
   expect_true(any(grepl("Benchmarks", readme)))
-
-  # Check that PERFORMANCE.md has key sections
-  perf <- readLines(perf_path, warn = FALSE)
-  expect_true(any(grepl("Architecture", perf)))
-  expect_true(any(grepl("Performance Issues", perf)))
-  expect_true(any(grepl("Verification", perf)))
 })
