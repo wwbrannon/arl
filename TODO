@@ -1,6 +1,6 @@
 medium stuff:
 --------------------------------------
-o) change inherits where appropriate to r6_isinstance
+o) refactor rye promises to also be an R6 class? and update inherits checks
 
 o) remove rye_cons_p etc -- avoid "r/call", we don't now need it
 o) tests fail when R CMD check runs them

@@ -19,7 +19,7 @@ EvalContext <- R6::R6Class(
     evaluator = NULL,
     macro_expander = NULL,
     initialize = function(env, source_tracker) {
-      if (!inherits(env, "RyeEnv")) {
+      if (!r6_isinstance(env, "RyeEnv")) {
         stop("EvalContext requires a RyeEnv")
       }
       self$env <- env
@@ -40,7 +40,7 @@ Evaluator <- R6::R6Class(
     help_fn = NULL,
     special_forms = NULL,
     initialize = function(context, load_file_fn = NULL, help_fn = NULL) {
-      if (!inherits(context, "EvalContext")) {
+      if (!r6_isinstance(context, "EvalContext")) {
         stop("Evaluator requires an EvalContext")
       }
       self$context <- context
@@ -52,7 +52,7 @@ Evaluator <- R6::R6Class(
       self$eval_in_env(expr, self$context$env$env)
     },
     eval_in_env = function(expr, env) {
-      if (inherits(env, "RyeEnv")) {
+      if (r6_isinstance(env, "RyeEnv")) {
         env <- env$env
       } else if (is.null(env)) {
         env <- self$context$env$env
@@ -72,7 +72,7 @@ Evaluator <- R6::R6Class(
       self$eval_seq_in_env(exprs, self$context$env$env)
     },
     eval_seq_in_env = function(exprs, env) {
-      if (inherits(env, "RyeEnv")) {
+      if (r6_isinstance(env, "RyeEnv")) {
         env <- env$env
       } else if (is.null(env)) {
         env <- self$context$env$env

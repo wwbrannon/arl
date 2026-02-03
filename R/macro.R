@@ -7,7 +7,7 @@ MacroExpander <- R6::R6Class(
   public = list(
     context = NULL,
     initialize = function(context) {
-      if (!inherits(context, "EvalContext")) {
+      if (!r6_isinstance(context, "EvalContext")) {
         stop("MacroExpander requires an EvalContext")
       }
       self$context <- context
@@ -51,7 +51,7 @@ MacroExpander <- R6::R6Class(
     gensym_counter = 0,
     hygiene_counter = 0,
     normalize_env = function(env) {
-      if (inherits(env, "RyeEnv")) {
+      if (r6_isinstance(env, "RyeEnv")) {
         return(env$env)
       }
       if (is.environment(env)) {

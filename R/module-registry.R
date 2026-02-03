@@ -7,7 +7,7 @@ ModuleRegistry <- R6::R6Class(
   public = list(
     rye_env = NULL,
     initialize = function(rye_env) {
-      if (!inherits(rye_env, "RyeEnv")) {
+      if (!r6_isinstance(rye_env, "RyeEnv")) {
         stop("ModuleRegistry requires a RyeEnv")
       }
       self$rye_env <- rye_env

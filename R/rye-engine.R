@@ -345,7 +345,7 @@ RyeEngine <- R6::R6Class(
   ),
   private = list(
     resolve_env_arg = function(env) {
-      if (inherits(env, "RyeEnv")) {
+      if (r6_isinstance(env, "RyeEnv")) {
         return(env$env)
       }
       if (is.environment(env)) {

@@ -20,7 +20,7 @@ HelpSystem <- R6::R6Class(
         stop("help requires a symbol or string")
       }
 
-      if (inherits(env, "RyeEnv")) {
+      if (r6_isinstance(env, "RyeEnv")) {
         env <- env$env
       } else if (is.null(env)) {
         env <- self$env$env
