@@ -1,8 +1,10 @@
-o) the cli is kinda fragile and ugly. replace it? cli package?
+o) there's a tail recursive pattern in ==! eliminate any tail recursion.
+
+o) the repl is also kinda fragile and ugly. replace it?
+
+o) turn the pairlists into an R6 class?
 
 o) fix while* and for*
-
-o) there's a tail recursive pattern in ==! eliminate any tail recursion.
 
 o) fix the minor issues from opus auditing the tests
 

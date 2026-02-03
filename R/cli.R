@@ -24,7 +24,7 @@ CLI_HELP_TEXT <- paste(
 #'
 #' @keywords internal
 #' @noRd
-#' @importFrom docopt docopt
+#' @importFrom optparse OptionParser make_option parse_args
 RyeCLI <- R6::R6Class(
   "RyeCLI",
   public = list(
@@ -32,6 +32,69 @@ RyeCLI <- R6::R6Class(
     parsed = NULL,
     initialize = function(args = commandArgs(trailingOnly = TRUE)) {
       self$args <- args
+    },
+    cli_exit_with_error = function(message, show_help = TRUE) {
+      exit_fn <- getOption("rye.cli_exit_fn", NULL)
+      if (!is.null(exit_fn) && is.function(exit_fn)) {
+        exit_fn(message, show_help)
+        return(invisible(NULL))
+      }
+      cli::cli_alert_danger(message)
+      if (isTRUE(show_help)) {
+        cli::cat_line(CLI_HELP_TEXT)
+      }
+      quit(save = "no", status = 1)
+    },
+    cli_parser = function() {
+      option_list <- list(
+        optparse::make_option(
+          c("-e", "--eval"),
+          type = "character",
+          default = NULL,
+          metavar = "expr",
+          help = "Evaluate a single Rye expression."
+        )
+      )
+      optparse::OptionParser(
+        usage = "usage: rye [options] [files...]",
+        option_list = option_list,
+        description = "Rye: A Lisp dialect for R. Use --help for help, --version for version."
+      )
+    },
+    extract_file_args = function(args) {
+      files <- character(0)
+      error <- character(0)
+      i <- 1L
+      while (i <= length(args)) {
+        if (args[i] %in% c("-f", "--file")) {
+          if (i < length(args)) {
+            files <- c(files, args[i + 1L])
+            i <- i + 2L
+          } else {
+            error <- c(error, "--file requires a path.")
+            i <- i + 1L
+          }
+        } else {
+          i <- i + 1L
+        }
+      }
+      omit <- logical(length(args))
+      i <- 1L
+      while (i <= length(args)) {
+        if (args[i] %in% c("-f", "--file")) {
+          omit[i] <- TRUE
+          if (i < length(args)) {
+            omit[i + 1L] <- TRUE
+            i <- i + 2L
+          } else {
+            i <- i + 1L
+          }
+        } else {
+          i <- i + 1L
+        }
+      }
+      args_for_parse <- args[!omit]
+      list(files = files, args_for_parse = args_for_parse, error = error)
     },
     parse = function() {
       state <- list(
@@ -56,22 +119,43 @@ RyeCLI <- R6::R6Class(
         }
       }
 
+      if (length(args) > 0) {
+        if (any(c("-h", "--help") %in% args)) {
+          state$action <- "help"
+          self$parsed <- state
+          return(state)
+        }
+        if (any(c("-v", "--version") %in% args)) {
+          state$action <- "version"
+          self$parsed <- state
+          return(state)
+        }
+      }
+
+      n_eval_flags <- sum(args %in% c("--eval", "-e"))
+      if (n_eval_flags > 1) {
+        state$errors <- c(state$errors, "Multiple --eval flags not allowed.")
+        self$parsed <- state
+        return(state)
+      }
+
+      file_extract <- self$extract_file_args(args)
+      state$files <- c(state$files, file_extract$files)
+      state$errors <- c(state$errors, file_extract$error)
+      args_for_parse <- file_extract$args_for_parse
+      if (length(state$errors) > 0) {
+        self$parsed <- state
+        return(state)
+      }
+
+      parser <- self$cli_parser()
       parsed <- tryCatch(
         {
-          value <- NULL
-          utils::capture.output(
-            {
-              value <- docopt::docopt(
-                CLI_HELP_TEXT,
-                args = args,
-                help = FALSE,
-                version = NULL,
-                strict = TRUE
-              )
-            },
-            type = "output"
+          optparse::parse_args(
+            parser,
+            args = args_for_parse,
+            positional_arguments = TRUE
           )
-          value
         },
         error = function(e) {
           state$errors <<- c(state$errors, conditionMessage(e))
@@ -84,30 +168,26 @@ RyeCLI <- R6::R6Class(
         return(state)
       }
 
-      files_flag <- parsed[["--file"]]
-      files_pos <- parsed[["<files>"]]
-      expr <- parsed[["--eval"]]
+      opt <- parsed$options
+      positional <- parsed$args
 
-      if (!is.null(files_flag) && length(files_flag) > 0) {
-        state$files <- c(state$files, files_flag)
-      }
-      if (!is.null(files_pos) && length(files_pos) > 0) {
-        state$files <- c(state$files, files_pos)
+      if (length(positional) > 0) {
+        state$files <- c(state$files, as.character(positional))
       }
       if (length(args_after) > 0) {
         state$files <- c(state$files, args_after)
       }
-      if (!is.null(expr) && !identical(expr, FALSE) && length(expr) > 0) {
-        state$expr <- expr[[1]]
+      if (!is.null(opt$eval) && !is.na(opt$eval) && nzchar(opt$eval)) {
+        state$expr <- opt$eval
       }
 
       if (length(state$files) > 0 && !is.null(state$expr)) {
         state$errors <- c(state$errors, "Use only one of --file/files or --eval.")
       }
 
-      if (isTRUE(parsed[["--help"]])) {
+      if (isTRUE(opt$help)) {
         state$action <- "help"
-      } else if (isTRUE(parsed[["--version"]])) {
+      } else if (isTRUE(opt$version)) {
         state$action <- "version"
       } else if (!is.null(state$expr)) {
         state$action <- "eval"
@@ -119,7 +199,7 @@ RyeCLI <- R6::R6Class(
       state
     },
     do_help = function() {
-      cat(CLI_HELP_TEXT, "\n", sep = "")
+      cli::cat_line(CLI_HELP_TEXT)
       invisible(NULL)
     },
     do_version = function() {
@@ -127,7 +207,7 @@ RyeCLI <- R6::R6Class(
         as.character(utils::packageVersion("rye")),
         error = function(...) "unknown"
       )
-      cat("rye ", version, "\n", sep = "")
+      cli::cat_line("rye ", version)
       invisible(NULL)
     },
     do_repl = function() {
@@ -147,8 +227,7 @@ RyeCLI <- R6::R6Class(
       engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
       for (path in parsed$files) {
         if (!file.exists(path)) {
-          cat("Error: File not found: ", path, "\n", sep = "", file = stderr())
-          quit(save = "no", status = 1)
+          self$cli_exit_with_error(paste0("File not found: ", path), show_help = TRUE)
         }
       }
       for (path in parsed$files) {
@@ -166,14 +245,13 @@ RyeCLI <- R6::R6Class(
         withVisible(fn()),
         error = function(e) {
           engine$source_tracker$print_error(e, file = stderr())
-          quit(save = "no", status = 1)
+          self$cli_exit_with_error(conditionMessage(e), show_help = FALSE)
           return(list(value = NULL, visible = FALSE))
         }
       )
       result <- result_with_vis$value
-      # Only print if the result is visible and not NULL
       if (!is.null(result) && result_with_vis$visible) {
-        cat(engine$env$format_value(result), "\n", sep = "")
+        cli::cat_line(engine$env$format_value(result))
       }
       invisible(result)
     },
@@ -184,7 +262,6 @@ RyeCLI <- R6::R6Class(
       )
     },
     cli_isatty = function() {
-      # we need this among other things to make tests work
       override <- getOption("rye.cli_isatty_override", NULL)
       if (!is.null(override)) {
         if (is.function(override)) {
@@ -217,11 +294,16 @@ RyeCLI <- R6::R6Class(
       if (length(parsed$errors) > 0) {
         if (!isTRUE(getOption("rye.cli_quiet", FALSE))) {
           for (err in parsed$errors) {
-            cat("Error: ", err, "\n", sep = "", file = stderr())
+            cli::cli_alert_danger(err)
           }
-          cat(CLI_HELP_TEXT, "\n", sep = "")
+          cli::cat_line(CLI_HELP_TEXT)
         }
-        quit(save = "no", status = 1)
+        exit_fn <- getOption("rye.cli_exit_fn", NULL)
+        if (!is.null(exit_fn) && is.function(exit_fn)) {
+          exit_fn(paste(parsed$errors, collapse = "; "), TRUE)
+        } else {
+          quit(save = "no", status = 1)
+        }
         return(invisible(NULL))
       }
 
@@ -235,8 +317,10 @@ RyeCLI <- R6::R6Class(
 
       handler <- handlers[[parsed$action]]
       if (is.null(handler)) {
-        cat("Error: Unknown action: ", parsed$action, "\n", sep = "", file = stderr())
-        quit(save = "no", status = 1)
+        self$cli_exit_with_error(
+          paste0("Unknown action: ", parsed$action),
+          show_help = FALSE
+        )
       }
       handler()
     }
@@ -261,7 +345,7 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
 #' executable so it can be run from the shell.
 #'
 #' @param target_dir Directory for the `rye` executable. Defaults to the
-#'   `RYE_BIN_DIR` environment variable, then `~/.local/bin`, then `~/bin`.
+#'   \code{RYE_BIN_DIR} environment variable, then \code{~/.local/bin}, then \code{~/bin}.
 #' @param overwrite Whether to overwrite an existing `rye` executable.
 #' @return The installed path, invisibly.
 #' @export

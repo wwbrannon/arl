@@ -204,22 +204,18 @@ test_that("rye_cli errors on missing file", {
 })
 
 test_that("rye_cli errors and shows help on invalid args", {
-  # Mock quit to prevent R session termination
-  quit_called <- FALSE
-  withr::local_options(list(rye.cli_quiet = TRUE))
-  output <- testthat::with_mocked_bindings(
-    {
-      capture.output(
-        suppressMessages(rye:::rye_cli(c("--unknown-flag"))),
-        type = "message"
-      )
-    },
-    quit = function(...) {
-      quit_called <<- TRUE
-    },
-    .package = "base"
+  exit_fn_called <- FALSE
+  withr::local_options(list(
+    rye.cli_quiet = TRUE,
+    rye.cli_exit_fn = function(message, show_help) {
+      exit_fn_called <<- TRUE
+    }
+  ))
+  capture.output(
+    suppressMessages(rye:::rye_cli(c("--unknown-flag"))),
+    type = "message"
   )
-  expect_true(quit_called)
+  expect_true(exit_fn_called)
 })
 
 test_that("rye_cli handles --eval flag", {

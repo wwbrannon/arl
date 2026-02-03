@@ -18,7 +18,8 @@ Depends:
     R (>= 3.6)
 Imports:
     R6 (>= 2.5.0),
-    docopt
+    cli (>= 3.0.0),
+    optparse (>= 1.7.0)
 Suggests:
     testthat (>= 3.0.0),
     covr (>= 3.6.0),
