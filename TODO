@@ -1,14 +1,30 @@
-o) there's a tail recursive pattern in ==! eliminate any tail recursion. update AGENTS.md and CLAUDE.md to say this
 o) fix while* and for*
 
+o) assq and assv: these still act like pointer equality is available; probably we should have both raise an error and provide "assi" that uses identical?
+
+o) support s3 dispatch nicely
+
+o) refactor equal? to use s3 dispatch
+
+o) there's a tail recursive pattern in ==! eliminate any tail recursion. update AGENTS.md and CLAUDE.md to say this
+
 --------------------------------------
-o) look at the test behavior: any tests that look obviously bad? anywhere it's not what a lisp should do? identify questionable choices that may reflect encoding bugs into tests
+o) have Opus 4.5 critique the tests:
+```
+Take a look at the tests in tests/, maybe especially the native ones in tests/native/. Keep in mind that the language being tested is supposed to be a lisp, generally scheme-like, but implemented on top of R. So that makes for a few peculiarities -- R's type system, no tail call optimization, the whole "r/call" apparatus, the lack of pointer equality for eq? and eqv?, etc.
+
+Given that, let's critique these tests. Is there any behavior they implement that they clearly shouldn't? Mistaken behavior of the interpreter we have now that's been hardcoded into the tests? You're looking for things that clearly don't make sense and aren't how an R-based lisp should behave. Use your judgment!
+```
 
 o) this stdlib is very poorly organized, has undocumented dependencies on prior import order, needs to be refactored
 o) several circularities in the stdlib. equality for example should be in core
 
-o) performance optimizations: use profiling and benchmarking
-    o) the evaluator is too dynamic and creates way too many stack frames per rye call. this is presumably the main performance bottleneck
+o) the evaluator is a very dynamic AST walker and creates way too many stack frames per rye call.
+  o) this is the main performance bottleneck.
+  o) option 1: replace it with an AST-to-R compiler which will also kill off the translator program we have now.
+  o) option 2: we can walk the AST more carefully, nonrecursively, maybe by explicitly treating the R language object we get as a graph. this is a much smaller change.
+
+o) other performance optimizations: use profiling and benchmarking
 
 o) documentation updates / systematizing: make a plan
 
