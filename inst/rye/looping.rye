@@ -86,19 +86,22 @@
                                    (cdr expr)))))))
         expr)))
 
-  ;; Helper: Generate variable rebinding code
+  ;; Helper: Generate variable rebinding code (set! so LHS is not evaluated)
   (define generate-rebindings
     (lambda (vars recur-vals)
       (define index-op (as.symbol "[["))
-      (define brace-op (as.symbol "{"))
       (define rebinds
         (map (lambda (pair)
                (define var (car pair))
                (define idx (car (cdr pair)))
                (define nth-expr (call (list index-op recur-vals idx)))
-               `(<- ,var ,nth-expr))
+               `(set! ,var ,nth-expr))
              (zip vars (seq_len (length vars)))))
-      (call (cons brace-op rebinds))))
+      (if (null? rebinds)
+        (quote (begin))
+        (if (= (length rebinds) 1)
+          (car rebinds)
+          `(begin ,@rebinds)))))
 
   (defmacro loop (bindings . body)
     "Clojure-style loop/recur that expands to an R while loop."
@@ -113,6 +116,7 @@
           (define recur-vals (gensym "recur_vals"))
           (define loop-result (gensym "loop_result"))
           (define loop-step (gensym "loop_step"))
+          (define loop-done (gensym "loop_done"))
 
           ;; Rewrite body to transform recur calls
           (define rewritten-body
@@ -122,22 +126,22 @@
           ;; Generate the rebinding block
           (define rebind-block (generate-rebindings vars recur-vals))
 
-          ;; Emit the loop structure
+          ;; Emit the loop structure (use done flag instead of break so we stay inside R's while)
           `(begin
              ;; Initialize loop variables
              ,@(map (lambda (pair) `(define ,(car pair) ,(car (cdr pair)))) bindings)
              (define ,recur-flag #f)
              (define ,recur-vals (list))
              (define ,loop-result #f)
+             (define ,loop-done #f)
              (define ,loop-step (lambda () (begin ,@rewritten-body)))
 
-             ;; Main loop (use set! so first arg is not evaluated; <- would evaluate recur-flag to FALSE)
-             (while* #t
+             (while* (not ,loop-done)
                (set! ,recur-flag #f)
                (set! ,loop-result (,loop-step))
                (if ,recur-flag
                  (r/eval ,rebind-block (current-env))
-                 (break)))
+                 (set! ,loop-done #t)))
 
              ,loop-result)))))
 
