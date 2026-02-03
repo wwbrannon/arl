@@ -9,7 +9,7 @@ CLI_HELP_TEXT <- paste(
   "Options:",
   "  -f, --file <path>    Evaluate a Rye source file (repeatable).",
   "  -e, --eval <expr>    Evaluate a single Rye expression.",
-  "  -q, --quiet          Start REPL with minimal banner (no warranty text).",
+  "  -q, --quiet          Start REPL without banner.",
   "  -v, --version        Print version and exit.",
   "  -h, --help           Show this help message.",
   "",

@@ -247,13 +247,13 @@ test_that("rye_cli --quiet and -q set rye.repl_quiet and show minimal banner", {
     rye.repl_can_use_history_override = FALSE
   ))
   output <- capture.output(rye:::rye_cli(c("--quiet")))
-  expect_true(any(grepl("^Rye REPL", output)))
+  expect_false(any(grepl("^Rye REPL", output)))
   expect_false(any(grepl("NO warranty", output)))
   expect_true(isTRUE(getOption("rye.repl_quiet")))
 
   withr::local_options(list(rye.repl_quiet = FALSE))
   output_q <- capture.output(rye:::rye_cli(c("-q")))
-  expect_true(any(grepl("^Rye REPL", output_q)))
+  expect_false(any(grepl("^Rye REPL", output_q)))
   expect_false(any(grepl("NO warranty", output_q)))
 })
 
