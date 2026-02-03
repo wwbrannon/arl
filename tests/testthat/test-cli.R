@@ -240,6 +240,23 @@ test_that("rye_cli starts interactive REPL when tty", {
   expect_true(any(grepl("^Rye REPL", output)))
 })
 
+test_that("rye_cli --quiet and -q set rye.repl_quiet and show minimal banner", {
+  withr::local_options(list(
+    rye.cli_isatty_override = TRUE,
+    rye.repl_read_form_override = function(...) NULL,
+    rye.repl_can_use_history_override = FALSE
+  ))
+  output <- capture.output(rye:::rye_cli(c("--quiet")))
+  expect_true(any(grepl("^Rye REPL", output)))
+  expect_false(any(grepl("NO warranty", output)))
+  expect_true(isTRUE(getOption("rye.repl_quiet")))
+
+  withr::local_options(list(rye.repl_quiet = FALSE))
+  output_q <- capture.output(rye:::rye_cli(c("-q")))
+  expect_true(any(grepl("^Rye REPL", output_q)))
+  expect_false(any(grepl("NO warranty", output_q)))
+})
+
 test_that("rye_cli reads stdin when not tty with empty input", {
   withr::local_options(list(
     rye.cli_isatty_override = FALSE,

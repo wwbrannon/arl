@@ -2,18 +2,20 @@ CLI_HELP_TEXT <- paste(
   "Rye: A Lisp dialect for R.",
   "",
   "Usage:",
-  "  rye [--file <path>...] [--eval <expr>] [<files>...]",
+  "  rye [--file <path>...] [--eval <expr>] [--quiet] [<files>...]",
   "  rye --version",
   "  rye --help",
   "",
   "Options:",
   "  -f, --file <path>    Evaluate a Rye source file (repeatable).",
   "  -e, --eval <expr>    Evaluate a single Rye expression.",
+  "  -q, --quiet          Start REPL with minimal banner (no warranty text).",
   "  -v, --version        Print version and exit.",
   "  -h, --help           Show this help message.",
   "",
   "Examples:",
   "  rye",
+  "  rye -q",
   "  rye --file script.rye",
   "  rye script.rye",
   "  rye --eval \"(+ 1 2)\"",
@@ -53,6 +55,12 @@ RyeCLI <- R6::R6Class(
           default = NULL,
           metavar = "expr",
           help = "Evaluate a single Rye expression."
+        ),
+        optparse::make_option(
+          c("-q", "--quiet"),
+          action = "store_true",
+          default = FALSE,
+          help = "Start REPL with minimal banner (no warranty text)."
         )
       )
       optparse::OptionParser(
@@ -170,6 +178,10 @@ RyeCLI <- R6::R6Class(
 
       opt <- parsed$options
       positional <- parsed$args
+
+      if (isTRUE(opt$quiet)) {
+        options(rye.repl_quiet = TRUE)
+      }
 
       if (length(positional) > 0) {
         state$files <- c(state$files, as.character(positional))

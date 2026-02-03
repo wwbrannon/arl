@@ -54,9 +54,12 @@ Then you can evaluate code without opening R:
 ```bash
 rye --eval "(+ 1 2)"
 rye --file script.rye
+rye -q
 ```
 
-You can also pass multiple files; they run in order.
+You can also pass multiple files; they run in order. Use `-q` or `--quiet` to start the REPL with a minimal banner.
+
+**REPL options (when running from R):** You can control the REPL with options before calling `engine$repl()`: `rye.repl_quiet` (minimal banner), `rye.repl_use_history` (set to `FALSE` to avoid touching R's readline history), and `rye.repl_bracketed_paste` (enable/disable bracketed paste mode for cleaner multiline pastes).
 
 ## Evaluate Rye from R
 

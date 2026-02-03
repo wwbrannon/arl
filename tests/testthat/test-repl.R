@@ -15,6 +15,7 @@ test_that("RyeREPL detects incomplete parse errors", {
   repl <- rye:::RyeREPL$new()
   expect_true(repl$is_incomplete_error(simpleError("Unexpected end of input")))
   expect_true(repl$is_incomplete_error(simpleError("Unclosed parenthesis at line 1, column 1")))
+  expect_true(repl$is_incomplete_error(simpleError("Unterminated string at line 1, column 5")))
   expect_false(repl$is_incomplete_error(simpleError("Unexpected ')' at line 1, column 1")))
 })
 
@@ -25,6 +26,15 @@ test_that("RyeREPL read_form collects multiline input", {
 
   expect_equal(form$text, "(+ 1\n2)")
   expect_length(form$exprs, 1)
+})
+
+test_that("RyeREPL read_form accepts multi-line first chunk (e.g. from paste)", {
+  multi_line <- "(+ 1 2)\n(* 3 4)"
+  input_fn <- make_repl_input(multi_line)
+  repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
+  form <- repl$read_form()
+  expect_equal(form$text, multi_line)
+  expect_length(form$exprs, 2)
 })
 
 test_that("RyeREPL read_form skips leading blank lines", {
@@ -40,6 +50,14 @@ test_that("RyeREPL read_form surfaces non-incomplete parse errors", {
   input_fn <- make_repl_input(c(")"))
   repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
   expect_error(repl$read_form(), "Unexpected")
+})
+
+test_that("RyeREPL read_form continues on Unterminated string (incomplete input)", {
+  input_fn <- make_repl_input(c('(define x "', 'hello")'))
+  repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
+  form <- repl$read_form()
+  expect_equal(form$text, '(define x "\nhello")')
+  expect_length(form$exprs, 1)
 })
 
 test_that("RyeREPL read_form supports override option", {
@@ -97,6 +115,18 @@ test_that("RyeREPL can_use_history respects override option", {
     .package = "base"
   )
   expect_true(can_use)
+})
+
+test_that("RyeREPL can_use_history is FALSE when rye.repl_use_history is FALSE", {
+  repl <- rye:::RyeREPL$new()
+  withr::local_options(list(rye.repl_use_history = FALSE))
+  can_use <- testthat::with_mocked_bindings(
+    repl$can_use_history(),
+    interactive = function() TRUE,
+    capabilities = function(...) c(readline = TRUE),
+    .package = "base"
+  )
+  expect_false(can_use)
 })
 
 test_that("RyeREPL load_history handles non-interactive mode", {
@@ -350,6 +380,15 @@ test_that("engine$repl handles evaluation errors gracefully", {
     },
     rye.repl_can_use_history_override = FALSE
   ))
-  output <- capture.output(engine$repl())
+  tf <- tempfile()
+  con <- file(tf, open = "w")
+  sink(con)
+  sink(con, type = "message")
+  tryCatch(engine$repl(), error = function(e) NULL)
+  sink(type = "message")
+  sink()
+  close(con)
+  output <- readLines(tf, warn = FALSE)
+  unlink(tf)
   expect_true(any(grepl("Error", output)))
 })

@@ -3,6 +3,15 @@
 #' Provides an interactive loop for reading Rye forms, evaluating them, and
 #' printing results with optional readline history support.
 #'
+#' @section REPL options:
+#' \describe{
+#'   \item{\code{rye.repl_quiet}}{If TRUE, show minimal startup banner (e.g. set by CLI \code{-q}/\code{--quiet}).}
+#'   \item{\code{rye.repl_use_history}}{If FALSE, do not load, save, or add to readline history (avoids touching R's global history when REPL runs from within R).}
+#'   \item{\code{rye.repl_bracketed_paste}}{If TRUE (default), enable bracketed paste mode so multiline pastes show one prompt.}
+#'   \item{\code{rye.repl_read_form_override}}{Function or value overriding \code{read_form()}. If a function, it receives \code{input_fn}, \code{prompt}, \code{cont_prompt} and must return a list with \code{text} (character), \code{exprs} (list of expressions), and optionally \code{error} (TRUE to skip and continue), or NULL to exit. If not a function, that value is returned as-is (main loop expects a list or NULL).}
+#'   \item{\code{rye.repl_can_use_history_override}}{Override for \code{can_use_history()}: function returning logical, or a logical value.}
+#' }
+#'
 #' @keywords internal
 #' @noRd
 #'
@@ -58,15 +67,47 @@ RyeREPL <- R6::R6Class(
     },
     #' @description
     #' Read a single input line, using readline when available.
+    #' When bracketed paste mode is enabled and the line starts with the BPM
+    #' start sequence (ESC [200 ~), reads until the BPM end sequence (ESC [201 ~)
+    #' and returns the whole pasted block as one string.
     input_line = function(prompt) {
-      if (isTRUE(interactive()) && isTRUE(capabilities("readline"))) {
-        return(readline(prompt))
+      bpm_start <- "\033[200~"
+      bpm_end <- "\033[201~"
+      read_one = function(p) {
+        if (isTRUE(interactive()) && isTRUE(capabilities("readline"))) {
+          return(readline(p))
+        }
+        cat(p)
+        utils::flush.console()
+        line <- readLines("stdin", n = 1, warn = FALSE)
+        if (length(line) == 0) {
+          return(NULL)
+        }
+        line
       }
-      cat(prompt)
-      utils::flush.console()
-      line <- readLines("stdin", n = 1, warn = FALSE)
-      if (length(line) == 0) {
+      line <- read_one(prompt)
+      if (is.null(line)) {
         return(NULL)
+      }
+      use_bpm <- isTRUE(getOption("rye.repl_bracketed_paste", TRUE))
+      if (use_bpm && startsWith(line, bpm_start)) {
+        chunk <- substring(line, nchar(bpm_start) + 1L)
+        if (endsWith(chunk, bpm_end)) {
+          return(substring(chunk, 1L, nchar(chunk) - nchar(bpm_end)))
+        }
+        lines <- chunk
+        repeat {
+          next_line <- read_one("")
+          if (is.null(next_line)) {
+            return(paste(lines, collapse = "\n"))
+          }
+          lines <- c(lines, next_line)
+          if (endsWith(next_line, bpm_end)) {
+            n <- length(lines)
+            lines[[n]] <- substring(lines[[n]], 1L, nchar(lines[[n]]) - nchar(bpm_end))
+            return(paste(lines, collapse = "\n"))
+          }
+        }
       }
       line
     },
@@ -78,6 +119,9 @@ RyeREPL <- R6::R6Class(
     #' @description
     #' Determine whether readline history can be used.
     can_use_history = function() {
+      if (!isTRUE(getOption("rye.repl_use_history", TRUE))) {
+        return(FALSE)
+      }
       override <- getOption("rye.repl_can_use_history_override", NULL)
       if (!is.null(override)) {
         if (is.function(override)) {
@@ -91,7 +135,7 @@ RyeREPL <- R6::R6Class(
     #' Detect parse errors that indicate incomplete input.
     is_incomplete_error = function(e) {
       msg <- conditionMessage(e)
-      grepl("Unexpected end of input|Unclosed parenthesis", msg)
+      grepl("Unexpected end of input|Unclosed parenthesis|Unterminated string", msg)
     },
     #' @description
     #' Read a complete Rye form from the input stream.
@@ -160,6 +204,7 @@ RyeREPL <- R6::R6Class(
         return(invisible(NULL))
       }
       cat(self$engine$env$format_value(value), "\n", sep = "")
+      utils::flush.console()
       invisible(value)
     },
     #' @description
@@ -214,14 +259,20 @@ RyeREPL <- R6::R6Class(
       if (trimws(text) == "") { # nolint: object_usage_linter
         return(invisible(NULL))
       }
-      add_history <- tryCatch(
-        utils::getFromNamespace("addHistory", "utils"),
-        error = function(...) NULL
-      )
-      if (is.null(add_history)) {
+      add_history_fn <- self$history_state$add_history_fn
+      if (is.null(add_history_fn)) {
+        add_history_fn <- tryCatch(
+          utils::getFromNamespace("addHistory", "utils"),
+          error = function(...) NULL
+        )
+        if (!is.null(add_history_fn)) {
+          self$history_state$add_history_fn <- add_history_fn
+        }
+      }
+      if (is.null(add_history_fn)) {
         return(invisible(NULL))
       }
-      try(add_history(text), silent = TRUE)
+      try(add_history_fn(text), silent = TRUE)
       invisible(NULL)
     },
     #' @description
@@ -229,17 +280,34 @@ RyeREPL <- R6::R6Class(
     run = function() {
       private$require_engine()
 
-      self$output_fn(paste0("Rye REPL ", rye_version()), "\n", sep = "")
-      self$output_fn("This is free software; see the source for copying conditions.\n")
-      self$output_fn("There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n")
-      self$output_fn("\n")
-      self$output_fn("Type '(quit)' w/o quotes or press Ctrl+C to exit\n")
-      self$output_fn(
-        "Builtin readline support: ",
-        ifelse(isTRUE(capabilities("readline")), "yes", "no (try rlwrap)"),
-        "\n\n",
-        sep = ""
-      )
+      quiet <- isTRUE(getOption("rye.repl_quiet", FALSE))
+      if (quiet) {
+        self$output_fn(paste0("Rye REPL ", rye_version(), ". Type '(quit)' to exit.\n"), sep = "")
+      } else {
+        self$output_fn(paste0("Rye REPL ", rye_version()), "\n", sep = "")
+        self$output_fn("This is free software; see the source for copying conditions.\n")
+        self$output_fn("There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n")
+        self$output_fn("\n")
+        self$output_fn("Type '(quit)' w/o quotes or press Ctrl+C to exit\n")
+        self$output_fn(
+          "Builtin readline support: ",
+          ifelse(isTRUE(capabilities("readline")), "yes", "no (try rlwrap)"),
+          "\n\n",
+          sep = ""
+        )
+      }
+
+      use_bpm <- isTRUE(getOption("rye.repl_bracketed_paste", TRUE)) &&
+        isTRUE(interactive()) &&
+        isTRUE(capabilities("readline"))
+      if (use_bpm) {
+        self$output_fn("\033[?2004h", sep = "")
+        utils::flush.console()
+        on.exit({
+          self$output_fn("\033[?2004l", sep = "")
+          utils::flush.console()
+        }, add = TRUE)
+      }
 
       self$load_history()
       on.exit(self$save_history(), add = TRUE)
@@ -248,7 +316,8 @@ RyeREPL <- R6::R6Class(
         form <- tryCatch(
           self$read_form(),
           error = function(e) {
-            self$engine$source_tracker$print_error(e, file = stdout())
+            self$engine$source_tracker$print_error(e, file = stderr())
+            utils::flush.console()
             list(error = TRUE)
           }
         )
@@ -271,7 +340,8 @@ RyeREPL <- R6::R6Class(
         tryCatch({
           self$eval_and_print_exprs(form$exprs)
         }, error = function(e) {
-          self$engine$source_tracker$print_error(e, file = stdout())
+          self$engine$source_tracker$print_error(e, file = stderr())
+          utils::flush.console()
         })
       }
     }
