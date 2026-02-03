@@ -16,12 +16,32 @@ build: ## Build the package
 check: build ## Check the package (includes tests)
 	R -q -e 'devtools::check(args="--as-cran")'
 
-.PHONY: document
-document: ## Generate roxygen, README, and pkgdown docs
+.PHONY: devdoc
+devdoc:
 	R -q -e "devtools::document()"
+
+.PHONY: readme
+readme:
 	R -q -e "rmarkdown::render('README.Rmd')"
+
+.PHONY: vignettes
+vignettes:
 	R -q -e "devtools::build_vignettes()"
-	R -q -e "pkgdown::build_site()"
+
+.PHONY: site
+site:
+	@tmp=$$(mktemp -d) && \
+	rsync -a --delete \
+	  --exclude 'AGENTS.md' \
+	  --exclude 'CLAUDE.md' \
+	  --exclude '.git/' \
+	  ./ $$tmp/ && \
+	Rscript -e "pkgdown::build_site(pkg='$$tmp')" && \
+	rm -rf $$tmp
+
+## Generate roxygen, README, and pkgdown docs
+.PHONY: document
+document: devdoc readme vignettes site
 
 .PHONY: coverage
 coverage:
