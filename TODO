@@ -1,8 +1,12 @@
 medium stuff:
 --------------------------------------
-o) turn the pairlists into an R6 class
-o) remove exports of rye_cons_p etc
 o) tests fail when R CMD check runs them
+
+o) change inherits where appropriate to r6_isinstance
+
+o) remove rye_cons_p etc
+
+o) fix failing repl tests
 
 o) fix the minor issues from opus auditing the tests
 

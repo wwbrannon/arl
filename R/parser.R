@@ -182,7 +182,7 @@ Parser <- R6::R6Class(
           if (seen_dot && !is.null(dot_cdr) && length(dotted_heads) > 0) {
             result <- dot_cdr
             for (j in rev(seq_along(dotted_heads))) {
-              result <- rye_cons(dotted_heads[[j]], result)
+              result <- RyeCons$new(dotted_heads[[j]], result)
             }
             return(tracker$src_set(result, tracker$src_new(source_name, start_token$line, start_token$col, end_token$line, end_token$col)))
           }

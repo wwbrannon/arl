@@ -76,3 +76,27 @@ rye_error <- function(message, src_stack = list(), r_stack = list()) {
     class = c("rye_error", "error", "condition")
   )
 }
+
+#' Test if an object is an R6 instance of a given class
+#'
+#' @param obj Any object.
+#' @param cls Character class name (e.g. \code{"RyeCons"}).
+#' @return Logical.
+#' @keywords internal
+#' @noRd
+#' @importFrom R6 is.R6
+r6_isinstance <- function(obj, cls) {
+  R6::is.R6(obj) && inherits(obj, cls)
+}
+
+#' Test if an object is an R6 class generator for a given class name
+#'
+#' @param obj Any object.
+#' @param cls Character class name (e.g. \code{"RyeCons"}).
+#' @return Logical.
+#' @keywords internal
+#' @noRd
+#' @importFrom R6 is.R6Class
+r6_issubclass <- function(obj, cls) {
+  R6::is.R6Class(obj) && identical(obj$classname, cls)
+}

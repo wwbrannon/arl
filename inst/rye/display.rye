@@ -58,10 +58,8 @@
       (if (not (is.null fn-tag))
         fn-tag
         (begin
-          (define env-tag (__format-environment x))
-          (if (not (is.null env-tag))
-            env-tag
-            (if (r/call "rye_cons_p" (list x))
+          ;; Check dotted pair before environment (R6 instances are environments in R)
+          (if (r/call "rye_cons_p" (list x))
               (begin
                 (define parts (r/call "rye_cons_parts" (list x)))
                 (define prefix (r/call "[[" (list parts "prefix")))
@@ -71,7 +69,11 @@
                   (string-join (lapply prefix format-value) " ")))
                 (define tail-str (format-value tail))
                 (string-join (list "(" head-str " . " tail-str ")") ""))
-              (if (values? x)
+              (begin
+                (define env-tag (__format-environment x))
+                (if (not (is.null env-tag))
+                  env-tag
+                  (if (values? x)
                 (begin
                   (define inner (r/call "unclass" (list x)))
                   (if (= (length inner) 0)
@@ -90,7 +92,7 @@
                         (as.character x)
                         (if (or (is.call x) (is.list x))
                           (__format-seq x)
-                          (__format-atomic x)))))))))))))
+                          (__format-atomic x))))))))))))))
 
   (define display
     (lambda (x)

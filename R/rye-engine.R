@@ -136,10 +136,10 @@ RyeEngine <- R6::R6Class(
       rye_env_registry(env, ".rye_module_registry", create = TRUE)
       rye_env_registry(env, ".rye_macros", create = TRUE)
 
-      env$rye_cons <- rye_cons
-      env$rye_cons_p <- rye_cons_p
-      env$rye_cons_as_list <- rye_cons_as_list
-      env$rye_cons_parts <- rye_cons_parts
+      env$rye_cons <- function(car, cdr) RyeCons$new(car, cdr)
+      env$rye_cons_p <- function(x) r6_isinstance(x, "RyeCons")
+      env$rye_cons_as_list <- function(x) if (r6_isinstance(x, "RyeCons")) x$as_list() else list()
+      env$rye_cons_parts <- function(x) if (r6_isinstance(x, "RyeCons")) x$parts() else list(prefix = list(), tail = x)
 
       env$gensym <- function(prefix = "G") {
         self$macro_expander$gensym(prefix = prefix)

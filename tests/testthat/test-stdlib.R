@@ -189,7 +189,7 @@ test_that("cons adds element to front", {
 test_that("cons with non-list cdr produces dotted pair (rye_cons)", {
   env <- stdlib_env(engine, new.env())
   result <- engine$eval_in_env(engine$read("(cons 'a 'b)")[[1]], env)
-  expect_true(inherits(result, "rye_cons"))
+  expect_true(r6_isinstance(result, "RyeCons"))
   expect_equal(as.character(result$car), "a")
   expect_equal(as.character(result$cdr), "b")
 })
@@ -211,7 +211,7 @@ test_that("list? and pair? are true for rye_cons", {
 test_that("__as-list on improper list returns proper prefix only", {
   env <- stdlib_env(engine, new.env())
   pl <- engine$read("'(a b . c)")[[1]][[2]]
-  expect_true(inherits(pl, "rye_cons"))
+  expect_true(r6_isinstance(pl, "RyeCons"))
   prefix <- env$`__as-list`(pl)
   expect_equal(length(prefix), 2)
   expect_equal(as.character(prefix[[1]]), "a")
@@ -654,7 +654,7 @@ test_that("format-value for dotted pair (rye_cons) shows dotted form", {
   env <- new.env()
   stdlib_env(engine, env)
   pair <- engine$read("'(a . b)")[[1]][[2]]
-  expect_true(inherits(pair, "rye_cons"))
+  expect_true(r6_isinstance(pair, "RyeCons"))
   formatted <- env$`format-value`(pair)
   expect_true(grepl(" \\. ", formatted))
   expect_true(grepl("a", formatted))
@@ -665,7 +665,7 @@ test_that("format-value for improper list shows dotted tail", {
   env <- new.env()
   stdlib_env(engine, env)
   improper <- engine$read("'(a b . c)")[[1]][[2]]
-  expect_true(inherits(improper, "rye_cons"))
+  expect_true(r6_isinstance(improper, "RyeCons"))
   formatted <- env$`format-value`(improper)
   expect_true(grepl(" \\. ", formatted))
   expect_true(grepl("a", formatted))
