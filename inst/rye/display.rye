@@ -61,26 +61,36 @@
           (define env-tag (__format-environment x))
           (if (not (is.null env-tag))
             env-tag
-            (if (values? x)
+            (if (r/call "rye_cons_p" (list x))
               (begin
-                (define inner (r/call "unclass" (list x)))
-                (if (= (length inner) 0)
-                  "(values)"
-                  (string-join (append (list "(values") (lapply inner format-value) (list ")")) " ")))
-              (if (dict? x)
+                (define parts (r/call "rye_cons_parts" (list x)))
+                (define prefix (r/call "[[" (list parts "prefix")))
+                (define tail (r/call "[[" (list parts "tail")))
+                (define head-str (if (= (length prefix) 0)
+                  ""
+                  (string-join (lapply prefix format-value) " ")))
+                (define tail-str (format-value tail))
+                (string-join (list "(" head-str " . " tail-str ")") ""))
+              (if (values? x)
                 (begin
-                  (define keys (dict-keys x))
-                  (define values (lapply keys (lambda (k) (dict-get x k))))
-                  (__format-seq values))
-                (if (set? x)
-                  (__format-seq (r/call "as.list" (list x :all.names #t)))
-                  (if (promise? x)
-                    "<promise>"
-                    (if (is.symbol x)
-                      (as.character x)
-                      (if (or (is.call x) (is.list x))
-                        (__format-seq x)
-                        (__format-atomic x))))))))))))
+                  (define inner (r/call "unclass" (list x)))
+                  (if (= (length inner) 0)
+                    "(values)"
+                    (string-join (append (list "(values") (lapply inner format-value) (list ")")) " ")))
+                (if (dict? x)
+                  (begin
+                    (define keys (dict-keys x))
+                    (define values (lapply keys (lambda (k) (dict-get x k))))
+                    (__format-seq values))
+                  (if (set? x)
+                    (__format-seq (r/call "as.list" (list x :all.names #t)))
+                    (if (promise? x)
+                      "<promise>"
+                      (if (is.symbol x)
+                        (as.character x)
+                        (if (or (is.call x) (is.list x))
+                          (__format-seq x)
+                          (__format-atomic x)))))))))))))
 
   (define display
     (lambda (x)

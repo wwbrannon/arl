@@ -420,7 +420,10 @@ Evaluator <- R6::R6Class(
 
           params_expr <- expr[[3]]
           params <- list()
-          if (!is.null(params_expr) && is.call(params_expr) && length(params_expr) > 0) {
+          if (!is.null(params_expr) && rye_cons_p(params_expr)) {
+            parts <- rye_cons_parts(params_expr)
+            params <- c(parts$prefix, list(as.symbol(".")), list(parts$tail))
+          } else if (!is.null(params_expr) && is.call(params_expr) && length(params_expr) > 0) {
             for (i in seq_along(params_expr)) {
               params[[i]] <- params_expr[[i]]
             }
@@ -722,6 +725,10 @@ Evaluator <- R6::R6Class(
     lambda_arg_items = function(args_expr) {
       if (is.null(args_expr)) {
         return(list())
+      }
+      if (rye_cons_p(args_expr)) {
+        parts <- rye_cons_parts(args_expr)
+        return(c(parts$prefix, list(as.symbol(".")), list(parts$tail)))
       }
       if (is.call(args_expr)) {
         if (length(args_expr) > 0) {

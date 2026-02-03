@@ -113,6 +113,12 @@ Parser <- R6::R6Class(
           return(tracker$src_set(keyword, make_src(token)))
         }
 
+        # Standalone dot: treat as symbol . (e.g. lambda (. args) rest parameter)
+        if (token$type == "DOT") {
+          pos <<- pos + 1
+          return(tracker$src_set(as.symbol("."), make_src(token)))
+        }
+
         # Lists (S-expressions)
         if (token$type == "LPAREN") {
           pos <<- pos + 1
@@ -122,9 +128,33 @@ Parser <- R6::R6Class(
           elements <- list()
           chunk <- vector("list", 32)  # Collect in chunks of 32
           chunk_idx <- 1
+          seen_dot <- FALSE
+          dot_cdr <- NULL
+
+          dotted_heads <- NULL
 
           while (pos <= length(tokens) && tokens[[pos]]$type != "RPAREN") {
             elem <- parse_expr()
+            # After first element(s), DOT means dotted pair: (a . b) or (a b . c)
+            if (pos <= length(tokens) && tokens[[pos]]$type == "DOT") {
+              # (a .) with no cdr: parse as list (a .) so lambda/macro can error on invalid formals
+              if (pos + 1 <= length(tokens) && tokens[[pos + 1]]$type == "RPAREN") {
+                chunk[[chunk_idx]] <- elem
+                chunk_idx <- chunk_idx + 1
+                next
+              }
+              pos <<- pos + 1  # consume DOT
+              if (pos > length(tokens) || tokens[[pos]]$type == "RPAREN") {
+                stop(sprintf("Missing cdr after '.' at line %d, column %d", tokens[[pos - 1]]$line, tokens[[pos - 1]]$col))
+              }
+              dot_cdr <- parse_expr()
+              if (chunk_idx > 1) {
+                elements <- c(elements, chunk[1:(chunk_idx - 1)])
+              }
+              dotted_heads <- c(elements, list(elem))
+              seen_dot <- TRUE
+              break
+            }
             chunk[[chunk_idx]] <- elem
             chunk_idx <- chunk_idx + 1
 
@@ -147,6 +177,15 @@ Parser <- R6::R6Class(
 
           end_token <- tokens[[pos]]
           pos <<- pos + 1  # Skip RPAREN
+
+          # Dotted pair: (a . b) or (a b . c)
+          if (seen_dot && !is.null(dot_cdr) && length(dotted_heads) > 0) {
+            result <- dot_cdr
+            for (j in rev(seq_along(dotted_heads))) {
+              result <- rye_cons(dotted_heads[[j]], result)
+            }
+            return(tracker$src_set(result, tracker$src_new(source_name, start_token$line, start_token$col, end_token$line, end_token$col)))
+          }
 
           # Empty list
           if (length(elements) == 0) {

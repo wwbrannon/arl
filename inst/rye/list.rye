@@ -20,14 +20,16 @@
 
   (define __as-list
     (lambda (x)
-      "Coerce calls and vectors to list."
-      (if (is.call x)
-        (as.list x)
-        (if (is.list x)
-          x
-          (if (__r== (__rlength x) 0)
-            (list)
-            (as.list x))))))
+      "Coerce calls and vectors to list; rye_cons chain to proper prefix."
+      (if (r/call "rye_cons_p" (list x))
+        (r/call "rye_cons_as_list" (list x))
+        (if (is.call x)
+          (as.list x)
+          (if (is.list x)
+            x
+            (if (__r== (__rlength x) 0)
+              (list)
+              (as.list x)))))))
 
   (define __list-last
     (lambda (lst)
@@ -51,24 +53,28 @@
   (define car
     (lambda (lst)
       "Return first element or #nil."
-      (if (is.call lst)
-        (if (__r> (__rlength lst) 0) (__r[[ lst 1) #nil)
-        (if (is.list lst)
+      (if (r/call "rye_cons_p" (list lst))
+        (r/call "[[" (list lst "car"))
+        (if (is.call lst)
           (if (__r> (__rlength lst) 0) (__r[[ lst 1) #nil)
-          #nil))))
+          (if (is.list lst)
+            (if (__r> (__rlength lst) 0) (__r[[ lst 1) #nil)
+            #nil)))))
 
   (define cdr
     (lambda (lst)
-      "Return list without first element."
-      (if (is.call lst)
-        (if (__r> (__rlength lst) 1)
-          (r/call "[" (list (as.list lst) (seq 2 (__rlength lst))))
-          (list))
-        (if (is.list lst)
+      "Return list without first element (or cdr of dotted pair)."
+      (if (r/call "rye_cons_p" (list lst))
+        (r/call "[[" (list lst "cdr"))
+        (if (is.call lst)
           (if (__r> (__rlength lst) 1)
-            (r/call "[" (list lst (seq 2 (__rlength lst))))
+            (r/call "[" (list (as.list lst) (seq 2 (__rlength lst))))
             (list))
-          (list)))))
+          (if (is.list lst)
+            (if (__r> (__rlength lst) 1)
+              (r/call "[" (list lst (seq 2 (__rlength lst))))
+              (list))
+            (list))))))
 
   ;; Common composed list accessors
   ;; These intentionally compose the semantics of car/cdr (including #nil / empty list handling).
@@ -92,12 +98,12 @@
 
   (define cons
     (lambda (item lst)
-      "Prepend item to list or call."
+      "Prepend item to list or call; dotted pair when cdr is not a list."
       (if (is.call lst)
         (as.call (c (list item) (as.list lst)))
         (if (is.list lst)
           (c (list item) lst)
-          (list item lst)))))
+          (r/call "rye_cons" (list item lst))))))
 
   (define list*
     (lambda (. args)

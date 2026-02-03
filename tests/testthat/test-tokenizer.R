@@ -147,3 +147,43 @@ test_that("tokenizer handles NA values", {
   expect_true(is.na(tokens[[5]]$value))
   expect_equal(typeof(tokens[[5]]$value), "complex")
 })
+
+# =============================================================================
+# Dotted-pair (standalone dot) tokenizer tests
+# =============================================================================
+
+test_that("standalone dot in dotted-pair syntax yields DOT token", {
+  tokens <- engine$tokenize("(a . b)")
+  expect_equal(length(tokens), 5)
+  expect_equal(tokens[[1]]$type, "LPAREN")
+  expect_equal(tokens[[2]]$type, "SYMBOL")
+  expect_equal(tokens[[2]]$value, "a")
+  expect_equal(tokens[[3]]$type, "DOT")
+  expect_equal(tokens[[3]]$value, ".")
+  expect_equal(tokens[[4]]$type, "SYMBOL")
+  expect_equal(tokens[[4]]$value, "b")
+  expect_equal(tokens[[5]]$type, "RPAREN")
+})
+
+test_that("dot with no surrounding space is part of symbol", {
+  tokens <- engine$tokenize("(a.b)")
+  expect_equal(length(tokens), 3)
+  expect_equal(tokens[[1]]$type, "LPAREN")
+  expect_equal(tokens[[2]]$type, "SYMBOL")
+  expect_equal(tokens[[2]]$value, "a.b")
+  expect_equal(tokens[[3]]$type, "RPAREN")
+})
+
+test_that("dot at start of list yields DOT token", {
+  tokens <- engine$tokenize("( . b)")
+  expect_equal(length(tokens), 4)
+  expect_equal(tokens[[2]]$type, "DOT")
+  expect_equal(tokens[[2]]$value, ".")
+})
+
+test_that("dot before closing paren yields DOT token", {
+  tokens <- engine$tokenize("(a . )")
+  expect_equal(length(tokens), 4)
+  expect_equal(tokens[[3]]$type, "DOT")
+  expect_equal(tokens[[4]]$type, "RPAREN")
+})

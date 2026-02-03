@@ -136,6 +136,11 @@ RyeEngine <- R6::R6Class(
       rye_env_registry(env, ".rye_module_registry", create = TRUE)
       rye_env_registry(env, ".rye_macros", create = TRUE)
 
+      env$rye_cons <- rye_cons
+      env$rye_cons_p <- rye_cons_p
+      env$rye_cons_as_list <- rye_cons_as_list
+      env$rye_cons_parts <- rye_cons_parts
+
       env$gensym <- function(prefix = "G") {
         self$macro_expander$gensym(prefix = prefix)
       }

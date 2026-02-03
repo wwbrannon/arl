@@ -186,6 +186,38 @@ test_that("cons adds element to front", {
   expect_equal(result[[3]], 3)
 })
 
+test_that("cons with non-list cdr produces dotted pair (rye_cons)", {
+  env <- stdlib_env(engine, new.env())
+  result <- engine$eval_in_env(engine$read("(cons 'a 'b)")[[1]], env)
+  expect_true(inherits(result, "rye_cons"))
+  expect_equal(as.character(result$car), "a")
+  expect_equal(as.character(result$cdr), "b")
+})
+
+test_that("car and cdr on dotted pair", {
+  env <- stdlib_env(engine, new.env())
+  pair <- engine$eval_in_env(engine$read("'(a . 42)")[[1]], env)
+  expect_equal(as.character(env$car(pair)), "a")
+  expect_equal(env$cdr(pair), 42)
+})
+
+test_that("list? and pair? are true for rye_cons", {
+  env <- stdlib_env(engine, new.env())
+  pair <- engine$eval_in_env(engine$read("(cons 1 2)")[[1]], env)
+  expect_true(env$`list?`(pair))
+  expect_true(env$`pair?`(pair))
+})
+
+test_that("__as-list on improper list returns proper prefix only", {
+  env <- stdlib_env(engine, new.env())
+  pl <- engine$read("'(a b . c)")[[1]][[2]]
+  expect_true(inherits(pl, "rye_cons"))
+  prefix <- env$`__as-list`(pl)
+  expect_equal(length(prefix), 2)
+  expect_equal(as.character(prefix[[1]]), "a")
+  expect_equal(as.character(prefix[[2]]), "b")
+})
+
 test_that("map applies function to list", {
   env <- new.env()
   stdlib_env(engine, env)
@@ -616,6 +648,29 @@ test_that("format-value handles environments correctly", {
     r6_class <- R6::R6Class("TestClass")
     expect_true(grepl("R6ClassGenerator", env$`format-value`(r6_class)))
   }
+})
+
+test_that("format-value for dotted pair (rye_cons) shows dotted form", {
+  env <- new.env()
+  stdlib_env(engine, env)
+  pair <- engine$read("'(a . b)")[[1]][[2]]
+  expect_true(inherits(pair, "rye_cons"))
+  formatted <- env$`format-value`(pair)
+  expect_true(grepl(" \\. ", formatted))
+  expect_true(grepl("a", formatted))
+  expect_true(grepl("b", formatted))
+})
+
+test_that("format-value for improper list shows dotted tail", {
+  env <- new.env()
+  stdlib_env(engine, env)
+  improper <- engine$read("'(a b . c)")[[1]][[2]]
+  expect_true(inherits(improper, "rye_cons"))
+  formatted <- env$`format-value`(improper)
+  expect_true(grepl(" \\. ", formatted))
+  expect_true(grepl("a", formatted))
+  expect_true(grepl("b", formatted))
+  expect_true(grepl("c", formatted))
 })
 
 test_that("string match helpers work", {

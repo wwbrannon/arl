@@ -95,6 +95,17 @@ Tokenizer <- R6::R6Class(
           next
         }
 
+        # Standalone dot (dotted-pair notation): emit DOT only when . is alone
+        if (char == ".") {
+          next_char <- if (i + 1 <= n) substr(source, i + 1, i + 1) else ""
+          if (next_char == "" || next_char %in% delimiters) {
+            add_token("DOT", ".")
+            col <- col + 1
+            i <- i + 1
+            next
+          }
+        }
+
         # String literals
         if (char == '"') {
           start_col <- col

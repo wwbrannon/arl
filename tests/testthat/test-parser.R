@@ -102,3 +102,47 @@ test_that("parser handles NA values", {
   expect_true(is.na(exprs[[1]]))
   expect_equal(typeof(exprs[[1]]), "double")
 })
+
+# =============================================================================
+# Dotted-pair (improper list) parser tests
+# =============================================================================
+
+test_that("single dotted pair parses to rye_cons", {
+  exprs <- engine$read("'(a . b)")
+  expect_equal(length(exprs), 1)
+  pair <- exprs[[1]][[2]]
+  expect_true(inherits(pair, "rye_cons"))
+  expect_equal(as.character(pair$car), "a")
+  expect_equal(as.character(pair$cdr), "b")
+})
+
+test_that("improper list parses to rye_cons chain", {
+  exprs <- engine$read("'(a b . c)")
+  expect_equal(length(exprs), 1)
+  improper <- exprs[[1]][[2]]
+  expect_true(inherits(improper, "rye_cons"))
+  expect_equal(as.character(improper$car), "a")
+  expect_true(inherits(improper$cdr, "rye_cons"))
+  expect_equal(as.character(improper$cdr$car), "b")
+  expect_equal(as.character(improper$cdr$cdr), "c")
+})
+
+test_that("normal list unchanged (still call)", {
+  exprs <- engine$read("'(a b c)")
+  expect_equal(length(exprs), 1)
+  lst <- exprs[[1]][[2]]
+  expect_true(is.call(lst))
+  expect_equal(length(lst), 3)
+  expect_equal(as.character(lst[[1]]), "a")
+})
+
+test_that("( . b) parses as two-element list (rest-param form)", {
+  # ( . b) parses as list of . and b; invalid as dotted pair but valid as formals
+  exprs <- engine$read("'( . b)")
+  expect_equal(length(exprs), 1)
+  lst <- exprs[[1]][[2]]
+  expect_true(is.call(lst))
+  expect_equal(length(lst), 2)
+  expect_equal(as.character(lst[[1]]), ".")
+  expect_equal(as.character(lst[[2]]), "b")
+})

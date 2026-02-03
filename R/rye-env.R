@@ -120,6 +120,12 @@ RyeEnv <- R6::R6Class(
         }
         return(invisible(NULL))
       }
+      if (rye_cons_p(pattern)) {
+        parts <- rye_cons_parts(pattern)
+        pattern <- c(parts$prefix, list(as.symbol(".")), list(parts$tail))
+        self$destructure_bind(pattern, value, mode = mode)
+        return(invisible(NULL))
+      }
       if (is.call(pattern) || (is.list(pattern) && is.null(attr(pattern, "class", exact = TRUE)))) {
         self$destructure_bind(pattern, value, mode = mode)
         return(invisible(NULL))
@@ -139,6 +145,10 @@ RyeEnv <- R6::R6Class(
           self$assign_existing(name, val)
         }
         invisible(NULL)
+      }
+      if (rye_cons_p(pattern)) {
+        parts <- rye_cons_parts(pattern)
+        pattern <- c(parts$prefix, list(as.symbol(".")), list(parts$tail))
       }
       if (is.symbol(pattern)) {
         return(bind_symbol(pattern, value))
