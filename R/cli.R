@@ -27,6 +27,7 @@ CLI_HELP_TEXT <- paste(
 #' @keywords internal
 #' @noRd
 #' @importFrom optparse OptionParser make_option parse_args
+#' @importFrom cli cat_line cli_alert_danger
 RyeCLI <- R6::R6Class(
   "RyeCLI",
   public = list(

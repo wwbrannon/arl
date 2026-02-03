@@ -69,13 +69,16 @@ engine$eval_text("(+ 1 2 3)")
 \subsection{Method \code{new()}}{
 Initialize engine components and base environment.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$new(env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$new(env = NULL, parent = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+\item{\code{env}}{Optional existing environment to use. If NULL, creates a new environment.}
+
+\item{\code{parent}}{Optional parent environment for the new environment. Only used if env is NULL.
+Defaults to baseenv(). Cannot be specified together with env.}
 }
 \if{html}{\out{</div>}}
 }

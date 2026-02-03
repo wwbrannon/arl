@@ -29,6 +29,7 @@ articles:
     contents:
       - getting-started
       - macros
+      - modules
       - r-interop
       - stdlib-reference
       - rye-vs-scheme

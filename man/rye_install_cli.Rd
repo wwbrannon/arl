@@ -11,7 +11,7 @@ rye_install_cli(
 }
 \arguments{
 \item{target_dir}{Directory for the \code{rye} executable. Defaults to the
-\code{RYE_BIN_DIR} environment variable, then \verb{~/.local/bin}, then \verb{~/bin}.}
+\code{RYE_BIN_DIR} environment variable, then \code{~/.local/bin}, then \code{~/bin}.}
 
 \item{overwrite}{Whether to overwrite an existing \code{rye} executable.}
 }

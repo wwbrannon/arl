@@ -2,9 +2,6 @@
 #'
 #' Minimal dotted-pair representation: a pair has a car and a cdr;
 #' when cdr is not a proper list, the pair is represented as rye_cons.
-#'
-#' @keywords internal
-#' @noRd
 
 #' Create a dotted pair (rye_cons)
 #'
