@@ -8,15 +8,15 @@
           length= length> length<
           eq? eqv? equal?
           equal?.default equal?.environment equal?.list
-          set-method!
+          s3-type check-s3-type-match use-method set-method!
           atom? procedure? rational? real? complex?
           symbol->string string->symbol
           ->symbol ->number ->list ->vector
           type-of)
 
+  (import _aliases)
   (import list)
   (import core)  ; for doc!
-  (import _aliases)
 
   ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
   ;; to avoid unnecessary stack frames. Docstrings attached using doc!.
@@ -135,6 +135,48 @@
       (isTRUE (< (length x) n))))
 
   ;; ============================================================================
+  ;; Implement S3 dispatch
+  ;; ============================================================================
+  (define s3-type
+    (lambda (obj)
+      (__r[[ (__rclass obj) 1)))
+
+  (define check-s3-type-match
+    (lambda (obj . rest)
+      (begin
+        (define type-a (s3-type obj))
+        (if (__r== (__rlength rest) 0)
+          #t
+          (begin
+            (define cand-types (__runique (__rlapply rest s3-type)))
+            (if (__r>= (__rlength cand-types) 1)
+              #f
+              (if (__r!= type-a (__r[[ cand-types 1))
+                #f
+                #t)))))))
+
+  (define use-method
+    ; pass args explicitly because we can't use R's magic internals
+    (lambda (generic-name obj args)
+      (begin
+        (define env (stdlib-env))
+        (define class-name (s3-type obj))
+        (define method-name (string-append "equal?." class-name))
+        (define method (get0 method-name :envir env :inherits #f))
+        (if (nil? method)
+          (set! method (get "equal?.default" :envir env)))
+        (funcall method args))))
+
+  ; a wrapper for clarity's sake around define
+  ; you can of course also just do (define equal?.my-class (lambda (a b string) ...))
+  (define set-method!
+    (lambda (generic-name class-name method-fun)
+      "Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
+      (define env (stdlib-env))
+      (define method-name (string-append (->string generic-name) "." (->string class-name)))
+      (assign method-name method-fun :envir env)))
+
+  ;; ============================================================================
   ;; Phase 4: Enhanced Equality & Type Predicates
   ;; ============================================================================
 
@@ -208,22 +250,6 @@
           result)
         #f)))
 
-  ;; equal? - S3-style generic: dispatch on class of first argument.
-  ;; Methods: equal?.default, equal?.environment, equal?.list (and user-defined).
-  ;; Use (set-method! 'equal? 'my-class fn) to add methods for new types.
-  (define equal?.default
-    (lambda (a b (strict #f))
-      "Default equality: atomic/vector comparison. :strict #t => #f; else use == with type coercion."
-      (if strict
-        #f
-        (begin
-          (define comp-result (== a b))
-          (if (is.logical comp-result)
-            (if (> (length comp-result) 1)
-              (isTRUE (all comp-result))
-              (isTRUE comp-result))
-            #f)))))
-
   (define equal?.environment
     (lambda (a b (strict #f))
       "Compare environments by bindings and values (dict, set, R6, refclass are env-based)."
@@ -238,27 +264,30 @@
         #f
         (list-equal? a b))))
 
+  (define equal?.default
+    (lambda (a b (strict #f))
+      "Default equality: atomic/vector comparison. :strict #t => #f; else use == with type coercion."
+      (begin
+        (define comp-result (if strict (identical? a b) (__r== a b)))
+        (if (is.logical comp-result)
+          (if (__r> (length comp-result) 1)
+            (isTRUE (all comp-result))
+            (isTRUE comp-result))
+          #f))))
+
+  ;; equal? - S3-style generic: dispatch on class of first argument.
+  ;; Methods: equal?.default, equal?.environment, equal?.list (and user-defined).
+  ;; Use (set-method! 'equal? 'my-class fn) to add methods for new types.
   (define equal?
     (lambda (a b (strict #f))
-      "Deep structural equality. Dispatches on class of first argument. Optional :strict #t uses identical? for atomics.
+      "Deep structural equality. Dispatches on class of first argument.
+       Optional :strict #t uses identical? for atomics.
        Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
-      (if (identical? a b)
-        #t
-        (begin
-          (define env (stdlib-env))
-          (define class-name (r/call "[[" (list (r/call "class" (list a)) 1)))
-          (define method-name (string-append "equal?." class-name))
-          (define method (r/call "get0" (list method-name :envir env :inherits #f)))
-          (if (nil? method)
-            (set! method (r/call "get" (list "equal?.default" :envir env))))
-          (method a b strict)))))
-
-  (define set-method!
-    (lambda (generic-name class-name method-fun)
-      "Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
-      (define env (stdlib-env))
-      (define method-name (string-append (->string generic-name) "." (->string class-name)))
-      (r/call "assign" (list method-name method-fun :envir env))))
+       (if (__r! (check-s3-type-match (list a b)))
+         #f
+        (if (identical? a b)
+          #t
+          (use-method "equal?" a (list a b strict))))))
 
   ;; Additional type predicates
   (define atom?

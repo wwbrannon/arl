@@ -1,16 +1,18 @@
 stdlib_env <- function(engine, env = NULL) {
-  if (is.null(env)) {
-    return(engine$env$env)
-  }
-  if (!is.environment(env)) {
-    stop("Expected an environment")
-  }
-  parent.env(env) <- engine$env$env
   loader_path <- rye_resolve_module_path("_stdlib_loader")
   if (is.null(loader_path)) {
     stop("stdlib loader not found")
   }
   expr <- engine$read(sprintf('(load "%s")', loader_path))[[1]]
+  if (is.null(env)) {
+    env <- engine$env$env
+    engine$eval_in_env(expr, env)
+    return(env)
+  }
+  if (!is.environment(env)) {
+    stop("Expected an environment")
+  }
+  parent.env(env) <- engine$env$env
   engine$eval_in_env(expr, env)
   core_env <- engine$env$env
   for (name in ls(core_env, all.names = TRUE)) {
