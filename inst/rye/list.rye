@@ -124,7 +124,7 @@
   (define append
     (lambda (. lists)
       (define result (list))
-      (for* (lst lists)
+      (for (lst lists)
         (set! result (c result (__as-list lst))))
       result))
 
@@ -194,7 +194,7 @@
     (lambda (key alist pred)
       (define result #nil)
       (define remaining (__as-list alist))
-      (while* (and (not (null? remaining)) (not result))
+      (while (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
           (when (and (list? pair) (>= (__rlength pair) 1))
@@ -238,7 +238,7 @@
       "Find first pair in alist with matching value (searches cdr of pairs; uses equal?)."
       (define result #nil)
       (define remaining (__as-list alist))
-      (while* (and (not (null? remaining)) (not result))
+      (while (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
           (when (and (list? pair) (>= (__rlength pair) 2))
@@ -267,7 +267,7 @@
           (define less (list))
           (define greater (list))
           (define remaining rest-items)
-          (while* (not (null? remaining))
+          (while (not (null? remaining))
             (if (comparator (car remaining) pivot)
               (set! less (append less (list (car remaining))))
               (set! greater (append greater (list (car remaining)))))
@@ -296,7 +296,7 @@
       (define l1 (__as-list list1))
       (define l2 (__as-list list2))
       (define acc (list))
-      (while* (and (not (null? l1)) (not (null? l2)))
+      (while (and (not (null? l1)) (not (null? l2)))
         (if (comparator (car l1) (car l2))
           (begin
             (set! acc (cons (car l1) acc))
@@ -349,7 +349,7 @@
         (begin
           (define result (list))
           (define i 0)
-          (while* (< i n)
+          (while (< i n)
             (begin
               (set! result (cons value result))
               (set! i (+ i 1))))

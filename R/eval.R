@@ -485,9 +485,9 @@ Evaluator <- R6::R6Class(
           RyeEnv$new(env)$assign_pattern(name, value, mode = "set", context = "set!")
           NULL
         },
-        `while*` = function(expr, env, op_name) {
+        `while` = function(expr, env, op_name) {
           if (length(expr) < 3) {
-            stop("while* requires at least 2 arguments: (while* test body...)")
+            stop("while requires at least 2 arguments: (while test body...)")
           }
           test_expr <- expr[[2]]
           body_expr <- if (length(expr) == 3) {

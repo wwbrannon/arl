@@ -225,7 +225,7 @@
         (begin
           (define result #t)
           (define remaining names1)
-          (while* (and (not (null? remaining)) result)
+          (while (and (not (null? remaining)) result)
             (begin
               (when (not (equal? (r/call "get" (list (car remaining) :envir env1))
                                  (r/call "get" (list (car remaining) :envir env2))))
@@ -243,7 +243,7 @@
           (define result #t)
           (define remaining1 lst1)
           (define remaining2 lst2)
-          (while* (and (not (null? remaining1)) result)
+          (while (and (not (null? remaining1)) result)
             (begin
               (when (not (equal? (car remaining1) (car remaining2)))
                 (set! result #f))

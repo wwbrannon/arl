@@ -1,5 +1,3 @@
-o) rename while* and for* to while and for
-
 o) the repl is also kinda fragile and ugly. replace it?
 
 o) turn the pairlists into an R6 class?

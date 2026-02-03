@@ -165,7 +165,7 @@
             (if (> (length keys) 0)
               (r/call "lapply" (list (as.list keys) merge-key)))))))
     (define remaining dicts)
-    (while* (> (length remaining) 0)
+    (while (> (length remaining) 0)
       (begin
         (merge-dict (car remaining))
         (set! remaining (cdr remaining))))

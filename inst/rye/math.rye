@@ -33,7 +33,7 @@
           (begin
             (define result #t)
             (define remaining args)
-            (while* (and (__r> (__rlength remaining) 1) result)
+            (while (and (__r> (__rlength remaining) 1) result)
               (begin
                 (if (not (__r< (car remaining) (car (cdr remaining))))
                   (set! result #f)
@@ -51,7 +51,7 @@
           (begin
             (define result #t)
             (define remaining args)
-            (while* (and (__r> (__rlength remaining) 1) result)
+            (while (and (__r> (__rlength remaining) 1) result)
               (begin
                 (if (not (__r> (car remaining) (car (cdr remaining))))
                   (set! result #f)
@@ -69,7 +69,7 @@
           (begin
             (define result #t)
             (define remaining args)
-            (while* (and (__r> (__rlength remaining) 1) result)
+            (while (and (__r> (__rlength remaining) 1) result)
               (begin
                 (if (not (__r<= (car remaining) (car (cdr remaining))))
                   (set! result #f)
@@ -87,7 +87,7 @@
           (begin
             (define result #t)
             (define remaining args)
-            (while* (and (__r> (__rlength remaining) 1) result)
+            (while (and (__r> (__rlength remaining) 1) result)
               (begin
                 (if (not (__r>= (car remaining) (car (cdr remaining))))
                   (set! result #f)
@@ -105,7 +105,7 @@
           (begin
             (define result #t)
             (define remaining args)
-            (while* (and (__r> (__rlength remaining) 1) result)
+            (while (and (__r> (__rlength remaining) 1) result)
               (begin
                 (if (not (__r== (car remaining) (car (cdr remaining))))
                   (set! result #f)

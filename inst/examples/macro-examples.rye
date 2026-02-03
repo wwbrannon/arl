@@ -76,7 +76,7 @@
   "Repeat body n times."
   (let ((counter (gensym "counter")))
     `(let ((,counter 0))
-       (while* (< ,counter ,n)
+       (while (< ,counter ,n)
          (begin ,@body)
          (set! ,counter (+ ,counter 1))))))
 

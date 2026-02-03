@@ -32,7 +32,7 @@
       (define items (__as-list lst))
       (define acc (list))
       (define remaining items)
-      (while* (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
+      (while (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
         (begin
           (set! acc (c acc (list (car remaining))))
           (set! remaining (cdr remaining))))
@@ -43,7 +43,7 @@
       "Drop items while predicate is true."
       (define items (__as-list lst))
       (define remaining items)
-      (while* (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
+      (while (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
         (set! remaining (cdr remaining)))
       remaining))
 
@@ -59,7 +59,7 @@
             (list)
             (begin
               (define acc (list))
-              (for* (idx (seq 1 (length items) step))
+              (for (idx (seq 1 (length items) step))
                 (begin
                   (define end (+ idx (- n 1)))
                   (when (<= end (length items))
@@ -71,7 +71,7 @@
       "Flatten nested lists."
       (define items (__as-list lst))
       (define acc (list))
-      (for* (item items)
+      (for (item items)
         (if (list? item)
           (set! acc (c acc (flatten item)))
           (set! acc (c acc (list item)))))
@@ -110,7 +110,7 @@
       (define items (__as-list lst))
       (define result #f)
       (define remaining items)
-      (while* (and (> (length remaining) 0) (not result))
+      (while (and (> (length remaining) 0) (not result))
         (begin
           (when (identical (car remaining) x)
             (set! result remaining))

@@ -17,7 +17,7 @@
       "Map then concatenate results."
       (define results (lapply (__as-list lst) fn))
       (define acc (list))
-      (for* (result results)
+      (for (result results)
         (set! acc (c acc (__as-list result))))
       acc))
 
@@ -126,7 +126,7 @@
       (define current init)
       (define acc (list))
       (define done #f)
-      (while* (not done)
+      (while (not done)
         (begin
           (set! acc (c acc current))
           (define next (fn current))
@@ -158,7 +158,7 @@
       "Call function n times, return list of results."
       (define acc (list))
       (define count n)
-      (while* (> count 0)
+      (while (> count 0)
         (begin
           (set! acc (append acc (list (fn))))
           (set! count (- count 1))))

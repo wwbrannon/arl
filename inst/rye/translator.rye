@@ -151,7 +151,7 @@
                            (define arg-parts (character 0))
                            (define param-names (character 0))
                            (define i 1)
-                           (while* (<= i (length arg-items))
+                           (while (<= i (length arg-items))
                              (begin
                               (define arg (__at arg-items i))
                               (if (symbol? arg)
@@ -192,7 +192,7 @@
                            (if has-body
                              (begin
                                (define j 3)
-                               (while* (<= j (length expr))
+                               (while (<= j (length expr))
                                  (begin
                                    (set! body-parts (c body-parts (translate-expr (__at expr j) (+ indent 1))))
                                    (set! j (+ j 1)))))
@@ -249,7 +249,7 @@
                          (begin
                            (define parts (character 0))
                            (define j 2)
-                           (while* (<= j (length expr))
+                           (while (<= j (length expr))
                              (begin
                                (set! parts (c parts (translate-expr (__at expr j) indent)))
                                (set! j (+ j 1))))
@@ -279,7 +279,7 @@
                          (begin
                            (define parts (character 0))
                            (define j 2)
-                           (while* (<= j (length expr))
+                           (while (<= j (length expr))
                              (begin
                                (set! parts (c parts (translate-expr (__at expr j) indent)))
                                (set! j (+ j 1))))
@@ -294,7 +294,7 @@
                            (define op-name (as.character op))
                            (define args (character 0))
                            (define j 2)
-                           (while* (<= j (length expr))
+                           (while (<= j (length expr))
                              (begin
                                (define arg-expr (__at expr j))
                                (define arg-text (translate-expr arg-expr indent))
@@ -315,7 +315,7 @@
                            (define fn-name (translate-expr op indent))
                            (define args (character 0))
                            (define j 2)
-                           (while* (<= j (length expr))
+                           (while (<= j (length expr))
                              (begin
                                (define arg-expr (__at expr j))
                                (if (keyword? arg-expr)
@@ -342,7 +342,7 @@
     (define exprs (rye_read source))
     (define r-code-parts (character 0))
     (define i 1)
-    (while* (<= i (length exprs))
+    (while (<= i (length exprs))
       (begin
         (set! r-code-parts (c r-code-parts (translate-expr (__at exprs i) 0)))
         (set! i (+ i 1))))

@@ -27,7 +27,7 @@
 
 (println "Classic FizzBuzz (1-20):")
 (define i 1)
-(while* (<= i 20)
+(while (<= i 20)
   (println (fizzbuzz i))
   (set! i (+ i 1)))
 
@@ -36,7 +36,7 @@
 ;; ============================================================================
 
 (println "\nUsing for loop (1-15):")
-(for* (n (r/call "seq" (list 1 15)))
+(for (n (r/call "seq" (list 1 15)))
   (println (fizzbuzz n)))
 
 ;; ============================================================================
@@ -66,7 +66,7 @@
       result)))
 
 (println "\nUsing when (1-10):")
-(for* (n (r/call "seq" (list 1 10)))
+(for (n (r/call "seq" (list 1 10)))
   (println (fizzbuzz-when n)))
 
 ;; ============================================================================
@@ -87,7 +87,7 @@
 
 (println "\nUsing case (note: case checks exact value, not pattern):")
 (println "1-15 with case-based FizzBuzz:")
-(for* (n (r/call "seq" (list 1 15)))
+(for (n (r/call "seq" (list 1 15)))
   (println (fizzbuzz-case n)))
 
 ;; ============================================================================

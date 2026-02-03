@@ -126,7 +126,7 @@
   (assert-true (! (== 1 1 2)))))
 
 ;; Variadic comparisons with many arguments (no tail-call optimization;
-;; implementation uses while* loop, so many args must not blow the stack)
+;; implementation uses while loop, so many args must not blow the stack)
 (define test-variadic-comparison-many-args (lambda ()
   ;; Build list of 100 equal values for ==
   (define hundred (iota 100))

@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Looping Macros
 
 (module looping
-  (export until for* loop recur)
+  (export until for loop recur)
 
   (import higher-order)
   (import list)
@@ -9,18 +9,18 @@
   (import sequences)
 
   ;;
-  ;; for loops (defined in terms of while*, which is a built-in special form)
+  ;; for loops (defined in terms of while, which is a built-in special form)
   ;;
 
-  (defmacro for* (binding . body)
-    "Loop over seq binding var each iteration. Expands to while*."
+  (defmacro for (binding . body)
+    "Loop over seq binding var each iteration. Expands to while."
     (begin
       (define var (car binding))
       (define seq (car (cdr binding)))
       (define remaining (gensym "for_remaining"))
       `(begin
          (define ,remaining (__as-list ,seq))
-         (while* (not (null? ,remaining))
+         (while (not (null? ,remaining))
            (define ,var (car ,remaining))
            ,@body
            (set! ,remaining (cdr ,remaining))))))
@@ -136,7 +136,7 @@
              (define ,loop-done #f)
              (define ,loop-step (lambda () (begin ,@rewritten-body)))
 
-             (while* (not ,loop-done)
+             (while (not ,loop-done)
                (set! ,recur-flag #f)
                (set! ,loop-result (,loop-step))
                (if ,recur-flag
@@ -151,5 +151,5 @@
 
   (defmacro until (test . body)
     "Repeat body until test is truthy."
-    `(while* (not ,test) ,@body))
+    `(while (not ,test) ,@body))
 )

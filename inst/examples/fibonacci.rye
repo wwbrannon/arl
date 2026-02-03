@@ -49,7 +49,7 @@
           (define a 0)
           (define b 1)
           (define i 2)
-          (while* (<= i n)
+          (while (<= i n)
             (define temp b)
             (set! b (+ a b))
             (set! a temp)
