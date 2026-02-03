@@ -21,16 +21,37 @@
 (define test-assoc-empty-list (lambda ()
   (assert-equal (assoc 'a (list)) #nil)))
 
-(define test-assq-symbol-identity (lambda ()
-  ;; assq uses eq? (identity comparison)
-  (define key 'test)
-  (define alist (list (list key 1)))
-  (assert-equal (assq 'test alist) (list 'test 1))))
+(define test-assoc-by-equal? (lambda ()
+  ;; assoc-by-equal? is alias for assoc
+  (define alist (list (list 'a 1) (list 'b 2) (list 'c 3)))
+  (assert-equal (assoc-by-equal? 'b alist) (list 'b 2))))
 
-(define test-assv-value-equality (lambda ()
-  ;; assv uses eqv? (value equality)
-  (define alist (list (list 5 "five") (list 10 "ten")))
-  (assert-equal (assv 5 alist) (list 5 "five"))))
+(define test-assoc-by-identical? (lambda ()
+  ;; assoc-by-identical? uses R's identical?
+  (define key 'k)
+  (define alist (list (list key 1)))
+  (assert-equal (assoc-by-identical? key alist) (list 'k 1))))
+
+(define test-assoc-by-== (lambda ()
+  ;; assoc-by-== uses R's == (numeric/coercing equality)
+  (define alist (list (list 1 "one") (list 2 "two") (list 3 "three")))
+  (assert-equal (assoc-by-== 1 alist) (list 1 "one"))
+  (assert-equal (assoc-by-== 1L alist) (list 1 "one"))))
+
+(define test-assq-errors (lambda ()
+  ;; assq cannot be implemented in R (no eq?) - errors when called.
+  ;; Error behavior is tested in testthat (expect_error).
+  #t))
+
+(define test-assv-errors (lambda ()
+  ;; assv cannot be implemented in R (no eqv?) - errors when called.
+  ;; Error behavior is tested in testthat (expect_error).
+  #t))
+
+(define test-rassoc-by-equal? (lambda ()
+  ;; rassoc-by-equal? is alias for rassoc
+  (define alist (list (list 'a 1) (list 'b 2) (list 'c 3)))
+  (assert-equal (rassoc-by-equal? 2 alist) (list 'b 2))))
 
 (define test-rassoc-value-search (lambda ()
   ;; rassoc searches by value (cdr of pair)

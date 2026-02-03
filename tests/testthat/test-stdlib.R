@@ -141,6 +141,41 @@ test_that("ordinal list accessors work (second, third, fourth)", {
   expect_null(env$fourth(list(1, 2, 3)))
 })
 
+test_that("assoc family: assoc, assoc-by-equal?, assoc-by-identical?, assoc-by-==, rassoc, rassoc-by-equal?", {
+  env <- stdlib_env(engine, new.env())
+
+  # assoc (equal?) and assoc-by-equal? (alias)
+  alist <- list(list(quote(a), 1), list(quote(b), 2), list(quote(c), 3))
+  expect_equal(env$assoc(quote(b), alist), list(quote(b), 2))
+  expect_equal(env$`assoc-by-equal?`(quote(b), alist), list(quote(b), 2))
+
+  # assoc-by-identical? uses R's identical()
+  key <- quote(k)
+  alist_id <- list(list(key, 1))
+  expect_equal(env$`assoc-by-identical?`(key, alist_id), list(quote(k), 1))
+
+  # assoc-by-== uses R's == (e.g. 1 and 1L match)
+  alist_num <- list(list(1, "one"), list(2, "two"), list(3, "three"))
+  expect_equal(env$`assoc-by-==`(1, alist_num), list(1, "one"))
+  expect_equal(env$`assoc-by-==`(1L, alist_num), list(1, "one"))
+
+  # rassoc and rassoc-by-equal? (alias)
+  expect_equal(env$rassoc(2, alist), list(quote(b), 2))
+  expect_equal(env$`rassoc-by-equal?`(2, alist), list(quote(b), 2))
+})
+
+test_that("assq and assv error (cannot implement eq?/eqv? in R)", {
+  env <- stdlib_env(engine, new.env())
+  expect_error(
+    engine$eval_in_env(engine$read("(assq 'x (list (list 'x 1)))")[[1]], env),
+    "assq cannot be properly implemented"
+  )
+  expect_error(
+    engine$eval_in_env(engine$read("(assv 5 (list (list 5 \"five\")))")[[1]], env),
+    "assv cannot be properly implemented"
+  )
+})
+
 test_that("cons adds element to front", {
   env <- new.env()
   stdlib_env(engine, env)

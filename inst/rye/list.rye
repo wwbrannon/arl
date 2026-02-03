@@ -10,7 +10,8 @@
           cadddr cddddr
           cons list* append reverse
           first second third fourth rest last nth
-          assoc assq assv rassoc
+          assoc assoc-by-equal? assoc-by-identical? assoc-by-==
+          assq assv rassoc rassoc-by-equal?
           sort sort-by merge stable-sort
           range iota make-list
           list-ref list-tail)
@@ -172,51 +173,63 @@
   ;; ============================================================================
 
   ;; Association lists (alists)
+  ;; Internal: predicate (key-in-pair target-key) -> boolean.
+  ;; __r== can return a vector; treat as match only when scalar #t or all true.
+  (define __r==-pred
+    (lambda (a b)
+      (define comp-result (__r== a b))
+      (if (r/call "is.logical" (list comp-result))
+        (if (__r> (r/call "length" (list comp-result)) 1)
+          (isTRUE (r/call "all" (list comp-result)))
+          (isTRUE comp-result))
+        #f)))
+
+  (define __assoc-by-pred
+    (lambda (key alist pred)
+      (define result #nil)
+      (define remaining (__as-list alist))
+      (while* (and (not (null? remaining)) (not result))
+        (begin
+          (define pair (car remaining))
+          (when (and (list? pair) (>= (__rlength pair) 1))
+            (when (pred (car pair) key)
+              (set! result pair)))
+          (set! remaining (cdr remaining))))
+      result))
+
   (define assoc
     (lambda (key alist)
       "Find first pair in alist with matching key (uses equal?)."
-      (define result #nil)
-      (define remaining (__as-list alist))
-      (while* (and (not (null? remaining)) (not result))
-        (begin
-          (define pair (car remaining))
-          (when (and (list? pair) (>= (__rlength pair) 1))
-            (when (equal? (car pair) key)
-              (set! result pair)))
-          (set! remaining (cdr remaining))))
-      result))
+      (__assoc-by-pred key alist equal?)))
+
+  (define assoc-by-equal?
+    (lambda (key alist)
+      "Alias for assoc: find first pair with key matching under equal?."
+      (assoc key alist)))
+
+  (define assoc-by-identical?
+    (lambda (key alist)
+      "Find first pair in alist with matching key (uses R's identical?)."
+      (__assoc-by-pred key alist identical?)))
+
+  (define assoc-by-==
+    (lambda (key alist)
+      "Find first pair in alist with matching key (uses R's ==)."
+      (__assoc-by-pred key alist __r==-pred)))
 
   (define assq
     (lambda (key alist)
-      "Find first pair in alist with matching key (uses eq?/identical)."
-      (define result #nil)
-      (define remaining (__as-list alist))
-      (while* (and (not (null? remaining)) (not result))
-        (begin
-          (define pair (car remaining))
-          (when (and (list? pair) (>= (__rlength pair) 1))
-            (when (identical (car pair) key)
-              (set! result pair)))
-          (set! remaining (cdr remaining))))
-      result))
+      "assq cannot be properly implemented in R (no eq?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead."
+      (error "assq cannot be properly implemented in R. Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.")))
 
   (define assv
     (lambda (key alist)
-      "Find first pair in alist with matching key (uses identical? - R's native equality)."
-      (define result #nil)
-      (define remaining (__as-list alist))
-      (while* (and (not (null? remaining)) (not result))
-        (begin
-          (define pair (car remaining))
-          (when (and (list? pair) (>= (__rlength pair) 1))
-            (when (identical? (car pair) key)
-              (set! result pair)))
-          (set! remaining (cdr remaining))))
-      result))
+      "assv cannot be properly implemented in R (no eqv?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead."
+      (error "assv cannot be properly implemented in R. Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.")))
 
   (define rassoc
     (lambda (value alist)
-      "Find first pair in alist with matching value (searches cdr of pairs)."
+      "Find first pair in alist with matching value (searches cdr of pairs; uses equal?)."
       (define result #nil)
       (define remaining (__as-list alist))
       (while* (and (not (null? remaining)) (not result))
@@ -227,6 +240,11 @@
               (set! result pair)))
           (set! remaining (cdr remaining))))
       result))
+
+  (define rassoc-by-equal?
+    (lambda (value alist)
+      "Alias for rassoc: find first pair with value matching under equal?."
+      (rassoc value alist)))
 
   ;; Sorting
   (define sort
