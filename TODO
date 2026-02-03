@@ -1,12 +1,9 @@
 medium stuff:
 --------------------------------------
-o) tests fail when R CMD check runs them
-
 o) change inherits where appropriate to r6_isinstance
 
-o) remove rye_cons_p etc
-
-o) fix failing repl tests
+o) remove rye_cons_p etc -- avoid "r/call", we don't now need it
+o) tests fail when R CMD check runs them
 
 o) fix the minor issues from opus auditing the tests
 

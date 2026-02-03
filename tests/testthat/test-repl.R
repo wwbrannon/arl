@@ -266,6 +266,7 @@ test_that("RyeREPL print_value handles vectors with print", {
 test_that("engine$repl exits on (quit) command", {
   call_count <- 0
   withr::local_options(list(
+    rye.repl_quiet = FALSE,
     rye.repl_read_form_override = function(...) {
       call_count <<- call_count + 1
       if (call_count == 1) {
@@ -276,12 +277,13 @@ test_that("engine$repl exits on (quit) command", {
     rye.repl_can_use_history_override = FALSE
   ))
   output <- capture.output(engine$repl())
-  expect_true(any(grepl("^Rye REPL", output)))
+  expect_true(any(grepl("Rye REPL", output, fixed = TRUE)), info = "REPL should show startup banner")
 })
 
 test_that("engine$repl exits on (exit) command", {
   call_count <- 0
   withr::local_options(list(
+    rye.repl_quiet = FALSE,
     rye.repl_read_form_override = function(...) {
       call_count <<- call_count + 1
       if (call_count == 1) {
@@ -292,12 +294,13 @@ test_that("engine$repl exits on (exit) command", {
     rye.repl_can_use_history_override = FALSE
   ))
   output <- capture.output(engine$repl())
-  expect_true(any(grepl("^Rye REPL", output)))
+  expect_true(any(grepl("Rye REPL", output, fixed = TRUE)), info = "REPL should show startup banner")
 })
 
 test_that("engine$repl exits on quit command", {
   call_count <- 0
   withr::local_options(list(
+    rye.repl_quiet = FALSE,
     rye.repl_read_form_override = function(...) {
       call_count <<- call_count + 1
       if (call_count == 1) {
@@ -308,21 +311,33 @@ test_that("engine$repl exits on quit command", {
     rye.repl_can_use_history_override = FALSE
   ))
   output <- capture.output(engine$repl())
-  expect_true(any(grepl("^Rye REPL", output)))
+  expect_true(any(grepl("Rye REPL", output, fixed = TRUE)), info = "REPL should show startup banner")
 })
 
 test_that("engine$repl exits on NULL from read_form", {
   withr::local_options(list(
+    rye.repl_quiet = FALSE,
     rye.repl_read_form_override = function(...) NULL,
     rye.repl_can_use_history_override = FALSE
   ))
   output <- capture.output(engine$repl())
-  expect_true(any(grepl("^Rye REPL", output)))
+  expect_true(any(grepl("Rye REPL", output, fixed = TRUE)), info = "REPL should show startup banner")
+})
+
+test_that("engine$repl with rye.repl_quiet prints no banner", {
+  withr::local_options(list(
+    rye.repl_quiet = TRUE,
+    rye.repl_read_form_override = function(...) NULL,
+    rye.repl_can_use_history_override = FALSE
+  ))
+  output <- capture.output(engine$repl())
+  expect_length(output, 0)
 })
 
 test_that("engine$repl handles parse errors gracefully", {
   call_count <- 0
   withr::local_options(list(
+    rye.repl_quiet = FALSE,
     rye.repl_read_form_override = function(...) {
       call_count <<- call_count + 1
       if (call_count == 1) {
@@ -333,7 +348,7 @@ test_that("engine$repl handles parse errors gracefully", {
     rye.repl_can_use_history_override = FALSE
   ))
   output <- capture.output(engine$repl())
-  expect_true(any(grepl("^Rye REPL", output)))
+  expect_true(any(grepl("Rye REPL", output, fixed = TRUE)), info = "REPL should show startup banner")
 })
 
 test_that("engine$repl evaluates expressions and prints results", {
