@@ -1,10 +1,8 @@
-o) there's a tail recursive pattern in ==! eliminate any tail recursion.
-
 o) the repl is also kinda fragile and ugly. replace it?
 
 o) turn the pairlists into an R6 class?
 
-o) fix while* and for*
+o) fix while*, for*, for-r, while-r
 
 o) fix the minor issues from opus auditing the tests
 

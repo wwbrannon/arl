@@ -16,6 +16,7 @@
           gcd lcm)
 
   (import _aliases)
+  (import looping)
 
   (define %
     (lambda (x y)
@@ -30,14 +31,15 @@
         (if (__r== (__rlength args) 2)
           (__r< (__r[[ args 1) (__r[[ args 2))
           (begin
-            (define check-pairs
-              (lambda (lst)
-                (if (__r<= (__rlength lst) 1)
-                  #t
-                  (if (__r< (car lst) (car (cdr lst)))
-                    (check-pairs (cdr lst))
-                    #f))))
-            (check-pairs args))))))
+            (define result #t)
+            (define remaining args)
+            (while* (and (__r> (__rlength remaining) 1) result)
+              (begin
+                (if (not (__r< (car remaining) (car (cdr remaining))))
+                  (set! result #f)
+                  #nil)
+                (set! remaining (cdr remaining))))
+            result)))))
 
   (define >
     (lambda (. args)
@@ -47,14 +49,15 @@
         (if (__r== (__rlength args) 2)
           (__r> (__r[[ args 1) (__r[[ args 2))
           (begin
-            (define check-pairs
-              (lambda (lst)
-                (if (__r<= (__rlength lst) 1)
-                  #t
-                  (if (__r> (car lst) (car (cdr lst)))
-                    (check-pairs (cdr lst))
-                    #f))))
-            (check-pairs args))))))
+            (define result #t)
+            (define remaining args)
+            (while* (and (__r> (__rlength remaining) 1) result)
+              (begin
+                (if (not (__r> (car remaining) (car (cdr remaining))))
+                  (set! result #f)
+                  #nil)
+                (set! remaining (cdr remaining))))
+            result)))))
 
   (define <=
     (lambda (. args)
@@ -64,14 +67,15 @@
         (if (__r== (__rlength args) 2)
           (__r<= (__r[[ args 1) (__r[[ args 2))
           (begin
-            (define check-pairs
-              (lambda (lst)
-                (if (__r<= (__rlength lst) 1)
-                  #t
-                  (if (__r<= (car lst) (car (cdr lst)))
-                    (check-pairs (cdr lst))
-                    #f))))
-            (check-pairs args))))))
+            (define result #t)
+            (define remaining args)
+            (while* (and (__r> (__rlength remaining) 1) result)
+              (begin
+                (if (not (__r<= (car remaining) (car (cdr remaining))))
+                  (set! result #f)
+                  #nil)
+                (set! remaining (cdr remaining))))
+            result)))))
 
   (define >=
     (lambda (. args)
@@ -81,14 +85,15 @@
         (if (__r== (__rlength args) 2)
           (__r>= (__r[[ args 1) (__r[[ args 2))
           (begin
-            (define check-pairs
-              (lambda (lst)
-                (if (__r<= (__rlength lst) 1)
-                  #t
-                  (if (__r>= (car lst) (car (cdr lst)))
-                    (check-pairs (cdr lst))
-                    #f))))
-            (check-pairs args))))))
+            (define result #t)
+            (define remaining args)
+            (while* (and (__r> (__rlength remaining) 1) result)
+              (begin
+                (if (not (__r>= (car remaining) (car (cdr remaining))))
+                  (set! result #f)
+                  #nil)
+                (set! remaining (cdr remaining))))
+            result)))))
 
   (define ==
     (lambda (. args)
@@ -98,14 +103,15 @@
         (if (__r== (__rlength args) 2)
           (__r== (__r[[ args 1) (__r[[ args 2))
           (begin
-            (define check-pairs
-              (lambda (lst)
-                (if (__r<= (__rlength lst) 1)
-                  #t
-                  (if (__r== (car lst) (car (cdr lst)))
-                    (check-pairs (cdr lst))
-                    #f))))
-            (check-pairs args))))))
+            (define result #t)
+            (define remaining args)
+            (while* (and (__r> (__rlength remaining) 1) result)
+              (begin
+                (if (not (__r== (car remaining) (car (cdr remaining))))
+                  (set! result #f)
+                  #nil)
+                (set! remaining (cdr remaining))))
+            result)))))
 
   ;; Alias = to == for convenience
   (define = ==)

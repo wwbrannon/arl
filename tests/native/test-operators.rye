@@ -124,3 +124,16 @@
 (define test-equality-chained (lambda ()
   (assert-true (== 2 2 2))
   (assert-true (! (== 1 1 2)))))
+
+;; Variadic comparisons with many arguments (no tail-call optimization;
+;; implementation uses while* loop, so many args must not blow the stack)
+(define test-variadic-comparison-many-args (lambda ()
+  ;; Build list of 100 equal values for ==
+  (define hundred (iota 100))
+  (define all-ones (lapply hundred (lambda (i) 1)))
+  (assert-true (funcall == all-ones))
+  ;; Build strictly increasing list for <
+  (assert-true (funcall < hundred))
+  ;; Mismatch in middle: == should be #f
+  (define with-mismatch (append (list 1 1 1) (list 2) (lapply (iota 95) (lambda (i) 1))))
+  (assert-true (! (funcall == with-mismatch)))))
