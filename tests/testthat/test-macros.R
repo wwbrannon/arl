@@ -230,9 +230,6 @@ test_that("stdlib macros from files work", {
   )
   expect_equal(result, 3)
 
-  result <- engine$eval_in_env(engine$read("(for* (x (list 1 2 3)) (* x 2))")[[1]], env)
-  expect_equal(result, list(2, 4, 6))
-
   result <- engine$eval_in_env(engine$read("(-> 1 (+ 2) (* 3))")[[1]], env)
   expect_equal(result, 9)
 

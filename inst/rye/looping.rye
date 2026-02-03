@@ -37,28 +37,21 @@
       `(r/eval (call (list (get "while" (as.environment "package:base")) ',test ',body-expr)) (current-env))))
 
   ;;
-  ;; for loops
+  ;; for loops (defined in terms of while* so we only have one loop to maintain)
   ;;
 
   (defmacro for* (binding . body)
-    "Map body over seq, binding var."
+    "Loop over seq binding var each iteration. Expands to while*."
     (begin
       (define var (car binding))
       (define seq (car (cdr binding)))
-      `(map (lambda (,var) (begin ,@body)) ,seq)))
-
-  (defmacro for-r (binding . body)
-    "Execute an R for loop in the current environment."
-    (begin
-      (define var (car binding))
-      (define seq (car (cdr binding)))
-      (define body-expr
-        (if (null? body)
-          #nil
-          (if (= (length body) 1)
-            (car body)
-            `({ ,@body))))
-      `(r/eval (call (list (get "for" (as.environment "package:base")) ',var ',seq ',body-expr)) (current-env))))
+      (define remaining (gensym "for_remaining"))
+      `(begin
+         (define ,remaining (__as-list ,seq))
+         (while* (not (null? ,remaining))
+           (define ,var (car ,remaining))
+           ,@body
+           (set! ,remaining (cdr ,remaining))))))
 
   ;;
   ;; loop/recur, clojure-style
