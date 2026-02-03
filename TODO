@@ -1,8 +1,10 @@
+o) fix the loop/recur macros
+
+o) rename while* and for* to while and for
+
 o) the repl is also kinda fragile and ugly. replace it?
 
 o) turn the pairlists into an R6 class?
-
-o) fix while*, for*, for-r, while-r
 
 o) fix the minor issues from opus auditing the tests
 

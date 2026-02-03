@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Looping Macros
 
 (module looping
-  (export while* until for* loop recur)
+  (export until for* loop recur)
 
   (import higher-order)
   (import list)
@@ -9,35 +9,7 @@
   (import sequences)
 
   ;;
-  ;; while loops
-  ;;
-
-  (defmacro while* (test . body)
-    "Repeat body while test is truthy."
-    (begin
-      (define loop (gensym "while"))
-      `(begin
-         (define ,loop
-           (lambda ()
-           "Run loop body while test is true."
-             (if ,test
-               (begin ,@body (,loop))
-               #nil)))
-         (,loop))))
-
-  (defmacro while-r (test . body)
-    "Execute an R while loop in the current environment."
-    (begin
-      (define body-expr
-        (if (null? body)
-          #nil
-          (if (= (length body) 1)
-            (car body)
-            `({ ,@body))))
-      `(r/eval (call (list (get "while" (as.environment "package:base")) ',test ',body-expr)) (current-env))))
-
-  ;;
-  ;; for loops (defined in terms of while* so we only have one loop to maintain)
+  ;; for loops (defined in terms of while*, which is a built-in special form)
   ;;
 
   (defmacro for* (binding . body)
@@ -159,12 +131,12 @@
              (define ,loop-result #f)
              (define ,loop-step (lambda () (begin ,@rewritten-body)))
 
-             ;; Main loop
-             (while-r #t
-               (<- ,recur-flag #f)
-               (<- ,loop-result (,loop-step))
+             ;; Main loop (use set! so first arg is not evaluated; <- would evaluate recur-flag to FALSE)
+             (while* #t
+               (set! ,recur-flag #f)
+               (set! ,loop-result (,loop-step))
                (if ,recur-flag
-                 ,rebind-block
+                 (r/eval ,rebind-block (current-env))
                  (break)))
 
              ,loop-result)))))

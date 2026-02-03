@@ -485,6 +485,21 @@ Evaluator <- R6::R6Class(
           RyeEnv$new(env)$assign_pattern(name, value, mode = "set", context = "set!")
           NULL
         },
+        `while*` = function(expr, env, op_name) {
+          if (length(expr) < 3) {
+            stop("while* requires at least 2 arguments: (while* test body...)")
+          }
+          test_expr <- expr[[2]]
+          body_expr <- if (length(expr) == 3) {
+            expr[[3]]
+          } else {
+            as.call(c(quote(begin), as.list(expr)[-(1:2)]))
+          }
+          while (isTRUE(self$eval_inner(test_expr, env))) {
+            self$eval_inner(body_expr, env)
+          }
+          invisible(NULL)
+        },
         load = function(expr, env, op_name) {
           if (length(expr) != 2) {
             stop("load requires exactly 1 argument: (load \"path\")")
