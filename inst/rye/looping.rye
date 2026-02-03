@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Looping Macros
 
 (module looping
-  (export while* while-r until for* for-r loop recur)
+  (export while* until for* loop recur)
 
   (import higher-order)
   (import list)
