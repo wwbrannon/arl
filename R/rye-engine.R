@@ -174,20 +174,20 @@ RyeEngine <- R6::R6Class(
       env$`current-env` <- function() self$env$current_env()
 
       env$`promise?` <- function(x) {
-        is.environment(x) && inherits(x, "rye_promise")
+        r6_isinstance(x, "RyePromise")
       }
       env$force <- function(x) {
-        if (!is.environment(x) || !inherits(x, "rye_promise")) {
-            return(x)
+        if (!r6_isinstance(x, "RyePromise")) {
+          return(x)
         }
-        get(rye_promise_value_key, envir = x, inherits = FALSE)
+        x$value()
       }
 
       env$`promise-expr` <- function(p) {
-        if (!is.environment(p) || !inherits(p, "rye_promise")) {
+        if (!r6_isinstance(p, "RyePromise")) {
           stop("promise-expr requires a promise (created with delay)")
         }
-        get(rye_promise_expr_key, envir = p, inherits = FALSE)
+        p$get_expr()
       }
 
       attr(env$`promise?`, "rye_doc") <- list(

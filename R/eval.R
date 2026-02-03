@@ -2,11 +2,6 @@ rye_missing_default <- function() {
   structure(list(), class = "rye_missing_default")
 }
 
-rye_promise_value_key <- ".rye_promise_value"
-rye_promise_expr_key <- ".rye_promise_expr"
-rye_promise_env_key <- ".rye_promise_env"
-rye_promise_eval_key <- ".rye_promise_eval"
-
 #' Evaluation context shared between Evaluator and MacroExpander
 #'
 #' @keywords internal
@@ -244,19 +239,7 @@ Evaluator <- R6::R6Class(
       private$do_call_impl(fn, args, env)
     },
     promise_new = function(expr, env) {
-      promise_env <- new.env(parent = emptyenv())
-      assign(rye_promise_expr_key, expr, envir = promise_env)
-      assign(rye_promise_env_key, env, envir = promise_env)
-      assign(rye_promise_eval_key, self$eval_in_env, envir = promise_env)
-      delayedAssign(
-        rye_promise_value_key,
-        .rye_promise_eval(.rye_promise_expr, .rye_promise_env),
-        eval.env = promise_env,
-        assign.env = promise_env
-      )
-      class(promise_env) <- c("rye_promise", class(promise_env))
-      lockEnvironment(promise_env, bindings = FALSE)
-      promise_env
+      RyePromise$new(self$context$source_tracker$strip_src(expr), env, self$eval_in_env)
     },
     apply_closure = function(fn, args, env) {
       info <- attr(fn, "rye_closure")

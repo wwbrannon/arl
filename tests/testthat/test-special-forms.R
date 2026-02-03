@@ -21,8 +21,7 @@ test_that("quote sugar works", {
 
 test_that("delay creates a promise", {
   result <- engine$eval(engine$read("(delay (+ 1 2))")[[1]])
-  expect_true(is.environment(result))
-  expect_true(inherits(result, "rye_promise"))
+  expect_true(r6_isinstance(result, "RyePromise"))
 })
 
 test_that("promise? detects promises", {
