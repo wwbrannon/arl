@@ -2,11 +2,9 @@ o) fix while* and for*
 
 o) assq and assv: these still act like pointer equality is available; probably we should have both raise an error and provide "assi" that uses identical?
 
-o) support s3 dispatch nicely
+o) there's a tail recursive pattern in ==! eliminate any tail recursion.
 
-o) refactor equal? to use s3 dispatch
-
-o) there's a tail recursive pattern in ==! eliminate any tail recursion. update AGENTS.md and CLAUDE.md to say this
+o) I think import has an issue: if executed at any prior point, the symbols exported from that module seem to be in scope even in modules that didn't import them. the module registry should have them but we need to fix the scoping rules? is this how scheme works? how does R work? in any case it seems like better design and would catch a lot of stdlib issues
 
 --------------------------------------
 o) have Opus 4.5 critique the tests:
@@ -19,10 +17,11 @@ Given that, let's critique these tests. Is there any behavior they implement tha
 o) this stdlib is very poorly organized, has undocumented dependencies on prior import order, needs to be refactored
 o) several circularities in the stdlib. equality for example should be in core
 
-o) the evaluator is a very dynamic AST walker and creates way too many stack frames per rye call.
+o) the evaluator is a dynamic, recursive AST walker and creates way too many stack frames per rye call.
   o) this is the main performance bottleneck.
   o) option 1: replace it with an AST-to-R compiler which will also kill off the translator program we have now.
-  o) option 2: we can walk the AST more carefully, nonrecursively, maybe by explicitly treating the R language object we get as a graph. this is a much smaller change.
+  o) option 2: we can walk the AST more carefully, nonrecursively, maybe by explicitly treating the R language object we get as a graph. (evaluate the AST nodes in a postorder traversal with an explicit stack and caching, right? any scoping subtleties this misses?) this is a much smaller change.
+  o) option 3: can we build the input AST a bit differently or provide helpers so that the entire evaluator is just a call to R's eval()?
 
 o) other performance optimizations: use profiling and benchmarking
 
@@ -32,3 +31,4 @@ o) documentation updates / systematizing: make a plan
 small stuff:
 o) minor pkgdown warning about site url
 o) recursion-related FIXMEs (reenable some code) in benchmarks after evaluator improvements
+o) equal? behavior for dict and set and friends, environment-based objects: this needs recursive environment handling. for bare environments, should we do pointer equality? (this is I think what scheme does?)

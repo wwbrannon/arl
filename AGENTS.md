@@ -94,6 +94,7 @@ Rye leverages R's existing eval/quote/environment system rather than reimplement
 - **Special forms**: `quote`, `if`, `define`, `lambda`, `begin`, `defmacro`, `quasiquote`, `~`
 - **Scoping**: Lexical scoping via R environments
 - **Macros**: Compile-time code transformation with quasiquote/unquote
+- **Tail call optimization**: Not implemented! Efficient code should use loops
 
 **R Interoperability**:
 - All R functions callable directly: `(mean (c 1 2 3))` → `3`
