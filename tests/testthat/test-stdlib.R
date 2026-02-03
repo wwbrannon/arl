@@ -201,11 +201,11 @@ test_that("car and cdr on dotted pair", {
   expect_equal(env$cdr(pair), 42)
 })
 
-test_that("list? and pair? are true for rye_cons", {
+test_that("list? and pair? are true for dotted pair (RyeCons)", {
   env <- stdlib_env(engine, new.env())
   pair <- engine$eval_in_env(engine$read("(cons 1 2)")[[1]], env)
   expect_true(env$`list?`(pair))
-  expect_true(env$`pair?`(pair))
+  expect_true(env$`pair?`(pair))  # pair? = dotted pair (RyeCons)
 })
 
 test_that("__as-list on improper list returns proper prefix only", {
@@ -577,8 +577,8 @@ test_that("predicates and interop helpers work", {
   env <- new.env()
   stdlib_env(engine, env)
 
-  expect_true(env$`pair?`(list(1)))
-  expect_false(env$`pair?`(list()))
+  expect_true(env$`list-or-pair?`(list(1)))
+  expect_false(env$`list-or-pair?`(list()))
   expect_true(env$`keyword?`(structure("from", class = "rye_keyword")))
   expect_true(env$`vector?`(c(1, 2, 3)))
   expect_true(env$`true?`(TRUE))

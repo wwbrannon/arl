@@ -61,9 +61,3 @@ RyePromise <- R6::R6Class("RyePromise",
   )
 )
 
-# Thin wrappers for r/call lookups from Rye stdlib (get from globalenv finds package namespace).
-# Engine also binds these names in the Rye env; R code uses r6_isinstance / RyeCons$new / $parts() directly.
-rye_cons <- function(car, cdr) RyeCons$new(car, cdr)
-rye_cons_p <- function(x) r6_isinstance(x, "RyeCons")
-rye_cons_as_list <- function(x) if (r6_isinstance(x, "RyeCons")) x$as_list() else list()
-rye_cons_parts <- function(x) if (r6_isinstance(x, "RyeCons")) x$parts() else list(prefix = list(), tail = x)

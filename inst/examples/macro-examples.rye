@@ -189,7 +189,7 @@
       value
       (let ((first-form (car forms))
             (rest-forms (cdr forms)))
-        (if (pair? first-form)
+        (if (list-or-pair? first-form)
             `(-> (,(car first-form) ,value ,@(cdr first-form)) ,@rest-forms)
             `(-> (,first-form ,value) ,@rest-forms)))))
 

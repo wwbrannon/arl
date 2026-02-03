@@ -49,7 +49,7 @@
   ;; Helper: Validate binding pairs
   (define valid-binding-pair?
     (lambda (pair)
-      (if (pair? pair)
+      (if (list-or-pair? pair)
         (isTRUE (= (length pair) 2))
         #f)))
 

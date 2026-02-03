@@ -20,7 +20,7 @@
       value
       (let ((step (car steps))
             (rest-steps (cdr steps)))
-        (if (pair? step)
+        (if (list-or-pair? step)
             `(pipeline (,(car step) ,@(cdr step) ,value) ,@rest-steps)
             `(pipeline (,step ,value) ,@rest-steps)))))
 

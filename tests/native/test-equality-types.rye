@@ -76,11 +76,13 @@
   (assert-true (atom? 'foo))))
 
 (define test-atom-not-pair (lambda ()
-  (assert-false (atom? (list 1 2)))
   (assert-false (atom? (cons 1 2)))))
 
+(define test-atom-not-pair (lambda ()
+  (assert-false (atom? (list 1 2)))))
+
 (define test-atom-empty-list (lambda ()
-  ;; Empty list is atomic (not a pair)
+  ;; Empty list is atomic (not list-or-pair?)
   (assert-true (atom? (list)))))
 
 (define test-procedure-predicate (lambda ()

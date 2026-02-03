@@ -16,7 +16,7 @@
       (if (= (as.character pattern) ".")
         (list)
         (list pattern))
-      (if (pair? pattern)
+      (if (list-or-pair? pattern)
         (begin
           (define head (car pattern))
           (define tail (cdr pattern))

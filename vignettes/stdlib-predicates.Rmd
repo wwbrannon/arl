@@ -26,24 +26,42 @@ Tests if a value is a list.
 (list? "hello")       ; => #f
 ```
 
-**See also:** pair?, null?
+**See also:** pair?, list-or-pair?, null?
 
 ---
 
 ### pair?
 
-Tests if a value is a non-empty list.
+Tests if a value is a dotted pair (pairlist cell / RyeCons). In R terms, a pair is not a list (type-generic vector); it is a cons cell.
 
 **Signature:** `(pair? x)`
 
 **Examples:**
 ```lisp
-(pair? (list 1))      ; => #t
-(pair? (list 1 2 3))  ; => #t
+(pair? (cons 1 2))    ; => #t   (dotted pair)
+(pair? (list 1))      ; => #f   (list, not a pair)
 (pair? ())            ; => #f
 ```
 
-**See also:** list?, null?
+**See also:** list?, list-or-pair?, null?
+
+---
+
+### list-or-pair?
+
+Tests if a value is a non-empty list or a dotted pair.
+
+**Signature:** `(list-or-pair? x)`
+
+**Examples:**
+```lisp
+(list-or-pair? (list 1))      ; => #t
+(list-or-pair? (list 1 2 3))  ; => #t
+(list-or-pair? (cons 1 2))    ; => #t
+(list-or-pair? ())            ; => #f
+```
+
+**See also:** list?, pair?, null?
 
 ---
 
@@ -60,7 +78,7 @@ Tests if a value is NULL or an empty list.
 (null? (list 1))      ; => #f
 ```
 
-**See also:** nil?, pair?
+**See also:** nil?, pair?, list-or-pair?
 
 ---
 

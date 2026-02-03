@@ -362,10 +362,10 @@ test_that("predicates handle edge cases", {
   expect_false(env$`list?`(c(1, 2, 3)))  # vector, not list
   expect_false(env$`list?`(NULL))
 
-  # pair? edge cases
-  expect_false(env$`pair?`(list()))  # empty list is not a pair
-  expect_true(env$`pair?`(list(1)))  # single element counts
-  expect_true(env$`pair?`(list(1, 2)))
+  # list-or-pair? edge cases (non-empty list or dotted pair)
+  expect_false(env$`list-or-pair?`(list()))
+  expect_true(env$`list-or-pair?`(list(1)))
+  expect_true(env$`list-or-pair?`(list(1, 2)))
 
   # vector? with various types (only numeric vectors)
   expect_true(env$`vector?`(c(1, 2, 3)))

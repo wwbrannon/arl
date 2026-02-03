@@ -190,9 +190,9 @@ helpers and access to all base R functions.
 **Sequence Helpers:** - `take`, `drop`, `take-while`, `drop-while`,
 `partition`, `flatten`, `zip` - `repeatedly`, `repeat`
 
-**Predicates:** - `null?`, `nil?`, `list?`, `pair?`, `symbol?`,
-`keyword?` - `number?`, `string?`, `vector?`, `true?`, `false?`, `fn?`,
-`callable?`
+**Predicates:** - `null?`, `nil?`, `list?`, `pair?`, `list-or-pair?`,
+`symbol?`, `keyword?` - `number?`, `string?`, `vector?`, `true?`,
+`false?`, `fn?`, `callable?`
 
 **Control Flow Macros:** - `when`, `unless`, `and`, `or`, `cond`, `case`
 

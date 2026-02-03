@@ -59,9 +59,9 @@
         fn-tag
         (begin
           ;; Check dotted pair before environment (R6 instances are environments in R)
-          (if (r/call "rye_cons_p" (list x))
+          (if (pair? x)
               (begin
-                (define parts (r/call "rye_cons_parts" (list x)))
+                (define parts (__cons-parts x))
                 (define prefix (r/call "[[" (list parts "prefix")))
                 (define tail (r/call "[[" (list parts "tail")))
                 (define head-str (if (= (length prefix) 0)

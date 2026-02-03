@@ -379,7 +379,7 @@ Partially applies arguments to a function.
 `take`, `drop`, `take-while`, `drop-while`, `partition`, `flatten`, `zip`
 
 ### Predicates
-`list?`, `pair?`, `null?`, `nil?`, `symbol?`, `keyword?`, `number?`, `string?`, `vector?`, `true?`, `false?`, `fn?`, `callable?`
+`list?`, `pair?`, `list-or-pair?`, `null?`, `nil?`, `symbol?`, `keyword?`, `number?`, `string?`, `vector?`, `true?`, `false?`, `fn?`, `callable?`
 
 ### Control Flow
 `when`, `unless`, `and`, `or`, `not`, `cond`, `case`

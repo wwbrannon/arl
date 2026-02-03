@@ -200,7 +200,7 @@ access to all base R functions.
 - `repeatedly`, `repeat`
 
 **Predicates:**
-- `null?`, `nil?`, `list?`, `pair?`, `symbol?`, `keyword?`
+- `null?`, `nil?`, `list?`, `pair?`, `list-or-pair?`, `symbol?`, `keyword?`
 - `number?`, `string?`, `vector?`, `true?`, `false?`, `fn?`, `callable?`
 
 **Control Flow Macros:**

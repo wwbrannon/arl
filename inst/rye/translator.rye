@@ -104,9 +104,9 @@
                            (define args-expr (__at expr 2))
                            (define arg-items (list))
                            (if (not (is.null args-expr))
-                             (if (r/call "rye_cons_p" (list args-expr))
+                             (if (pair? args-expr)
                                (begin
-                                 (define parts (r/call "rye_cons_parts" (list args-expr)))
+                                 (define parts (__cons-parts args-expr))
                                  (set! arg-items (c (r/call "[[" (list parts "prefix"))
                                                     (list (r/call "as.symbol" (list ".")))
                                                     (list (r/call "[[" (list parts "tail"))))))
@@ -172,7 +172,7 @@
                                      (set! param-names (c param-names name))
                                      (define default-expr (translate-expr (__at arg-list 2) indent))
                                      (set! arg-parts (c arg-parts (paste0 name " = " default-expr))))
-                                   (stop "lambda arguments must be symbols or (name default) pairs")))
+                                   (stop "lambda arguments must be symbols or (name default) forms")))
                                (set! i (+ i 1))))
 
                            (define all-names param-names)

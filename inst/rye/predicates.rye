@@ -1,7 +1,7 @@
 ;;; Rye Standard Library - Predicates
 
 (module predicates
-  (export list? pair? null? nil?
+  (export list? list-or-pair? null? nil?
           symbol? keyword? number? string? vector?
           true? false? boolean? fn? callable? not xor
           empty?
@@ -23,14 +23,14 @@
 
   (define list?
     (lambda (x)
-      "Return #t if x is a list, call, or rye_cons (dotted pair)."
-      (if (r/call "rye_cons_p" (list x)) #t
+      "Return #t if x is a list, call, or dotted pair."
+      (if (pair? x) #t
         (if (is.list x) #t (if (is.call x) #t #f)))))
 
-  (define pair?
+  (define list-or-pair?
     (lambda (x)
-      "Return #t if x is a non-empty list or rye_cons (dotted pair)."
-      (if (r/call "rye_cons_p" (list x)) #t
+      "Return #t if x is a non-empty list or dotted pair (pairlist cell)."
+      (if (pair? x) #t
         (if (list? x) (if (__r> (__rlength x) 0) #t #f) #f))))
 
   (define null?
@@ -294,8 +294,8 @@
   ;; Additional type predicates
   (define atom?
     (lambda (x)
-      "Return #t if x is not a pair (i.e., not a non-empty list)."
-      (not (pair? x))))
+      "Return #t if x is not a non-empty list or dotted pair (i.e. not list-or-pair?)."
+      (not (list-or-pair? x))))
 
   (define procedure?
     (lambda (x)

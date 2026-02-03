@@ -44,7 +44,8 @@ Rye evaluates expressions via R’s `eval()` and environments. That means:
 Scheme has pairs and lists as the fundamental sequence type. Rye uses R data
 structures:
 
-- Lists are R lists or calls.
+- Lists are R lists or calls (R's type-generic vectors).
+- Rye also has dotted pairs (pairlist cells, `pair?`); `list-or-pair?` is true for non-empty lists or dotted pairs.
 - Vectors are R vectors.
 - `#nil` maps to R’s `NULL`.
 

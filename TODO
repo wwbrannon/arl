@@ -1,15 +1,18 @@
-medium stuff:
---------------------------------------
-o) remove rye_cons_p etc -- avoid "r/call", we don't now need it
-o) should fix tests failing when R CMD check runs them
-
-o) fix the minor issues from opus auditing the tests
-
-big stuff:
---------------------------------------
+stdlib cleanup:
+-------------------------------------------------
 o) stdlib is poorly organized, has circularities, undeclared deps on prior import order, needs refactor
+    o) fix the minor issues from opus auditing the tests
   o) closely related: import has an issue. if executed at any prior point, the symbols exported from that module seem to be in scope even in modules that didn't import them. the module registry should have them but we need to fix the scoping rules? is this how scheme works? how does R work? in any case it seems like better design and would catch a lot of stdlib issues
 
+o) have opus audit the tests again afterward:
+```
+Take a look at the tests in tests/, maybe especially the native ones in tests/native/. Keep in mind that the language being tested is supposed to be a lisp, generally scheme-like, but implemented on top of R. So that makes for a few peculiarities -- R's type system, no tail call optimization, the whole "r/call" apparatus, etc.
+
+Given that, let's critique these tests. Is there any behavior they implement that they clearly shouldn't? Mistaken behavior of the interpreter we have now that's been hardcoded into the tests? You're looking for things that clearly don't make sense and aren't how an R-based lisp should behave. Use your judgment!
+```
+
+performance issues:
+-------------------------------------------------
 o) the evaluator is a dynamic, recursive AST walker and creates way too many stack frames per rye call.
   o) this is the main performance bottleneck.
   o) option 1: replace it with an AST-to-R compiler which will also kill off the translator program we have now.

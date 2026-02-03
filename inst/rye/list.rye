@@ -20,9 +20,9 @@
 
   (define __as-list
     (lambda (x)
-      "Coerce calls and vectors to list; rye_cons chain to proper prefix."
-      (if (r/call "rye_cons_p" (list x))
-        (r/call "rye_cons_as_list" (list x))
+      "Coerce calls and vectors to list; dotted pair to proper prefix."
+      (if (pair? x)
+        (__cons-as-list x)
         (if (is.call x)
           (as.list x)
           (if (is.list x)
@@ -53,7 +53,7 @@
   (define car
     (lambda (lst)
       "Return first element or #nil."
-      (if (r/call "rye_cons_p" (list lst))
+      (if (pair? lst)
         (r/call "[[" (list lst "car"))
         (if (is.call lst)
           (if (__r> (__rlength lst) 0) (__r[[ lst 1) #nil)
@@ -64,7 +64,7 @@
   (define cdr
     (lambda (lst)
       "Return list without first element (or cdr of dotted pair)."
-      (if (r/call "rye_cons_p" (list lst))
+      (if (pair? lst)
         (r/call "[[" (list lst "cdr"))
         (if (is.call lst)
           (if (__r> (__rlength lst) 1)
@@ -103,7 +103,7 @@
         (as.call (c (list item) (as.list lst)))
         (if (is.list lst)
           (c (list item) lst)
-          (r/call "rye_cons" (list item lst))))))
+          (__cons item lst)))))
 
   (define list*
     (lambda (. args)
@@ -179,7 +179,7 @@
   ;; ============================================================================
 
   ;; Association lists (alists)
-  ;; Internal: predicate (key-in-pair target-key) -> boolean.
+  ;; Internal: predicate (key-in-entry target-key) -> boolean; entry = alist element (list or dotted pair).
   ;; __r== can return a vector; treat as match only when scalar #t or all true.
   (define __r==-pred
     (lambda (a b)
@@ -205,22 +205,22 @@
 
   (define assoc
     (lambda (key alist)
-      "Find first pair in alist with matching key (uses equal?)."
+      "Find first alist entry (list or dotted pair) with matching key (uses equal?)."
       (__assoc-by-pred key alist equal?)))
 
   (define assoc-by-equal?
     (lambda (key alist)
-      "Alias for assoc: find first pair with key matching under equal?."
+      "Alias for assoc: find first alist entry with key matching under equal?."
       (assoc key alist)))
 
   (define assoc-by-identical?
     (lambda (key alist)
-      "Find first pair in alist with matching key (uses R's identical?)."
+      "Find first alist entry with matching key (uses R's identical?)."
       (__assoc-by-pred key alist identical?)))
 
   (define assoc-by-==
     (lambda (key alist)
-      "Find first pair in alist with matching key (uses R's ==)."
+      "Find first alist entry with matching key (uses R's ==)."
       (__assoc-by-pred key alist __r==-pred)))
 
   (define assq
@@ -235,7 +235,7 @@
 
   (define rassoc
     (lambda (value alist)
-      "Find first pair in alist with matching value (searches cdr of pairs; uses equal?)."
+      "Find first alist entry with matching value (searches cdr of entries; uses equal?)."
       (define result #nil)
       (define remaining (__as-list alist))
       (while (and (not (null? remaining)) (not result))
@@ -249,7 +249,7 @@
 
   (define rassoc-by-equal?
     (lambda (value alist)
-      "Alias for rassoc: find first pair with value matching under equal?."
+      "Alias for rassoc: find first alist entry with value matching under equal?."
       (rassoc value alist)))
 
   ;; Sorting
@@ -283,9 +283,9 @@
       (if (<= (__rlength items) 1)
         items
         (begin
-          ;; Create pairs of (key . value)
+          ;; Create list of (key, value) entries
           (define pairs (lapply items (lambda (x) (list (key-fn x) x))))
-          ;; Sort by first element of pair
+          ;; Sort by first element of each entry
           (define sorted-pairs (sort pairs (lambda (a b) (comparator (car a) (car b)))))
           ;; Extract values
           (lapply sorted-pairs cadr)))))
