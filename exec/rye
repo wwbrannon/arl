@@ -5,4 +5,4 @@ if [ -z "$R_HOME" ]; then
   R_HOME="$(R RHOME)"
 fi
 
-exec "${R_HOME}/bin/Rscript" -e "rye:::rye_cli()" --args "$@"
+exec "${R_HOME}/bin/Rscript" --vanilla -e "rye:::rye_cli()" --args "$@"
