@@ -11,6 +11,8 @@
 #' @param car First element (the "car").
 #' @param cdr Second element (the "cdr"); may be any value.
 #' @return Object with class \code{rye_cons} and components \code{car}, \code{cdr}.
+#' @keywords internal
+#' @noRd
 rye_cons <- function(car, cdr) {
   structure(list(car = car, cdr = cdr), class = "rye_cons")
 }
@@ -19,6 +21,8 @@ rye_cons <- function(car, cdr) {
 #'
 #' @param x Any object.
 #' @return Logical.
+#' @keywords internal
+#' @noRd
 rye_cons_p <- function(x) {
   inherits(x, "rye_cons")
 }
@@ -31,6 +35,8 @@ rye_cons_p <- function(x) {
 #'
 #' @param x A rye_cons chain (or any value; non-rye_cons returns empty list).
 #' @return A proper R list of the cars, or empty list if not rye_cons.
+#' @keywords internal
+#' @noRd
 rye_cons_as_list <- function(x) {
   out <- list()
   while (rye_cons_p(x)) {
@@ -48,6 +54,7 @@ rye_cons_as_list <- function(x) {
 #' @param x A rye_cons chain.
 #' @return List with components \code{prefix} (list of cars) and \code{tail} (final cdr).
 #' @keywords internal
+#' @noRd
 rye_cons_parts <- function(x) {
   prefix <- list()
   while (rye_cons_p(x)) {
