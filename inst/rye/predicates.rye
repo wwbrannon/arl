@@ -7,6 +7,8 @@
           empty?
           length= length> length<
           eq? eqv? equal?
+          equal?.default equal?.environment equal?.list
+          set-method!
           atom? procedure? rational? real? complex?
           symbol->string string->symbol
           ->symbol ->number ->list ->vector
@@ -206,45 +208,57 @@
           result)
         #f)))
 
-  ;; equal? - proper deep structural equality
-  ;; Handles reference-semantic types (environments, RC) by comparing contents
-  ;; Handles containers (lists, including data.frames and list-arrays) recursively
+  ;; equal? - S3-style generic: dispatch on class of first argument.
+  ;; Methods: equal?.default, equal?.environment, equal?.list (and user-defined).
+  ;; Use (set-method! 'equal? 'my-class fn) to add methods for new types.
+  (define equal?.default
+    (lambda (a b (strict #f))
+      "Default equality: atomic/vector comparison. :strict #t => #f; else use == with type coercion."
+      (if strict
+        #f
+        (begin
+          (define comp-result (== a b))
+          (if (is.logical comp-result)
+            (if (> (length comp-result) 1)
+              (isTRUE (all comp-result))
+              (isTRUE comp-result))
+            #f)))))
+
+  (define equal?.environment
+    (lambda (a b (strict #f))
+      "Compare environments by bindings and values (dict, set, R6, refclass are env-based)."
+      (if (not (environment? b))
+        #f
+        (env-equal? a b))))
+
+  (define equal?.list
+    (lambda (a b (strict #f))
+      "Compare lists recursively by structure and elements."
+      (if (not (list? b))
+        #f
+        (list-equal? a b))))
+
   (define equal?
     (lambda (a b (strict #f))
-      "Optional keyword argument :strict #t uses identical? for atomic comparisons (strict type checking).
-       Default :strict #f uses = for atomic comparisons (allows numeric type coercion, e.g., 4 == 4L)."
-      ;; First check if they're identical (fast path)
+      "Deep structural equality. Dispatches on class of first argument. Optional :strict #t uses identical? for atomics.
+       Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
       (if (identical? a b)
         #t
-        (cond
-          ;; Environments (incl. R6 objects + refclasses) - compare contents
-          ;; R6 objects are currently implemented as environments, so they're
-          ;; caught here. If R6 switches to a compiled implementation in the
-          ;; future, we may need to add special handling. Similarly with R's
-          ;; built-in reference class system: these are environments.
-          ((and (environment? a) (environment? b)) (env-equal? a b))
+        (begin
+          (define env (stdlib-env))
+          (define class-name (r/call "[[" (list (r/call "class" (list a)) 1)))
+          (define method-name (string-append "equal?." class-name))
+          (define method (r/call "get0" (list method-name :envir env :inherits #f)))
+          (if (nil? method)
+            (set! method (r/call "get" (list "equal?.default" :envir env))))
+          (method a b strict)))))
 
-          ;; Lists (including data.frames, list-arrays) - recursive comparison
-          ;; This handles lists containing reference-semantic objects correctly
-          ((and (list? a) (list? b)) (list-equal? a b))
-
-          ;; Everything else: atomic vectors, arrays, S3, S4, external pointers
-          ;; For atomic types, use = (allows type coercion) unless :strict is #t
-          ;; For external pointers, identical() does pointer comparison, which is
-          ;; the best we can do (we can't inspect arbitrary C struct contents).
-          (else
-            (if strict
-              ;; Strict mode: already checked identical? above, so false
-              #f
-              ;; Default mode: use == for flexible comparison with type coercion
-              ;; For vectors/arrays, need all elements equal
-              (begin
-                (define comp-result (== a b))
-                (if (is.logical comp-result)
-                  (if (> (length comp-result) 1)
-                    (isTRUE (all comp-result))
-                    (isTRUE comp-result))
-                  #f))))))))
+  (define set-method!
+    (lambda (generic-name class-name method-fun)
+      "Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
+      (define env (stdlib-env))
+      (define method-name (string-append (->string generic-name) "." (->string class-name)))
+      (r/call "assign" (list method-name method-fun :envir env))))
 
   ;; Additional type predicates
   (define atom?

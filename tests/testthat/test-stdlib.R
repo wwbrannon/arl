@@ -852,6 +852,30 @@ test_that("r/call invokes R functions with arguments", {
   expect_true(is.character(result))
 })
 
+test_that("equal? dispatches on class and set-method! registers methods", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  # equal? still works for lists and environments (built-in methods)
+  expect_true(env$`equal?`(list(1, 2, 3), list(1, 2, 3)))
+  expect_false(env$`equal?`(list(1, 2), list(1, 3)))
+  e1 <- new.env()
+  e2 <- new.env()
+  assign("x", 1, envir = e1)
+  assign("x", 1, envir = e2)
+  expect_true(env$`equal?`(e1, e2))
+
+  # set-method! can add a method for a custom class
+  my_a <- structure(list(42), class = "my_thing")
+  my_b <- structure(list(42), class = "my_thing")
+  my_c <- structure(list(99), class = "my_thing")
+  env$`set-method!`(as.symbol("equal?"), as.symbol("my_thing"), function(a, b, strict) {
+    identical(a[[1]], b[[1]])
+  })
+  expect_true(env$`equal?`(my_a, my_b))
+  expect_false(env$`equal?`(my_a, my_c))
+})
+
 test_that("macroexpand-1 expands macros one level", {
   env <- new.env()
   stdlib_env(engine, env)
