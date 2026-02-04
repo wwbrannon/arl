@@ -93,6 +93,32 @@ ModuleRegistry <- R6::R6Class(
         assign(export_name, get(export_name, envir = module_env, inherits = FALSE), envir = target_env)
       }
       invisible(NULL)
+    },
+    #' Attach a module's exports into an arbitrary target environment (for global cache).
+    attach_into = function(name, target_env) {
+      entry <- self$get(name)
+      if (is.null(entry)) {
+        stop(sprintf("module '%s' is not loaded", name))
+      }
+      exports <- entry$exports
+      module_env <- entry$env
+      target_rye <- RyeEnv$new(target_env)
+      target_macro_registry <- target_rye$macro_registry_env(create = TRUE)
+      module_macro_registry <- self$rye_env$macro_registry_env(module_env, create = FALSE)
+
+      for (export_name in exports) {
+        if (!exists(export_name, envir = module_env, inherits = FALSE)) {
+          if (!is.null(module_macro_registry) && exists(export_name, envir = module_macro_registry, inherits = FALSE)) {
+            macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
+            assign(export_name, macro_fn, envir = target_macro_registry)
+            lockBinding(export_name, target_macro_registry)
+            next
+          }
+          stop(sprintf("module '%s' does not export '%s'", name, export_name))
+        }
+        assign(export_name, get(export_name, envir = module_env, inherits = FALSE), envir = target_env)
+      }
+      invisible(NULL)
     }
   )
 )

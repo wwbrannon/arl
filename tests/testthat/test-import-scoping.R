@@ -136,3 +136,34 @@ test_that("(run path) runs in child env - imports not visible in caller", {
   exprs <- engine$read(main_code)
   expect_error(engine$eval_in_env(exprs[[1]], env), regexp = "uniquefn|not found|object")
 })
+
+test_that("global module cache: same module loaded once per engine, shared across files", {
+  # Module with side effect (counter); two files each import it and call tick.
+  # With global cache, module runs once so counter is shared: file_a returns 1, file_b returns 2.
+  engine <- RyeEngine$new()
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  old_dir <- getwd()
+  setwd(tmp_dir)
+  on.exit({
+    setwd(old_dir)
+    unlink(tmp_dir, recursive = TRUE)
+  }, add = TRUE)
+
+  mod_name <- paste0("cached", sample.int(100000, 1))
+  mod_file <- file.path(tmp_dir, paste0(mod_name, ".rye"))
+  writeLines(c(
+    sprintf("(module %s", mod_name),
+    "  (export tick)",
+    "  (define counter 0)",
+    "  (define tick (lambda () (begin (set! counter (+ counter 1)) counter))))"
+  ), mod_file)
+
+  file_a <- file.path(tmp_dir, "file_a.rye")
+  writeLines(c(sprintf("(import %s)", mod_name), "(tick)"), file_a)
+  file_b <- file.path(tmp_dir, "file_b.rye")
+  writeLines(c(sprintf("(import %s)", mod_name), "(tick)"), file_b)
+
+  expect_equal(engine$load_file(file_a), 1)
+  expect_equal(engine$load_file(file_b), 2)
+})
