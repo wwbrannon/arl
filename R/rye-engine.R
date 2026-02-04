@@ -431,11 +431,14 @@ RyeEngine <- R6::R6Class(
         if (!is.null(src)) {
           self$source_tracker$push(src)
         }
-        result <- self$evaluator$eval_compiled(compiled, target_env)
+        result_with_vis <- withVisible(self$evaluator$eval_compiled(compiled, target_env))
         if (!is.null(src)) {
           self$source_tracker$pop()
         }
-        return(result)
+        if (result_with_vis$visible) {
+          return(result_with_vis$value)
+        }
+        return(invisible(result_with_vis$value))
       }
       self$evaluator$eval_seq_in_env(expanded, target_env)
     }
