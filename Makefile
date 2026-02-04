@@ -69,7 +69,7 @@ test-native: ## Run a single native test file (usage: make test-native FILE=test
 		echo "Error: FILE parameter required. Usage: make test-native FILE=test-equality-types"; \
 		exit 1; \
 	fi
-	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- RyeEngine\$$new(); env <- engine\$$env\$$env; for (m in c('control', 'binding', 'strings', 'math', 'predicates', 'list', 'higher-order', 'sequences')) { exprs <- engine\$$read(sprintf('(load \"%s\")', m)); engine\$$eval_in_env(exprs[[1]], env) }; run_native_test_file('tests/native/$(FILE).rye', engine, env)"
+	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- RyeEngine\$$new(); env <- engine\$$env\$$env; run_native_test_file('tests/native/$(FILE).rye', engine, env)"
 
 .PHONY: bench
 bench: ## Run all benchmarks

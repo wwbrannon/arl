@@ -1,8 +1,3 @@
-o) ```
-+  # Load stdlib modules needed for tests (assert needs core, predicates, strings, dict)
-+  for (module in c("control", "binding", "strings", "math", "predicates", "list", "higher-order", "sequences", "looping", "dict", "core", "assert")) {
-```
-
 o) can you "import" without first running "load" to define the module? looks like no, which is a bit broken
 o) can we import arbitrary non-stdlib modules? does import work for this?
 o) may be able to get rid of the stdlib "loader"?

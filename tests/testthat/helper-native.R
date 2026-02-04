@@ -76,15 +76,11 @@ run_native_tests <- function(dir = "tests/native") {
     return(invisible(NULL))
   }
 
-  # Create a fresh engine for running tests
+  # Create a fresh engine; it already loads the full stdlib via (load "_stdlib_loader")
+  # in initialize_environment(), so env has all module exports (assert, core, etc.).
+  # No need to (load ...) modules here: (import ...) in each module resolves deps.
   engine <- RyeEngine$new()
   env <- engine$env$env
-
-  # Load stdlib modules needed for tests (assert needs core, predicates, strings, dict)
-  for (module in c("control", "binding", "strings", "math", "predicates", "list", "functional", "sequences", "looping", "dict", "core", "assert")) {
-    exprs <- engine$read(sprintf('(load "%s")', module))
-    engine$eval_in_env(exprs[[1]], env)
-  }
 
   # Run each test file
   for (test_file in test_files) {
