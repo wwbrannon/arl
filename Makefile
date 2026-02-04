@@ -104,10 +104,14 @@ bench-compare: ## Compare benchmark results (usage: make bench-compare OLD=basel
 	R -q -e "source('benchmarks/compare-results.R'); compare_benchmarks('$(OLD)', '$(NEW)')"
 
 .PHONY: clean
-clean: ## Remove build artifacts
+clean: ## Remove build artifacts and all make document output
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
 	rm -rf site/ doc/ Meta/
+	rm -f README.knit.md
+	rm -f vignettes/*.html vignettes/*.R vignettes/*.knit.md
+	# rm -f README.md  # version-controlled
+	# rm -rf man/  # version-controlled
 
 .PHONY: cran-prep
 cran-prep: ## Prepare docs and run CRAN check
