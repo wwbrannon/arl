@@ -638,6 +638,12 @@ Evaluator <- R6::R6Class(
           assign(".rye_module", TRUE, envir = module_env)
           RyeEnv$new(env)$module_registry$register(module_name, module_env, exports)
 
+          src <- self$context$source_tracker$src_get(expr)
+          if (!is.null(src) && !is.null(src$file) && is.character(src$file) && nzchar(src$file) && grepl("[/\\\\]", src$file)) {
+            absolute_path <- rye_normalize_path_absolute(src$file)
+            RyeEnv$new(env)$module_registry$alias(absolute_path, module_name)
+          }
+
           body_exprs <- private$collect_body(expr, 4)
           if (length(body_exprs) == 0) {
             if (export_all) {
@@ -657,25 +663,44 @@ Evaluator <- R6::R6Class(
           if (length(expr) != 2) {
             stop("import requires exactly 1 argument: (import name)")
           }
-          module_name <- RyeEnv$new(env)$symbol_or_string(expr[[2]], "import requires a module name symbol or string")
+          arg <- expr[[2]]
+          is_path <- is.character(arg) && length(arg) == 1
+          if (is_path) {
+            path_str <- arg
+            module_path <- rye_resolve_path_only(path_str)
+            if (is.null(module_path)) {
+              stop(sprintf("Module not found: %s", path_str))
+            }
+            registry_key <- rye_normalize_path_absolute(module_path)
+          } else {
+            module_name <- RyeEnv$new(env)$symbol_or_string(arg, "import requires a module name symbol or string")
+            registry_key <- module_name
+          }
 
           # Global cache: use engine (shared) registry; load into engine env when missing.
           shared_registry <- self$context$env$module_registry
-          if (!shared_registry$exists(module_name)) {
-            module_path <- rye_resolve_module_path(module_name)
-            if (is.null(module_path)) {
-              stop(sprintf("Module not found: %s", module_name))
+          if (!shared_registry$exists(registry_key)) {
+            if (is_path) {
+              if (is.null(self$load_file_fn)) {
+                stop("import requires a load_file function")
+              }
+              self$load_file_fn(module_path, self$context$env$env, create_scope = FALSE)
+            } else {
+              module_path <- rye_resolve_module_path(registry_key)
+              if (is.null(module_path)) {
+                stop(sprintf("Module not found: %s", registry_key))
+              }
+              if (is.null(self$load_file_fn)) {
+                stop("import requires a load_file function")
+              }
+              self$load_file_fn(module_path, self$context$env$env, create_scope = FALSE)
             }
-            if (is.null(self$load_file_fn)) {
-              stop("import requires a load_file function")
-            }
-            self$load_file_fn(module_path, self$context$env$env, create_scope = FALSE)
-            if (!shared_registry$exists(module_name)) {
-              stop(sprintf("Module '%s' did not register itself", module_name))
+            if (!shared_registry$exists(registry_key)) {
+              stop(sprintf("Module '%s' did not register itself", registry_key))
             }
           }
 
-          shared_registry$attach_into(module_name, env)
+          shared_registry$attach_into(registry_key, env)
           NULL
         },
         lambda = function(expr, env, op_name) {

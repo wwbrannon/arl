@@ -162,8 +162,8 @@ HelpSystem <- R6::R6Class(
           description = "Define a module with explicit exports. Use (export-all) to export all definitions."
         ),
         import = list(
-          usage = "(import name)",
-          description = "Load a module and attach its exports."
+          usage = "(import name) or (import \"path\")",
+          description = "Load a module and attach its exports. Symbol: module name (stdlib, then CWD). String: file path (path-only resolution, normalized to absolute)."
         ),
         `::` = list(
           usage = "(:: pkg name)",

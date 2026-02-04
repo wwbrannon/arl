@@ -151,34 +151,31 @@ The `import` special form loads a module and makes its exports available in the 
 ### Signature
 
 ```lisp
-(import name)
-; or
-(import "name")
+(import name)      ; name is a symbol: module name (stdlib, then CWD)
+(import "path")    ; path is a string: file path (path-only resolution)
 ```
+
+- **Symbol** (e.g. `control`): treated as a **module name**. Resolution looks in the stdlib, then the current working directory (same as `load` by name).
+- **String** (e.g. `"lib/utils.rye"`): treated as a **file path**. Only path-based resolution is used (no stdlib lookup). The path is normalized to absolute so that the same file imported with different path strings (e.g. `"inst/rye/control.rye"` and `"./inst/rye/control.rye"`) reuses the same loaded module.
 
 ### Examples
 
 ```lisp
-; Import a module from the current directory
+; Import by module name (symbol): stdlib or CWD
 (import math-utils)
 (square 5)  ; => 25
-(cube 3)    ; => 27
-
-; Import a stdlib module
 (import control)
 (when #t (println "hello"))
 
-; Import with string name
-(import "my-module")
+; Import by path (string): path-only resolution, no stdlib
+(import "lib/my-module.rye")
+(import "/absolute/path/to/module.rye")
 ```
 
 ### Path Resolution
 
-`import` uses the same path resolution as `load`:
-
-1. **Path separator check**: If the name contains `/` or `\`, treats it as a file path
-2. **Stdlib lookup**: Checks `inst/rye/` for stdlib modules
-3. **Current directory lookup**: Checks the current working directory
+- **`(import name)`** (symbol): resolve by **module name** — stdlib (`inst/rye/`), then current directory. The file must register itself with `(module name ...)`.
+- **`(import "path")`** (string): resolve by **path only** — the string is a file path (existing file or `path.rye`). No stdlib lookup. The path is normalized to absolute for caching, so re-importing the same file with a different path string does not reload it.
 
 ### Module Registration and Scoping
 

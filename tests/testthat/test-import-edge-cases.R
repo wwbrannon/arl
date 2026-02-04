@@ -19,6 +19,41 @@ test_that("import with invalid path", {
   )
 })
 
+test_that("same file imported with different path strings uses one module (absolute path alias)", {
+  engine <- RyeEngine$new()
+  env <- engine$env$env
+
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  old_dir <- getwd()
+  setwd(tmp_dir)
+  on.exit({
+    setwd(old_dir)
+    unlink(tmp_dir, recursive = TRUE)
+  }, add = TRUE)
+
+  module_file <- file.path(tmp_dir, "aliasm.rye")
+  writeLines(c(
+    "(module aliasm",
+    "  (export getn)",
+    "  (define n 0)",
+    "  (set! n (+ n 1))",
+    "  (define getn (lambda () n)))"
+  ), module_file)
+
+  path_abs <- normalizePath(module_file, winslash = "/", mustWork = TRUE)
+  path_rel <- "aliasm.rye"
+
+  engine$eval_in_env(engine$read(sprintf('(import "%s")', path_abs))[[1]], env)
+  n_after_first <- engine$eval_in_env(engine$read("(getn)")[[1]], env)
+
+  engine$eval_in_env(engine$read(sprintf('(import "%s")', path_rel))[[1]], env)
+  n_after_second <- engine$eval_in_env(engine$read("(getn)")[[1]], env)
+
+  expect_equal(n_after_first, 1L)
+  expect_equal(n_after_second, 1L)
+})
+
 test_that("module is cached after first load", {
   # Create a temporary module file
   temp_dir <- tempdir()

@@ -70,6 +70,38 @@ rye_resolve_module_path <- function(name) {
   NULL
 }
 
+# Path-only resolution: find file at path or path.rye (no stdlib lookup).
+# Used when import argument is a string (path). Returns NULL if not found.
+rye_resolve_path_only <- function(path) {
+  if (!is.character(path) || length(path) != 1) {
+    return(NULL)
+  }
+  if (file.exists(path)) {
+    return(path)
+  }
+  with_ext <- paste0(path, ".rye")
+  if (file.exists(with_ext)) {
+    return(with_ext)
+  }
+  NULL
+}
+
+# Normalize a file path to absolute form for consistent registry keys.
+# Relative paths are resolved relative to getwd(). Uses forward slashes.
+rye_normalize_path_absolute <- function(path) {
+  if (!is.character(path) || length(path) != 1 || !nzchar(path)) {
+    return(path)
+  }
+  normalized <- tryCatch(
+    normalizePath(path, mustWork = FALSE, winslash = "/"),
+    error = function(e) path
+  )
+  if (is.na(normalized) || !nzchar(normalized)) {
+    return(path)
+  }
+  normalized
+}
+
 rye_error <- function(message, src_stack = list(), r_stack = list()) {
   structure(
     list(message = message, src_stack = src_stack, r_stack = r_stack),

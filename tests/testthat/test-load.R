@@ -140,3 +140,74 @@ test_that("(import ...) errors on missing modules and exports", {
   exprs <- engine$read(sprintf("(import %s)", module_name))
   expect_error(engine$eval_in_env(exprs[[1]], env), "does not export")
 })
+
+test_that("(import \"path\") loads module by path and attaches exports", {
+  engine <- RyeEngine$new()
+  env <- engine$env$env
+
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  old_dir <- getwd()
+  setwd(tmp_dir)
+  on.exit({
+    setwd(old_dir)
+    unlink(tmp_dir, recursive = TRUE)
+  }, add = TRUE)
+
+  module_file <- file.path(tmp_dir, "pathmod.rye")
+  writeLines(c(
+    "(module pathmod",
+    "  (export double)",
+    "  (define double (lambda (x) (* x 2))))"
+  ), module_file)
+
+  exprs <- engine$read(sprintf('(import "%s")', module_file))
+  engine$eval_in_env(exprs[[1]], env)
+
+  exprs <- engine$read("(double 7)")
+  expect_equal(engine$eval_in_env(exprs[[1]], env), 14)
+})
+
+test_that("second (import \"path\") does not reload module", {
+  engine <- RyeEngine$new()
+  env <- engine$env$env
+
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  old_dir <- getwd()
+  setwd(tmp_dir)
+  on.exit({
+    setwd(old_dir)
+    unlink(tmp_dir, recursive = TRUE)
+  }, add = TRUE)
+
+  module_file <- file.path(tmp_dir, "countmod.rye")
+  writeLines(c(
+    "(module countmod",
+    "  (export getn)",
+    "  (define n 0)",
+    "  (define getn (lambda () (begin (set! n (+ n 1)) n))))"
+  ), module_file)
+
+  path_abs <- normalizePath(module_file, winslash = "/", mustWork = TRUE)
+  engine$eval_in_env(engine$read(sprintf('(import "%s")', path_abs))[[1]], env)
+  expect_equal(engine$eval_in_env(engine$read("(getn)")[[1]], env), 1)
+
+  engine$eval_in_env(engine$read(sprintf('(import "%s")', path_abs))[[1]], env)
+  expect_equal(engine$eval_in_env(engine$read("(getn)")[[1]], env), 2)
+})
+
+test_that("(import symbol) is module name, (import \"string\") is path", {
+  engine <- RyeEngine$new()
+  env <- engine$env$env
+
+  expect_silent(engine$eval_in_env(engine$read("(import control)")[[1]], env))
+  expect_true(engine$macro_expander$is_macro(as.symbol("when"), env = env))
+
+  missing_path <- tempfile(fileext = ".rye")
+  expect_false(file.exists(missing_path))
+  expect_error(
+    engine$eval_in_env(engine$read(sprintf('(import "%s")', missing_path))[[1]], env),
+    "Module not found"
+  )
+})

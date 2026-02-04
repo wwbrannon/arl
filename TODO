@@ -1,6 +1,6 @@
-o) can you "import" without first running "load" to define the module? looks like no, which is a bit broken
-o) can we import arbitrary non-stdlib modules? does import work for this?
-o) may be able to get rid of the stdlib "loader"?
+o) any of the utils.R functions that properly belong as a method of a class?
+
+o) can we use fix above to get rid of the stdlib "loader"?
 
 o) fix the minor issues from opus auditing the tests
 

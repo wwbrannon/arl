@@ -77,6 +77,31 @@ ModuleRegistry <- R6::R6Class(
       lockBinding(name, registry)
       entry
     },
+    # @description Register an alias: path (absolute) -> same entry as name.
+    # Used so (import "path/to/file.rye") can find the module registered as (module X ...).
+    # @param path Absolute path string (use rye_normalize_path_absolute first).
+    # @param name Module name (single string) already registered.
+    # @return The registry entry (invisible). Idempotent if path already aliases same module.
+    alias = function(path, name) {
+      if (!is.character(path) || length(path) != 1 || !is.character(name) || length(name) != 1) {
+        stop("alias requires path and name as single strings")
+      }
+      registry <- self$rye_env$module_registry_env(create = TRUE)
+      entry <- self$get(name)
+      if (is.null(entry)) {
+        stop(sprintf("module '%s' is not loaded", name))
+      }
+      if (exists(path, envir = registry, inherits = FALSE)) {
+        existing <- get(path, envir = registry, inherits = FALSE)
+        if (identical(existing, entry)) {
+          return(invisible(entry))
+        }
+        stop(sprintf("path '%s' is already bound to a different module", path))
+      }
+      assign(path, entry, envir = registry)
+      lockBinding(path, registry)
+      invisible(entry)
+    },
     # @description Remove a module from the registry.
     # @param name Module name (single string).
     unregister = function(name) {
