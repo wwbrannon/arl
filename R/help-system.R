@@ -136,7 +136,11 @@ HelpSystem <- R6::R6Class(
         ),
         load = list(
           usage = "(load \"path\")",
-          description = "Load and evaluate a Rye source file."
+          description = "Load and evaluate a Rye source file in the current environment (source-like). Definitions and imports in the file are visible in the caller."
+        ),
+        run = list(
+          usage = "(run \"path\")",
+          description = "Run a Rye source file in an isolated child environment. Definitions and imports in the file are not visible in the caller."
         ),
         defmacro = list(
           usage = "(defmacro name (params...) body...)",

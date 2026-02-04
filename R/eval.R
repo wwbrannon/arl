@@ -502,20 +502,51 @@ Evaluator <- R6::R6Class(
               if (is.null(self$load_file_fn)) {
                 stop("load requires a load_file function")
               }
-              return(self$context$source_tracker$strip_src(self$load_file_fn(stdlib_path, env)))
+              return(self$context$source_tracker$strip_src(self$load_file_fn(stdlib_path, env, create_scope = FALSE)))
             }
             if (file.exists(path)) {
               if (is.null(self$load_file_fn)) {
                 stop("load requires a load_file function")
               }
-              return(self$context$source_tracker$strip_src(self$load_file_fn(path, env)))
+              return(self$context$source_tracker$strip_src(self$load_file_fn(path, env, create_scope = FALSE)))
             }
             stop(sprintf("File not found: %s", path))
           }
           if (is.null(self$load_file_fn)) {
             stop("load requires a load_file function")
           }
-          self$context$source_tracker$strip_src(self$load_file_fn(path, env))
+          self$context$source_tracker$strip_src(self$load_file_fn(path, env, create_scope = FALSE))
+        },
+        run = function(expr, env, op_name) {
+          if (length(expr) != 2) {
+            stop("run requires exactly 1 argument: (run \"path\")")
+          }
+          path <- self$eval_inner(expr[[2]], env)
+          path <- self$context$source_tracker$strip_src(path)
+          if (!is.character(path) || length(path) != 1) {
+            stop("run requires a single file path string")
+          }
+          has_separator <- grepl("[/\\\\]", path)
+          if (!has_separator) {
+            stdlib_path <- rye_resolve_stdlib_path(path)
+            if (!is.null(stdlib_path)) {
+              if (is.null(self$load_file_fn)) {
+                stop("run requires a load_file function")
+              }
+              return(self$context$source_tracker$strip_src(self$load_file_fn(stdlib_path, env, create_scope = TRUE)))
+            }
+            if (file.exists(path)) {
+              if (is.null(self$load_file_fn)) {
+                stop("run requires a load_file function")
+              }
+              return(self$context$source_tracker$strip_src(self$load_file_fn(path, env, create_scope = TRUE)))
+            }
+            stop(sprintf("File not found: %s", path))
+          }
+          if (is.null(self$load_file_fn)) {
+            stop("run requires a load_file function")
+          }
+          self$context$source_tracker$strip_src(self$load_file_fn(path, env, create_scope = TRUE))
         },
         module = function(expr, env, op_name) {
           if (length(expr) < 3) {
@@ -585,7 +616,7 @@ Evaluator <- R6::R6Class(
             if (is.null(self$load_file_fn)) {
               stop("import requires a load_file function")
             }
-            self$load_file_fn(module_path, env)
+            self$load_file_fn(module_path, env, create_scope = FALSE)
             if (!RyeEnv$new(env)$module_registry$exists(module_name)) {
               stop(sprintf("Module '%s' did not register itself", module_name))
             }

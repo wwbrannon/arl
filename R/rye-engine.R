@@ -53,7 +53,7 @@ RyeEngine <- R6::R6Class(
       self$macro_expander <- MacroExpander$new(context)
       self$evaluator <- Evaluator$new(
         context,
-        load_file_fn = function(path, env) self$load_file_in_env(path, env),
+        load_file_fn = function(path, env, create_scope = FALSE) self$load_file_in_env(path, env, create_scope),
         help_fn = function(topic, env) self$help_in_env(topic, env)
       )
 
@@ -286,13 +286,14 @@ RyeEngine <- R6::R6Class(
       env
     },
     #' @description
-    #' Load and evaluate a Rye source file.
+    #' Load and evaluate a Rye source file (each file runs in its own scope).
     load_file = function(path) {
-      self$load_file_in_env(path, self$env$env)
+      self$load_file_in_env(path, self$env$env, create_scope = TRUE)
     },
     #' @description
     #' Load and evaluate a Rye source file in an explicit environment.
-    load_file_in_env = function(path, env) {
+    #' @param create_scope If TRUE, evaluate in a new child of \code{env}; if FALSE, in \code{env}.
+    load_file_in_env = function(path, env, create_scope = FALSE) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
       }
@@ -300,7 +301,8 @@ RyeEngine <- R6::R6Class(
         stop(sprintf("File not found: %s", path))
       }
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-      target_env <- private$resolve_env_arg(env)
+      resolved <- private$resolve_env_arg(env)
+      target_env <- if (isTRUE(create_scope)) new.env(parent = resolved) else resolved
       self$source_tracker$with_error_context(function() {
         self$evaluator$eval_seq_in_env(self$read(text, source_name = path), target_env)
       })
