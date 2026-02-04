@@ -78,17 +78,19 @@ sequentially and return the last value.
 
 ## Run Rye files
 
-You can execute a file from the REPL using `load`:
+From the REPL, use `load` to run a file in the current environment so that its definitions are visible:
 
 ```lisp
 (load "script.rye")
 ```
 
-From R, use `engine$load_file()`:
+From R, `engine$load_file(path)` runs the file in an *isolated* environment: definitions and imports in that file are not visible in the engine's main environment or to later code. Use this when you want to execute a script without affecting the session (e.g. run a script and then continue in the REPL with a clean scope). To run a file and have its definitions visible in the engine (e.g. for use in the REPL), call `engine$load_file_in_env(path, engine$env$env)` or evaluate `(load "script.rye")` from the REPL.
 
 ```{r eval=FALSE}
 engine <- RyeEngine$new()
-engine$load_file("script.rye")
+engine$load_file("script.rye")  # isolated; definitions not visible
+# Or, to make definitions visible in the engine:
+engine$load_file_in_env("script.rye", engine$env$env)
 ```
 
 ## Loading stdlib modules

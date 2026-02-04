@@ -245,8 +245,7 @@ Additional Rye stdlib modules live in `inst/rye` so you can load just what you n
 (load "error")     ; try/catch/finally
 ```
 
-You can also create your own modules with the `module` and `import` special forms.
-See the [Modules and Imports](articles/modules.html) guide for details.
+**Modules and loading:** `load` runs a file in the current environment (definitions visible). `run` runs a file in an isolated child (definitions not visible). `import` loads a module and attaches its exports into the current scope only; each module is loaded once per engine. From R, `engine$load_file(path)` runs a file in an isolated scope; to have definitions visible in the engine, use `engine$load_file_in_env(path, engine$env$env)` or evaluate `(load "script.rye")` from the REPL. You can define your own modules with `module` and `import`—see the [Modules and Imports](articles/modules.html) guide.
 
 ### Examples
 

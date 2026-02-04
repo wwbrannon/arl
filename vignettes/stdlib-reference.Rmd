@@ -15,12 +15,14 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 Rye ships with a small standard library implemented in R, plus additional Rye
 source modules. The engine loads the base R stdlib and the Rye modules from
-`inst/rye/` by default.
+`inst/rye/` by default. Stdlib modules are loaded in dependency order (each
+module declares its dependencies with `(import ...)` and is loaded after the
+modules it imports).
 
 For the full, per-function reference, see the individual stdlib reference pages:
 
 - [Standard Library: Lists and Sequences](stdlib-list-seq.html)
-- [Standard Library: Higher-Order Functions](stdlib-higher-order.html)
+- [Standard Library: Higher-Order Functions](stdlib-functional.html)
 - [Standard Library: Predicates](stdlib-predicates.html)
 - [Standard Library: Control Flow and Macros](stdlib-control.html)
 - [Standard Library: Strings, I/O, and Arithmetic](stdlib-strings-io.html)
@@ -109,21 +111,27 @@ engine <- RyeEngine$new()
 The base R parts of the stdlib implementation live in `R/stdlib.R`. The rye
 parts are organized by topic in `inst/rye/` (each file defines a module):
 
-- `stdlib-core.rye`
-- `math.rye`
+- `_r.rye` (R operator/function aliases, internal)
+- `_stdlib_loader.rye` (loads modules in dependency order)
+- `core.rye`
+- `list.rye`
 - `predicates.rye`
-- `list-core.rye`
-- `higher-order.rye`
+- `control.rye`
+- `functional.rye`
 - `sequences.rye`
+- `struct.rye`
+- `error.rye`
+- `threading.rye`
+- `binding.rye`
+- `looping.rye`
+- `dict.rye`
+- `math.rye`
+- `set.rye`
 - `strings.rye`
 - `display.rye`
 - `io.rye`
-- `binding.rye`
-- `struct.rye`
-- `control.rye`
-- `looping.rye`
-- `threading.rye`
-- `error.rye`
+- `assert.rye`
+- `r-interop.rye`
 - `translator.rye`
 
 If you’re looking for implementation details, these files are the source of

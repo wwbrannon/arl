@@ -39,7 +39,7 @@ articles:
   - title: Reference
     contents:
       - stdlib-list-seq
-      - stdlib-higher-order
+      - stdlib-functional
       - stdlib-predicates
       - stdlib-control
       - stdlib-strings-io

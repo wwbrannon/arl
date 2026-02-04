@@ -300,7 +300,11 @@ Populate standard bindings
 \if{html}{\out{<a id="method-RyeEngine-load_file"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-load_file}{}}}
 \subsection{Method \code{load_file()}}{
-Load and evaluate a Rye source file.
+Load and evaluate a Rye source file in an isolated scope. The file runs in a
+child of the engine's environment, so definitions and imports in the file
+are not visible in the engine's main environment or to subsequent code. For
+source-like behavior (definitions visible in the engine), use
+\code{load_file_in_env(path, env, create_scope = FALSE)}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_file(path)}\if{html}{\out{</div>}}
 }
@@ -317,9 +321,13 @@ Load and evaluate a Rye source file.
 \if{html}{\out{<a id="method-RyeEngine-load_file_in_env"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-load_file_in_env}{}}}
 \subsection{Method \code{load_file_in_env()}}{
-Load and evaluate a Rye source file in an explicit environment.
+Load and evaluate a Rye source file in an explicit environment. By default
+(\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
+and imports in the file are visible in that environment. With
+\code{create_scope = TRUE}, the file runs in a child of \code{env} and its
+definitions are not visible in \code{env}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_file_in_env(path, env)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_file_in_env(path, env, create_scope = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -328,6 +336,8 @@ Load and evaluate a Rye source file in an explicit environment.
 \item{\code{path}}{File path to load.}
 
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{create_scope}}{If TRUE, evaluate in a new child of \code{env}; if FALSE, in \code{env}.}
 }
 \if{html}{\out{</div>}}
 }

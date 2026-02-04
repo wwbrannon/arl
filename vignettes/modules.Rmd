@@ -17,10 +17,11 @@ Rye provides a module system for organizing code into reusable, encapsulated uni
 
 ## Overview
 
-Rye has two main mechanisms for loading code:
+Rye has three mechanisms for loading code:
 
-- **`load`**: Evaluates a file directly into the current environment (all definitions become available)
-- **`import`**: Loads a module and imports only its exported symbols
+- **`load`**: Evaluates a file in the current environment (source-like; definitions and imports from the file are visible in the caller)
+- **`run`**: Evaluates a file in an isolated child environment (definitions and imports in the file are not visible in the caller)
+- **`import`**: Loads a module and attaches only its exported symbols into the current environment
 
 ## The `load` Special Form
 
@@ -65,6 +66,28 @@ When you call `(load "name")`, Rye resolves the path in this order:
 `load` includes simple caching to prevent re-evaluation:
 - Files with path separators are cached by their full path
 - Files without separators (potential stdlib modules) are cached by name if found in stdlib
+
+## The `run` Special Form
+
+`run` reads and evaluates a file in a *child* of the current environment. Definitions and imports in that file stay in the child environment and are not visible in the caller. Use `run` when you want to execute a script without polluting the current scope (e.g. running a one-off task or a file that should not affect the caller's bindings).
+
+### Signature
+
+```lisp
+(run "path")
+```
+
+### Examples
+
+```lisp
+; Run a script in isolation; its definitions are not visible here
+(run "scripts/one-off.rye")
+
+; Run a stdlib module by name (same path resolution as load)
+(run "control")
+```
+
+Path resolution is the same as for `load`. Unlike `load`, `run` does not make the file's definitions or imports visible in the current environment.
 
 ## The `module` Special Form
 
@@ -157,14 +180,16 @@ The `import` special form loads a module and makes its exports available in the 
 2. **Stdlib lookup**: Checks `inst/rye/` for stdlib modules
 3. **Current directory lookup**: Checks the current working directory
 
-### Module Registration
+### Module Registration and Scoping
 
 When you `import` a module:
 
-1. If the module isn't already registered, Rye loads the file containing the module
+1. If the module isn't already registered for this engine, Rye loads the file containing the module (into the engine's shared module cache)
 2. The file must contain a `(module ...)` form that registers itself
-3. `import` then copies the module's exports into the current environment
-4. Subsequent imports of the same module use the cached version
+3. `import` attaches the module's exports into the *current* environment (the scope where you wrote `(import ...)`)
+4. Subsequent `(import M)` in any scope reuses the same module instance and attaches its exports into that scope
+
+**Import scoping**: Each `(import M)` only makes M's exports visible in the environment where that form was evaluated. Imports in one file are not visible in another file or in the REPL unless that file (or the REPL) also runs `(import M)`. Modules are loaded once per engine and shared; only the set of environments that "see" the exports depends on where you call `import`.
 
 ### Error Handling
 
@@ -289,8 +314,8 @@ Rye's standard library is organized into modules that you can load as needed:
 ; Error handling
 (import error)      ; try, catch, finally
 
-; Higher-order functions
-(import higher-order)  ; map, filter, reduce, etc.
+; Functional (higher-order) functions
+(import functional)  ; map, filter, reduce, etc.
 
 ; String operations
 (import strings)    ; str, string-join, string-split, etc.
@@ -410,9 +435,9 @@ Then load with relative paths:
 
 ## Summary
 
-- **`load`**: Evaluates a file into the current environment
+- **`load`**: Evaluates a file in the current environment (definitions and imports visible in the caller)
+- **`run`**: Evaluates a file in an isolated child environment (definitions and imports not visible in the caller)
 - **`module`**: Defines a module with explicit exports
-- **`import`**: Loads a module and imports its exports
-- Path resolution checks: path separators → stdlib → current directory
-- Modules are cached after first load
+- **`import`**: Loads a module and attaches its exports into the current scope only; each module is loaded once per engine
+- Path resolution: path separators → stdlib → current directory
 - Use explicit exports for maintainable module interfaces

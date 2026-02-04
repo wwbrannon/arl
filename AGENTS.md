@@ -21,7 +21,7 @@ Standard R package layout:
   - `help.R` - Help system
   - `utils.R` - Utilities
 - `inst/` - Installed package files
-  - `rye/` - Modular stdlib extensions (control.rye, binding.rye, looping.rye, threading.rye, error.rye)
+  - `rye/` - Modular stdlib (control.rye, functional.rye, binding.rye, looping.rye, threading.rye, error.rye, struct.rye, assert.rye, r-interop.rye, etc.); each module declares `(import ...)` and is loaded in dependency order via `_stdlib_loader.rye`
   - `examples/` - Complete working programs (fibonacci, quicksort, data-analysis, macros, etc.)
   - `cli/rye` - Command-line executable
 - `tests/testthat/` - Comprehensive test suite (16 test files)
@@ -77,7 +77,7 @@ Rye leverages R's existing eval/quote/environment system rather than reimplement
 
 4. **Evaluator** (`eval.R`) - Handles special forms (`quote`, `if`, `define`, `lambda`, `begin`, `defmacro`, `quasiquote`, `~`); delegates non-special-form evaluation to R's native `eval()`
 
-5. **Standard Library** (`stdlib.R`, `inst/rye/*.rye`) - Core library (list operations, higher-order functions, predicates, string/I/O, error handling) implemented in R; modular extensions (control flow, binding, looping, threading, error handling) implemented in Rye
+5. **Standard Library** (`stdlib.R`, `inst/rye/*.rye`) - Core library (list operations, functional/higher-order, predicates, string/I/O, error handling) in R; modular extensions in Rye. **Module system**: `(import M)` attaches M's exports only in the scope where import was evaluated; each module is loaded once per engine (shared cache). `(load path)` runs a file in the current env; `(run path)` runs it in an isolated child env. From R, `load_file(path)` uses an isolated scope; use `load_file_in_env(path, env, create_scope = FALSE)` for source-like visibility.
 
 6. **R Bridge** - Direct access to all R functions; keywords (`:name`) become named arguments; R operators and data structures work naturally
 

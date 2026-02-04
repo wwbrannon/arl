@@ -1,8 +1,6 @@
 stdlib cleanup:
 -------------------------------------------------
 o) stdlib is poorly organized, has circularities, undeclared deps on prior import order, needs refactor
-  o) update docs?
-
   ```
   +  # Load stdlib modules needed for tests (assert needs core, predicates, strings, dict)
   +  for (module in c("control", "binding", "strings", "math", "predicates", "list", "higher-order", "sequences", "looping", "dict", "core", "assert")) {

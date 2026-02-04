@@ -286,12 +286,20 @@ RyeEngine <- R6::R6Class(
       env
     },
     #' @description
-    #' Load and evaluate a Rye source file (each file runs in its own scope).
+    #' Load and evaluate a Rye source file in an isolated scope. The file runs in a
+    #' child of the engine's environment, so definitions and imports in the file
+    #' are not visible in the engine's main environment or to subsequent code. For
+    #' source-like behavior (definitions visible in the engine), use
+    #' \code{load_file_in_env(path, env, create_scope = FALSE)}.
     load_file = function(path) {
       self$load_file_in_env(path, self$env$env, create_scope = TRUE)
     },
     #' @description
-    #' Load and evaluate a Rye source file in an explicit environment.
+    #' Load and evaluate a Rye source file in an explicit environment. By default
+    #' (\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
+    #' and imports in the file are visible in that environment. With
+    #' \code{create_scope = TRUE}, the file runs in a child of \code{env} and its
+    #' definitions are not visible in \code{env}.
     #' @param create_scope If TRUE, evaluate in a new child of \code{env}; if FALSE, in \code{env}.
     load_file_in_env = function(path, env, create_scope = FALSE) {
       if (!is.character(path) || length(path) != 1) {

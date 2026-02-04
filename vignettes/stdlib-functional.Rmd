@@ -13,6 +13,8 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
+These functions are provided by the `functional` module (`inst/rye/functional.rye`).
+
 ### map
 
 Applies a function to each element of a list, returning a new list.
