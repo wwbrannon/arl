@@ -243,8 +243,11 @@ RyeCLI <- R6::R6Class(
           self$cli_exit_with_error(paste0("File not found: ", path), show_help = TRUE)
         }
       }
+      # Run all files in the same engine env so definitions in one file are visible in the next
       for (path in parsed$files) {
-        self$cli_eval_with_engine(engine, function() engine$load_file(path))
+        self$cli_eval_with_engine(engine, function() {
+          engine$load_file_in_env(path, engine$env$env, create_scope = FALSE)
+        })
       }
       invisible(NULL)
     },
