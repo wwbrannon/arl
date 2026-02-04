@@ -20,7 +20,6 @@
 ^pkgdown$
 ^doc$
 ^Meta$
-^tools$
 ^benchmarks$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$

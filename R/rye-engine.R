@@ -295,8 +295,19 @@ RyeEngine <- R6::R6Class(
       if (!dir.exists(stdlib_dir)) {
         stop("stdlib directory not found")
       }
-      deps <- StdlibDeps$new(stdlib_dir = stdlib_dir)
-      load_order <- deps$get_load_order()
+      cache_path <- system.file("rye", "load-order.rds", package = "rye")
+      if (nzchar(cache_path) && file.exists(cache_path)) {
+        load_order <- readRDS(cache_path)
+        if (!is.character(load_order) || length(load_order) == 0L) {
+          load_order <- NULL
+        }
+      } else {
+        load_order <- NULL
+      }
+      if (is.null(load_order)) {
+        deps <- FileDeps$new(dir = stdlib_dir)
+        load_order <- deps$get_load_order()
+      }
       target_rye <- RyeEnv$new(resolved)
       for (name in load_order) {
         if (!target_rye$module_registry$exists(name)) {

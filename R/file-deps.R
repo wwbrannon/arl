@@ -1,14 +1,14 @@
-# StdlibDeps: static analysis of inst/rye/*.rye for module dependencies and load order.
-# Uses rye_topsort for topological sort. No reference to engine or evaluator.
+# FileDeps: static analysis of a directory of .rye files for module dependencies and load order.
+# Uses rye_topsort for topological sort. Generic over dir/pattern/exclude; no reference to engine or evaluator.
 
 #' @importFrom R6 R6Class
 #' @keywords internal
 #' @noRd
-StdlibDeps <- R6::R6Class(
-  "StdlibDeps",
+FileDeps <- R6::R6Class(
+  "FileDeps",
   public = list(
-    #' @field stdlib_dir Path to directory containing .rye module files.
-    stdlib_dir = NULL,
+    #' @field dir Path to directory containing .rye module files.
+    dir = NULL,
     #' @field modules List of module info (name, exports, imports, file) keyed by name.
     modules = NULL,
     #' @field graph List with vertices (character) and edges (list of list(from=, to=)).
@@ -16,22 +16,22 @@ StdlibDeps <- R6::R6Class(
     #' @field load_order Character vector of module names in dependency order.
     load_order = NULL,
 
-    #' @description Create a StdlibDeps instance by scanning a stdlib directory.
-    #' @param stdlib_dir Path to directory containing .rye files. Defaults to
-    #'   \code{system.file("rye", package = "rye")}.
-    initialize = function(stdlib_dir = NULL) {
-      if (is.null(stdlib_dir)) {
-        stdlib_dir <- system.file("rye", package = "rye")
+    #' @description Create a FileDeps instance by scanning a directory.
+    #' @param dir Path to directory containing files matching \code{pattern}.
+    #' @param pattern Regex for file names (default \code{"\\.rye$"}).
+    #' @param exclude Character vector of basenames to skip (default none).
+    initialize = function(dir, pattern = "\\.rye$", exclude = character()) {
+      if (!dir.exists(dir)) {
+        stop("Directory not found: ", dir)
       }
-      if (!dir.exists(stdlib_dir)) {
-        stop("Directory not found: ", stdlib_dir)
+      self$dir <- dir
+      all_files <- list.files(dir, pattern = pattern, full.names = TRUE)
+      if (length(exclude) > 0L) {
+        all_files <- all_files[!basename(all_files) %in% exclude]
       }
-      self$stdlib_dir <- stdlib_dir
-      rye_files <- list.files(stdlib_dir, pattern = "\\.rye$", full.names = TRUE)
-      rye_files <- rye_files[basename(rye_files) != "_stdlib_loader.rye"]
       modules <- list()
       all_exports <- list()
-      for (f in rye_files) {
+      for (f in all_files) {
         text <- private$strip_comments(paste(readLines(f, warn = FALSE), collapse = "\n"))
         mod <- private$extract_module(text)
         if (is.null(mod)) next
@@ -75,7 +75,7 @@ StdlibDeps <- R6::R6Class(
     check_undeclared = function(verbose = FALSE) {
       reported <- character()
       for (nm in names(self$modules)) {
-        f <- file.path(self$stdlib_dir, self$modules[[nm]]$file)
+        f <- file.path(self$dir, self$modules[[nm]]$file)
         body_text <- private$strip_comments(paste(readLines(f, warn = FALSE), collapse = "\n"))
         msgs <- private$find_undeclared_deps(
           nm, body_text, lapply(self$modules, `[[`, "exports"), self$modules[[nm]]$imports
@@ -226,14 +226,40 @@ StdlibDeps <- R6::R6Class(
       }
       list(vertices = vertices, edges = edges)
     },
+    strip_strings = function(text) {
+      # Replace string literal contents with spaces so tokenization ignores them.
+      n <- nchar(text)
+      if (n == 0L) return(text)
+      result <- character(n)
+      in_str <- FALSE
+      quote_char <- ""
+      for (i in seq_len(n)) {
+        c <- substr(text, i, i)
+        if (in_str) {
+          if (c == quote_char && (i == 1L || substr(text, i - 1L, i - 1L) != "\\"))
+            in_str <- FALSE
+          result[i] <- " "
+          next
+        }
+        if (c %in% c('"', "'")) {
+          in_str <- TRUE
+          quote_char <- c
+          result[i] <- " "
+          next
+        }
+        result[i] <- c
+      }
+      paste(result, collapse = "")
+    },
     find_undeclared_deps = function(module_name, body_text, all_exports, declared_imports) {
       other_exports <- list()
       for (nm in names(all_exports))
         if (nm != module_name && !nm %in% declared_imports)
           for (sym in all_exports[[nm]])
             other_exports[[sym]] <- c(other_exports[[sym]], nm)
+      body_no_strings <- private$strip_strings(body_text)
       tokens <- unique(
-        regmatches(body_text, gregexpr("[a-zA-Z0-9_.?-]+", body_text))[[1]]
+        regmatches(body_no_strings, gregexpr("[a-zA-Z0-9_.?-]+", body_no_strings))[[1]]
       )
       reported <- character()
       for (sym in tokens) {
@@ -254,7 +280,8 @@ StdlibDeps <- R6::R6Class(
 #' @keywords internal
 #' @noRd
 rye_stdlib_print_order <- function(stdlib_dir = NULL) {
-  d <- StdlibDeps$new(stdlib_dir = stdlib_dir)
+  dir <- if (is.null(stdlib_dir)) system.file("rye", package = "rye") else stdlib_dir
+  d <- FileDeps$new(dir = dir)
   cat("Load order (topological sort):\n")
   cat(paste(d$get_load_order(), collapse = " "), "\n")
   invisible(d$get_load_order())
@@ -266,7 +293,8 @@ rye_stdlib_print_order <- function(stdlib_dir = NULL) {
 #' @keywords internal
 #' @noRd
 rye_stdlib_print_order_and_check_undeclared <- function(stdlib_dir = NULL) {
-  d <- StdlibDeps$new(stdlib_dir = stdlib_dir)
+  dir <- if (is.null(stdlib_dir)) system.file("rye", package = "rye") else stdlib_dir
+  d <- FileDeps$new(dir = dir)
   cat("Load order (topological sort):\n")
   cat(paste(d$get_load_order(), collapse = " "), "\n")
   d$check_undeclared(verbose = TRUE)

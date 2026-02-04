@@ -4,12 +4,17 @@ help: ## Show this help message
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
+# Stdlib load order cache (phony: stdlib deps not in makefile, run promiscuously).
+.PHONY: stdlib-cache
+stdlib-cache: ## Ensure inst/rye/load-order.rds is up to date (run before build/install)
+	Rscript tools/build-stdlib-order.R
+
 .PHONY: install
-install: ## Install package
+install: stdlib-cache ## Install package
 	R -q -e "devtools::install()"
 
 .PHONY: build
-build: ## Build the package
+build: stdlib-cache ## Build the package
 	R -q -e "devtools::build()"
 
 .PHONY: check
@@ -73,7 +78,7 @@ test-native: ## Run a single native test file (usage: make test-native FILE=test
 
 .PHONY: bench
 bench: ## Run all benchmarks
-	R -q -e "source('benchmarks/run-all-benchmarks.R')"
+	R -q -e "devtools::load_all(); source('benchmarks/run-all-benchmarks.R')"
 
 .PHONY: bench-component
 bench-component: ## Run single component benchmark (usage: make bench-component COMPONENT=tokenizer)
@@ -81,11 +86,11 @@ bench-component: ## Run single component benchmark (usage: make bench-component 
 		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval, stdlib, e2e"; \
 		exit 1; \
 	fi
-	R -q -e "source('benchmarks/bench-$(COMPONENT).R')"
+	R -q -e "devtools::load_all(); source('benchmarks/bench-$(COMPONENT).R')"
 
 .PHONY: profile
 profile: ## Generate profiling reports
-	R -q -e "source('benchmarks/run-all-profiles.R')"
+	R -q -e "devtools::load_all(); source('benchmarks/run-all-profiles.R')"
 
 .PHONY: profile-component
 profile-component: ## Profile single component (usage: make profile-component COMPONENT=tokenizer)
@@ -93,7 +98,7 @@ profile-component: ## Profile single component (usage: make profile-component CO
 		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval"; \
 		exit 1; \
 	fi
-	R -q -e "source('benchmarks/profile-$(COMPONENT).R')"
+	R -q -e "devtools::load_all(); source('benchmarks/profile-$(COMPONENT).R')"
 
 .PHONY: bench-compare
 bench-compare: ## Compare benchmark results (usage: make bench-compare OLD=baseline.rds NEW=optimized.rds)
@@ -114,7 +119,7 @@ clean: ## Remove build artifacts and all make document output
 	# rm -rf man/  # version-controlled
 
 .PHONY: cran-prep
-cran-prep: ## Prepare docs and run CRAN check
+cran-prep: stdlib-cache ## Prepare docs and run CRAN check
 	R -q -e "source('tools/cran_prep.R')"
 
 .PHONY: cran-check
@@ -132,11 +137,13 @@ cran-clean: ## Remove CRAN check artifacts
 
 .PHONY: stdlib-order
 stdlib-order: ## Print stdlib load order (topological sort)
-	R -q -e "rye:::rye_stdlib_print_order()"
+	R -q -e "devtools::load_all(); rye:::rye_stdlib_print_order()"
 
-.PHONY: stdlib-check
-stdlib-check: ## Print stdlib load order and undeclared dependency check
-	R -q -e "rye:::rye_stdlib_print_order_and_check_undeclared()"
+# this is too crude to use, has too many false positives
+# maybe we can improve it in the future
+# .PHONY: stdlib-lint-check
+# stdlib-lint-check: ## Print stdlib load order and crude undeclared dep check
+# 	R -q -e "devtools::load_all(); rye:::rye_stdlib_print_order_and_check_undeclared()"
 
 .PHONY: cran
 cran: ## Run full CRAN prep/check/comments

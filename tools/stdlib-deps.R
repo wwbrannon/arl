@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # Thin wrapper: load rye and print stdlib load order (and optionally check undeclared).
 # Usage: Rscript tools/stdlib-deps.R [--check-undeclared] [inst/rye]
-# The real implementation lives in R/stdlib-deps.R (StdlibDeps class).
+# The real implementation lives in R/file-deps.R (FileDeps class).
 
 run_as_script <- length(commandArgs(trailingOnly = FALSE)) > 1 &&
   any(grepl("stdlib-deps\\.R", commandArgs(trailingOnly = FALSE), fixed = TRUE))

@@ -1,6 +1,6 @@
 # Topological sort for directed acyclic graphs (DAGs).
 # Reusable for dependency order, build order, etc.
-# Used by StdlibDeps for stdlib module load order.
+# Used by FileDeps for module load order (e.g. stdlib).
 
 #' Topological sort of a DAG
 #'

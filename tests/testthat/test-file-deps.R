@@ -1,4 +1,4 @@
-# Tests for StdlibDeps (R/stdlib-deps.R): module/import extraction and load order
+# Tests for FileDeps (R/file-deps.R): module/import extraction and load order
 
 # Find package root (DESCRIPTION lives there). In R CMD check, cwd is pkg/tests/testthat.
 pkg_root <- function() {
@@ -10,10 +10,10 @@ pkg_root <- function() {
   wd
 }
 
-test_that("StdlibDeps is loadable and returns structure", {
+test_that("FileDeps is loadable and returns structure", {
   stdlib_dir <- system.file("rye", package = "rye")
   skip_if_not(dir.exists(stdlib_dir))
-  d <- rye:::StdlibDeps$new(stdlib_dir = stdlib_dir)
+  d <- rye:::FileDeps$new(dir = stdlib_dir)
   expect_true(is.environment(d))
   expect_true(is.function(d$get_load_order))
   expect_true(is.function(d$get_modules))
@@ -25,7 +25,7 @@ test_that("stdlib modules are discovered and have valid topsort", {
   pkg <- pkg_root()
   stdlib_dir <- file.path(pkg, "inst", "rye")
   skip_if_not(dir.exists(stdlib_dir))
-  d <- rye:::StdlibDeps$new(stdlib_dir = stdlib_dir)
+  d <- rye:::FileDeps$new(dir = stdlib_dir)
   modules <- d$get_modules()
   load_order <- d$get_load_order()
   expect_type(modules, "list")
@@ -49,7 +49,7 @@ test_that("no cycle in stdlib dependency graph", {
   pkg <- pkg_root()
   stdlib_dir <- file.path(pkg, "inst", "rye")
   skip_if_not(dir.exists(stdlib_dir))
-  d <- rye:::StdlibDeps$new(stdlib_dir = stdlib_dir)
+  d <- rye:::FileDeps$new(dir = stdlib_dir)
   load_order <- d$get_load_order()
   g <- d$get_graph()
   expect_length(load_order, length(g$vertices))
