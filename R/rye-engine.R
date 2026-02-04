@@ -32,6 +32,7 @@ RyeEngine <- R6::R6Class(
     parser = NULL,
     macro_expander = NULL,
     evaluator = NULL,
+    compiler = NULL,
     help_system = NULL,
     env = NULL,
     source_tracker = NULL,
@@ -61,6 +62,7 @@ RyeEngine <- R6::R6Class(
       context$evaluator <- self$evaluator
       context$macro_expander <- self$macro_expander
 
+      self$compiler <- Compiler$new(context)
       self$help_system <- HelpSystem$new(self$env, self$macro_expander)
 
       self$initialize_environment()
@@ -82,15 +84,15 @@ RyeEngine <- R6::R6Class(
       self$parser$parse(tokens, source_name = source_name)
     },
     #' @description
-    #' Evaluate a single expression.
+    #' Evaluate a single expression. Tries compiled path first; falls back to interpreter.
     eval = function(expr) {
-      self$evaluator$eval(expr)
+      private$eval_one_compiled_or_interpret(expr, self$env$env)
     },
     #' @description
     #' Evaluate a single expression in an explicit environment.
     eval_in_env = function(expr, env) {
       target_env <- private$resolve_env_arg(env)
-      self$evaluator$eval_in_env(expr, target_env)
+      private$eval_one_compiled_or_interpret(expr, target_env)
     },
     #' @description
     #' Evaluate expressions in order.
@@ -110,10 +112,11 @@ RyeEngine <- R6::R6Class(
     },
     #' @description
     #' Evaluate expressions with source tracking in an explicit environment.
+    #' Tries compiled path first; falls back to interpreter.
     eval_exprs_in_env = function(exprs, env) {
       target_env <- private$resolve_env_arg(env)
       self$source_tracker$with_error_context(function() {
-        self$evaluator$eval_seq_in_env(exprs, target_env)
+        private$eval_seq_compiled_or_interpret(exprs, target_env)
       })
     },
     #' @description
@@ -341,11 +344,20 @@ RyeEngine <- R6::R6Class(
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
       }
+      resolved <- private$resolve_env_arg(env)
+      if (!grepl("[/\\\\]", path)) {
+        if (RyeEnv$new(resolved)$module_registry$exists(path)) {
+          return(invisible(NULL))
+        }
+        stdlib_path <- rye_resolve_stdlib_path(path)
+        if (!is.null(stdlib_path)) {
+          path <- stdlib_path
+        }
+      }
       if (!file.exists(path)) {
         stop(sprintf("File not found: %s", path))
       }
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-      resolved <- private$resolve_env_arg(env)
       target_env <- if (isTRUE(create_scope)) new.env(parent = resolved) else resolved
       self$source_tracker$with_error_context(function() {
         self$evaluator$eval_seq_in_env(self$read(text, source_name = path), target_env)
@@ -402,6 +414,30 @@ RyeEngine <- R6::R6Class(
         return(self$env$env)
       }
       stop("Expected a RyeEnv or environment")
+    },
+    eval_one_compiled_or_interpret = function(expr, env) {
+      expanded <- self$macroexpand_in_env(expr, env)
+      compiled <- self$compiler$compile(expanded, env)
+      if (!is.null(compiled)) {
+        return(self$evaluator$eval_compiled(compiled, env))
+      }
+      self$evaluator$eval_in_env(expanded, env)
+    },
+    eval_seq_compiled_or_interpret = function(exprs, target_env) {
+      expanded <- lapply(exprs, function(e) self$macroexpand_in_env(e, target_env))
+      compiled <- self$compiler$compile_seq(expanded, target_env)
+      if (!is.null(compiled)) {
+        src <- self$source_tracker$src_get(exprs[[1]])
+        if (!is.null(src)) {
+          self$source_tracker$push(src)
+        }
+        result <- self$evaluator$eval_compiled(compiled, target_env)
+        if (!is.null(src)) {
+          self$source_tracker$pop()
+        }
+        return(result)
+      }
+      self$evaluator$eval_seq_in_env(expanded, target_env)
     }
   )
 )

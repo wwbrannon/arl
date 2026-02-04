@@ -939,11 +939,11 @@ MacroExpander <- R6::R6Class(
         }
       }
 
-      result <- list(expr[[1]])
-      if (length(expr) > 1) {
-        for (i in 2:length(expr)) {
-          result[[i]] <- private$macroexpand_impl(expr[[i]], env, preserve_src, max_depth, walk = TRUE)
-        }
+      # Recurse into all elements (including the operator) so that e.g. (and 1 2 3)
+      # inside ((lambda (tmp) (if tmp (and 1 2 3) tmp)) #t) gets expanded.
+      result <- list()
+      for (i in seq_len(length(expr))) {
+        result[[i]] <- private$macroexpand_impl(expr[[i]], env, preserve_src, max_depth, walk = TRUE)
       }
 
       expanded <- self$context$source_tracker$src_inherit(as.call(result), expr)

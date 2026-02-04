@@ -2,6 +2,21 @@ rye_missing_default <- function() {
   structure(list(), class = "rye_missing_default")
 }
 
+# Compiled-mode helpers: installed in env before eval(compiled, env).
+# Rye truthiness: only #f (FALSE) and #nil (NULL) are false.
+.rye_true_p <- function(x) {
+  !identical(x, FALSE) && !is.null(x)
+}
+
+# Wrapper for define/set! from compiled code (including pattern destructuring).
+# pattern can be a symbol, a string (converted to symbol for simple binding), or a list for destructuring.
+.rye_assign_pattern <- function(env, pattern, value, mode) {
+  if (is.character(pattern) && length(pattern) == 1L) {
+    pattern <- as.symbol(pattern)
+  }
+  RyeEnv$new(env)$assign_pattern(pattern, value, mode = mode, context = if (identical(mode, "define")) "define" else "set!")
+}
+
 # EvalContext: Shared context for Evaluator and MacroExpander. Holds env (RyeEnv) and
 # source_tracker. Created once per engine; evaluator and macro_expander are set after.
 #
@@ -123,6 +138,99 @@ Evaluator <- R6::R6Class(
         result_with_vis$value
       } else {
         invisible(result_with_vis$value)
+      }
+    },
+    # @description Install bindings required for compiled code: .rye_env, .rye_true_p,
+    # .rye_assign_pattern, .rye_load, .rye_help, .rye_import, .rye_pkg_access, .rye_delay, .rye_defmacro.
+    # @param env Environment (will be used for eval(compiled, env)).
+    install_compiled_helpers = function(env) {
+      assign(".rye_env", env, envir = env)
+      assign(".rye_true_p", .rye_true_p, envir = env)
+      assign(".rye_assign_pattern", .rye_assign_pattern, envir = env)
+      assign(".rye_load", self$load_file_fn, envir = env)
+      assign(".rye_help", function(topic, env) {
+        if (is.symbol(topic)) topic <- as.character(topic)
+        self$help_fn(topic, env)
+      }, envir = env)
+      assign(".rye_delay", function(compiled_expr, env) self$promise_new_compiled(compiled_expr, env), envir = env)
+      assign(".rye_defmacro", function(name, params, body_arg, docstring, env) self$defmacro_compiled(name, params, body_arg, docstring, env), envir = env)
+      assign(".rye_module", function(module_name, exports, export_all, compiled_body, env) self$module_compiled(module_name, exports, export_all, compiled_body, env), envir = env)
+      assign(".rye_import", function(arg_value, env) {
+        self$import_compiled(arg_value, env)
+      }, envir = env)
+      assign(".rye_pkg_access", function(op_name, pkg, name, env) {
+        self$pkg_access_compiled(op_name, pkg, name, env)
+      }, envir = env)
+      invisible(NULL)
+    },
+    # @description Run compiled R expression in env (helpers must be installed).
+    # @param compiled_expr R expression returned by Compiler$compile().
+    # @param env Environment (raw R environment).
+    # @return Result (possibly invisible).
+    eval_compiled = function(compiled_expr, env) {
+      if (!is.environment(env)) {
+        stop("eval_compiled requires an environment")
+      }
+      self$context$env$push_env(env)
+      on.exit(self$context$env$pop_env(), add = TRUE)
+      self$install_compiled_helpers(env)
+      result_with_vis <- withVisible(eval(compiled_expr, envir = env))
+      if (result_with_vis$visible) {
+        result_with_vis$value
+      } else {
+        invisible(result_with_vis$value)
+      }
+    },
+    # Import logic for compiled (import x): same semantics as import special form.
+    import_compiled = function(arg_value, env) {
+      is_path <- is.character(arg_value) && length(arg_value) == 1
+      if (is_path) {
+        path_str <- arg_value
+        module_path <- rye_resolve_path_only(path_str)
+        if (is.null(module_path)) {
+          stop(sprintf("Module not found: %s", path_str))
+        }
+        registry_key <- rye_normalize_path_absolute(module_path)
+      } else {
+        module_name <- RyeEnv$new(env)$symbol_or_string(arg_value, "import requires a module name symbol or string")
+        registry_key <- module_name
+      }
+      shared_registry <- self$context$env$module_registry
+      if (!shared_registry$exists(registry_key)) {
+        if (is_path) {
+          if (is.null(self$load_file_fn)) {
+            stop("import requires a load_file function")
+          }
+          self$load_file_fn(module_path, self$context$env$env, create_scope = FALSE)
+        } else {
+          module_path <- rye_resolve_module_path(registry_key)
+          if (is.null(module_path)) {
+            stop(sprintf("Module not found: %s", registry_key))
+          }
+          if (is.null(self$load_file_fn)) {
+            stop("import requires a load_file function")
+          }
+          self$load_file_fn(module_path, self$context$env$env, create_scope = FALSE)
+        }
+        if (!shared_registry$exists(registry_key)) {
+          stop(sprintf("Module '%s' did not register itself", registry_key))
+        }
+      }
+      shared_registry$attach_into(registry_key, env)
+      invisible(NULL)
+    },
+    # Package access (:: / :::) for compiled code. pkg and name are strings from the compiler.
+    pkg_access_compiled = function(op_name, pkg_name, obj_name, env) {
+      if (!is.character(pkg_name) || length(pkg_name) != 1 ||
+          !is.character(obj_name) || length(obj_name) != 1) {
+        stop("Package and object names must be length-1 character")
+      }
+      if (identical(op_name, "::")) {
+        getExportedValue(pkg_name, obj_name)
+      } else if (identical(op_name, ":::")) {
+        getFromNamespace(obj_name, pkg_name)
+      } else {
+        stop("Unknown package access operator: ", op_name)
       }
     },
     # @description Inner evaluation with source-tracking push/pop. Dispatches to eval_inner_impl.
@@ -291,6 +399,31 @@ Evaluator <- R6::R6Class(
     },
     promise_new = function(expr, env) {
       RyePromise$new(self$context$source_tracker$strip_src(expr), env, self$eval_in_env)
+    },
+    promise_new_compiled = function(compiled_expr, env) {
+      RyePromise$new(compiled_expr, env, self$eval_compiled)
+    },
+    defmacro_compiled = function(name, params, body_arg, docstring, env) {
+      body_list <- if (is.call(body_arg) && length(body_arg) >= 1 && identical(as.character(body_arg[[1]]), "begin")) {
+        as.list(body_arg)[-1]
+      } else {
+        list(body_arg)
+      }
+      self$context$macro_expander$defmacro(name, params, body_list, docstring = docstring, env = env)
+      invisible(NULL)
+    },
+    module_compiled = function(module_name, exports, export_all, compiled_body, env) {
+      module_env <- new.env(parent = env)
+      assign(".rye_module", TRUE, envir = module_env)
+      self$context$env$module_registry$register(module_name, module_env, exports)
+      self$install_compiled_helpers(module_env)
+      assign(".rye_env", module_env, envir = module_env)
+      result <- withVisible(eval(compiled_body, envir = module_env))
+      if (export_all) {
+        exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
+        self$context$env$module_registry$update_exports(module_name, exports)
+      }
+      if (result$visible) result$value else invisible(result$value)
     },
     apply_closure = function(fn, args, env) {
       info <- attr(fn, "rye_closure")
@@ -740,8 +873,20 @@ Evaluator <- R6::R6Class(
           docstring <- doc_out$docstring
 
           parent_env <- env
+          has_pattern_param <- any(vapply(param_specs, function(s) identical(s$type, "pattern"), logical(1L)))
+          has_pattern_rest <- !is.null(rest_param_spec) && identical(rest_param_spec$type, "pattern")
 
           fn <- function(...) {
+            if (has_pattern_param || has_pattern_rest) {
+              info <- attr(sys.function(0), "rye_closure")
+              call <- sys.call(0)
+              args <- if (length(call) > 1L) {
+                lapply(as.list(call)[-1L], function(a) eval(a, envir = info$parent_env))
+              } else {
+                list()
+              }
+              return(info$evaluator$apply_closure(sys.function(0), args, info$parent_env))
+            }
             fn_env <- new.env(parent = parent_env)
 
             if (length(formals_list) > 0) {
@@ -775,7 +920,8 @@ Evaluator <- R6::R6Class(
             rest_param = rest_param,
             rest_param_spec = rest_param_spec,
             body_exprs = body_exprs,
-            parent_env = parent_env
+            parent_env = parent_env,
+            evaluator = self
           )
           if (!is.null(docstring)) {
             attr(fn, "rye_doc") <- list(description = docstring)

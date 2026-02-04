@@ -1,25 +1,45 @@
+performance issues:
+-------------------------------------------------
+o) main perf bottleneck: evaluator is a dynamic, recursive AST walker. per rye
+   call, it creates way too many stack frames and does way too much
+   evaluation-time work.
+    o) replace it with an AST-to-R compiler and replace the evaluator with just
+       a call to base::eval()
+    o) this means our overhead is all at macroexpansion + transpilation time
+       and stacks are shorter / recursion can safely be deeper (depth is
+       determined by the depth of the AST, not the runtime call graph)
+    o) there's of course still evaluation but R's eval() is in C and is highly
+       optimized, much more efficient than anything we could possibly do
+
+o) still some missing compiler features and failing tests
+o) recursion-related FIXMEs (reenable some code) in benchmarks after evaluator
+   improvements
+o) caching in the compiler? or write compiled files a la __pycache__?
+o) kill off the translator; replace with API that exposes compile() to users
+o) this is a big win, but probably room to further optimize what kind
+   of expressions are generated
+
+o) other performance optimizations: use profiling and benchmarking
+
 test audits:
 -------------------------------------------------
 o) fix the minor issues found last time from opus auditing the tests
 
 o) have opus audit the tests again:
 ```
-Take a look at the tests in tests/, maybe especially the native ones in tests/native/. Keep in mind that the language being tested is supposed to be a lisp, generally scheme-like, but implemented on top of R. So that makes for a few peculiarities -- R's type system, no tail call optimization, the whole "r/call" apparatus, etc.
+Take a look at the tests in tests/, maybe especially the native ones in
+tests/native/. Keep in mind that the language being tested is supposed to be a
+lisp, generally scheme-like, but implemented on top of R. So that makes for a
+few peculiarities -- R's type system, no tail call optimization, the whole
+"r/call" apparatus, etc.
 
-Given that, let's critique these tests. Is there any behavior they implement that they clearly shouldn't? Mistaken behavior of the interpreter we have now that's been hardcoded into the tests? You're looking for things that clearly don't make sense and aren't how an R-based lisp should behave. Use your judgment!
+Given that, let's critique these tests. Is there any behavior they implement
+that they clearly shouldn't? Mistaken behavior of the interpreter we have now
+that's been hardcoded into the tests? You're looking for things that clearly
+don't make sense and aren't how an R-based lisp should behave. Use your
+judgment!
 ```
 or similar
-
-performance issues:
--------------------------------------------------
-o) the evaluator is a dynamic, recursive AST walker and creates way too many stack frames per rye call.
-  o) this is the main performance bottleneck.
-  o) option 1: replace it with an AST-to-R compiler which will also kill off the translator program we have now.
-  o) option 2: we can walk the AST more carefully, nonrecursively, maybe by explicitly treating the R language object we get as a graph. (evaluate the AST nodes in a postorder traversal with an explicit stack and caching, right? any scoping subtleties this misses?) this is a much smaller change.
-  o) option 3: can we build the input AST a bit differently or provide helpers so that the entire evaluator is just a call to R's eval()?
-  o) recursion-related FIXMEs (reenable some code) in benchmarks after evaluator improvements
-
-o) other performance optimizations: use profiling and benchmarking
 
 documentation updates:
 -------------------------------------------------
