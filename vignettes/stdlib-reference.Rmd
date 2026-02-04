@@ -109,10 +109,10 @@ engine <- RyeEngine$new()
 ## Source mapping
 
 The base R parts of the stdlib implementation live in `R/stdlib.R`. The rye
-parts are organized by topic in `inst/rye/` (each file defines a module):
+parts are organized by topic in `inst/rye/` (each file defines a module). The
+engine loads these modules in dependency order when initializing.
 
 - `_r.rye` (R operator/function aliases, internal)
-- `_stdlib_loader.rye` (loads modules in dependency order)
 - `core.rye`
 - `list.rye`
 - `predicates.rye`

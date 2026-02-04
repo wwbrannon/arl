@@ -51,6 +51,7 @@ engine$eval_text("(+ 1 2 3)")
 \item \href{#method-RyeEngine-eval_text}{\code{RyeEngine$eval_text()}}
 \item \href{#method-RyeEngine-eval_text_in_env}{\code{RyeEngine$eval_text_in_env()}}
 \item \href{#method-RyeEngine-initialize_environment}{\code{RyeEngine$initialize_environment()}}
+\item \href{#method-RyeEngine-load_stdlib_into_env}{\code{RyeEngine$load_stdlib_into_env()}}
 \item \href{#method-RyeEngine-load_file}{\code{RyeEngine$load_file()}}
 \item \href{#method-RyeEngine-load_file_in_env}{\code{RyeEngine$load_file_in_env()}}
 \item \href{#method-RyeEngine-macroexpand}{\code{RyeEngine$macroexpand()}}
@@ -295,6 +296,25 @@ Populate standard bindings
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$initialize_environment()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-load_stdlib_into_env"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-load_stdlib_into_env}{}}}
+\subsection{Method \code{load_stdlib_into_env()}}{
+Load all stdlib modules in dependency order into an environment. Each module
+is loaded and its exports attached into \code{env}. Used by
+\code{initialize_environment()} and by the test helper for a custom env.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$load_stdlib_into_env(env)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{env}}{Environment to load stdlib into (e.g. \code{self$env$env} or a test env).}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeEngine-load_file"></a>}}

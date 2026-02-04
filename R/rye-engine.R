@@ -280,10 +280,35 @@ RyeEngine <- R6::R6Class(
       }
       attr(env$`r/eval`, "rye_no_quote") <- TRUE
 
-      loader_path <- rye_resolve_module_path("_stdlib_loader")
-      self$eval_in_env(self$read(sprintf('(load "%s")', loader_path))[[1]], env)
+      self$load_stdlib_into_env(env)
 
       env
+    },
+    #' @description
+    #' Load all stdlib modules in dependency order into an environment. Each module
+    #' is loaded and its exports attached into \code{env}. Used by
+    #' \code{initialize_environment()} and by the test helper for a custom env.
+    #' @param env Environment to load stdlib into (e.g. \code{self$env$env} or a test env).
+    load_stdlib_into_env = function(env) {
+      resolved <- private$resolve_env_arg(env)
+      stdlib_dir <- system.file("rye", package = "rye")
+      if (!dir.exists(stdlib_dir)) {
+        stop("stdlib directory not found")
+      }
+      deps <- StdlibDeps$new(stdlib_dir = stdlib_dir)
+      load_order <- deps$get_load_order()
+      target_rye <- RyeEnv$new(resolved)
+      for (name in load_order) {
+        if (!target_rye$module_registry$exists(name)) {
+          path <- rye_resolve_stdlib_path(name)
+          if (is.null(path)) {
+            stop("stdlib module not found: ", name)
+          }
+          self$load_file_in_env(path, resolved, create_scope = FALSE)
+        }
+        target_rye$module_registry$attach_into(name, resolved)
+      }
+      invisible(NULL)
     },
     #' @description
     #' Load and evaluate a Rye source file in an isolated scope. The file runs in a

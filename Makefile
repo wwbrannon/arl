@@ -130,6 +130,14 @@ cran-clean: ## Remove CRAN check artifacts
 	rm -rf rye.Rcheck
 	rm -f tools/cran_check_summary.txt
 
+.PHONY: stdlib-order
+stdlib-order: ## Print stdlib load order (topological sort)
+	R -q -e "rye:::rye_stdlib_print_order()"
+
+.PHONY: stdlib-check
+stdlib-check: ## Print stdlib load order and undeclared dependency check
+	R -q -e "rye:::rye_stdlib_print_order_and_check_undeclared()"
+
 .PHONY: cran
 cran: ## Run full CRAN prep/check/comments
 	make cran-prep

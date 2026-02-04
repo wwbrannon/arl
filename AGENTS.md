@@ -21,7 +21,7 @@ Standard R package layout:
   - `help.R` - Help system
   - `utils.R` - Utilities
 - `inst/` - Installed package files
-  - `rye/` - Modular stdlib (control.rye, functional.rye, binding.rye, looping.rye, threading.rye, error.rye, struct.rye, assert.rye, r-interop.rye, etc.); each module declares `(import ...)` and is loaded in dependency order via `_stdlib_loader.rye`
+  - `rye/` - Modular stdlib (control.rye, functional.rye, binding.rye, looping.rye, threading.rye, error.rye, struct.rye, assert.rye, r-interop.rye, etc.); each module declares `(import ...)` and is loaded in dependency order by the engine (StdlibDeps + load_stdlib_into_env)
   - `examples/` - Complete working programs (fibonacci, quicksort, data-analysis, macros, etc.)
   - `cli/rye` - Command-line executable
 - `tests/testthat/` - Comprehensive test suite (16 test files)

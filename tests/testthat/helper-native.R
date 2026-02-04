@@ -76,7 +76,7 @@ run_native_tests <- function(dir = "tests/native") {
     return(invisible(NULL))
   }
 
-  # Create a fresh engine; it already loads the full stdlib via (load "_stdlib_loader")
+  # Create a fresh engine; it already loads the full stdlib via load_stdlib_into_env
   # in initialize_environment(), so env has all module exports (assert, core, etc.).
   # No need to (load ...) modules here: (import ...) in each module resolves deps.
   engine <- RyeEngine$new()
