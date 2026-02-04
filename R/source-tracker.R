@@ -193,6 +193,17 @@ SourceTracker <- R6::R6Class(
     print_error = function(e, file = stderr()) {
       cat(self$format_error(e), "\n", sep = "", file = file)
     },
+    # @description Build a rye_error condition with message and optional Rye/R stack traces.
+    # @param message Error message string.
+    # @param src_stack List of rye_src for Rye stack (default empty).
+    # @param r_stack List of call objects for R stack (default empty).
+    # @return Condition of class rye_error.
+    create_error = function(message, src_stack = list(), r_stack = list()) {
+      structure(
+        list(message = message, src_stack = src_stack, r_stack = r_stack),
+        class = c("rye_error", "error", "condition")
+      )
+    },
     # @description Run fn(); on error, augment condition with current stack for location in message.
     # @param fn Function of no arguments to run.
     # @return Result of fn().
@@ -213,7 +224,7 @@ SourceTracker <- R6::R6Class(
           if (inherits(e, "rye_error")) {
             stop(e)
           }
-          cond <- rye_error(conditionMessage(e), self$get(), sys.calls())
+          cond <- self$create_error(conditionMessage(e), self$get(), sys.calls())
           stop(cond)
         }
       )

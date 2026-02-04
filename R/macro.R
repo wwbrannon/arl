@@ -107,7 +107,7 @@ MacroExpander <- R6::R6Class(
       stop("Expected a RyeEnv or environment")
     },
     macro_registry = function(env, create = TRUE) {
-      rye_env_registry(env, ".rye_macros", create = create)
+      self$context$env$get_registry(".rye_macros", env, create = create)
     },
     is_macro_impl = function(name, env) {
       if (!is.symbol(name)) {

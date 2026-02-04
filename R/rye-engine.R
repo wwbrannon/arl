@@ -133,8 +133,8 @@ RyeEngine <- R6::R6Class(
     initialize_environment = function() {
       env <- self$env$env
 
-      rye_env_registry(env, ".rye_module_registry", create = TRUE)
-      rye_env_registry(env, ".rye_macros", create = TRUE)
+      self$env$get_registry(".rye_module_registry", create = TRUE)
+      self$env$get_registry(".rye_macros", create = TRUE)
 
       # Cons-cell primitives (bound in stdlib env so no globalenv/package lookup)
       env$`__cons` <- function(car, cdr) RyeCons$new(car, cdr)

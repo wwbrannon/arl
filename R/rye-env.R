@@ -120,21 +120,34 @@ RyeEnv <- R6::R6Class(
       }
       stop(message)
     },
+    # @description Get (or create) a named registry environment in an env. Used for .rye_macros and .rye_module_registry.
+    # @param name Registry name (e.g. ".rye_macros").
+    # @param env Target environment or NULL for self$env.
+    # @param create If TRUE, create the registry if missing.
+    # @return Environment or NULL.
+    get_registry = function(name, env = NULL, create = TRUE) {
+      target_env <- if (is.null(env)) self$env else env
+      registry <- get0(name, envir = target_env, inherits = TRUE)
+      if (is.null(registry) && create) {
+        registry <- new.env(parent = emptyenv())
+        assign(name, registry, envir = target_env)
+        lockBinding(name, target_env)
+      }
+      registry
+    },
     # @description Get (or create) the macro registry environment for an env.
     # @param env Target environment or NULL for self$env.
     # @param create If TRUE, create the registry if missing.
     # @return Environment or NULL.
     macro_registry_env = function(env = NULL, create = TRUE) {
-      target_env <- if (is.null(env)) self$env else env
-      rye_env_registry(target_env, ".rye_macros", create = create)
+      self$get_registry(".rye_macros", env, create = create)
     },
     # @description Get (or create) the module registry environment for an env.
     # @param env Target environment or NULL for self$env.
     # @param create If TRUE, create the registry if missing.
     # @return Environment or NULL.
     module_registry_env = function(env = NULL, create = TRUE) {
-      target_env <- if (is.null(env)) self$env else env
-      rye_env_registry(target_env, ".rye_module_registry", create = create)
+      self$get_registry(".rye_module_registry", env, create = create)
     },
     # @description Environment where (define name ...) should create a binding (always current env).
     # @param name Unused; for interface consistency.

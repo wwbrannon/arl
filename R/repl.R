@@ -267,9 +267,11 @@ RyeREPL <- R6::R6Class(
     run = function() {
       private$require_engine()
 
+      rye_version <- as.character(utils::packageVersion("rye"))
+
       quiet <- isTRUE(getOption("rye.repl_quiet", FALSE))
       if (! quiet) {
-        self$output_fn(paste0("Rye REPL ", rye_version()), "\n", sep = "")
+        self$output_fn(paste0("Rye REPL ", rye_version), "\n", sep = "")
         self$output_fn("Type '(license)' w/o quotes for legal information.\n")
         self$output_fn("Type '(quit)' w/o quotes or press Ctrl+C to exit.\n")
         self$output_fn(

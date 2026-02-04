@@ -1,6 +1,4 @@
-o) any of the utils.R functions that properly belong as a method of a class?
-
-o) can we use fix above to get rid of the stdlib "loader"?
+o) can we use the import fixes to get rid of the stdlib "loader"?
 
 o) fix the minor issues from opus auditing the tests
 

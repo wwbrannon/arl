@@ -1,21 +1,25 @@
-rye_version <- function() {
-  tryCatch(
-    as.character(utils::packageVersion("rye")),
-    error = function(...) "unknown"
-  )
+#' Test if an object is an R6 instance of a given class
+#'
+#' @param obj Any object.
+#' @param cls Character class name (e.g. \code{"RyeCons"}).
+#' @return Logical.
+#' @keywords internal
+#' @noRd
+#' @importFrom R6 is.R6
+r6_isinstance <- function(obj, cls) {
+  R6::is.R6(obj) && inherits(obj, cls)
 }
 
-rye_env_registry <- function(env, name, create = TRUE) {
-  if (is.null(env)) {
-    env <- parent.frame()
-  }
-  registry <- get0(name, envir = env, inherits = TRUE)
-  if (is.null(registry) && create) {
-    registry <- new.env(parent = emptyenv())
-    assign(name, registry, envir = env)
-    lockBinding(name, env)
-  }
-  registry
+#' Test if an object is an R6 class generator for a given class name
+#'
+#' @param obj Any object.
+#' @param cls Character class name (e.g. \code{"RyeCons"}).
+#' @return Logical.
+#' @keywords internal
+#' @noRd
+#' @importFrom R6 is.R6Class
+r6_issubclass <- function(obj, cls) {
+  R6::is.R6Class(obj) && identical(obj$classname, cls)
 }
 
 # Wrapper for unlockBinding to avoid R CMD check NOTE
@@ -100,35 +104,4 @@ rye_normalize_path_absolute <- function(path) {
     return(path)
   }
   normalized
-}
-
-rye_error <- function(message, src_stack = list(), r_stack = list()) {
-  structure(
-    list(message = message, src_stack = src_stack, r_stack = r_stack),
-    class = c("rye_error", "error", "condition")
-  )
-}
-
-#' Test if an object is an R6 instance of a given class
-#'
-#' @param obj Any object.
-#' @param cls Character class name (e.g. \code{"RyeCons"}).
-#' @return Logical.
-#' @keywords internal
-#' @noRd
-#' @importFrom R6 is.R6
-r6_isinstance <- function(obj, cls) {
-  R6::is.R6(obj) && inherits(obj, cls)
-}
-
-#' Test if an object is an R6 class generator for a given class name
-#'
-#' @param obj Any object.
-#' @param cls Character class name (e.g. \code{"RyeCons"}).
-#' @return Logical.
-#' @keywords internal
-#' @noRd
-#' @importFrom R6 is.R6Class
-r6_issubclass <- function(obj, cls) {
-  R6::is.R6Class(obj) && identical(obj$classname, cls)
 }
