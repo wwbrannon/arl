@@ -5,7 +5,7 @@
 
   (import predicates)
   (import list)
-  (import higher-order)
+  (import functional)
   (import sequences)
   (import control)
 

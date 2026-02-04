@@ -14,7 +14,7 @@
           ->symbol ->number ->list ->vector
           type-of)
 
-  (import _aliases)
+  (import _r)
   (import list)
   (import core)  ; for doc!
 

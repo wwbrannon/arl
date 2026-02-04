@@ -59,11 +59,13 @@
             (list)
             (begin
               (define acc (list))
-              (for (idx (seq 1 (length items) step))
-                (begin
-                  (define end (+ idx (- n 1)))
-                  (when (<= end (length items))
-                    (set! acc (c acc (list (r/call "[" (list items (seq idx end)))))))))
+              (define idx 1)
+              (define n-items (length items))
+              (while (<= idx n-items)
+                (define end (+ idx (- n 1)))
+                (if (<= end n-items)
+                  (set! acc (c acc (list (r/call "[" (list items (seq idx end)))))))
+                (set! idx (+ idx step)))
               acc))))))
 
   (define flatten
@@ -71,10 +73,13 @@
       "Flatten nested lists."
       (define items (__as-list lst))
       (define acc (list))
-      (for (item items)
+      (define remaining items)
+      (while (> (length remaining) 0)
+        (define item (car remaining))
         (if (list? item)
           (set! acc (c acc (flatten item)))
-          (set! acc (c acc (list item)))))
+          (set! acc (c acc (list item))))
+        (set! remaining (cdr remaining)))
       acc))
 
   (define repeatedly

@@ -39,14 +39,14 @@ test_that("stdlib modules are discovered and have valid topsort", {
   on.exit(Sys.unsetenv("RYE_PKG_ROOT"), add = TRUE)
   env <- new.env()
   source(script_path, local = env)
-  result <- env$main(stdlib_dir = stdlib_dir, check_undeclared = FALSE)
+  capture.output(result <- env$main(stdlib_dir = stdlib_dir, check_undeclared = FALSE))
   expect_type(result$modules, "list")
   expect_type(result$load_order, "character")
   expect_true(length(result$load_order) >= 1)
   # Loader excludes _stdlib_loader.rye; we expect at least core, list, etc.
   expect_true("core" %in% result$load_order)
   expect_true("list" %in% result$load_order)
-  expect_true("_aliases" %in% result$load_order)
+  expect_true("_r" %in% result$load_order)
   # Topological order: for every edge (from -> to), to must appear before from
   g <- result$graph
   pos <- setNames(seq_along(result$load_order), result$load_order)
@@ -71,6 +71,6 @@ test_that("no cycle in stdlib dependency graph", {
   on.exit(Sys.unsetenv("RYE_PKG_ROOT"), add = TRUE)
   env <- new.env()
   source(script_path, local = env)
-  result <- env$main(stdlib_dir = stdlib_dir, check_undeclared = FALSE)
+  capture.output(result <- env$main(stdlib_dir = stdlib_dir, check_undeclared = FALSE))
   expect_length(result$load_order, length(result$graph$vertices))
 })

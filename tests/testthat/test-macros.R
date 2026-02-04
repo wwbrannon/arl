@@ -652,7 +652,7 @@ test_that("defmacro complex parameter mixing", {
 test_that("defmacro realistic let macro", {
   env <- new.env(parent = baseenv())
   stdlib_env(engine, env)
-  import_stdlib_modules(engine, c("core", "list", "higher-order", "binding"), env)
+  import_stdlib_modules(engine, c("core", "list", "functional", "binding"), env)
 
   engine$eval_in_env(
     engine$read("(defmacro my-let (bindings . body) (begin (define expanded-bindings (map (lambda (b) `(define ,(car b) ,(cadr b))) bindings)) `(begin ,@expanded-bindings ,@body)))")[[1]],

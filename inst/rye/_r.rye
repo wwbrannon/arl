@@ -5,7 +5,7 @@
 ;;; might be called during operator evaluation should use these primitives
 ;;; instead of wrapped operators.
 
-(module _aliases
+(module _r
   (export __r== __r< __r> __r<= __r>= __r! __r!=
           __r+ __r- __r* __r/ __r^
           __rmin __rmax

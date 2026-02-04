@@ -1,0 +1,65 @@
+;;; Rye Standard Library - Assertion Helpers
+
+(module assert
+  (export assert assert-equal assert-true assert-false assert-eq assert-error)
+
+  (import core)
+  (import predicates)
+  (import strings)
+  (import dict)
+
+  (define assert
+    (lambda (cond (msg "Assertion failed"))
+      "Assert condition or raise error."
+      (if cond
+        #t
+        (error msg))))
+
+  (define assert-equal
+    (lambda (expected actual)
+      "Assert expected and actual are equal?."
+      (if (not (equal? expected actual))
+        (begin
+          (define error-msg (string-append "Expected: " (->string expected) ", Got: " (->string actual)))
+          (error error-msg))
+        #t)))
+
+  (define assert-true
+    (lambda (value)
+      "Assert value is truthy."
+      (if (not value)
+        (begin
+          (define error-msg (string-append "Expected truthy value, got: " (->string value)))
+          (error error-msg))
+        #t)))
+
+  (define assert-false
+    (lambda (value)
+      "Assert value is falsy."
+      (if value
+        (begin
+          (define error-msg (string-append "Expected falsy value, got: " (->string value)))
+          (error error-msg))
+        #t)))
+
+  (define assert-eq
+    (lambda (expected actual)
+      "Assert expected and actual are identical?."
+      (if (not (identical? expected actual))
+        (begin
+          (define error-msg (string-append "Expected (identical?): " (->string expected) ", Got: " (->string actual)))
+          (error error-msg))
+        #t)))
+
+  (define assert-error
+    (lambda (thunk)
+      "Assert thunk throws an error."
+      (define result
+        (r/call "tryCatch"
+          (dict
+            :expr (thunk)
+            :error (lambda (e) #t))))
+      (if (not (== result #t))
+        (error "Expected an error to be thrown, but none was")
+        #t)))
+)

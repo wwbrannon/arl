@@ -3,7 +3,7 @@
 (module looping
   (export until for loop recur)
 
-  (import higher-order)
+  (import functional)
   (import list)
   (import predicates)
   (import sequences)

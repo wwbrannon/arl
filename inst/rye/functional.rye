@@ -1,6 +1,6 @@
-;;; Rye Standard Library - Higher-Order Functions
+;;; Rye Standard Library - Functional Helpers
 
-(module higher-order
+(module functional
   (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial
           curry juxt constantly iterate iterate-until memoize repeatedly)
 
@@ -14,12 +14,11 @@
 
   (define mapcat
     (lambda (fn lst)
-      "Map then concatenate results."
-      (define results (lapply (__as-list lst) fn))
-      (define acc (list))
-      (for (result results)
-        (set! acc (c acc (__as-list result))))
-      acc))
+      "Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation."
+      (define results (map fn lst))
+      (if (null? results)
+        (list)
+        (do.call c (lapply results (lambda (x) (__as-list x)))))))
 
   (define filter
     (lambda (pred lst)
@@ -81,22 +80,19 @@
         (do.call fn (append captured more)))))
 
   ;; ============================================================================
-  ;; Phase 6: Advanced Functional Programming
+  ;; Advanced Functional Programming
   ;; ============================================================================
 
   (define curry
     (lambda (fn . initial-args)
       "Curry a function - enables partial application with optional initial arguments."
-      ;; Get the number of parameters the function expects
       (define arity (length (formals fn)))
       (define curry-helper
         (lambda (collected-args)
           (lambda (. new-args)
             (define all-args (append collected-args new-args))
             (if (>= (length all-args) arity)
-              ;; Have enough args, call the function
               (do.call fn all-args)
-              ;; Need more args, return another curried function
               (curry-helper all-args)))))
       (curry-helper initial-args)))
 
@@ -138,16 +134,11 @@
   (define memoize
     (lambda (fn)
       "Memoize function - cache results for previously seen arguments."
-      ;; Use an environment to store cached results
       (define cache (r/call "new.env" (list)))
       (lambda (. args)
-        ;; Create a key from the arguments
         (define key (r/call "paste" (list args :collapse "|")))
-        ;; Check if we have a cached result
         (if (r/call "exists" (list key :envir cache))
-          ;; Return cached result
           (r/call "get" (list key :envir cache))
-          ;; Compute and cache result
           (begin
             (define result (do.call fn args))
             (r/call "assign" (list key result :envir cache))

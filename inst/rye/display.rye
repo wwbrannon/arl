@@ -6,6 +6,8 @@
   (import list)
   (import strings)
   (import control)
+  (import dict)
+  (import set)
 
   (define __format-atomic
     (lambda (x)

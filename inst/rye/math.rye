@@ -15,8 +15,7 @@
           quotient remainder modulo
           gcd lcm)
 
-  (import _aliases)
-  (import looping)
+  (import _r)
 
   (define %
     (lambda (x y)

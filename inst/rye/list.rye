@@ -16,7 +16,7 @@
           range iota make-list
           list-ref list-tail)
 
-  (import _aliases)
+  (import _r)
 
   (define __as-list
     (lambda (x)
@@ -124,8 +124,10 @@
   (define append
     (lambda (. lists)
       (define result (list))
-      (for (lst lists)
-        (set! result (c result (__as-list lst))))
+      (define remaining (__as-list lists))
+      (while (__r> (__rlength remaining) 0)
+        (set! result (c result (__as-list (car remaining))))
+        (set! remaining (cdr remaining)))
       result))
 
   (define reverse

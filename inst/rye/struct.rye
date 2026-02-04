@@ -3,7 +3,7 @@
 (module struct
   (export defstruct)
 
-  (import higher-order)
+  (import functional)
 
 (defmacro defstruct (name fields)
   "Define a struct constructor, predicate, and accessors."

@@ -3,7 +3,7 @@
 (module threading
   (export -> ->>)
 
-  (import higher-order)
+  (import functional)
   (import list)
   (import predicates)
 

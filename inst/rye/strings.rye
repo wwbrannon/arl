@@ -26,8 +26,6 @@
   ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
   ;; to avoid unnecessary stack frames. Docstrings attached using doc!.
 
-  (import core)  ; for doc!
-
   (define trim trimws)
   (doc! trim "Trim leading and trailing whitespace.")
 
