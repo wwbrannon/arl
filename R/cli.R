@@ -22,8 +22,12 @@ CLI_HELP_TEXT <- paste(
   sep = "\n"
 )
 
-#' Core CLI implementation class
-#'
+# RyeCLI: Command-line interface for the rye script. Parses args (--file, --eval, --quiet,
+# positional files), creates an engine, and either runs the REPL or evaluates files/expressions.
+#
+# @field args Raw command-line args (character vector).
+# @field parsed Result of parse() (list with file, eval, help, version, etc.).
+#
 #' @keywords internal
 #' @noRd
 #' @importFrom optparse OptionParser make_option parse_args
@@ -33,9 +37,14 @@ RyeCLI <- R6::R6Class(
   public = list(
     args = NULL,
     parsed = NULL,
+    # @description Create CLI with optional args (default: commandArgs(trailingOnly = TRUE)).
+    # @param args Character vector of command-line arguments.
     initialize = function(args = commandArgs(trailingOnly = TRUE)) {
       self$args <- args
     },
+    # @description Print error and optionally help text; exit via rye.cli_exit_fn or quit().
+    # @param message Error message string.
+    # @param show_help If TRUE, print CLI help after the message.
     cli_exit_with_error = function(message, show_help = TRUE) {
       exit_fn <- getOption("rye.cli_exit_fn", NULL)
       if (!is.null(exit_fn) && is.function(exit_fn)) {
@@ -48,6 +57,8 @@ RyeCLI <- R6::R6Class(
       }
       quit(save = "no", status = 1)
     },
+    # @description Build optparse OptionParser for --eval, --quiet, etc.
+    # @return OptionParser instance.
     cli_parser = function() {
       option_list <- list(
         optparse::make_option(
@@ -70,6 +81,9 @@ RyeCLI <- R6::R6Class(
         description = "Rye: A Lisp dialect for R. Use --help for help, --version for version."
       )
     },
+    # @description Extract file paths from -f/--file and positional args; validate and return list(files, error).
+    # @param args Character vector of arguments.
+    # @return List with elements files (character) and error (character, optional).
     extract_file_args = function(args) {
       files <- character(0)
       error <- character(0)
@@ -105,6 +119,8 @@ RyeCLI <- R6::R6Class(
       args_for_parse <- args[!omit]
       list(files = files, args_for_parse = args_for_parse, error = error)
     },
+    # @description Parse self$args with cli_parser(); set self$parsed. Exits on help/version or parse error.
+    # @return Invisible; may exit.
     parse = function() {
       state <- list(
         action = "repl",
@@ -211,10 +227,12 @@ RyeCLI <- R6::R6Class(
       self$parsed <- state
       state
     },
+    # @description Print CLI help text and exit.
     do_help = function() {
       cli::cat_line(CLI_HELP_TEXT)
       invisible(NULL)
     },
+    # @description Print package version and exit.
     do_version = function() {
       version <- tryCatch(
         as.character(utils::packageVersion("rye")),
@@ -223,6 +241,7 @@ RyeCLI <- R6::R6Class(
       cli::cat_line("rye ", version)
       invisible(NULL)
     },
+    # @description Start the Rye REPL (interactive loop).
     do_repl = function() {
       if (!self$cli_isatty()) {
         engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
@@ -236,6 +255,8 @@ RyeCLI <- R6::R6Class(
       engine$repl()
       invisible(NULL)
     },
+    # @description Evaluate files from parsed (--file and positional). Uses shared engine env.
+    # @param parsed Result of parse().
     do_file = function(parsed) {
       engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
       for (path in parsed$files) {
@@ -251,11 +272,16 @@ RyeCLI <- R6::R6Class(
       }
       invisible(NULL)
     },
+    # @description Evaluate --eval expression(s) and exit.
+    # @param parsed Result of parse().
     do_eval = function(parsed) {
       engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
       self$cli_eval_text(parsed$expr, engine, source_name = "<cli>")
       invisible(NULL)
     },
+    # @description Run fn(engine) with engine; on error, call cli_exit_with_error.
+    # @param engine RyeEngine instance.
+    # @param fn Function(engine) to run.
     cli_eval_with_engine = function(engine, fn) {
       result_with_vis <- tryCatch(
         withVisible(fn()),
@@ -269,14 +295,21 @@ RyeCLI <- R6::R6Class(
       if (!is.null(result) && result_with_vis$visible) {
         cli::cat_line(engine$env$format_value(result))
       }
-      invisible(result)
+      invisible(result      )
     },
+    # @description Parse and evaluate text in engine; return result. Used by do_eval and tests.
+    # @param text Character string of Rye code.
+    # @param engine RyeEngine instance.
+    # @param source_name Source name for errors.
+    # @return Result of evaluation.
     cli_eval_text = function(text, engine, source_name = "<cli>") {
       self$cli_eval_with_engine(
         engine,
         function() engine$eval_text(text, source_name = source_name)
       )
     },
+    # @description Check if stdin is a terminal (for REPL vs batch).
+    # @return Logical.
     cli_isatty = function() {
       override <- getOption("rye.cli_isatty_override", NULL)
       if (!is.null(override)) {
@@ -291,6 +324,8 @@ RyeCLI <- R6::R6Class(
       }
       isTRUE(tty)
     },
+    # @description Read all lines from stdin (for piping script into rye).
+    # @return Character vector of lines.
     cli_read_stdin = function() {
       override <- getOption("rye.cli_read_stdin_override", NULL)
       if (!is.null(override)) {
@@ -301,6 +336,8 @@ RyeCLI <- R6::R6Class(
       }
       readLines("stdin", warn = FALSE)
     },
+    # @description Main entry: parse args, then dispatch to do_repl, do_file, or do_eval.
+    # @return Invisible; may exit.
     run = function() {
       parsed <- self$parsed
       if (is.null(parsed)) {

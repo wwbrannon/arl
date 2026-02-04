@@ -1,17 +1,15 @@
-stdlib cleanup:
--------------------------------------------------
-o) stdlib is poorly organized, has circularities, undeclared deps on prior import order, needs refactor
-  ```
-  +  # Load stdlib modules needed for tests (assert needs core, predicates, strings, dict)
-  +  for (module in c("control", "binding", "strings", "math", "predicates", "list", "higher-order", "sequences", "looping", "dict", "core", "assert")) {
-  ```
+o) ```
++  # Load stdlib modules needed for tests (assert needs core, predicates, strings, dict)
++  for (module in c("control", "binding", "strings", "math", "predicates", "list", "higher-order", "sequences", "looping", "dict", "core", "assert")) {
+```
 
-  o) can we import arbitrary non-stdlib modules? does import work for this?
-  o) can you "import" without first running "load" to define the module? this seems a bit broken
+o) can you "import" without first running "load" to define the module? looks like no, which is a bit broken
+o) can we import arbitrary non-stdlib modules? does import work for this?
+o) may be able to get rid of the stdlib "loader"?
 
 o) fix the minor issues from opus auditing the tests
 
-o) have opus audit the tests again afterward:
+o) have opus audit the tests again:
 ```
 Take a look at the tests in tests/, maybe especially the native ones in tests/native/. Keep in mind that the language being tested is supposed to be a lisp, generally scheme-like, but implemented on top of R. So that makes for a few peculiarities -- R's type system, no tail call optimization, the whole "r/call" apparatus, etc.
 

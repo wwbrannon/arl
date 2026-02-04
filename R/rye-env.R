@@ -1,5 +1,12 @@
-#' Rye environment wrapper
-#'
+# RyeEnv: Wraps an R environment with Rye-specific registries (macros, modules) and
+# helpers for define/set!/lookup, module attach, and format_value. Used by the engine
+# and evaluator.
+#
+# @field env The underlying R environment.
+# @field macro_registry ModuleRegistry for macros (actually macro registry is per-env via .rye_macros).
+# @field module_registry ModuleRegistry instance for loaded modules.
+# @field env_stack List of environments pushed for evaluation (e.g. current env during eval).
+#
 #' @keywords internal
 #' @noRd
 RyeEnv <- R6::R6Class(
@@ -9,6 +16,9 @@ RyeEnv <- R6::R6Class(
     macro_registry = NULL,
     module_registry = NULL,
     env_stack = NULL,
+    # @description Create a RyeEnv from an existing environment or a new one with optional parent.
+    # @param env Optional existing environment. If NULL, a new environment is created.
+    # @param parent Optional parent for the new environment when env is NULL. Cannot be used with env.
     initialize = function(env = NULL, parent = NULL) {
       if (!is.null(env) && !is.null(parent)) {
         stop("Cannot specify both 'env' and 'parent' arguments")
@@ -27,10 +37,13 @@ RyeEnv <- R6::R6Class(
       self$module_registry <- ModuleRegistry$new(self)
       self$env_stack <- list()
     },
+    # @description Push an environment onto the env stack (e.g. current eval env).
+    # @param env Environment to push.
     push_env = function(env) {
       self$env_stack <- c(self$env_stack, list(env))
       invisible(NULL)
     },
+    # @description Pop the most recently pushed environment from the stack.
     pop_env = function() {
       n <- length(self$env_stack)
       if (n > 0) {
@@ -38,6 +51,8 @@ RyeEnv <- R6::R6Class(
       }
       invisible(NULL)
     },
+    # @description Return the top of the env stack, or globalenv() if stack is empty.
+    # @return Environment.
     current_env = function() {
       n <- length(self$env_stack)
       if (n > 0) {
@@ -45,25 +60,43 @@ RyeEnv <- R6::R6Class(
       }
       globalenv()
     },
+    # @description Return the raw R environment.
+    # @return Environment.
     raw = function() {
       self$env
     },
+    # @description Define a binding (create in current env). Used by define.
+    # @param name Symbol or character name.
+    # @param value Value to assign.
     assign = function(name, value) {
       target <- self$find_define_env(name)
       assign(name, value, envir = target)
       invisible(NULL)
     },
+    # @description Update an existing binding. Used by set!. Errors if name is not defined.
+    # @param name Symbol or character name.
+    # @param value Value to assign.
     assign_existing = function(name, value) {
       target_env <- self$find_existing_env(name)
       assign(name, value, envir = target_env)
       invisible(NULL)
     },
+    # @description Get a module's registry entry (env, exports, path) by name.
+    # @param name Module name (single string).
+    # @return List or NULL.
     resolve_module = function(name) {
       self$module_registry$get(name)
     },
+    # @description Attach a module's exports into this RyeEnv's environment.
+    # @param name Module name (single string).
+    # @description Attach a module's exports into this RyeEnv's environment.
+    # @param name Module name (single string).
     attach_module = function(name) {
       self$module_registry$attach(name)
     },
+    # @description Format a value for display (e.g. REPL). Uses format-value from env if bound.
+    # @param value Value to format.
+    # @return Character string.
     format_value = function(value) {
       formatter <- get0("format-value", envir = self$env, inherits = TRUE)
       if (!is.function(formatter)) {
@@ -74,6 +107,10 @@ RyeEnv <- R6::R6Class(
         error = function(e) paste(as.character(value), collapse = " ")
       )
     },
+    # @description Coerce value to a single string (symbol or length-1 character). Errors with message otherwise.
+    # @param value Symbol or character.
+    # @param message Error message if invalid.
+    # @return Character string.
     symbol_or_string = function(value, message) {
       if (is.symbol(value)) {
         return(as.character(value))
@@ -83,19 +120,33 @@ RyeEnv <- R6::R6Class(
       }
       stop(message)
     },
+    # @description Get (or create) the macro registry environment for an env.
+    # @param env Target environment or NULL for self$env.
+    # @param create If TRUE, create the registry if missing.
+    # @return Environment or NULL.
     macro_registry_env = function(env = NULL, create = TRUE) {
       target_env <- if (is.null(env)) self$env else env
       rye_env_registry(target_env, ".rye_macros", create = create)
     },
+    # @description Get (or create) the module registry environment for an env.
+    # @param env Target environment or NULL for self$env.
+    # @param create If TRUE, create the registry if missing.
+    # @return Environment or NULL.
     module_registry_env = function(env = NULL, create = TRUE) {
       target_env <- if (is.null(env)) self$env else env
       rye_env_registry(target_env, ".rye_module_registry", create = create)
     },
+    # @description Environment where (define name ...) should create a binding (always current env).
+    # @param name Unused; for interface consistency.
+    # @return Environment.
     find_define_env = function(name) {
       # Define always creates a binding in the current environment,
       # never modifies parent environments (proper lexical scoping)
       self$env
     },
+    # @description Environment containing an existing binding for name (for set!). Walks parent chain.
+    # @param name Symbol or character name.
+    # @return Environment.
     find_existing_env = function(name) {
       if (!exists(name, envir = self$env, inherits = TRUE)) {
         stop(sprintf("set!: variable '%s' is not defined", name))
@@ -109,6 +160,11 @@ RyeEnv <- R6::R6Class(
       }
       target_env
     },
+    # @description Assign value to a pattern (symbol or list/destructuring). Dispatches to assign or destructure_bind.
+    # @param pattern Symbol or list pattern.
+    # @param value Value (or list of values for destructuring).
+    # @param mode "define" or "set".
+    # @param context String for error messages.
     assign_pattern = function(pattern, value, mode = c("define", "set"), context = "define") {
       mode <- match.arg(mode)
       if (is.symbol(pattern)) {
@@ -132,6 +188,10 @@ RyeEnv <- R6::R6Class(
       }
       stop(sprintf("%s requires a symbol or list pattern as the first argument", context))
     },
+    # @description Recursively bind pattern to value (list/call with optional . rest). Used by define/set! destructuring.
+    # @param pattern Symbol, list, or call (may contain . for rest).
+    # @param value Value or list of values.
+    # @param mode "define" or "set".
     destructure_bind = function(pattern, value, mode = c("define", "set")) {
       mode <- match.arg(mode)
       bind_symbol <- function(symbol, val) {

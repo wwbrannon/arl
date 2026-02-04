@@ -1,14 +1,23 @@
-#' Parser for Rye tokens
-#'
+# Parser: Converts token lists from Tokenizer into Rye S-expressions (R calls). Expands
+# quote/quasiquote sugar into explicit forms. Uses source_tracker for source locations.
+#
+# @field source_tracker SourceTracker for attaching source info to expressions.
+#
 #' @keywords internal
 #' @noRd
 Parser <- R6::R6Class(
   "Parser",
   public = list(
     source_tracker = NULL,
+    # @description Create parser with optional source tracker.
+    # @param source_tracker Optional SourceTracker; used for src on parsed expressions.
     initialize = function(source_tracker = NULL) {
       self$source_tracker <- source_tracker
     },
+    # @description Parse a list of tokens into a list of Rye expressions (R calls/symbols/atoms).
+    # @param tokens List of tokens from Tokenizer$tokenize().
+    # @param source_name Optional name for error reporting and source attachment.
+    # @return List of expressions.
     parse = function(tokens, source_name = NULL) {
       pos <- 1
       expressions <- list()

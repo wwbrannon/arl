@@ -1,17 +1,25 @@
-#' Tokenizer for Rye source code
-#'
+# Tokenizer: Lexes Rye source code into tokens (LPAREN, RPAREN, SYMBOL, NUMBER, STRING,
+# QUOTE, QUASIQUOTE, etc.) with line/col. Delimiters control what counts as a token boundary.
+#
+# @field delimiters Character vector of single-character delimiters.
+#
 #' @keywords internal
 #' @noRd
 Tokenizer <- R6::R6Class(
   "Tokenizer",
   public = list(
     delimiters = NULL,
+    # @description Create tokenizer with default or custom delimiters.
+    # @param delimiters Optional character vector; default includes space, parens, quote, comma, etc.
     initialize = function(delimiters = NULL) {
       if (is.null(delimiters)) {
         delimiters <- c(" ", "\t", "\n", "\r", "(", ")", "'", "`", ",", ";", "@", '"', ":")
       }
       self$delimiters <- delimiters
     },
+    # @description Lex source string into a list of tokens (each list(type, value, line, col)).
+    # @param source Character string of Rye source code.
+    # @return List of token lists.
     tokenize = function(source) {
       tokens <- list()
       line <- 1

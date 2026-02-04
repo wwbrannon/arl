@@ -1,47 +1,91 @@
-#' Macro expander
-#'
+# MacroExpander: Defines and expands Rye macros. Handles defmacro, macroexpand,
+# macroexpand_1, quasiquote/unquote, gensym, hygiene. Shares EvalContext with Evaluator.
+#
+# @field context EvalContext (env, source_tracker).
+#
 #' @keywords internal
 #' @noRd
 MacroExpander <- R6::R6Class(
   "MacroExpander",
   public = list(
     context = NULL,
+    # @description Create macro expander.
+    # @param context EvalContext instance.
     initialize = function(context) {
       if (!r6_isinstance(context, "EvalContext")) {
         stop("MacroExpander requires an EvalContext")
       }
       self$context <- context
     },
+    # @description Define a macro. Registers name in env's macro registry.
+    # @param name Symbol or character macro name.
+    # @param params Formal parameter list.
+    # @param body Macro body (unevaluated).
+    # @param docstring Optional string for (help name).
+    # @param env Target environment or NULL for context$env$env.
     defmacro = function(name, params, body, docstring = NULL, env = NULL) {
       target_env <- private$normalize_env(env)
       private$define_macro(name, params, body, target_env, docstring = docstring)
       invisible(NULL)
     },
+    # @description Recursively expand macros in expr.
+    # @param expr Rye expression.
+    # @param env Environment for macro lookup or NULL.
+    # @param preserve_src Whether to keep source attributes.
+    # @return Expanded expression.
     macroexpand = function(expr, env = NULL, preserve_src = FALSE) {
       target_env <- private$normalize_env(env)
       private$macroexpand_impl(expr, target_env, preserve_src, max_depth = Inf, walk = TRUE)
     },
+    # @description Expand one layer of macros only.
+    # @param expr Rye expression.
+    # @param env Environment or NULL.
+    # @param preserve_src Whether to keep source attributes.
+    # @return Expanded expression.
     macroexpand_1 = function(expr, env = NULL, preserve_src = FALSE) {
       target_env <- private$normalize_env(env)
       private$macroexpand_impl(expr, target_env, preserve_src, max_depth = 1, walk = FALSE)
     },
+    # @description Check if name is bound to a macro in env.
+    # @param name Symbol or character.
+    # @param env Environment or NULL.
+    # @return Logical.
     is_macro = function(name, env = NULL) {
       target_env <- private$normalize_env(env)
       private$is_macro_impl(name, target_env)
     },
+    # @description Get the macro function for name in env.
+    # @param name Symbol or character.
+    # @param env Environment or NULL.
+    # @return Macro function or error.
     get_macro = function(name, env = NULL) {
       target_env <- private$normalize_env(env)
       private$get_macro_impl(name, target_env)
     },
+    # @description Capture (macroexpand preserving one symbol). Used for macro hygiene.
+    # @param symbol Symbol to preserve.
+    # @param expr Expression to expand.
+    # @return Expanded expression with symbol unquoted.
     capture = function(symbol, expr) {
       private$capture_impl(symbol, expr)
     },
+    # @description Unwrap hygiene wrappers from an expression.
+    # @param expr Expression possibly containing hygiene wrappers.
+    # @return Expression.
     hygiene_unwrap = function(expr) {
       private$hygiene_unwrap_impl(expr)
     },
+    # @description Generate a unique symbol (for macro hygiene).
+    # @param prefix Character prefix for the symbol name.
+    # @return New symbol.
     gensym = function(prefix = "G") {
       private$gensym_impl(prefix = prefix)
     },
+    # @description Expand quasiquote (backtick) with unquote (comma) in expr.
+    # @param expr Quasiquoted expression.
+    # @param env Environment for unquote evaluation.
+    # @param depth Unquote depth (for nested quasiquote).
+    # @return Expanded expression.
     quasiquote = function(expr, env, depth = 1) {
       target_env <- private$normalize_env(env)
       private$quasiquote_impl(expr, target_env, depth = depth)

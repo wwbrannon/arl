@@ -2,8 +2,14 @@ rye_missing_default <- function() {
   structure(list(), class = "rye_missing_default")
 }
 
-#' Evaluation context shared between Evaluator and MacroExpander
-#'
+# EvalContext: Shared context for Evaluator and MacroExpander. Holds env (RyeEnv) and
+# source_tracker. Created once per engine; evaluator and macro_expander are set after.
+#
+# @field env RyeEnv for the engine.
+# @field source_tracker SourceTracker for error locations.
+# @field evaluator Set by RyeEngine after creation.
+# @field macro_expander Set by RyeEngine after creation.
+#
 #' @keywords internal
 #' @noRd
 EvalContext <- R6::R6Class(
@@ -13,6 +19,9 @@ EvalContext <- R6::R6Class(
     source_tracker = NULL,
     evaluator = NULL,
     macro_expander = NULL,
+    # @description Create context. evaluator and macro_expander are assigned by the engine.
+    # @param env RyeEnv instance.
+    # @param source_tracker SourceTracker instance.
     initialize = function(env, source_tracker) {
       if (!r6_isinstance(env, "RyeEnv")) {
         stop("EvalContext requires a RyeEnv")
@@ -23,8 +32,15 @@ EvalContext <- R6::R6Class(
   )
 )
 
-#' Evaluator for Rye expressions
-#'
+# Evaluator: Evaluates Rye expressions. Handles special forms (quote, if, define, lambda,
+# load, run, import, module, etc.), delegates the rest to R eval(). Uses context (EvalContext),
+# load_file_fn, help_fn.
+#
+# @field context EvalContext (env, source_tracker, macro_expander).
+# @field load_file_fn Function(path, env, create_scope) for load/run/import.
+# @field help_fn Function(topic, env) for (help topic).
+# @field special_forms Named list of special-form handlers (quote, define, lambda, ...).
+#
 #' @keywords internal
 #' @noRd
 Evaluator <- R6::R6Class(
@@ -34,6 +50,10 @@ Evaluator <- R6::R6Class(
     load_file_fn = NULL,
     help_fn = NULL,
     special_forms = NULL,
+    # @description Create evaluator. special_forms built from build_special_forms().
+    # @param context EvalContext instance.
+    # @param load_file_fn Optional; required for load/run/import.
+    # @param help_fn Optional; required for (help topic).
     initialize = function(context, load_file_fn = NULL, help_fn = NULL) {
       if (!r6_isinstance(context, "EvalContext")) {
         stop("Evaluator requires an EvalContext")
@@ -43,9 +63,16 @@ Evaluator <- R6::R6Class(
       self$help_fn <- help_fn
       self$special_forms <- self$build_special_forms()
     },
+    # @description Evaluate one expression in the context's env.
+    # @param expr Rye expression.
+    # @return Result (possibly invisible).
     eval = function(expr) {
       self$eval_in_env(expr, self$context$env$env)
     },
+    # @description Evaluate one expression in the given environment. Pushes env, runs eval_inner, pops.
+    # @param expr Rye expression.
+    # @param env RyeEnv or R environment.
+    # @return Result (possibly invisible).
     eval_in_env = function(expr, env) {
       if (r6_isinstance(env, "RyeEnv")) {
         env <- env$env
@@ -63,9 +90,16 @@ Evaluator <- R6::R6Class(
         stop(e)
       })
     },
+    # @description Evaluate a sequence of expressions in the context's env; returns last value.
+    # @param exprs List of Rye expressions.
+    # @return Last result (possibly invisible).
     eval_seq = function(exprs) {
       self$eval_seq_in_env(exprs, self$context$env$env)
     },
+    # @description Evaluate a sequence of expressions in the given environment; returns last value.
+    # @param exprs List of Rye expressions.
+    # @param env RyeEnv or R environment.
+    # @return Last result (possibly invisible).
     eval_seq_in_env = function(exprs, env) {
       if (r6_isinstance(env, "RyeEnv")) {
         env <- env$env
@@ -91,6 +125,10 @@ Evaluator <- R6::R6Class(
         invisible(result_with_vis$value)
       }
     },
+    # @description Inner evaluation with source-tracking push/pop. Dispatches to eval_inner_impl.
+    # @param expr Rye expression.
+    # @param env R environment.
+    # @return Result (possibly invisible).
     eval_inner = function(expr, env) {
       # Source tracking:
       # We *must not* pop the src stack on error, because `SourceTracker$with_error_context()`
@@ -117,6 +155,10 @@ Evaluator <- R6::R6Class(
         }
       }
     },
+    # @description Core evaluation: atoms, symbols, special forms, macro expansion, function application.
+    # @param expr Rye expression.
+    # @param env R environment.
+    # @return Result (possibly invisible).
     eval_inner_impl = function(expr, env) {
       # Handle NULL (empty list or #nil)
       if (is.null(expr)) {
@@ -180,6 +222,10 @@ Evaluator <- R6::R6Class(
         invisible(result_with_vis$value)
       }
     },
+    # @description Evaluate arguments of a call (positional and keyword), return list(args, arg_names).
+    # @param expr Call expression (function + args).
+    # @param env R environment.
+    # @return List with args (list) and arg_names (character).
     eval_args = function(expr, env) {
       # Pre-allocate to avoid O(n^2) vector growing, but handle NULL values correctly
       # Note: args[[i]] <- NULL doesn't work (removes element), so we pre-allocate
@@ -219,6 +265,11 @@ Evaluator <- R6::R6Class(
       arg_names <- arg_names[1:actual_size]
       return(list(args = args, arg_names = arg_names))
     },
+    # @description Apply a function to evaluated args. Dispatches to apply_closure or do_call.
+    # @param fn Rye closure or R function.
+    # @param args List of evaluated arguments (may have names for keywords).
+    # @param env R environment (for closure application).
+    # @return Result.
     apply = function(fn, args, env) {
       if (inherits(fn, "rye_closure")) {
         return(self$apply_closure(fn, args, env))

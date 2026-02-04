@@ -1,5 +1,8 @@
-# Help system for Rye
-#'
+# HelpSystem: Dispatches (help topic) to built-in specials, macro docstrings, or R's help().
+#
+# @field env RyeEnv (for default env in help()).
+# @field macro_expander MacroExpander (for macro docstrings and usage).
+#
 #' @keywords internal
 #' @noRd
 HelpSystem <- R6::R6Class(
@@ -7,14 +10,22 @@ HelpSystem <- R6::R6Class(
   public = list(
     env = NULL,
     macro_expander = NULL,
+    # @description Create help system. Builds specials_help from build_specials_help().
+    # @param env RyeEnv instance.
+    # @param macro_expander MacroExpander instance.
     initialize = function(env, macro_expander) {
       self$env <- env
       self$macro_expander <- macro_expander
       private$specials_help <- private$build_specials_help()
     },
+    # @description Show help for topic in the default env (self$env$env).
+    # @param topic Symbol or string topic name.
     help = function(topic) {
       self$help_in_env(topic, self$env$env)
     },
+    # @description Show help for topic in the given env. Tries specials, then macro doc, then env binding, then utils::help.
+    # @param topic Symbol or string (length 1).
+    # @param env RyeEnv or R environment.
     help_in_env = function(topic, env) {
       if (!is.character(topic) || length(topic) != 1) {
         stop("help requires a symbol or string")

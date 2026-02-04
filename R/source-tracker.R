@@ -1,5 +1,8 @@
-#' Source tracking for errors
-#'
+# SourceTracker: Attaches source locations (file, line, col) to expressions for error
+# reporting. Used by parser and evaluator.
+#
+# @field (private) stack List of rye_src for current evaluation context.
+#
 #' @keywords internal
 #' @noRd
 SourceTracker <- R6::R6Class(
@@ -8,6 +11,13 @@ SourceTracker <- R6::R6Class(
     stack = list()
   ),
   public = list(
+    # @description Create a rye_src structure for a source location.
+    # @param file File name or NULL.
+    # @param start_line Start line number.
+    # @param start_col Start column number.
+    # @param end_line End line (default start_line).
+    # @param end_col End column (default start_col).
+    # @return Object of class "rye_src".
     src_new = function(file, start_line, start_col, end_line = start_line, end_col = start_col) {
       structure(
         list(
@@ -20,12 +30,19 @@ SourceTracker <- R6::R6Class(
         class = "rye_src"
       )
     },
+    # @description Get rye_src attribute from an expression.
+    # @param expr Expression (call, list, etc.).
+    # @return rye_src or NULL.
     src_get = function(expr) {
       if (is.null(expr)) {
         return(NULL)
       }
       attr(expr, "rye_src", exact = TRUE)
     },
+    # @description Attach rye_src to an expression.
+    # @param expr Expression to attach to.
+    # @param src rye_src from src_new.
+    # @return expr (invisibly) or expr unchanged if symbol.
     src_set = function(expr, src) {
       if (is.null(expr) || is.null(src)) {
         return(expr)
@@ -36,6 +53,10 @@ SourceTracker <- R6::R6Class(
       attr(expr, "rye_src") <- src
       expr
     },
+    # @description Copy source from one expression to another if expr has none.
+    # @param expr Expression to possibly attach to.
+    # @param from Expression to take rye_src from.
+    # @return expr.
     src_inherit = function(expr, from) {
       src <- self$src_get(from)
       if (is.null(src)) {
@@ -46,6 +67,9 @@ SourceTracker <- R6::R6Class(
       }
       self$src_set(expr, src)
     },
+    # @description Recursively remove rye_src attributes from a value (for returning from eval).
+    # @param value Any value (call, list, etc.).
+    # @return Value with rye_src stripped.
     strip_src = function(value) {
       if (is.null(value) || is.symbol(value)) {
         return(value)
@@ -83,17 +107,24 @@ SourceTracker <- R6::R6Class(
 
       value
     },
+    # @description Return the current source stack (list of rye_src).
+    # @return List.
     get = function() {
       private$stack
     },
+    # @description Clear the source stack.
     reset = function() {
       private$stack <- list()
       invisible(NULL)
     },
+    # @description Push a rye_src onto the stack (used during eval for error context).
+    # @param src rye_src from src_new.
     push = function(src) {
       private$stack <- c(private$stack, list(src))
       invisible(NULL)
     },
+    # @description Pop the top rye_src from the stack.
+    # @return The popped rye_src or NULL if empty.
     pop = function() {
       if (length(private$stack) == 0) {
         return(NULL)
@@ -102,6 +133,9 @@ SourceTracker <- R6::R6Class(
       private$stack <- private$stack[-length(private$stack)]
       last
     },
+    # @description Format a rye_src as "file:line:col" or "file:line:col-line:col".
+    # @param src rye_src or NULL.
+    # @return Character string or NULL.
     format_src = function(src) {
       if (is.null(src)) {
         return(NULL)
@@ -159,6 +193,9 @@ SourceTracker <- R6::R6Class(
     print_error = function(e, file = stderr()) {
       cat(self$format_error(e), "\n", sep = "", file = file)
     },
+    # @description Run fn(); on error, augment condition with current stack for location in message.
+    # @param fn Function of no arguments to run.
+    # @return Result of fn().
     with_error_context = function(fn) {
       prev_stack <- self$get()
       on.exit({
