@@ -132,7 +132,6 @@ engine loads these modules in dependency order when initializing.
 - `io.rye`
 - `assert.rye`
 - `r-interop.rye`
-- `translator.rye`
 
 If you’re looking for implementation details, these files are the source of
 truth for the stdlib definitions.

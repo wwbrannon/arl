@@ -3,21 +3,26 @@ performance issues:
 o) main perf bottleneck: evaluator is a dynamic, recursive AST walker. per rye
    call, it creates way too many stack frames and does way too much
    evaluation-time work.
-    o) replace it with an AST-to-R compiler and replace the evaluator with just
-       a call to base::eval()
-    o) this means our overhead is all at macroexpansion + transpilation time
-       and stacks are shorter / recursion can safely be deeper (depth is
-       determined by the depth of the AST, not the runtime call graph)
-    o) there's of course still evaluation but R's eval() is in C and is highly
-       optimized, much more efficient than anything we could possibly do
+     => we want to add an AST-to-R compiler and replace the evaluator with just
+     a call to base::eval(). this means our overhead is all at macroexpansion +
+     transpilation time and stacks are shorter / recursion can safely be deeper
+     (depth is determined by the depth of the AST, not the runtime call graph).
+     there's of course still evaluation but R's eval() is in C and is highly
+     optimized, much more efficient than anything we could possibly do
 
+o) inspect_compilation tests shouldn't hardcode current limitations
+o) docs as appropriate for inspect_compilation
 o) still some missing compiler features and failing tests
+o) eliminate the current evaluator entirely
 o) recursion-related FIXMEs (reenable some code) in benchmarks after evaluator
    improvements
 o) caching in the compiler? or write compiled files a la __pycache__?
-o) kill off the translator; replace with API that exposes compile() to users
 o) this is a big win, but probably room to further optimize what kind
    of expressions are generated
+o) should we inject helpers into the environment rather than the generated
+   scripts themselves? pros of environment: slightly faster. cons: programs
+   aren't self-contained.
+o) compiler vignette
 
 o) other performance optimizations: use profiling and benchmarking
 

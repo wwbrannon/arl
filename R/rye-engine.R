@@ -386,6 +386,26 @@ RyeEngine <- R6::R6Class(
       self$macro_expander$macroexpand_1(expr, env = target_env, preserve_src = preserve_src)
     },
     #' @description
+    #' Inspect expansion and compilation for debugging. Parse text, expand macros in env,
+    #' then compile to R. Returns parsed AST, expanded form, compiled R expression, and
+    #' deparsed R code so you can see exactly what a Rye program becomes.
+    #' @param text Character; Rye source (single expression or multiple).
+    #' @param env Environment or NULL (use engine env). Must have macros/stdlib if needed.
+    #' @param source_name Name for parse errors.
+    #' @return List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr or NULL), \code{compiled_deparsed} (character, or NULL).
+    inspect_compilation = function(text, env = NULL, source_name = "<inspect>") {
+      target_env <- private$resolve_env_arg(env)
+      exprs <- self$read(text, source_name = source_name)
+      if (length(exprs) == 0) {
+        return(list(parsed = NULL, expanded = NULL, compiled = NULL, compiled_deparsed = NULL))
+      }
+      parsed <- exprs[[1]]
+      expanded <- self$macroexpand_in_env(parsed, target_env)
+      compiled <- self$compiler$compile(expanded, target_env)
+      compiled_deparsed <- if (!is.null(compiled)) deparse(compiled) else NULL
+      list(parsed = parsed, expanded = expanded, compiled = compiled, compiled_deparsed = compiled_deparsed)
+    },
+    #' @description
     #' Show help for a topic.
     help = function(topic) {
       self$help_system$help(topic)

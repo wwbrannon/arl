@@ -15,7 +15,6 @@ Standard R package layout:
   - `eval.R` - Evaluator with special forms
   - `macro.R` - Macro expansion system
   - `stdlib.R` - Standard library (list ops, higher-order functions, predicates, etc.)
-  - `translator.R` - R-to-Rye syntax translator
   - `repl.R` - Interactive REPL
   - `cli.R` - Command-line interface
   - `help.R` - Help system

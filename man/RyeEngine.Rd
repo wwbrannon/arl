@@ -58,6 +58,7 @@ engine$eval_text("(+ 1 2 3)")
 \item \href{#method-RyeEngine-macroexpand_in_env}{\code{RyeEngine$macroexpand_in_env()}}
 \item \href{#method-RyeEngine-macroexpand_1}{\code{RyeEngine$macroexpand_1()}}
 \item \href{#method-RyeEngine-macroexpand_1_in_env}{\code{RyeEngine$macroexpand_1_in_env()}}
+\item \href{#method-RyeEngine-inspect_compilation}{\code{RyeEngine$inspect_compilation()}}
 \item \href{#method-RyeEngine-help}{\code{RyeEngine$help()}}
 \item \href{#method-RyeEngine-help_in_env}{\code{RyeEngine$help_in_env()}}
 \item \href{#method-RyeEngine-repl}{\code{RyeEngine$repl()}}
@@ -143,7 +144,7 @@ Parse tokens into expressions.
 \if{html}{\out{<a id="method-RyeEngine-eval"></a>}}
 \if{latex}{\out{\hypertarget{method-RyeEngine-eval}{}}}
 \subsection{Method \code{eval()}}{
-Evaluate a single expression.
+Evaluate a single expression. Tries compiled path first; falls back to interpreter.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval(expr)}\if{html}{\out{</div>}}
 }
@@ -233,6 +234,7 @@ Evaluate expressions with source tracking.
 \if{latex}{\out{\hypertarget{method-RyeEngine-eval_exprs_in_env}{}}}
 \subsection{Method \code{eval_exprs_in_env()}}{
 Evaluate expressions with source tracking in an explicit environment.
+Tries compiled path first; falls back to interpreter.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_exprs_in_env(exprs, env)}\if{html}{\out{</div>}}
 }
@@ -440,6 +442,32 @@ Expand a single macro layer in an explicit environment.
 \item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-inspect_compilation"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-inspect_compilation}{}}}
+\subsection{Method \code{inspect_compilation()}}{
+Inspect expansion and compilation for debugging. Parse text, expand macros in env,
+then compile to R. Returns parsed AST, expanded form, compiled R expression, and
+deparsed R code so you can see exactly what a Rye program becomes.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$inspect_compilation(text, env = NULL, source_name = "<inspect>")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{text}}{Character; Rye source (single expression or multiple).}
+
+\item{\code{env}}{Environment or NULL (use engine env). Must have macros/stdlib if needed.}
+
+\item{\code{source_name}}{Name for parse errors.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr or NULL), \code{compiled_deparsed} (character, or NULL).
 }
 }
 \if{html}{\out{<hr>}}
