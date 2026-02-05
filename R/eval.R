@@ -154,6 +154,7 @@ Evaluator <- R6::R6Class(
         if (is.symbol(topic)) topic <- as.character(topic)
         self$help_fn(topic, env)
       }, envir = env)
+      assign("quasiquote", function(expr) self$quasiquote_compiled(expr, env), envir = env)
       assign(".rye_delay", function(compiled_expr, env) self$promise_new_compiled(compiled_expr, env), envir = env)
       assign(".rye_defmacro", function(name, params, body_arg, docstring, env) self$defmacro_compiled(name, params, body_arg, docstring, env), envir = env)
       assign(".rye_module", function(module_name, exports, export_all, compiled_body, src_file, env) {
@@ -236,6 +237,9 @@ Evaluator <- R6::R6Class(
       } else {
         stop("Unknown package access operator: ", op_name)
       }
+    },
+    quasiquote_compiled = function(expr, env) {
+      private$quasiquote_compiled_impl(expr, env, 1L)
     },
     # @description Inner evaluation with source-tracking push/pop. Dispatches to eval_inner_impl.
     # @param expr Rye expression.
@@ -1166,6 +1170,74 @@ Evaluator <- R6::R6Class(
       # For other functions, quote symbols and calls as usual
       args <- lapply(args, private$quote_arg_impl, quote_symbols = TRUE)
       do.call(fn, args)
+    }
+    ,
+    quasiquote_compiled_impl = function(expr, env, depth) {
+      if (!is.call(expr)) {
+        return(expr)
+      }
+      if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]]) && as.character(expr[[1]]) == "quote") {
+        return(expr)
+      }
+      if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]]) && as.character(expr[[1]]) == "unquote") {
+        if (length(expr) != 2) {
+          stop("unquote requires exactly 1 argument")
+        }
+        if (depth == 1) {
+          compiled <- self$context$compiler$compile(expr[[2]], env)
+          if (is.null(compiled)) {
+            stop("unquote could not be compiled")
+          }
+          return(self$eval_compiled(compiled, env))
+        }
+        return(as.call(list(as.symbol("unquote"), private$quasiquote_compiled_impl(expr[[2]], env, depth - 1L))))
+      }
+      if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]]) && as.character(expr[[1]]) == "unquote-splicing") {
+        stop("unquote-splicing can only appear in list context")
+      }
+      if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]]) && as.character(expr[[1]]) == "quasiquote") {
+        if (length(expr) != 2) {
+          stop("quasiquote requires exactly 1 argument")
+        }
+        return(as.call(list(as.symbol("quasiquote"), private$quasiquote_compiled_impl(expr[[2]], env, depth + 1L))))
+      }
+      result <- list()
+      i <- 1
+      while (i <= length(expr)) {
+        elem <- expr[[i]]
+        if (is.call(elem) && length(elem) > 0 && is.symbol(elem[[1]]) && as.character(elem[[1]]) == "unquote-splicing") {
+          if (depth == 1) {
+            if (length(elem) != 2) {
+              stop("unquote-splicing requires exactly 1 argument")
+            }
+            compiled <- self$context$compiler$compile(elem[[2]], env)
+            if (is.null(compiled)) {
+              stop("unquote-splicing could not be compiled")
+            }
+            spliced <- self$eval_compiled(compiled, env)
+            if (is.call(spliced)) {
+              spliced <- as.list(spliced)
+            }
+            if (is.list(spliced)) {
+              for (item in spliced) {
+                result <- c(result, list(item))
+              }
+            } else {
+              stop("unquote-splicing requires a list")
+            }
+          } else {
+            result <- c(result, list(as.call(list(
+              as.symbol("unquote-splicing"),
+              private$quasiquote_compiled_impl(elem[[2]], env, depth - 1L)
+            ))))
+          }
+        } else {
+          processed <- private$quasiquote_compiled_impl(elem, env, depth)
+          result <- c(result, list(processed))
+        }
+        i <- i + 1
+      }
+      as.call(result)
     }
   )
 )

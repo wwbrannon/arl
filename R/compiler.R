@@ -155,7 +155,7 @@ Compiler <- R6::R6Class(
     compile_quasiquote_impl = function(template, depth) {
       env_sym <- as.symbol(self$env_var_name)
       eval_in_env <- function(compiled) {
-        as.call(list(quote(base::eval), compiled, envir = env_sym))
+        as.call(list(quote(base::eval), as.call(list(quote(quote), compiled)), envir = env_sym))
       }
       if (!is.call(template)) {
         return(as.call(list(quote(quote), template)))
@@ -172,15 +172,22 @@ Compiler <- R6::R6Class(
           return(eval_in_env(inner))
         }
         inner <- private$compile_quasiquote_impl(template[[2]], depth - 1L)
-        return(as.call(list(as.symbol("unquote"), inner)))
+        return(as.call(list(quote(quote), as.call(list(as.symbol("unquote"), inner)))))
       }
       if (op_char == "unquote-splicing") {
-        return(NULL)
+        if (depth == 1L) {
+          return(NULL)
+        }
+        if (length(template) != 2) {
+          return(NULL)
+        }
+        inner <- private$compile_quasiquote_impl(template[[2]], depth - 1L)
+        return(as.call(list(quote(quote), as.call(list(as.symbol("unquote-splicing"), inner)))))
       }
       if (op_char == "quasiquote") {
         if (length(template) != 2) return(NULL)
         inner <- private$compile_quasiquote_impl(template[[2]], depth + 1L)
-        return(as.call(list(as.symbol("quasiquote"), inner)))
+        return(as.call(list(quote(quote), as.call(list(as.symbol("quasiquote"), inner)))))
       }
       segments <- list()
       for (i in seq_len(length(template))) {
@@ -352,15 +359,25 @@ Compiler <- R6::R6Class(
       body_parts <- c(body_parts, compiled_body)
       body_call <- as.call(c(list(quote(`{`)), body_parts))
       formals_list <- params$formals_list
-      parent_env <- self$current_env
-      if (!is.environment(parent_env)) {
-        parent_env <- baseenv()
+      fn_expr <- as.call(list(
+        quote(as.function),
+        c(formals_list, list(body_call)),
+        envir = as.symbol(self$env_var_name)
+      ))
+      if (is.null(docstring)) {
+        return(fn_expr)
       }
-      fn <- as.function(c(formals_list, body_call), envir = parent_env)
-      if (!is.null(docstring)) {
-        attr(fn, "rye_doc") <- list(description = docstring)
-      }
-      fn
+      fn_sym <- as.symbol(".__rye_compiled_fn")
+      as.call(list(
+        quote(`{`),
+        as.call(list(quote(`<-`), fn_sym, fn_expr)),
+        as.call(list(
+          quote(`<-`),
+          as.call(list(quote(attr), fn_sym, "rye_doc")),
+          list(description = docstring)
+        )),
+        fn_sym
+      ))
     },
     lambda_params = function(args_expr) {
       arg_items <- if (is.null(args_expr)) {
