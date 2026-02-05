@@ -326,6 +326,29 @@ Compiler <- R6::R6Class(
       if (params$has_rest && !is.null(params$rest_param)) {
         body_parts <- c(body_parts, list(as.call(list(quote(`<-`), as.symbol(params$rest_param), quote(list(...))))))
       }
+      if (length(params$param_bindings) > 0) {
+        for (binding in params$param_bindings) {
+          pattern_arg <- as.call(list(as.symbol(".rye_quote"), binding$pattern))
+          body_parts <- c(body_parts, list(as.call(list(
+            as.symbol(".rye_assign_pattern"),
+            as.symbol(self$env_var_name),
+            pattern_arg,
+            as.symbol(binding$name),
+            "define"
+          ))))
+        }
+      }
+      if (!is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) {
+        pattern_arg <- as.call(list(as.symbol(".rye_quote"), params$rest_param_spec$pattern))
+        rest_val <- as.call(list(quote(list), quote(...)))
+        body_parts <- c(body_parts, list(as.call(list(
+          as.symbol(".rye_assign_pattern"),
+          as.symbol(self$env_var_name),
+          pattern_arg,
+          rest_val,
+          "define"
+        ))))
+      }
       body_parts <- c(body_parts, compiled_body)
       body_call <- as.call(c(list(quote(`{`)), body_parts))
       formals_list <- params$formals_list
@@ -353,6 +376,7 @@ Compiler <- R6::R6Class(
         return(NULL)
       }
       rest_param <- NULL
+      rest_param_spec <- NULL
       if (length(arg_items) > 0) {
         dot_idx <- which(vapply(arg_items, function(a) {
           is.symbol(a) && identical(as.character(a), ".")
@@ -364,13 +388,31 @@ Compiler <- R6::R6Class(
           rest_arg <- arg_items[[dot_idx + 1]]
           if (is.symbol(rest_arg)) {
             rest_param <- as.character(rest_arg)
+            rest_param_spec <- list(type = "name", name = rest_param, pattern = NULL)
           } else {
-            return(NULL)
+            rest_list <- if (is.call(rest_arg)) as.list(rest_arg) else if (is.list(rest_arg)) rest_arg else NULL
+            if (is.null(rest_list) || length(rest_list) < 2 ||
+                !is.symbol(rest_list[[1]]) ||
+                !(as.character(rest_list[[1]]) %in% c("pattern", "destructure"))) {
+              return(NULL)
+            }
+            if (length(rest_list) != 2) {
+              return(NULL)
+            }
+            rest_pattern <- rest_list[[2]]
+            rest_display <- paste(deparse(rest_pattern, width.cutoff = 500), collapse = " ")
+            rest_param_spec <- list(
+              type = "pattern",
+              name = NULL,
+              pattern = rest_pattern,
+              display = rest_display
+            )
           }
           arg_items <- if (dot_idx > 1) arg_items[1:(dot_idx - 1)] else list()
         }
       }
       formals_list <- list()
+      param_bindings <- list()
       for (arg in arg_items) {
         if (is.symbol(arg)) {
           name <- as.character(arg)
@@ -378,9 +420,32 @@ Compiler <- R6::R6Class(
         } else if (is.call(arg) && length(arg) >= 2 && is.symbol(arg[[1]])) {
           op_char <- as.character(arg[[1]])
           if (op_char %in% c("pattern", "destructure")) {
-            return(NULL)  # destructuring not supported in compiled lambdas
-          }
-          if (length(arg) == 2) {
+            if (length(arg) != 2 && length(arg) != 3) {
+              return(NULL)
+            }
+            pattern <- arg[[2]]
+            tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
+              self$context$macro_expander$gensym(".__rye_arg")
+            } else {
+              as.symbol(paste0(".__rye_arg", as.integer(stats::runif(1, 1, 1e9))))
+            }
+            tmp_name <- as.character(tmp_sym)
+            default <- quote(expr = )
+            if (length(arg) == 3) {
+              default <- private$compile_impl(arg[[3]])
+              if (is.null(default)) {
+                return(NULL)
+              }
+            }
+            formals_list[[tmp_name]] <- default
+            display <- paste(deparse(pattern, width.cutoff = 500), collapse = " ")
+            param_bindings[[length(param_bindings) + 1]] <- list(
+              type = "pattern",
+              name = tmp_name,
+              pattern = pattern,
+              display = display
+            )
+          } else if (length(arg) == 2) {
             name <- op_char
             default <- private$compile_impl(arg[[2]])
             if (is.null(default)) {
@@ -394,10 +459,16 @@ Compiler <- R6::R6Class(
           return(NULL)
         }
       }
-      if (!is.null(rest_param)) {
+      if (!is.null(rest_param) || !is.null(rest_param_spec)) {
         formals_list[["..."]] <- quote(expr = )
       }
-      list(formals_list = formals_list, has_rest = !is.null(rest_param), rest_param = rest_param, param_bindings = list())
+      list(
+        formals_list = formals_list,
+        has_rest = !is.null(rest_param) || !is.null(rest_param_spec),
+        rest_param = rest_param,
+        rest_param_spec = rest_param_spec,
+        param_bindings = param_bindings
+      )
     },
     compile_load = function(expr) {
       if (length(expr) != 2) {
