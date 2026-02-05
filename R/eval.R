@@ -154,6 +154,9 @@ Evaluator <- R6::R6Class(
         if (is.symbol(topic)) topic <- as.character(topic)
         self$help_fn(topic, env)
       }, envir = env)
+      assign(".rye_subscript_call", function(op_name, args, env) {
+        self$subscript_call_compiled(op_name, args, env)
+      }, envir = env)
       assign("quasiquote", function(expr) self$quasiquote_compiled(expr, env), envir = env)
       assign(".rye_delay", function(compiled_expr, env) self$promise_new_compiled(compiled_expr, env), envir = env)
       assign(".rye_defmacro", function(name, params, body_arg, docstring, env) self$defmacro_compiled(name, params, body_arg, docstring, env), envir = env)
@@ -237,6 +240,17 @@ Evaluator <- R6::R6Class(
       } else {
         stop("Unknown package access operator: ", op_name)
       }
+    },
+    subscript_call_compiled = function(op_name, args, env) {
+      if (!is.character(op_name) || length(op_name) != 1) {
+        stop("subscript operator name must be a single string")
+      }
+      if (!is.list(args)) {
+        stop("subscript args must be a list")
+      }
+      fn <- get(op_name, envir = baseenv())
+      args <- lapply(args, self$quote_arg, quote_symbols = FALSE)
+      do.call(fn, args)
     },
     quasiquote_compiled = function(expr, env) {
       private$quasiquote_compiled_impl(expr, env, 1L)

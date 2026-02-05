@@ -733,11 +733,41 @@ Compiler <- R6::R6Class(
       if (is.null(op)) {
         return(NULL)
       }
-      # $, [, [[ need interpreter so subscript is quoted correctly (do_call_impl special case).
       if (is.symbol(op)) {
         op_char <- as.character(op)
         if (op_char %in% c("$", "[", "[[")) {
-          return(NULL)
+          args <- list()
+          i <- 2
+          while (i <= length(expr)) {
+            arg_expr <- expr[[i]]
+            if (inherits(arg_expr, "rye_keyword")) {
+              if (i + 1 > length(expr)) {
+                return(NULL)
+              }
+              keyword_name <- as.character(arg_expr)
+              val <- private$compile_impl(expr[[i + 1]])
+              if (is.null(val)) {
+                return(NULL)
+              }
+              args <- c(args, list(val))
+              names(args)[length(args)] <- keyword_name
+              i <- i + 2
+            } else {
+              val <- private$compile_impl(arg_expr)
+              if (is.null(val)) {
+                return(NULL)
+              }
+              args <- c(args, list(val))
+              names(args)[length(args)] <- ""
+              i <- i + 1
+            }
+          }
+          return(as.call(list(
+            as.symbol(".rye_subscript_call"),
+            op_char,
+            as.call(c(list(quote(list)), args)),
+            as.symbol(self$env_var_name)
+          )))
         }
       }
       args <- list()
