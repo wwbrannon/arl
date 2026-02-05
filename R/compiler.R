@@ -716,11 +716,10 @@ Compiler <- R6::R6Class(
       if (is.null(op)) {
         return(NULL)
       }
-      # r/eval and NSE wrappers (with, within, subset) need interpreter for correct env/quoting.
       # $, [, [[ need interpreter so subscript is quoted correctly (do_call_impl special case).
       if (is.symbol(op)) {
         op_char <- as.character(op)
-        if (op_char %in% c("r/eval", "with", "within", "subset", "$", "[", "[[")) {
+        if (op_char %in% c("$", "[", "[[")) {
           return(NULL)
         }
       }

@@ -13,7 +13,7 @@
           __rabs __rfloor __rceiling __rtrunc __rround __rsign
           __rsqrt __rlog __rexp __rlog10 __rlog2
           __rsin __rcos __rtan __rasin __racos __ratan __ratan2 __ras.integer
-          __rclass __runique __rlapply)
+          __rget __rclass __runique __rlapply)
 
   ;; Comparison operators
   (define __r== (get "==" :envir (baseenv)))
@@ -59,6 +59,7 @@
   (define __ratan (get "atan" :envir (baseenv)))
   (define __ratan2 (get "atan2" :envir (baseenv)))
   (define __ras.integer (get "as.integer" :envir (baseenv)))
+  (define __rget (get "get" :envir (baseenv)))
 
   ;; Other functions
   (define __rclass (get "class" :envir (baseenv)))

@@ -246,6 +246,9 @@ RyeEngine <- R6::R6Class(
         if (is.null(env)) {
           env <- self$env$current_env()
         }
+        expr_expr <- substitute(expr)
+        expr_value <- expr
+        expr <- if (is.call(expr_value) || is.symbol(expr_value)) expr_value else expr_expr
         expr <- self$macro_expander$hygiene_unwrap(expr)
         # Unwrap (quote x) so we evaluate x in env; R's eval(quote(x), env) would look up x
         if (is.call(expr) && length(expr) == 2L && identical(expr[[1L]], quote(quote))) {

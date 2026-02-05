@@ -3,7 +3,7 @@
 (module core
   (export error warn
             identity values values? call-with-values call/cc call-with-current-continuation doc! doc
-            funcall r/call license)
+            funcall r/call get license)
 
   (import _r)
 
@@ -31,8 +31,17 @@
           (if (is.character fn)
             fn
             (error "r/call requires a symbol or string function name"))))
-      (define fn-obj (get fn-name :envir envir :inherits #t))
+      (define fn-obj (__rget fn-name :envir envir :inherits #t))
       (funcall fn-obj (as.list args))))  ; as.list handles environments
+
+  (define get
+    (lambda (name (envir (globalenv)) (inherits #t))
+      "Get a binding by name, defaulting to .GlobalEnv."
+      (define name-str
+        (if (is.symbol name)
+          (as.character name)
+          name))
+      (r/call "get" (list name-str :envir envir :inherits inherits))))
 
   (define error
     (lambda (msg)
