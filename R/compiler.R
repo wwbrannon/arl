@@ -93,8 +93,11 @@ Compiler <- R6::R6Class(
       if (inherits(expr, "rye_keyword")) {
         return(expr)
       }
-      # Symbol: leave as-is for R to look up
+      # Symbol: .rye_nil is the parser sentinel for #nil; compile to NULL
       if (is.symbol(expr)) {
+        if (identical(expr, as.symbol(".rye_nil"))) {
+          return(quote(NULL))
+        }
         return(expr)
       }
       # Empty list
@@ -107,7 +110,7 @@ Compiler <- R6::R6Class(
       if (!is.null(op_name)) {
         out <- switch(op_name,
           quote = private$compile_quote(expr),
-          quasiquote = NULL,
+          quasiquote = private$compile_quasiquote(expr),
           `if` = private$compile_if(expr),
           begin = private$compile_begin(expr),
           define = private$compile_define(expr),
@@ -122,7 +125,7 @@ Compiler <- R6::R6Class(
           or = NULL,    # macro in control.rye; expand before compile
           delay = private$compile_delay(expr),
           defmacro = private$compile_defmacro(expr),
-          module = NULL,
+          module = private$compile_module(expr),
           `~` = private$compile_formula(expr),
           `::` = private$compile_package_access(expr),
           `:::` = private$compile_package_access(expr),
@@ -142,6 +145,70 @@ Compiler <- R6::R6Class(
       }
       # Return R (quote x) so that eval(compiled, env) yields the quoted value, not a lookup of x.
       as.call(list(quote(quote), private$strip_src(expr[[2]])))
+    },
+    compile_quasiquote = function(expr) {
+      if (length(expr) != 2) {
+        return(NULL)
+      }
+      private$compile_quasiquote_impl(expr[[2]], 1L)
+    },
+    compile_quasiquote_impl = function(template, depth) {
+      env_sym <- as.symbol(self$env_var_name)
+      eval_in_env <- function(compiled) {
+        as.call(list(quote(base::eval), compiled, envir = env_sym))
+      }
+      if (!is.call(template)) {
+        return(as.call(list(quote(quote), template)))
+      }
+      op <- template[[1]]
+      op_char <- if (is.symbol(op)) as.character(op) else ""
+      if (op_char == "unquote") {
+        if (length(template) != 2) {
+          return(NULL)
+        }
+        if (depth == 1L) {
+          inner <- private$compile_impl(template[[2]])
+          if (is.null(inner)) return(NULL)
+          return(eval_in_env(inner))
+        }
+        inner <- private$compile_quasiquote_impl(template[[2]], depth - 1L)
+        return(as.call(list(as.symbol("unquote"), inner)))
+      }
+      if (op_char == "unquote-splicing") {
+        return(NULL)
+      }
+      if (op_char == "quasiquote") {
+        if (length(template) != 2) return(NULL)
+        inner <- private$compile_quasiquote_impl(template[[2]], depth + 1L)
+        return(as.call(list(as.symbol("quasiquote"), inner)))
+      }
+      segments <- list()
+      for (i in seq_len(length(template))) {
+        elem <- template[[i]]
+        if (is.call(elem) && length(elem) >= 1L && is.symbol(elem[[1]])) {
+          elem_op <- as.character(elem[[1]])
+          if (elem_op == "unquote-splicing" && depth == 1L) {
+            if (length(elem) != 2) return(NULL)
+            compiled <- private$compile_impl(elem[[2]])
+            if (is.null(compiled)) return(NULL)
+            segments <- c(segments, list(as.call(list(quote(as.list), eval_in_env(compiled)))))
+            next
+          }
+          if (elem_op == "unquote" && depth == 1L) {
+            if (length(elem) != 2) return(NULL)
+            compiled <- private$compile_impl(elem[[2]])
+            if (is.null(compiled)) return(NULL)
+            segments <- c(segments, list(as.call(list(quote(list), eval_in_env(compiled)))))
+            next
+          }
+        }
+        part <- private$compile_quasiquote_impl(elem, depth)
+        segments <- c(segments, list(as.call(list(quote(list), part))))
+      }
+      if (length(segments) == 0) {
+        return(as.call(list(quote(quote), template)))
+      }
+      as.call(c(list(quote(as.call), as.call(c(list(quote(c)), segments)))))
     },
     compile_if = function(expr) {
       if (length(expr) < 3 || length(expr) > 4) {
@@ -190,8 +257,8 @@ Compiler <- R6::R6Class(
       if (is.null(val)) {
         return(NULL)
       }
-      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> quote(pattern)
-      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(quote(quote), name))
+      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .rye_quote(pattern)
+      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".rye_quote"), name))
       assign_call <- as.call(list(
         as.symbol(".rye_assign_pattern"),
         as.symbol(self$env_var_name),
@@ -214,8 +281,8 @@ Compiler <- R6::R6Class(
       if (is.null(val)) {
         return(NULL)
       }
-      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> quote(pattern)
-      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(quote(quote), name))
+      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .rye_quote(pattern)
+      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".rye_quote"), name))
       as.call(list(
         as.symbol(".rye_assign_pattern"),
         as.symbol(self$env_var_name),
@@ -253,7 +320,6 @@ Compiler <- R6::R6Class(
       env_bind <- as.call(list(quote(`<-`), as.symbol(self$env_var_name), quote(environment())))
       body_parts <- list(env_bind)
       if (params$has_rest && !is.null(params$rest_param)) {
-        # Rest param is only in ...; bind it so body can use the name (e.g. rest <- list(...))
         body_parts <- c(body_parts, list(as.call(list(quote(`<-`), as.symbol(params$rest_param), quote(list(...))))))
       }
       body_parts <- c(body_parts, compiled_body)
@@ -323,9 +389,8 @@ Compiler <- R6::R6Class(
       }
       if (!is.null(rest_param)) {
         formals_list[["..."]] <- quote(expr = )
-        # rest_param is bound in body via rest <- list(...), not as a formal
       }
-      list(formals_list = formals_list, has_rest = !is.null(rest_param), rest_param = rest_param)
+      list(formals_list = formals_list, has_rest = !is.null(rest_param), rest_param = rest_param, param_bindings = list())
     },
     compile_load = function(expr) {
       if (length(expr) != 2) {
@@ -397,9 +462,7 @@ Compiler <- R6::R6Class(
       as.call(list(quote(`while`), test_pred, body_compiled))
     },
     compile_delay = function(expr) {
-      # Do not compile delay: interpreter path preserves correct laziness and
-      # stores the Rye expression for promise-expr; compiled path would store
-      # the compiled R expression and force semantics differ.
+      # Compiled delay uses .rye_delay; promise memoization may differ from interpreter.
       return(NULL)
     },
     compile_defmacro = function(expr) {

@@ -57,3 +57,4 @@ o) update / systematics docs: make a plan
 small stuff:
 --------------------------------------
 o) minor pkgdown warning about site url
+o) run lints and coverage, see what to do

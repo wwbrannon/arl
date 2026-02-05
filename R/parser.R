@@ -80,7 +80,8 @@ Parser <- R6::R6Class(
 
         if (token$type == "NIL") {
           pos <<- pos + 1
-          return(NULL)
+          # Use a sentinel symbol so #nil survives in (as.call elements); NULL would be dropped.
+          return(tracker$src_set(as.symbol(".rye_nil"), make_src(token)))
         }
 
         if (token$type == "NA") {

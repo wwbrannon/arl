@@ -34,7 +34,8 @@ EvalContext <- R6::R6Class(
     source_tracker = NULL,
     evaluator = NULL,
     macro_expander = NULL,
-    # @description Create context. evaluator and macro_expander are assigned by the engine.
+    compiler = NULL,
+    # @description Create context. evaluator, macro_expander, and compiler are assigned by the engine.
     # @param env RyeEnv instance.
     # @param source_tracker SourceTracker instance.
     initialize = function(env, source_tracker) {
@@ -145,6 +146,7 @@ Evaluator <- R6::R6Class(
     # @param env Environment (will be used for eval(compiled, env)).
     install_compiled_helpers = function(env) {
       assign(".rye_env", env, envir = env)
+      assign(".rye_quote", base::quote, envir = env)
       assign(".rye_true_p", .rye_true_p, envir = env)
       assign(".rye_assign_pattern", .rye_assign_pattern, envir = env)
       assign(".rye_load", self$load_file_fn, envir = env)
@@ -286,6 +288,9 @@ Evaluator <- R6::R6Class(
 
       # Handle symbols (variable lookup)
       if (is.symbol(expr)) {
+        if (identical(expr, as.symbol(".rye_nil"))) {
+          return(NULL)
+        }
         return(eval(expr, envir = env))
       }
 

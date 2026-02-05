@@ -63,6 +63,7 @@ RyeEngine <- R6::R6Class(
       context$macro_expander <- self$macro_expander
 
       self$compiler <- Compiler$new(context)
+      context$compiler <- self$compiler
       self$help_system <- HelpSystem$new(self$env, self$macro_expander)
 
       self$initialize_environment()
