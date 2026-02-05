@@ -24,6 +24,14 @@ test_that("delay creates a promise", {
   expect_true(r6_isinstance(result, "RyePromise"))
 })
 
+test_that("delay compiles to a promise", {
+  info <- engine$inspect_compilation("(delay (+ 1 2))")
+  expect_false(is.null(info$compiled))
+  result <- engine$evaluator$eval_compiled(info$compiled, engine$env$env)
+  expect_true(r6_isinstance(result, "RyePromise"))
+  expect_equal(result$value(), 3)
+})
+
 test_that("promise? detects promises", {
   env <- stdlib_env(engine)
   result <- engine$eval_in_env(engine$read("(promise? (delay 1))")[[1]], env)

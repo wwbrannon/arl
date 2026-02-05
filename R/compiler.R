@@ -305,12 +305,16 @@ Compiler <- R6::R6Class(
       } else {
         list()
       }
+      docstring <- NULL
+      if (length(body_exprs) > 0) {
+        first_body <- private$strip_src(body_exprs[[1]])
+        if (is.character(first_body) && length(first_body) == 1L) {
+          docstring <- first_body
+          body_exprs <- body_exprs[-1]
+        }
+      }
       if (length(body_exprs) == 0) {
         body_exprs <- list(quote(NULL))
-      }
-      first_body <- private$strip_src(body_exprs[[1]])
-      if (is.character(first_body) && length(first_body) == 1L) {
-        return(NULL)
       }
       compiled_body <- lapply(body_exprs, function(e) private$compile_impl(e))
       if (any(vapply(compiled_body, is.null, logical(1)))) {
@@ -330,6 +334,9 @@ Compiler <- R6::R6Class(
         parent_env <- baseenv()
       }
       fn <- as.function(c(formals_list, body_call), envir = parent_env)
+      if (!is.null(docstring)) {
+        attr(fn, "rye_doc") <- list(description = docstring)
+      }
       fn
     },
     lambda_params = function(args_expr) {
@@ -462,8 +469,19 @@ Compiler <- R6::R6Class(
       as.call(list(quote(`while`), test_pred, body_compiled))
     },
     compile_delay = function(expr) {
+      if (length(expr) != 2) {
+        return(NULL)
+      }
+      compiled <- private$compile_impl(expr[[2]])
+      if (is.null(compiled)) {
+        return(NULL)
+      }
       # Compiled delay uses .rye_delay; promise memoization may differ from interpreter.
-      return(NULL)
+      as.call(list(
+        as.symbol(".rye_delay"),
+        as.call(list(quote(quote), compiled)),
+        as.symbol(self$env_var_name)
+      ))
     },
     compile_defmacro = function(expr) {
       if (length(expr) < 4) {
