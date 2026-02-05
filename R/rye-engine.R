@@ -95,24 +95,24 @@ RyeEngine <- R6::R6Class(
     #' @description
     #' Evaluate a single expression. Tries compiled path first; falls back to interpreter.
     eval = function(expr) {
-      private$eval_one_compiled_or_interpret(expr, self$env$env)
+      private$eval_one_compiled_or_interpret(expr, self$env$env, compiled_only = TRUE)
     },
     #' @description
     #' Evaluate a single expression in an explicit environment.
     eval_in_env = function(expr, env) {
       target_env <- private$resolve_env_arg(env)
-      private$eval_one_compiled_or_interpret(expr, target_env)
+      private$eval_one_compiled_or_interpret(expr, target_env, compiled_only = TRUE)
     },
     #' @description
     #' Evaluate expressions in order.
     eval_seq = function(exprs) {
-      self$evaluator$eval_seq(exprs)
+      self$eval_seq_in_env(exprs, self$env$env)
     },
     #' @description
     #' Evaluate expressions in order in an explicit environment.
     eval_seq_in_env = function(exprs, env) {
       target_env <- private$resolve_env_arg(env)
-      self$evaluator$eval_seq_in_env(exprs, target_env)
+      self$eval_exprs_in_env(exprs, target_env)
     },
     #' @description
     #' Evaluate expressions with source tracking.
@@ -122,23 +122,23 @@ RyeEngine <- R6::R6Class(
     #' @description
     #' Evaluate expressions with source tracking in an explicit environment.
     #' Tries compiled path first; falls back to interpreter.
-    eval_exprs_in_env = function(exprs, env) {
+    eval_exprs_in_env = function(exprs, env, compiled_only = TRUE) {
       target_env <- private$resolve_env_arg(env)
       self$source_tracker$with_error_context(function() {
-        private$eval_seq_compiled_or_interpret(exprs, target_env)
+        private$eval_seq_compiled_or_interpret(exprs, target_env, compiled_only = compiled_only)
       })
     },
     #' @description
     #' Read and evaluate text.
-    eval_text = function(text, source_name = "<eval>") {
+    eval_text = function(text, source_name = "<eval>", compiled_only = TRUE) {
       exprs <- self$read(text, source_name = source_name)
-      self$eval_exprs(exprs)
+      self$eval_exprs_in_env(exprs, self$env$env, compiled_only = compiled_only)
     },
     #' @description
     #' Read and evaluate text in an explicit environment.
-    eval_text_in_env = function(text, env, source_name = "<eval>") {
+    eval_text_in_env = function(text, env, source_name = "<eval>", compiled_only = TRUE) {
       exprs <- self$read(text, source_name = source_name)
-      self$eval_exprs_in_env(exprs, env)
+      self$eval_exprs_in_env(exprs, env, compiled_only = compiled_only)
     },
     #' @description
     #' Populate standard bindings
@@ -184,7 +184,12 @@ RyeEngine <- R6::R6Class(
       )
 
       env$`stdlib-env` <- function() env
-      env$`current-env` <- function() self$env$current_env()
+      env$`current-env` <- function() {
+        if (exists(".rye_env", envir = parent.frame(), inherits = TRUE)) {
+          return(get(".rye_env", envir = parent.frame(), inherits = TRUE))
+        }
+        self$env$current_env()
+      }
 
       env$`promise?` <- function(x) {
         r6_isinstance(x, "RyePromise")
@@ -252,7 +257,11 @@ RyeEngine <- R6::R6Class(
 
       env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
-          env <- self$env$current_env()
+          if (exists(".rye_env", envir = parent.frame(), inherits = TRUE)) {
+            env <- get(".rye_env", envir = parent.frame(), inherits = TRUE)
+          } else {
+            env <- self$env$current_env()
+          }
         }
         expr_expr <- substitute(expr)
         expr_value <- expr
@@ -413,7 +422,10 @@ RyeEngine <- R6::R6Class(
       }
       parsed <- exprs[[1]]
       expanded <- self$macroexpand_in_env(parsed, target_env)
-      compiled <- self$compiler$compile(expanded, target_env)
+      compiled <- tryCatch(
+        self$compiler$compile(expanded, target_env, strict = FALSE),
+        error = function(e) NULL
+      )
       compiled_deparsed <- if (!is.null(compiled)) deparse(compiled) else NULL
       list(parsed = parsed, expanded = expanded, compiled = compiled, compiled_deparsed = compiled_deparsed)
     },
@@ -447,17 +459,20 @@ RyeEngine <- R6::R6Class(
       }
       stop("Expected a RyeEnv or environment")
     },
-    eval_one_compiled_or_interpret = function(expr, env) {
+    eval_one_compiled_or_interpret = function(expr, env, compiled_only = TRUE) {
       expanded <- self$macroexpand_in_env(expr, env)
-      compiled <- self$compiler$compile(expanded, env)
+      compiled <- self$compiler$compile(expanded, env, strict = isTRUE(compiled_only))
       if (!is.null(compiled)) {
         return(self$evaluator$eval_compiled(compiled, env))
       }
+      if (isTRUE(compiled_only)) {
+        stop("Expression could not be compiled", call. = FALSE)
+      }
       self$evaluator$eval_in_env(expanded, env)
     },
-    eval_seq_compiled_or_interpret = function(exprs, target_env) {
+    eval_seq_compiled_or_interpret = function(exprs, target_env, compiled_only = TRUE) {
       expanded <- lapply(exprs, function(e) self$macroexpand_in_env(e, target_env))
-      compiled <- self$compiler$compile_seq(expanded, target_env)
+      compiled <- self$compiler$compile_seq(expanded, target_env, strict = isTRUE(compiled_only))
       if (!is.null(compiled)) {
         src <- self$source_tracker$src_get(exprs[[1]])
         if (!is.null(src)) {
@@ -471,6 +486,9 @@ RyeEngine <- R6::R6Class(
           return(result_with_vis$value)
         }
         return(invisible(result_with_vis$value))
+      }
+      if (isTRUE(compiled_only)) {
+        stop("Expression sequence could not be compiled", call. = FALSE)
       }
       self$evaluator$eval_seq_in_env(expanded, target_env)
     }

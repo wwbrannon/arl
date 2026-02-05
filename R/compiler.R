@@ -64,6 +64,9 @@ Compiler <- R6::R6Class(
     }
   ),
   private = list(
+    compiled_nil = function() {
+      as.call(list(quote(quote), NULL))
+    },
     fail = function(msg) {
       if (isTRUE(self$strict)) {
         stop(msg, call. = FALSE)
@@ -100,7 +103,7 @@ Compiler <- R6::R6Class(
     },
     compile_impl = function(expr) {
       if (is.null(expr)) {
-        return(quote(NULL))
+        return(private$compiled_nil())
       }
       # Atoms (self-evaluating)
       if (!is.call(expr) && !is.symbol(expr)) {
@@ -112,7 +115,7 @@ Compiler <- R6::R6Class(
       # Symbol: .rye_nil is the parser sentinel for #nil; compile to NULL
       if (is.symbol(expr)) {
         if (identical(expr, as.symbol(".rye_nil"))) {
-          return(quote(NULL))
+          return(private$compiled_nil())
         }
         return(expr)
       }
@@ -264,7 +267,7 @@ Compiler <- R6::R6Class(
         }
         as.call(list(quote(`if`), test_pred, then_expr, else_expr))
       } else {
-        as.call(list(quote(`if`), test_pred, then_expr, quote(NULL)))
+        as.call(list(quote(`if`), test_pred, then_expr, private$compiled_nil()))
       }
     },
     compile_begin = function(expr) {
@@ -347,7 +350,7 @@ Compiler <- R6::R6Class(
         }
       }
       if (length(body_exprs) == 0) {
-        body_exprs <- list(quote(NULL))
+        body_exprs <- list(private$compiled_nil())
       }
       compiled_body <- lapply(body_exprs, function(e) private$compile_impl(e))
       if (any(vapply(compiled_body, is.null, logical(1)))) {
@@ -462,7 +465,7 @@ Compiler <- R6::R6Class(
       for (arg in arg_items) {
         if (is.symbol(arg)) {
           name <- as.character(arg)
-          formals_list[[name]] <- quote(expr = )
+          formals_list[[name]] <- base::quote(expr = )
         } else if (is.call(arg) && length(arg) >= 2 && is.symbol(arg[[1]])) {
           op_char <- as.character(arg[[1]])
           if (op_char %in% c("pattern", "destructure")) {
@@ -476,14 +479,15 @@ Compiler <- R6::R6Class(
               as.symbol(paste0(".__rye_arg", as.integer(stats::runif(1, 1, 1e9))))
             }
             tmp_name <- as.character(tmp_sym)
-            default <- quote(expr = )
             if (length(arg) == 3) {
-              default <- private$compile_impl(arg[[3]])
-              if (is.null(default)) {
+              default_expr <- private$compile_impl(arg[[3]])
+              if (is.null(default_expr)) {
                 return(private$fail("lambda default value could not be compiled"))
               }
+              formals_list[[tmp_name]] <- default_expr
+            } else {
+              formals_list[[tmp_name]] <- base::quote(expr = )
             }
-            formals_list[[tmp_name]] <- default
             display <- paste(deparse(pattern, width.cutoff = 500), collapse = " ")
             param_bindings[[length(param_bindings) + 1]] <- list(
               type = "pattern",
@@ -493,11 +497,11 @@ Compiler <- R6::R6Class(
             )
           } else if (length(arg) == 2) {
             name <- op_char
-            default <- private$compile_impl(arg[[2]])
-            if (is.null(default)) {
+            default_expr <- private$compile_impl(arg[[2]])
+            if (is.null(default_expr)) {
               return(private$fail("lambda default value could not be compiled"))
             }
-            formals_list[[name]] <- default
+            formals_list[[name]] <- default_expr
           } else {
             return(private$fail("lambda arguments must be symbols, (name default) pairs, or (pattern <pat> [default])"))
           }
@@ -506,7 +510,7 @@ Compiler <- R6::R6Class(
         }
       }
       if (!is.null(rest_param) || !is.null(rest_param_spec)) {
-        formals_list[["..."]] <- quote(expr = )
+        formals_list[["..."]] <- base::quote(expr = )
       }
       list(
         formals_list = formals_list,
@@ -629,7 +633,7 @@ Compiler <- R6::R6Class(
             op_char <- if (is.symbol(item[[1]])) as.character(item[[1]]) else NULL
             if (!is.null(op_char) && op_char %in% c("pattern", "destructure")) {
               if (length(item) != 2 && length(item) != 3) {
-                return(private$fail("defmacro parameters must be symbols, (name default), or (pattern ...)"))
+                return(private$fail("pattern must be (pattern <pat>) or (pattern <pat> <default>)"))
               }
               next
             }
@@ -644,7 +648,7 @@ Compiler <- R6::R6Class(
             op_char <- if (is.symbol(item_list[[1]])) as.character(item_list[[1]]) else NULL
             if (!is.null(op_char) && op_char %in% c("pattern", "destructure")) {
               if (length(item_list) != 2 && length(item_list) != 3) {
-                return(private$fail("defmacro parameters must be symbols, (name default), or (pattern ...)"))
+                return(private$fail("pattern must be (pattern <pat>) or (pattern <pat> <default>)"))
               }
               next
             }
@@ -665,7 +669,7 @@ Compiler <- R6::R6Class(
         }
       }
       body_quoted <- as.call(list(quote(quote), as.call(c(list(quote(begin)), body_exprs))))
-      docstring_arg <- if (is.null(docstring)) quote(NULL) else docstring
+      docstring_arg <- if (is.null(docstring)) private$compiled_nil() else docstring
       as.call(list(
         as.symbol(".rye_defmacro"),
         as.call(list(quote(quote), name)),
