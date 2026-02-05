@@ -104,22 +104,13 @@ MacroExpander <- R6::R6Class(
       prev_strict <- self$context$compiler$strict
       prev_macro_eval <- self$context$compiler$macro_eval
       on.exit({
-        self$context$compiler$strict <- prev_strict
-        self$context$compiler$macro_eval <- prev_macro_eval
-      }, add = TRUE)
-      self$context$compiler$macro_eval <- TRUE
-      compiled <- tryCatch(
-        self$context$compiler$compile(expr, env, strict = TRUE),
-        error = function(e) NULL
-      )
-      if (is.null(compiled)) {
-        if (!is.null(self$context$evaluator)) {
-          return(self$context$evaluator$eval_in_env(expr, env))
-        }
-        stop("Expression could not be compiled")
-      }
-      self$context$compiled_runtime$eval_compiled(compiled, env)
-    },
+      self$context$compiler$strict <- prev_strict
+      self$context$compiler$macro_eval <- prev_macro_eval
+    }, add = TRUE)
+    self$context$compiler$macro_eval <- TRUE
+    compiled <- self$context$compiler$compile(expr, env, strict = TRUE)
+    self$context$compiled_runtime$eval_compiled(compiled, env)
+  },
     normalize_env = function(env) {
       if (r6_isinstance(env, "RyeEnv")) {
         return(env$env)

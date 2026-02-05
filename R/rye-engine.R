@@ -465,10 +465,7 @@ RyeEngine <- R6::R6Class(
       if (!is.null(compiled)) {
         return(self$evaluator$eval_compiled(compiled, env))
       }
-      if (isTRUE(compiled_only)) {
-        stop("Expression could not be compiled", call. = FALSE)
-      }
-      self$evaluator$eval_in_env(expanded, env)
+      stop("Expression could not be compiled", call. = FALSE)
     },
     eval_seq_compiled_or_interpret = function(exprs, target_env, compiled_only = TRUE) {
       expanded <- lapply(exprs, function(e) self$macroexpand_in_env(e, target_env))
@@ -487,10 +484,7 @@ RyeEngine <- R6::R6Class(
         }
         return(invisible(result_with_vis$value))
       }
-      if (isTRUE(compiled_only)) {
-        stop("Expression sequence could not be compiled", call. = FALSE)
-      }
-      self$evaluator$eval_seq_in_env(expanded, target_env)
+      stop("Expression sequence could not be compiled", call. = FALSE)
     }
   )
 )
