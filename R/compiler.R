@@ -564,17 +564,46 @@ Compiler <- R6::R6Class(
       }
       params_expr <- expr[[3]]
       if (r6_isinstance(params_expr, "RyeCons")) {
-        return(NULL)
+        parts <- params_expr$parts()
+        params_expr <- as.call(c(parts$prefix, list(as.symbol(".")), list(parts$tail)))
       }
       if (is.call(params_expr) && length(params_expr) > 0) {
         for (i in seq_along(params_expr)) {
           item <- params_expr[[i]]
-          if (!is.symbol(item) && (!is.call(item) || length(item) < 1 || length(item) > 2)) {
-            return(NULL)
+          if (is.symbol(item)) {
+            next
           }
-          if (is.call(item) && length(item) == 2 && identical(as.character(item[[1]]), "pattern")) {
-            return(NULL)
+          if (is.call(item)) {
+            if (length(item) < 1) {
+              return(NULL)
+            }
+            op_char <- if (is.symbol(item[[1]])) as.character(item[[1]]) else NULL
+            if (!is.null(op_char) && op_char %in% c("pattern", "destructure")) {
+              if (length(item) != 2 && length(item) != 3) {
+                return(NULL)
+              }
+              next
+            }
+            if (length(item) == 2 && is.symbol(item[[1]])) {
+              next
+            }
+          } else if (is.list(item)) {
+            item_list <- item
+            if (length(item_list) == 0) {
+              return(NULL)
+            }
+            op_char <- if (is.symbol(item_list[[1]])) as.character(item_list[[1]]) else NULL
+            if (!is.null(op_char) && op_char %in% c("pattern", "destructure")) {
+              if (length(item_list) != 2 && length(item_list) != 3) {
+                return(NULL)
+              }
+              next
+            }
+            if (length(item_list) == 2 && is.symbol(item_list[[1]])) {
+              next
+            }
           }
+          return(NULL)
         }
       }
       body_exprs <- as.list(expr)[-(1:3)]
