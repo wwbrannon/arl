@@ -669,12 +669,18 @@ Compiler <- R6::R6Class(
           return(NULL)
         }
       }
+      src <- private$src_get(expr)
+      src_file <- NULL
+      if (!is.null(src) && !is.null(src$file) && is.character(src$file) && nzchar(src$file) && grepl("[/\\\\]", src$file)) {
+        src_file <- src$file
+      }
       as.call(list(
         as.symbol(".rye_module"),
         name_str,
         exports,
         export_all,
         compiled_body,
+        src_file,
         as.symbol(self$env_var_name)
       ))
     },

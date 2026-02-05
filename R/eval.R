@@ -156,7 +156,9 @@ Evaluator <- R6::R6Class(
       }, envir = env)
       assign(".rye_delay", function(compiled_expr, env) self$promise_new_compiled(compiled_expr, env), envir = env)
       assign(".rye_defmacro", function(name, params, body_arg, docstring, env) self$defmacro_compiled(name, params, body_arg, docstring, env), envir = env)
-      assign(".rye_module", function(module_name, exports, export_all, compiled_body, env) self$module_compiled(module_name, exports, export_all, compiled_body, env), envir = env)
+      assign(".rye_module", function(module_name, exports, export_all, compiled_body, src_file, env) {
+        self$module_compiled(module_name, exports, export_all, compiled_body, src_file, env)
+      }, envir = env)
       assign(".rye_import", function(arg_value, env) {
         self$import_compiled(arg_value, env)
       }, envir = env)
@@ -417,10 +419,14 @@ Evaluator <- R6::R6Class(
       self$context$macro_expander$defmacro(name, params, body_list, docstring = docstring, env = env)
       invisible(NULL)
     },
-    module_compiled = function(module_name, exports, export_all, compiled_body, env) {
+    module_compiled = function(module_name, exports, export_all, compiled_body, src_file, env) {
       module_env <- new.env(parent = env)
       assign(".rye_module", TRUE, envir = module_env)
       self$context$env$module_registry$register(module_name, module_env, exports)
+      if (!is.null(src_file) && is.character(src_file) && length(src_file) == 1L && nzchar(src_file) && grepl("[/\\\\]", src_file)) {
+        absolute_path <- rye_normalize_path_absolute(src_file)
+        self$context$env$module_registry$alias(absolute_path, module_name)
+      }
       self$install_compiled_helpers(module_env)
       assign(".rye_env", module_env, envir = module_env)
       result <- withVisible(eval(compiled_body, envir = module_env))
