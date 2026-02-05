@@ -14,6 +14,10 @@ Compiler <- R6::R6Class(
     env_var_name = ".rye_env",
     # Env used as parent for compiled closures (so they see .rye_true_p etc.). Set by engine before compile.
     current_env = NULL,
+    # When TRUE, invalid forms raise errors instead of returning NULL.
+    strict = FALSE,
+    # When TRUE, compile quasiquote via macro-expander helper (for macro evaluation).
+    macro_eval = FALSE,
     # @param context EvalContext (for source_tracker).
     initialize = function(context) {
       if (!r6_isinstance(context, "EvalContext")) {
@@ -24,36 +28,48 @@ Compiler <- R6::R6Class(
     # @description Compile one expression. Returns R expression or NULL (cannot compile).
     # @param expr Macro-expanded Rye expression.
     # @return R expression (language object) or NULL.
-    compile = function(expr, env = NULL) {
+    compile = function(expr, env = NULL, strict = NULL) {
       if (!is.null(env)) {
         self$current_env <- env
       }
-      tryCatch(
-        private$compile_impl(expr),
-        error = function(e) NULL
-      )
+      if (!is.null(strict)) {
+        self$strict <- isTRUE(strict)
+      }
+      if (isTRUE(self$strict)) {
+        return(private$compile_impl(expr))
+      }
+      tryCatch(private$compile_impl(expr), error = function(e) NULL)
     },
     # @description Compile a sequence of expressions to a single R expression (block).
     # @param exprs List of Rye expressions.
     # @return R expression or NULL.
-    compile_seq = function(exprs, env = NULL) {
+    compile_seq = function(exprs, env = NULL, strict = NULL) {
       if (length(exprs) == 0) {
-        return(NULL)
+        return(private$fail("empty expression list"))
       }
       if (!is.null(env)) {
         self$current_env <- env
       }
+      if (!is.null(strict)) {
+        self$strict <- isTRUE(strict)
+      }
       if (length(exprs) == 1) {
-        return(self$compile(exprs[[1]], env))
+        return(self$compile(exprs[[1]], env, strict = self$strict))
       }
       compiled <- lapply(exprs, function(e) private$compile_impl(e))
       if (any(vapply(compiled, is.null, logical(1)))) {
-        return(NULL)
+        return(private$fail("unable to compile expression sequence"))
       }
       private$src_inherit(as.call(c(list(quote(`{`)), compiled)), exprs[[1]])
     }
   ),
   private = list(
+    fail = function(msg) {
+      if (isTRUE(self$strict)) {
+        stop(msg, call. = FALSE)
+      }
+      NULL
+    },
     src_get = function(expr) {
       if (is.null(self$context) || is.null(self$context$source_tracker)) {
         return(NULL)
@@ -110,7 +126,7 @@ Compiler <- R6::R6Class(
       if (!is.null(op_name)) {
         out <- switch(op_name,
           quote = private$compile_quote(expr),
-          quasiquote = private$compile_quasiquote(expr),
+          quasiquote = if (isTRUE(self$macro_eval)) private$compile_macro_quasiquote(expr) else private$compile_quasiquote(expr),
           `if` = private$compile_if(expr),
           begin = private$compile_begin(expr),
           define = private$compile_define(expr),
@@ -141,16 +157,26 @@ Compiler <- R6::R6Class(
     },
     compile_quote = function(expr) {
       if (length(expr) != 2) {
-        return(NULL)
+        return(private$fail("quote requires exactly 1 argument"))
       }
       # Return R (quote x) so that eval(compiled, env) yields the quoted value, not a lookup of x.
       as.call(list(quote(quote), private$strip_src(expr[[2]])))
     },
     compile_quasiquote = function(expr) {
       if (length(expr) != 2) {
-        return(NULL)
+        return(private$fail("quasiquote requires exactly 1 argument"))
       }
       private$compile_quasiquote_impl(expr[[2]], 1L)
+    },
+    compile_macro_quasiquote = function(expr) {
+      if (length(expr) != 2) {
+        return(private$fail("quasiquote requires exactly 1 argument"))
+      }
+      as.call(list(
+        as.symbol(".rye_macro_quasiquote"),
+        as.call(list(quote(quote), private$strip_src(expr[[2]]))),
+        as.symbol(self$env_var_name)
+      ))
     },
     compile_quasiquote_impl = function(template, depth) {
       env_sym <- as.symbol(self$env_var_name)
@@ -164,7 +190,7 @@ Compiler <- R6::R6Class(
       op_char <- if (is.symbol(op)) as.character(op) else ""
       if (op_char == "unquote") {
         if (length(template) != 2) {
-          return(NULL)
+          return(private$fail("unquote requires exactly 1 argument"))
         }
         if (depth == 1L) {
           inner <- private$compile_impl(template[[2]])
@@ -176,16 +202,16 @@ Compiler <- R6::R6Class(
       }
       if (op_char == "unquote-splicing") {
         if (depth == 1L) {
-          return(NULL)
+          return(private$fail("unquote-splicing can only appear in list context"))
         }
         if (length(template) != 2) {
-          return(NULL)
+          return(private$fail("unquote-splicing requires exactly 1 argument"))
         }
         inner <- private$compile_quasiquote_impl(template[[2]], depth - 1L)
         return(as.call(list(quote(quote), as.call(list(as.symbol("unquote-splicing"), inner)))))
       }
       if (op_char == "quasiquote") {
-        if (length(template) != 2) return(NULL)
+        if (length(template) != 2) return(private$fail("quasiquote requires exactly 1 argument"))
         inner <- private$compile_quasiquote_impl(template[[2]], depth + 1L)
         return(as.call(list(quote(quote), as.call(list(as.symbol("quasiquote"), inner)))))
       }
@@ -195,16 +221,16 @@ Compiler <- R6::R6Class(
         if (is.call(elem) && length(elem) >= 1L && is.symbol(elem[[1]])) {
           elem_op <- as.character(elem[[1]])
           if (elem_op == "unquote-splicing" && depth == 1L) {
-            if (length(elem) != 2) return(NULL)
+            if (length(elem) != 2) return(private$fail("unquote-splicing requires exactly 1 argument"))
             compiled <- private$compile_impl(elem[[2]])
-            if (is.null(compiled)) return(NULL)
+            if (is.null(compiled)) return(private$fail("unquote-splicing could not be compiled"))
             segments <- c(segments, list(as.call(list(quote(as.list), eval_in_env(compiled)))))
             next
           }
           if (elem_op == "unquote" && depth == 1L) {
-            if (length(elem) != 2) return(NULL)
+            if (length(elem) != 2) return(private$fail("unquote requires exactly 1 argument"))
             compiled <- private$compile_impl(elem[[2]])
-            if (is.null(compiled)) return(NULL)
+            if (is.null(compiled)) return(private$fail("unquote could not be compiled"))
             segments <- c(segments, list(as.call(list(quote(list), eval_in_env(compiled)))))
             next
           }
@@ -219,22 +245,22 @@ Compiler <- R6::R6Class(
     },
     compile_if = function(expr) {
       if (length(expr) < 3 || length(expr) > 4) {
-        return(NULL)
+        return(private$fail("if requires 2 or 3 arguments: (if test then [else])"))
       }
       test <- private$compile_impl(expr[[2]])
       if (is.null(test)) {
-        return(NULL)
+        return(private$fail("if test could not be compiled"))
       }
       then_expr <- private$compile_impl(expr[[3]])
       if (is.null(then_expr)) {
-        return(NULL)
+        return(private$fail("if then-branch could not be compiled"))
       }
       # Rye: only #f and #nil are false
       test_pred <- as.call(list(as.symbol(".rye_true_p"), test))
       if (length(expr) == 4) {
         else_expr <- private$compile_impl(expr[[4]])
         if (is.null(else_expr)) {
-          return(NULL)
+          return(private$fail("if else-branch could not be compiled"))
         }
         as.call(list(quote(`if`), test_pred, then_expr, else_expr))
       } else {
@@ -254,15 +280,15 @@ Compiler <- R6::R6Class(
     },
     compile_define = function(expr) {
       if (length(expr) != 3) {
-        return(NULL)
+        return(private$fail("define requires exactly 2 arguments: (define name value)"))
       }
       name <- expr[[2]]
       if (is.symbol(name) && identical(as.character(name), self$env_var_name)) {
-        return(NULL)
+        return(private$fail("define cannot bind reserved name .rye_env"))
       }
       val <- private$compile_impl(expr[[3]])
       if (is.null(val)) {
-        return(NULL)
+        return(private$fail("define value could not be compiled"))
       }
       # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .rye_quote(pattern)
       pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".rye_quote"), name))
@@ -278,15 +304,15 @@ Compiler <- R6::R6Class(
     },
     compile_set = function(expr) {
       if (length(expr) != 3) {
-        return(NULL)
+        return(private$fail("set! requires exactly 2 arguments: (set! name value)"))
       }
       name <- expr[[2]]
       if (is.symbol(name) && identical(as.character(name), self$env_var_name)) {
-        return(NULL)
+        return(private$fail("set! cannot bind reserved name .rye_env"))
       }
       val <- private$compile_impl(expr[[3]])
       if (is.null(val)) {
-        return(NULL)
+        return(private$fail("set! value could not be compiled"))
       }
       # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .rye_quote(pattern)
       pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".rye_quote"), name))
@@ -300,12 +326,12 @@ Compiler <- R6::R6Class(
     },
     compile_lambda = function(expr) {
       if (length(expr) < 3) {
-        return(NULL)
+        return(private$fail("lambda requires at least 2 arguments: (lambda (args...) body...)"))
       }
       args_expr <- expr[[2]]
       params <- private$lambda_params(args_expr)
       if (is.null(params)) {
-        return(NULL)
+        return(private$fail("lambda arguments must be a list"))
       }
       body_exprs <- if (length(expr) >= 3) {
         as.list(expr)[-(1:2)]
@@ -325,7 +351,7 @@ Compiler <- R6::R6Class(
       }
       compiled_body <- lapply(body_exprs, function(e) private$compile_impl(e))
       if (any(vapply(compiled_body, is.null, logical(1)))) {
-        return(NULL)
+        return(private$fail("lambda body could not be compiled"))
       }
       # Prepend .rye_env <- environment() so closure body sees correct current env
       env_bind <- as.call(list(quote(`<-`), as.symbol(self$env_var_name), quote(environment())))
@@ -390,7 +416,7 @@ Compiler <- R6::R6Class(
       } else if (is.list(args_expr)) {
         args_expr
       } else {
-        return(NULL)
+        return(private$fail("lambda arguments must be a list"))
       }
       rest_param <- NULL
       rest_param_spec <- NULL
@@ -398,9 +424,12 @@ Compiler <- R6::R6Class(
         dot_idx <- which(vapply(arg_items, function(a) {
           is.symbol(a) && identical(as.character(a), ".")
         }, logical(1)))
+        if (length(dot_idx) > 1) {
+          return(private$fail("Dotted parameter list can only contain one '.'"))
+        }
         if (length(dot_idx) == 1) {
           if (dot_idx != length(arg_items) - 1) {
-            return(NULL)
+            return(private$fail("Dotted parameter list must have exactly one parameter after '.'"))
           }
           rest_arg <- arg_items[[dot_idx + 1]]
           if (is.symbol(rest_arg)) {
@@ -411,10 +440,10 @@ Compiler <- R6::R6Class(
             if (is.null(rest_list) || length(rest_list) < 2 ||
                 !is.symbol(rest_list[[1]]) ||
                 !(as.character(rest_list[[1]]) %in% c("pattern", "destructure"))) {
-              return(NULL)
+              return(private$fail("Rest parameter must be a symbol or (pattern <pat>)"))
             }
             if (length(rest_list) != 2) {
-              return(NULL)
+              return(private$fail("Rest pattern must be (pattern <pat>)"))
             }
             rest_pattern <- rest_list[[2]]
             rest_display <- paste(deparse(rest_pattern, width.cutoff = 500), collapse = " ")
@@ -438,7 +467,7 @@ Compiler <- R6::R6Class(
           op_char <- as.character(arg[[1]])
           if (op_char %in% c("pattern", "destructure")) {
             if (length(arg) != 2 && length(arg) != 3) {
-              return(NULL)
+              return(private$fail("pattern wrapper must be (pattern <pat>) or (pattern <pat> <default>)"))
             }
             pattern <- arg[[2]]
             tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
@@ -451,7 +480,7 @@ Compiler <- R6::R6Class(
             if (length(arg) == 3) {
               default <- private$compile_impl(arg[[3]])
               if (is.null(default)) {
-                return(NULL)
+                return(private$fail("lambda default value could not be compiled"))
               }
             }
             formals_list[[tmp_name]] <- default
@@ -466,14 +495,14 @@ Compiler <- R6::R6Class(
             name <- op_char
             default <- private$compile_impl(arg[[2]])
             if (is.null(default)) {
-              return(NULL)
+              return(private$fail("lambda default value could not be compiled"))
             }
             formals_list[[name]] <- default
           } else {
-            return(NULL)
+            return(private$fail("lambda arguments must be symbols, (name default) pairs, or (pattern <pat> [default])"))
           }
         } else {
-          return(NULL)
+          return(private$fail("lambda arguments must be symbols, (name default) pairs, or (pattern <pat> [default])"))
         }
       }
       if (!is.null(rest_param) || !is.null(rest_param_spec)) {
@@ -489,11 +518,11 @@ Compiler <- R6::R6Class(
     },
     compile_load = function(expr) {
       if (length(expr) != 2) {
-        return(NULL)
+        return(private$fail("load requires exactly 1 argument: (load \"path\")"))
       }
       path <- private$compile_impl(expr[[2]])
       if (is.null(path)) {
-        return(NULL)
+        return(private$fail("load path could not be compiled"))
       }
       as.call(list(
         as.symbol(".rye_load"),
@@ -504,11 +533,11 @@ Compiler <- R6::R6Class(
     },
     compile_run = function(expr) {
       if (length(expr) != 2) {
-        return(NULL)
+        return(private$fail("run requires exactly 1 argument: (run \"path\")"))
       }
       path <- private$compile_impl(expr[[2]])
       if (is.null(path)) {
-        return(NULL)
+        return(private$fail("run path could not be compiled"))
       }
       as.call(list(
         as.symbol(".rye_load"),
@@ -519,7 +548,7 @@ Compiler <- R6::R6Class(
     },
     compile_import = function(expr) {
       if (length(expr) != 2) {
-        return(NULL)
+        return(private$fail("import requires exactly 1 argument: (import name)"))
       }
       # Pass argument unevaluated (module name is a symbol/string, not a variable lookup)
       arg_quoted <- as.call(list(quote(quote), expr[[2]]))
@@ -531,7 +560,7 @@ Compiler <- R6::R6Class(
     },
     compile_help = function(expr) {
       if (length(expr) != 2) {
-        return(NULL)
+        return(private$fail("help requires exactly 1 argument: (help topic)"))
       }
       topic_quoted <- as.call(list(quote(quote), expr[[2]]))
       as.call(list(
@@ -542,27 +571,27 @@ Compiler <- R6::R6Class(
     },
     compile_while = function(expr) {
       if (length(expr) < 3) {
-        return(NULL)
+        return(private$fail("while requires at least 2 arguments: (while test body...)"))
       }
       test <- private$compile_impl(expr[[2]])
       if (is.null(test)) {
-        return(NULL)
+        return(private$fail("while test could not be compiled"))
       }
       body_expr <- if (length(expr) == 3) expr[[3]] else as.call(c(list(quote(begin)), as.list(expr)[-(1:2)]))
       body_compiled <- private$compile_impl(body_expr)
       if (is.null(body_compiled)) {
-        return(NULL)
+        return(private$fail("while body could not be compiled"))
       }
       test_pred <- as.call(list(as.symbol(".rye_true_p"), test))
       as.call(list(quote(`while`), test_pred, body_compiled))
     },
     compile_delay = function(expr) {
       if (length(expr) != 2) {
-        return(NULL)
+        return(private$fail("delay requires exactly 1 argument"))
       }
       compiled <- private$compile_impl(expr[[2]])
       if (is.null(compiled)) {
-        return(NULL)
+        return(private$fail("delay expression could not be compiled"))
       }
       # Compiled delay uses .rye_delay; promise memoization may differ from interpreter.
       as.call(list(
@@ -573,16 +602,19 @@ Compiler <- R6::R6Class(
     },
     compile_defmacro = function(expr) {
       if (length(expr) < 4) {
-        return(NULL)
+        return(private$fail("defmacro requires at least 3 arguments: (defmacro name (params...) body...)"))
       }
       name <- expr[[2]]
       if (!is.symbol(name)) {
-        return(NULL)
+        return(private$fail("defmacro requires a symbol as the first argument"))
       }
       params_expr <- expr[[3]]
       if (r6_isinstance(params_expr, "RyeCons")) {
         parts <- params_expr$parts()
         params_expr <- as.call(c(parts$prefix, list(as.symbol(".")), list(parts$tail)))
+      }
+      if (!is.call(params_expr) && !is.null(params_expr)) {
+        return(private$fail("defmacro parameters must be a list"))
       }
       if (is.call(params_expr) && length(params_expr) > 0) {
         for (i in seq_along(params_expr)) {
@@ -592,12 +624,12 @@ Compiler <- R6::R6Class(
           }
           if (is.call(item)) {
             if (length(item) < 1) {
-              return(NULL)
+              return(private$fail("defmacro parameters must be symbols, (name default), or (pattern ...)"))
             }
             op_char <- if (is.symbol(item[[1]])) as.character(item[[1]]) else NULL
             if (!is.null(op_char) && op_char %in% c("pattern", "destructure")) {
               if (length(item) != 2 && length(item) != 3) {
-                return(NULL)
+                return(private$fail("defmacro parameters must be symbols, (name default), or (pattern ...)"))
               }
               next
             }
@@ -607,12 +639,12 @@ Compiler <- R6::R6Class(
           } else if (is.list(item)) {
             item_list <- item
             if (length(item_list) == 0) {
-              return(NULL)
+              return(private$fail("defmacro parameters must be symbols, (name default), or (pattern ...)"))
             }
             op_char <- if (is.symbol(item_list[[1]])) as.character(item_list[[1]]) else NULL
             if (!is.null(op_char) && op_char %in% c("pattern", "destructure")) {
               if (length(item_list) != 2 && length(item_list) != 3) {
-                return(NULL)
+                return(private$fail("defmacro parameters must be symbols, (name default), or (pattern ...)"))
               }
               next
             }
@@ -620,7 +652,7 @@ Compiler <- R6::R6Class(
               next
             }
           }
-          return(NULL)
+          return(private$fail("defmacro parameters must be symbols, (name default), or (pattern ...)"))
         }
       }
       body_exprs <- as.list(expr)[-(1:3)]
@@ -645,16 +677,16 @@ Compiler <- R6::R6Class(
     },
     compile_module = function(expr) {
       if (length(expr) < 3) {
-        return(NULL)
+        return(private$fail("module requires at least 2 arguments: (module name (export ...) body...)"))
       }
       module_name <- expr[[2]]
       name_str <- if (is.symbol(module_name)) as.character(module_name) else if (is.character(module_name) && length(module_name) == 1L) module_name else NULL
       if (is.null(name_str)) {
-        return(NULL)
+        return(private$fail("module name must be a symbol or string"))
       }
       exports_expr <- expr[[3]]
       if (!is.call(exports_expr) || length(exports_expr) < 1 || !is.symbol(exports_expr[[1]])) {
-        return(NULL)
+        return(private$fail("module requires an export list: (module name (export ...) body...)"))
       }
       export_tag <- as.character(exports_expr[[1]])
       export_all <- FALSE
@@ -664,18 +696,18 @@ Compiler <- R6::R6Class(
           for (i in 2:length(exports_expr)) {
             item <- exports_expr[[i]]
             if (!is.symbol(item)) {
-              return(NULL)
+              return(private$fail("module exports must be symbols"))
             }
             exports <- c(exports, as.character(item))
           }
         }
       } else if (identical(export_tag, "export-all")) {
         if (length(exports_expr) > 1) {
-          return(NULL)
+          return(private$fail("export-all does not take any arguments"))
         }
         export_all <- TRUE
       } else {
-        return(NULL)
+        return(private$fail("module requires an export list: (module name (export ...) body...)"))
       }
       body_exprs <- as.list(expr)[-(1:3)]
       if (length(body_exprs) == 0) {
@@ -683,7 +715,7 @@ Compiler <- R6::R6Class(
       } else {
         compiled_body <- self$compile_seq(body_exprs)
         if (is.null(compiled_body)) {
-          return(NULL)
+          return(private$fail("module body could not be compiled"))
         }
       }
       src <- private$src_get(expr)
@@ -712,13 +744,16 @@ Compiler <- R6::R6Class(
     },
     compile_package_access = function(expr) {
       if (length(expr) != 3) {
-        return(NULL)
+        return(private$fail(sprintf("%s requires exactly 2 arguments: (%s pkg name)", as.character(expr[[1]]), as.character(expr[[1]]))))
       }
       # Pass package and name as strings so lookup works without namespace in env
       pkg_str <- if (is.symbol(expr[[2]])) as.character(expr[[2]]) else if (is.character(expr[[2]]) && length(expr[[2]]) == 1L) expr[[2]] else NULL
       name_str <- if (is.symbol(expr[[3]])) as.character(expr[[3]]) else if (is.character(expr[[3]]) && length(expr[[3]]) == 1L) expr[[3]] else NULL
-      if (is.null(pkg_str) || is.null(name_str)) {
-        return(NULL)
+      if (is.null(pkg_str)) {
+        return(private$fail("Package name must be a symbol or string"))
+      }
+      if (is.null(name_str)) {
+        return(private$fail("Function/object name must be a symbol or string"))
       }
       as.call(list(
         as.symbol(".rye_pkg_access"),
@@ -731,7 +766,7 @@ Compiler <- R6::R6Class(
     compile_application = function(expr) {
       op <- private$compile_impl(expr[[1]])
       if (is.null(op)) {
-        return(NULL)
+        return(private$fail("attempt to call non-function"))
       }
       if (is.symbol(op)) {
         op_char <- as.character(op)
@@ -742,12 +777,12 @@ Compiler <- R6::R6Class(
             arg_expr <- expr[[i]]
             if (inherits(arg_expr, "rye_keyword")) {
               if (i + 1 > length(expr)) {
-                return(NULL)
+                return(private$fail(sprintf("Keyword :%s requires a value", arg_expr)))
               }
               keyword_name <- as.character(arg_expr)
               val <- private$compile_impl(expr[[i + 1]])
               if (is.null(val)) {
-                return(NULL)
+                return(private$fail("argument could not be compiled"))
               }
               args <- c(args, list(val))
               names(args)[length(args)] <- keyword_name
@@ -755,7 +790,7 @@ Compiler <- R6::R6Class(
             } else {
               val <- private$compile_impl(arg_expr)
               if (is.null(val)) {
-                return(NULL)
+                return(private$fail("argument could not be compiled"))
               }
               args <- c(args, list(val))
               names(args)[length(args)] <- ""
@@ -776,12 +811,12 @@ Compiler <- R6::R6Class(
         arg_expr <- expr[[i]]
         if (inherits(arg_expr, "rye_keyword")) {
           if (i + 1 > length(expr)) {
-            return(NULL)
+            return(private$fail(sprintf("Keyword :%s requires a value", arg_expr)))
           }
           keyword_name <- as.character(arg_expr)
           val <- private$compile_impl(expr[[i + 1]])
           if (is.null(val)) {
-            return(NULL)
+            return(private$fail("argument could not be compiled"))
           }
           args <- c(args, list(val))
           names(args)[length(args)] <- keyword_name
@@ -789,7 +824,7 @@ Compiler <- R6::R6Class(
         } else {
           val <- private$compile_impl(arg_expr)
           if (is.null(val)) {
-            return(NULL)
+            return(private$fail("argument could not be compiled"))
           }
           args <- c(args, list(val))
           names(args)[length(args)] <- ""  # positional; avoid NA so R does not treat as named

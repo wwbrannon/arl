@@ -1,53 +1,3 @@
-rye_missing_default <- function() {
-  structure(list(), class = "rye_missing_default")
-}
-
-# Compiled-mode helpers: installed in env before eval(compiled, env).
-# Rye truthiness: only #f (FALSE) and #nil (NULL) are false.
-.rye_true_p <- function(x) {
-  !identical(x, FALSE) && !is.null(x)
-}
-
-# Wrapper for define/set! from compiled code (including pattern destructuring).
-# pattern can be a symbol, a string (converted to symbol for simple binding), or a list for destructuring.
-.rye_assign_pattern <- function(env, pattern, value, mode) {
-  if (is.character(pattern) && length(pattern) == 1L) {
-    pattern <- as.symbol(pattern)
-  }
-  RyeEnv$new(env)$assign_pattern(pattern, value, mode = mode, context = if (identical(mode, "define")) "define" else "set!")
-}
-
-# EvalContext: Shared context for Evaluator and MacroExpander. Holds env (RyeEnv) and
-# source_tracker. Created once per engine; evaluator and macro_expander are set after.
-#
-# @field env RyeEnv for the engine.
-# @field source_tracker SourceTracker for error locations.
-# @field evaluator Set by RyeEngine after creation.
-# @field macro_expander Set by RyeEngine after creation.
-#
-#' @keywords internal
-#' @noRd
-EvalContext <- R6::R6Class(
-  "EvalContext",
-  public = list(
-    env = NULL,
-    source_tracker = NULL,
-    evaluator = NULL,
-    macro_expander = NULL,
-    compiler = NULL,
-    # @description Create context. evaluator, macro_expander, and compiler are assigned by the engine.
-    # @param env RyeEnv instance.
-    # @param source_tracker SourceTracker instance.
-    initialize = function(env, source_tracker) {
-      if (!r6_isinstance(env, "RyeEnv")) {
-        stop("EvalContext requires a RyeEnv")
-      }
-      self$env <- env
-      self$source_tracker <- source_tracker
-    }
-  )
-)
-
 # Evaluator: Evaluates Rye expressions. Handles special forms (quote, if, define, lambda,
 # load, run, import, module, etc.), delegates the rest to R eval(). Uses context (EvalContext),
 # load_file_fn, help_fn.
@@ -145,115 +95,46 @@ Evaluator <- R6::R6Class(
     # .rye_assign_pattern, .rye_load, .rye_help, .rye_import, .rye_pkg_access, .rye_delay, .rye_defmacro.
     # @param env Environment (will be used for eval(compiled, env)).
     install_compiled_helpers = function(env) {
-      assign(".rye_env", env, envir = env)
-      assign(".rye_quote", base::quote, envir = env)
-      assign(".rye_true_p", .rye_true_p, envir = env)
-      assign(".rye_assign_pattern", .rye_assign_pattern, envir = env)
-      assign(".rye_load", self$load_file_fn, envir = env)
-      assign(".rye_help", function(topic, env) {
-        if (is.symbol(topic)) topic <- as.character(topic)
-        self$help_fn(topic, env)
-      }, envir = env)
-      assign(".rye_subscript_call", function(op_name, args, env) {
-        self$subscript_call_compiled(op_name, args, env)
-      }, envir = env)
-      assign("quasiquote", function(expr) self$quasiquote_compiled(expr, env), envir = env)
-      assign(".rye_delay", function(compiled_expr, env) self$promise_new_compiled(compiled_expr, env), envir = env)
-      assign(".rye_defmacro", function(name, params, body_arg, docstring, env) self$defmacro_compiled(name, params, body_arg, docstring, env), envir = env)
-      assign(".rye_module", function(module_name, exports, export_all, compiled_body, src_file, env) {
-        self$module_compiled(module_name, exports, export_all, compiled_body, src_file, env)
-      }, envir = env)
-      assign(".rye_import", function(arg_value, env) {
-        self$import_compiled(arg_value, env)
-      }, envir = env)
-      assign(".rye_pkg_access", function(op_name, pkg, name, env) {
-        self$pkg_access_compiled(op_name, pkg, name, env)
-      }, envir = env)
-      invisible(NULL)
+      if (is.null(self$context$compiled_runtime)) {
+        stop("compiled runtime not initialized")
+      }
+      self$context$compiled_runtime$install_helpers(env)
     },
     # @description Run compiled R expression in env (helpers must be installed).
     # @param compiled_expr R expression returned by Compiler$compile().
     # @param env Environment (raw R environment).
     # @return Result (possibly invisible).
     eval_compiled = function(compiled_expr, env) {
-      if (!is.environment(env)) {
-        stop("eval_compiled requires an environment")
+      if (is.null(self$context$compiled_runtime)) {
+        stop("compiled runtime not initialized")
       }
-      self$context$env$push_env(env)
-      on.exit(self$context$env$pop_env(), add = TRUE)
-      self$install_compiled_helpers(env)
-      result_with_vis <- withVisible(eval(compiled_expr, envir = env))
-      if (result_with_vis$visible) {
-        result_with_vis$value
-      } else {
-        invisible(result_with_vis$value)
-      }
+      self$context$compiled_runtime$eval_compiled(compiled_expr, env)
     },
     # Import logic for compiled (import x): same semantics as import special form.
     import_compiled = function(arg_value, env) {
-      is_path <- is.character(arg_value) && length(arg_value) == 1
-      if (is_path) {
-        path_str <- arg_value
-        module_path <- rye_resolve_path_only(path_str)
-        if (is.null(module_path)) {
-          stop(sprintf("Module not found: %s", path_str))
-        }
-        registry_key <- rye_normalize_path_absolute(module_path)
-      } else {
-        module_name <- RyeEnv$new(env)$symbol_or_string(arg_value, "import requires a module name symbol or string")
-        registry_key <- module_name
+      if (is.null(self$context$compiled_runtime)) {
+        stop("compiled runtime not initialized")
       }
-      shared_registry <- self$context$env$module_registry
-      if (!shared_registry$exists(registry_key)) {
-        if (is_path) {
-          if (is.null(self$load_file_fn)) {
-            stop("import requires a load_file function")
-          }
-          self$load_file_fn(module_path, self$context$env$env, create_scope = FALSE)
-        } else {
-          module_path <- rye_resolve_module_path(registry_key)
-          if (is.null(module_path)) {
-            stop(sprintf("Module not found: %s", registry_key))
-          }
-          if (is.null(self$load_file_fn)) {
-            stop("import requires a load_file function")
-          }
-          self$load_file_fn(module_path, self$context$env$env, create_scope = FALSE)
-        }
-        if (!shared_registry$exists(registry_key)) {
-          stop(sprintf("Module '%s' did not register itself", registry_key))
-        }
-      }
-      shared_registry$attach_into(registry_key, env)
-      invisible(NULL)
+      self$context$compiled_runtime$import_compiled(arg_value, env)
     },
     # Package access (:: / :::) for compiled code. pkg and name are strings from the compiler.
     pkg_access_compiled = function(op_name, pkg_name, obj_name, env) {
-      if (!is.character(pkg_name) || length(pkg_name) != 1 ||
-          !is.character(obj_name) || length(obj_name) != 1) {
-        stop("Package and object names must be length-1 character")
+      if (is.null(self$context$compiled_runtime)) {
+        stop("compiled runtime not initialized")
       }
-      if (identical(op_name, "::")) {
-        getExportedValue(pkg_name, obj_name)
-      } else if (identical(op_name, ":::")) {
-        getFromNamespace(obj_name, pkg_name)
-      } else {
-        stop("Unknown package access operator: ", op_name)
-      }
+      self$context$compiled_runtime$pkg_access_compiled(op_name, pkg_name, obj_name, env)
     },
     subscript_call_compiled = function(op_name, args, env) {
-      if (!is.character(op_name) || length(op_name) != 1) {
-        stop("subscript operator name must be a single string")
+      if (is.null(self$context$compiled_runtime)) {
+        stop("compiled runtime not initialized")
       }
-      if (!is.list(args)) {
-        stop("subscript args must be a list")
-      }
-      fn <- get(op_name, envir = baseenv())
-      args <- lapply(args, self$quote_arg, quote_symbols = FALSE)
-      do.call(fn, args)
+      self$context$compiled_runtime$subscript_call_compiled(op_name, args, env)
     },
     quasiquote_compiled = function(expr, env) {
-      private$quasiquote_compiled_impl(expr, env, 1L)
+      if (is.null(self$context$compiled_runtime)) {
+        stop("compiled runtime not initialized")
+      }
+      self$context$compiled_runtime$quasiquote_compiled(expr, env)
     },
     # @description Inner evaluation with source-tracking push/pop. Dispatches to eval_inner_impl.
     # @param expr Rye expression.
@@ -426,33 +307,22 @@ Evaluator <- R6::R6Class(
       RyePromise$new(self$context$source_tracker$strip_src(expr), env, self$eval_in_env)
     },
     promise_new_compiled = function(compiled_expr, env) {
-      RyePromise$new(compiled_expr, env, self$eval_compiled)
+      if (is.null(self$context$compiled_runtime)) {
+        stop("compiled runtime not initialized")
+      }
+      self$context$compiled_runtime$promise_new_compiled(compiled_expr, env)
     },
     defmacro_compiled = function(name, params, body_arg, docstring, env) {
-      body_list <- if (is.call(body_arg) && length(body_arg) >= 1 && identical(as.character(body_arg[[1]]), "begin")) {
-        as.list(body_arg)[-1]
-      } else {
-        list(body_arg)
+      if (is.null(self$context$compiled_runtime)) {
+        stop("compiled runtime not initialized")
       }
-      self$context$macro_expander$defmacro(name, params, body_list, docstring = docstring, env = env)
-      invisible(NULL)
+      self$context$compiled_runtime$defmacro_compiled(name, params, body_arg, docstring, env)
     },
     module_compiled = function(module_name, exports, export_all, compiled_body, src_file, env) {
-      module_env <- new.env(parent = env)
-      assign(".rye_module", TRUE, envir = module_env)
-      self$context$env$module_registry$register(module_name, module_env, exports)
-      if (!is.null(src_file) && is.character(src_file) && length(src_file) == 1L && nzchar(src_file) && grepl("[/\\\\]", src_file)) {
-        absolute_path <- rye_normalize_path_absolute(src_file)
-        self$context$env$module_registry$alias(absolute_path, module_name)
+      if (is.null(self$context$compiled_runtime)) {
+        stop("compiled runtime not initialized")
       }
-      self$install_compiled_helpers(module_env)
-      assign(".rye_env", module_env, envir = module_env)
-      result <- withVisible(eval(compiled_body, envir = module_env))
-      if (export_all) {
-        exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
-        self$context$env$module_registry$update_exports(module_name, exports)
-      }
-      if (result$visible) result$value else invisible(result$value)
+      self$context$compiled_runtime$module_compiled(module_name, exports, export_all, compiled_body, src_file, env)
     },
     apply_closure = function(fn, args, env) {
       info <- attr(fn, "rye_closure")

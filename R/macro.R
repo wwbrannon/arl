@@ -94,6 +94,32 @@ MacroExpander <- R6::R6Class(
   private = list(
     gensym_counter = 0,
     hygiene_counter = 0,
+    eval_compiled_in_env = function(expr, env) {
+      if (is.null(self$context$compiled_runtime) || is.null(self$context$compiler)) {
+        stop("compiled runtime not initialized")
+      }
+      if (!is.null(self$context$macro_expander)) {
+        expr <- self$context$macro_expander$macroexpand(expr, env = env, preserve_src = TRUE)
+      }
+      prev_strict <- self$context$compiler$strict
+      prev_macro_eval <- self$context$compiler$macro_eval
+      on.exit({
+        self$context$compiler$strict <- prev_strict
+        self$context$compiler$macro_eval <- prev_macro_eval
+      }, add = TRUE)
+      self$context$compiler$macro_eval <- TRUE
+      compiled <- tryCatch(
+        self$context$compiler$compile(expr, env, strict = TRUE),
+        error = function(e) NULL
+      )
+      if (is.null(compiled)) {
+        if (!is.null(self$context$evaluator)) {
+          return(self$context$evaluator$eval_in_env(expr, env))
+        }
+        stop("Expression could not be compiled")
+      }
+      self$context$compiled_runtime$eval_compiled(compiled, env)
+    },
     normalize_env = function(env) {
       if (r6_isinstance(env, "RyeEnv")) {
         return(env$env)
@@ -554,7 +580,8 @@ MacroExpander <- R6::R6Class(
           if (length(expr) != 2) {
             stop("unquote requires exactly 1 argument")
           }
-          return(private$hygiene_wrap(self$context$evaluator$eval_in_env(expr[[2]], env), "call_site"))
+          value <- private$eval_compiled_in_env(expr[[2]], env)
+          return(private$hygiene_wrap(value, "call_site"))
         }
         return(as.call(list(as.symbol("unquote"), private$quasiquote_impl(expr[[2]], env, depth - 1))))
       }
@@ -573,7 +600,7 @@ MacroExpander <- R6::R6Class(
             if (length(elem) != 2) {
               stop("unquote-splicing requires exactly 1 argument")
             }
-            spliced <- self$context$evaluator$eval_in_env(elem[[2]], env)
+            spliced <- private$eval_compiled_in_env(elem[[2]], env)
             if (is.call(spliced)) {
               spliced <- as.list(spliced)
             }
@@ -796,7 +823,7 @@ MacroExpander <- R6::R6Class(
                 stop(sprintf("Missing required parameter (position %d)", i))
               }
               # Evaluate default
-              value <- self$context$evaluator$eval_in_env(default_expr, env)
+              value <- private$eval_compiled_in_env(default_expr, env)
             }
 
             # Bind the value
@@ -840,7 +867,7 @@ MacroExpander <- R6::R6Class(
                 stop(sprintf("Missing required parameter (position %d)", i))
               }
               # Evaluate default
-              value <- self$context$evaluator$eval_in_env(default_expr, env)
+              value <- private$eval_compiled_in_env(default_expr, env)
             }
 
             # Bind the value
@@ -866,7 +893,7 @@ MacroExpander <- R6::R6Class(
 
         result <- NULL
         for (expr in body) {
-          result <- self$context$evaluator$eval_in_env(expr, macro_env)
+          result <- private$eval_compiled_in_env(expr, macro_env)
         }
         result
       }

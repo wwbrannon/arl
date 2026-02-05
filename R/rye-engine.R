@@ -32,6 +32,7 @@ RyeEngine <- R6::R6Class(
     parser = NULL,
     macro_expander = NULL,
     evaluator = NULL,
+    compiled_runtime = NULL,
     compiler = NULL,
     help_system = NULL,
     env = NULL,
@@ -64,6 +65,13 @@ RyeEngine <- R6::R6Class(
 
       self$compiler <- Compiler$new(context)
       context$compiler <- self$compiler
+
+      self$compiled_runtime <- CompiledRuntime$new(
+        context,
+        load_file_fn = function(path, env, create_scope = FALSE) self$load_file_in_env(path, env, create_scope),
+        help_fn = function(topic, env) self$help_in_env(topic, env)
+      )
+      context$compiled_runtime <- self$compiled_runtime
       self$help_system <- HelpSystem$new(self$env, self$macro_expander)
 
       self$initialize_environment()
