@@ -98,7 +98,7 @@ test_that("compiled eval validates lambda argument lists", {
 test_that("eval text errors include source and stack context", {
   env <- new.env(parent = baseenv())
   err <- tryCatch(
-    engine$eval_text_in_env("(+ 1 nope)", env, source_name = "test.rye"),
+    engine$eval_text("(+ 1 nope)", env = env, source_name = "test.rye"),
     error = function(e) e
   )
   expect_s3_class(err, "rye_error")

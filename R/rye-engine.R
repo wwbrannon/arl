@@ -20,6 +20,7 @@
 #' @param expr Rye expression (symbol/call/atomic value).
 #' @param exprs List of Rye expressions to evaluate.
 #' @param text Character string of Rye code to read/eval.
+#' @param env Optional environment or RyeEnv to evaluate in (defaults to engine env).
 #' @param path File path to load.
 #' @param create_scope Logical; evaluate file in a child environment when TRUE.
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
@@ -91,50 +92,32 @@ RyeEngine <- R6::R6Class(
     #' @description
     #' Evaluate a single expression via compiled evaluation.
     eval = function(expr) {
-      private$eval_one_compiled_or_interpret(expr, self$env$env, compiled_only = TRUE)
+      private$eval_one_compiled(expr, self$env$env, compiled_only = TRUE)
     },
     #' @description
     #' Evaluate a single expression in an explicit environment.
     eval_in_env = function(expr, env) {
       target_env <- private$resolve_env_arg(env)
-      private$eval_one_compiled_or_interpret(expr, target_env, compiled_only = TRUE)
+      private$eval_one_compiled(expr, target_env, compiled_only = TRUE)
     },
     #' @description
     #' Evaluate expressions in order via compiled evaluation.
-    eval_seq = function(exprs) {
-      self$eval_seq_in_env(exprs, self$env$env)
-    },
-    #' @description
-    #' Evaluate expressions in order in an explicit environment.
-    eval_seq_in_env = function(exprs, env) {
-      target_env <- private$resolve_env_arg(env)
-      self$eval_exprs_in_env(exprs, target_env)
+    eval_seq = function(exprs, env = NULL) {
+      self$eval_exprs(exprs, env = env, compiled_only = TRUE)
     },
     #' @description
     #' Evaluate expressions with source tracking.
-    eval_exprs = function(exprs) {
-      self$eval_exprs_in_env(exprs, self$env$env)
-    },
-    #' @description
-    #' Evaluate expressions with source tracking in an explicit environment.
-    #' Tries compiled path first; falls back to interpreter.
-    eval_exprs_in_env = function(exprs, env, compiled_only = TRUE) {
+    eval_exprs = function(exprs, env = NULL, compiled_only = TRUE) {
       target_env <- private$resolve_env_arg(env)
       self$source_tracker$with_error_context(function() {
-        private$eval_seq_compiled_or_interpret(exprs, target_env, compiled_only = compiled_only)
+        private$eval_seq_compiled(exprs, target_env, compiled_only = compiled_only)
       })
     },
     #' @description
     #' Read and evaluate text.
-    eval_text = function(text, source_name = "<eval>", compiled_only = TRUE) {
+    eval_text = function(text, env = NULL, source_name = "<eval>", compiled_only = TRUE) {
       exprs <- self$read(text, source_name = source_name)
-      self$eval_exprs_in_env(exprs, self$env$env, compiled_only = compiled_only)
-    },
-    #' @description
-    #' Read and evaluate text in an explicit environment.
-    eval_text_in_env = function(text, env, source_name = "<eval>", compiled_only = TRUE) {
-      exprs <- self$read(text, source_name = source_name)
-      self$eval_exprs_in_env(exprs, env, compiled_only = compiled_only)
+      self$eval_exprs(exprs, env = env, compiled_only = compiled_only)
     },
     #' @description
     #' Populate standard bindings
@@ -387,7 +370,7 @@ RyeEngine <- R6::R6Class(
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
       target_env <- if (isTRUE(create_scope)) new.env(parent = resolved) else resolved
       self$source_tracker$with_error_context(function() {
-        self$eval_seq_in_env(self$read(text, source_name = path), target_env)
+        self$eval_seq(self$read(text, source_name = path), env = target_env)
       })
     },
     #' @description
@@ -465,7 +448,7 @@ RyeEngine <- R6::R6Class(
       }
       stop("Expected a RyeEnv or environment")
     },
-    eval_one_compiled_or_interpret = function(expr, env, compiled_only = TRUE) {
+    eval_one_compiled = function(expr, env, compiled_only = TRUE) {
       expanded <- self$macroexpand_in_env(expr, env, preserve_src = TRUE)
       compiled <- self$compiler$compile(expanded, env, strict = isTRUE(compiled_only))
       if (!is.null(compiled)) {
@@ -479,7 +462,7 @@ RyeEngine <- R6::R6Class(
       }
       stop(msg, call. = FALSE)
     },
-    eval_seq_compiled_or_interpret = function(exprs, target_env, compiled_only = TRUE) {
+    eval_seq_compiled = function(exprs, target_env, compiled_only = TRUE) {
       if (length(exprs) == 0) {
         return(invisible(NULL))
       }

@@ -47,11 +47,8 @@ engine$eval_text("(+ 1 2 3)")
 \item \href{#method-RyeEngine-eval}{\code{RyeEngine$eval()}}
 \item \href{#method-RyeEngine-eval_in_env}{\code{RyeEngine$eval_in_env()}}
 \item \href{#method-RyeEngine-eval_seq}{\code{RyeEngine$eval_seq()}}
-\item \href{#method-RyeEngine-eval_seq_in_env}{\code{RyeEngine$eval_seq_in_env()}}
 \item \href{#method-RyeEngine-eval_exprs}{\code{RyeEngine$eval_exprs()}}
-\item \href{#method-RyeEngine-eval_exprs_in_env}{\code{RyeEngine$eval_exprs_in_env()}}
 \item \href{#method-RyeEngine-eval_text}{\code{RyeEngine$eval_text()}}
-\item \href{#method-RyeEngine-eval_text_in_env}{\code{RyeEngine$eval_text_in_env()}}
 \item \href{#method-RyeEngine-initialize_environment}{\code{RyeEngine$initialize_environment()}}
 \item \href{#method-RyeEngine-load_stdlib_into_env}{\code{RyeEngine$load_stdlib_into_env()}}
 \item \href{#method-RyeEngine-load_file}{\code{RyeEngine$load_file()}}
@@ -174,6 +171,8 @@ Evaluate a single expression in an explicit environment.
 \item{\code{expr}}{Rye expression (symbol/call/atomic value).}
 
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{env}}{Optional environment or RyeEnv to evaluate in (defaults to engine env).}
 }
 \if{html}{\out{</div>}}
 }
@@ -184,24 +183,7 @@ Evaluate a single expression in an explicit environment.
 \subsection{Method \code{eval_seq()}}{
 Evaluate expressions in order via compiled evaluation.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_seq(exprs)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{exprs}}{List of Rye expressions to evaluate.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RyeEngine-eval_seq_in_env"></a>}}
-\if{latex}{\out{\hypertarget{method-RyeEngine-eval_seq_in_env}{}}}
-\subsection{Method \code{eval_seq_in_env()}}{
-Evaluate expressions in order in an explicit environment.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_seq_in_env(exprs, env)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_seq(exprs, env = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -210,6 +192,8 @@ Evaluate expressions in order in an explicit environment.
 \item{\code{exprs}}{List of Rye expressions to evaluate.}
 
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{env}}{Optional environment or RyeEnv to evaluate in (defaults to engine env).}
 }
 \if{html}{\out{</div>}}
 }
@@ -220,25 +204,7 @@ Evaluate expressions in order in an explicit environment.
 \subsection{Method \code{eval_exprs()}}{
 Evaluate expressions with source tracking.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_exprs(exprs)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{exprs}}{List of Rye expressions to evaluate.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RyeEngine-eval_exprs_in_env"></a>}}
-\if{latex}{\out{\hypertarget{method-RyeEngine-eval_exprs_in_env}{}}}
-\subsection{Method \code{eval_exprs_in_env()}}{
-Evaluate expressions with source tracking in an explicit environment.
-Tries compiled path first; falls back to interpreter.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_exprs_in_env(exprs, env, compiled_only = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_exprs(exprs, env = NULL, compiled_only = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -247,6 +213,8 @@ Tries compiled path first; falls back to interpreter.
 \item{\code{exprs}}{List of Rye expressions to evaluate.}
 
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{env}}{Optional environment or RyeEnv to evaluate in (defaults to engine env).}
 
 \item{\code{compiled_only}}{Logical; if TRUE, require compiled evaluation.}
 }
@@ -259,30 +227,9 @@ Tries compiled path first; falls back to interpreter.
 \subsection{Method \code{eval_text()}}{
 Read and evaluate text.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_text(text, source_name = "<eval>", compiled_only = TRUE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{text}}{Character string of Rye code to read/eval.}
-
-\item{\code{source_name}}{Optional source name for error reporting.}
-
-\item{\code{compiled_only}}{Logical; if TRUE, require compiled evaluation.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RyeEngine-eval_text_in_env"></a>}}
-\if{latex}{\out{\hypertarget{method-RyeEngine-eval_text_in_env}{}}}
-\subsection{Method \code{eval_text_in_env()}}{
-Read and evaluate text in an explicit environment.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_text_in_env(
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$eval_text(
   text,
-  env,
+  env = NULL,
   source_name = "<eval>",
   compiled_only = TRUE
 )}\if{html}{\out{</div>}}
@@ -294,6 +241,8 @@ Read and evaluate text in an explicit environment.
 \item{\code{text}}{Character string of Rye code to read/eval.}
 
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{env}}{Optional environment or RyeEnv to evaluate in (defaults to engine env).}
 
 \item{\code{source_name}}{Optional source name for error reporting.}
 
@@ -372,6 +321,8 @@ definitions are not visible in \code{env}.
 
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
 
+\item{\code{env}}{Optional environment or RyeEnv to evaluate in (defaults to engine env).}
+
 \item{\code{create_scope}}{If TRUE, evaluate in a new child of \code{env}; if FALSE, in \code{env}.}
 }
 \if{html}{\out{</div>}}
@@ -412,6 +363,8 @@ Expand macros recursively in an explicit environment.
 
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
 
+\item{\code{env}}{Optional environment or RyeEnv to evaluate in (defaults to engine env).}
+
 \item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
 }
 \if{html}{\out{</div>}}
@@ -451,6 +404,8 @@ Expand a single macro layer in an explicit environment.
 \item{\code{expr}}{Rye expression (symbol/call/atomic value).}
 
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{env}}{Optional environment or RyeEnv to evaluate in (defaults to engine env).}
 
 \item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
 }
@@ -515,6 +470,8 @@ Show help for a topic in an explicit environment.
 \item{\code{topic}}{Help topic as a single string.}
 
 \item{\code{env}}{Optional environment or RyeEnv used as the engine base.}
+
+\item{\code{env}}{Optional environment or RyeEnv to evaluate in (defaults to engine env).}
 }
 \if{html}{\out{</div>}}
 }
