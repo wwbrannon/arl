@@ -1,7 +1,5 @@
 performance issues:
 -------------------------------------------------
-o) check that the benchmarks run correctly and run/commit bench/profile
-
 o) should we inject helpers into the environment rather than the generated
    scripts themselves? pros of environment: slightly faster. maybe more robust.
    cons: compiled programs aren't self-contained. (but would they be anyway?)
@@ -49,6 +47,8 @@ compiler opt ideas
 o) have opus or some such critique the architecture and make suggestions
 o) other performance optimizations: use profiling and benchmarking
 
+o) check that the benchmarks run correctly and run/commit bench/profile
+
 test audits:
 -------------------------------------------------
 o) fix the minor issues found last time from opus auditing the tests
@@ -75,6 +75,7 @@ o) update / systematics docs: make a plan
 
 small stuff:
 --------------------------------------
+o) code quality pass
+
 o) minor pkgdown warning about site url
 o) run lints and coverage, see what to do
-

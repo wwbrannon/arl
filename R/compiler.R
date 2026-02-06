@@ -288,9 +288,13 @@ Compiler <- R6::R6Class(
         return(quote(invisible(NULL)))
       }
       parts <- as.list(expr)[-1]
-      compiled <- lapply(parts, function(e) private$compile_impl(e))
-      if (any(vapply(compiled, is.null, logical(1)))) {
-        return(NULL)
+      # Use early-exit loop with preallocation
+      compiled <- vector("list", length(parts))
+      for (i in seq_along(parts)) {
+        compiled[[i]] <- private$compile_impl(parts[[i]])
+        if (is.null(compiled[[i]])) {
+          return(NULL)  # Early exit on failure
+        }
       }
       as.call(c(list(quote(`{`)), compiled))
     },
@@ -371,40 +375,59 @@ Compiler <- R6::R6Class(
       if (length(body_exprs) == 0) {
         body_exprs <- list(private$compiled_nil())
       }
-      compiled_body <- lapply(body_exprs, function(e) private$compile_impl(e))
-      if (any(vapply(compiled_body, is.null, logical(1)))) {
-        return(private$fail("lambda body could not be compiled"))
+      # Use early-exit loop with preallocation
+      compiled_body <- vector("list", length(body_exprs))
+      for (i in seq_along(body_exprs)) {
+        compiled_body[[i]] <- private$compile_impl(body_exprs[[i]])
+        if (is.null(compiled_body[[i]])) {
+          return(private$fail("lambda body could not be compiled"))  # Early exit on failure
+        }
       }
       # Prepend .rye_env <- environment() so closure body sees correct current env
       env_bind <- as.call(list(quote(`<-`), as.symbol(self$env_var_name), quote(environment())))
-      body_parts <- list(env_bind)
+      # Preallocate body_parts: 1 (env_bind) + has_rest + param_bindings + rest_param_spec + compiled_body
+      size <- 1 +
+              as.integer(params$has_rest && !is.null(params$rest_param)) +
+              length(params$param_bindings) +
+              as.integer(!is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) +
+              length(compiled_body)
+      body_parts <- vector("list", size)
+      idx <- 1
+      body_parts[[idx]] <- env_bind
+      idx <- idx + 1
       if (params$has_rest && !is.null(params$rest_param)) {
-        body_parts <- c(body_parts, list(as.call(list(quote(`<-`), as.symbol(params$rest_param), quote(list(...))))))
+        body_parts[[idx]] <- as.call(list(quote(`<-`), as.symbol(params$rest_param), quote(list(...))))
+        idx <- idx + 1
       }
       if (length(params$param_bindings) > 0) {
         for (binding in params$param_bindings) {
           pattern_arg <- as.call(list(as.symbol(".rye_quote"), binding$pattern))
-          body_parts <- c(body_parts, list(as.call(list(
+          body_parts[[idx]] <- as.call(list(
             as.symbol(".rye_assign_pattern"),
             as.symbol(self$env_var_name),
             pattern_arg,
             as.symbol(binding$name),
             "define"
-          ))))
+          ))
+          idx <- idx + 1
         }
       }
       if (!is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) {
         pattern_arg <- as.call(list(as.symbol(".rye_quote"), params$rest_param_spec$pattern))
         rest_val <- as.call(list(quote(list), quote(...)))
-        body_parts <- c(body_parts, list(as.call(list(
+        body_parts[[idx]] <- as.call(list(
           as.symbol(".rye_assign_pattern"),
           as.symbol(self$env_var_name),
           pattern_arg,
           rest_val,
           "define"
-        ))))
+        ))
+        idx <- idx + 1
       }
-      body_parts <- c(body_parts, compiled_body)
+      for (i in seq_along(compiled_body)) {
+        body_parts[[idx]] <- compiled_body[[i]]
+        idx <- idx + 1
+      }
       body_call <- as.call(c(list(quote(`{`)), body_parts))
       formals_list <- params$formals_list
       fn_expr <- as.call(list(
@@ -627,13 +650,14 @@ Compiler <- R6::R6Class(
       if (length(expr) < 2) {
         return(private$fail("and requires at least 1 argument"))
       }
-      args <- list()
+      # Preallocate args list
+      args <- vector("list", length(expr) - 1)
       for (i in 2:length(expr)) {
         compiled <- private$compile_impl(expr[[i]])
         if (is.null(compiled)) {
           return(private$fail("and argument could not be compiled"))
         }
-        args <- c(args, list(compiled))
+        args[[i - 1]] <- compiled
       }
       gensym_tmp <- function() {
         if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
@@ -662,13 +686,14 @@ Compiler <- R6::R6Class(
       if (length(expr) < 2) {
         return(private$fail("or requires at least 1 argument"))
       }
-      args <- list()
+      # Preallocate args list
+      args <- vector("list", length(expr) - 1)
       for (i in 2:length(expr)) {
         compiled <- private$compile_impl(expr[[i]])
         if (is.null(compiled)) {
           return(private$fail("or argument could not be compiled"))
         }
-        args <- c(args, list(compiled))
+        args[[i - 1]] <- compiled
       }
       gensym_tmp <- function() {
         if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
@@ -855,35 +880,54 @@ Compiler <- R6::R6Class(
       if (is.null(op)) {
         return(private$fail("attempt to call non-function"))
       }
+      # Helper to collect keyword/positional arguments with preallocation
+      collect_args <- function() {
+        # Preallocate: worst case is all positional (expr_len - 1)
+        max_args <- length(expr) - 1
+        args <- vector("list", max_args)
+        arg_names <- character(max_args)
+        arg_idx <- 1
+        i <- 2
+        while (i <= length(expr)) {
+          arg_expr <- expr[[i]]
+          if (inherits(arg_expr, "rye_keyword")) {
+            if (i + 1 > length(expr)) {
+              return(private$fail(sprintf("Keyword :%s requires a value", arg_expr)))
+            }
+            keyword_name <- as.character(arg_expr)
+            val <- private$compile_impl(expr[[i + 1]])
+            if (is.null(val)) {
+              return(private$fail("argument could not be compiled"))
+            }
+            args[[arg_idx]] <- val
+            arg_names[arg_idx] <- keyword_name
+            arg_idx <- arg_idx + 1
+            i <- i + 2
+          } else {
+            val <- private$compile_impl(arg_expr)
+            if (is.null(val)) {
+              return(private$fail("argument could not be compiled"))
+            }
+            args[[arg_idx]] <- val
+            arg_names[arg_idx] <- ""
+            arg_idx <- arg_idx + 1
+            i <- i + 1
+          }
+        }
+        # Trim to actual size (handle zero-argument case)
+        if (arg_idx == 1) {
+          # No arguments
+          return(list())
+        }
+        args <- args[seq_len(arg_idx - 1)]
+        names(args) <- arg_names[seq_len(arg_idx - 1)]
+        args
+      }
       if (is.symbol(op)) {
         op_char <- as.character(op)
         if (op_char %in% c("$", "[", "[[")) {
-          args <- list()
-          i <- 2
-          while (i <= length(expr)) {
-            arg_expr <- expr[[i]]
-            if (inherits(arg_expr, "rye_keyword")) {
-              if (i + 1 > length(expr)) {
-                return(private$fail(sprintf("Keyword :%s requires a value", arg_expr)))
-              }
-              keyword_name <- as.character(arg_expr)
-              val <- private$compile_impl(expr[[i + 1]])
-              if (is.null(val)) {
-                return(private$fail("argument could not be compiled"))
-              }
-              args <- c(args, list(val))
-              names(args)[length(args)] <- keyword_name
-              i <- i + 2
-            } else {
-              val <- private$compile_impl(arg_expr)
-              if (is.null(val)) {
-                return(private$fail("argument could not be compiled"))
-              }
-              args <- c(args, list(val))
-              names(args)[length(args)] <- ""
-              i <- i + 1
-            }
-          }
+          args <- collect_args()
+          if (is.null(args)) return(NULL)  # Error occurred
           return(as.call(list(
             as.symbol(".rye_subscript_call"),
             op_char,
@@ -892,32 +936,8 @@ Compiler <- R6::R6Class(
           )))
         }
       }
-      args <- list()
-      i <- 2
-      while (i <= length(expr)) {
-        arg_expr <- expr[[i]]
-        if (inherits(arg_expr, "rye_keyword")) {
-          if (i + 1 > length(expr)) {
-            return(private$fail(sprintf("Keyword :%s requires a value", arg_expr)))
-          }
-          keyword_name <- as.character(arg_expr)
-          val <- private$compile_impl(expr[[i + 1]])
-          if (is.null(val)) {
-            return(private$fail("argument could not be compiled"))
-          }
-          args <- c(args, list(val))
-          names(args)[length(args)] <- keyword_name
-          i <- i + 2
-        } else {
-          val <- private$compile_impl(arg_expr)
-          if (is.null(val)) {
-            return(private$fail("argument could not be compiled"))
-          }
-          args <- c(args, list(val))
-          names(args)[length(args)] <- ""  # positional; avoid NA so R does not treat as named
-          i <- i + 1
-        }
-      }
+      args <- collect_args()
+      if (is.null(args)) return(NULL)  # Error occurred
       as.call(c(list(op), args))
     }
   )

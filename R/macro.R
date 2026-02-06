@@ -36,11 +36,8 @@ MacroExpander <- R6::R6Class(
     macroexpand = function(expr, env = NULL, preserve_src = FALSE) {
       target_env <- private$normalize_env(env)
       registry <- private$macro_registry(target_env, create = FALSE)
-      if (!is.null(registry)) {
-        macro_names <- ls(registry, all.names = TRUE)
-      } else {
-        macro_names <- character(0)
-      }
+      # Use cached macro names (optimization 1.3)
+      macro_names <- private$get_macro_names(registry)
       if (length(macro_names) == 0 || !private$contains_macro_head(expr, macro_names)) {
         if (isTRUE(preserve_src)) {
           return(expr)
@@ -106,6 +103,11 @@ MacroExpander <- R6::R6Class(
   private = list(
     gensym_counter = 0,
     hygiene_counter = 0,
+    # Cache for macro registry names (optimization 1.3)
+    macro_names_cache = NULL,
+    macro_names_cache_env = NULL,
+    # Cache for macro name lookup (optimization 1.4) - environment for O(1) lookup
+    macro_names_set = NULL,
     eval_compiled_in_env = function(expr, env) {
       if (is.null(self$context$compiled_runtime) || is.null(self$context$compiler)) {
         stop("compiled runtime not initialized")
@@ -136,7 +138,39 @@ MacroExpander <- R6::R6Class(
       stop("Expected a RyeEnv or environment")
     },
     macro_registry = function(env, create = TRUE) {
-      self$context$env$get_registry(".rye_macros", env, create = create)
+      registry <- self$context$env$get_registry(".rye_macros", env, create = create)
+      # Invalidate cache if registry changed (optimization 1.3)
+      if (!identical(registry, private$macro_names_cache_env)) {
+        private$macro_names_cache <- NULL
+        private$macro_names_cache_env <- NULL
+        private$macro_names_set <- NULL
+      }
+      registry
+    },
+    get_macro_names = function(registry) {
+      # Check cache (optimization 1.3)
+      if (!is.null(private$macro_names_cache) &&
+          identical(registry, private$macro_names_cache_env)) {
+        return(private$macro_names_cache)
+      }
+      # Cache miss - recompute
+      if (!is.null(registry)) {
+        macro_names <- ls(registry, all.names = TRUE)
+      } else {
+        macro_names <- character(0)
+      }
+      # Update cache
+      private$macro_names_cache <- macro_names
+      private$macro_names_cache_env <- registry
+      # Build hash set for O(1) lookup (optimization 1.4)
+      if (length(macro_names) > 0) {
+        set_list <- as.list(rep(TRUE, length(macro_names)))
+        names(set_list) <- macro_names
+        private$macro_names_set <- list2env(set_list, hash = TRUE, parent = emptyenv())
+      } else {
+        private$macro_names_set <- new.env(hash = TRUE, parent = emptyenv())
+      }
+      macro_names
     },
     contains_macro_head = function(expr, macro_names) {
       if (is.null(expr)) {
@@ -154,7 +188,8 @@ MacroExpander <- R6::R6Class(
           if (op_name %in% c("quote", "quasiquote", "defmacro")) {
             return(FALSE)
           }
-          if (!is.na(match(op_name, macro_names))) {
+          # Use O(1) hash set lookup (optimization 1.4)
+          if (!is.null(private$macro_names_set) && exists(op_name, envir = private$macro_names_set, inherits = FALSE)) {
             return(TRUE)
           }
         }
@@ -953,6 +988,10 @@ MacroExpander <- R6::R6Class(
       registry[[name_str]] <- macro_fn
       lockBinding(name_str, registry)
       assign(name_str, macro_fn, envir = env)
+      # Invalidate cache after defining macro (optimization 1.3)
+      private$macro_names_cache <- NULL
+      private$macro_names_cache_env <- NULL
+      private$macro_names_set <- NULL
     },
     macroexpand_impl = function(expr, env, preserve_src, max_depth, walk) {
       if (!is.call(expr) || length(expr) == 0) {

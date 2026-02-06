@@ -29,7 +29,7 @@ scripts <- c(
   "bench-stdlib.R",
   "bench-interop.R",
   "bench-modules.R",
-  "bench-e2e.R"
+  # "bench-e2e.R"  # FIXME disabled for now because too slow
 )
 
 all_results <- list()

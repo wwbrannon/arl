@@ -1,0 +1,5 @@
+R -q -e "testthat::set_max_fails(Inf); devtools::test()"
+> testthat::set_max_fails(Inf); devtools::test()
+[32m✔[39m | [38;2;255;165;0mF[39m [35mW[39m [34m S[39m [32m OK[39m | Context
+⠏ |          0 | benchmarks                                                     ⠋ |          1 | benchmarks                                                     ⠙ |         12 | benchmarks                                                     ⠏ |         30 | benchmarks                                                     ⠇ |         49 | benchmarks                                                     ⠧ |         58 | benchmarks                                                     [32m✔[39m |         61 | benchmarks[90m [19.0s][39m
+⠏ |          0 | cli                                                            
