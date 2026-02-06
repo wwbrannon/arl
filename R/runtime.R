@@ -5,7 +5,13 @@ rye_missing_default <- function() {
 # Compiled-mode helpers: installed in env before eval(compiled, env).
 # Rye truthiness: only #f (FALSE) and #nil (NULL) are false.
 .rye_true_p <- function(x) {
-  !identical(x, FALSE) && !is.null(x)
+  if (is.null(x)) {
+    return(FALSE)
+  }
+  if (is.logical(x) && length(x) == 1L && !is.na(x) && identical(x[[1]], FALSE)) {
+    return(FALSE)
+  }
+  TRUE
 }
 
 # Wrapper for define/set! from compiled code (including pattern destructuring).
@@ -17,12 +23,11 @@ rye_missing_default <- function() {
   RyeEnv$new(env)$assign_pattern(pattern, value, mode = mode, context = if (identical(mode, "define")) "define" else "set!")
 }
 
-# EvalContext: Shared context for Evaluator and MacroExpander. Holds env (RyeEnv) and
-# source_tracker. Created once per engine; evaluator and macro_expander are set after.
+# EvalContext: Shared context for MacroExpander and CompiledRuntime. Holds env (RyeEnv)
+# and source_tracker. Created once per engine; macro_expander and compiler are set after.
 #
 # @field env RyeEnv for the engine.
 # @field source_tracker SourceTracker for error locations.
-# @field evaluator Set by RyeEngine after creation.
 # @field macro_expander Set by RyeEngine after creation.
 # @field compiled_runtime Set by RyeEngine after creation.
 #
@@ -33,11 +38,10 @@ EvalContext <- R6::R6Class(
   public = list(
     env = NULL,
     source_tracker = NULL,
-    evaluator = NULL,
     macro_expander = NULL,
     compiled_runtime = NULL,
     compiler = NULL,
-    # @description Create context. evaluator, macro_expander, and compiler are assigned by the engine.
+    # @description Create context. macro_expander and compiler are assigned by the engine.
     # @param env RyeEnv instance.
     # @param source_tracker SourceTracker instance.
     initialize = function(env, source_tracker) {
@@ -82,7 +86,10 @@ CompiledRuntime <- R6::R6Class(
       assign(".rye_env", env, envir = env)
       assign(".rye_quote", base::quote, envir = env)
       assign(".rye_true_p", .rye_true_p, envir = env)
-      assign(".rye_assign_pattern", .rye_assign_pattern, envir = env)
+      assign(".rye_assign_pattern", function(env, pattern, value, mode) {
+        value <- self$context$source_tracker$strip_src(value)
+        .rye_assign_pattern(env, pattern, value, mode)
+      }, envir = env)
       assign(".rye_load", self$load_file_fn, envir = env)
       assign(".rye_help", function(topic, env) {
         if (is.symbol(topic)) topic <- as.character(topic)
@@ -109,8 +116,8 @@ CompiledRuntime <- R6::R6Class(
         }
         self$context$macro_expander$quasiquote(expr, env)
       }, envir = env)
-      assign(".rye_module", function(module_name, exports, export_all, compiled_body, src_file, env) {
-        self$module_compiled(module_name, exports, export_all, compiled_body, src_file, env)
+      assign(".rye_module", function(module_name, exports, export_all, body_exprs, src_file, env) {
+        self$module_compiled(module_name, exports, export_all, body_exprs, src_file, env)
       }, envir = env)
       assign(".rye_import", function(arg_value, env) {
         self$import_compiled(arg_value, env)
@@ -129,10 +136,11 @@ CompiledRuntime <- R6::R6Class(
       on.exit(self$context$env$pop_env(), add = TRUE)
       self$install_helpers(env)
       result_with_vis <- withVisible(eval(compiled_expr, envir = env))
+      value <- self$context$source_tracker$strip_src(result_with_vis$value)
       if (result_with_vis$visible) {
-        result_with_vis$value
+        value
       } else {
-        invisible(result_with_vis$value)
+        invisible(value)
       }
     },
     # Import logic for compiled (import x): same semantics as import special form.
@@ -198,11 +206,22 @@ CompiledRuntime <- R6::R6Class(
       args <- lapply(args, private$quote_arg_impl, quote_symbols = FALSE)
       do.call(fn, args)
     },
+    # @description Apply a function to evaluated args (used in tests).
+    do_call = function(fn, args, env = NULL) {
+      if (is.null(env)) {
+        env <- self$context$env$current_env()
+      }
+      private$do_call_impl(fn, args, env)
+    },
     quasiquote_compiled = function(expr, env) {
       private$quasiquote_compiled_impl(expr, env, 1L)
     },
     promise_new_compiled = function(compiled_expr, env) {
       RyePromise$new(compiled_expr, env, self$eval_compiled)
+    },
+    # @description Quote an argument for compiled helpers (used in tests).
+    quote_arg = function(value, quote_symbols = TRUE) {
+      private$quote_arg_impl(value, quote_symbols = quote_symbols)
     },
     defmacro_compiled = function(name, params, body_arg, docstring, env) {
       body_list <- if (is.call(body_arg) && length(body_arg) >= 1 && identical(as.character(body_arg[[1]]), "begin")) {
@@ -213,7 +232,7 @@ CompiledRuntime <- R6::R6Class(
       self$context$macro_expander$defmacro(name, params, body_list, docstring = docstring, env = env)
       invisible(NULL)
     },
-    module_compiled = function(module_name, exports, export_all, compiled_body, src_file, env) {
+    module_compiled = function(module_name, exports, export_all, body_exprs, src_file, env) {
       module_env <- new.env(parent = env)
       assign(".rye_module", TRUE, envir = module_env)
       self$context$env$module_registry$register(module_name, module_env, exports)
@@ -223,12 +242,12 @@ CompiledRuntime <- R6::R6Class(
       }
       self$install_helpers(module_env)
       assign(".rye_env", module_env, envir = module_env)
-      result <- withVisible(eval(compiled_body, envir = module_env))
+      result <- private$eval_seq_compiled(body_exprs, module_env)
       if (export_all) {
         exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
         self$context$env$module_registry$update_exports(module_name, exports)
       }
-      if (result$visible) result$value else invisible(result$value)
+      result
     }
   ),
   private = list(
@@ -237,6 +256,40 @@ CompiledRuntime <- R6::R6Class(
         return(as.call(list(as.symbol("quote"), value)))
       }
       value
+    },
+    do_call_impl = function(fn, args, env) {
+      # Special handling for $, [, [[ - don't quote symbols
+      if (identical(fn, base::`$`) || identical(fn, base::`[`) || identical(fn, base::`[[`)) {
+        args <- lapply(args, private$quote_arg_impl, quote_symbols = FALSE)
+        return(do.call(fn, args))
+      }
+
+      # For rye_no_quote functions, always quote symbols and calls to prevent
+      # premature evaluation during promise forcing, but do it in the Rye environment
+      # so symbols are looked up correctly.
+      if (isTRUE(attr(fn, "rye_no_quote"))) {
+        args <- lapply(args, private$quote_arg_impl, quote_symbols = TRUE)
+        return(do.call(fn, args, envir = env))
+      }
+
+      # For other functions, quote symbols and calls as usual
+      args <- lapply(args, private$quote_arg_impl, quote_symbols = TRUE)
+      do.call(fn, args)
+    },
+    eval_seq_compiled = function(exprs, env) {
+      if (is.null(exprs) || length(exprs) == 0) {
+        return(invisible(NULL))
+      }
+      if (!is.list(exprs)) {
+        exprs <- list(exprs)
+      }
+      result <- NULL
+      for (expr in exprs) {
+        expanded <- self$context$macro_expander$macroexpand(expr, env = env, preserve_src = TRUE)
+        compiled <- self$context$compiler$compile(expanded, env, strict = TRUE)
+        result <- self$eval_compiled(compiled, env)
+      }
+      result
     },
     quasiquote_compiled_impl = function(expr, env, depth) {
       if (!is.call(expr)) {

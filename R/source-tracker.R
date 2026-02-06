@@ -75,9 +75,22 @@ SourceTracker <- R6::R6Class(
         return(value)
       }
 
+      if (r6_isinstance(value, "RyeCons")) {
+        value$car <- self$strip_src(value$car)
+        value$cdr <- self$strip_src(value$cdr)
+        return(value)
+      }
+
       has_src_attr <- !is.null(attr(value, "rye_src", exact = TRUE))
 
       if (!is.call(value) && (!is.list(value) || !is.null(attr(value, "class", exact = TRUE)))) {
+        if (has_src_attr) {
+          attr(value, "rye_src") <- NULL
+        }
+        return(value)
+      }
+
+      if (is.call(value) && !is.null(attr(value, "class", exact = TRUE))) {
         if (has_src_attr) {
           attr(value, "rye_src") <- NULL
         }

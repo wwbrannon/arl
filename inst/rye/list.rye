@@ -199,9 +199,11 @@
       (while (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
-          (when (and (list? pair) (>= (__rlength pair) 1))
-            (when (pred (car pair) key)
-              (set! result pair)))
+          (if (and (list? pair) (>= (__rlength pair) 1))
+            (if (pred (car pair) key)
+              (set! result pair)
+              #nil)
+            #nil)
           (set! remaining (cdr remaining))))
       result))
 
@@ -243,9 +245,11 @@
       (while (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
-          (when (and (list? pair) (>= (__rlength pair) 2))
-            (when (equal? (cadr pair) value)
-              (set! result pair)))
+          (if (and (list? pair) (>= (__rlength pair) 2))
+            (if (equal? (cadr pair) value)
+              (set! result pair)
+              #nil)
+            #nil)
           (set! remaining (cdr remaining))))
       result))
 

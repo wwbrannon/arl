@@ -919,7 +919,16 @@ MacroExpander <- R6::R6Class(
       if (private$is_macro_impl(op, env) && max_depth > 0) {
         macro_fn <- private$get_macro_impl(op, env)
         args <- as.list(expr[-1])
-        expanded <- do.call(macro_fn, args)
+        expanded <- tryCatch(
+          do.call(macro_fn, args),
+          error = function(e) {
+            if (isTRUE(getOption("rye.debug_macro"))) {
+              op_name <- if (is.symbol(op)) as.character(op) else "<macro>"
+              stop(sprintf("macro expansion failed for %s: %s", op_name, conditionMessage(e)), call. = FALSE)
+            }
+            stop(e)
+          }
+        )
         expanded <- private$hygienize(expanded)
         expanded <- private$hygiene_unwrap_impl(expanded)
         expanded <- self$context$source_tracker$src_inherit(expanded, expr)
@@ -943,6 +952,34 @@ MacroExpander <- R6::R6Class(
 
       if (is.symbol(op)) {
         op_name <- as.character(op)
+        if (op_name == "lambda" && length(expr) >= 3) {
+          args_expr <- expr[[2]]
+          if (!isTRUE(preserve_src)) {
+            args_expr <- self$context$source_tracker$strip_src(args_expr)
+          }
+          body_exprs <- lapply(as.list(expr)[-(1:2)], function(e) {
+            private$macroexpand_impl(e, env, preserve_src, max_depth, walk = TRUE)
+          })
+          out <- as.call(c(list(op), list(args_expr), body_exprs))
+          if (isTRUE(preserve_src)) {
+            return(self$context$source_tracker$src_inherit(out, expr))
+          }
+          return(self$context$source_tracker$strip_src(out))
+        }
+        if (op_name == "define" && length(expr) >= 3 && is.call(expr[[2]])) {
+          head_expr <- expr[[2]]
+          if (!isTRUE(preserve_src)) {
+            head_expr <- self$context$source_tracker$strip_src(head_expr)
+          }
+          body_exprs <- lapply(as.list(expr)[-(1:2)], function(e) {
+            private$macroexpand_impl(e, env, preserve_src, max_depth, walk = TRUE)
+          })
+          out <- as.call(c(list(op), list(head_expr), body_exprs))
+          if (isTRUE(preserve_src)) {
+            return(self$context$source_tracker$src_inherit(out, expr))
+          }
+          return(self$context$source_tracker$strip_src(out))
+        }
         if (op_name %in% c("quote", "defmacro")) {
           if (isTRUE(preserve_src)) {
             return(expr)

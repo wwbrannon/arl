@@ -107,7 +107,7 @@ Compiler <- R6::R6Class(
       }
       # Atoms (self-evaluating)
       if (!is.call(expr) && !is.symbol(expr)) {
-        return(expr)
+        return(private$strip_src(expr))
       }
       if (inherits(expr, "rye_keyword")) {
         return(expr)
@@ -140,8 +140,8 @@ Compiler <- R6::R6Class(
           import = private$compile_import(expr),
           help = private$compile_help(expr),
           `while` = private$compile_while(expr),
-          and = NULL,   # macro in control.rye; expand before compile
-          or = NULL,    # macro in control.rye; expand before compile
+          and = private$compile_and(expr),
+          or = private$compile_or(expr),
           delay = private$compile_delay(expr),
           defmacro = private$compile_defmacro(expr),
           module = private$compile_module(expr),
@@ -295,15 +295,21 @@ Compiler <- R6::R6Class(
       }
       # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .rye_quote(pattern)
       pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".rye_quote"), name))
+      tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
+        self$context$macro_expander$gensym(".__rye_define_value")
+      } else {
+        as.symbol(paste0(".__rye_define_value", as.integer(stats::runif(1, 1, 1e9))))
+      }
+      assign_tmp <- as.call(list(quote(`<-`), tmp_sym, val))
       assign_call <- as.call(list(
         as.symbol(".rye_assign_pattern"),
         as.symbol(self$env_var_name),
         pattern_arg,
-        val,
+        tmp_sym,
         "define"
       ))
-      # (define x v) returns invisible(v) like the interpreter
-      as.call(list(quote(`{`), assign_call, as.call(list(quote(invisible), val))))
+      # (define x v) returns invisible(v) like the interpreter; evaluate v once.
+      as.call(list(quote(`{`), assign_tmp, assign_call, as.call(list(quote(invisible), tmp_sym))))
     },
     compile_set = function(expr) {
       if (length(expr) != 3) {
@@ -604,6 +610,76 @@ Compiler <- R6::R6Class(
         as.symbol(self$env_var_name)
       ))
     },
+    compile_and = function(expr) {
+      if (length(expr) < 2) {
+        return(private$fail("and requires at least 1 argument"))
+      }
+      args <- list()
+      for (i in 2:length(expr)) {
+        compiled <- private$compile_impl(expr[[i]])
+        if (is.null(compiled)) {
+          return(private$fail("and argument could not be compiled"))
+        }
+        args <- c(args, list(compiled))
+      }
+      gensym_tmp <- function() {
+        if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
+          return(self$context$macro_expander$gensym(".__rye_tmp"))
+        }
+        as.symbol(paste0(".__rye_tmp", as.integer(stats::runif(1, 1, 1e9))))
+      }
+      build <- function(idx) {
+        if (idx == length(args)) {
+          return(args[[idx]])
+        }
+        tmp_sym <- gensym_tmp()
+        as.call(c(list(quote(`{`)),
+          list(as.call(list(quote(`<-`), tmp_sym, args[[idx]]))),
+          list(as.call(list(
+            quote(`if`),
+            as.call(list(as.symbol(".rye_true_p"), tmp_sym)),
+            build(idx + 1L),
+            tmp_sym
+          )))
+        ))
+      }
+      build(1L)
+    },
+    compile_or = function(expr) {
+      if (length(expr) < 2) {
+        return(private$fail("or requires at least 1 argument"))
+      }
+      args <- list()
+      for (i in 2:length(expr)) {
+        compiled <- private$compile_impl(expr[[i]])
+        if (is.null(compiled)) {
+          return(private$fail("or argument could not be compiled"))
+        }
+        args <- c(args, list(compiled))
+      }
+      gensym_tmp <- function() {
+        if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
+          return(self$context$macro_expander$gensym(".__rye_tmp"))
+        }
+        as.symbol(paste0(".__rye_tmp", as.integer(stats::runif(1, 1, 1e9))))
+      }
+      build <- function(idx) {
+        if (idx == length(args)) {
+          return(args[[idx]])
+        }
+        tmp_sym <- gensym_tmp()
+        as.call(c(list(quote(`{`)),
+          list(as.call(list(quote(`<-`), tmp_sym, args[[idx]]))),
+          list(as.call(list(
+            quote(`if`),
+            as.call(list(as.symbol(".rye_true_p"), tmp_sym)),
+            tmp_sym,
+            build(idx + 1L)
+          )))
+        ))
+      }
+      build(1L)
+    },
     compile_defmacro = function(expr) {
       if (length(expr) < 4) {
         return(private$fail("defmacro requires at least 3 arguments: (defmacro name (params...) body...)"))
@@ -714,25 +790,19 @@ Compiler <- R6::R6Class(
         return(private$fail("module requires an export list: (module name (export ...) body...)"))
       }
       body_exprs <- as.list(expr)[-(1:3)]
-      if (length(body_exprs) == 0) {
-        compiled_body <- quote(invisible(NULL))
-      } else {
-        compiled_body <- self$compile_seq(body_exprs)
-        if (is.null(compiled_body)) {
-          return(private$fail("module body could not be compiled"))
-        }
-      }
+      body_exprs <- if (length(body_exprs) == 0) list() else body_exprs
       src <- private$src_get(expr)
       src_file <- NULL
       if (!is.null(src) && !is.null(src$file) && is.character(src$file) && nzchar(src$file) && grepl("[/\\\\]", src$file)) {
         src_file <- src$file
       }
+      compiled_body_quoted <- as.call(list(quote(quote), body_exprs))
       as.call(list(
         as.symbol(".rye_module"),
         name_str,
         exports,
         export_all,
-        compiled_body,
+        compiled_body_quoted,
         src_file,
         as.symbol(self$env_var_name)
       ))

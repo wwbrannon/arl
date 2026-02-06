@@ -110,20 +110,20 @@ test_that("eval text errors include source and stack context", {
 })
 
 test_that("quote_arg quotes symbols and calls by default", {
-  result <- engine$evaluator$quote_arg(as.symbol("x"))
+  result <- engine$compiled_runtime$quote_arg(as.symbol("x"))
   expect_true(is.call(result))
   expect_equal(as.character(result[[1]]), "quote")
   expect_equal(result[[2]], as.symbol("x"))
 
-  call_result <- engine$evaluator$quote_arg(quote(f(1)))
+  call_result <- engine$compiled_runtime$quote_arg(quote(f(1)))
   expect_true(is.call(call_result))
 
-  literal_result <- engine$evaluator$quote_arg(42)
+  literal_result <- engine$compiled_runtime$quote_arg(42)
   expect_equal(literal_result, 42)
 })
 
 test_that("quote_arg can skip symbol quoting", {
-  result <- engine$evaluator$quote_arg(as.symbol("x"), quote_symbols = FALSE)
+  result <- engine$compiled_runtime$quote_arg(as.symbol("x"), quote_symbols = FALSE)
   expect_true(is.symbol(result))
   expect_equal(as.character(result), "x")
 })
@@ -143,7 +143,6 @@ test_that("r/eval with no env uses current environment", {
   # + is in the env (from stdlib); r/eval (quote +) should return it
   result <- engine$eval(engine$read("(r/eval (quote +))")[[1]])
   expect_true(is.function(result))
-  expect_s3_class(result, "rye_closure")
 })
 
 test_that("r/eval with no env sees bindings from same evaluation context", {

@@ -1,14 +1,14 @@
 test_that("rye_do_call quotes symbols except for accessors", {
   engine <- RyeEngine$new()
   a <- 10
-  result <- engine$evaluator$do_call(base::list, list(as.symbol("a")))
+  result <- engine$compiled_runtime$do_call(base::list, list(as.symbol("a")))
   expect_true(is.symbol(result[[1]]))
   expect_equal(as.character(result[[1]]), "a")
 
   obj <- list(a = 1)
-  expect_equal(engine$evaluator$do_call(base::`$`, list(obj, as.symbol("a"))), 1)
-  expect_equal(engine$evaluator$do_call(base::`[`, list(c(10, 20), 2)), 20)
-  expect_equal(engine$evaluator$do_call(base::`[[`, list(list(1, 2), 2)), 2)
+  expect_equal(engine$compiled_runtime$do_call(base::`$`, list(obj, as.symbol("a"))), 1)
+  expect_equal(engine$compiled_runtime$do_call(base::`[`, list(c(10, 20), 2)), 20)
+  expect_equal(engine$compiled_runtime$do_call(base::`[[`, list(list(1, 2), 2)), 2)
 })
 
 test_that("RyeEnv$assign creates binding in current environment (lexical scoping)", {

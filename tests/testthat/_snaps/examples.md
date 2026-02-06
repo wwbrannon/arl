@@ -21,7 +21,6 @@
       [16] "Sum of first 10: 88 "                               
       [17] ""                                                   
       [18] "Example complete! "                                 
-      [19] "NULL"                                               
 
 # quicksort example runs end-to-end
 
@@ -53,7 +52,6 @@
       [23] "Sort [3 1 4 1 5 9 2 6]: 1 1 2 3 4 5 6 9 "        
       [24] ""                                                
       [25] "Example complete! "                              
-      [26] "NULL"                                            
 
 # fizzbuzz example runs end-to-end
 
@@ -141,7 +139,6 @@
       [79] "27 14 6 53 "                                              
       [80] ""                                                         
       [81] "Example complete! "                                       
-      [82] "NULL"                                                     
 
 # macro examples run end-to-end
 
@@ -179,7 +176,7 @@
       [29] ""                                                      
       [30] "Original: (let ((x 1)) (+ x 2)) "                      
       [31] "Expanded: "                                            
-      [32] "lambda tmp__8 define x tmp__8 begin + x 2 1 "          
+      [32] "lambda tmp__601 define x tmp__601 begin + x 2 1 "      
       [33] ""                                                      
       [34] "=== Anaphoric Macros ==="                              
       [35] " "                                                     
@@ -198,9 +195,9 @@
       [48] "=== Hygiene and Capture ==="                           
       [49] " "                                                     
       [50] "Demonstrating gensym: "                                
-      [51] "Generated symbol 1: G__12 "                            
-      [52] "Generated symbol 2: G__13 "                            
-      [53] "Generated symbol with prefix: my-prefix__14 "          
+      [51] "Generated symbol 1: G__607 "                           
+      [52] "Generated symbol 2: G__608 "                           
+      [53] "Generated symbol with prefix: my-prefix__609 "         
       [54] ""                                                      
       [55] "=== Quasiquote Examples ==="                           
       [56] " "                                                     
@@ -224,7 +221,6 @@
       [74] "This multiplication happened at macro expansion time! "
       [75] ""                                                      
       [76] "Example complete! "                                    
-      [77] "NULL"                                                  
 
 # data analysis example runs end-to-end
 
@@ -298,7 +294,6 @@
       [65] "Food total: $175 "                                                                                                                                                                              
       [66] ""                                                                                                                                                                                               
       [67] "Example complete! "                                                                                                                                                                             
-      [68] "NULL"                                                                                                                                                                                           
 
 # graph paths example runs end-to-end
 
@@ -309,23 +304,21 @@
       [3] ""                             "=== Shortest Paths === "     
       [5] "Shortest path A -> E: A B E " "Total cost: 7 "              
       [7] ""                             "Example complete! "          
-      [9] "NULL"                        
 
 # sales report example runs end-to-end
 
     Code
       result$output
     Output
-       [1] "=== Sales Transactions === "                                                                                        
-       [2] "beta east 120 alpha west 80 beta north 150 gamma east 60 beta west 90 alpha north 110 gamma south 50 beta south 30 "
-       [3] ""                                                                                                                   
-       [4] "=== Summary === "                                                                                                   
-       [5] "Total sales: 690 "                                                                                                  
-       [6] "Totals by product: alpha 190 beta 390 gamma 110 "                                                                   
-       [7] "Top product: beta "                                                                                                 
-       [8] ""                                                                                                                   
-       [9] "Example complete! "                                                                                                 
-      [10] "NULL"                                                                                                               
+      [1] "=== Sales Transactions === "                                                                                        
+      [2] "beta east 120 alpha west 80 beta north 150 gamma east 60 beta west 90 alpha north 110 gamma south 50 beta south 30 "
+      [3] ""                                                                                                                   
+      [4] "=== Summary === "                                                                                                   
+      [5] "Total sales: 690 "                                                                                                  
+      [6] "Totals by product: alpha 190 beta 390 gamma 110 "                                                                   
+      [7] "Top product: beta "                                                                                                 
+      [8] ""                                                                                                                   
+      [9] "Example complete! "                                                                                                 
 
 # log parser example runs end-to-end
 
@@ -334,7 +327,6 @@
     Output
       [1] "=== Log Summary === "  "Total lines: 6 "       "HTTP 500 count: 2 "   
       [4] "Average latency: 120 " ""                      "Example complete! "   
-      [7] "NULL"                 
 
 # pipeline macros example runs end-to-end
 
@@ -349,7 +341,6 @@
       [6] "pipeline filter lambda x > x 0 data map lambda x x reduce + "
       [7] ""                                                            
       [8] "Example complete! "                                          
-      [9] "NULL"                                                        
 
 # task runner example runs end-to-end
 
@@ -360,5 +351,4 @@
       [2] "Execution order: clean compile test package deploy "
       [3] ""                                                   
       [4] "Example complete! "                                 
-      [5] "NULL"                                               
 

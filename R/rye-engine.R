@@ -1,13 +1,12 @@
 #' Core Rye engine
 #'
 #' Provides class-based organization for tokenization, parsing, macro expansion,
-#' evaluation, and environment management.
+#' compiled evaluation, and environment management.
 #'
 #' @importFrom R6 R6Class
 #' @field tokenizer Tokenizer instance used to lex source text.
 #' @field parser Parser instance used to read expressions.
 #' @field macro_expander Macro expander for Rye macros.
-#' @field evaluator Evaluator used for expression execution.
 #' @field help_system Help system for Rye topics.
 #' @field env RyeEnv backing the engine.
 #' @field source_tracker Source tracker used for error context.
@@ -31,7 +30,6 @@ RyeEngine <- R6::R6Class(
     tokenizer = NULL,
     parser = NULL,
     macro_expander = NULL,
-    evaluator = NULL,
     compiled_runtime = NULL,
     compiler = NULL,
     help_system = NULL,
@@ -53,14 +51,7 @@ RyeEngine <- R6::R6Class(
 
       # Create components with context
       self$macro_expander <- MacroExpander$new(context)
-      self$evaluator <- Evaluator$new(
-        context,
-        load_file_fn = function(path, env, create_scope = FALSE) self$load_file_in_env(path, env, create_scope),
-        help_fn = function(topic, env) self$help_in_env(topic, env)
-      )
-
       # Link components in context
-      context$evaluator <- self$evaluator
       context$macro_expander <- self$macro_expander
 
       self$compiler <- Compiler$new(context)
@@ -93,7 +84,7 @@ RyeEngine <- R6::R6Class(
       self$parser$parse(tokens, source_name = source_name)
     },
     #' @description
-    #' Evaluate a single expression. Tries compiled path first; falls back to interpreter.
+    #' Evaluate a single expression via compiled evaluation.
     eval = function(expr) {
       private$eval_one_compiled_or_interpret(expr, self$env$env, compiled_only = TRUE)
     },
@@ -104,7 +95,7 @@ RyeEngine <- R6::R6Class(
       private$eval_one_compiled_or_interpret(expr, target_env, compiled_only = TRUE)
     },
     #' @description
-    #' Evaluate expressions in order.
+    #' Evaluate expressions in order via compiled evaluation.
     eval_seq = function(exprs) {
       self$eval_seq_in_env(exprs, self$env$env)
     },
@@ -339,9 +330,19 @@ RyeEngine <- R6::R6Class(
           if (is.null(path)) {
             stop("stdlib module not found: ", name)
           }
-          self$load_file_in_env(path, resolved, create_scope = FALSE)
+          tryCatch(
+            self$load_file_in_env(path, resolved, create_scope = FALSE),
+            error = function(e) {
+              stop(sprintf("Failed to load stdlib module '%s': %s", name, conditionMessage(e)), call. = FALSE)
+            }
+          )
         }
-        target_rye$module_registry$attach_into(name, resolved)
+        tryCatch(
+          target_rye$module_registry$attach_into(name, resolved),
+          error = function(e) {
+            stop(sprintf("Failed to attach stdlib module '%s': %s", name, conditionMessage(e)), call. = FALSE)
+          }
+        )
       }
       invisible(NULL)
     },
@@ -381,7 +382,7 @@ RyeEngine <- R6::R6Class(
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
       target_env <- if (isTRUE(create_scope)) new.env(parent = resolved) else resolved
       self$source_tracker$with_error_context(function() {
-        self$evaluator$eval_seq_in_env(self$read(text, source_name = path), target_env)
+        self$eval_seq_in_env(self$read(text, source_name = path), target_env)
       })
     },
     #' @description
@@ -460,31 +461,40 @@ RyeEngine <- R6::R6Class(
       stop("Expected a RyeEnv or environment")
     },
     eval_one_compiled_or_interpret = function(expr, env, compiled_only = TRUE) {
-      expanded <- self$macroexpand_in_env(expr, env)
+      expanded <- self$macroexpand_in_env(expr, env, preserve_src = TRUE)
       compiled <- self$compiler$compile(expanded, env, strict = isTRUE(compiled_only))
       if (!is.null(compiled)) {
-        return(self$evaluator$eval_compiled(compiled, env))
+        return(self$compiled_runtime$eval_compiled(compiled, env))
       }
       stop("Expression could not be compiled", call. = FALSE)
     },
     eval_seq_compiled_or_interpret = function(exprs, target_env, compiled_only = TRUE) {
-      expanded <- lapply(exprs, function(e) self$macroexpand_in_env(e, target_env))
-      compiled <- self$compiler$compile_seq(expanded, target_env, strict = isTRUE(compiled_only))
-      if (!is.null(compiled)) {
-        src <- self$source_tracker$src_get(exprs[[1]])
+      if (length(exprs) == 0) {
+        return(invisible(NULL))
+      }
+      result <- NULL
+      result_visible <- FALSE
+      for (expr in exprs) {
+        expanded <- self$macroexpand_in_env(expr, target_env, preserve_src = TRUE)
+        compiled <- self$compiler$compile(expanded, target_env, strict = isTRUE(compiled_only))
+        if (is.null(compiled)) {
+          stop("Expression sequence could not be compiled", call. = FALSE)
+        }
+        src <- self$source_tracker$src_get(expr)
         if (!is.null(src)) {
           self$source_tracker$push(src)
         }
-        result_with_vis <- withVisible(self$evaluator$eval_compiled(compiled, target_env))
+        result_with_vis <- withVisible(self$compiled_runtime$eval_compiled(compiled, target_env))
         if (!is.null(src)) {
           self$source_tracker$pop()
         }
-        if (result_with_vis$visible) {
-          return(result_with_vis$value)
-        }
-        return(invisible(result_with_vis$value))
+        result <- result_with_vis$value
+        result_visible <- isTRUE(result_with_vis$visible)
       }
-      stop("Expression sequence could not be compiled", call. = FALSE)
+      if (isTRUE(result_visible)) {
+        return(result)
+      }
+      invisible(result)
     }
   )
 )
