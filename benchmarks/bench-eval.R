@@ -78,24 +78,16 @@ engine4$eval_text('
   (fact-helper n 1)))
 ')
 
-# FIXME: at the moment, we have an evaluator implementation that creates lots
-# and lots of R stack frames (~50) for every rye call. this should be fixed,
-# but in the meantime recursion can't be too deep without allowing more frames
-options(expressions=10000)
-
 bench_recursive <- benchmark_component(
   "fibonacci(10)" = engine4$eval(engine4$read("(fib 10)")[[1]]),
   "fibonacci(12)" = engine4$eval(engine4$read("(fib 12)")[[1]]),
   "factorial(100)" = engine4$eval(engine4$read("(fact 100)")[[1]]),
-  # "factorial(500)" = engine4$eval(engine4$read("(fact 500)")[[1]]),  # same FIXME as above, reenable once evaluator fixed
+  "factorial(500)" = engine4$eval(engine4$read("(fact 500)")[[1]]),
   iterations = 50,
   check = FALSE
 )
 print(bench_recursive[, c("expression", "median", "mem_alloc")])
 cat("\n")
-
-# FIXME: reset this after the stuff above. 5000 is R's default
-options(expressions=5000)
 
 # Benchmark 5: Real workloads
 cat("Benchmark 5: Real workloads\n")

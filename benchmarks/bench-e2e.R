@@ -61,10 +61,10 @@ bench_synthetic <- benchmark_component(
     load_modules(engine, "binding")  # Needed for let
     engine$eval_text(workloads$medium)
   },
-  # "Deep recursion" = {  # FIXME: can't run this now, evaluator needs fixing
-  #   engine <- RyeEngine$new()
-  #   engine$eval_text(workloads$deep_recursion)
-  # },
+  "Deep recursion" = {
+    engine <- RyeEngine$new()
+    engine$eval_text(workloads$deep_recursion)
+  },
   iterations = 50,
   check = FALSE
 )
