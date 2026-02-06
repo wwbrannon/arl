@@ -99,7 +99,10 @@
   (define display
     (lambda (x)
       "Print value with newline."
-      (r/call "cat" (list (format-value x) "\n"))))
+      (define quiet (r/call "Sys.getenv" (list "RYE_QUIET" "")))
+      (if (= quiet "")
+        (r/call "cat" (list (format-value x) "\n"))
+        #nil)))
 
   (define println
     (lambda (x)
@@ -118,9 +121,13 @@
     (lambda (x . rest)
       "Print value and return it."
       (define label (if (> (length rest) 0) (car rest) #nil))
-      (if (is.null label)
-        #nil
-        (r/call "cat" (list (format-value label) ": ")))
-      (r/call "cat" (list (format-value x) "\n"))
-      x))
+      (define quiet (r/call "Sys.getenv" (list "RYE_QUIET" "")))
+      (if (= quiet "")
+        (begin
+          (if (is.null label)
+            #nil
+            (r/call "cat" (list (format-value label) ": ")))
+          (r/call "cat" (list (format-value x) "\n"))
+          x)
+        x)))
 )

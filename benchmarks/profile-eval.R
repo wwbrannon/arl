@@ -98,6 +98,16 @@ real_workloads <- get_real_workloads()
 if (length(real_workloads) > 0 && "quicksort" %in% names(real_workloads)) {
   engine6 <- RyeEngine$new()
 
+  old_quiet <- Sys.getenv("RYE_QUIET", unset = NA)
+  on.exit({
+    if (is.na(old_quiet)) {
+      Sys.unsetenv("RYE_QUIET")
+    } else {
+      Sys.setenv(RYE_QUIET = old_quiet)
+    }
+  }, add = TRUE)
+  Sys.setenv(RYE_QUIET = "1")
+
   profile_component({
     for (i in 1:20) {
       engine6$eval_text(real_workloads$quicksort)
