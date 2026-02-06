@@ -171,3 +171,169 @@ test_that("multiple engines have independent current-env", {
   expect_true(is.function(result_a))
   expect_true(is.function(result_b))
 })
+
+make_env <- function(engine, init = NULL) {
+  env <- new.env()
+  stdlib_env(engine, env)
+  if (is.function(init)) {
+    init(env)
+  }
+  env
+}
+
+eval_compiled_in_env <- function(engine, expr, env) {
+  expanded <- engine$macroexpand_in_env(expr, env, preserve_src = TRUE)
+  compiled <- engine$compiler$compile(expanded, env, strict = TRUE)
+  expect_false(is.null(compiled))
+  list(
+    compiled = compiled,
+    result = withVisible(engine$compiled_runtime$eval_compiled(compiled, env))
+  )
+}
+
+test_that("compiler conformance for core constructs", {
+  cases <- list(
+    list(
+      name = "quote",
+      expr = "'(a b)"
+    ),
+    list(
+      name = "quasiquote",
+      expr = "`(1 ,(+ 1 1) 3)"
+    ),
+    list(
+      name = "if",
+      expr = "(if #t 1 2)"
+    ),
+    list(
+      name = "begin",
+      expr = "(begin (define x 1) (+ x 1))"
+    ),
+    list(
+      name = "lambda",
+      expr = "((lambda (x) (+ x 1)) 2)"
+    ),
+    list(
+      name = "set!",
+      expr = "(begin (define x 1) (set! x 2) x)"
+    ),
+    list(
+      name = "define",
+      expr = "(begin (define x 10) x)"
+    ),
+    list(
+      name = "and",
+      expr = "(and #t 1 2)"
+    ),
+    list(
+      name = "or",
+      expr = "(or #f 1 2)"
+    ),
+    list(
+      name = "import",
+      expr = "(begin (import list) (caddr (list 1 2 3 4)))"
+    ),
+    list(
+      name = "load",
+      expr = "(begin (load load_path) loaded_value)",
+      init = function(env) {
+        module_path <- tempfile("rye-load-", fileext = ".rye")
+        writeLines(
+          c("(define loaded_value 42)"),
+          module_path
+        )
+        assign("load_path", module_path, envir = env)
+      }
+    ),
+    list(
+      name = "package access",
+      expr = "(base::mean (c 1 2 3))"
+    ),
+    list(
+      name = "keyword args",
+      expr = "(seq :from 1 :to 5 :by 2)"
+    )
+  )
+
+  for (case in cases) {
+    env_eval <- make_env(engine, case$init)
+    env_compiled <- make_env(engine, case$init)
+    expr <- engine$read(case$expr)[[1]]
+
+    expected <- withVisible(engine$eval_in_env(expr, env_eval))
+    compiled_out <- eval_compiled_in_env(engine, expr, env_compiled)
+
+    expect_equal(compiled_out$result$value, expected$value, info = case$name)
+    expect_identical(compiled_out$result$visible, expected$visible, info = case$name)
+  }
+})
+
+test_that("compiler output is pure R code (no evaluator references)", {
+  env <- make_env(engine)
+  exprs <- list(
+    engine$read("(begin (define x 1) (+ x 2))")[[1]],
+    engine$read("((lambda (x) (* x 2)) 3)")[[1]],
+    engine$read("(and #t 1 2)")[[1]]
+  )
+  for (expr in exprs) {
+    expanded <- engine$macroexpand_in_env(expr, env, preserve_src = TRUE)
+    compiled <- engine$compiler$compile(expanded, env, strict = TRUE)
+    expect_false(is.null(compiled))
+    text <- paste(deparse(compiled), collapse = " ")
+    expect_false(grepl("Evaluator", text, fixed = TRUE))
+    expect_false(grepl("evaluator", text, fixed = TRUE))
+    expect_false(grepl("\\.rye_eval", text))
+  }
+})
+
+test_that("compiled visibility contract matches engine eval", {
+  env_eval <- make_env(engine)
+  env_compiled <- make_env(engine)
+
+  expr_define <- engine$read("(define x 1)")[[1]]
+  expected_define <- withVisible(engine$eval_in_env(expr_define, env_eval))
+  compiled_define <- eval_compiled_in_env(engine, expr_define, env_compiled)
+  expect_false(expected_define$visible)
+  expect_false(compiled_define$result$visible)
+
+  expr_begin <- engine$read("(begin (define x 1) x)")[[1]]
+  expected_begin <- withVisible(engine$eval_in_env(expr_begin, env_eval))
+  compiled_begin <- eval_compiled_in_env(engine, expr_begin, env_compiled)
+  expect_true(expected_begin$visible)
+  expect_true(compiled_begin$result$visible)
+
+  expr_empty <- engine$read("(begin)")[[1]]
+  expected_empty <- withVisible(engine$eval_in_env(expr_empty, env_eval))
+  compiled_empty <- eval_compiled_in_env(engine, expr_empty, env_compiled)
+  expect_false(expected_empty$visible)
+  expect_false(compiled_empty$result$visible)
+  expect_null(expected_empty$value)
+  expect_null(compiled_empty$result$value)
+})
+
+test_that("macro pipeline matches engine eval", {
+  env_eval <- make_env(engine)
+  env_compiled <- make_env(engine)
+
+  engine$eval_in_env(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env_eval)
+  engine$eval_in_env(engine$read("(defmacro my-inc (x) `(+ ,x 1))")[[1]], env_eval)
+  engine$eval_in_env(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env_compiled)
+  engine$eval_in_env(engine$read("(defmacro my-inc (x) `(+ ,x 1))")[[1]], env_compiled)
+
+  exprs <- list(
+    engine$read("(my-inc 2)")[[1]],
+    engine$read("(my-when #t (my-inc 1))")[[1]]
+  )
+
+  for (expr in exprs) {
+    expected <- withVisible(engine$eval_in_env(expr, env_eval))
+
+    expanded <- engine$macroexpand_in_env(expr, env_compiled, preserve_src = TRUE)
+    compiled <- engine$compiler$compile(expanded, env_compiled, strict = TRUE)
+    expect_false(is.null(compiled))
+    actual <- withVisible(engine$compiled_runtime$eval_compiled(compiled, env_compiled))
+
+    expect_equal(actual$value, expected$value)
+    expect_identical(actual$visible, expected$visible)
+  }
+})
