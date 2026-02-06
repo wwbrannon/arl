@@ -231,7 +231,10 @@ Compiler <- R6::R6Class(
         inner <- private$compile_quasiquote_impl(template[[2]], depth + 1L)
         return(as.call(list(quote(quote), as.call(list(as.symbol("quasiquote"), inner)))))
       }
-      segments <- list()
+      if (length(template) == 0) {
+        return(as.call(list(quote(quote), template)))
+      }
+      segments <- vector("list", length(template))
       for (i in seq_len(length(template))) {
         elem <- template[[i]]
         if (is.call(elem) && length(elem) >= 1L && is.symbol(elem[[1]])) {
@@ -240,22 +243,19 @@ Compiler <- R6::R6Class(
             if (length(elem) != 2) return(private$fail("unquote-splicing requires exactly 1 argument"))
             compiled <- private$compile_impl(elem[[2]])
             if (is.null(compiled)) return(private$fail("unquote-splicing could not be compiled"))
-            segments <- c(segments, list(as.call(list(quote(as.list), eval_in_env(compiled)))))
+            segments[[i]] <- as.call(list(quote(as.list), eval_in_env(compiled)))
             next
           }
           if (elem_op == "unquote" && depth == 1L) {
             if (length(elem) != 2) return(private$fail("unquote requires exactly 1 argument"))
             compiled <- private$compile_impl(elem[[2]])
             if (is.null(compiled)) return(private$fail("unquote could not be compiled"))
-            segments <- c(segments, list(as.call(list(quote(list), eval_in_env(compiled)))))
+            segments[[i]] <- as.call(list(quote(list), eval_in_env(compiled)))
             next
           }
         }
         part <- private$compile_quasiquote_impl(elem, depth)
-        segments <- c(segments, list(as.call(list(quote(list), part))))
-      }
-      if (length(segments) == 0) {
-        return(as.call(list(quote(quote), template)))
+        segments[[i]] <- as.call(list(quote(list), part))
       }
       as.call(c(list(quote(as.call), as.call(c(list(quote(c)), segments)))))
     },

@@ -321,7 +321,8 @@ CompiledRuntime <- R6::R6Class(
         return(as.call(list(as.symbol("quasiquote"), private$quasiquote_compiled_impl(expr[[2]], env, depth + 1L))))
       }
       result <- list()
-      i <- 1
+      result_idx <- 1L
+      i <- 1L
       while (i <= length(expr)) {
         elem <- expr[[i]]
         if (is.call(elem) && length(elem) > 0 && is.symbol(elem[[1]]) && as.character(elem[[1]]) == "unquote-splicing") {
@@ -338,23 +339,28 @@ CompiledRuntime <- R6::R6Class(
               spliced <- as.list(spliced)
             }
             if (is.list(spliced)) {
-              for (item in spliced) {
-                result <- c(result, list(item))
+              if (length(spliced) > 0) {
+                for (item in spliced) {
+                  result[[result_idx]] <- item
+                  result_idx <- result_idx + 1L
+                }
               }
             } else {
               stop("unquote-splicing requires a list")
             }
           } else {
-            result <- c(result, list(as.call(list(
+            result[[result_idx]] <- as.call(list(
               as.symbol("unquote-splicing"),
               private$quasiquote_compiled_impl(elem[[2]], env, depth - 1L)
-            ))))
+            ))
+            result_idx <- result_idx + 1L
           }
         } else {
           processed <- private$quasiquote_compiled_impl(elem, env, depth)
-          result <- c(result, list(processed))
+          result[[result_idx]] <- processed
+          result_idx <- result_idx + 1L
         }
-        i <- i + 1
+        i <- i + 1L
       }
       as.call(result)
     }
