@@ -35,6 +35,18 @@ MacroExpander <- R6::R6Class(
     # @return Expanded expression.
     macroexpand = function(expr, env = NULL, preserve_src = FALSE) {
       target_env <- private$normalize_env(env)
+      registry <- private$macro_registry(target_env, create = FALSE)
+      if (!is.null(registry)) {
+        macro_names <- ls(registry, all.names = TRUE)
+      } else {
+        macro_names <- character(0)
+      }
+      if (length(macro_names) == 0 || !private$contains_macro_head(expr, macro_names)) {
+        if (isTRUE(preserve_src)) {
+          return(expr)
+        }
+        return(self$context$source_tracker$strip_src(expr))
+      }
       private$macroexpand_impl(expr, target_env, preserve_src, max_depth = Inf, walk = TRUE)
     },
     # @description Expand one layer of macros only.
@@ -125,6 +137,42 @@ MacroExpander <- R6::R6Class(
     },
     macro_registry = function(env, create = TRUE) {
       self$context$env$get_registry(".rye_macros", env, create = create)
+    },
+    contains_macro_head = function(expr, macro_names) {
+      if (is.null(expr)) {
+        return(FALSE)
+      }
+      if (r6_isinstance(expr, "RyeCons")) {
+        if (private$contains_macro_head(expr$car, macro_names)) {
+          return(TRUE)
+        }
+        return(private$contains_macro_head(expr$cdr, macro_names))
+      }
+      if (is.call(expr)) {
+        if (length(expr) > 0 && is.symbol(expr[[1]])) {
+          op_name <- as.character(expr[[1]])
+          if (op_name %in% c("quote", "quasiquote", "defmacro")) {
+            return(FALSE)
+          }
+          if (!is.na(match(op_name, macro_names))) {
+            return(TRUE)
+          }
+        }
+        for (i in seq_len(length(expr))) {
+          if (private$contains_macro_head(expr[[i]], macro_names)) {
+            return(TRUE)
+          }
+        }
+        return(FALSE)
+      }
+      if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
+        for (i in seq_along(expr)) {
+          if (private$contains_macro_head(expr[[i]], macro_names)) {
+            return(TRUE)
+          }
+        }
+      }
+      FALSE
     },
     is_macro_impl = function(name, env) {
       if (!is.symbol(name)) {
