@@ -7,10 +7,13 @@
 #' @field tokenizer Tokenizer instance used to lex source text.
 #' @field parser Parser instance used to read expressions.
 #' @field macro_expander Macro expander for Rye macros.
+#' @field compiled_runtime Compiled runtime helper for executing compiled expressions.
+#' @field compiler Compiler for AST-to-R translation.
 #' @field help_system Help system for Rye topics.
 #' @field env RyeEnv backing the engine.
 #' @field source_tracker Source tracker used for error context.
 #' @param env Optional environment or RyeEnv used as the engine base.
+#' @param parent Optional parent environment for the new environment.
 #' @param source Character string containing Rye source.
 #' @param source_name Optional source name for error reporting.
 #' @param tokens Token list produced by the tokenizer.
@@ -18,8 +21,10 @@
 #' @param exprs List of Rye expressions to evaluate.
 #' @param text Character string of Rye code to read/eval.
 #' @param path File path to load.
+#' @param create_scope Logical; evaluate file in a child environment when TRUE.
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
 #' @param topic Help topic as a single string.
+#' @param compiled_only Logical; if TRUE, require compiled evaluation.
 #' @examples
 #' engine <- RyeEngine$new()
 #' engine$eval_text("(+ 1 2 3)")

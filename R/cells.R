@@ -1,5 +1,5 @@
 # RyeCons: Minimal dotted-pair representation for Rye lists (car, cdr). Load order: this
-# file must be sourced before eval.R (legacy evaluator uses RyePromise).
+# file must be sourced before runtime/eval helpers that use RyePromise.
 #
 # @field car First element of the pair.
 # @field cdr Second element (rest of list or another RyeCons).

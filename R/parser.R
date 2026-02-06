@@ -118,7 +118,7 @@ Parser <- R6::R6Class(
         if (token$type == "KEYWORD") {
           pos <<- pos + 1
           # Store keywords as a special structure
-          # We'll use this in the evaluator to convert to named arguments
+          # We'll use this in the compiler/runtime to convert to named arguments
           keyword <- structure(token$value, class = "rye_keyword")
           return(tracker$src_set(keyword, make_src(token)))
         }

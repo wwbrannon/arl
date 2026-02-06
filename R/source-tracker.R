@@ -1,5 +1,5 @@
 # SourceTracker: Attaches source locations (file, line, col) to expressions for error
-# reporting. Used by parser and evaluator.
+# reporting. Used by parser and compiled runtime.
 #
 # @field (private) stack List of rye_src for current evaluation context.
 #

@@ -1,5 +1,5 @@
 # MacroExpander: Defines and expands Rye macros. Handles defmacro, macroexpand,
-# macroexpand_1, quasiquote/unquote, gensym, hygiene. Shares EvalContext with Evaluator.
+# macroexpand_1, quasiquote/unquote, gensym, hygiene. Shares EvalContext with compiled runtime.
 #
 # @field context EvalContext (env, source_tracker).
 #

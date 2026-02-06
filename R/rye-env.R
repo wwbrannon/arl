@@ -1,6 +1,6 @@
 # RyeEnv: Wraps an R environment with Rye-specific registries (macros, modules) and
 # helpers for define/set!/lookup, module attach, and format_value. Used by the engine
-# and evaluator.
+# and compiled runtime.
 #
 # @field env The underlying R environment.
 # @field macro_registry ModuleRegistry for macros (actually macro registry is per-env via .rye_macros).
@@ -285,4 +285,3 @@ RyeEnv <- R6::R6Class(
     }
   )
 )
-

@@ -1,23 +1,23 @@
 engine <- RyeEngine$new()
 
-test_that("evaluator handles simple arithmetic", {
+test_that("compiled eval handles simple arithmetic", {
   expect_equal(engine$eval(engine$read("(+ 1 2)")[[1]]), 3)
   expect_equal(engine$eval(engine$read("(- 5 3)")[[1]]), 2)
   expect_equal(engine$eval(engine$read("(* 4 5)")[[1]]), 20)
   expect_equal(engine$eval(engine$read("(/ 10 2)")[[1]]), 5)
 })
 
-test_that("evaluator handles R functions", {
+test_that("compiled eval handles R functions", {
   result <- engine$eval(engine$read("(mean (c 1 2 3 4 5))")[[1]])
   expect_equal(result, 3)
 })
 
-test_that("evaluator handles nested calls", {
+test_that("compiled eval handles nested calls", {
   result <- engine$eval(engine$read("(+ (* 2 3) (* 4 5))")[[1]])
   expect_equal(result, 26)
 })
 
-test_that("evaluator evaluates arguments left-to-right", {
+test_that("compiled eval evaluates arguments left-to-right", {
   env <- new.env(parent = baseenv())
   engine$eval_in_env(engine$read("(define x 0)")[[1]], env)
   engine$eval_in_env(engine$read("(define collect (lambda (a b) (list a b)))")[[1]], env)
@@ -31,7 +31,7 @@ test_that("evaluator evaluates arguments left-to-right", {
   expect_equal(env$x, 2)
 })
 
-test_that("evaluator handles :: sugar", {
+test_that("compiled eval handles :: sugar", {
   result <- engine$eval(engine$read("(base::mean (c 1 2 3))")[[1]])
   expect_equal(result, 2)
 })
@@ -41,7 +41,7 @@ test_that("calculator with nested expressions", {
   expect_equal(result, 7)
 })
 
-test_that("evaluator validates special form arity and types", {
+test_that("compiled eval validates special form arity and types", {
   expect_error(engine$eval(engine$read("(quote 1 2)")[[1]]), "quote requires exactly 1 argument")
   expect_error(engine$eval(engine$read("(quasiquote)")[[1]]), "quasiquote requires exactly 1 argument")
   expect_error(engine$eval(engine$read("(if 1)")[[1]]), "if requires 2 or 3 arguments")
@@ -49,7 +49,7 @@ test_that("evaluator validates special form arity and types", {
   expect_error(engine$eval(engine$read("(set! 1 2)")[[1]]), "set! requires a symbol")
 })
 
-test_that("evaluator handles set! scoping and missing bindings", {
+test_that("compiled eval handles set! scoping and missing bindings", {
   env <- new.env(parent = emptyenv())
   env$x <- 1
   child <- new.env(parent = env)
@@ -59,12 +59,12 @@ test_that("evaluator handles set! scoping and missing bindings", {
   expect_error(engine$eval_in_env(engine$read("(set! y 1)")[[1]], child), "variable 'y' is not defined")
 })
 
-test_that("evaluator validates load arguments and missing files", {
+test_that("compiled eval validates load arguments and missing files", {
   expect_error(engine$eval(engine$read("(load 1)")[[1]]), "load requires a single file path string")
   expect_error(engine$eval(engine$read('(load "missing-file.rye")')[[1]]), "File not found")
 })
 
-test_that("evaluator builds formulas without evaluating arguments", {
+test_that("compiled eval builds formulas without evaluating arguments", {
   env <- new.env(parent = baseenv())
   env$x <- 10
   result <- engine$eval_in_env(engine$read("(~ x y)")[[1]], env)
@@ -73,17 +73,17 @@ test_that("evaluator builds formulas without evaluating arguments", {
   expect_equal(as.character(result)[3], "y")
 })
 
-test_that("evaluator validates package accessor arguments", {
+test_that("compiled eval validates package accessor arguments", {
   expect_error(engine$eval(engine$read("(:: base mean extra)")[[1]]), "requires exactly 2 arguments")
   expect_error(engine$eval(engine$read("(:: 1 mean)")[[1]]), "Package name must be a symbol or string")
   expect_error(engine$eval(engine$read("(:: base 1)")[[1]]), "Function/object name must be a symbol or string")
 })
 
-test_that("evaluator validates keyword usage", {
+test_that("compiled eval validates keyword usage", {
   expect_error(engine$eval(engine$read("(mean :trim)")[[1]]), "requires a value")
 })
 
-test_that("evaluator validates lambda argument lists", {
+test_that("compiled eval validates lambda argument lists", {
   expect_error(engine$eval(engine$read("(lambda 1 2)")[[1]]), "lambda arguments must be a list")
   expect_error(
     engine$eval(engine$read("(lambda (1) 2)")[[1]]),

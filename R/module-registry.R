@@ -1,5 +1,5 @@
 # Module registry for Rye modules. Tracks loaded modules (name -> list(env, exports, path))
-# and supports attach into a target environment. Used by the evaluator for (import ...).
+# and supports attach into a target environment. Used by compiled runtime for (import ...).
 #
 #' @keywords internal
 #' @noRd
