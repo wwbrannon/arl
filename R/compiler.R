@@ -65,9 +65,12 @@ Compiler <- R6::R6Class(
       if (length(exprs) == 1) {
         return(self$compile(exprs[[1]], env, strict = self$strict))
       }
-      compiled <- lapply(exprs, function(e) private$compile_impl(e))
-      if (any(vapply(compiled, is.null, logical(1)))) {
-        return(private$fail("unable to compile expression sequence"))
+      compiled <- vector("list", length(exprs))
+      for (i in seq_along(exprs)) {
+        compiled[[i]] <- private$compile_impl(exprs[[i]])
+        if (is.null(compiled[[i]])) {
+          return(private$fail("unable to compile expression sequence"))
+        }
       }
       private$src_inherit(as.call(c(list(quote(`{`)), compiled)), exprs[[1]])
     }
