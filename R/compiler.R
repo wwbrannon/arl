@@ -18,6 +18,8 @@ Compiler <- R6::R6Class(
     strict = FALSE,
     # When TRUE, compile quasiquote via macro-expander helper (for macro evaluation).
     macro_eval = FALSE,
+    # Last compilation error (message) when compile() returns NULL.
+    last_error = NULL,
     # @param context EvalContext (for source_tracker).
     initialize = function(context) {
       if (!r6_isinstance(context, "EvalContext")) {
@@ -35,10 +37,16 @@ Compiler <- R6::R6Class(
       if (!is.null(strict)) {
         self$strict <- isTRUE(strict)
       }
+      self$last_error <- NULL
       if (isTRUE(self$strict)) {
         return(private$compile_impl(expr))
       }
-      tryCatch(private$compile_impl(expr), error = function(e) NULL)
+      tryCatch(private$compile_impl(expr), error = function(e) {
+        if (is.null(self$last_error)) {
+          self$last_error <- conditionMessage(e)
+        }
+        NULL
+      })
     },
     # @description Compile a sequence of expressions to a single R expression (block).
     # @param exprs List of Rye expressions.
@@ -53,6 +61,7 @@ Compiler <- R6::R6Class(
       if (!is.null(strict)) {
         self$strict <- isTRUE(strict)
       }
+      self$last_error <- NULL
       if (length(exprs) == 1) {
         return(self$compile(exprs[[1]], env, strict = self$strict))
       }
@@ -68,6 +77,7 @@ Compiler <- R6::R6Class(
       as.call(list(quote(quote), NULL))
     },
     fail = function(msg) {
+      self$last_error <- msg
       if (isTRUE(self$strict)) {
         stop(msg, call. = FALSE)
       }

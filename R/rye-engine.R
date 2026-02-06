@@ -471,7 +471,13 @@ RyeEngine <- R6::R6Class(
       if (!is.null(compiled)) {
         return(self$compiled_runtime$eval_compiled(compiled, env))
       }
-      stop("Expression could not be compiled", call. = FALSE)
+      msg <- self$compiler$last_error
+      if (is.null(msg) || !nzchar(msg)) {
+        msg <- "Expression could not be compiled"
+      } else {
+        msg <- paste0("Expression could not be compiled: ", msg)
+      }
+      stop(msg, call. = FALSE)
     },
     eval_seq_compiled_or_interpret = function(exprs, target_env, compiled_only = TRUE) {
       if (length(exprs) == 0) {
@@ -483,7 +489,13 @@ RyeEngine <- R6::R6Class(
         expanded <- self$macroexpand_in_env(expr, target_env, preserve_src = TRUE)
         compiled <- self$compiler$compile(expanded, target_env, strict = isTRUE(compiled_only))
         if (is.null(compiled)) {
-          stop("Expression sequence could not be compiled", call. = FALSE)
+          msg <- self$compiler$last_error
+          if (is.null(msg) || !nzchar(msg)) {
+            msg <- "Expression sequence could not be compiled"
+          } else {
+            msg <- paste0("Expression sequence could not be compiled: ", msg)
+          }
+          stop(msg, call. = FALSE)
         }
         src <- self$source_tracker$src_get(expr)
         if (!is.null(src)) {
