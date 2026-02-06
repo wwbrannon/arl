@@ -43,6 +43,8 @@ source("benchmarks/profile-eval.R")
 - `bench-macro.R` - Macro expansion benchmarks
 - `bench-eval.R` - Evaluator/CPS benchmarks
 - `bench-stdlib.R` - Standard library function benchmarks
+- `bench-interop.R` - R interoperability benchmarks (function calls, object construction)
+- `bench-modules.R` - Module/import and load/run overhead benchmarks
 - `bench-e2e.R` - End-to-end pipeline benchmarks with component breakdown
 
 ### Master Scripts (to be created)
@@ -111,6 +113,14 @@ Each benchmark script measures different aspects of Rye performance:
 - String-heavy workloads
 - Many-argument workloads
 - REPL-style interaction
+
+### R Interop (`bench-interop.R`)
+- R function calls (positional vs named arguments)
+- R object construction (vectors, lists, data.frame, formulas)
+
+### Modules/Load/Run (`bench-modules.R`)
+- `(import ...)` module load overhead
+- `(load ...)` vs `(run ...)` overhead for small scripts
 
 ## Usage Examples
 

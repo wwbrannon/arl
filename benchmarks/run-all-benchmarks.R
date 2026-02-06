@@ -27,6 +27,8 @@ scripts <- c(
   "bench-macro.R",
   "bench-eval.R",
   "bench-stdlib.R",
+  "bench-interop.R",
+  "bench-modules.R",
   "bench-e2e.R"
 )
 
@@ -71,7 +73,7 @@ cat("========================================\n\n")
 result_files <- list.files(output_dir, pattern = "\\.rds$", full.names = TRUE)
 
 # Get the most recent result for each component
-components <- c("tokenizer", "parser", "macro", "eval", "stdlib", "e2e")
+components <- c("tokenizer", "parser", "macro", "eval", "stdlib", "interop", "modules", "e2e")
 
 for (component in components) {
   component_files <- grep(paste0("^", component, "-"), basename(result_files), value = TRUE)

@@ -139,7 +139,6 @@ eval_results <- list(
   calls = bench_calls,
   special = bench_special,
   recursive = bench_recursive,
-  tail = bench_real,
   closures = bench_closures
 )
 

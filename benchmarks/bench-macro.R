@@ -95,7 +95,8 @@ engine5 <- RyeEngine$new()
 
 # Load standard macros from modules
 tryCatch({
-  rye:::import_stdlib_modules(env5, c("control", "binding"))
+  engine5$eval_text("(import control)")
+  engine5$eval_text("(import binding)")
 
   macro_heavy <- '
 (when #t
@@ -149,6 +150,16 @@ macro_results <- list(
   nested = bench_nested,
   hygiene = bench_hygiene
 )
+
+# Include macro-heavy results when available
+if (exists("bench_heavy")) {
+  macro_results$heavy <- bench_heavy
+}
+
+# Include real macro examples when available
+if (exists("bench_real")) {
+  macro_results$real <- bench_real
+}
 
 # Save results
 save_benchmark_results(macro_results, "macro")
