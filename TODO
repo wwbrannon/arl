@@ -1,53 +1,15 @@
 performance issues:
 -------------------------------------------------
-o) should we inject helpers into the environment rather than the generated
-   scripts themselves? pros of environment: slightly faster. maybe more robust.
-   cons: compiled programs aren't self-contained. (but would they be anyway?)
+o) let's also save the generated R code as a .R script for debugging / inspectability
+
+o) probably room to further optimize the generated expressions
 
 o) compiler vignette
 
 o) where in here do we expose things user code can modify and break compilation?
 
-o) should we write any of these compiled versions to disk a la __pycache__?
-o) probably room to further optimize the generated expressions
-
-compiler opt ideas
-  1. Macro expansion cache
-
-  - Key: (expr, env macro registry version)
-  - Value: expanded AST + src metadata
-  - Big wins for repeated macro-heavy code and module loads.
-
-  2. Compile cache
-
-  - Key: (expanded AST, env/compiler options)
-  - Value: compiled R expression
-  - Useful for REPL, repeated evaluations, and stdlib module loads.
-
-  3. Module load cache
-
-  - Already partly present, but could cache compiled bodies per module file hash to skip parse/expand/compile on repeated loads.
-
-  4. Constant folding & literal hoisting
-
-  - Precompute pure literal calls (e.g., (+ 1 2)) and hoist immutable literals into temps.
-
-  5. Function body compilation memoization
-
-  - Cache compiled bodies for lambdas created from identical source to reduce closure compilation overhead in macro expansions.
-
-  11. Inline simple runtime helpers
-
-  - For tiny helpers (.rye_true_p, etc.) to reduce call overhead.
-
-  12. Specialized fast paths for hot forms
-
-  - if, begin, and/or, lambda bodies compiled into more direct R idioms.
-
 o) have opus or some such critique the architecture and make suggestions
 o) other performance optimizations: use profiling and benchmarking
-
-o) check that the benchmarks run correctly and run/commit bench/profile
 
 test audits:
 -------------------------------------------------
@@ -71,11 +33,11 @@ or similar
 
 documentation updates:
 -------------------------------------------------
-o) update / systematics docs: make a plan
+o) update / systematize docs: make a plan
 
 small stuff:
 --------------------------------------
-o) code quality pass
+o) general code quality / duplication pass
 
 o) minor pkgdown warning about site url
 o) run lints and coverage, see what to do

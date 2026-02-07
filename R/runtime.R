@@ -242,11 +242,50 @@ CompiledRuntime <- R6::R6Class(
       }
       self$install_helpers(module_env)
       assign(".rye_env", module_env, envir = module_env)
-      result <- private$eval_seq_compiled(body_exprs, module_env)
+
+      # Compile body expressions (for caching)
+      should_cache <- !is.null(src_file) && is.character(src_file) &&
+                      length(src_file) == 1L && nzchar(src_file) &&
+                      file.exists(src_file)
+
+      compiled_body <- NULL
+      if (should_cache) {
+        compiled_body <- lapply(body_exprs, function(expr) {
+          expanded <- self$context$macro_expander$macroexpand(expr, env = module_env, preserve_src = TRUE)
+          self$context$compiler$compile(expanded, module_env, strict = TRUE)
+        })
+      }
+
+      # Evaluate (use compiled version if we made it, otherwise compile on-the-fly)
+      if (!is.null(compiled_body)) {
+        result <- NULL
+        for (compiled_expr in compiled_body) {
+          result <- self$eval_compiled(compiled_expr, module_env)
+        }
+      } else {
+        result <- private$eval_seq_compiled(body_exprs, module_env)
+      }
+
       if (export_all) {
         exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
         self$context$env$module_registry$update_exports(module_name, exports)
       }
+
+      # Write caches after successful module load
+      if (should_cache) {
+        cache_paths <- get_cache_paths(src_file)
+        if (!is.null(cache_paths)) {
+          # Always write Option A (safe fallback)
+          write_code_cache(module_name, compiled_body, exports, export_all, src_file, cache_paths$file_hash)
+
+          # Try Option C if safe
+          safety <- is_safe_to_cache(module_env, env)
+          if (safety$safe) {
+            write_env_cache(module_name, module_env, exports, src_file, cache_paths$file_hash)
+          }
+        }
+      }
+
       result
     }
   ),

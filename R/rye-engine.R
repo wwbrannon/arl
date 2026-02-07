@@ -367,6 +367,75 @@ RyeEngine <- R6::R6Class(
       if (!file.exists(path)) {
         stop(sprintf("File not found: %s", path))
       }
+
+      # Try cache loading (only for module files, not create_scope loads)
+      if (!create_scope) {
+        cache_paths <- get_cache_paths(path)
+        if (!is.null(cache_paths)) {
+          target_env <- resolved
+
+          # Try Option C first (fastest - full environment cache)
+          if (file.exists(cache_paths$env_cache)) {
+            cache_data <- load_env_cache(cache_paths$env_cache, target_env, path)
+            if (!is.null(cache_data)) {
+              # Register the cached module
+              module_env <- cache_data$module_env
+              module_name <- cache_data$module_name
+              exports <- cache_data$exports
+
+              rye_env <- RyeEnv$new(target_env)
+              rye_env$module_registry$register(module_name, module_env, exports)
+
+              # Also register by absolute path
+              absolute_path <- rye_normalize_path_absolute(path)
+              rye_env$module_registry$alias(absolute_path, module_name)
+
+              return(invisible(NULL))
+            }
+          }
+
+          # Fallback to Option A (compiled expressions cache)
+          if (file.exists(cache_paths$code_cache)) {
+            cache_data <- load_code_cache(cache_paths$code_cache, path)
+            if (!is.null(cache_data)) {
+              # Recreate module environment (like module_compiled does)
+              module_name <- cache_data$module_name
+              exports <- cache_data$exports
+              export_all <- cache_data$export_all
+
+              module_env <- new.env(parent = target_env)
+              assign(".rye_module", TRUE, envir = module_env)
+
+              rye_env <- RyeEnv$new(target_env)
+              rye_env$module_registry$register(module_name, module_env, exports)
+
+              # Register by absolute path
+              absolute_path <- rye_normalize_path_absolute(path)
+              rye_env$module_registry$alias(absolute_path, module_name)
+
+              # Install helpers and setup
+              self$compiled_runtime$install_helpers(module_env)
+              assign(".rye_env", module_env, envir = module_env)
+
+              # Evaluate cached compiled expressions in module environment
+              result <- NULL
+              for (compiled_expr in cache_data$compiled_body) {
+                result <- self$compiled_runtime$eval_compiled(compiled_expr, module_env)
+              }
+
+              # Handle export_all
+              if (export_all) {
+                exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
+                rye_env$module_registry$update_exports(module_name, exports)
+              }
+
+              return(invisible(result))
+            }
+          }
+        }
+      }
+
+      # Cache miss - full load
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
       target_env <- if (isTRUE(create_scope)) new.env(parent = resolved) else resolved
       self$source_tracker$with_error_context(function() {
