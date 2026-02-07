@@ -67,26 +67,6 @@ FileDeps <- R6::R6Class(
     #' @return List with \code{vertices} (character) and \code{edges} (list).
     get_graph = function() {
       self$graph
-    },
-
-    #' @description Find modules that use symbols from other modules without importing them.
-    #' @param verbose If TRUE, print messages to console.
-    #' @return Character vector of warning messages (invisible if verbose).
-    check_undeclared = function(verbose = FALSE) {
-      reported <- character()
-      for (nm in names(self$modules)) {
-        f <- file.path(self$dir, self$modules[[nm]]$file)
-        body_text <- private$strip_comments(paste(readLines(f, warn = FALSE), collapse = "\n"))
-        msgs <- private$find_undeclared_deps(
-          nm, body_text, lapply(self$modules, `[[`, "exports"), self$modules[[nm]]$imports
-        )
-        reported <- c(reported, msgs)
-      }
-      if (verbose && length(reported) > 0L) {
-        cat("Undeclared dependency check:\n")
-        for (msg in reported) cat("  ", msg, "\n", sep = "")
-      }
-      if (verbose) invisible(reported) else reported
     }
   ),
   private = list(
@@ -285,18 +265,4 @@ rye_stdlib_print_order <- function(stdlib_dir = NULL) {
   cat("Load order (topological sort):\n")
   cat(paste(d$get_load_order(), collapse = " "), "\n")
   invisible(d$get_load_order())
-}
-
-#' Print stdlib load order and undeclared dependency check (for script/Make use)
-#'
-#' @param stdlib_dir Optional path; defaults to installed package stdlib.
-#' @keywords internal
-#' @noRd
-rye_stdlib_print_order_and_check_undeclared <- function(stdlib_dir = NULL) {
-  dir <- if (is.null(stdlib_dir)) system.file("rye", package = "rye") else stdlib_dir
-  d <- FileDeps$new(dir = dir)
-  cat("Load order (topological sort):\n")
-  cat(paste(d$get_load_order(), collapse = " "), "\n")
-  d$check_undeclared(verbose = TRUE)
-  invisible(d)
 }

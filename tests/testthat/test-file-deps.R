@@ -18,7 +18,6 @@ test_that("FileDeps is loadable and returns structure", {
   expect_true(is.function(d$get_load_order))
   expect_true(is.function(d$get_modules))
   expect_true(is.function(d$get_graph))
-  expect_true(is.function(d$check_undeclared))
 })
 
 test_that("stdlib modules are discovered and have valid topsort", {
