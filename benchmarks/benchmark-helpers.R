@@ -55,7 +55,9 @@ profile_component <- function(expr, name, output_dir = "benchmarks/profiles", sa
     dir.create(output_dir, recursive = TRUE)
   }
 
-  output_rds <- file.path(output_dir, paste0(name, ".rds"))
+  # Add timestamp to .rds for historical tracking (like benchmark results)
+  timestamp <- format(Sys.time(), "%Y%m%d-%H%M%S")
+  output_rds <- file.path(output_dir, paste0(name, "-", timestamp, ".rds"))
   output_html <- file.path(output_dir, paste0(name, ".html"))
 
   # Note: profvis has limitations when running from sourced scripts
