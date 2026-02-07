@@ -484,3 +484,73 @@ test_that("compiler handles constant-folded boolean tests", {
   expect_equal(engine$eval(engine$read("(if (< 1 2) 1 2)")[[1]]), 1)
   expect_equal(engine$eval(engine$read("(if (> 1 2) 1 2)")[[1]]), 2)
 })
+
+# Optimization Tests: Dead Code Elimination
+test_that("compiler eliminates dead branches for constant true test", {
+  engine <- RyeEngine$new()
+
+  # When test is literally TRUE, only then-branch should remain
+  expect_equal(engine$eval(engine$read("(if #t 42 99)")[[1]]), 42)
+  expect_equal(engine$eval(engine$read("(if #t 100 200)")[[1]]), 100)
+
+  # With constant-folded true condition
+  expect_equal(engine$eval(engine$read("(if (< 1 2) 100 200)")[[1]]), 100)
+})
+
+test_that("compiler eliminates dead branches for constant false test", {
+  engine <- RyeEngine$new()
+
+  # When test is literally FALSE, only else-branch should remain
+  expect_equal(engine$eval(engine$read("(if #f 42 99)")[[1]]), 99)
+
+  # With constant-folded false condition
+  expect_equal(engine$eval(engine$read("(if (> 1 2) 100 200)")[[1]]), 200)
+})
+
+test_that("compiler eliminates dead branches for null test", {
+  engine <- RyeEngine$new()
+
+  # NULL is falsy in Rye, so else-branch is taken
+  expect_equal(engine$eval(engine$read("(if #nil 42 99)")[[1]]), 99)
+})
+
+test_that("compiler handles missing else branch with constant test", {
+  engine <- RyeEngine$new()
+
+  # (if #t a) should become just a
+  expect_equal(engine$eval(engine$read("(if #t 42)")[[1]]), 42)
+
+  # (if #f a) should become NULL (no else branch)
+  expect_null(engine$eval(engine$read("(if #f 42)")[[1]]))
+})
+
+test_that("dead code elimination preserves side effects in taken branch", {
+  engine <- RyeEngine$new()
+  env <- new.env(parent = baseenv())
+  env$x <- 0
+
+  # Side effects in then-branch should execute
+  engine$eval_in_env(engine$read("(if #t (set! x 10) (set! x 20))")[[1]], env)
+  expect_equal(env$x, 10)
+
+  # Reset
+  env$x <- 0
+
+  # Side effects in else-branch should execute
+  engine$eval_in_env(engine$read("(if #f (set! x 10) (set! x 20))")[[1]], env)
+  expect_equal(env$x, 20)
+})
+
+test_that("dead code elimination does NOT eliminate for variable tests", {
+  engine <- RyeEngine$new()
+  env <- new.env(parent = baseenv())
+  env$x <- TRUE
+
+  # Variable test - both branches should be compiled (not eliminated)
+  result <- engine$eval_in_env(engine$read("(if x 1 2)")[[1]], env)
+  expect_equal(result, 1)
+
+  env$x <- FALSE
+  result <- engine$eval_in_env(engine$read("(if x 1 2)")[[1]], env)
+  expect_equal(result, 2)
+})

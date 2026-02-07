@@ -269,6 +269,32 @@ Compiler <- R6::R6Class(
       if (is.null(test)) {
         return(private$fail("if test could not be compiled"))
       }
+
+      # Dead code elimination: if test is a compile-time constant, return only the taken branch
+      constant_test <- private$eval_constant_test(test)
+      if (!is.null(constant_test)) {
+        if (isTRUE(constant_test)) {
+          # Test is TRUE - return then-branch
+          then_expr <- private$compile_impl(expr[[3]])
+          if (is.null(then_expr)) {
+            return(private$fail("if then-branch could not be compiled"))
+          }
+          return(then_expr)
+        } else {
+          # Test is FALSE or NULL - return else-branch (or NULL if no else)
+          if (length(expr) == 4) {
+            else_expr <- private$compile_impl(expr[[4]])
+            if (is.null(else_expr)) {
+              return(private$fail("if else-branch could not be compiled"))
+            }
+            return(else_expr)
+          } else {
+            return(private$compiled_nil())
+          }
+        }
+      }
+
+      # Non-constant test - compile normally
       then_expr <- private$compile_impl(expr[[3]])
       if (is.null(then_expr)) {
         return(private$fail("if then-branch could not be compiled"))
@@ -1052,10 +1078,12 @@ Compiler <- R6::R6Class(
       }
       if (is.symbol(expr)) {
         expr_str <- as.character(expr)
-        if (expr_str %in% c("TRUE", "FALSE", "NULL")) {
+        if (expr_str %in% c("TRUE", "FALSE")) {
           return(TRUE)
         }
       }
+      # Note: quote(NULL) is how NULL is compiled, but it's NOT a boolean!
+      # It's a language object that needs .rye_true_p() wrapper
 
       # Check if it's a call to a function that returns logical
       if (!is.call(expr)) {
@@ -1092,6 +1120,33 @@ Compiler <- R6::R6Class(
       }
 
       FALSE
+    },
+
+    # Evaluate a test expression if it's a compile-time constant
+    # Returns NULL if not constant, TRUE if truthy, FALSE if falsy (according to Rye semantics)
+    eval_constant_test = function(test) {
+      # Literal TRUE/FALSE
+      if (is.logical(test) && length(test) == 1 && !is.na(test)) {
+        return(test)  # TRUE or FALSE
+      }
+
+      # Literal NULL (compiled as quote(NULL)) - falsy in Rye
+      if (is.call(test) && length(test) == 2) {
+        if (identical(test[[1]], quote(quote)) && is.null(test[[2]])) {
+          return(FALSE)  # NULL is falsy in Rye
+        }
+      }
+
+      # Symbol TRUE/FALSE/NULL
+      if (is.symbol(test)) {
+        test_str <- as.character(test)
+        if (test_str == "TRUE") return(TRUE)
+        if (test_str == "FALSE") return(FALSE)
+        if (test_str == "NULL") return(FALSE)  # NULL is falsy in Rye
+      }
+
+      # Not a compile-time constant
+      NULL
     }
   )
 )
