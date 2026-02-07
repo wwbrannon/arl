@@ -130,4 +130,5 @@ profile_component({
 
 
 cat("=== Evaluator Profiling Complete ===\n")
-cat("View HTML reports in benchmarks/profiles/\n")
+cat("Profiling data saved to benchmarks/profiles/*.rds\n")
+cat("Load with: prof <- readRDS('benchmarks/profiles/eval-*.rds'); print(prof)\n")

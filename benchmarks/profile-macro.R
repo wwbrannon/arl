@@ -140,4 +140,5 @@ profile_component({
 }, "macro-tree-walk")
 
 cat("=== Macro Profiling Complete ===\n")
-cat("View HTML reports in benchmarks/profiles/\n")
+cat("Profiling data saved to benchmarks/profiles/*.rds\n")
+cat("Load with: prof <- readRDS('benchmarks/profiles/macro-*.rds'); print(prof)\n")

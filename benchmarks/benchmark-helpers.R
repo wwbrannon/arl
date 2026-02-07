@@ -35,13 +35,14 @@ benchmark_component <- function(..., iterations = NULL, check = TRUE) {
   )
 }
 
-#' Profile a component and save HTML output
+#' Profile a component and save profiling data
 #'
 #' @param expr Expression to profile
 #' @param name Name for the output file
-#' @param output_dir Directory for HTML output (default: benchmarks/profiles/)
-#' @return Path to generated HTML file
-profile_component <- function(expr, name, output_dir = "benchmarks/profiles") {
+#' @param output_dir Directory for output (default: benchmarks/profiles/)
+#' @param save_html Whether to also save HTML (default: TRUE)
+#' @return Path to generated .rds file
+profile_component <- function(expr, name, output_dir = "benchmarks/profiles", save_html = TRUE) {
   if (!requireNamespace("profvis", quietly = TRUE)) {
     stop("Package 'profvis' is required for profiling. Install with: install.packages('profvis')")
   }
@@ -54,7 +55,8 @@ profile_component <- function(expr, name, output_dir = "benchmarks/profiles") {
     dir.create(output_dir, recursive = TRUE)
   }
 
-  output_file <- file.path(output_dir, paste0(name, ".html"))
+  output_rds <- file.path(output_dir, paste0(name, ".rds"))
+  output_html <- file.path(output_dir, paste0(name, ".html"))
 
   # Note: profvis has limitations when running from sourced scripts
   # It works best in interactive sessions
@@ -64,12 +66,22 @@ profile_component <- function(expr, name, output_dir = "benchmarks/profiles") {
     prof <- profvis::profvis({
         eval(expr, envir = parent.frame())
     }, rerun=TRUE)  # rerun helps if expr finishes too fast to sample
-    htmlwidgets::saveWidget(prof, output_file, selfcontained = TRUE)
+
+    # Save compact .rds format (much smaller, machine-readable)
+    saveRDS(prof, output_rds, compress = "xz")
     if (!nzchar(Sys.getenv("TESTTHAT"))) {
-      cat(sprintf("  ✓ Generated: %s\n", output_file))
+      cat(sprintf("  ✓ Generated: %s\n", output_rds))
     }
 
-    output_file
+    # Optionally save HTML for immediate viewing
+    if (save_html) {
+      htmlwidgets::saveWidget(prof, output_html, selfcontained = TRUE)
+      if (!nzchar(Sys.getenv("TESTTHAT"))) {
+        cat(sprintf("  ✓ Generated: %s\n", output_html))
+      }
+    }
+
+    output_rds
   }
 
   invisible(result)

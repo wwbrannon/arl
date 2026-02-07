@@ -53,3 +53,10 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Log files
+*.log
+
+# Profiling HTML output (keep .rds files for historical comparison)
+benchmarks/profiles/*.html
+benchmarks/profiles/*_files/

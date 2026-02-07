@@ -115,6 +115,10 @@ clean: ## Remove build artifacts and all make document output
 	rm -rf site/ doc/ Meta/
 	rm -f README.knit.md
 	rm -f vignettes/*.html vignettes/*.R vignettes/*.knit.md
+	find . -type d -name ".rye_cache" -exec rm -rf {} +
+	rm -f *.log
+	rm -f benchmarks/profiles/*.html
+	rm -rf benchmarks/profiles/*_files
 	# rm -f README.md  # version-controlled
 	# rm -rf man/  # version-controlled
 
