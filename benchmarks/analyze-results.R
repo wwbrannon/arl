@@ -29,9 +29,6 @@ identify_bottlenecks <- function(results, threshold = 0.05) {
     stringsAsFactors = FALSE
   )
 
-  # Extract all timing data
-  all_times <- list()
-
   if ("results" %in% names(results)) {
     # Consolidated results format
     comp_results <- results$results

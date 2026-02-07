@@ -222,7 +222,7 @@ Compiler <- R6::R6Class(
         }
 
         # Recursively check all elements
-        for (i in seq_len(length(tmpl))) {
+        for (i in seq_along(tmpl)) {
           if (has_unquotes(tmpl[[i]], d)) return(TRUE)
         }
         FALSE
@@ -271,7 +271,7 @@ Compiler <- R6::R6Class(
         return(as.call(list(quote(quote), template)))
       }
       segments <- vector("list", length(template))
-      for (i in seq_len(length(template))) {
+      for (i in seq_along(template)) {
         elem <- template[[i]]
         if (is.call(elem) && length(elem) >= 1L && is.symbol(elem[[1]])) {
           elem_op <- as.character(elem[[1]])

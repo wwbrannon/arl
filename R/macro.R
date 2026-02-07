@@ -193,7 +193,7 @@ MacroExpander <- R6::R6Class(
             return(TRUE)
           }
         }
-        for (i in seq_len(length(expr))) {
+        for (i in seq_along(expr)) {
           if (private$contains_macro_head(expr[[i]], macro_names)) {
             return(TRUE)
           }
@@ -1084,7 +1084,7 @@ MacroExpander <- R6::R6Class(
       # Recurse into all elements (including the operator) so that e.g. (and 1 2 3)
       # inside ((lambda (tmp) (if tmp (and 1 2 3) tmp)) #t) gets expanded.
       result <- list()
-      for (i in seq_len(length(expr))) {
+      for (i in seq_along(expr)) {
         result[[i]] <- private$macroexpand_impl(expr[[i]], env, preserve_src, max_depth, walk = TRUE)
       }
 

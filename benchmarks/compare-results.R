@@ -236,7 +236,7 @@ generate_comparison_report <- function(old_file, new_file, output_file = NULL) {
 
   # Capture output
   output <- capture.output({
-    comparison <- compare_benchmarks(old_file, new_file)
+    compare_benchmarks(old_file, new_file)
   })
 
   # Write to file
