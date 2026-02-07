@@ -47,7 +47,7 @@ ModuleCache <- R6::R6Class(
 
       for (name in ls(module_env, all.names = TRUE)) {
         # Skip special internal names that are safe
-        if (name %in% c(".rye_module", ".rye_env", ".rye_exports")) next
+        if (name %in% c(".rye_module", ".rye_exports")) next
 
         # Skip compiler-generated intermediate values (safe)
         if (grepl("^\\.__rye_define_value__", name)) next

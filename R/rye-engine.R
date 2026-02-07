@@ -240,11 +240,8 @@ RyeEngine <- R6::R6Class(
 
       env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
-          if (exists(".rye_env", envir = parent.frame(), inherits = TRUE)) {
-            env <- get(".rye_env", envir = parent.frame(), inherits = TRUE)
-          } else {
-            env <- self$env$current_env()
-          }
+          # Use caller's environment directly (no .rye_env needed)
+          env <- parent.frame()
         }
         expr_expr <- substitute(expr)
         expr_value <- expr
@@ -419,7 +416,6 @@ RyeEngine <- R6::R6Class(
 
               # Install helpers and setup
               self$compiled_runtime$install_helpers(module_env)
-              assign(".rye_env", module_env, envir = module_env)
 
               # Evaluate cached compiled expressions in module environment
               result <- NULL
@@ -572,16 +568,15 @@ RyeEngine <- R6::R6Class(
   )
 )
 
-.rye_engine_state <- new.env(parent = emptyenv())
-
 #' Get the default Rye engine
 #'
 #' @export
-rye_default_engine <- function() {
-  engine <- get0("engine", envir = .rye_engine_state, inherits = FALSE)
-  if (is.null(engine)) {
-    engine <- RyeEngine$new()
-    assign("engine", engine, envir = .rye_engine_state)
+rye_default_engine <- local({
+  engine <- NULL
+  function() {
+    if (is.null(engine)) {
+      engine <<- RyeEngine$new()
+    }
+    engine
   }
-  engine
-}
+})

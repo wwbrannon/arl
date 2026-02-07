@@ -47,32 +47,36 @@ RyeCons <- R6::R6Class("RyeCons",
 # (No public fields; state in private .rye_promise_* bindings.)
 #
 RyePromise <- R6::R6Class("RyePromise",
-  lock_objects = FALSE,
+  private = list(
+    expr = NULL,
+    env = NULL,
+    eval_fn = NULL,
+    cached_value = NULL,
+    evaluated = FALSE
+  ),
   public = list(
     # @description Create a promise. Evaluation is deferred until value() is called.
     # @param expr Unevaluated expression.
     # @param env Environment to evaluate expr in.
     # @param eval_fn Function(expr, env) used to evaluate (e.g. compiled runtime).
     initialize = function(expr, env, eval_fn) {
-      assign(".rye_promise_expr", expr, envir = self)
-      assign(".rye_promise_env", env, envir = self)
-      assign(".rye_promise_eval", eval_fn, envir = self)
-      delayedAssign(
-        ".rye_promise_value",
-        .rye_promise_eval(.rye_promise_expr, .rye_promise_env),
-        eval.env = self,
-        assign.env = self
-      )
+      private$expr <- expr
+      private$env <- env
+      private$eval_fn <- eval_fn
     },
     # @description Force the promise and return the value.
     # @return The evaluated result.
     value = function() {
-      get(".rye_promise_value", envir = self, inherits = FALSE)
+      if (!private$evaluated) {
+        private$cached_value <- private$eval_fn(private$expr, private$env)
+        private$evaluated <- TRUE
+      }
+      private$cached_value
     },
     # @description Return the unevaluated expression stored in the promise.
     # @return Rye expression.
     get_expr = function() {
-      get(".rye_promise_expr", envir = self, inherits = FALSE)
+      private$expr
     }
   )
 )
