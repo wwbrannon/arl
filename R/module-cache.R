@@ -5,7 +5,7 @@
 
 #' Get cache file paths for a source file
 #' @param src_file Path to source .rye file
-#' @return List with cache_dir, env_cache, code_cache, file_hash
+#' @return List with cache_dir, env_cache, code_cache, code_r, file_hash
 get_cache_paths <- function(src_file) {
   if (!file.exists(src_file)) {
     return(NULL)
@@ -25,6 +25,7 @@ get_cache_paths <- function(src_file) {
     cache_dir = cache_dir,
     env_cache = file.path(cache_dir, paste0(base_name, ".", file_hash, ".env.rds")),
     code_cache = file.path(cache_dir, paste0(base_name, ".", file_hash, ".code.rds")),
+    code_r = file.path(cache_dir, paste0(base_name, ".", file_hash, ".code.R")),
     file_hash = file_hash
   )
 }
@@ -191,6 +192,36 @@ write_code_cache <- function(module_name, compiled_body, exports, export_all, sr
     )
 
     saveRDS(cache_data, paths$code_cache, compress = FALSE)
+
+    # Also write human-readable .code.R file for inspection
+    tryCatch({
+      r_code <- c(
+        paste0("# Compiled code for module: ", module_name),
+        paste0("# Source: ", basename(src_file)),
+        paste0("# Hash: ", file_hash),
+        paste0("# Rye version: ", utils::packageVersion("rye")),
+        paste0("# Exports: ", paste(exports, collapse = ", ")),
+        paste0("# Export all: ", export_all),
+        "",
+        "# === Compiled Body Expressions ==="
+      )
+
+      for (i in seq_along(compiled_body)) {
+        expr <- compiled_body[[i]]
+        r_code <- c(
+          r_code,
+          "",
+          paste0("# --- Expression ", i, " ---"),
+          deparse(expr, width.cutoff = 80)
+        )
+      }
+
+      writeLines(r_code, paths$code_r)
+    }, error = function(e) {
+      # Non-fatal - .code.R is just for inspection
+      warning(sprintf("Failed to write .code.R for %s: %s", module_name, conditionMessage(e)))
+    })
+
     TRUE
   }, error = function(e) {
     warning(sprintf("Failed to write code cache for %s: %s", module_name, conditionMessage(e)))
@@ -222,8 +253,13 @@ load_env_cache <- function(cache_file, engine_env, src_file) {
 
   # Validate cache
   if (!is_cache_valid(cache_data, src_file)) {
-    # Invalid cache, delete it
-    unlink(cache_file)
+    # Invalid cache, delete all related cache files
+    paths <- get_cache_paths(src_file)
+    if (!is.null(paths)) {
+      unlink(paths$env_cache)
+      unlink(paths$code_cache)
+      unlink(paths$code_r)
+    }
     return(NULL)
   }
 
@@ -259,8 +295,13 @@ load_code_cache <- function(cache_file, src_file) {
 
   # Validate cache
   if (!is_cache_valid(cache_data, src_file)) {
-    # Invalid cache, delete it
-    unlink(cache_file)
+    # Invalid cache, delete all related cache files
+    paths <- get_cache_paths(src_file)
+    if (!is.null(paths)) {
+      unlink(paths$env_cache)
+      unlink(paths$code_cache)
+      unlink(paths$code_r)
+    }
     return(NULL)
   }
 
