@@ -581,3 +581,42 @@ test_that("compiler handles empty begin", {
   result <- engine$eval(engine$read("(begin)")[[1]])
   expect_null(result)
 })
+
+# Optimization Tests: Identity Elimination
+test_that("compiler eliminates simple identity lambda", {
+  engine <- RyeEngine$new()
+
+  # ((lambda (x) x) value) should become just value
+  expect_equal(engine$eval(engine$read("((lambda (x) x) 42)")[[1]]), 42)
+  expect_equal(engine$eval(engine$read("((lambda (x) x) (+ 1 2))")[[1]]), 3)
+})
+
+test_that("compiler eliminates identity lambda selecting first arg", {
+  engine <- RyeEngine$new()
+
+  # ((lambda (a b) a) v1 v2) should become just v1
+  expect_equal(engine$eval(engine$read("((lambda (a b) a) 10 20)")[[1]]), 10)
+  expect_equal(engine$eval(engine$read("((lambda (x y z) x) 1 2 3)")[[1]]), 1)
+})
+
+test_that("compiler does NOT eliminate non-identity lambdas", {
+  engine <- RyeEngine$new()
+
+  # These are not identity functions - should not be optimized away
+  expect_equal(engine$eval(engine$read("((lambda (x) (+ x 1)) 5)")[[1]]), 6)
+  expect_equal(engine$eval(engine$read("((lambda (a b) (+ a b)) 3 4)")[[1]]), 7)
+})
+
+test_that("identity elimination preserves evaluation order", {
+  engine <- RyeEngine$new()
+  env <- new.env(parent = baseenv())
+  env$counter <- 0
+  engine$eval_in_env(engine$read("(define inc! (lambda () (set! counter (+ counter 1)) counter))")[[1]], env)
+
+  # Arguments should still be evaluated even if lambda is eliminated
+  result <- engine$eval_in_env(engine$read("((lambda (x) x) (inc!))")[[1]], env)
+  expect_equal(result, 1)
+  expect_equal(env$counter, 1)
+})
+
+# Note: Optimization verification tests moved to test-compiler-optimizations.R
