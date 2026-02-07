@@ -128,3 +128,81 @@ test_that("default engine uses closure pattern", {
   expect_false(exists(".rye_engine_state", where = .GlobalEnv))
   expect_false(exists(".rye_engine_state", where = asNamespace("rye")))
 })
+
+test_that("module registry entries are truly immutable", {
+  engine <- RyeEngine$new()
+
+  # Create a module
+  engine$eval_text('(module immutmod (export val) (define val 123))')
+
+  # Get the entry
+  entry <- engine$env$module_registry$get("immutmod")
+
+  # Entry should be a locked environment
+  expect_true(is.environment(entry))
+  expect_true(environmentIsLocked(entry))
+
+  # Cannot mutate fields
+  expect_error({
+    entry$exports <- c("hacked")
+  }, "locked")
+
+  expect_error({
+    entry$env <- new.env()
+  }, "locked")
+
+  expect_error({
+    entry$path <- "/evil/path"
+  }, "locked")
+
+  # Original exports should be unchanged
+  expect_equal(entry$exports, "val")
+})
+
+test_that("RyeEnv fields are read-only via active bindings", {
+  engine <- RyeEngine$new()
+
+  # Can read fields
+  expect_true(is.environment(engine$env$env))
+  expect_s3_class(engine$env$module_registry, "ModuleRegistry")
+  expect_true(is.list(engine$env$env_stack))
+
+  # Cannot reassign fields
+  expect_error({
+    engine$env$env <- new.env()
+  }, "Cannot reassign env field")
+
+  expect_error({
+    engine$env$module_registry <- NULL
+  }, "Cannot reassign module_registry field")
+
+  expect_error({
+    engine$env$env_stack <- list()
+  }, "Cannot reassign env_stack field")
+
+  expect_error({
+    engine$env$macro_registry <- NULL
+  }, "Cannot reassign macro_registry field")
+})
+
+test_that("RyeEnv internal operations still work with private fields", {
+  engine <- RyeEngine$new()
+
+  # Test env stack operations
+  test_env <- new.env()
+  engine$env$push_env(test_env)
+
+  # Should be on stack
+  expect_identical(engine$env$current_env(), test_env)
+
+  # Pop should work
+  engine$env$pop_env()
+  expect_identical(engine$env$current_env(), globalenv())
+
+  # Module operations should work
+  engine$eval_text('(module testmod2 (export z) (define z 789))')
+  expect_true(engine$env$module_registry$exists("testmod2"))
+
+  mod_entry <- engine$env$module_registry$get("testmod2")
+  expect_equal(mod_entry$exports, "z")
+})

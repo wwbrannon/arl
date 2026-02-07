@@ -11,11 +11,35 @@
 #' @noRd
 RyeEnv <- R6::R6Class(
   "RyeEnv",
+  private = list(
+    .env = NULL,
+    .macro_registry = NULL,
+    .module_registry = NULL,
+    .env_stack = NULL
+  ),
+  active = list(
+    # Read-only access to internal environment
+    env = function(value) {
+      if (!missing(value)) stop("Cannot reassign env field")
+      private$.env
+    },
+    # Read-only access to macro registry
+    macro_registry = function(value) {
+      if (!missing(value)) stop("Cannot reassign macro_registry field")
+      private$.macro_registry
+    },
+    # Read-only access to module registry
+    module_registry = function(value) {
+      if (!missing(value)) stop("Cannot reassign module_registry field")
+      private$.module_registry
+    },
+    # Read-only access to env stack
+    env_stack = function(value) {
+      if (!missing(value)) stop("Cannot reassign env_stack field")
+      private$.env_stack
+    }
+  ),
   public = list(
-    env = NULL,
-    macro_registry = NULL,
-    module_registry = NULL,
-    env_stack = NULL,
     # @description Create a RyeEnv from an existing environment or a new one with optional parent.
     # @param env Optional existing environment. If NULL, a new environment is created.
     # @param parent Optional parent for the new environment when env is NULL. Cannot be used with env.
@@ -32,31 +56,31 @@ RyeEnv <- R6::R6Class(
       if (!is.environment(env)) {
         stop("RyeEnv requires an environment")
       }
-      self$env <- env
-      self$macro_registry <- self$macro_registry_env(env, create = TRUE)
-      self$module_registry <- ModuleRegistry$new(self)
-      self$env_stack <- list()
+      private$.env <- env
+      private$.macro_registry <- self$macro_registry_env(env, create = TRUE)
+      private$.module_registry <- ModuleRegistry$new(self)
+      private$.env_stack <- list()
     },
     # @description Push an environment onto the env stack (e.g. current eval env).
     # @param env Environment to push.
     push_env = function(env) {
-      self$env_stack <- c(self$env_stack, list(env))
+      private$.env_stack <- c(private$.env_stack, list(env))
       invisible(NULL)
     },
     # @description Pop the most recently pushed environment from the stack.
     pop_env = function() {
-      n <- length(self$env_stack)
+      n <- length(private$.env_stack)
       if (n > 0) {
-        self$env_stack <- self$env_stack[-n]
+        private$.env_stack <- private$.env_stack[-n]
       }
       invisible(NULL)
     },
     # @description Return the top of the env stack, or globalenv() if stack is empty.
     # @return Environment.
     current_env = function() {
-      n <- length(self$env_stack)
+      n <- length(private$.env_stack)
       if (n > 0) {
-        return(self$env_stack[[n]])
+        return(private$.env_stack[[n]])
       }
       globalenv()
     },

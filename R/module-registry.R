@@ -50,10 +50,15 @@ ModuleRegistry <- R6::R6Class(
       if (self$exists(name)) {
         stop(sprintf("module '%s' is already defined", name))
       }
-      entry <- list(env = env, exports = exports, path = path)
-      assign(name, entry, envir = registry)
+      # Create locked environment entry instead of list for true immutability
+      entry_env <- new.env(parent = emptyenv())
+      entry_env$env <- env
+      entry_env$exports <- exports
+      entry_env$path <- path
+      lockEnvironment(entry_env, bindings = TRUE)
+      assign(name, entry_env, envir = registry)
       lockBinding(name, registry)
-      entry
+      entry_env
     },
     # @description Update a module's exported symbols list.
     # @param name Module name (single string).
@@ -63,19 +68,24 @@ ModuleRegistry <- R6::R6Class(
       if (!is.character(name) || length(name) != 1) {
         stop("module name must be a single string")
       }
-      entry <- self$get(name)
-      if (is.null(entry)) {
+      old_entry <- self$get(name)
+      if (is.null(old_entry)) {
         stop(sprintf("module '%s' is not loaded", name))
       }
       if (!is.character(exports)) {
         exports <- as.character(exports)
       }
-      entry$exports <- exports
+      # Create new locked environment with updated exports (can't mutate old one)
+      entry_env <- new.env(parent = emptyenv())
+      entry_env$env <- old_entry$env
+      entry_env$exports <- exports
+      entry_env$path <- old_entry$path
+      lockEnvironment(entry_env, bindings = TRUE)
       registry <- self$rye_env$module_registry_env(create = TRUE)
       rye_unlock_binding(name, registry)
-      assign(name, entry, envir = registry)
+      assign(name, entry_env, envir = registry)
       lockBinding(name, registry)
-      entry
+      entry_env
     },
     # @description Register an alias: path (absolute) -> same entry as name.
     # Used so (import "path/to/file.rye") can find the module registered as (module X ...).
