@@ -1,12 +1,5 @@
 performance issues:
 -------------------------------------------------
-o) what about version checks for compiled language rather than env? do we do this?
-o) do we strip the version out of the env passed back to the user?
-
-o) where in here do we expose things user code can modify and break
-compilation? for example: all the .rye_ variables, the pacakge version stored
-into a cached env
-
 o) probably room to further optimize the generated expressions
 
 o) write a compiler vignette
@@ -17,6 +10,8 @@ o) other performance optimizations: use profiling and benchmarking
 test audits:
 -------------------------------------------------
 o) fix the minor issues found last time from opus auditing the tests
+
+o) expand test coverage for newer components
 
 o) have opus audit the tests again:
 ```
@@ -43,4 +38,4 @@ small stuff:
 o) general code quality / duplication pass
 
 o) minor pkgdown warning about site url
-o) run lints and coverage, see what to do
+o) run lints and fix
