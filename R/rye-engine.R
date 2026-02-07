@@ -406,6 +406,7 @@ RyeEngine <- R6::R6Class(
 
               module_env <- new.env(parent = target_env)
               assign(".rye_module", TRUE, envir = module_env)
+              lockBinding(".rye_module", module_env)
 
               rye_env <- RyeEnv$new(target_env)
               rye_env$module_registry$register(module_name, module_env, exports)

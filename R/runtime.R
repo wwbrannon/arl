@@ -86,22 +86,52 @@ CompiledRuntime <- R6::R6Class(
     },
     # @description Install bindings required for compiled code into env.
     install_helpers = function(env) {
-      assign(".rye_env", env, envir = env)
-      assign(".rye_quote", base::quote, envir = env)
-      assign(".rye_true_p", .rye_true_p, envir = env)
-      assign(".rye_assign_pattern", function(env, pattern, value, mode) {
+      # Helper to assign, document, and lock internal functions
+      assign_and_lock <- function(name, value, description) {
+        # Check if binding already exists and is locked
+        if (exists(name, envir = env, inherits = FALSE) && bindingIsLocked(name, env)) {
+          # Binding already locked (e.g., .rye_module marker in module envs)
+          # Skip assignment to avoid conflict
+          return(invisible(NULL))
+        }
+
+        assign(name, value, envir = env)
+        # Only set rye_doc on non-primitive functions (primitives can't have attributes)
+        if (is.function(value) && !is.primitive(value)) {
+          obj <- get(name, envir = env)
+          attr(obj, "rye_doc") <- list(
+            description = paste0("INTERNAL: ", description, " This is part of Rye's compiled code implementation. Direct use is unsupported and may break in future versions.")
+          )
+          assign(name, obj, envir = env)
+        }
+        lockBinding(name, env)
+      }
+
+      # Environment reference
+      assign_and_lock(".rye_env", env, "Current environment reference.")
+
+      # Utility functions
+      assign_and_lock(".rye_quote", base::quote, "Quote wrapper (base::quote).")
+      assign_and_lock(".rye_true_p", .rye_true_p, "Truthiness checker.")
+
+      # Core helpers
+      assign_and_lock(".rye_assign_pattern", function(env, pattern, value, mode) {
         value <- self$context$source_tracker$strip_src(value)
         .rye_assign_pattern(env, pattern, value, mode)
-      }, envir = env)
-      assign(".rye_load", self$load_file_fn, envir = env)
-      assign(".rye_help", function(topic, env) {
+      }, "Pattern assignment for define/set!.")
+
+      assign_and_lock(".rye_load", self$load_file_fn, "File loader for load/run.")
+
+      assign_and_lock(".rye_help", function(topic, env) {
         if (is.symbol(topic)) topic <- as.character(topic)
         self$help_fn(topic, env)
-      }, envir = env)
-      assign(".rye_subscript_call", function(op_name, args, env) {
+      }, "Help system accessor.")
+
+      assign_and_lock(".rye_subscript_call", function(op_name, args, env) {
         self$subscript_call_compiled(op_name, args, env)
-      }, envir = env)
-      assign("quasiquote", function(expr) {
+      }, "Subscript operator handler ($, [, [[).")
+
+      assign_and_lock("quasiquote", function(expr) {
         if (exists(".rye_macroexpanding", envir = env, inherits = TRUE) &&
             isTRUE(get(".rye_macroexpanding", envir = env, inherits = TRUE))) {
           if (is.null(self$context$macro_expander)) {
@@ -110,24 +140,35 @@ CompiledRuntime <- R6::R6Class(
           return(self$context$macro_expander$quasiquote(expr, env))
         }
         self$quasiquote_compiled(expr, env)
-      }, envir = env)
-      assign(".rye_delay", function(compiled_expr, env) self$promise_new_compiled(compiled_expr, env), envir = env)
-      assign(".rye_defmacro", function(name, params, body_arg, docstring, env) self$defmacro_compiled(name, params, body_arg, docstring, env), envir = env)
-      assign(".rye_macro_quasiquote", function(expr, env) {
+      }, "Quasiquote template expander.")
+
+      assign_and_lock(".rye_delay", function(compiled_expr, env) {
+        self$promise_new_compiled(compiled_expr, env)
+      }, "Promise/delay constructor.")
+
+      assign_and_lock(".rye_defmacro", function(name, params, body_arg, docstring, env) {
+        self$defmacro_compiled(name, params, body_arg, docstring, env)
+      }, "Macro definition handler.")
+
+      assign_and_lock(".rye_macro_quasiquote", function(expr, env) {
         if (is.null(self$context$macro_expander)) {
           stop("macro expander not initialized")
         }
         self$context$macro_expander$quasiquote(expr, env)
-      }, envir = env)
-      assign(".rye_module", function(module_name, exports, export_all, body_exprs, src_file, env) {
+      }, "Quasiquote for macro expansion.")
+
+      assign_and_lock(".rye_module", function(module_name, exports, export_all, body_exprs, src_file, env) {
         self$module_compiled(module_name, exports, export_all, body_exprs, src_file, env)
-      }, envir = env)
-      assign(".rye_import", function(arg_value, env) {
+      }, "Module definition handler.")
+
+      assign_and_lock(".rye_import", function(arg_value, env) {
         self$import_compiled(arg_value, env)
-      }, envir = env)
-      assign(".rye_pkg_access", function(op_name, pkg, name, env) {
+      }, "Module import handler.")
+
+      assign_and_lock(".rye_pkg_access", function(op_name, pkg, name, env) {
         self$pkg_access_compiled(op_name, pkg, name, env)
-      }, envir = env)
+      }, "R package access handler (r/pkg::fn).")
+
       invisible(NULL)
     },
     # @description Run compiled R expression in env (helpers must be installed).
@@ -238,13 +279,13 @@ CompiledRuntime <- R6::R6Class(
     module_compiled = function(module_name, exports, export_all, body_exprs, src_file, env) {
       module_env <- new.env(parent = env)
       assign(".rye_module", TRUE, envir = module_env)
+      lockBinding(".rye_module", module_env)
       self$context$env$module_registry$register(module_name, module_env, exports)
       if (!is.null(src_file) && is.character(src_file) && length(src_file) == 1L && nzchar(src_file) && grepl("[/\\\\]", src_file)) {
         absolute_path <- rye_normalize_path_absolute(src_file)
         self$context$env$module_registry$alias(absolute_path, module_name)
       }
       self$install_helpers(module_env)
-      assign(".rye_env", module_env, envir = module_env)
 
       # Compile body expressions (for caching)
       should_cache <- !is.null(src_file) && is.character(src_file) &&
