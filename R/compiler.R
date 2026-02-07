@@ -696,14 +696,32 @@ Compiler <- R6::R6Class(
       if (length(expr) < 2) {
         return(private$fail("and requires at least 1 argument"))
       }
-      # Preallocate args list
-      args <- vector("list", length(expr) - 1)
-      for (i in 2:length(expr)) {
-        compiled <- private$compile_impl(expr[[i]])
+
+      # Flatten nested ANDs recursively: (and (and a b) c) → (and a b c)
+      # This avoids creating temps for intermediate AND results
+      flatten_and <- function(e) {
+        result <- list()
+        for (i in 2:length(e)) {
+          arg <- e[[i]]
+          if (is.call(arg) && length(arg) >= 1 && identical(arg[[1]], quote(and))) {
+            # Recursively flatten nested AND
+            result <- c(result, flatten_and(arg))
+          } else {
+            result <- c(result, list(arg))
+          }
+        }
+        result
+      }
+      flat_args <- flatten_and(expr)
+
+      # Compile all flattened arguments
+      args <- vector("list", length(flat_args))
+      for (i in seq_along(flat_args)) {
+        compiled <- private$compile_impl(flat_args[[i]])
         if (is.null(compiled)) {
           return(private$fail("and argument could not be compiled"))
         }
-        args[[i - 1]] <- compiled
+        args[[i]] <- compiled
       }
       gensym_tmp <- function() {
         if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
@@ -715,9 +733,23 @@ Compiler <- R6::R6Class(
         if (idx == length(args)) {
           return(args[[idx]])
         }
+
+        arg <- args[[idx]]
+
+        # Simple values don't need temps - use directly
+        if (private$is_simple_value(arg)) {
+          return(as.call(list(
+            quote(`if`),
+            as.call(list(as.symbol(".rye_true_p"), arg)),
+            build(idx + 1L),
+            arg
+          )))
+        }
+
+        # Complex expressions need temps to avoid double evaluation
         tmp_sym <- gensym_tmp()
         as.call(c(list(quote(`{`)),
-          list(as.call(list(quote(`<-`), tmp_sym, args[[idx]]))),
+          list(as.call(list(quote(`<-`), tmp_sym, arg))),
           list(as.call(list(
             quote(`if`),
             as.call(list(as.symbol(".rye_true_p"), tmp_sym)),
@@ -732,14 +764,32 @@ Compiler <- R6::R6Class(
       if (length(expr) < 2) {
         return(private$fail("or requires at least 1 argument"))
       }
-      # Preallocate args list
-      args <- vector("list", length(expr) - 1)
-      for (i in 2:length(expr)) {
-        compiled <- private$compile_impl(expr[[i]])
+
+      # Flatten nested ORs recursively: (or (or a b) c) → (or a b c)
+      # This avoids creating temps for intermediate OR results
+      flatten_or <- function(e) {
+        result <- list()
+        for (i in 2:length(e)) {
+          arg <- e[[i]]
+          if (is.call(arg) && length(arg) >= 1 && identical(arg[[1]], quote(or))) {
+            # Recursively flatten nested OR
+            result <- c(result, flatten_or(arg))
+          } else {
+            result <- c(result, list(arg))
+          }
+        }
+        result
+      }
+      flat_args <- flatten_or(expr)
+
+      # Compile all flattened arguments
+      args <- vector("list", length(flat_args))
+      for (i in seq_along(flat_args)) {
+        compiled <- private$compile_impl(flat_args[[i]])
         if (is.null(compiled)) {
           return(private$fail("or argument could not be compiled"))
         }
-        args[[i - 1]] <- compiled
+        args[[i]] <- compiled
       }
       gensym_tmp <- function() {
         if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
@@ -751,9 +801,23 @@ Compiler <- R6::R6Class(
         if (idx == length(args)) {
           return(args[[idx]])
         }
+
+        arg <- args[[idx]]
+
+        # Simple values don't need temps - use directly
+        if (private$is_simple_value(arg)) {
+          return(as.call(list(
+            quote(`if`),
+            as.call(list(as.symbol(".rye_true_p"), arg)),
+            arg,
+            build(idx + 1L)
+          )))
+        }
+
+        # Complex expressions need temps to avoid double evaluation
         tmp_sym <- gensym_tmp()
         as.call(c(list(quote(`{`)),
-          list(as.call(list(quote(`<-`), tmp_sym, args[[idx]]))),
+          list(as.call(list(quote(`<-`), tmp_sym, arg))),
           list(as.call(list(
             quote(`if`),
             as.call(list(as.symbol(".rye_true_p"), tmp_sym)),
@@ -1226,6 +1290,22 @@ Compiler <- R6::R6Class(
 
       # Return the corresponding argument
       compiled_args[[param_index]]
+    },
+
+    # Check if a compiled expression is a "simple value" that doesn't need a temp
+    # Simple values: literals (numeric, logical, string, NULL) and symbols
+    # Complex values: function calls, blocks, etc.
+    is_simple_value = function(expr) {
+      # Literals: numeric, logical, character, NULL
+      if (is.numeric(expr) || is.logical(expr) || is.character(expr) || is.null(expr)) {
+        return(TRUE)
+      }
+      # Symbols (variable references) - safe because R uses lazy evaluation
+      if (is.symbol(expr)) {
+        return(TRUE)
+      }
+      # Everything else (calls, etc.) needs a temp to avoid double evaluation
+      FALSE
     }
   )
 )
