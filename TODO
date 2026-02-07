@@ -1,12 +1,18 @@
 performance issues:
 -------------------------------------------------
-o) let's also save the generated R code as a .R script for debugging / inspectability
+o) a make clean addition to remove the caches
+o) shrink profvis output format
+o) remove huge html from existing unpushed commits
+o) let's generate the html though
+o) is digest one of the R recommended packages? does it ship with the interpreter? we need to either remove use of it or update DESCRIPTION
+o) what about version checks for compiled language rather than env? do we do this?
+o) do we strip the version out of the env passed back to the user?
+
+o) where in here do we expose things user code can modify and break compilation? for example: all the .rye_ variables, the pacakge version stored into a cached env
 
 o) probably room to further optimize the generated expressions
 
 o) compiler vignette
-
-o) where in here do we expose things user code can modify and break compilation?
 
 o) have opus or some such critique the architecture and make suggestions
 o) other performance optimizations: use profiling and benchmarking
