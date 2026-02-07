@@ -1091,6 +1091,12 @@ Compiler <- R6::R6Class(
         }
       }
 
+      # Attempt strength reduction: replace expensive ops with cheaper equivalents
+      strength_reduced <- private$try_strength_reduction(op, args)
+      if (!is.null(strength_reduced)) {
+        return(strength_reduced)
+      }
+
       # Attempt identity elimination: detect ((lambda (x) x) value) and inline
       # Check the original expression to see if operator is a lambda
       if (is.call(expr[[1]]) && length(expr[[1]]) >= 3) {
@@ -1263,6 +1269,38 @@ Compiler <- R6::R6Class(
       }
 
       # Not a compile-time constant
+      NULL
+    },
+
+    # Try strength reduction: replace expensive operations with cheaper ones
+    # Returns the reduced expression if applicable, NULL otherwise
+    try_strength_reduction = function(op, args) {
+      if (!is.symbol(op)) return(NULL)
+      op_name <- as.character(op)
+
+      # Multiplication by 2: (* x 2) → (+ x x)
+      if (op_name == "*" && length(args) == 2) {
+        # Check if second arg is literal 2
+        if (is.numeric(args[[2]]) && args[[2]] == 2) {
+          # Replace with addition: x + x
+          return(as.call(list(quote(`+`), args[[1]], args[[1]])))
+        }
+        # Also handle (* 2 x)
+        if (is.numeric(args[[1]]) && args[[1]] == 2) {
+          return(as.call(list(quote(`+`), args[[2]], args[[2]])))
+        }
+      }
+
+      # Power of 2: (^ x 2) → (* x x)
+      if (op_name == "^" && length(args) == 2) {
+        # Check if second arg is literal 2
+        if (is.numeric(args[[2]]) && args[[2]] == 2) {
+          # Replace with multiplication: x * x
+          return(as.call(list(quote(`*`), args[[1]], args[[1]])))
+        }
+      }
+
+      # No reduction applicable
       NULL
     },
 

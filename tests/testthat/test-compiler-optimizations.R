@@ -299,3 +299,66 @@ test_that("VERIFY: quasiquote code complexity reduction", {
     info = sprintf("Simple (%d lines) should be <70%% of unquote (%d lines)",
                    simple_len, unquote_len))
 })
+
+# ==============================================================================
+# Strength Reduction Verification (Phase 3)
+# ==============================================================================
+
+test_that("VERIFY: multiplication by 2 reduces to addition", {
+  engine <- RyeEngine$new()
+
+  # (* x 2) should become (+ x x)
+  out <- engine$inspect_compilation("(* x 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+
+  # Should have + instead of *
+  expect_true(grepl("\\+", compiled_str),
+    info = "Should use addition")
+  expect_false(grepl("\\*", compiled_str),
+    info = "Should not use multiplication")
+})
+
+test_that("VERIFY: power of 2 reduces to multiplication", {
+  engine <- RyeEngine$new()
+
+  # (^ x 2) should become (* x x)
+  out <- engine$inspect_compilation("(^ x 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+
+  # Should have * instead of ^
+  expect_true(grepl("\\*", compiled_str),
+    info = "Should use multiplication")
+  expect_false(grepl("\\^", compiled_str),
+    info = "Should not use exponentiation")
+})
+
+test_that("VERIFY: strength reduction preserves semantics", {
+  engine <- RyeEngine$new()
+
+  # Test that optimized code produces same results
+  engine$eval(engine$read("(define x 5)")[[1]])
+
+  # (* x 2) should still equal 10
+  result1 <- engine$eval(engine$read("(* x 2)")[[1]])
+  expect_equal(result1, 10)
+
+  # (^ x 2) should still equal 25
+  result2 <- engine$eval(engine$read("(^ x 2)")[[1]])
+  expect_equal(result2, 25)
+})
+
+test_that("VERIFY: strength reduction only applies to safe cases", {
+  engine <- RyeEngine$new()
+
+  # (* x 3) should NOT reduce (not power of 2)
+  out <- engine$inspect_compilation("(* x 3)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(grepl("\\*", compiled_str),
+    info = "Multiplication by 3 should not reduce")
+
+  # (^ x 3) should NOT reduce (not power of 2)
+  out <- engine$inspect_compilation("(^ x 3)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(grepl("\\^", compiled_str),
+    info = "Power of 3 should not reduce")
+})
