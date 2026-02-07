@@ -241,3 +241,61 @@ test_that("VERIFY: nested boolean chains flatten", {
   # This should remain nested (can't flatten different operators)
   expect_true(is.language(mixed$compiled))
 })
+
+# ==============================================================================
+# Quasiquote Simplification Verification (Phase 3)
+# ==============================================================================
+
+test_that("VERIFY: quasiquote with no unquotes simplifies", {
+  engine <- RyeEngine$new()
+
+  # Pure quoted template (no unquotes) should be simple
+  out <- engine$inspect_compilation("`(a b c)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+
+  # Should be much simpler than the current 4-level nesting
+  # Check that it doesn't have excessive as.call nesting
+  as_call_count <- length(gregexpr("as\\.call", compiled_str)[[1]])
+  expect_true(as_call_count <= 2,
+    info = sprintf("Expected <=2 as.call, got %d", as_call_count))
+
+  # Simple symbols should be very simple
+  out <- engine$inspect_compilation("`x")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(nchar(compiled_str) < 50,
+    info = "Simple quasiquote should generate short code")
+})
+
+test_that("VERIFY: quasiquote with unquotes preserves correctness", {
+  engine <- RyeEngine$new()
+
+  # With unquotes, correctness is paramount
+  # These tests verify behavior, not optimization
+  engine$eval(engine$read("(define x 42)")[[1]])
+
+  result <- engine$eval(engine$read("`(a ,x c)")[[1]])
+  # Result is a call object
+  expect_true(is.call(result))
+  expect_equal(result[[2]], 42)  # Middle element should be unquoted value
+
+  # Nested quasiquote
+  result <- engine$eval(engine$read("`(a `(b ,x) c)")[[1]])
+  expect_true(is.call(result))
+})
+
+test_that("VERIFY: quasiquote code complexity reduction", {
+  engine <- RyeEngine$new()
+
+  # Measure complexity of compiled quasiquote
+  simple_qq <- engine$inspect_compilation("`(a b c)")
+  with_unquote <- engine$inspect_compilation("`(a ,x c)")
+
+  # Simple case should be simpler than unquote case
+  simple_len <- length(deparse(simple_qq$compiled))
+  unquote_len <- length(deparse(with_unquote$compiled))
+
+  # Simple should be notably smaller (this will fail before optimization)
+  expect_true(simple_len < unquote_len * 0.7,
+    info = sprintf("Simple (%d lines) should be <70%% of unquote (%d lines)",
+                   simple_len, unquote_len))
+})

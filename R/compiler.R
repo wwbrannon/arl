@@ -201,7 +201,41 @@ Compiler <- R6::R6Class(
       eval_in_env <- function(compiled) {
         as.call(list(quote(base::eval), as.call(list(quote(quote), compiled)), envir = env_sym))
       }
+
+      # Helper: Check if template contains any unquotes at current depth
+      has_unquotes <- function(tmpl, d) {
+        if (!is.call(tmpl)) return(FALSE)
+        if (length(tmpl) == 0) return(FALSE)
+
+        # Check operator
+        op <- tmpl[[1]]
+        if (is.symbol(op)) {
+          op_char <- as.character(op)
+          # At depth 1, unquote/unquote-splicing are active
+          if (d == 1L && (op_char == "unquote" || op_char == "unquote-splicing")) {
+            return(TRUE)
+          }
+          # Nested quasiquote increases depth
+          if (op_char == "quasiquote") {
+            return(has_unquotes(tmpl[[2]], d + 1L))
+          }
+        }
+
+        # Recursively check all elements
+        for (i in seq_len(length(tmpl))) {
+          if (has_unquotes(tmpl[[i]], d)) return(TRUE)
+        }
+        FALSE
+      }
+
       if (!is.call(template)) {
+        return(as.call(list(quote(quote), template)))
+      }
+
+      # Optimization: If no unquotes at all, return simple quoted structure
+      if (!has_unquotes(template, depth)) {
+        # For all-quoted templates, just quote the whole thing
+        # This is much simpler than building with as.call(c(...))
         return(as.call(list(quote(quote), template)))
       }
       op <- template[[1]]
