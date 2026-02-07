@@ -69,17 +69,20 @@ CompiledRuntime <- R6::R6Class(
     context = NULL,
     load_file_fn = NULL,
     help_fn = NULL,
+    module_cache = NULL,
     # @description Create compiled runtime.
     # @param context EvalContext instance.
     # @param load_file_fn Optional; required for load/run/import.
     # @param help_fn Optional; required for (help topic).
-    initialize = function(context, load_file_fn = NULL, help_fn = NULL) {
+    # @param module_cache Optional ModuleCache instance.
+    initialize = function(context, load_file_fn = NULL, help_fn = NULL, module_cache = NULL) {
       if (!r6_isinstance(context, "EvalContext")) {
         stop("CompiledRuntime requires an EvalContext")
       }
       self$context <- context
       self$load_file_fn <- load_file_fn
       self$help_fn <- help_fn
+      self$module_cache <- module_cache
     },
     # @description Install bindings required for compiled code into env.
     install_helpers = function(env) {
@@ -272,16 +275,16 @@ CompiledRuntime <- R6::R6Class(
       }
 
       # Write caches after successful module load
-      if (should_cache) {
-        cache_paths <- get_cache_paths(src_file)
+      if (should_cache && !is.null(self$module_cache)) {
+        cache_paths <- self$module_cache$get_paths(src_file)
         if (!is.null(cache_paths)) {
           # Always write Option A (safe fallback)
-          write_code_cache(module_name, compiled_body, exports, export_all, src_file, cache_paths$file_hash)
+          self$module_cache$write_code(module_name, compiled_body, exports, export_all, src_file, cache_paths$file_hash)
 
           # Try Option C if safe
-          safety <- is_safe_to_cache(module_env, env)
+          safety <- self$module_cache$is_safe_to_cache(module_env, env)
           if (safety$safe) {
-            write_env_cache(module_name, module_env, exports, src_file, cache_paths$file_hash)
+            self$module_cache$write_env(module_name, module_env, exports, src_file, cache_paths$file_hash)
           }
         }
       }

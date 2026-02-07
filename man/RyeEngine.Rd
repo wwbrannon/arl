@@ -34,6 +34,8 @@ engine$eval_text("(+ 1 2 3)")
 \item{\code{env}}{RyeEnv backing the engine.}
 
 \item{\code{source_tracker}}{Source tracker used for error context.}
+
+\item{\code{module_cache}}{Module cache for caching compiled modules.}
 }
 \if{html}{\out{</div>}}
 }

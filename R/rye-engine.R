@@ -12,6 +12,7 @@
 #' @field help_system Help system for Rye topics.
 #' @field env RyeEnv backing the engine.
 #' @field source_tracker Source tracker used for error context.
+#' @field module_cache Module cache for caching compiled modules.
 #' @param env Optional environment or RyeEnv used as the engine base.
 #' @param parent Optional parent environment for the new environment.
 #' @param source Character string containing Rye source.
@@ -41,6 +42,7 @@ RyeEngine <- R6::R6Class(
     help_system = NULL,
     env = NULL,
     source_tracker = NULL,
+    module_cache = NULL,
     #' @description
     #' Initialize engine components and base environment.
     #' @param env Optional existing environment to use. If NULL, creates a new environment.
@@ -51,6 +53,7 @@ RyeEngine <- R6::R6Class(
       self$source_tracker <- SourceTracker$new()
       self$tokenizer <- Tokenizer$new()
       self$parser <- Parser$new(self$source_tracker)
+      self$module_cache <- ModuleCache$new()
 
       # Create shared evaluation context
       context <- EvalContext$new(self$env, self$source_tracker)
@@ -66,7 +69,8 @@ RyeEngine <- R6::R6Class(
       self$compiled_runtime <- CompiledRuntime$new(
         context,
         load_file_fn = function(path, env, create_scope = FALSE) self$load_file_in_env(path, env, create_scope),
-        help_fn = function(topic, env) self$help_in_env(topic, env)
+        help_fn = function(topic, env) self$help_in_env(topic, env),
+        module_cache = self$module_cache
       )
       context$compiled_runtime <- self$compiled_runtime
       self$help_system <- HelpSystem$new(self$env, self$macro_expander)
@@ -370,13 +374,13 @@ RyeEngine <- R6::R6Class(
 
       # Try cache loading (only for module files, not create_scope loads)
       if (!create_scope) {
-        cache_paths <- get_cache_paths(path)
+        cache_paths <- self$module_cache$get_paths(path)
         if (!is.null(cache_paths)) {
           target_env <- resolved
 
           # Try Option C first (fastest - full environment cache)
           if (file.exists(cache_paths$env_cache)) {
-            cache_data <- load_env_cache(cache_paths$env_cache, target_env, path)
+            cache_data <- self$module_cache$load_env(cache_paths$env_cache, target_env, path)
             if (!is.null(cache_data)) {
               # Register the cached module
               module_env <- cache_data$module_env
@@ -396,7 +400,7 @@ RyeEngine <- R6::R6Class(
 
           # Fallback to Option A (compiled expressions cache)
           if (file.exists(cache_paths$code_cache)) {
-            cache_data <- load_code_cache(cache_paths$code_cache, path)
+            cache_data <- self$module_cache$load_code(cache_paths$code_cache, path)
             if (!is.null(cache_data)) {
               # Recreate module environment (like module_compiled does)
               module_name <- cache_data$module_name
