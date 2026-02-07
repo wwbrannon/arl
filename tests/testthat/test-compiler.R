@@ -431,3 +431,56 @@ test_that("compiler handles constant folding edge cases", {
   # Empty list operations that are pure
   expect_equal(engine$eval(engine$read("(length (list))")[[1]]), 0)
 })
+
+# Optimization Tests: Truthiness Optimization
+test_that("compiler optimizes truthiness checks for literal booleans", {
+  engine <- RyeEngine$new()
+
+  # Literal TRUE/FALSE should work without .rye_true_p wrapper
+  expect_equal(engine$eval(engine$read("(if #t 1 2)")[[1]]), 1)
+  expect_equal(engine$eval(engine$read("(if #f 1 2)")[[1]]), 2)
+  expect_equal(engine$eval(engine$read("(if #nil 1 2)")[[1]]), 2)
+})
+
+test_that("compiler optimizes truthiness checks for comparison operators", {
+  engine <- RyeEngine$new()
+
+  # Comparison operators return proper R logicals - no wrapper needed
+  expect_equal(engine$eval(engine$read("(if (< 1 2) 1 2)")[[1]]), 1)
+  expect_equal(engine$eval(engine$read("(if (> 1 2) 1 2)")[[1]]), 2)
+  expect_equal(engine$eval(engine$read("(if (== 5 5) 1 2)")[[1]]), 1)
+  expect_equal(engine$eval(engine$read("(if (!= 5 5) 1 2)")[[1]]), 2)
+  expect_equal(engine$eval(engine$read("(if (<= 2 2) 1 2)")[[1]]), 1)
+  expect_equal(engine$eval(engine$read("(if (>= 3 3) 1 2)")[[1]]), 1)
+})
+
+test_that("compiler optimizes truthiness checks for logical operators", {
+  engine <- RyeEngine$new()
+
+  # Logical operators return proper R logicals - no wrapper needed
+  expect_equal(engine$eval(engine$read("(if (& #t #t) 1 2)")[[1]]), 1)
+  expect_equal(engine$eval(engine$read("(if (| #f #t) 1 2)")[[1]]), 1)
+  expect_equal(engine$eval(engine$read("(if (! #f) 1 2)")[[1]]), 1)
+})
+
+test_that("compiler preserves Rye truthiness semantics", {
+  engine <- RyeEngine$new()
+
+  # Only #f and #nil are false in Rye
+  # Numbers, strings, empty lists, etc. are truthy
+  expect_equal(engine$eval(engine$read("(if 0 1 2)")[[1]]), 1)  # 0 is truthy
+  expect_equal(engine$eval(engine$read('(if "" 1 2)')[[1]]), 1)  # empty string is truthy
+  expect_equal(engine$eval(engine$read("(if (list) 1 2)")[[1]]), 1)  # empty list is truthy
+
+  # But #f and #nil are falsy
+  expect_equal(engine$eval(engine$read("(if #f 1 2)")[[1]]), 2)
+  expect_equal(engine$eval(engine$read("(if #nil 1 2)")[[1]]), 2)
+})
+
+test_that("compiler handles constant-folded boolean tests", {
+  engine <- RyeEngine$new()
+
+  # When constant folding produces a boolean literal, skip wrapper
+  expect_equal(engine$eval(engine$read("(if (< 1 2) 1 2)")[[1]]), 1)
+  expect_equal(engine$eval(engine$read("(if (> 1 2) 1 2)")[[1]]), 2)
+})

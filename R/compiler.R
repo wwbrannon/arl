@@ -274,7 +274,13 @@ Compiler <- R6::R6Class(
         return(private$fail("if then-branch could not be compiled"))
       }
       # Rye: only #f and #nil are false
-      test_pred <- as.call(list(as.symbol(".rye_true_p"), test))
+      # Skip .rye_true_p wrapper if test is known to return proper R logical
+      test_pred <- if (private$returns_r_logical(test)) {
+        test
+      } else {
+        as.call(list(as.symbol(".rye_true_p"), test))
+      }
+
       if (length(expr) == 4) {
         else_expr <- private$compile_impl(expr[[4]])
         if (is.null(else_expr)) {
@@ -1031,6 +1037,60 @@ Compiler <- R6::R6Class(
       if (is.atomic(expr) && !is.symbol(expr)) {
         return(TRUE)
       }
+      FALSE
+    },
+
+    # Check if an expression is guaranteed to return a proper R logical (TRUE/FALSE)
+    # These expressions don't need .rye_true_p() wrapper
+    returns_r_logical = function(expr) {
+      # Literal TRUE/FALSE/NULL
+      if (is.logical(expr) && length(expr) == 1) {
+        return(TRUE)
+      }
+      if (is.null(expr)) {
+        return(TRUE)
+      }
+      if (is.symbol(expr)) {
+        expr_str <- as.character(expr)
+        if (expr_str %in% c("TRUE", "FALSE", "NULL")) {
+          return(TRUE)
+        }
+      }
+
+      # Check if it's a call to a function that returns logical
+      if (!is.call(expr)) {
+        return(FALSE)
+      }
+
+      op <- expr[[1]]
+      if (!is.symbol(op)) {
+        return(FALSE)
+      }
+
+      op_name <- as.character(op)
+
+      # Comparison operators always return proper R logicals
+      if (op_name %in% c("<", ">", "<=", ">=", "==", "!=")) {
+        return(TRUE)
+      }
+
+      # Logical operators return proper R logicals
+      if (op_name %in% c("&", "|", "!", "&&", "||")) {
+        return(TRUE)
+      }
+
+      # Type checking functions return logical
+      if (op_name %in% c("is.null", "is.na", "is.nan", "is.finite", "is.infinite",
+                         "is.numeric", "is.character", "is.logical", "is.list",
+                         "is.vector", "is.matrix", "is.array", "is.function")) {
+        return(TRUE)
+      }
+
+      # Other functions known to return logical
+      if (op_name %in% c("all", "any", "identical", "exists")) {
+        return(TRUE)
+      }
+
       FALSE
     }
   )
