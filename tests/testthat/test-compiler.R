@@ -337,3 +337,97 @@ test_that("macro pipeline matches engine eval", {
     expect_identical(actual$visible, expected$visible)
   }
 })
+
+# Optimization Tests: Constant Folding
+test_that("compiler performs constant folding for arithmetic operations", {
+  engine <- RyeEngine$new()
+
+  # Test that pure arithmetic with literals gets folded
+  # We verify by checking the result is correct (semantic test)
+  expect_equal(engine$eval(engine$read("(+ 1 2)")[[1]]), 3)
+  expect_equal(engine$eval(engine$read("(- 10 3)")[[1]]), 7)
+  expect_equal(engine$eval(engine$read("(* 4 5)")[[1]]), 20)
+  expect_equal(engine$eval(engine$read("(/ 20 4)")[[1]]), 5)
+
+  # Test nested constant expressions
+  expect_equal(engine$eval(engine$read("(+ (* 2 3) (* 4 5))")[[1]]), 26)
+  expect_equal(engine$eval(engine$read("(- (+ 10 5) (* 2 3))")[[1]]), 9)
+})
+
+test_that("compiler performs constant folding for comparison operations", {
+  engine <- RyeEngine$new()
+
+  # Comparison operators should fold
+  expect_true(engine$eval(engine$read("(< 1 2)")[[1]]))
+  expect_false(engine$eval(engine$read("(> 1 2)")[[1]]))
+  expect_true(engine$eval(engine$read("(== 5 5)")[[1]]))
+  expect_false(engine$eval(engine$read("(!= 5 5)")[[1]]))
+  expect_true(engine$eval(engine$read("(<= 2 2)")[[1]]))
+  expect_true(engine$eval(engine$read("(>= 3 3)")[[1]]))
+})
+
+test_that("compiler performs constant folding for logical operations", {
+  engine <- RyeEngine$new()
+
+  # Logical operators should fold
+  expect_true(engine$eval(engine$read("(& #t #t)")[[1]]))
+  expect_false(engine$eval(engine$read("(& #t #f)")[[1]]))
+  expect_true(engine$eval(engine$read("(| #t #f)")[[1]]))
+  expect_false(engine$eval(engine$read("(| #f #f)")[[1]]))
+  expect_true(engine$eval(engine$read("(! #f)")[[1]]))
+  expect_false(engine$eval(engine$read("(! #t)")[[1]]))
+})
+
+test_that("compiler does NOT fold when arguments have side effects", {
+  engine <- RyeEngine$new()
+  env <- new.env(parent = baseenv())
+
+  # Define a function with side effects
+  engine$eval_in_env(engine$read("(define counter 0)")[[1]], env)
+  engine$eval_in_env(engine$read("(define inc! (lambda () (set! counter (+ counter 1)) counter))")[[1]], env)
+
+  # This should NOT be folded - inc! has side effects
+  result <- engine$eval_in_env(engine$read("(+ (inc!) (inc!))")[[1]], env)
+  expect_equal(result, 3)  # 1 + 2 = 3
+  expect_equal(env$counter, 2)  # Counter incremented twice
+})
+
+test_that("compiler does NOT fold when operators are not pure", {
+  engine <- RyeEngine$new()
+
+  # Non-literal arguments should not fold
+  env <- new.env(parent = baseenv())
+  env$x <- 10
+  result <- engine$eval_in_env(engine$read("(+ x 5)")[[1]], env)
+  expect_equal(result, 15)
+
+  # Mixed literal and variable should not fold
+  env$y <- 3
+  result <- engine$eval_in_env(engine$read("(* 2 y)")[[1]], env)
+  expect_equal(result, 6)
+})
+
+test_that("compiler performs constant folding for math functions", {
+  engine <- RyeEngine$new()
+
+  # Math functions with literal arguments should fold
+  expect_equal(engine$eval(engine$read("(abs -5)")[[1]]), 5)
+  expect_equal(engine$eval(engine$read("(sqrt 16)")[[1]]), 4)
+  expect_equal(engine$eval(engine$read("(floor 3.7)")[[1]]), 3)
+  expect_equal(engine$eval(engine$read("(ceiling 3.2)")[[1]]), 4)
+  expect_equal(engine$eval(engine$read("(round 3.5)")[[1]]), 4)
+})
+
+test_that("compiler handles constant folding edge cases", {
+  engine <- RyeEngine$new()
+
+  # Division by zero produces Inf (R behavior)
+  expect_equal(engine$eval(engine$read("(/ 1 0)")[[1]]), Inf)
+
+  # NA/NaN propagation (NULL in Rye is NULL in R, not NA)
+  result <- engine$eval(engine$read("(+ 1 2)")[[1]])
+  expect_false(is.na(result))
+
+  # Empty list operations that are pure
+  expect_equal(engine$eval(engine$read("(length (list))")[[1]]), 0)
+})

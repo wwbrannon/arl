@@ -18,6 +18,8 @@ Compiler <- R6::R6Class(
     strict = FALSE,
     # When TRUE, compile quasiquote via macro-expander helper (for macro evaluation).
     macro_eval = FALSE,
+    # When FALSE, disable constant folding optimization (for preserving expression structure).
+    enable_constant_folding = TRUE,
     # Last compilation error (message) when compile() returns NULL.
     last_error = NULL,
     # @param context EvalContext (for source_tracker).
@@ -635,7 +637,12 @@ Compiler <- R6::R6Class(
       if (length(expr) != 2) {
         return(private$fail("delay requires exactly 1 argument"))
       }
+      # Disable constant folding to preserve expression structure for promise-expr
+      old_folding <- self$enable_constant_folding
+      self$enable_constant_folding <- FALSE
       compiled <- private$compile_impl(expr[[2]])
+      self$enable_constant_folding <- old_folding
+
       if (is.null(compiled)) {
         return(private$fail("delay expression could not be compiled"))
       }
@@ -938,7 +945,93 @@ Compiler <- R6::R6Class(
       }
       args <- collect_args()
       if (is.null(args)) return(NULL)  # Error occurred
+
+      # Attempt constant folding if operator is a known pure function (and if enabled)
+      if (isTRUE(self$enable_constant_folding)) {
+        folded <- private$try_constant_fold(op, args)
+        if (!is.null(folded)) {
+          return(folded)
+        }
+      }
+
       as.call(c(list(op), args))
+    },
+
+    # Attempt to fold constant expressions at compile time
+    # Returns folded literal or NULL if folding not possible
+    try_constant_fold = function(op, args) {
+      # Only fold if operator is a symbol
+      if (!is.symbol(op)) return(NULL)
+
+      op_name <- as.character(op)
+
+      # Whitelist of pure functions safe to evaluate at compile time
+      # These must be deterministic and have no side effects
+      pure_functions <- c(
+        # Arithmetic
+        "+", "-", "*", "/", "^", "%%", "%/%",
+        # Comparison
+        "<", ">", "<=", ">=", "==", "!=",
+        # Logical (element-wise)
+        "&", "|", "!",
+        # Math functions
+        "abs", "sqrt", "exp", "log", "log10", "log2",
+        "sin", "cos", "tan", "asin", "acos", "atan",
+        "floor", "ceiling", "round", "trunc",
+        "sign", "signif",
+        # Other pure functions
+        "length", "nchar", "toupper", "tolower"
+      )
+
+      if (!(op_name %in% pure_functions)) {
+        return(NULL)
+      }
+
+      # Check if all arguments are literals (atomic values)
+      # We consider NULL, logical, integer, double, complex, character, and raw as literals
+      all_literals <- TRUE
+      for (arg in args) {
+        if (!private$is_literal(arg)) {
+          all_literals <- FALSE
+          break
+        }
+      }
+
+      if (!all_literals) {
+        return(NULL)
+      }
+
+      # Attempt to evaluate at compile time
+      # Use tryCatch to safely handle errors (e.g., division by zero, domain errors)
+      tryCatch({
+        # Build the call
+        call_expr <- as.call(c(list(op), args))
+        # Evaluate in a clean environment
+        result <- eval(call_expr, envir = baseenv())
+        # Return as a literal (quote to preserve as-is)
+        if (is.null(result)) {
+          return(quote(NULL))
+        }
+        # For other values, return as-is (they're already literals)
+        return(result)
+      }, error = function(e) {
+        # If evaluation fails, don't fold (return NULL)
+        NULL
+      })
+    },
+
+    # Check if an expression is a compile-time literal
+    is_literal = function(expr) {
+      # NULL, TRUE, FALSE are symbols but should be treated as literals
+      if (is.symbol(expr)) {
+        expr_str <- as.character(expr)
+        return(expr_str %in% c("NULL", "TRUE", "FALSE", "NA", "NaN", "Inf"))
+      }
+      # Atomic vectors (numeric, logical, character, etc.)
+      if (is.atomic(expr) && !is.symbol(expr)) {
+        return(TRUE)
+      }
+      FALSE
     }
   )
 )

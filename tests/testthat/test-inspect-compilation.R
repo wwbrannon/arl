@@ -9,7 +9,8 @@ test_that("inspect_compilation on compilable expression returns right-shaped res
   out <- engine$inspect_compilation("(+ 1 2)")
   expect_true(is.language(out$parsed))
   expect_true(is.language(out$expanded))
-  expect_true(is.language(out$compiled))
+  # Compiled can be a language object or a literal (if constant-folded)
+  expect_true(is.language(out$compiled) || is.atomic(out$compiled))
   expect_type(out$compiled_deparsed, "character")
   expect_true(length(out$compiled_deparsed) >= 1L)
   expect_false(any(is.na(out$compiled_deparsed)))
@@ -55,7 +56,8 @@ test_that("inspect_compilation accepts env and uses it for expansion", {
 
 test_that("inspect_compilation with env = NULL uses engine environment", {
   out <- engine$inspect_compilation("(* 2 3)", env = NULL)
-  expect_true(is.language(out$compiled))
+  # Compiled can be a language object or a literal (if constant-folded)
+  expect_true(is.language(out$compiled) || is.atomic(out$compiled))
   expect_type(out$compiled_deparsed, "character")
 })
 
