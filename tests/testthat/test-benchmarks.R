@@ -164,7 +164,7 @@ test_that("profiling helper functions work", {
   })
 
   expect_true(file.exists(output_path))
-  expect_match(output_path, "\\.html$")
+  expect_match(output_path, "\\.rds$")
 
   # Clean up
   unlink(temp_dir, recursive = TRUE)
