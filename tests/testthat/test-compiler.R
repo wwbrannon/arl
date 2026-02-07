@@ -554,3 +554,30 @@ test_that("dead code elimination does NOT eliminate for variable tests", {
   result <- engine$eval_in_env(engine$read("(if x 1 2)")[[1]], env)
   expect_equal(result, 2)
 })
+
+# Optimization Tests: Begin Simplification
+test_that("compiler simplifies single-expression begin blocks", {
+  engine <- RyeEngine$new()
+
+  # Single expression should not have block wrapper
+  expect_equal(engine$eval(engine$read("(begin 42)")[[1]]), 42)
+  expect_equal(engine$eval(engine$read("(begin (+ 1 2))")[[1]]), 3)
+})
+
+test_that("compiler preserves multi-expression begin blocks", {
+  engine <- RyeEngine$new()
+  env <- new.env(parent = baseenv())
+  env$x <- 0
+
+  # Multiple expressions need block wrapper
+  engine$eval_in_env(engine$read("(begin (set! x 10) (set! x 20) x)")[[1]], env)
+  expect_equal(env$x, 20)
+})
+
+test_that("compiler handles empty begin", {
+  engine <- RyeEngine$new()
+
+  # Empty begin should return NULL (invisible)
+  result <- engine$eval(engine$read("(begin)")[[1]])
+  expect_null(result)
+})

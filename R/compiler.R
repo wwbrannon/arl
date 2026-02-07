@@ -322,6 +322,13 @@ Compiler <- R6::R6Class(
         return(quote(invisible(NULL)))
       }
       parts <- as.list(expr)[-1]
+
+      # Optimization: single expression doesn't need block wrapper
+      if (length(parts) == 1) {
+        return(private$compile_impl(parts[[1]]))
+      }
+
+      # Multiple expressions - use block
       # Use early-exit loop with preallocation
       compiled <- vector("list", length(parts))
       for (i in seq_along(parts)) {
