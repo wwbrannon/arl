@@ -993,6 +993,18 @@ Compiler <- R6::R6Class(
         }
       }
 
+      # Attempt identity elimination: detect ((lambda (x) x) value) and inline
+      # Check the original expression to see if operator is a lambda
+      if (is.call(expr[[1]]) && length(expr[[1]]) >= 3) {
+        if (is.symbol(expr[[1]][[1]]) && as.character(expr[[1]][[1]]) == "lambda") {
+          identity_result <- private$try_identity_elimination(expr[[1]], args)
+          if (!is.null(identity_result)) {
+            return(identity_result)
+          } else {
+          }
+        }
+      }
+
       as.call(c(list(op), args))
     },
 
@@ -1154,6 +1166,66 @@ Compiler <- R6::R6Class(
 
       # Not a compile-time constant
       NULL
+    },
+
+    # Try to eliminate identity lambda: ((lambda (x) x) value) → value
+    # Returns the appropriate argument if lambda is identity, NULL otherwise
+    try_identity_elimination = function(lambda_expr, compiled_args) {
+      # lambda_expr is the original (lambda (...) body) expression
+      # compiled_args are the already-compiled arguments
+
+      # Lambda must have at least (lambda params body)
+      if (length(lambda_expr) < 3) {
+        return(NULL)
+      }
+
+      params <- lambda_expr[[2]]
+      body <- lambda_expr[[3]]
+
+      # Handle simple parameter list (not pattern matching, not dotted)
+      if (!is.call(params)) {
+        return(NULL)  # Should be a list
+      }
+
+      # Extract parameter names from the call structure
+      # For (x), params is x()
+      # For (a b), params is a(b)
+      # For (a b c), params is a(b, c)
+      # So we iterate through all elements of the call
+      param_count <- length(params)
+      param_names <- character(param_count)
+
+      for (i in seq_len(param_count)) {
+        p <- params[[i]]
+        if (is.symbol(p)) {
+          param_names[i] <- as.character(p)
+        } else {
+          # Complex param (default value, pattern, etc.) - don't optimize
+          return(NULL)
+        }
+      }
+
+
+      # Body must be a single symbol
+      if (!is.symbol(body)) {
+        return(NULL)
+      }
+
+      body_name <- as.character(body)
+
+      # Find which parameter the body references
+      param_index <- match(body_name, param_names)
+      if (is.na(param_index)) {
+        return(NULL)  # Body doesn't reference a parameter
+      }
+
+      # Check we have the right number of arguments
+      if (length(compiled_args) != length(param_names)) {
+        return(NULL)
+      }
+
+      # Return the corresponding argument
+      compiled_args[[param_index]]
     }
   )
 )
