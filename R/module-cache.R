@@ -11,12 +11,8 @@ get_cache_paths <- function(src_file) {
     return(NULL)
   }
 
-  # Use xxhash64 for fast hashing (or md5 as fallback)
-  if (requireNamespace("digest", quietly = TRUE)) {
-    file_hash <- digest::digest(file = src_file, algo = "xxhash64")
-  } else {
-    file_hash <- tools::md5sum(src_file)
-  }
+  # Use MD5 for file content hashing (fast and adequate for cache invalidation)
+  file_hash <- tools::md5sum(src_file)
 
   cache_dir <- file.path(dirname(src_file), ".rye_cache")
   base_name <- basename(src_file)
