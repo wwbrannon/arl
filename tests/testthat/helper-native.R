@@ -42,6 +42,9 @@ run_native_test_file <- function(path, engine, env) {
           engine$eval_in_env(exprs[[1]], env)
           # If we get here, the test passed
           expect_true(TRUE)
+        }, skip = function(e) {
+          # Test was skipped - re-signal the skip condition
+          testthat::skip(e$message)
         }, error = function(e) {
           # Test failed with an error
           expect_true(FALSE, info = sprintf("Test %s failed: %s", test_name, e$message))
@@ -81,6 +84,17 @@ run_native_tests <- function(dir = "tests/native") {
   # No need to (load ...) modules here: (import ...) in each module resolves deps.
   engine <- RyeEngine$new()
   env <- engine$env$env
+
+  # Load test-specific helpers (like skip function)
+  native_helper <- system.file("tests", "testthat", "helper-native.rye", package = "rye")
+  if (native_helper == "") {
+    # During development, file is not installed - use relative path
+    native_helper <- file.path("tests", "testthat", "helper-native.rye")
+  }
+  if (file.exists(native_helper)) {
+    exprs <- engine$read(sprintf('(load "%s")', native_helper))
+    engine$eval_in_env(exprs[[1]], env)
+  }
 
   # Run each test file
   for (test_file in test_files) {

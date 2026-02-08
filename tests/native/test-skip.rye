@@ -1,0 +1,23 @@
+;;; Tests for skip functionality
+
+(define test-skip-without-reason (lambda ()
+  ;; This test should be skipped
+  (skip)
+  ;; This should never be reached
+  (assert-equal 1 2)))
+
+(define test-skip-with-reason (lambda ()
+  ;; This test should be skipped with a reason
+  (skip "Not yet implemented")
+  ;; This should never be reached
+  (assert-equal 1 2)))
+
+(define test-skip-conditional (lambda ()
+  ;; Skip based on a condition
+  (if (> 2 1)
+    (skip "Feature requires R >= 5.0")
+    (assert-equal 1 1))))
+
+(define test-normal-passing (lambda ()
+  ;; This test should pass normally
+  (assert-equal 1 1)))
