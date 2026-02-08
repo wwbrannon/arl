@@ -41,24 +41,28 @@
 (defmacro cond (clause . rest)
   "Multi-branch conditional."
   (if (null? clause)
-    #nil
+    (error "cond: Missing required parameter (else clause)")
     (begin
       (define test (car clause))
       (define body (cdr clause))
       (if (and (symbol? test) (= (as.character test) "else"))
         `(begin ,@body)
-        `(if ,test (begin ,@body) (cond ,@rest))))))
+        (if (null? rest)
+          `(if ,test (begin ,@body) (error "Missing required parameter (else clause)"))
+          `(if ,test (begin ,@body) (cond ,@rest)))))))
 
 (defmacro case (key clause . rest)
   "Branch on key equality."
   (if (null? clause)
-    #nil
+    (error "case: Missing required parameter (else clause)")
     (begin
       (define datum (car clause))
       (define body (cdr clause))
       (if (and (symbol? datum) (= (as.character datum) "else"))
         `(begin ,@body)
-        `(if (= ,key ,datum) (begin ,@body) (case ,key ,@rest))))))
+        (if (null? rest)
+          `(if (= ,key ,datum) (begin ,@body) (error "Missing required parameter (else clause)"))
+          `(if (= ,key ,datum) (begin ,@body) (case ,key ,@rest)))))))
 
 ;;; Error handling helper
 

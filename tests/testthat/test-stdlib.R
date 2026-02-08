@@ -1,3 +1,14 @@
+# Remaining stdlib tests (tests for string/io helpers, numeric helpers, dict/set,
+# defstruct, error/debug, conversions, equality, math, macro expansion, formatting, etc.)
+# Core function tests moved to test-stdlib-core.R
+# List operation tests moved to test-stdlib-list.R
+# Functional tests moved to test-stdlib-functional.R
+# Predicate tests moved to test-stdlib-predicates.R
+# Sequence tests moved to test-stdlib-sequences.R
+# Control flow tests moved to test-stdlib-control.R
+# Looping tests moved to test-stdlib-looping.R
+# Binding tests moved to test-stdlib-binding.R
+
 engine <- RyeEngine$new()
 
 test_that("stdlib loads successfully", {
@@ -9,550 +20,6 @@ test_that("stdlib loads successfully", {
   expect_true(exists("map", envir = env))
   expect_true(exists("filter", envir = env))
   expect_true(exists("reduce", envir = env))
-})
-
-test_that("force evaluates promises", {
-  env <- stdlib_env(engine, new.env())
-  forced <- engine$eval_in_env(engine$read("(force (delay (+ 1 2)))")[[1]], env)
-  expect_equal(forced, 3)
-})
-
-test_that("force memoizes delayed expressions", {
-  env <- stdlib_env(engine, new.env())
-  engine$eval_in_env(
-    engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  (force p)\n  (force p)\n  counter)")[[1]],
-    env
-  )
-  expect_equal(env$counter, 1)
-})
-
-test_that("force returns non-promises unchanged", {
-  env <- stdlib_env(engine)
-  result <- engine$eval_in_env(engine$read("(force 42)")[[1]], env)
-  expect_equal(result, 42)
-})
-
-test_that("call/cc exits to current continuation", {
-  env <- stdlib_env(engine)
-  result <- engine$eval_in_env(
-    engine$read("(call/cc (lambda (k) (+ 1 (k 42) 3)))")[[1]],
-    env
-  )
-  expect_equal(result, 42)
-})
-
-test_that("call/cc is downward-only (R's callCC behavior)", {
-  env <- stdlib_env(engine)
-  # R's callCC is one-shot and downward-only
-  result <- engine$eval_in_env(
-    engine$read("(call/cc (lambda (k) (k 5)))")[[1]],
-    env
-  )
-  expect_equal(result, 5)
-  
-  # Test that it works as a regular function
-  result2 <- engine$eval_in_env(
-    engine$read("(call/cc (lambda (exit) (if (> 2 1) (exit 10) 20)))")[[1]],
-    env
-  )
-  expect_equal(result2, 10)
-})
-
-test_that("call/cc is first-class and has an alias", {
-  env <- stdlib_env(engine)
-  engine$eval_in_env(engine$read("(define cc call/cc)")[[1]], env)
-  result <- engine$eval_in_env(engine$read("(cc (lambda (k) (k 7)))")[[1]], env)
-  expect_equal(result, 7)
-  alias_result <- engine$eval_in_env(
-    engine$read("(call-with-current-continuation (lambda (k) (k 9)))")[[1]],
-    env
-  )
-  expect_equal(alias_result, 9)
-})
-
-test_that("car returns first element", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Test with R list
-  expect_equal(env$car(list(1, 2, 3)), 1)
-
-  # Test with parsed expression
-  expr <- engine$read("(+ 1 2)")[[1]]
-  expect_equal(as.character(env$car(expr)), "+")
-})
-
-test_that("cdr returns rest of list", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Test with R list
-  result <- env$cdr(list(1, 2, 3))
-  expect_equal(length(result), 2)
-  expect_equal(result[[1]], 2)
-  expect_equal(result[[2]], 3)
-})
-
-test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", {
-  env <- stdlib_env(engine, new.env())
-
-  # From list values
-  expect_equal(engine$eval_in_env(engine$read("(begin (import list) (cadr (list 1 2 3 4)))")[[1]], env), 2)
-  expect_equal(engine$eval_in_env(engine$read("(begin (import list) (caddr (list 1 2 3 4)))")[[1]], env), 3)
-  expect_equal(engine$eval_in_env(engine$read("(begin (import list) (cadddr (list 1 2 3 4)))")[[1]], env), 4)
-  expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (caar (list (list 10 11) (list 20 21))))")[[1]], env),
-    10
-  )
-  expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (cdar (list (list 10 11) (list 20 21))))")[[1]], env),
-    list(11)
-  )
-  expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (cddr (list 1 2 3 4)))")[[1]], env),
-    list(3, 4)
-  )
-
-  # From quoted calls (call objects)
-  expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (cadr '(+ 1 2 3)))")[[1]], env),
-    1
-  )
-  expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (caddr '(+ 1 2 3)))")[[1]], env),
-    2
-  )
-  expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (cadddr '(+ 1 2 3)))")[[1]], env),
-    3
-  )
-})
-
-test_that("ordinal list accessors work (second, third, fourth)", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_equal(env$second(list(1, 2, 3)), 2)
-  expect_equal(env$third(list(1, 2, 3, 4)), 3)
-  expect_equal(env$fourth(list(1, 2, 3, 4)), 4)
-
-  expect_null(env$second(list(1)))
-  expect_null(env$third(list(1, 2)))
-  expect_null(env$fourth(list(1, 2, 3)))
-})
-
-test_that("assoc family: assoc, assoc-by-equal?, assoc-by-identical?, assoc-by-==, rassoc, rassoc-by-equal?", {
-  env <- stdlib_env(engine, new.env())
-
-  # assoc (equal?) and assoc-by-equal? (alias)
-  alist <- list(list(quote(a), 1), list(quote(b), 2), list(quote(c), 3))
-  expect_equal(env$assoc(quote(b), alist), list(quote(b), 2))
-  expect_equal(env$`assoc-by-equal?`(quote(b), alist), list(quote(b), 2))
-
-  # assoc-by-identical? uses R's identical()
-  key <- quote(k)
-  alist_id <- list(list(key, 1))
-  expect_equal(env$`assoc-by-identical?`(key, alist_id), list(quote(k), 1))
-
-  # assoc-by-== uses R's == (e.g. 1 and 1L match)
-  alist_num <- list(list(1, "one"), list(2, "two"), list(3, "three"))
-  expect_equal(env$`assoc-by-==`(1, alist_num), list(1, "one"))
-  expect_equal(env$`assoc-by-==`(1L, alist_num), list(1, "one"))
-
-  # rassoc and rassoc-by-equal? (alias)
-  expect_equal(env$rassoc(2, alist), list(quote(b), 2))
-  expect_equal(env$`rassoc-by-equal?`(2, alist), list(quote(b), 2))
-})
-
-test_that("assq and assv error (cannot implement eq?/eqv? in R)", {
-  env <- stdlib_env(engine, new.env())
-  expect_error(
-    engine$eval_in_env(engine$read("(assq 'x (list (list 'x 1)))")[[1]], env),
-    "assq cannot be properly implemented"
-  )
-  expect_error(
-    engine$eval_in_env(engine$read("(assv 5 (list (list 5 \"five\")))")[[1]], env),
-    "assv cannot be properly implemented"
-  )
-})
-
-test_that("cons adds element to front", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  result <- env$cons(1, list(2, 3))
-  expect_equal(result[[1]], 1)
-  expect_equal(result[[2]], 2)
-  expect_equal(result[[3]], 3)
-})
-
-test_that("cons with non-list cdr produces dotted pair (rye_cons)", {
-  env <- stdlib_env(engine, new.env())
-  result <- engine$eval_in_env(engine$read("(cons 'a 'b)")[[1]], env)
-  expect_true(r6_isinstance(result, "RyeCons"))
-  expect_equal(as.character(result$car), "a")
-  expect_equal(as.character(result$cdr), "b")
-})
-
-test_that("car and cdr on dotted pair", {
-  env <- stdlib_env(engine, new.env())
-  pair <- engine$eval_in_env(engine$read("'(a . 42)")[[1]], env)
-  expect_equal(as.character(env$car(pair)), "a")
-  expect_equal(env$cdr(pair), 42)
-})
-
-test_that("list? and pair? are true for dotted pair (RyeCons)", {
-  env <- stdlib_env(engine, new.env())
-  pair <- engine$eval_in_env(engine$read("(cons 1 2)")[[1]], env)
-  expect_true(env$`list?`(pair))
-  expect_true(env$`pair?`(pair))  # pair? = dotted pair (RyeCons)
-})
-
-test_that("__as-list on improper list returns proper prefix only", {
-  env <- stdlib_env(engine, new.env())
-  pl <- engine$read("'(a b . c)")[[1]][[2]]
-  expect_true(r6_isinstance(pl, "RyeCons"))
-  prefix <- env$`__as-list`(pl)
-  expect_equal(length(prefix), 2)
-  expect_equal(as.character(prefix[[1]]), "a")
-  expect_equal(as.character(prefix[[2]]), "b")
-})
-
-test_that("map applies function to list", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  double <- function(x) x * 2
-  result <- env$map(double, list(1, 2, 3))
-
-  expect_equal(result[[1]], 2)
-  expect_equal(result[[2]], 4)
-  expect_equal(result[[3]], 6)
-})
-
-test_that("filter selects matching elements", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  is_even <- function(x) x %% 2 == 0
-  result <- env$filter(is_even, list(1, 2, 3, 4, 5, 6))
-
-  expect_equal(length(result), 3)
-  expect_equal(result[[1]], 2)
-  expect_equal(result[[2]], 4)
-  expect_equal(result[[3]], 6)
-})
-
-test_that("reduce combines list elements", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  result <- env$reduce(`+`, list(1, 2, 3, 4))
-  expect_equal(result, 10)
-
-  result <- env$reduce(`*`, list(1, 2, 3, 4))
-  expect_equal(result, 24)
-})
-
-test_that("map works from Rye code", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Define a doubling function in Rye
-  engine$eval_in_env(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env)
-
-  # Use map with the Rye function
-  result <- engine$eval_in_env(engine$read("(map double (list 1 2 3))")[[1]], env)
-
-  expect_equal(result[[1]], 2)
-  expect_equal(result[[2]], 4)
-  expect_equal(result[[3]], 6)
-})
-
-test_that("filter works from Rye code", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Define a predicate in Rye
-  engine$eval_in_env(engine$read("(define even? (lambda (x) (= (% x 2) 0)))")[[1]], env)
-
-  # Use filter
-  result <- engine$eval_in_env(engine$read("(filter even? (list 1 2 3 4 5 6))")[[1]], env)
-
-  expect_equal(length(result), 3)
-})
-
-test_that("predicates work correctly", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_true(engine$eval_in_env(engine$read("(number? 42)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(number? \"hello\")")[[1]], env))
-
-  expect_true(engine$eval_in_env(engine$read("(string? \"hello\")")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(string? 42)")[[1]], env))
-
-  expect_true(engine$eval_in_env(engine$read("(null? #nil)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(null? 42)")[[1]], env))
-})
-
-test_that("extended predicates work correctly", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_true(env$`boolean?`(TRUE))
-  expect_true(env$`boolean?`(FALSE))
-  expect_false(env$`boolean?`(c(TRUE, FALSE)))
-  expect_false(env$`boolean?`(1))
-
-  expect_true(engine$eval_in_env(engine$read("(xor #t #f)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(xor #t #t)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(xor #f #f)")[[1]], env))
-
-  expect_true(env$`even?`(4))
-  expect_true(env$`odd?`(5))
-  expect_true(env$`zero?`(0))
-  expect_true(env$`positive?`(3))
-  expect_true(env$`negative?`(-1))
-  expect_true(env$`non-negative?`(0))
-  expect_true(env$`non-positive?`(0))
-
-  expect_true(env$`integer?`(2))
-  expect_false(env$`integer?`(2.5))
-  expect_true(env$`natural?`(0))
-  expect_false(env$`natural?`(-1))
-
-  expect_true(env$`finite?`(1))
-  expect_false(env$`finite?`(Inf))
-  expect_true(env$`infinite?`(Inf))
-  expect_false(env$`infinite?`(1))
-  expect_true(env$`nan?`(NaN))
-  expect_false(env$`nan?`(1))
-
-  expect_true(env$`empty?`(list()))
-  expect_true(env$`empty?`(NULL))
-  expect_false(env$`empty?`(""))
-  expect_true(env$`empty?`(character()))
-  expect_true(env$`empty?`(c()))
-  expect_false(env$`empty?`(list(1)))
-  expect_false(env$`empty?`("x"))
-  expect_false(env$`empty?`(c(1)))
-
-  expect_true(env$`length=`(list(1, 2, 3), 3))
-  expect_true(env$`length>`(list(1, 2, 3), 2))
-  expect_true(env$`length<`(list(1, 2, 3), 4))
-})
-
-test_that("and macro works", {
-  env <- new.env()
-
-  # Define and macro
-  engine$eval_in_env(engine$read("(defmacro and2 (first second) `(if ,first ,second #f))")[[1]], env)
-
-  result <- engine$eval_in_env(engine$read("(and2 #t #t)")[[1]], env)
-  expect_true(result)
-
-  result <- engine$eval_in_env(engine$read("(and2 #t #f)")[[1]], env)
-  expect_false(result)
-
-  result <- engine$eval_in_env(engine$read("(and2 #f #t)")[[1]], env)
-  expect_false(result)
-})
-
-test_that("or macro works", {
-  env <- new.env()
-
-  # Define or macro
-  engine$eval_in_env(engine$read("(defmacro or2 (first second) `(if ,first #t ,second))")[[1]], env)
-
-  result <- engine$eval_in_env(engine$read("(or2 #t #f)")[[1]], env)
-  expect_true(result)
-
-  result <- engine$eval_in_env(engine$read("(or2 #f #t)")[[1]], env)
-  expect_true(result)
-
-  result <- engine$eval_in_env(engine$read("(or2 #f #f)")[[1]], env)
-  expect_false(result)
-})
-
-test_that("variadic and/or short-circuit correctly", {
-  env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
-  import_stdlib_modules(engine, c("control"), env)
-
-  result <- engine$eval_in_env(engine$read("(and #t 1 2 3)")[[1]], env)
-  expect_equal(result, 3)
-
-  result <- engine$eval_in_env(engine$read("(or #f 1 2)")[[1]], env)
-  expect_equal(result, 1)
-
-  engine$eval_in_env(engine$read("(define x 0)")[[1]], env)
-  result <- engine$eval_in_env(engine$read("(and #f (begin (set! x 1) x))")[[1]], env)
-  expect_false(result)
-  expect_equal(env$x, 0)
-
-  result <- engine$eval_in_env(engine$read("(or #t (begin (set! x 2) x))")[[1]], env)
-  expect_true(result)
-  expect_equal(env$x, 0)
-})
-
-test_that("binding macros when-let and if-let work", {
-  env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
-  import_stdlib_modules(engine, c("binding"), env)
-
-  result <- engine$eval_in_env(engine$read("(when-let (x 10) (+ x 1))")[[1]], env)
-  expect_equal(result, 11)
-
-  result <- engine$eval_in_env(engine$read("(when-let (x #f) (+ x 1))")[[1]], env)
-  expect_null(result)
-
-  result <- engine$eval_in_env(engine$read("(when-let ((a b) (list 1 2)) (+ a b))")[[1]], env)
-  expect_equal(result, 3)
-
-  result <- engine$eval_in_env(engine$read("(if-let (x 5) (+ x 1) 0)")[[1]], env)
-  expect_equal(result, 6)
-
-  result <- engine$eval_in_env(engine$read("(if-let (x #nil) 1 2)")[[1]], env)
-  expect_equal(result, 2)
-
-  result <- engine$eval_in_env(engine$read("(if-let (x #f) 1 2)")[[1]], env)
-  expect_equal(result, 2)
-
-  result <- engine$eval_in_env(engine$read("(if-let (x #f) 1)")[[1]], env)
-  expect_null(result)
-
-  result <- engine$eval_in_env(engine$read("(if-let ((a b) (list 3 4)) (+ a b) 0)")[[1]], env)
-  expect_equal(result, 7)
-})
-
-test_that("until macro repeats until test is truthy", {
-  env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
-  import_stdlib_modules(engine, c("looping"), env)
-
-  result <- engine$eval_in_env(
-    engine$read("(begin (define i 0) (until (= i 3) (set! i (+ i 1))) i)")[[1]],
-    env
-  )
-  expect_equal(result, 3)
-})
-
-test_that("loop/recur iterates with rebinding", {
-  env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
-  import_stdlib_modules(engine, c("looping"), env)
-
-  result <- engine$eval_in_env(
-    engine$read("(loop ((i 0) (acc 0)) (if (< i 5) (recur (+ i 1) (+ acc i)) acc))")[[1]],
-    env
-  )
-  expect_equal(result, 10)
-
-  result <- engine$eval_in_env(
-    engine$read("(loop ((x 1)) (+ x 2))")[[1]],
-    env
-  )
-  expect_equal(result, 3)
-
-  result <- engine$eval_in_env(
-    engine$read("(loop ((i 0) (sum 0)) (if (< i 3) (recur (+ i 1) (+ sum (loop ((j 0) (acc 0)) (if (< j 2) (recur (+ j 1) (+ acc 1)) acc)))) sum))")[[1]],
-    env
-  )
-  expect_equal(result, 6)
-
-  result <- engine$eval_in_env(
-    engine$read("(loop ((n 5) (acc 1)) (if (< n 2) acc (recur (- n 1) (* acc n))))")[[1]],
-    env
-  )
-  expect_equal(result, 120)
-
-  result <- engine$eval_in_env(
-    engine$read("(loop ((xs (list 1 2 3)) (sum 0)) (if (null? xs) sum (recur (cdr xs) (+ sum (car xs)))))")[[1]],
-    env
-  )
-  expect_equal(result, 6)
-})
-
-test_that("recur errors outside loop", {
-  env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
-  import_stdlib_modules(engine, c("looping"), env)
-
-  expect_error(engine$eval_in_env(engine$read("(recur 1)")[[1]], env), "recur can only be used inside loop")
-})
-
-test_that("not function works", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_false(engine$eval_in_env(engine$read("(not #t)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(not #f)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(not 42)")[[1]], env))
-})
-
-test_that("list helpers work", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_equal(env$`list*`(1, list(2, 3)), list(1, 2, 3))
-  expect_equal(env$append(list(1, 2), list(3)), list(1, 2, 3))
-  expect_equal(env$reverse(list(1, 2, 3)), list(3, 2, 1))
-  expect_equal(env$funcall(sum, list(1, 2, 3)), 6)
-})
-
-test_that("values and call-with-values work", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () (values)) (lambda () 42))")[[1]], env)
-  expect_equal(result, 42)
-
-  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () (values 1)) (lambda (x) (+ x 1)))")[[1]], env)
-  expect_equal(result, 2)
-
-  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () (values 1 2)) (lambda (a b) (+ a b)))")[[1]], env)
-  expect_equal(result, 3)
-
-  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () 5) (lambda (x) (* x 2)))")[[1]], env)
-  expect_equal(result, 10)
-})
-
-test_that("sequence helpers work", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  result <- env$mapcat(function(x) list(x, x + 10), list(1, 2))
-  expect_equal(result, list(1, 11, 2, 12))
-
-  result <- env$remove(function(x) x %% 2 == 0, list(1, 2, 3, 4))
-  expect_equal(result, list(1, 3))
-
-  expect_equal(env$foldl(`-`, list(1, 2, 3)), -4)
-  expect_equal(env$foldr(`-`, list(1, 2, 3)), 2)
-
-  expect_true(env$`every?`(function(x) x > 0, list(1, 2, 3)))
-  expect_false(env$`every?`(function(x) x > 1, list(1, 2, 3)))
-  expect_true(env$`any?`(function(x) x > 2, list(1, 2, 3)))
-  expect_false(env$`any?`(function(x) x > 5, list(1, 2, 3)))
-
-  expect_equal(env$take(2, list(1, 2, 3)), list(1, 2))
-  expect_equal(env$drop(2, list(1, 2, 3)), list(3))
-  expect_equal(env$`take-while`(function(x) x < 3, list(1, 2, 3, 1)), list(1, 2))
-  expect_equal(env$`drop-while`(function(x) x < 3, list(1, 2, 3, 1)), list(3, 1))
-  expect_equal(env$partition(2, list(1, 2, 3, 4)), list(list(1, 2), list(3, 4)))
-  expect_equal(env$flatten(list(1, list(2, list(3)), 4)), list(1, 2, 3, 4))
-})
-
-test_that("member and contains? sequence helpers work", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_equal(env$member(2, list(1, 2, 3)), list(2, 3))
-  expect_false(env$member(5, list(1, 2, 3)))
-
-  expect_true(env$`contains?`(2, list(1, 2, 3)))
-  expect_false(env$`contains?`(5, list(1, 2, 3)))
 })
 
 test_that("numeric helpers inc/dec/clamp/within? work", {
@@ -571,27 +38,6 @@ test_that("numeric helpers inc/dec/clamp/within? work", {
   expect_true(env$`within?`(5, 1, 10))
   expect_false(env$`within?`(0, 1, 10))
   expect_false(env$`within?`(11, 1, 10))
-})
-
-test_that("predicates and interop helpers work", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_true(env$`list-or-pair?`(list(1)))
-  expect_false(env$`list-or-pair?`(list()))
-  expect_true(env$`keyword?`(structure("from", class = "rye_keyword")))
-  expect_true(env$`vector?`(c(1, 2, 3)))
-  expect_true(env$`true?`(TRUE))
-  expect_true(env$`false?`(FALSE))
-  expect_true(env$`fn?`(function(x) x))
-  expect_true(env$`callable?`(function(x) x))
-
-  dict <- env$dict(a = 1, b = 2)
-  expect_true(env$`dict?`(dict))
-  expect_true(env$`dict-has?`(dict, "a"))
-  expect_equal(env$`dict-get`(dict, "a"), 1)
-  expect_equal(env$`dict-get`(dict, "b"), 2)
-  expect_equal(env$`r/call`("sum", list(1, 2, 3)), 6)
 })
 
 test_that("string and io helpers work", {
@@ -790,158 +236,6 @@ test_that("error and debug helpers work", {
   expect_true(any(grepl("label", output)))
 })
 
-test_that("call function converts lists to calls", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Convert list to call
-  lst <- list(quote(`+`), 1, 2)
-  result <- env$call(lst)
-  expect_true(is.call(result))
-  expect_equal(result[[1]], quote(`+`))
-  expect_equal(result[[2]], 1)
-  expect_equal(result[[3]], 2)
-
-  # Already a call should be returned as-is
-  call_obj <- engine$read("(+ 1 2)")[[1]]
-  expect_equal(
-    engine$source_tracker$strip_src(env$call(call_obj)),
-    engine$source_tracker$strip_src(call_obj)
-  )
-})
-
-test_that("eval function evaluates Rye expressions", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Eval simple arithmetic
-  result <- env$eval(engine$read("(+ 1 2)")[[1]], env)
-  expect_equal(result, 3)
-
-  # Eval with variables
-  env$x <- 10
-  result <- env$eval(engine$read("(* x 5)")[[1]], env)
-  expect_equal(result, 50)
-
-  # Eval function definition and call
-  env$eval(engine$read("(define double (lambda (n) (* n 2)))")[[1]], env)
-  result <- env$eval(engine$read("(double 21)")[[1]], env)
-  expect_equal(result, 42)
-})
-
-test_that("gensym generates unique symbols", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Generate unique symbols
-  sym1 <- env$gensym()
-  sym2 <- env$gensym()
-
-  expect_true(is.symbol(sym1))
-  expect_true(is.symbol(sym2))
-  expect_false(identical(sym1, sym2))
-
-  # Custom prefix
-  sym_custom <- env$gensym("foo")
-  expect_true(is.symbol(sym_custom))
-  expect_true(grepl("^foo", as.character(sym_custom)))
-})
-
-test_that("try* with only error handler works", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Success case
-  result <- env$`try*`(
-    function() 42,
-    function(e) "error"
-  )
-  expect_equal(result, 42)
-
-  # Error case
-  result <- env$`try*`(
-    function() stop("boom"),
-    function(e) "caught"
-  )
-  expect_equal(result, "caught")
-})
-
-test_that("try* with only finally handler works", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Track whether finally ran
-  finally_ran <- FALSE
-
-  # Success case
-  result <- env$`try*`(
-    function() 42,
-    NULL,
-    function() finally_ran <<- TRUE
-  )
-  expect_equal(result, 42)
-  expect_true(finally_ran)
-
-  # Error case (finally should run but error should propagate)
-  finally_ran <- FALSE
-  expect_error({
-    env$`try*`(
-      function() stop("boom"),
-      NULL,
-      function() finally_ran <<- TRUE
-    )
-  })
-  expect_true(finally_ran)
-})
-
-test_that("try* with both handlers works", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Track execution
-  finally_ran <- FALSE
-
-  # Error caught and finally runs
-  result <- env$`try*`(
-    function() stop("boom"),
-    function(e) "caught",
-    function() finally_ran <<- TRUE
-  )
-  expect_equal(result, "caught")
-  expect_true(finally_ran)
-
-  # Success and finally runs
-  finally_ran <- FALSE
-  result <- env$`try*`(
-    function() 99,
-    function(e) "error",
-    function() finally_ran <<- TRUE
-  )
-  expect_equal(result, 99)
-  expect_true(finally_ran)
-})
-
-test_that("r/call invokes R functions with arguments", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Call R function by name (string)
-  result <- env$`r/call`("sum", list(1, 2, 3, 4))
-  expect_equal(result, 10)
-
-  # Call R function by symbol
-  result <- env$`r/call`(quote(prod), list(2, 3, 4))
-  expect_equal(result, 24)
-
-  # Call with single argument
-  result <- env$`r/call`("sqrt", list(16))
-  expect_equal(result, 4)
-
-  # Call with no arguments
-  result <- env$`r/call`("ls", list())
-  expect_true(is.character(result))
-})
-
 test_that("equal? dispatches on class of first argument", {
   env <- new.env()
   stdlib_env(engine, env)
@@ -1064,373 +358,11 @@ test_that("macro? predicate identifies macros", {
   expect_false(env$`macro?`(42))
 })
 
-# ===========================================================================
-# Convenience Functions Tests
-# ===========================================================================
-
-test_that("identity returns its argument", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_equal(env$identity(42), 42)
-  expect_equal(env$identity("hello"), "hello")
-  expect_equal(env$identity(list(1, 2, 3)), list(1, 2, 3))
-  expect_null(env$identity(NULL))
-})
-
-test_that("first is an alias for car", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_equal(env$first(list(1, 2, 3)), 1)
-  expect_null(env$first(list()))
-  expect_equal(env$first(list("a", "b")), "a")
-})
-
-test_that("rest is an alias for cdr", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_equal(env$rest(list(1, 2, 3)), list(2, 3))
-  expect_equal(env$rest(list(1)), list())
-  expect_equal(env$rest(list()), list())
-})
-
-test_that("last returns last element", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  expect_equal(env$last(list(1, 2, 3)), 3)
-  expect_equal(env$last(list(42)), 42)
-  expect_null(env$last(list()))
-  expect_equal(env$last(list("a", "b", "c")), "c")
-})
-
-test_that("nth returns element at index", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  lst <- list(10, 20, 30, 40)
-
-  # 0-indexed
-  expect_equal(env$nth(lst, 0), 10)
-  expect_equal(env$nth(lst, 1), 20)
-  expect_equal(env$nth(lst, 2), 30)
-  expect_equal(env$nth(lst, 3), 40)
-
-  # Out of bounds
-  expect_error(env$nth(lst, -1), "out of bounds")
-  expect_error(env$nth(lst, 4), "out of bounds")
-})
-
-test_that("complement negates predicate", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  is_even <- function(x) x %% 2 == 0
-  is_odd <- env$complement(is_even)
-
-  expect_true(is_odd(1))
-  expect_false(is_odd(2))
-  expect_true(is_odd(3))
-  expect_false(is_odd(4))
-
-  # Use with filter
-  result <- env$filter(is_odd, list(1, 2, 3, 4, 5, 6))
-  expect_equal(result, list(1, 3, 5))
-})
-
-test_that("compose combines functions", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  double <- function(x) x * 2
-  add_one <- function(x) x + 1
-
-  # compose applies right-to-left: f(g(x))
-  double_then_add_one <- env$compose(add_one, double)
-  expect_equal(double_then_add_one(5), 11)  # (5 * 2) + 1
-
-  # Multiple compositions
-  add_ten <- function(x) x + 10
-  complex_fn <- env$compose(double, env$compose(add_one, add_ten))
-  expect_equal(complex_fn(5), 32)  # ((5 + 10) + 1) * 2
-})
-
-test_that("repeatedly calls function n times", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  counter <- 0
-  increment <- function() {
-    counter <<- counter + 1
-    counter
-  }
-
-  result <- env$repeatedly(5, increment)
-  expect_equal(length(result), 5)
-  expect_equal(result[[1]], 1)
-  expect_equal(result[[5]], 5)
-})
-
-test_that("repeat creates list with repeated value", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  result <- env$`repeat`(5, "x")
-  expect_equal(length(result), 5)
-  expect_equal(result[[1]], "x")
-  expect_equal(result[[5]], "x")
-
-  # With number
-  result <- env$`repeat`(3, 42)
-  expect_equal(result, list(42, 42, 42))
-
-  # With NULL
-  result <- env$`repeat`(2, NULL)
-  expect_equal(length(result), 2)
-  expect_null(result[[1]])
-})
-
-test_that("zip combines lists element-wise", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Two lists
-  result <- env$zip(list(1, 2, 3), list("a", "b", "c"))
-  expect_equal(length(result), 3)
-  expect_equal(result[[1]], list(1, "a"))
-  expect_equal(result[[2]], list(2, "b"))
-  expect_equal(result[[3]], list(3, "c"))
-
-  # Three lists
-  result <- env$zip(list(1, 2), list("a", "b"), list(TRUE, FALSE))
-  expect_equal(length(result), 2)
-  expect_equal(result[[1]], list(1, "a", TRUE))
-  expect_equal(result[[2]], list(2, "b", FALSE))
-
-  # Different lengths (zip to shortest)
-  result <- env$zip(list(1, 2, 3, 4), list("a", "b"))
-  expect_equal(length(result), 2)
-
-  # Empty list
-  result <- env$zip(list(), list(1, 2))
-  expect_equal(length(result), 0)
-})
-
-test_that("partial applies arguments partially", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  # Partial application
-  add <- function(a, b) a + b
-  add_five <- env$partial(add, 5)
-
-  expect_equal(add_five(3), 8)
-  expect_equal(add_five(10), 15)
-
-  # Multiple arguments
-  multiply <- function(a, b, c) a * b * c
-  multiply_by_2_3 <- env$partial(multiply, 2, 3)
-
-  expect_equal(multiply_by_2_3(4), 24)  # 2 * 3 * 4
-  expect_equal(multiply_by_2_3(5), 30)  # 2 * 3 * 5
-})
-
-test_that("numeric tower predicates work correctly", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-
-  # number? includes complex
-  expect_true(engine$eval_in_env(engine$read("(number? 42)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(number? (complex :real 3 :imaginary 4))")[[1]], env))
-
-  # real? includes infinities but not complex
-  expect_true(engine$eval_in_env(engine$read("(real? Inf)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(real? (complex :real 3 :imaginary 4))")[[1]], env))
-
-  # rational? excludes infinities
-  expect_false(engine$eval_in_env(engine$read("(rational? Inf)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(rational? 3.14)")[[1]], env))
-
-  # exact? and inexact?
-  expect_true(engine$eval_in_env(engine$read("(exact? 5L)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(exact? 5.0)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(inexact? 5.0)")[[1]], env))
-})
-
-test_that("type coercion functions work", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-
-  expect_equal(engine$eval_in_env(engine$read("(exact->inexact 5)")[[1]], env), 5.0)
-  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 5L)
-  expect_equal(engine$eval_in_env(engine$read("(->integer \"42\")")[[1]], env), 42L)
-  expect_equal(engine$eval_in_env(engine$read("(->double 5)")[[1]], env), 5.0)
-})
-
-test_that("complex number utilities work", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-
-  z <- engine$eval_in_env(engine$read("(make-rectangular 3 4)")[[1]], env)
-  expect_equal(Re(z), 3.0)
-  expect_equal(Im(z), 4.0)
-
-  expect_equal(engine$eval_in_env(engine$read("(real-part (make-rectangular 3 4))")[[1]], env), 3.0)
-  expect_equal(engine$eval_in_env(engine$read("(imag-part (make-rectangular 3 4))")[[1]], env), 4.0)
-  expect_equal(engine$eval_in_env(engine$read("(magnitude (make-rectangular 3 4))")[[1]], env), 5.0)
-})
-
-# ============================================================================
-# types.rye - Type predicate tests (18 tests covering key predicates)
-# ============================================================================
-
-test_that("list? identifies lists correctly", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(list? '(1 2 3))")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(list? '())")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(list? 42)")[[1]], env))
-})
-
-test_that("symbol? identifies symbols correctly", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(symbol? 'foo)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(symbol? \"foo\")")[[1]], env))
-})
-
-test_that("number? identifies all numeric types", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(number? 42)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(number? 3.14)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(number? \"42\")")[[1]], env))
-})
-
-test_that("string? identifies strings correctly", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(string? \"hello\")")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(string? 'hello)")[[1]], env))
-})
-
-test_that("vector? identifies R vectors", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(vector? 42)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(vector? '(1 2))")[[1]], env))
-})
-
-test_that("boolean? identifies logical values", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(boolean? #t)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(boolean? #f)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(boolean? 1)")[[1]], env))
-})
-
-test_that("atom? identifies non-compound values", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(atom? 42)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(atom? '(1 2))")[[1]], env))
-})
-
-test_that("empty? identifies zero-length collections", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(empty? '())")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(empty? '(1 2))")[[1]], env))
-})
-
-test_that("null? identifies NULL and empty lists", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(null? '())")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(null? NULL)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(null? 0)")[[1]], env))
-})
-
-test_that("procedure? identifies functions", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(procedure? +)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(procedure? 42)")[[1]], env))
-})
-
-test_that("environment? identifies environments", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(environment? (new.env))")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(environment? 42)")[[1]], env))
-})
-
-test_that("fn? and callable? are function predicates", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(fn? +)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(callable? (lambda (x) x))")[[1]], env))
-})
-
-# ============================================================================
-# logic.rye - Logical operation tests (4 tests)
-# ============================================================================
-
-test_that("not returns logical negation", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(not #f)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(not #t)")[[1]], env))
-})
-
-test_that("not treats only #f as false", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_false(engine$eval_in_env(engine$read("(not 0)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(not #f)")[[1]], env))
-})
-
-test_that("xor implements exclusive or", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_false(engine$eval_in_env(engine$read("(xor #f #f)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(xor #f #t)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(xor #t #t)")[[1]], env))
-})
-
-test_that("xor works with truthy values", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(xor #f 1)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(xor 1 2)")[[1]], env))
-})
-
-# ============================================================================
-# conversions.rye - Type conversion tests (20 tests)
-# ============================================================================
-
+# Type conversion tests
 test_that("->symbol converts to symbols", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   result <- engine$eval_in_env(engine$read("(->symbol \"foo\")")[[1]], env)
   expect_true(is.symbol(result))
 })
@@ -1438,14 +370,14 @@ test_that("->symbol converts to symbols", {
 test_that("->number converts to numbers", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_equal(engine$eval_in_env(engine$read("(->number \"42\")")[[1]], env), 42)
 })
 
 test_that("->integer converts to integers", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_equal(engine$eval_in_env(engine$read("(->integer \"42\")")[[1]], env), 42L)
   expect_equal(engine$eval_in_env(engine$read("(->integer 3.14)")[[1]], env), 3L)
 })
@@ -1453,14 +385,14 @@ test_that("->integer converts to integers", {
 test_that("->double converts to doubles", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_equal(engine$eval_in_env(engine$read("(->double 42)")[[1]], env), 42.0)
 })
 
 test_that("->complex converts to complex", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   z <- engine$eval_in_env(engine$read("(->complex 42)")[[1]], env)
   expect_equal(Re(z), 42.0)
 })
@@ -1468,7 +400,7 @@ test_that("->complex converts to complex", {
 test_that("symbol->string and string->symbol work", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_equal(engine$eval_in_env(engine$read("(symbol->string 'foo)")[[1]], env), "foo")
   result <- engine$eval_in_env(engine$read("(string->symbol \"bar\")")[[1]], env)
   expect_true(is.symbol(result))
@@ -1485,7 +417,7 @@ test_that("->list converts vectors to lists", {
 test_that("->vector converts lists to vectors", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   result <- engine$eval_in_env(engine$read("(->vector '(1 2 3))")[[1]], env)
   expect_equal(length(result), 3)
 })
@@ -1493,14 +425,14 @@ test_that("->vector converts lists to vectors", {
 test_that("exact->inexact converts integers to doubles", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_equal(engine$eval_in_env(engine$read("(exact->inexact 5)")[[1]], env), 5.0)
 })
 
 test_that("inexact->exact converts doubles to integers", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.0)")[[1]], env), 5L)
   expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 5L)
 })
@@ -1508,7 +440,7 @@ test_that("inexact->exact converts doubles to integers", {
 test_that("conversion roundtrips work", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   result <- engine$eval_in_env(engine$read("(inexact->exact (exact->inexact 42))")[[1]], env)
   expect_equal(result, 42L)
 })
@@ -1516,15 +448,12 @@ test_that("conversion roundtrips work", {
 test_that("->integer truncates towards zero", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_equal(engine$eval_in_env(engine$read("(->integer 3.7)")[[1]], env), 3L)
   expect_equal(engine$eval_in_env(engine$read("(->integer -3.7)")[[1]], env), -3L)
 })
 
-# ============================================================================
-# equality.rye - Equality predicate tests (15 tests)
-# ============================================================================
-
+# Equality tests
 test_that("identical? tests object identity", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
@@ -1548,7 +477,7 @@ test_that("identical? tests value identity", {
 test_that("equal? tests structural equality", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_true(engine$eval_in_env(engine$read("(equal? '(1 2 3) '(1 2 3))")[[1]], env))
   expect_false(engine$eval_in_env(engine$read("(equal? '(1 2 3) '(1 2 4))")[[1]], env))
 })
@@ -1556,21 +485,21 @@ test_that("equal? tests structural equality", {
 test_that("equal? handles nested structures", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_true(engine$eval_in_env(engine$read("(equal? '(1 (2 3)) '(1 (2 3)))")[[1]], env))
 })
 
 test_that("equality handles empty collections", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_true(engine$eval_in_env(engine$read("(equal? '() '())")[[1]], env))
 })
 
 test_that("equal? compares strings", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
+
   expect_true(engine$eval_in_env(engine$read("(equal? \"hello\" \"hello\")")[[1]], env))
   expect_false(engine$eval_in_env(engine$read("(equal? \"hello\" \"world\")")[[1]], env))
 })
@@ -1603,154 +532,26 @@ test_that("equality handles symbols", {
   expect_false(engine$eval_in_env(engine$read("(identical? 'foo 'bar)")[[1]], env))
 })
 
-# ============================================================================
-# math.rye - Numeric tower tests (15 tests)
-# ============================================================================
-
-test_that("real? excludes complex numbers", {
+# Complex number tests
+test_that("type coercion functions work", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(real? 42)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(real? Inf)")[[1]], env))
+
+  expect_equal(engine$eval_in_env(engine$read("(exact->inexact 5)")[[1]], env), 5.0)
+  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 5L)
+  expect_equal(engine$eval_in_env(engine$read("(->integer \"42\")")[[1]], env), 42L)
+  expect_equal(engine$eval_in_env(engine$read("(->double 5)")[[1]], env), 5.0)
 })
 
-test_that("rational? excludes infinities", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(rational? 42)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(rational? Inf)")[[1]], env))
-})
-
-test_that("integer? checks integer-valued numbers", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(integer? 42L)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(integer? 42.0)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(integer? 3.14)")[[1]], env))
-})
-
-test_that("exact? identifies integer storage", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(exact? 5L)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(exact? 5.0)")[[1]], env))
-})
-
-test_that("inexact? identifies double storage", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(inexact? 5.0)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(inexact? 5L)")[[1]], env))
-})
-
-test_that("natural? requires non-negative integers", {
+test_that("complex number utilities work", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
 
-  expect_true(engine$eval_in_env(engine$read("(natural? 1)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(natural? 0)")[[1]], env))  # Natural includes 0
-  expect_false(engine$eval_in_env(engine$read("(natural? -1)")[[1]], env))
-})
+  z <- engine$eval_in_env(engine$read("(make-rectangular 3 4)")[[1]], env)
+  expect_equal(Re(z), 3.0)
+  expect_equal(Im(z), 4.0)
 
-test_that("zero? identifies zero", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(zero? 0)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(zero? 1)")[[1]], env))
-})
-
-test_that("positive? and negative? work", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(positive? 1)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(positive? -1)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(negative? -1)")[[1]], env))
-})
-
-test_that("even? and odd? work", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(even? 2)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(even? 1)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(odd? 1)")[[1]], env))
-})
-
-test_that("finite? and infinite? work", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(finite? 42)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(finite? Inf)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(infinite? Inf)")[[1]], env))
-})
-
-test_that("nan? identifies NaN", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(nan? NaN)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(nan? 42)")[[1]], env))
-})
-
-# ============================================================================
-# sequences.rye - Length predicate tests (6 tests)
-# ============================================================================
-
-test_that("length= checks exact length", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(length= '(1 2 3) 3)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length= '(1 2) 3)")[[1]], env))
-})
-
-test_that("length> checks greater length", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(length> '(1 2 3) 2)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length> '(1 2) 2)")[[1]], env))
-})
-
-test_that("length< checks less length", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(length< '(1 2) 3)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length< '(1 2 3) 3)")[[1]], env))
-})
-
-test_that("length predicates work with empty sequences", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(length= '() 0)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(length< '() 1)")[[1]], env))
-})
-
-test_that("length predicates work with vectors", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-
-  # Note: length("hello") is 1 in R (vector length), not 5 (character count)
-  # Use nchar() for string character count
-  expect_true(engine$eval_in_env(engine$read("(length= \"hello\" 1)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length> \"hello\" 1)")[[1]], env))
-})
-
-test_that("length predicates handle boundaries", {
-  env <- new.env(parent = emptyenv())
-  stdlib_env(engine, env)
-  
-  expect_true(engine$eval_in_env(engine$read("(length= '(1 2 3) 3)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length> '(1 2 3) 3)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(length> '(1 2 3) 2)")[[1]], env))
+  expect_equal(engine$eval_in_env(engine$read("(real-part (make-rectangular 3 4))")[[1]], env), 3.0)
+  expect_equal(engine$eval_in_env(engine$read("(imag-part (make-rectangular 3 4))")[[1]], env), 4.0)
+  expect_equal(engine$eval_in_env(engine$read("(magnitude (make-rectangular 3 4))")[[1]], env), 5.0)
 })
