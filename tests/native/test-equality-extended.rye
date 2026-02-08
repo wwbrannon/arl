@@ -1,0 +1,47 @@
+;;; Extended tests for equality functions
+
+(import assert)
+(import equality)
+
+(define test-list-equal-basic (lambda ()
+  ;; Test list-equal? with various lists
+  (assert-true (list-equal? '() '()))
+  (assert-true (list-equal? '(1 2 3) '(1 2 3)))
+  (assert-false (list-equal? '(1 2 3) '(1 2)))
+  (assert-false (list-equal? '(1 2 3) '(1 2 4)))))
+
+(define test-list-equal-nested (lambda ()
+  ;; Test with nested lists
+  (assert-true (list-equal? '(1 (2 3) 4) '(1 (2 3) 4)))
+  (assert-false (list-equal? '(1 (2 3) 4) '(1 (2 4) 4)))
+  (assert-true (list-equal? '((1) (2) (3)) '((1) (2) (3))))))
+
+(define test-s3-type (lambda ()
+  ;; Test s3-type function
+  (define vec (r/call "c" (list 1 2 3)))
+  (assert-equal (s3-type vec) "numeric")
+
+  (define df (r/call "data.frame" (list :x (r/call "c" (list 1 2 3)))))
+  (assert-equal (s3-type df) "data.frame")))
+
+(define test-check-s3-type-match (lambda ()
+  ;; Test check-s3-type-match with same types
+  (define v1 (r/call "c" (list 1 2 3)))
+  (define v2 (r/call "c" (list 4 5 6)))
+  (assert-true (check-s3-type-match v1 v2))
+
+  ;; Different types
+  (define v3 (r/call "c" (list "a" "b")))
+  (assert-false (check-s3-type-match v1 v3))
+
+  ;; Single object always matches
+  (assert-true (check-s3-type-match v1))))
+
+(define test-equal-with-strict (lambda ()
+  ;; Test equal? with strict parameter
+  (assert-true (equal? '(1 2 3) '(1 2 3) #t))
+  (assert-false (equal? '(1 2) '(1 2 3) #t))
+
+  ;; Non-strict should be more lenient
+  (assert-true (equal? 1 1 #f))
+  (assert-false (equal? 1 2 #f))))
