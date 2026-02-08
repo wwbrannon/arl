@@ -1,18 +1,4 @@
-other problems:
--------------------------------------------------
-o) Problem: our module cache invalidation is not correctly handling changes in files considered together
-  o) we have a hash-based check for if each file changed, but not for whether *other* files changed (modification, creation, deletion)
-  o) Key point: files are not self-contained, so if we're caching the final environment frame rather than the generated code that's eval()'d to make it, we need dependency resolution mechanisms to do this correctly
-  o) the issue specifically is imports and (load ...) and possibly also's R's source/library/require
-  o) important question: any inter-file deps beyond import/load/source/library/require?
-  o) caching the generated R code is always safe
-  o) so...should we switch to caching only generated code? invalidate the env-based caches if any file in the directory changes? (this one is bad because it requires reading every file to load any file)? keep a dependency DAG and read / check the files uptree from the one being loaded (this also requires reading a large part of the files in the DAG every time a file changes to rewrite the DAG)?
-  o) depending on just how bad the upstream deps can be, especially if source/library/require also matter, may have to switch to using only generated code
-  o) does FileDeps catch load, source, library, require
-  o) if possible, the right answer may be to make the env-based caching with DAG optional, controllable by an option: if you won't be doing writes, turn it on for more speed
-  o) alternatively, allow env-based caching exactly as is, off by default, and say that it's only safe if there are no writes: caches will in general get out of sync otherwise
-
-test and related fixes:
+tests and related fixes:
 -------------------------------------------------
 o) is there a lot of duplication between the native and R tests, especially the stdlib-* tests?
 o) audit for test duplication and remove it
@@ -61,5 +47,6 @@ o) run the benchmarks and profiles again after all this, commit them
 documentation updates:
 -------------------------------------------------
 o) update / systematize docs: make a plan
-o) write a compiler vignette
+o) write a compiler vignette (or inst/doc file?)
+o) internal technical docs in inst/doc
 o) minor pkgdown warning about site url
