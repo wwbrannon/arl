@@ -1236,3 +1236,48 @@ test_that("partial applies arguments partially", {
   expect_equal(multiply_by_2_3(4), 24)  # 2 * 3 * 4
   expect_equal(multiply_by_2_3(5), 30)  # 2 * 3 * 5
 })
+
+test_that("numeric tower predicates work correctly", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # number? includes complex
+  expect_true(engine$eval_in_env(engine$read("(number? 42)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(number? (complex :real 3 :imaginary 4))")[[1]], env))
+
+  # real? includes infinities but not complex
+  expect_true(engine$eval_in_env(engine$read("(real? Inf)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(real? (complex :real 3 :imaginary 4))")[[1]], env))
+
+  # rational? excludes infinities
+  expect_false(engine$eval_in_env(engine$read("(rational? Inf)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(rational? 3.14)")[[1]], env))
+
+  # exact? and inexact?
+  expect_true(engine$eval_in_env(engine$read("(exact? 5L)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(exact? 5.0)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(inexact? 5.0)")[[1]], env))
+})
+
+test_that("type coercion functions work", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_equal(engine$eval_in_env(engine$read("(exact->inexact 5)")[[1]], env), 5.0)
+  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 5L)
+  expect_equal(engine$eval_in_env(engine$read("(->integer \"42\")")[[1]], env), 42L)
+  expect_equal(engine$eval_in_env(engine$read("(->double 5)")[[1]], env), 5.0)
+})
+
+test_that("complex number utilities work", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  z <- engine$eval_in_env(engine$read("(make-rectangular 3 4)")[[1]], env)
+  expect_equal(Re(z), 3.0)
+  expect_equal(Im(z), 4.0)
+
+  expect_equal(engine$eval_in_env(engine$read("(real-part (make-rectangular 3 4))")[[1]], env), 3.0)
+  expect_equal(engine$eval_in_env(engine$read("(imag-part (make-rectangular 3 4))")[[1]], env), 4.0)
+  expect_equal(engine$eval_in_env(engine$read("(magnitude (make-rectangular 3 4))")[[1]], env), 5.0)
+})

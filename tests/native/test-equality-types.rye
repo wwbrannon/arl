@@ -103,6 +103,29 @@
   ;; R supports complex numbers
   (assert-true (complex? (complex :real 3 :imaginary 4)))))
 
+(define test-number-includes-complex (lambda ()
+  (assert-true (number? 5))
+  (assert-true (number? 3.14))
+  (assert-true (number? (complex :real 3 :imaginary 4)))))
+
+(define test-exact-inexact (lambda ()
+  (assert-true (exact? 5L))
+  (assert-false (exact? 5.0))
+  (assert-true (inexact? 5.0))
+  (assert-true (inexact? (complex :real 3 :imaginary 4)))
+  (assert-false (inexact? 5L))))
+
+(define test-real-includes-infinities (lambda ()
+  (assert-true (real? Inf))
+  (assert-true (real? -Inf))
+  (assert-false (rational? Inf))
+  (assert-false (rational? -Inf))))
+
+(define test-integer-rejects-infinities (lambda ()
+  (assert-false (integer? Inf))
+  (assert-false (integer? -Inf))
+  (assert-false (integer? NaN))))
+
 ;; ============================================================================
 ;; Symbol Conversions
 ;; ============================================================================

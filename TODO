@@ -1,17 +1,14 @@
+o) "predicates" is not a really coherent thing to have a file of, we should prob split these up
+
 performance issues:
 -------------------------------------------------
-o) probably room to further optimize the generated expressions
-
-o) write a compiler vignette
-
 o) have opus or some such critique the architecture and make suggestions
-o) other performance optimizations: use profiling and benchmarking
 
 test audits:
 -------------------------------------------------
-o) fix the minor issues found last time from opus auditing the tests
-
 o) expand test coverage for newer components
+
+o) audit for test duplication and remove it, especially between native and stdlib-*
 
 o) have opus audit the tests again:
 ```
@@ -29,13 +26,14 @@ judgment!
 ```
 or similar
 
-documentation updates:
--------------------------------------------------
-o) update / systematize docs: make a plan
-
 small stuff:
 --------------------------------------
 o) general code quality / duplication pass
 
 o) minor pkgdown warning about site url
 o) run lints and fix
+
+documentation updates:
+-------------------------------------------------
+o) update / systematize docs: make a plan
+o) write a compiler vignette

@@ -13,7 +13,8 @@
           log logb exp log10 log2
           sin cos tan asin acos atan atan2
           quotient remainder modulo
-          gcd lcm)
+          gcd lcm
+          make-rectangular make-polar real-part imag-part magnitude angle)
 
   (import _r)
 
@@ -228,7 +229,9 @@
     (lambda (x)
       "Return #t if x is an integer-valued number."
       (if (is.numeric x)
-        (isTRUE (== x (as.integer x)))
+        (if (is.finite x)
+          (isTRUE (== x (as.integer x)))
+          #f)
         #f)))
 
   (define natural?
@@ -252,6 +255,40 @@
     (lambda (x)
       "Return #t if x is NaN."
       (isTRUE (is.nan x))))
+
+  ;; ============================================================================
+  ;; Complex Number Utilities
+  ;; ============================================================================
+
+  (define make-rectangular
+    (lambda (real imag)
+      "Construct a complex number from real and imaginary parts."
+      (complex :real real :imaginary imag)))
+
+  (define make-polar
+    (lambda (magnitude angle)
+      "Construct a complex number from polar coordinates (magnitude and angle)."
+      (complex :modulus magnitude :argument angle)))
+
+  (define real-part
+    (lambda (z)
+      "Extract the real part of a complex number."
+      (Re z)))
+
+  (define imag-part
+    (lambda (z)
+      "Extract the imaginary part of a complex number."
+      (Im z)))
+
+  (define magnitude
+    (lambda (z)
+      "Compute the magnitude (modulus) of a complex number."
+      (Mod z)))
+
+  (define angle
+    (lambda (z)
+      "Compute the angle (argument) of a complex number."
+      (Arg z)))
 
   ;; ============================================================================
   ;; Phase 1: Extended Numeric Operations

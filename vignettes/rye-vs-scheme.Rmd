@@ -72,6 +72,41 @@ you need to branch on these values.
 (is.na (== NaN NaN))   ; => TRUE
 ```
 
+### Numeric Tower Differences
+
+Rye implements a numeric tower similar to Scheme's, but adapted for R's type system:
+
+```
+number?    (is.numeric OR is.complex)
+├─ complex?  (is.complex)
+└─ real?     (is.numeric AND NOT is.complex)
+   ├─ ±Inf   (real but not rational)
+   └─ rational? (real? AND is.finite)
+      └─ integer? (is.finite AND is.numeric AND x == as.integer(x))
+         └─ natural? (integer? AND x >= 0)
+
+Orthogonal predicates:
+exact?   (is.integer - storage type)
+inexact? (number? AND NOT is.integer)
+```
+
+**Key differences from Scheme:**
+
+1. R doesn't distinguish exact rationals from inexact reals - all are IEEE 754 floats
+2. `rational?` means "finite real" in Rye (since all finite floats are rationally representable)
+3. `exact?` checks storage type (integer vs. double), not mathematical exactness
+4. All complex numbers in R are inexact (double-precision)
+
+**Infinities and special values:**
+
+```lisp
+(real? Inf)       ; => #t (infinities are real)
+(rational? Inf)   ; => #f (but not rational)
+(finite? Inf)     ; => #f
+(real? NaN)       ; => #t
+(finite? NaN)     ; => #f
+```
+
 ### Keywords and named arguments
 
 Rye keywords (`:from`, `:to`) are self-evaluating and map to **named arguments**

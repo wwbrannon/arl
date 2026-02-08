@@ -10,8 +10,10 @@
           equal?.default equal?.environment equal?.list
           s3-type check-s3-type-match use-method set-method!
           atom? procedure? rational? real? complex?
+          exact? inexact?
           symbol->string string->symbol
           ->symbol ->number ->list ->vector
+          exact->inexact inexact->exact ->integer ->double ->complex
           type-of)
 
   (import _r)
@@ -57,8 +59,12 @@
       "Return #t if x is a Rye keyword."
       (isTRUE (inherits x "rye_keyword"))))
 
-  (define number? is.numeric)
-  (doc! number? "Return #t if x is numeric.")
+  (define number?
+    (lambda (x)
+      "Return #t if x is a number (real or complex)."
+      (if (is.numeric x)
+        #t
+        (if (is.complex x) #t #f))))
 
   (define string? is.character)
   (doc! string? "Return #t if x is character.")
@@ -295,16 +301,14 @@
 
   (define rational?
     (lambda (x)
-      "Return #t if x is a rational number (all R numerics are rational or special)."
-      ;; In R, all finite numerics can be considered rational
-      (if (number? x)
+      "Return #t if x is a finite real number (rational in R are finite floats)."
+      (if (real? x)
         (if (is.finite x) #t #f)
         #f)))
 
   (define real?
     (lambda (x)
-      "Return #t if x is a real number."
-      ;; R's is.numeric includes integers and doubles
+      "Return #t if x is a real number (includes ±Inf, excludes complex)."
       (if (is.numeric x)
         (if (is.complex x) #f #t)
         #f)))
@@ -313,6 +317,18 @@
     (lambda (x)
       "Return #t if x is a complex number."
       (is.complex x)))
+
+  (define exact?
+    (lambda (x)
+      "Return #t if x is an exact number (integer storage type in R)."
+      (is.integer x)))
+
+  (define inexact?
+    (lambda (x)
+      "Return #t if x is an inexact number (double or complex in R)."
+      (if (number? x)
+        (not (is.integer x))
+        #f)))
 
   ;; Symbol conversions
   (define symbol->string
@@ -349,6 +365,61 @@
               (stop (sprintf "Cannot convert '%s' to number" x))
               result))
           (stop "->number: cannot convert to number")))))
+
+  ;; Scheme-style exact/inexact conversions
+  (define exact->inexact
+    (lambda (x)
+      "Convert exact number to inexact (integer to double)."
+      (if (number? x)
+        (as.double x)
+        (stop "exact->inexact: argument must be a number"))))
+
+  (define inexact->exact
+    (lambda (x)
+      "Convert inexact number to exact (double to integer, may round)."
+      (if (number? x)
+        (as.integer x)
+        (stop "inexact->exact: argument must be a number"))))
+
+  ;; R-style type conversions (shortcuts)
+  (define ->integer
+    (lambda (x)
+      "Convert value to integer."
+      (if (number? x)
+        (as.integer x)
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.integer x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to integer" x))
+              result))
+          (stop "->integer: cannot convert to integer")))))
+
+  (define ->double
+    (lambda (x)
+      "Convert value to double."
+      (if (number? x)
+        (as.double x)
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.double x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to double" x))
+              result))
+          (stop "->double: cannot convert to double")))))
+
+  (define ->complex
+    (lambda (x)
+      "Convert value to complex number (imaginary part = 0)."
+      (if (number? x)
+        (as.complex x)
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.complex x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to complex" x))
+              result))
+          (stop "->complex: cannot convert to complex")))))
 
   (define ->list
     (lambda (x)

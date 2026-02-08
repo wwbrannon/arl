@@ -1,0 +1,32 @@
+;;; Tests for complex number utilities
+
+(import assert)
+(import math)
+(import predicates)
+
+(define test-make-rectangular (lambda ()
+  (define z (make-rectangular 3 4))
+  (assert-equal (real-part z) 3.0)
+  (assert-equal (imag-part z) 4.0)))
+
+(define test-make-polar (lambda ()
+  (define z (make-polar 5 0))
+  ;; For polar (5, 0) we get 5+0i, so real part is 5 and imag is 0
+  (assert-true (< (abs (- (real-part z) 5.0)) 1e-10))
+  (assert-true (< (abs (imag-part z)) 1e-10))))
+
+(define test-magnitude-angle (lambda ()
+  (define z (make-rectangular 3 4))
+  (assert-equal (magnitude z) 5.0)
+  (assert-true (> (angle z) 0))))
+
+(define test-real-imag-parts (lambda ()
+  (define z (complex :real 2.5 :imaginary -1.5))
+  (assert-equal (real-part z) 2.5)
+  (assert-equal (imag-part z) -1.5)))
+
+;; Run tests
+(test-make-rectangular)
+(test-make-polar)
+(test-magnitude-angle)
+(test-real-imag-parts)

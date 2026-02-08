@@ -1,0 +1,27 @@
+;;; Tests for type coercion functions
+
+(import assert)
+(import predicates)
+
+(define test-exact-inexact-conversion (lambda ()
+  (assert-equal (exact->inexact 5) 5.0)
+  (assert-equal (inexact->exact 5.7) 5L)))
+
+(define test-integer-conversion (lambda ()
+  (assert-equal (->integer 5.7) 5L)
+  (assert-equal (->integer "42") 42L)))
+
+(define test-double-conversion (lambda ()
+  (assert-equal (->double 5) 5.0)
+  (assert-equal (->double "3.14") 3.14)))
+
+(define test-complex-conversion (lambda ()
+  (assert-true (complex? (->complex 5)))
+  (assert-equal (real-part (->complex 5)) 5.0)
+  (assert-equal (imag-part (->complex 5)) 0.0)))
+
+;; Run tests
+(test-exact-inexact-conversion)
+(test-integer-conversion)
+(test-double-conversion)
+(test-complex-conversion)

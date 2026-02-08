@@ -102,7 +102,7 @@ test_that("optimized predicate functions have docstrings", {
   expect_match(symbol_doc, "symbol", ignore.case = TRUE)
 
   number_doc <- engine$eval_in_env(engine$read('(doc number?)')[[1]], env)
-  expect_match(number_doc, "numeric", ignore.case = TRUE)
+  expect_match(number_doc, "number", ignore.case = TRUE)
 })
 
 test_that("optimized string functions have docstrings", {
