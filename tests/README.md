@@ -1,0 +1,198 @@
+# Rye Test Suite
+
+This directory contains the test suite for the Rye language implementation. Tests are organized into two main categories: **R tests** and **native tests**.
+
+## Test Organization
+
+```
+tests/
+├── testthat/              # R-based tests using testthat framework
+│   ├── test-*.R           # R test files
+│   ├── helper-*.R         # R test helpers
+│   └── helper-native.rye  # Rye helpers for native tests (skip, etc.)
+├── native/                # Native Rye tests (.rye files)
+│   └── test-*.rye         # Native test files
+└── skip-examples.rye      # Example usage of skip() (not a test)
+```
+
+## R Tests (testthat/)
+
+Traditional R tests using the testthat framework. These tests:
+- Test the R implementation of the Rye engine
+- Test R interop and integration
+- Test stdlib functions from the R side
+- Use standard testthat assertions (`expect_equal`, `expect_error`, etc.)
+
+**Example:**
+```r
+test_that("lambda creates functions", {
+  engine <- RyeEngine$new()
+  env <- new.env()
+  result <- engine$eval_in_env(
+    engine$read("((lambda (x) (* x 2)) 5)")[[1]], env)
+  expect_equal(result, 10)
+})
+```
+
+## Native Tests (native/)
+
+Native Rye tests written in Rye itself. These tests:
+- Test Rye language features and semantics from within Rye
+- Test stdlib functionality using Rye assertions
+- Provide examples of idiomatic Rye code
+- Run faster than R tests for pure Rye logic
+
+### How Native Tests Work
+
+1. **Test files** are `.rye` files in `tests/native/` directory
+2. **Test functions** are defined with names starting with `test-`
+3. **Test runner** (`helper-native.R`) automatically discovers and runs all `test-*` functions
+4. **Assertions** use functions from the `assert` module (`assert-equal`, `assert-true`, etc.)
+
+### Writing a Native Test
+
+Create a file `tests/native/test-feature.rye`:
+
+```rye
+;;; Tests for my feature
+
+(define test-basic-functionality (lambda ()
+  ;; Test that 1 + 1 = 2
+  (assert-equal 2 (+ 1 1))))
+
+(define test-edge-case (lambda ()
+  ;; Test empty list behavior
+  (assert-true (null? (list)))))
+
+(define test-error-handling (lambda ()
+  ;; Test that division by zero errors
+  (assert-error (lambda ()
+    (/ 1 0)))))
+```
+
+**Key points:**
+- Each test is a function named `test-something`
+- Use `assert-equal`, `assert-true`, `assert-false`, `assert-eq`, `assert-error`
+- Tests run in a fresh environment with stdlib loaded
+- Tests are isolated from each other
+
+### Available Assertions
+
+From the `assert` module (automatically available):
+
+- `(assert condition [message])` - Assert condition is truthy
+- `(assert-equal expected actual)` - Assert structural equality (uses `equal?`)
+- `(assert-eq expected actual)` - Assert identity (uses `identical?`)
+- `(assert-true value)` - Assert value is truthy
+- `(assert-false value)` - Assert value is falsy
+- `(assert-error thunk)` - Assert thunk throws an error
+
+### Skipping Tests
+
+Use `skip()` to mark a test as skipped (only available in native tests):
+
+```rye
+(define test-future-feature (lambda ()
+  (skip "Not yet implemented")
+  ;; Code after skip is never reached
+  (assert-equal 1 2)))
+
+(define test-platform-specific (lambda ()
+  ;; Skip on Windows
+  (define os (r/call "Sys.info" (list)))
+  (if (== (r/call "[[" (list os "sysname")) "Windows")
+    (skip "Not supported on Windows")
+    (assert-equal 1 1))))
+
+(define test-requires-new-r (lambda ()
+  ;; Skip if R version too old
+  (if (< (r/call "getRversion" (list)) (r/call "package_version" (list "4.5")))
+    (skip "Requires R >= 4.5")
+    (assert-equal 1 1))))
+```
+
+**Note:** `skip()` is defined in `testthat/helper-native.rye` and calls `testthat::skip()`, so it integrates with the R test framework. Skipped tests appear in test output but don't fail the suite.
+
+### Test Infrastructure
+
+Native tests are run by `helper-native.R`:
+
+1. Creates a fresh `RyeEngine` with stdlib loaded
+2. Loads `helper-native.rye` to provide test utilities (like `skip`)
+3. Discovers all `.rye` files in `native/`
+4. Loads each file and finds all `test-*` functions
+5. Runs each test inside a `test_that()` block
+6. Catches errors and reports failures/skips
+
+## Running Tests
+
+```r
+# Run all tests
+devtools::test()
+
+# Run only R tests
+devtools::test(filter = "^(?!native)")
+
+# Run only native tests
+devtools::test(filter = "native")
+
+# Run specific test file
+testthat::test_file("tests/testthat/test-engine.R")
+```
+
+## Test Guidelines
+
+### When to Write R Tests vs Native Tests
+
+**Use R tests when:**
+- Testing the R engine implementation
+- Testing R interop features
+- Testing integration with R packages
+- Need to test R-specific edge cases
+
+**Use native tests when:**
+- Testing Rye language semantics
+- Testing stdlib functions from user perspective
+- Demonstrating idiomatic Rye patterns
+- Testing pure Rye logic without R concerns
+
+### General Guidelines
+
+- Keep tests focused and independent
+- Use descriptive test names that explain what's being tested
+- Group related tests in the same file
+- Add comments explaining non-obvious test logic
+- Test both success and failure cases
+- Consider edge cases (empty lists, null, zero, etc.)
+
+## Debugging Test Failures
+
+For R tests, use standard R debugging:
+```r
+testthat::test_file("tests/testthat/test-file.R")
+# Set breakpoints, use browser(), etc.
+```
+
+For native tests, you can load and run them manually:
+```r
+engine <- RyeEngine$new()
+env <- engine$env$env
+source("tests/testthat/helper-native.R")  # Loads skip() etc.
+engine$load_file("tests/native/test-something.rye", env)
+# Now you can call test functions directly:
+env$`test-my-function`()
+```
+
+## Contributing Tests
+
+When adding new features:
+1. Add R tests for the implementation
+2. Add native tests demonstrating usage
+3. Ensure all existing tests still pass
+4. Consider edge cases and error conditions
+
+When fixing bugs:
+1. Add a test that reproduces the bug (should fail initially)
+2. Fix the bug
+3. Verify the test now passes
+4. Ensure no other tests broke
