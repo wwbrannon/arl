@@ -180,21 +180,38 @@ test_that("assert-eq compares identity with identical?", {
   expect_true(result)
 })
 
+test_that("assert-eq passes for structurally identical lists", {
+  env <- new.env(parent = baseenv())
+  stdlib_env(engine, env)
+  import_stdlib_modules(engine, c("assert"), env)
+
+  # R's identical() returns TRUE for structurally identical lists
+  result <- engine$eval_in_env(
+    engine$read("(assert-eq (list 1 2) (list 1 2))")[[1]], env)
+  expect_true(result)
+
+  # Also works for nested lists
+  result <- engine$eval_in_env(
+    engine$read("(assert-eq (list 1 (list 2 3)) (list 1 (list 2 3)))")[[1]], env)
+  expect_true(result)
+})
+
 test_that("assert-eq fails on non-identical values", {
   env <- new.env(parent = baseenv())
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
-  # Different numbers (may be identical or not depending on R internals)
-  # Skip this test as it's implementation dependent
+  # Different list contents
+  expect_error(
+    engine$eval_in_env(
+      engine$read("(assert-eq (list 1 2) (list 1 3))")[[1]], env),
+    "Expected.*identical")
 
-  # NOTE: List identity tests are also skipped because R's identical()
-  # behavior with lists can be implementation-dependent
-  # Different lists (never identical even if equal)
-  # expect_error(
-  #   engine$eval_in_env(
-  #     engine$read("(assert-eq (list 1 2) (list 1 2))")[[1]], env),
-  #   "Expected.*identical")
+  # Different types
+  expect_error(
+    engine$eval_in_env(
+      engine$read("(assert-eq 42 \"42\")")[[1]], env),
+    "Expected.*identical")
 })
 
 # NOTE: assert-error has known issues with dict/tryCatch implementation

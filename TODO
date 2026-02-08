@@ -1,22 +1,16 @@
 test and related fixes:
 -------------------------------------------------
-o) finish refactoring stdlib tests
-
 o) "The assert-error function has a known issue - it's using dict() incorrectly with tryCatch"
 
-o) this is wrong? ```
-# NOTE: List identity tests are also skipped because R's identical()
-# behavior with lists can be implementation-dependent
-```
 
 o) what's up here?
 ```
 tests/native/test-scoping.rye:  ;; NOTE: We don't have assert-error yet, so we can't test this properly
 ```
 
-o) several commented-out tests / NOTEs / a TODO
-
 o) is there a lot of duplication between the native and R tests, especially the stdlib-* tests?
+
+o) skip() mechanism for native tests
 
 o) could we build instrumented coverage tooling really easily via covr? we do actually have a compiler to R now...
 
@@ -27,9 +21,10 @@ other problems:
 o) is our module cache invalidation correctly handling changes in which .rye files exist -- creations, deletions? we have a hash-based check for if each file changed, but what about the set of files changing?
   => No! the issue is imports! and (load ...)! possibly also's R's source/library/require? files are not self-contained: need dependency resolution mechanics to do invalidation correctly, or disable environment caching entirely (caching the generated R code is always safe)
   o) so...should we switch caching only generated code? invalidate the env-based caches if any file in the directory changes? (this one is bad because it requires reading every file to load any file)? keep a dependency DAG and read / check the files uptree from the one being loaded?
-  o) probably the right answer is to make the env-based caching with DAG optional, controllable by an option: if you won't be doing writes, turn it on for more speed
+  o) depending on just how bad the upstream deps can be, especially if source/library/require also matter, may have to switch to generated code (does FileDeps catch these? does it catch (load ...)?)
+  o) if possible, the right answer may be to make the env-based caching with DAG optional, controllable by an option: if you won't be doing writes, turn it on for more speed
 
-o) minor formatting issues -- TRUE printed rather than #t
+o) minor formatting issues -- TRUE printed rather than #t for example
 
 test audit:
 -------------------------------------------------
@@ -67,6 +62,8 @@ small stuff:
 --------------------------------------
 o) general code quality / duplication pass
 o) run `make lint`, fix and/or update lint rules
+
+o) run the benchmarks and profiles again after all this, commit them
 
 documentation updates:
 -------------------------------------------------
