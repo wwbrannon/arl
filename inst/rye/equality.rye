@@ -26,7 +26,7 @@
           #t
           (begin
             (define cand-types (__runique (__rlapply rest s3-type)))
-            (if (__r>= (__rlength cand-types) 1)
+            (if (__r> (__rlength cand-types) 1)
               #f
               (if (__r!= type-a (__r[[ cand-types 1))
                 #f
