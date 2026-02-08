@@ -13,6 +13,10 @@
 #' @field env RyeEnv backing the engine.
 #' @field source_tracker Source tracker used for error context.
 #' @field module_cache Module cache for caching compiled modules.
+#' @field use_env_cache Logical. If TRUE, enables Option C (environment cache) which is
+#'   faster but only safe when dependencies don't change. If FALSE (default), only
+#'   Option A (compiled expressions cache) is used, which is always safe. Can be set
+#'   via engine initialization parameter or global option `rye.use_env_cache`.
 #' @param env Optional environment or RyeEnv used as the engine base.
 #' @param parent Optional parent environment for the new environment.
 #' @param source Character string containing Rye source.
@@ -43,12 +47,33 @@ RyeEngine <- R6::R6Class(
     env = NULL,
     source_tracker = NULL,
     module_cache = NULL,
+    use_env_cache = NULL,
     #' @description
     #' Initialize engine components and base environment.
     #' @param env Optional existing environment to use. If NULL, creates a new environment.
     #' @param parent Optional parent environment for the new environment. Only used if env is NULL.
     #'   Defaults to baseenv(). Cannot be specified together with env.
-    initialize = function(env = NULL, parent = NULL) {
+    #' @param use_env_cache Optional logical. If TRUE, enables Option C (environment cache)
+    #'   for 4x faster module loading. Only safe when dependencies don't change. Defaults to
+    #'   NULL, which inherits from global option `getOption("rye.use_env_cache", FALSE)`.
+    initialize = function(env = NULL, parent = NULL, use_env_cache = NULL) {
+      # Priority: explicit parameter > global option > default FALSE
+      if (is.null(use_env_cache)) {
+        self$use_env_cache <- getOption("rye.use_env_cache", FALSE)
+      } else {
+        self$use_env_cache <- isTRUE(use_env_cache)
+      }
+
+      # Show one-time warning if enabled
+      if (self$use_env_cache && !getOption("rye.env_cache_warning_shown", FALSE)) {
+        message(
+          "Note: Environment cache (Option C) is enabled. ",
+          "This provides 4x speedup but is only safe when dependencies don't change. ",
+          "Disable with options(rye.use_env_cache = FALSE) if working with changing code."
+        )
+        options(rye.env_cache_warning_shown = TRUE)
+      }
+
       self$env <- RyeEnv$new(env = env, parent = parent)
       self$source_tracker <- SourceTracker$new()
       self$tokenizer <- Tokenizer$new()
@@ -56,7 +81,7 @@ RyeEngine <- R6::R6Class(
       self$module_cache <- ModuleCache$new()
 
       # Create shared evaluation context
-      context <- EvalContext$new(self$env, self$source_tracker)
+      context <- EvalContext$new(self$env, self$source_tracker, self$use_env_cache)
 
       # Create components with context
       self$macro_expander <- MacroExpander$new(context)
@@ -376,7 +401,8 @@ RyeEngine <- R6::R6Class(
           target_env <- resolved
 
           # Try Option C first (fastest - full environment cache)
-          if (file.exists(cache_paths$env_cache)) {
+          # ONLY if use_env_cache is enabled
+          if (isTRUE(self$use_env_cache) && file.exists(cache_paths$env_cache)) {
             cache_data <- self$module_cache$load_env(cache_paths$env_cache, target_env, path)
             if (!is.null(cache_data)) {
               # Register the cached module

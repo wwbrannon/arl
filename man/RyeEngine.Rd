@@ -36,6 +36,11 @@ engine$eval_text("(+ 1 2 3)")
 \item{\code{source_tracker}}{Source tracker used for error context.}
 
 \item{\code{module_cache}}{Module cache for caching compiled modules.}
+
+\item{\code{use_env_cache}}{Logical. If TRUE, enables Option C (environment cache) which is
+faster but only safe when dependencies don't change. If FALSE (default), only
+Option A (compiled expressions cache) is used, which is always safe. Can be set
+via engine initialization parameter or global option \code{rye.use_env_cache}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -72,7 +77,7 @@ engine$eval_text("(+ 1 2 3)")
 \subsection{Method \code{new()}}{
 Initialize engine components and base environment.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$new(env = NULL, parent = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$new(env = NULL, parent = NULL, use_env_cache = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -82,6 +87,10 @@ Initialize engine components and base environment.
 
 \item{\code{parent}}{Optional parent environment for the new environment. Only used if env is NULL.
 Defaults to baseenv(). Cannot be specified together with env.}
+
+\item{\code{use_env_cache}}{Optional logical. If TRUE, enables Option C (environment cache)
+for 4x faster module loading. Only safe when dependencies don't change. Defaults to
+NULL, which inherits from global option \code{getOption("rye.use_env_cache", FALSE)}.}
 }
 \if{html}{\out{</div>}}
 }

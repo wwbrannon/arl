@@ -41,15 +41,18 @@ EvalContext <- R6::R6Class(
     macro_expander = NULL,
     compiled_runtime = NULL,
     compiler = NULL,
+    use_env_cache = NULL,
     # @description Create context. macro_expander and compiler are assigned by the engine.
     # @param env RyeEnv instance.
     # @param source_tracker SourceTracker instance.
-    initialize = function(env, source_tracker) {
+    # @param use_env_cache Logical. If TRUE, enables Option C (environment cache).
+    initialize = function(env, source_tracker, use_env_cache = FALSE) {
       if (!r6_isinstance(env, "RyeEnv")) {
         stop("EvalContext requires a RyeEnv")
       }
       self$env <- env
       self$source_tracker <- source_tracker
+      self$use_env_cache <- isTRUE(use_env_cache)
     }
   )
 )
@@ -322,10 +325,12 @@ CompiledRuntime <- R6::R6Class(
           # Always write Option A (safe fallback)
           self$module_cache$write_code(module_name, compiled_body, exports, export_all, src_file, cache_paths$file_hash)
 
-          # Try Option C if safe
-          safety <- self$module_cache$is_safe_to_cache(module_env, env)
-          if (safety$safe) {
-            self$module_cache$write_env(module_name, module_env, exports, src_file, cache_paths$file_hash)
+          # Write Option C ONLY if enabled AND safe
+          if (isTRUE(self$context$use_env_cache)) {
+            safety <- self$module_cache$is_safe_to_cache(module_env, env)
+            if (safety$safe) {
+              self$module_cache$write_env(module_name, module_env, exports, src_file, cache_paths$file_hash)
+            }
           }
         }
       }

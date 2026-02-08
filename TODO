@@ -19,8 +19,6 @@ o) audit for test duplication and remove it
 
 o) could we build instrumented coverage tooling really easily via covr? we do actually have a compiler to R now...
 
-test audit:
--------------------------------------------------
 o) have opus audit the tests again:
 ```
 Take a look at the tests in tests/, maybe especially the native ones in
