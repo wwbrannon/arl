@@ -154,7 +154,7 @@
   (assert-equal (quotient 17 5) 3)))
 
 (define test-quotient-negative-numerator (lambda ()
-  (assert-equal (quotient -17 5) -4)))
+  (assert-equal (quotient -17 5) -3)))
 
 (define test-quotient-both-negative (lambda ()
   (assert-equal (quotient -17 -5) 3)))
@@ -163,7 +163,7 @@
   (assert-equal (remainder 17 5) 2)))
 
 (define test-remainder-negative-numerator (lambda ()
-  (assert-equal (remainder -17 5) 3)))
+  (assert-equal (remainder -17 5) -2)))
 
 (define test-modulo-positive (lambda ()
   (assert-equal (modulo 17 5) 2)))

@@ -343,7 +343,7 @@
   (define quotient
     (lambda (x y)
       "Return integer quotient of x divided by y."
-      (__ras.integer (__rfloor (__r/ x y)))))
+      (__ras.integer (__rtrunc (__r/ x y)))))
 
   (define remainder
     (lambda (x y)

@@ -18,9 +18,7 @@
   `(if ,test #nil ,body))
 
 ;;; Boolean operators - now handled as compiler special forms
-;;; (Phase 2 optimization: eliminate temps for simple values, flatten nested chains)
-;;;
-;;; OLD macro implementations (commented out):
+;;; (optimization: eliminate temps for simple values, flatten nested chains)
 ;;;
 ;;; (defmacro and (first . rest)
 ;;;   "Short-circuit boolean AND."
