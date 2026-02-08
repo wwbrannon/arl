@@ -1,5 +1,5 @@
 destination: site
-# url: https://wwbrannon.github.io/rye
+url:
 
 template:
   bootstrap: 5
