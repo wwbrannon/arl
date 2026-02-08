@@ -60,10 +60,20 @@ test_that("is_safe_to_cache() returns safe for clean environment", {
 })
 
 test_that("is_safe_to_cache() detects external pointers", {
-  skip("External pointer creation requires C-level access")
-  # This test would require creating an actual external pointer,
-  # which is difficult without C code. The implementation is tested
-  # by checking typeof(obj) == "externalptr"
+  skip_if_not_installed("xptr")
+
+  cache <- rye:::ModuleCache$new()
+  test_env <- new.env()
+  engine_env <- new.env()
+
+  # Create an external pointer using xptr package
+  test_env$ext_ptr <- xptr::null_xptr()  # A NULL external pointer
+  on.exit(rm(list = ls(test_env), envir = test_env))
+
+  result <- cache$is_safe_to_cache(test_env, engine_env)
+
+  expect_false(result$safe)
+  expect_true(any(grepl("External pointer", result$issues)))
 })
 
 test_that("is_safe_to_cache() detects connections", {

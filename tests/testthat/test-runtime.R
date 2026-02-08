@@ -165,9 +165,6 @@ test_that("module_compiled() marks module environment", {
 })
 
 test_that("module_compiled() creates path alias when src_file provided", {
-  skip_on_ci <- !interactive()
-  skip_if(skip_on_ci, "Requires file system access")
-
   eng <- RyeEngine$new()
   tmp_file <- tempfile(fileext = ".rye")
   writeLines("(module test (export foo) (define foo 42))", tmp_file)
@@ -209,11 +206,30 @@ test_that("module_compiled() installs helpers in module environment", {
 
 # Import handling tests
 test_that("import_compiled() by module name loads stdlib module", {
-  skip("Requires full stdlib initialization - tested in integration tests")
+  eng <- RyeEngine$new()
+  test_env <- new.env(parent = eng$env$raw())
+
+  # Import a simple stdlib module (math is one of the core modules)
+  # Module names are passed as symbols in compiled code
+  eng$compiled_runtime$import_compiled(as.symbol("math"), test_env)
+
+  # Check that some exported functions from math are now available
+  expect_true(exists("even?", envir = test_env, inherits = FALSE))
+  expect_true(exists("odd?", envir = test_env, inherits = FALSE))
+  expect_true(is.function(test_env$`even?`))
 })
 
 test_that("import_compiled() by module name as symbol", {
-  skip("Requires full stdlib initialization - tested in integration tests")
+  eng <- RyeEngine$new()
+  test_env <- new.env(parent = eng$env$raw())
+
+  # Import using a symbol (which is how compiled code calls it)
+  module_name_sym <- as.symbol("display")
+  eng$compiled_runtime$import_compiled(module_name_sym, test_env)
+
+  # Check that some exported functions from display are now available
+  expect_true(exists("str", envir = test_env, inherits = FALSE))
+  expect_true(is.function(test_env$str))
 })
 
 test_that("import_compiled() errors on missing module", {
@@ -227,16 +243,66 @@ test_that("import_compiled() errors on missing module", {
 })
 
 test_that("import_compiled() loads module only once", {
-  skip("Requires full stdlib initialization - tested in integration tests")
+  eng <- RyeEngine$new()
+  test_env1 <- new.env(parent = eng$env$raw())
+  test_env2 <- new.env(parent = eng$env$raw())
+
+  # Import the same module twice into different environments (using symbols)
+  eng$compiled_runtime$import_compiled(as.symbol("functional"), test_env1)
+  eng$compiled_runtime$import_compiled(as.symbol("functional"), test_env2)
+
+  # Both should get the same module (same function objects)
+  expect_true(exists("map", envir = test_env1, inherits = FALSE))
+  expect_true(exists("map", envir = test_env2, inherits = FALSE))
+
+  # The functions should be identical (same object from the shared registry)
+  expect_identical(test_env1$map, test_env2$map)
 })
 
-test_that("import_compiled() by path resolves relative to cwd", {
-  skip("Requires setting up test file in filesystem")
-  # This would require creating a temp .rye file and importing it
+test_that("import_compiled() by path loads and attaches exports", {
+  eng <- RyeEngine$new()
+
+  # Create a temporary .rye file with a simple module
+  tmp_file <- tempfile(fileext = ".rye")
+  writeLines(c(
+    "(module test-import",
+    "  (export test-value)",
+    "  (define test-value 123))"
+  ), tmp_file)
+  on.exit(unlink(tmp_file))
+
+  # Import using absolute path (strings are treated as paths by import_compiled)
+  test_env <- new.env(parent = eng$env$raw())
+  eng$compiled_runtime$import_compiled(tmp_file, test_env)
+
+  # Check that the exported value is now in test_env
+  expect_true(exists("test-value", envir = test_env, inherits = FALSE))
+  expect_equal(test_env$`test-value`, 123)
 })
 
 test_that("import_compiled() attaches exports to target environment", {
-  skip("Requires full module system initialization - tested in integration tests")
+  eng <- RyeEngine$new()
+  test_env <- new.env(parent = eng$env$raw())
+
+  # Before import, the environment should be empty
+  expect_equal(length(ls(test_env, all.names = TRUE)), 0)
+
+  # Import a module (using symbol)
+  eng$compiled_runtime$import_compiled(as.symbol("types"), test_env)
+
+  # After import, exported functions should be in the environment
+  exports <- ls(test_env, all.names = TRUE)
+  expect_true(length(exports) > 0)
+
+  # Check specific exports from types module
+  expect_true(exists("number?", envir = test_env, inherits = FALSE))
+  expect_true(exists("string?", envir = test_env, inherits = FALSE))
+  expect_true(exists("list?", envir = test_env, inherits = FALSE))
+
+  # Verify these are actually functions
+  expect_true(is.function(test_env$`number?`))
+  expect_true(is.function(test_env$`string?`))
+  expect_true(is.function(test_env$`list?`))
 })
 
 # Package access tests
