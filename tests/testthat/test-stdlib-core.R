@@ -3,6 +3,17 @@
 
 engine <- RyeEngine$new()
 
+test_that("stdlib loads successfully", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_true(exists("car", envir = env))
+  expect_true(exists("cdr", envir = env))
+  expect_true(exists("map", envir = env))
+  expect_true(exists("filter", envir = env))
+  expect_true(exists("reduce", envir = env))
+})
+
 test_that("force evaluates promises", {
   env <- stdlib_env(engine, new.env())
   forced <- engine$eval_in_env(engine$read("(force (delay (+ 1 2)))")[[1]], env)

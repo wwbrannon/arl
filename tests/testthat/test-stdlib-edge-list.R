@@ -101,3 +101,27 @@ test_that("list* handles edge cases", {
   # With NULL
   expect_equal(env$`list*`(NULL, list(1)), list(NULL, 1))
 })
+
+# ============================================================================
+# Nested Structure Tests
+# ============================================================================
+
+test_that("stdlib handles deeply nested structures", {
+  env <- setup_env()
+
+  # Create deeply nested list (10 levels)
+  deep <- list(1)
+  for (i in 2:10) {
+    deep <- list(i, deep)
+  }
+
+  # flatten should handle deep nesting
+  result <- env$flatten(deep)
+  expect_equal(length(result), 10)
+  expect_equal(result[[1]], 10)
+  expect_equal(result[[10]], 1)
+
+  # car/cdr should navigate nested structures
+  expect_equal(env$car(deep), 10)
+  expect_equal(env$car(env$cdr(deep)), list(9, list(8, list(7, list(6, list(5, list(4, list(3, list(2, list(1))))))))))
+})

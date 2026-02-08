@@ -150,3 +150,90 @@ test_that("string-append concatenates strings", {
 #   expect_equal(copy, original)
 #   expect_equal(copy, "hello")
 # })
+
+# ============================================================================
+# String Helpers and I/O
+# ============================================================================
+
+test_that("string and io helpers work", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_equal(env$str("a", 1, "b"), "a1b")
+  expect_equal(env$`format-value`(list(1, 2, 3)), "1 2 3")
+  expect_equal(env$`format-value`(quote(f(a, b))), "f a b")
+  expect_equal(env$`string-join`(list("a", "b", "c"), "-"), "a-b-c")
+  expect_equal(env$`string-split`("a-b-c", "-"), c("a", "b", "c"))
+  expect_equal(env$trim("  hi "), "hi")
+  expect_equal(env$format("x=%s", "y"), "x=y")
+
+  con <- textConnection("hello")
+  old_opts <- options(rye.stdin = con)
+  on.exit({
+    options(old_opts)
+    close(con)
+  }, add = TRUE)
+  expect_equal(env$`read-line`(), "hello")
+})
+
+test_that("string match helpers work", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_true(env$`string-contains?`("hello", "ell"))
+  expect_false(env$`string-contains?`("hello", "^ell"))
+  expect_true(env$`string-contains?`("hello", "^he", fixed = FALSE))
+
+  expect_true(env$`string-match?`("hello", "^he"))
+  expect_false(env$`string-match?`("hello", "ELL"))
+  expect_false(env$`string-match?`("hello", "ELL", fixed = TRUE))
+
+  expect_equal(env$`string-find`("hello", "ll"), 2)
+  expect_equal(env$`string-find`("hello", "nope"), NULL)
+  expect_equal(env$`string-find`("hello", "^he", fixed = FALSE), 0)
+
+  expect_equal(env$`string-replace`("hello", "l", "L"), "heLlo")
+  expect_equal(env$`string-replace-all`("hello", "l", "L"), "heLLo")
+})
+
+# ============================================================================
+# Edge Cases: String Operations
+# ============================================================================
+
+test_that("string operations handle edge cases", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  # str with no arguments (returns character(0), not empty string)
+  expect_equal(length(env$str()), 0)
+  expect_true(is.character(env$str()))
+
+  # str with single argument
+  expect_equal(env$str("hello"), "hello")
+
+  # str with NULL (NULLs are skipped)
+  expect_equal(env$str(NULL, "world"), "world")
+
+  # str with numbers
+  expect_equal(env$str(1, 2, 3), "123")
+
+  # string-join with empty list
+  expect_equal(env$`string-join`(list(), "-"), "")
+
+  # string-join with single element
+  expect_equal(env$`string-join`(list("a"), "-"), "a")
+
+  # string-split with empty string (returns character(0))
+  result <- env$`string-split`("", "-")
+  expect_equal(length(result), 0)
+  expect_true(is.character(result))
+
+  # string-split with delimiter not present
+  expect_equal(env$`string-split`("hello", "-"), c("hello"))
+
+  # trim with already trimmed string
+  expect_equal(env$trim("hello"), "hello")
+
+  # trim with only whitespace
+  expect_equal(env$trim("   "), "")
+})

@@ -1,26 +1,35 @@
-o) any functions in rye-engine.R that we can move in here?
-
-o) run `make coverage` and expand test coverage for newer components.
-o) let's also think about test coverage for the stdlib: any missing functions?
-we don't have the same instrumented coverage tooling but we can at least look
-closely
-
-o) audit for test duplication and remove it, especially between native and stdlib-*
-
-performance audit:
+test and related fixes:
 -------------------------------------------------
-o) have opus audit/critique the architecture and make performance-related suggestions:
-```
-Take a look at the architecture of this rye language implementation. We've made
-several improvements to get better performance, especially implementing a
-compiler in lieu of an AST-walking evaluator and adding disk-bached module
-caching. And performance is indeed much better: the examples test suite has
-gone from about 85s runtime to about 7.5s.
+o) finish refactoring stdlib tests
 
-But let's think about other ways to improve performance. Low-hanging fruit is
-especially desirable, but we should also think about larger architectural
-choices. Are there other good options to get better time or space performance?
+o) "The assert-error function has a known issue - it's using dict() incorrectly with tryCatch"
+
+o) this is wrong? ```
+# NOTE: List identity tests are also skipped because R's identical()
+# behavior with lists can be implementation-dependent
 ```
+
+o) what's up here?
+```
+tests/native/test-scoping.rye:  ;; NOTE: We don't have assert-error yet, so we can't test this properly
+```
+
+o) several commented-out tests / NOTEs / a TODO
+
+o) is there a lot of duplication between the native and R tests, especially the stdlib-* tests?
+
+o) could we build instrumented coverage tooling really easily via covr? we do actually have a compiler to R now...
+
+o) audit for test duplication and remove it
+
+other problems:
+-------------------------------------------------
+o) is our module cache invalidation correctly handling changes in which .rye files exist -- creations, deletions? we have a hash-based check for if each file changed, but what about the set of files changing?
+  => No! the issue is imports! and (load ...)! possibly also's R's source/library/require? files are not self-contained: need dependency resolution mechanics to do invalidation correctly, or disable environment caching entirely (caching the generated R code is always safe)
+  o) so...should we switch caching only generated code? invalidate the env-based caches if any file in the directory changes? (this one is bad because it requires reading every file to load any file)? keep a dependency DAG and read / check the files uptree from the one being loaded?
+  o) probably the right answer is to make the env-based caching with DAG optional, controllable by an option: if you won't be doing writes, turn it on for more speed
+
+o) minor formatting issues -- TRUE printed rather than #t
 
 test audit:
 -------------------------------------------------
@@ -37,6 +46,21 @@ that they clearly shouldn't? Mistaken behavior of the interpreter we have now
 that's been hardcoded into the tests? You're looking for things that clearly
 don't make sense and aren't how an R-based lisp should behave. Use your
 judgment!
+```
+
+performance audit:
+-------------------------------------------------
+o) have opus audit/critique the architecture and make performance-related suggestions:
+```
+Take a look at the architecture of this rye language implementation. We've made
+several improvements to get better performance, especially implementing a
+compiler in lieu of an AST-walking evaluator and adding disk-backed module
+caching. And performance is indeed much better: the examples test suite has
+gone from about 85s runtime to about 7.5s.
+
+But let's think about other ways to improve performance. Low-hanging fruit is
+especially desirable, but we should also think about larger architectural
+choices. Are there other good options to get better time or space performance?
 ```
 
 small stuff:

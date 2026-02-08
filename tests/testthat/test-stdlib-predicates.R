@@ -324,3 +324,85 @@ test_that("nan? identifies NaN", {
   expect_true(engine$eval_in_env(engine$read("(nan? NaN)")[[1]], env))
   expect_false(engine$eval_in_env(engine$read("(nan? 42)")[[1]], env))
 })
+
+# ============================================================================
+# Equality Tests
+# ============================================================================
+
+test_that("identical? tests object identity", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # eq? and eqv? not implemented - use identical? instead
+  engine$eval_in_env(engine$read("(define x '(1 2 3))")[[1]], env)
+  expect_true(engine$eval_in_env(engine$read("(identical? x x)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(identical? 'foo 'foo)")[[1]], env))
+})
+
+test_that("identical? tests value identity", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # identical? in R compares values, not storage types
+  expect_true(engine$eval_in_env(engine$read("(identical? 42 42)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(identical? 42 42.0)")[[1]], env))  # R coerces these
+  expect_false(engine$eval_in_env(engine$read("(identical? 42 43)")[[1]], env))
+})
+
+test_that("equal? tests structural equality", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_true(engine$eval_in_env(engine$read("(equal? '(1 2 3) '(1 2 3))")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(equal? '(1 2 3) '(1 2 4))")[[1]], env))
+})
+
+test_that("equal? handles nested structures", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_true(engine$eval_in_env(engine$read("(equal? '(1 (2 3)) '(1 (2 3)))")[[1]], env))
+})
+
+test_that("equality handles empty collections", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_true(engine$eval_in_env(engine$read("(equal? '() '())")[[1]], env))
+})
+
+test_that("equal? compares strings", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_true(engine$eval_in_env(engine$read("(equal? \"hello\" \"hello\")")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(equal? \"hello\" \"world\")")[[1]], env))
+})
+
+test_that("equality handles NULL", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # eq? not implemented - use eqv? or identical? instead
+  expect_true(engine$eval_in_env(engine$read("(identical? NULL NULL)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(equal? NULL NULL)")[[1]], env))
+})
+
+test_that("identical? and equal? both work for lists", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # In R, identical? does structural comparison for lists
+  expect_true(engine$eval_in_env(engine$read("(identical? '(1 2) '(1 2))")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(equal? '(1 2) '(1 2))")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(equal? '(1 2) '(1 3))")[[1]], env))
+})
+
+test_that("equality handles symbols", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # eq? not implemented - use identical? instead
+  expect_true(engine$eval_in_env(engine$read("(identical? 'foo 'foo)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(identical? 'foo 'bar)")[[1]], env))
+})
