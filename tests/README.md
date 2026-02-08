@@ -165,6 +165,70 @@ testthat::test_file("tests/testthat/test-engine.R")
 - Test both success and failure cases
 - Consider edge cases (empty lists, null, zero, etc.)
 
+## Avoiding Test Duplication
+
+The test suite includes both R tests (`tests/testthat/`) and native tests (`tests/native/`), each serving different purposes. To avoid unnecessary duplication and maintenance burden, follow these principles:
+
+### Native Tests Should
+
+- **Demonstrate idiomatic Rye usage patterns** - Show how features are meant to be used
+- **Test language semantics** - Focus on binding, scoping, closures, control flow, quoting
+- **Show 1-3 simple examples per stdlib function** - Demonstrate happy path usage
+- **Serve as executable documentation** - Be readable and exemplary
+- **Be concise and clear** - Each test should illustrate a specific pattern
+
+**Example of a good native test:**
+```rye
+(define test-string-upcase (lambda ()
+  (assert-equal (string-upcase "hello") "HELLO")))
+```
+
+### Native Tests Should NOT
+
+- **Test comprehensive edge cases** - Empty strings, NaN, boundary conditions belong in R tests
+- **Verify implementation details** - Caching behavior, optimization, internal state
+- **Duplicate detailed R test coverage** - If R tests comprehensively cover something, native tests should show only 1-2 examples
+- **Test system integration** - Actual file I/O, R interop details
+- **Test error handling exhaustively** - Basic error cases are OK, but comprehensive error testing belongs in R tests
+
+### R Tests Should
+
+- **Test R implementation correctness** - Engine, compiler, optimizer behavior
+- **Test comprehensive edge cases and error handling** - All boundary conditions, error messages
+- **Verify R interop and module system** - Integration with R, module loading
+- **Test actual file I/O and system integration** - Real filesystem operations
+- **Verify performance characteristics** - Memoization caching, optimization effects
+
+**Example of a good R test:**
+```r
+test_that("string-upcase handles edge cases", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_equal(env$`string-upcase`("hello"), "HELLO")
+  expect_equal(env$`string-upcase`(""), "")
+  expect_equal(env$`string-upcase`("ALREADY"), "ALREADY")
+  expect_error(env$`string-upcase`(NULL))
+})
+```
+
+### Acceptable Overlap
+
+- **Core language features** can be tested in both suites (different perspectives)
+- **Important stdlib functions** can have basic native examples + comprehensive R tests
+- The overlap should be **intentional, not accidental** - consider whether duplication adds value
+
+### Before Writing a Test
+
+1. **Check if it's already covered** - Search both `native/` and `testthat/` directories
+2. **Ask: "What am I testing?"**
+   - Language semantics or usage pattern → Native test
+   - Implementation correctness or edge case → R test
+3. **For stdlib functions:**
+   - Native: 1-2 clear examples showing typical usage
+   - R: Comprehensive edge cases, error handling, integration
+4. **When in doubt**, prefer R tests for comprehensive testing, reserve native tests for demonstrating idiomatic patterns
+
 ## Debugging Test Failures
 
 For R tests, use standard R debugging:

@@ -1,17 +1,13 @@
-;; Tests for extended string operations (Phase 3)
-;; Character access, substring, case conversion, comparisons
+;; Native tests for string operations - User-facing examples
+;; For comprehensive edge case testing, see tests/testthat/test-stdlib-strings.R
+;; These tests demonstrate idiomatic usage patterns with simple examples.
 
 ;; ============================================================================
 ;; Character Access
 ;; ============================================================================
 
 (define test-char-at-basic (lambda ()
-  (assert-equal (char-at "hello" 0) "h")))
-
-(define test-char-at-middle (lambda ()
-  (assert-equal (char-at "hello" 2) "l")))
-
-(define test-char-at-last (lambda ()
+  (assert-equal (char-at "hello" 0) "h")
   (assert-equal (char-at "hello" 4) "o")))
 
 (define test-string-ref-alias (lambda ()
@@ -23,108 +19,46 @@
 ;; ============================================================================
 
 (define test-substring-basic (lambda ()
-  (assert-equal (substring "hello world" 0 5) "hello")))
-
-(define test-substring-middle (lambda ()
+  (assert-equal (substring "hello world" 0 5) "hello")
   (assert-equal (substring "hello world" 6 11) "world")))
-
-(define test-substring-to-end (lambda ()
-  (assert-equal (substring "hello" 2 5) "llo")))
-
-(define test-substring-single-char (lambda ()
-  (assert-equal (substring "abc" 1 2) "b")))
-
-(define test-substring-empty (lambda ()
-  (assert-equal (substring "hello" 2 2) "")))
 
 ;; ============================================================================
 ;; Case Conversion
 ;; ============================================================================
 
-(define test-string-upcase-basic (lambda ()
+(define test-string-upcase (lambda ()
   (assert-equal (string-upcase "hello") "HELLO")))
 
-(define test-string-upcase-mixed (lambda ()
-  (assert-equal (string-upcase "Hello World") "HELLO WORLD")))
-
-(define test-string-upcase-already-upper (lambda ()
-  (assert-equal (string-upcase "HELLO") "HELLO")))
-
-(define test-string-downcase-basic (lambda ()
+(define test-string-downcase (lambda ()
   (assert-equal (string-downcase "HELLO") "hello")))
 
-(define test-string-downcase-mixed (lambda ()
-  (assert-equal (string-downcase "Hello World") "hello world")))
-
-(define test-string-downcase-already-lower (lambda ()
-  (assert-equal (string-downcase "hello") "hello")))
-
-(define test-string-titlecase-basic (lambda ()
+(define test-string-titlecase (lambda ()
   (assert-equal (string-titlecase "hello world") "Hello World")))
-
-(define test-string-titlecase-mixed (lambda ()
-  (assert-equal (string-titlecase "hELLo wORLd") "Hello World")))
 
 ;; ============================================================================
 ;; String Comparison
 ;; ============================================================================
 
-(define test-string-less-than (lambda ()
+(define test-string-comparison (lambda ()
   (assert-true (string<? "abc" "def"))
-  (assert-true (string<? "a" "b"))
-  (assert-false (string<? "xyz" "abc"))))
-
-(define test-string-greater-than (lambda ()
   (assert-true (string>? "def" "abc"))
-  (assert-true (string>? "b" "a"))
-  (assert-false (string>? "abc" "xyz"))))
-
-(define test-string-equal (lambda ()
-  (assert-true (string=? "hello" "hello"))
-  (assert-false (string=? "hello" "world"))
-  (assert-false (string=? "Hello" "hello"))))
-
-(define test-string-less-equal (lambda ()
-  (assert-true (string<=? "abc" "abc"))
-  (assert-true (string<=? "abc" "def"))
-  (assert-false (string<=? "xyz" "abc"))))
-
-(define test-string-greater-equal (lambda ()
-  (assert-true (string>=? "abc" "abc"))
-  (assert-true (string>=? "def" "abc"))
-  (assert-false (string>=? "abc" "xyz"))))
+  (assert-true (string=? "hello" "hello"))))
 
 ;; ============================================================================
 ;; String Length
 ;; ============================================================================
 
-(define test-string-length-basic (lambda ()
-  (assert-equal (string-length "hello") 5)))
-
-(define test-string-length-empty (lambda ()
+(define test-string-length (lambda ()
+  (assert-equal (string-length "hello") 5)
   (assert-equal (string-length "") 0)))
-
-(define test-string-length-with-spaces (lambda ()
-  (assert-equal (string-length "hello world") 11)))
 
 ;; ============================================================================
 ;; String/List Conversions
 ;; ============================================================================
 
-(define test-string-to-list-basic (lambda ()
-  (assert-equal (string->list "abc") (list "a" "b" "c"))))
-
-(define test-string-to-list-empty (lambda ()
-  (assert-equal (string->list "") (list))))
-
-(define test-string-to-list-spaces (lambda ()
-  (assert-equal (string->list "a b") (list "a" " " "b"))))
-
-(define test-list-to-string-basic (lambda ()
+(define test-string-list-conversion (lambda ()
+  (assert-equal (string->list "abc") (list "a" "b" "c"))
   (assert-equal (list->string (list "a" "b" "c")) "abc")))
-
-(define test-list-to-string-empty (lambda ()
-  (assert-equal (list->string (list)) "")))
 
 (define test-string-list-roundtrip (lambda ()
   (define str "hello")
@@ -134,39 +68,23 @@
 ;; Number/String Conversions
 ;; ============================================================================
 
-(define test-number-to-string-basic (lambda ()
-  (assert-equal (number->string 42) "42")))
-
-(define test-number-to-string-negative (lambda ()
+(define test-number-to-string (lambda ()
+  (assert-equal (number->string 42) "42")
   (assert-equal (number->string -17) "-17")))
 
-(define test-number-to-string-decimal (lambda ()
-  (assert-equal (number->string 3.14) "3.14")))
-
-(define test-number-to-string-binary (lambda ()
-  ;; Convert to base 2
+(define test-number-to-string-bases (lambda ()
+  ;; Hex and binary conversions
+  (assert-equal (number->string 255 16) "ff")
   (assert-equal (number->string 10 2) "1010")))
 
-(define test-number-to-string-hex (lambda ()
-  ;; Convert to base 16
-  (assert-equal (number->string 255 16) "ff")))
-
-(define test-string-to-number-basic (lambda ()
-  (assert-equal (string->number "42") 42)))
-
-(define test-string-to-number-negative (lambda ()
-  (assert-equal (string->number "-17") -17)))
-
-(define test-string-to-number-decimal (lambda ()
+(define test-string-to-number (lambda ()
+  (assert-equal (string->number "42") 42)
   (assert-equal (string->number "3.14") 3.14)))
 
-(define test-string-to-number-binary (lambda ()
-  ;; Parse from base 2
+(define test-string-to-number-bases (lambda ()
+  ;; Parse from different bases
+  (assert-equal (string->number "ff" 16) 255)
   (assert-equal (string->number "1010" 2) 10)))
-
-(define test-string-to-number-hex (lambda ()
-  ;; Parse from base 16
-  (assert-equal (string->number "ff" 16) 255)))
 
 (define test-string-to-number-invalid (lambda ()
   ;; Invalid number should return #nil or #f

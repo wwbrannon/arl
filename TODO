@@ -1,7 +1,7 @@
 tests and related fixes:
 -------------------------------------------------
-o) is there a lot of duplication between the native and R tests, especially the stdlib-* tests?
 o) audit for test duplication and remove it
+o) is there a lot of duplication between the native and R tests, especially the stdlib-* tests?
 
 o) could we build instrumented coverage tooling really easily via covr? we do actually have a compiler to R now...
 

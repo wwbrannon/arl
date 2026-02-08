@@ -1,28 +1,17 @@
-;; Tests for advanced functional programming utilities (Phase 6)
-;; curry, juxt, constantly, iterate, memoize
+;; Native tests for functional programming - User-facing examples
+;; For comprehensive edge case testing, see tests/testthat/test-stdlib-functional.R
+;; These tests demonstrate idiomatic usage patterns with simple examples.
 
 ;; ============================================================================
 ;; Currying
 ;; ============================================================================
 
 (define test-curry-basic (lambda ()
-  ;; curry should enable partial application automatically
-  (define add (lambda (a b c) (+ a b c)))
-  (define curried (curry add 3))
-  (define add5 (curried 5))
-  (assert-equal (add5 7) 15)))
-
-(define test-curry-single-arg (lambda ()
+  ;; curry enables partial application
   (define add (lambda (a b c) (+ a b c)))
   (define add3 (curry add 3))
   (define result ((add3 5) 7))  ;; Should be (+ 3 5 7)
   (assert-equal result 15)))
-
-(define test-curry-multiple-stages (lambda ()
-  (define multiply (lambda (a b c) (* a b c)))
-  (define curried (curry multiply 3))
-  (define times2 (curried 2))
-  (assert-equal (times2 4) 24)))  ;; 3 * 2 * 4
 
 ;; ============================================================================
 ;; Juxtaposition
@@ -35,18 +24,6 @@
   (define both (juxt inc dec))
   (assert-equal (both 10) (list 11 9))))
 
-(define test-juxt-three-functions (lambda ()
-  (define f1 (lambda (x) (* x 2)))
-  (define f2 (lambda (x) (+ x 10)))
-  (define f3 (lambda (x) (- x 5)))
-  (define combined (juxt f1 f2 f3))
-  (assert-equal (combined 5) (list 10 15 0))))
-
-(define test-juxt-single-function (lambda ()
-  (define double (lambda (x) (* x 2)))
-  (define juxtaposed (juxt double))
-  (assert-equal (juxtaposed 5) (list 10))))
-
 ;; ============================================================================
 ;; Constantly
 ;; ============================================================================
@@ -56,11 +33,6 @@
   (define always-42 (constantly 42))
   (assert-equal (always-42) 42)
   (assert-equal (always-42 1 2 3) 42)))
-
-(define test-constantly-with-value (lambda ()
-  (define always-hello (constantly "hello"))
-  (assert-equal (always-hello) "hello")
-  (assert-equal (always-hello "world") "hello")))
 
 (define test-constantly-in-map (lambda ()
   ;; useful for replacing all values
@@ -77,61 +49,17 @@
   (define result (iterate (lambda (x) (+ x 1)) 5 0))
   (assert-equal result 5)))
 
-(define test-iterate-double (lambda ()
-  ;; Powers of 2: starting from 1, apply *2 four times to get 16
-  (define result (iterate (lambda (x) (* x 2)) 4 1))
-  (assert-equal result 16)))
-
 (define test-iterate-until (lambda ()
   ;; iterate-until stops when predicate is true
-  (define less-than-100? (lambda (x) (< x 100)))
   (define result (iterate-until
                    (lambda (x) (* x 2))
                    1
                    (lambda (x) (>= x 100))))
   (assert-equal result (list 1 2 4 8 16 32 64))))
 
-(define test-iterate-until-immediate (lambda ()
-  ;; Stops immediately if condition is already met
-  (define result (iterate-until
-                   (lambda (x) (+ x 1))
-                   100
-                   (lambda (x) (>= x 100))))
-  (assert-equal result (list 100))))
-
 ;; ============================================================================
 ;; Memoization
 ;; ============================================================================
-
-(define test-memoize-basic (lambda ()
-  ;; memoize caches function results
-  (define call-count 0)
-  (define expensive (lambda (x)
-                      (begin
-                        (set! call-count (+ call-count 1))
-                        (* x x))))
-  (define memoized (memoize expensive))
-
-  ;; First call
-  (assert-equal (memoized 5) 25)
-  (assert-equal call-count 1)
-
-  ;; Second call with same argument (should use cache)
-  (assert-equal (memoized 5) 25)
-  (assert-equal call-count 1)  ;; Still 1, not 2!
-
-  ;; Different argument (should call function again)
-  (assert-equal (memoized 6) 36)
-  (assert-equal call-count 2)))
-
-(define test-memoize-multiple-args (lambda ()
-  ;; Memoize with multiple arguments
-  (define add (lambda (a b) (+ a b)))
-  (define memoized-add (memoize add))
-
-  (assert-equal (memoized-add 3 5) 8)
-  (assert-equal (memoized-add 3 5) 8)  ;; Cached
-  (assert-equal (memoized-add 4 5) 9)))  ;; Different args
 
 (define test-memoize-fibonacci (lambda ()
   ;; Classic use case: memoized fibonacci
@@ -146,15 +74,3 @@
   (assert-equal (fib 10) 55)
   ;; Should be very fast even for larger values due to memoization
   (assert-equal (fib 15) 610)))
-
-;; ============================================================================
-;; Helper: take function for iterate tests
-;; ============================================================================
-
-(define take (lambda (n seq)
-  ;; Take first n elements from a sequence (list or lazy seq)
-  (if (<= n 0)
-    (list)
-    (if (nil? seq)
-      (list)
-      (cons (car seq) (take (- n 1) (cdr seq)))))))
