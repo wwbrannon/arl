@@ -79,25 +79,25 @@ run_native_tests <- function(dir = "tests/native") {
     return(invisible(NULL))
   }
 
-  # Create a fresh engine; it already loads the full stdlib via load_stdlib_into_env
-  # in initialize_environment(), so env has all module exports (assert, core, etc.).
-  # No need to (load ...) modules here: (import ...) in each module resolves deps.
-  engine <- RyeEngine$new()
-  env <- engine$env$env
-
-  # Load test-specific helpers (like skip function)
-  native_helper <- system.file("tests", "testthat", "helper-native.rye", package = "rye")
-  if (native_helper == "") {
-    # During development, file is not installed - use relative path
-    native_helper <- file.path("tests", "testthat", "helper-native.rye")
-  }
-  if (file.exists(native_helper)) {
-    exprs <- engine$read(sprintf('(load "%s")', native_helper))
-    engine$eval_in_env(exprs[[1]], env)
-  }
-
-  # Run each test file
+  # Run each test file with a fresh engine for complete isolation
   for (test_file in test_files) {
+    # Create a fresh engine for this test file
+    # This ensures complete test isolation - no state leaks between files
+    engine <- RyeEngine$new()
+    env <- engine$env$env
+
+    # Load test-specific helpers (like skip function)
+    native_helper <- system.file("tests", "testthat", "helper-native.rye", package = "rye")
+    if (native_helper == "") {
+      # During development, file is not installed - use relative path
+      native_helper <- file.path("tests", "testthat", "helper-native.rye")
+    }
+    if (file.exists(native_helper)) {
+      exprs <- engine$read(sprintf('(load "%s")', native_helper))
+      engine$eval_in_env(exprs[[1]], env)
+    }
+
+    # Run this test file in its isolated environment
     run_native_test_file(test_file, engine, env)
   }
 
