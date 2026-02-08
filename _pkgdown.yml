@@ -20,9 +20,6 @@ reference:
     contents:
       - rye_cli
       - rye_install_cli
-  # - title: Macros  # FIXME?
-  #   contents:
-  #     - gensym
 
 articles:
   - title: Guides
@@ -40,7 +37,6 @@ articles:
     contents:
       - stdlib-list-seq
       - stdlib-functional
-      - stdlib-predicates
       - stdlib-control
       - stdlib-strings-io
       - stdlib-macro-eval-interop
