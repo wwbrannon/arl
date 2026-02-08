@@ -63,4 +63,3 @@ benchmarks/profiles/*_files/
 
 # Coverage output directories
 /coverage/
-!/coverage/.gitkeep

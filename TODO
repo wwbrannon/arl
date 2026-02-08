@@ -1,6 +1,8 @@
 coverage tracking:
 -------------------------------------------------
-o) update make clean to delete the coverage stuff, in particular why are we tracking coverage/.gitkeep
+o) looping.rye has > 100% test coverage
+o) discover_files is not flexible enough for users
+o) any other hardcoded inflexibilities?
 
 o) generally sanity-check all of this, look at the coverage reports
 

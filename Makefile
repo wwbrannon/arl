@@ -147,7 +147,7 @@ coverage-upload: ## help: Upload coverage to codecov (for CI)
 .PHONY: coverage-clean
 coverage-clean: ## help: Remove coverage output files
 	@echo "Cleaning coverage outputs..."
-	@rm -rf coverage/r coverage/rye coverage/combined
+	@rm -rf coverage
 	@echo "Coverage outputs cleaned."
 
 .PHONY: lint
