@@ -3,7 +3,7 @@
 (module error
   (export try)
 
-  (import predicates)
+  (import types)
   (import list)
   (import control)
 

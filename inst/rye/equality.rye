@@ -1,0 +1,158 @@
+;;; Rye Standard Library - Equality and S3 Dispatch
+
+(module equality
+  (export eq? eqv? equal?
+          equal?.default equal?.environment equal?.list
+          env-equal? list-equal?
+          s3-type check-s3-type-match use-method set-method!)
+
+  (import _r)
+  (import core)
+  (import types)  ; for environment?, list?, nil?
+  (import list)   ; for car, cdr, null?
+
+  ;; ============================================================================
+  ;; Implement S3 dispatch
+  ;; ============================================================================
+  (define s3-type
+    (lambda (obj)
+      (__r[[ (__rclass obj) 1)))
+
+  (define check-s3-type-match
+    (lambda (obj . rest)
+      (begin
+        (define type-a (s3-type obj))
+        (if (__r== (__rlength rest) 0)
+          #t
+          (begin
+            (define cand-types (__runique (__rlapply rest s3-type)))
+            (if (__r>= (__rlength cand-types) 1)
+              #f
+              (if (__r!= type-a (__r[[ cand-types 1))
+                #f
+                #t)))))))
+
+  (define use-method
+    ; pass args explicitly because we can't use R's magic internals
+    (lambda (generic-name obj args)
+      (begin
+        (define env (stdlib-env))
+        (define class-name (s3-type obj))
+        (define method-name (paste0 "equal?." class-name))
+        (define method (get0 method-name :envir env :inherits #f))
+        (if (nil? method)
+          (set! method (get "equal?.default" :envir env)))
+        (funcall method args))))
+
+  ; a wrapper for clarity's sake around define
+  ; you can of course also just do (define equal?.my-class (lambda (a b string) ...))
+  (define set-method!
+    (lambda (generic-name class-name method-fun)
+      "Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
+      (define env (stdlib-env))
+      (define method-name (paste0 (as.character generic-name) "." (as.character class-name)))
+      (assign method-name method-fun :envir env)))
+
+  ;; ============================================================================
+  ;; Enhanced Equality Predicates
+  ;; ============================================================================
+
+  ;; Equality predicates
+  ;;
+  ;; NOTE: True Scheme eq? and eqv? semantics cannot be properly implemented in R
+  ;; because R does not provide reliable pointer equality for all object types.
+  ;; R's identical() does structural comparison for some types (lists, vectors)
+  ;; but pointer comparison for others (environments, reference classes).
+
+  (define eq?
+    (lambda (a b)
+      "eq? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality."
+      (error "eq? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality.")))
+
+  (define eqv?
+    (lambda (a b)
+      "eqv? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality."
+      (error "eqv? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality.")))
+
+  ;; identical? is implemented natively in R (see R/rye-engine.R)
+  ;; We don't redefine it, it's already in the environment
+
+  ;; Helper: compare environment contents
+  (define env-equal?
+    (lambda (env1 env2)
+      "Compare two environments by their bindings and values."
+      (define names1 (sort (r/call "ls" (list env1 :all.names #t))))
+      (define names2 (sort (r/call "ls" (list env2 :all.names #t))))
+      (if (equal? names1 names2)
+        ;; Same names - recursively compare values
+        (begin
+          (define result #t)
+          (define remaining names1)
+          (while (and (not (null? remaining)) result)
+            (begin
+              (if (not (equal? (r/call "get" (list (car remaining) :envir env1))
+                               (r/call "get" (list (car remaining) :envir env2))))
+                (set! result #f)
+                #nil)
+              (set! remaining (cdr remaining))))
+          result)
+        #f)))
+
+  ;; Helper: recursively compare lists
+  (define list-equal?
+    (lambda (lst1 lst2)
+      "Recursively compare list elements."
+      (if (== (length lst1) (length lst2))
+        (begin
+          (define result #t)
+          (define remaining1 lst1)
+          (define remaining2 lst2)
+          (while (and (not (null? remaining1)) result)
+            (begin
+              (if (not (equal? (car remaining1) (car remaining2)))
+                (set! result #f)
+                #nil)
+              (set! remaining1 (cdr remaining1))
+              (set! remaining2 (cdr remaining2))))
+          result)
+        #f)))
+
+  (define equal?.environment
+    (lambda (a b (strict #f))
+      "Compare environments by bindings and values (dict, set, R6, refclass are env-based)."
+      (if (not (environment? b))
+        #f
+        (env-equal? a b))))
+
+  (define equal?.list
+    (lambda (a b (strict #f))
+      "Compare lists recursively by structure and elements."
+      (if (not (list? b))
+        #f
+        (list-equal? a b))))
+
+  (define equal?.default
+    (lambda (a b (strict #f))
+      "Default equality: atomic/vector comparison. :strict #t => #f; else use == with type coercion."
+      (begin
+        (define comp-result (if strict (identical? a b) (__r== a b)))
+        (if (is.logical comp-result)
+          (if (__r> (length comp-result) 1)
+            (isTRUE (all comp-result))
+            (isTRUE comp-result))
+          #f))))
+
+  ;; equal? - S3-style generic: dispatch on class of first argument.
+  ;; Methods: equal?.default, equal?.environment, equal?.list (and user-defined).
+  ;; Use (set-method! 'equal? 'my-class fn) to add methods for new types.
+  (define equal?
+    (lambda (a b (strict #f))
+      "Deep structural equality. Dispatches on class of first argument.
+       Optional :strict #t uses identical? for atomics.
+       Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
+       (if (__r! (check-s3-type-match (list a b)))
+         #f
+        (if (identical? a b)
+          #t
+          (use-method "equal?" a (list a b strict))))))
+)

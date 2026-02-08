@@ -3,7 +3,7 @@
 (module binding
   (export pattern-symbols destructuring-bind let let* letrec when-let if-let)
 
-  (import predicates)
+  (import types)
   (import list)
   (import functional)
   (import sequences)

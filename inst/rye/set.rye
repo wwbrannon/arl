@@ -3,7 +3,7 @@
 (module set
   (export set set? set-add set-remove set-contains? set-union set-intersection set-difference)
 
-  (import predicates)
+  (import types)
   (import list)
   (import looping)
 

@@ -266,3 +266,59 @@ Combines multiple lists element-wise.
 ```
 
 **See also:** map
+
+---
+
+## Length Predicates
+
+These predicates are provided by the `sequences` module for testing sequence lengths.
+
+### length=
+
+Tests if the length of a sequence equals a given value.
+
+**Signature:** `(length= x n)`
+
+**Examples:**
+```lisp
+(length= (list 1 2 3) 3)      ; => #t
+(length= [1 2 3 4] 3)         ; => #f
+(length= "hello" 5)           ; => #t
+(length= () 0)                ; => #t
+```
+
+**See also:** length>, length<, empty?
+
+---
+
+### length>
+
+Tests if the length of a sequence is greater than a given value.
+
+**Signature:** `(length> x n)`
+
+**Examples:**
+```lisp
+(length> (list 1 2 3) 2)      ; => #t
+(length> [1 2] 5)             ; => #f
+(length> "hello" 3)           ; => #t
+```
+
+**See also:** length=, length<
+
+---
+
+### length<
+
+Tests if the length of a sequence is less than a given value.
+
+**Signature:** `(length< x n)`
+
+**Examples:**
+```lisp
+(length< (list 1 2) 3)        ; => #t
+(length< [1 2 3 4] 3)         ; => #f
+(length< "hi" 5)              ; => #t
+```
+
+**See also:** length=, length>

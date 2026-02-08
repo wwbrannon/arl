@@ -1,0 +1,453 @@
+---
+title: "Standard Library: Math and Numeric Functions"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Standard Library: Math and Numeric Functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+These functions are provided by the `math` module (`inst/rye/math.rye`).
+
+## Numeric Type Predicates
+
+Rye implements a numeric tower adapted for R's type system:
+
+```
+number?    (is.numeric OR is.complex)
+├─ complex?  (is.complex)
+└─ real?     (is.numeric AND NOT is.complex)
+   ├─ ±Inf   (real but not rational)
+   └─ rational? (real? AND is.finite)
+      └─ integer? (is.finite AND is.numeric AND x == as.integer(x))
+         └─ natural? (integer? AND x >= 0)
+
+Orthogonal predicates:
+exact?   (is.integer - storage type)
+inexact? (number? AND NOT is.integer)
+```
+
+**Note:** `number?` is provided by the `types` module, not `math`.
+
+---
+
+### real?
+
+Tests if a value is a real number (includes infinities, excludes complex).
+
+**Signature:** `(real? x)`
+
+**Examples:**
+```lisp
+(real? 42)            ; => #t
+(real? 3.14)          ; => #t
+(real? Inf)           ; => #t
+(real? (make-rectangular 3 4))  ; => #f
+```
+
+**See also:** rational?, complex?, number? (in `types` module)
+
+---
+
+### complex?
+
+Tests if a value is a complex number.
+
+**Signature:** `(complex? x)`
+
+**Examples:**
+```lisp
+(complex? (make-rectangular 3 4))  ; => #t
+(complex? 42)         ; => #f
+```
+
+**See also:** real?, number? (in `types` module), make-rectangular
+
+---
+
+### rational?
+
+Tests if a value is a rational number (finite real number in R).
+
+**Signature:** `(rational? x)`
+
+**Examples:**
+```lisp
+(rational? 42)        ; => #t
+(rational? 3.14)      ; => #t
+(rational? Inf)       ; => #f (infinities are real but not rational)
+(rational? NaN)       ; => #f
+```
+
+**Note:** In R, all finite floating-point numbers can be represented as rationals (IEEE 754). R does not have a built-in rational or decimal type like some Schemes.
+
+**See also:** real?, integer?, number? (in `types` module)
+
+---
+
+### exact?
+
+Tests if a number is exact (integer storage type in R).
+
+**Signature:** `(exact? x)`
+
+**Examples:**
+```lisp
+(exact? 5L)           ; => #t (integer type)
+(exact? 5.0)          ; => #f (double type)
+(exact? (->integer 5)); => #t
+```
+
+**Note:** In Scheme, exactness is a property of the number. In R (and Rye), exactness corresponds to integer storage type. All integers are exact; all doubles and complex numbers are inexact.
+
+**See also:** inexact?, exact->inexact (in `conversions` module)
+
+---
+
+### inexact?
+
+Tests if a number is inexact (double or complex storage type in R).
+
+**Signature:** `(inexact? x)`
+
+**Examples:**
+```lisp
+(inexact? 5.0)        ; => #t
+(inexact? (make-rectangular 3 4))  ; => #t
+(inexact? 5L)         ; => #f
+```
+
+**See also:** exact?, inexact->exact (in `conversions` module)
+
+---
+
+### integer?
+
+Tests if a value is an integer-valued number.
+
+**Signature:** `(integer? x)`
+
+**Examples:**
+```lisp
+(integer? 42)         ; => #t
+(integer? 42.0)       ; => #t (value is integer even if storage is double)
+(integer? 3.14)       ; => #f
+(integer? Inf)        ; => #f
+```
+
+**Note:** Tests for integer VALUE, not storage type. Use `exact?` to test storage type.
+
+**See also:** natural?, exact?, rational?
+
+---
+
+### natural?
+
+Tests if a value is a natural number (non-negative integer).
+
+**Signature:** `(natural? x)`
+
+**Examples:**
+```lisp
+(natural? 0)          ; => #t
+(natural? 42)         ; => #t
+(natural? -5)         ; => #f
+(natural? 3.14)       ; => #f
+```
+
+**See also:** integer?, positive?, non-negative?
+
+---
+
+### finite?
+
+Tests if a value is finite (not infinite or NaN).
+
+**Signature:** `(finite? x)`
+
+**Examples:**
+```lisp
+(finite? 42)          ; => #t
+(finite? Inf)         ; => #f
+(finite? NaN)         ; => #f
+(finite? -Inf)        ; => #f
+```
+
+**See also:** infinite?, nan?, rational?
+
+---
+
+### infinite?
+
+Tests if a value is infinite (±Inf).
+
+**Signature:** `(infinite? x)`
+
+**Examples:**
+```lisp
+(infinite? Inf)       ; => #t
+(infinite? -Inf)      ; => #t
+(infinite? 42)        ; => #f
+(infinite? NaN)       ; => #f
+```
+
+**See also:** finite?, nan?
+
+---
+
+### nan?
+
+Tests if a value is NaN (Not a Number).
+
+**Signature:** `(nan? x)`
+
+**Examples:**
+```lisp
+(nan? NaN)            ; => #t
+(nan? (/ 0 0))        ; => #t (0/0 = NaN)
+(nan? 42)             ; => #f
+(nan? Inf)            ; => #f
+```
+
+**See also:** finite?, infinite?
+
+---
+
+## Value Predicates
+
+### even?
+
+Tests if a number is even.
+
+**Signature:** `(even? x)`
+
+**Examples:**
+```lisp
+(even? 4)             ; => #t
+(even? 3)             ; => #f
+(even? 0)             ; => #t
+```
+
+**See also:** odd?
+
+---
+
+### odd?
+
+Tests if a number is odd.
+
+**Signature:** `(odd? x)`
+
+**Examples:**
+```lisp
+(odd? 3)              ; => #t
+(odd? 4)              ; => #f
+```
+
+**See also:** even?
+
+---
+
+### zero?
+
+Tests if a number equals zero.
+
+**Signature:** `(zero? x)`
+
+**Examples:**
+```lisp
+(zero? 0)             ; => #t
+(zero? 0.0)           ; => #t
+(zero? 1)             ; => #f
+```
+
+**See also:** positive?, negative?
+
+---
+
+### positive?
+
+Tests if a number is greater than zero.
+
+**Signature:** `(positive? x)`
+
+**Examples:**
+```lisp
+(positive? 5)         ; => #t
+(positive? 0)         ; => #f
+(positive? -5)        ; => #f
+```
+
+**See also:** negative?, non-negative?, zero?
+
+---
+
+### negative?
+
+Tests if a number is less than zero.
+
+**Signature:** `(negative? x)`
+
+**Examples:**
+```lisp
+(negative? -5)        ; => #t
+(negative? 0)         ; => #f
+(negative? 5)         ; => #f
+```
+
+**See also:** positive?, non-positive?, zero?
+
+---
+
+### non-negative?
+
+Tests if a number is greater than or equal to zero.
+
+**Signature:** `(non-negative? x)`
+
+**Examples:**
+```lisp
+(non-negative? 5)     ; => #t
+(non-negative? 0)     ; => #t
+(non-negative? -5)    ; => #f
+```
+
+**See also:** positive?, natural?
+
+---
+
+### non-positive?
+
+Tests if a number is less than or equal to zero.
+
+**Signature:** `(non-positive? x)`
+
+**Examples:**
+```lisp
+(non-positive? -5)    ; => #t
+(non-positive? 0)     ; => #t
+(non-positive? 5)     ; => #f
+```
+
+**See also:** negative?
+
+---
+
+## Complex Number Utilities
+
+### make-rectangular
+
+Constructs a complex number from real and imaginary parts.
+
+**Signature:** `(make-rectangular real imag)`
+
+**Examples:**
+```lisp
+(make-rectangular 3 4)  ; => 3+4i
+```
+
+**See also:** make-polar, real-part, imag-part
+
+---
+
+### make-polar
+
+Constructs a complex number from polar coordinates (magnitude and angle).
+
+**Signature:** `(make-polar magnitude angle)`
+
+**Examples:**
+```lisp
+(make-polar 5 0)      ; => 5+0i
+```
+
+**See also:** make-rectangular, magnitude, angle
+
+---
+
+### real-part
+
+Extracts the real part of a complex number.
+
+**Signature:** `(real-part z)`
+
+**Examples:**
+```lisp
+(real-part (make-rectangular 3 4))  ; => 3.0
+```
+
+**See also:** imag-part, make-rectangular
+
+---
+
+### imag-part
+
+Extracts the imaginary part of a complex number.
+
+**Signature:** `(imag-part z)`
+
+**Examples:**
+```lisp
+(imag-part (make-rectangular 3 4))  ; => 4.0
+```
+
+**See also:** real-part, make-rectangular
+
+---
+
+### magnitude
+
+Computes the magnitude (modulus) of a complex number.
+
+**Signature:** `(magnitude z)`
+
+**Examples:**
+```lisp
+(magnitude (make-rectangular 3 4))  ; => 5.0
+```
+
+**See also:** angle, make-polar
+
+---
+
+### angle
+
+Computes the angle (argument) of a complex number in radians.
+
+**Signature:** `(angle z)`
+
+**Examples:**
+```lisp
+(angle (make-rectangular 1 1))  ; => 0.7853981633974483 (π/4)
+```
+
+**See also:** magnitude, make-polar
+
+---
+
+## Arithmetic Operations
+
+The `math` module also provides standard arithmetic operators and functions. For complete documentation of arithmetic operations (+, -, *, /, etc.) and mathematical functions (sqrt, sin, cos, log, etc.), see the math module source code at `inst/rye/math.rye`.
+
+---
+
+## Migration from predicates Module
+
+Numeric type predicates were previously in the `predicates` module. They are now in the `math` module:
+
+```lisp
+; Old (before reorganization)
+(import predicates)
+
+; New (after reorganization)
+(import math)  ; for real?, complex?, rational?, exact?, inexact?
+(import types) ; for number?
+```
+
+The function signatures and behavior remain unchanged.

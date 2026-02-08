@@ -23,7 +23,10 @@ For the full, per-function reference, see the individual stdlib reference pages:
 
 - [Standard Library: Lists and Sequences](stdlib-list-seq.html)
 - [Standard Library: Higher-Order Functions](stdlib-functional.html)
-- [Standard Library: Predicates](stdlib-predicates.html)
+- [Standard Library: Type Predicates](stdlib-types.html)
+- [Standard Library: Equality and S3 Dispatch](stdlib-equality.html)
+- [Standard Library: Type Conversions](stdlib-conversions.html)
+- [Standard Library: Math and Numeric Functions](stdlib-math.html)
 - [Standard Library: Control Flow and Macros](stdlib-control.html)
 - [Standard Library: Strings, I/O, and Arithmetic](stdlib-strings-io.html)
 - [Standard Library: Macro, Eval, Interop, and Convenience](stdlib-macro-eval-interop.html)
@@ -115,7 +118,10 @@ engine loads these modules in dependency order when initializing.
 - `_r.rye` (R operator/function aliases, internal)
 - `core.rye`
 - `list.rye`
-- `predicates.rye`
+- `types.rye` (type predicates)
+- `logic.rye` (logical operations)
+- `conversions.rye` (type conversions)
+- `equality.rye` (equality and S3 dispatch)
 - `control.rye`
 - `functional.rye`
 - `sequences.rye`
@@ -125,7 +131,7 @@ engine loads these modules in dependency order when initializing.
 - `binding.rye`
 - `looping.rye`
 - `dict.rye`
-- `math.rye`
+- `math.rye` (includes numeric type predicates)
 - `set.rye`
 - `strings.rye`
 - `display.rye`

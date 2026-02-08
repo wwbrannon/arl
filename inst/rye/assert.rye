@@ -4,7 +4,7 @@
   (export assert assert-equal assert-true assert-false assert-eq assert-error)
 
   (import core)
-  (import predicates)
+  (import equality)
   (import strings)
   (import dict)
 

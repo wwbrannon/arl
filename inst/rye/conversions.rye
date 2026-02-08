@@ -1,0 +1,121 @@
+;;; Rye Standard Library - Type Conversions
+
+(module conversions
+  (export symbol->string string->symbol
+          ->symbol ->number ->list ->vector
+          ->integer ->double ->complex
+          exact->inexact inexact->exact)
+
+  (import _r)
+  (import core)
+  (import types)  ; for symbol?, number?, string?, list?, vector?
+
+  ;; Symbol conversions
+  (define symbol->string
+    (lambda (sym)
+      "Convert symbol to string."
+      (if (symbol? sym)
+        (as.character sym)
+        (stop "symbol->string: argument must be a symbol"))))
+
+  (define string->symbol
+    (lambda (str)
+      "Convert string to symbol."
+      (if (string? str)
+        (as.symbol str)
+        (stop "string->symbol: argument must be a string"))))
+
+  ;; General type conversions
+  (define ->symbol
+    (lambda (x)
+      "Convert value to symbol."
+      (if (symbol? x)
+        x
+        (as.symbol (as.character x)))))
+
+  (define ->number
+    (lambda (x)
+      "Convert value to number."
+      (if (number? x)
+        x
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.numeric x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to number" x))
+              result))
+          (stop "->number: cannot convert to number")))))
+
+  ;; Scheme-style exact/inexact conversions
+  (define exact->inexact
+    (lambda (x)
+      "Convert exact number to inexact (integer to double)."
+      (if (number? x)
+        (as.double x)
+        (stop "exact->inexact: argument must be a number"))))
+
+  (define inexact->exact
+    (lambda (x)
+      "Convert inexact number to exact (double to integer, may round)."
+      (if (number? x)
+        (as.integer x)
+        (stop "inexact->exact: argument must be a number"))))
+
+  ;; R-style type conversions (shortcuts)
+  (define ->integer
+    (lambda (x)
+      "Convert value to integer."
+      (if (number? x)
+        (as.integer x)
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.integer x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to integer" x))
+              result))
+          (stop "->integer: cannot convert to integer")))))
+
+  (define ->double
+    (lambda (x)
+      "Convert value to double."
+      (if (number? x)
+        (as.double x)
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.double x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to double" x))
+              result))
+          (stop "->double: cannot convert to double")))))
+
+  (define ->complex
+    (lambda (x)
+      "Convert value to complex number (imaginary part = 0)."
+      (if (number? x)
+        (as.complex x)
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.complex x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to complex" x))
+              result))
+          (stop "->complex: cannot convert to complex")))))
+
+  (define ->list
+    (lambda (x)
+      "Convert value to list."
+      (if (list? x)
+        x
+        (as.list x))))
+
+  (define ->vector
+    (lambda (x)
+      "Convert value to vector."
+      (if (vector? x)
+        x
+        (if (list? x)
+          (unlist x)
+          (if (is.atomic x)
+            x
+            (stop "->vector: cannot convert to vector"))))))
+)

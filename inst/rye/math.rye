@@ -7,6 +7,7 @@
           even? odd? zero?
           positive? negative? non-negative? non-positive?
           integer? natural?
+          real? complex? rational? exact? inexact?
           finite? infinite? nan?
           abs floor ceiling truncate round signum
           sqrt expt
@@ -17,6 +18,8 @@
           make-rectangular make-polar real-part imag-part magnitude angle)
 
   (import _r)
+  (import core)
+  (import types)  ; for number? predicate
 
   (define %
     (lambda (x y)
@@ -239,6 +242,38 @@
       "Return #t if x is a natural number (integer >= 0)."
       (if (integer? x)
         (isTRUE (>= x 0))
+        #f)))
+
+  ;; Numeric type predicates
+  (define real?
+    (lambda (x)
+      "Return #t if x is a real number (includes ±Inf, excludes complex)."
+      (if (is.numeric x)
+        (if (is.complex x) #f #t)
+        #f)))
+
+  (define complex?
+    (lambda (x)
+      "Return #t if x is a complex number."
+      (is.complex x)))
+
+  (define rational?
+    (lambda (x)
+      "Return #t if x is a finite real number (rational in R are finite floats)."
+      (if (real? x)
+        (if (is.finite x) #t #f)
+        #f)))
+
+  (define exact?
+    (lambda (x)
+      "Return #t if x is an exact number (integer storage type in R)."
+      (is.integer x)))
+
+  (define inexact?
+    (lambda (x)
+      "Return #t if x is an inexact number (double or complex in R)."
+      (if (number? x)
+        (not (is.integer x))
         #f)))
 
   (define finite?

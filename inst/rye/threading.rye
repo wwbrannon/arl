@@ -5,7 +5,7 @@
 
   (import functional)
   (import list)
-  (import predicates)
+  (import types)
 
 (defmacro -> (value . forms)
   "Thread value through forms (first argument)."

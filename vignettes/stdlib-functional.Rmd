@@ -161,3 +161,50 @@ Returns true if any element satisfies the predicate.
 ```
 
 **See also:** every?, filter
+
+---
+
+## Logical Operations
+
+These functions are provided by the `logic` module (`inst/rye/logic.rye`).
+
+### not
+
+Logical negation with Rye truthiness semantics.
+
+**Signature:** `(not x)`
+
+**Examples:**
+```lisp
+(not #t)              ; => #f
+(not #f)              ; => #t
+(not 0)               ; => #f (0 is truthy in Rye)
+(not #nil)            ; => #t
+(not "hello")         ; => #f (non-#f values are truthy)
+```
+
+**Note:** In Rye (like Scheme), only `#f` is falsy. All other values including `0`, `""`, and `()` are truthy.
+
+**See also:** xor, and, or (special forms)
+
+---
+
+### xor
+
+Logical exclusive OR with Rye truthiness semantics.
+
+**Signature:** `(xor a b)`
+
+**Examples:**
+```lisp
+(xor #t #f)           ; => #t
+(xor #f #t)           ; => #t
+(xor #t #t)           ; => #f
+(xor #f #f)           ; => #f
+(xor 1 0)             ; => #f (both truthy)
+(xor #nil 5)          ; => #t (one falsy, one truthy)
+```
+
+**Note:** Returns `#t` if exactly one argument is truthy, `#f` otherwise.
+
+**See also:** not, and, or (special forms)

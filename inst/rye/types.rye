@@ -1,0 +1,122 @@
+;;; Rye Standard Library - Type Predicates
+
+(module types
+  (export list? list-or-pair? null? nil?
+          symbol? keyword? number? string? vector?
+          true? false? boolean? fn? callable? procedure?
+          environment? is-refclass?
+          atom? empty?
+          type-of)
+
+  (import _r)
+  (import core)  ; for doc!
+
+  ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
+  ;; to avoid unnecessary stack frames. Docstrings attached using doc!.
+
+  (define list?
+    (lambda (x)
+      "Return #t if x is a list, call, or dotted pair."
+      (if (pair? x) #t
+        (if (is.list x) #t (if (is.call x) #t #f)))))
+
+  (define list-or-pair?
+    (lambda (x)
+      "Return #t if x is a non-empty list or dotted pair (pairlist cell)."
+      (if (pair? x) #t
+        (if (list? x) (if (__r> (__rlength x) 0) #t #f) #f))))
+
+  (define null?
+    (lambda (x)
+      "Return #t for empty list or #nil."
+      (if (is.null x)
+        #t
+        (if (is.list x)
+          (if (__r== (__rlength x) 0) #t #f)
+          (if (is.call x)
+            (if (__r== (__rlength x) 0) #t #f)
+            #f)))))
+
+  (define nil?
+    (lambda (x)
+      "Alias for null?."
+      (null? x)))
+
+  (define symbol? is.symbol)
+  (doc! symbol? "Return #t if x is a symbol.")
+
+  (define keyword?
+    (lambda (x)
+      "Return #t if x is a Rye keyword."
+      (isTRUE (inherits x "rye_keyword"))))
+
+  (define number?
+    (lambda (x)
+      "Return #t if x is a number (real or complex)."
+      (if (is.numeric x)
+        #t
+        (if (is.complex x) #t #f))))
+
+  (define string? is.character)
+  (doc! string? "Return #t if x is character.")
+
+  (define vector?
+    (lambda (x)
+      "Return #t if x is a non-list atomic vector."
+      (if (is.atomic x)
+        (if (is.list x) #f #t)
+        #f)))
+
+  (define true?
+    (lambda (x)
+      "Return #t if x is TRUE."
+      (isTRUE x)))
+
+  (define false?
+    (lambda (x)
+      "Return #t if x is #f."
+      (identical x #f)))
+
+  (define boolean?
+    (lambda (x)
+      "Return #t if x is a single logical value."
+      (if (is.logical x)
+        (isTRUE (== (length x) 1))
+        #f)))
+
+  (define fn? is.function)
+  (doc! fn? "Return #t if x is a function.")
+
+  (define callable? fn?)
+  (doc! callable? "Alias for fn?.")
+
+  (define procedure?
+    (lambda (x)
+      "Alias for fn? - return #t if x is a function."
+      (fn? x)))
+
+  (define environment?
+    (lambda (x)
+      "Test if x is an environment (including R6 objects)."
+      (r/call "is.environment" (list x))))
+
+  (define is-refclass?
+    (lambda (x)
+      "Test if x is a Reference Class object."
+      (and (r/call "isS4" (list x))
+           (r/call "is" (list x "refClass")))))
+
+  (define atom?
+    (lambda (x)
+      "Return #t if x is not a non-empty list or dotted pair (i.e. not list-or-pair?)."
+      (not (list-or-pair? x))))
+
+  (define empty?
+    (lambda (x)
+     "Return #t if x is empty (0-length).  (Note the empty string \"\" has length 1 and is not \"empty\"!)"
+      (isTRUE (== (length x) 0))))
+
+  ;; Type introspection
+  (define type-of typeof)
+  (doc! type-of "Return the type of value (alias for R's typeof).")
+)

@@ -3,10 +3,11 @@
 (module sequences
   (export take drop take-while drop-while
           partition flatten repeatedly repeat zip
-          member contains?)
+          member contains?
+          length= length> length<)
 
   (import list)
-  (import predicates)
+  (import types)
 
   (define take
     (lambda (n lst)
@@ -125,4 +126,21 @@
   (define contains?
     (lambda (x lst)
       "Return #t if lst contains element equal to x."
-      (if (member x lst) #t #f))))
+      (if (member x lst) #t #f)))
+
+  ;; Length predicates
+  (define length=
+    (lambda (x n)
+      "Return #t if length of x equals n."
+      (isTRUE (== (length x) n))))
+
+  (define length>
+    (lambda (x n)
+      "Return #t if length of x is greater than n."
+      (isTRUE (> (length x) n))))
+
+  (define length<
+    (lambda (x n)
+      "Return #t if length of x is less than n."
+      (isTRUE (< (length x) n))))
+)

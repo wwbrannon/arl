@@ -1,0 +1,357 @@
+---
+title: "Standard Library: Type Predicates"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Standard Library: Type Predicates}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+These functions are provided by the `types` module (`inst/rye/types.rye`).
+
+## List and Pair Predicates
+
+### list?
+
+Tests if a value is a list.
+
+**Signature:** `(list? x)`
+
+**Examples:**
+```lisp
+(list? (list 1 2 3))  ; => #t
+(list? ())            ; => #t
+(list? "hello")       ; => #f
+```
+
+**See also:** pair?, list-or-pair?, null?
+
+---
+
+### pair?
+
+Tests if a value is a dotted pair (pairlist cell / RyeCons). In R terms, a pair is not a list (type-generic vector); it is a cons cell.
+
+**Signature:** `(pair? x)`
+
+**Examples:**
+```lisp
+(pair? (cons 1 2))    ; => #t   (dotted pair)
+(pair? (list 1))      ; => #f   (list, not a pair)
+(pair? ())            ; => #f
+```
+
+**Note:** `pair?` is defined in the `list` module, not `types`.
+
+**See also:** list?, list-or-pair?, null?
+
+---
+
+### list-or-pair?
+
+Tests if a value is a non-empty list or a dotted pair.
+
+**Signature:** `(list-or-pair? x)`
+
+**Examples:**
+```lisp
+(list-or-pair? (list 1))      ; => #t
+(list-or-pair? (list 1 2 3))  ; => #t
+(list-or-pair? (cons 1 2))    ; => #t
+(list-or-pair? ())            ; => #f
+```
+
+**See also:** list?, pair?, null?, atom?
+
+---
+
+### null?
+
+Tests if a value is NULL or an empty list.
+
+**Signature:** `(null? x)`
+
+**Examples:**
+```lisp
+(null? #nil)          ; => #t
+(null? ())            ; => #t
+(null? (list 1))      ; => #f
+```
+
+**See also:** nil?, pair?, list-or-pair?
+
+---
+
+### nil?
+
+Alias for `null?`.
+
+**Signature:** `(nil? x)`
+
+**See also:** null?
+
+---
+
+### atom?
+
+Tests if a value is NOT a non-empty list or dotted pair (i.e., is NOT list-or-pair?).
+
+**Signature:** `(atom? x)`
+
+**Examples:**
+```lisp
+(atom? 42)            ; => #t
+(atom? "hello")       ; => #t
+(atom? (list 1 2))    ; => #f
+(atom? ())            ; => #t  (empty list is atomic)
+```
+
+**See also:** list-or-pair?
+
+---
+
+### empty?
+
+Tests if a value has zero length.
+
+**Signature:** `(empty? x)`
+
+**Examples:**
+```lisp
+(empty? ())           ; => #t
+(empty? (list))       ; => #t
+(empty? [])           ; => #t
+(empty? (list 1))     ; => #f
+```
+
+**Note:** The empty string `""` has length 1 in R and is NOT considered empty!
+
+**See also:** null?, length= (in `sequences` module)
+
+---
+
+## Symbol Predicates
+
+### symbol?
+
+Tests if a value is a symbol.
+
+**Signature:** `(symbol? x)`
+
+**Examples:**
+```lisp
+(symbol? 'foo)        ; => #t
+(symbol? "foo")       ; => #f
+(symbol? 42)          ; => #f
+```
+
+---
+
+### keyword?
+
+Tests if a value is a keyword (`:key` syntax).
+
+**Signature:** `(keyword? x)`
+
+**Examples:**
+```lisp
+(keyword? :foo)       ; => #t
+(keyword? 'foo)       ; => #f
+```
+
+---
+
+## Basic Type Predicates
+
+### number?
+
+Tests if a value is a number (real or complex).
+
+**Signature:** `(number? x)`
+
+**Examples:**
+```lisp
+(number? 42)                              ; => #t
+(number? 3.14)                            ; => #t
+(number? (make-rectangular 3 4))          ; => #t
+(number? "42")                            ; => #f
+```
+
+**Note:** For numeric type hierarchy predicates (real?, complex?, rational?, exact?, inexact?), see the `math` module documentation.
+
+**See also:** stdlib-math vignette for real?, complex?, rational?, exact?, inexact?
+
+---
+
+### string?
+
+Tests if a value is a string (character vector in R).
+
+**Signature:** `(string? x)`
+
+**Examples:**
+```lisp
+(string? "hello")     ; => #t
+(string? 'hello)      ; => #f
+(string? 42)          ; => #f
+```
+
+---
+
+### vector?
+
+Tests if a value is a non-list atomic vector.
+
+**Signature:** `(vector? x)`
+
+**Examples:**
+```lisp
+(vector? [1 2 3])     ; => #t
+(vector? (list 1 2))  ; => #f
+(vector? "hello")     ; => #f  (strings are character vectors but excluded)
+```
+
+**Note:** This predicate tests for numeric/logical/character vectors, but NOT lists.
+
+---
+
+### boolean?
+
+Tests if a value is a single logical value.
+
+**Signature:** `(boolean? x)`
+
+**Examples:**
+```lisp
+(boolean? #t)         ; => #t
+(boolean? #f)         ; => #t
+(boolean? TRUE)       ; => #t
+(boolean? c(TRUE, FALSE))  ; => #f  (vector, not single value)
+```
+
+---
+
+### true?
+
+Tests if a value is exactly TRUE.
+
+**Signature:** `(true? x)`
+
+**Examples:**
+```lisp
+(true? #t)            ; => #t
+(true? 1)             ; => #f
+(true? TRUE)          ; => #t
+```
+
+---
+
+### false?
+
+Tests if a value is exactly FALSE.
+
+**Signature:** `(false? x)`
+
+**Examples:**
+```lisp
+(false? #f)           ; => #t
+(false? 0)            ; => #f
+(false? FALSE)        ; => #t
+```
+
+---
+
+## Function Predicates
+
+### fn?
+
+Tests if a value is a function.
+
+**Signature:** `(fn? x)`
+
+**Examples:**
+```lisp
+(fn? +)               ; => #t
+(fn? (lambda (x) x))  ; => #t
+(fn? 42)              ; => #f
+```
+
+**See also:** callable?, procedure?
+
+---
+
+### callable?
+
+Alias for `fn?`.
+
+**Signature:** `(callable? x)`
+
+**See also:** fn?
+
+---
+
+### procedure?
+
+Alias for `fn?`.
+
+**Signature:** `(procedure? x)`
+
+**See also:** fn?, callable?
+
+---
+
+## Environment Predicates
+
+### environment?
+
+Tests if a value is an environment (including R6 objects).
+
+**Signature:** `(environment? x)`
+
+**Examples:**
+```lisp
+(environment? (new.env))  ; => #t
+(environment? (list))     ; => #f
+```
+
+**Note:** Dictionaries and sets are implemented as environments, so this will return `#t` for those types.
+
+---
+
+### is-refclass?
+
+Tests if a value is a Reference Class object (S4 refClass).
+
+**Signature:** `(is-refclass? x)`
+
+**Examples:**
+```lisp
+; Assuming MyRefClass is a reference class
+(is-refclass? (MyRefClass$new))  ; => #t
+(is-refclass? (list))            ; => #f
+```
+
+---
+
+## Type Introspection
+
+### type-of
+
+Returns the R type of a value (alias for R's `typeof`).
+
+**Signature:** `(type-of x)`
+
+**Examples:**
+```lisp
+(type-of 42)          ; => "double"
+(type-of (list 1 2))  ; => "list"
+(type-of 'foo)        ; => "symbol"
+```
+
+**See also:** class, mode (R functions)

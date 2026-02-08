@@ -4,7 +4,7 @@
   (export when unless cond case try*)
   ;; Note: 'and' and 'or' removed from exports - now handled as compiler special forms
 
-  (import predicates)
+  (import types)
   (import list)
 
 ;;; Control flow macros

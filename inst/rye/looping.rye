@@ -5,7 +5,7 @@
 
   (import functional)
   (import list)
-  (import predicates)
+  (import types)
   (import sequences)
 
   ;;

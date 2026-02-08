@@ -1,7 +1,8 @@
 ;;; Tests for type coercion functions
 
 (import assert)
-(import predicates)
+(import conversions)
+(import math)
 
 (define test-exact-inexact-conversion (lambda ()
   (assert-equal (exact->inexact 5) 5.0)

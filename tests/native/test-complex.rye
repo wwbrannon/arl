@@ -2,7 +2,6 @@
 
 (import assert)
 (import math)
-(import predicates)
 
 (define test-make-rectangular (lambda ()
   (define z (make-rectangular 3 4))

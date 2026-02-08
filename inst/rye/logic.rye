@@ -1,0 +1,17 @@
+;;; Rye Standard Library - Logical Operations
+
+(module logic
+  (export not xor)
+
+  (define not
+    (lambda (x)
+      "Logical negation with Rye truthiness."
+      (if x #f #t)))
+
+  (define xor
+    (lambda (a b)
+      "Logical exclusive OR with Rye truthiness."
+      (if a
+        (if b #f #t)
+        (if b #t #f))))
+)

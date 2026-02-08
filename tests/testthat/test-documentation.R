@@ -95,7 +95,7 @@ test_that("optimized predicate functions have docstrings", {
   engine <- RyeEngine$new()
   env <- engine$env$env
 
-  engine$eval_in_env(engine$read('(import predicates)')[[1]], env)
+  engine$eval_in_env(engine$read('(import types)')[[1]], env)
   engine$eval_in_env(engine$read('(import core)')[[1]], env)
 
   symbol_doc <- engine$eval_in_env(engine$read('(doc symbol?)')[[1]], env)

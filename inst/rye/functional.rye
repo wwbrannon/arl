@@ -5,7 +5,7 @@
           curry juxt constantly iterate iterate-until memoize repeatedly)
 
   (import list)
-  (import predicates)
+  (import logic)
 
   (define map
     (lambda (fn lst)

@@ -1,15 +1,29 @@
-o) "predicates" is not a really coherent thing to have a file of, we should prob split these up
+o) any functions in rye-engine.R that we can move in here?
 
-performance issues:
--------------------------------------------------
-o) have opus or some such critique the architecture and make suggestions
-
-test audits:
--------------------------------------------------
-o) expand test coverage for newer components
+o) run `make coverage` and expand test coverage for newer components.
+o) let's also think about test coverage for the stdlib: any missing functions?
+we don't have the same instrumented coverage tooling but we can at least look
+closely
 
 o) audit for test duplication and remove it, especially between native and stdlib-*
 
+performance audit:
+-------------------------------------------------
+o) have opus audit/critique the architecture and make performance-related suggestions:
+```
+Take a look at the architecture of this rye language implementation. We've made
+several improvements to get better performance, especially implementing a
+compiler in lieu of an AST-walking evaluator and adding disk-bached module
+caching. And performance is indeed much better: the examples test suite has
+gone from about 85s runtime to about 7.5s.
+
+But let's think about other ways to improve performance. Low-hanging fruit is
+especially desirable, but we should also think about larger architectural
+choices. Are there other good options to get better time or space performance?
+```
+
+test audit:
+-------------------------------------------------
 o) have opus audit the tests again:
 ```
 Take a look at the tests in tests/, maybe especially the native ones in
@@ -24,16 +38,14 @@ that's been hardcoded into the tests? You're looking for things that clearly
 don't make sense and aren't how an R-based lisp should behave. Use your
 judgment!
 ```
-or similar
 
 small stuff:
 --------------------------------------
 o) general code quality / duplication pass
-
-o) minor pkgdown warning about site url
-o) run lints and fix
+o) run `make lint`, fix and/or update lint rules
 
 documentation updates:
 -------------------------------------------------
 o) update / systematize docs: make a plan
 o) write a compiler vignette
+o) minor pkgdown warning about site url

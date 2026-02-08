@@ -3,7 +3,7 @@
 (module dict
   (export dict hash dict? dict-get dict-set dict-remove dict-keys dict-values dict-has? dict-merge)
 
-  (import predicates)
+  (import types)
   (import list)
   (import looping)
 
