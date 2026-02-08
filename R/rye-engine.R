@@ -56,7 +56,9 @@ RyeEngine <- R6::R6Class(
     #' @param use_env_cache Optional logical. If TRUE, enables Option C (environment cache)
     #'   for 4x faster module loading. Only safe when dependencies don't change. Defaults to
     #'   NULL, which inherits from global option `getOption("rye.use_env_cache", FALSE)`.
-    initialize = function(env = NULL, parent = NULL, use_env_cache = NULL) {
+    #' @param coverage_tracker Optional RyeCoverageTracker instance to enable coverage tracking
+    #'   from the start. If provided, coverage will be tracked during stdlib loading.
+    initialize = function(env = NULL, parent = NULL, use_env_cache = NULL, coverage_tracker = NULL) {
       # Priority: explicit parameter > global option > default FALSE
       if (is.null(use_env_cache)) {
         self$use_env_cache <- getOption("rye.use_env_cache", FALSE)
@@ -81,7 +83,7 @@ RyeEngine <- R6::R6Class(
       self$module_cache <- ModuleCache$new()
 
       # Create shared evaluation context
-      context <- EvalContext$new(self$env, self$source_tracker, self$use_env_cache)
+      context <- EvalContext$new(self$env, self$source_tracker, self$use_env_cache, coverage_tracker)
 
       # Create components with context
       self$macro_expander <- MacroExpander$new(context)
@@ -529,6 +531,49 @@ RyeEngine <- R6::R6Class(
     #' Start the Rye REPL using this engine.
     repl = function() {
       RyeREPL$new(engine = self)$run()
+    },
+    #' @description
+    #' Enable coverage tracking.
+    #'
+    #' Creates a coverage tracker and installs it in the eval context.
+    #' Should be called before running code you want to track.
+    #'
+    #' @return The coverage tracker instance
+    enable_coverage = function() {
+      if (!requireNamespace("R6", quietly = TRUE)) {
+        stop("R6 package required for coverage tracking")
+      }
+
+      # Create tracker if needed
+      if (is.null(self$compiled_runtime$context$coverage_tracker)) {
+        self$compiled_runtime$context$coverage_tracker <- RyeCoverageTracker$new()
+      }
+
+      self$compiled_runtime$context$coverage_tracker$set_enabled(TRUE)
+      invisible(self$compiled_runtime$context$coverage_tracker)
+    },
+    #' @description
+    #' Disable coverage tracking.
+    disable_coverage = function() {
+      if (!is.null(self$compiled_runtime$context$coverage_tracker)) {
+        self$compiled_runtime$context$coverage_tracker$set_enabled(FALSE)
+      }
+      invisible(self)
+    },
+    #' @description
+    #' Get coverage data.
+    #'
+    #' @return Coverage tracker instance, or NULL if not enabled
+    get_coverage = function() {
+      self$compiled_runtime$context$coverage_tracker
+    },
+    #' @description
+    #' Reset coverage data.
+    reset_coverage = function() {
+      if (!is.null(self$compiled_runtime$context$coverage_tracker)) {
+        self$compiled_runtime$context$coverage_tracker$reset()
+      }
+      invisible(self)
     }
   ),
   private = list(

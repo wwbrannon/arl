@@ -68,6 +68,10 @@ via engine initialization parameter or global option \code{rye.use_env_cache}.}
 \item \href{#method-RyeEngine-help}{\code{RyeEngine$help()}}
 \item \href{#method-RyeEngine-help_in_env}{\code{RyeEngine$help_in_env()}}
 \item \href{#method-RyeEngine-repl}{\code{RyeEngine$repl()}}
+\item \href{#method-RyeEngine-enable_coverage}{\code{RyeEngine$enable_coverage()}}
+\item \href{#method-RyeEngine-disable_coverage}{\code{RyeEngine$disable_coverage()}}
+\item \href{#method-RyeEngine-get_coverage}{\code{RyeEngine$get_coverage()}}
+\item \href{#method-RyeEngine-reset_coverage}{\code{RyeEngine$reset_coverage()}}
 \item \href{#method-RyeEngine-clone}{\code{RyeEngine$clone()}}
 }
 }
@@ -77,7 +81,12 @@ via engine initialization parameter or global option \code{rye.use_env_cache}.}
 \subsection{Method \code{new()}}{
 Initialize engine components and base environment.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$new(env = NULL, parent = NULL, use_env_cache = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$new(
+  env = NULL,
+  parent = NULL,
+  use_env_cache = NULL,
+  coverage_tracker = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -91,6 +100,9 @@ Defaults to baseenv(). Cannot be specified together with env.}
 \item{\code{use_env_cache}}{Optional logical. If TRUE, enables Option C (environment cache)
 for 4x faster module loading. Only safe when dependencies don't change. Defaults to
 NULL, which inherits from global option \code{getOption("rye.use_env_cache", FALSE)}.}
+
+\item{\code{coverage_tracker}}{Optional RyeCoverageTracker instance to enable coverage tracking
+from the start. If provided, coverage will be tracked during stdlib loading.}
 }
 \if{html}{\out{</div>}}
 }
@@ -494,6 +506,55 @@ Show help for a topic in an explicit environment.
 Start the Rye REPL using this engine.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeEngine$repl()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-enable_coverage"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-enable_coverage}{}}}
+\subsection{Method \code{enable_coverage()}}{
+Enable coverage tracking.
+
+Creates a coverage tracker and installs it in the eval context.
+Should be called before running code you want to track.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$enable_coverage()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+The coverage tracker instance
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-disable_coverage"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-disable_coverage}{}}}
+\subsection{Method \code{disable_coverage()}}{
+Disable coverage tracking.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$disable_coverage()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-get_coverage"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-get_coverage}{}}}
+\subsection{Method \code{get_coverage()}}{
+Get coverage data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$get_coverage()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Coverage tracker instance, or NULL if not enabled
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-reset_coverage"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-reset_coverage}{}}}
+\subsection{Method \code{reset_coverage()}}{
+Reset coverage data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$reset_coverage()}\if{html}{\out{</div>}}
 }
 
 }

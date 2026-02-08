@@ -42,17 +42,20 @@ EvalContext <- R6::R6Class(
     compiled_runtime = NULL,
     compiler = NULL,
     use_env_cache = NULL,
+    coverage_tracker = NULL,
     # @description Create context. macro_expander and compiler are assigned by the engine.
     # @param env RyeEnv instance.
     # @param source_tracker SourceTracker instance.
     # @param use_env_cache Logical. If TRUE, enables Option C (environment cache).
-    initialize = function(env, source_tracker, use_env_cache = FALSE) {
+    # @param coverage_tracker Optional RyeCoverageTracker instance.
+    initialize = function(env, source_tracker, use_env_cache = FALSE, coverage_tracker = NULL) {
       if (!r6_isinstance(env, "RyeEnv")) {
         stop("EvalContext requires a RyeEnv")
       }
       self$env <- env
       self$source_tracker <- source_tracker
       self$use_env_cache <- isTRUE(use_env_cache)
+      self$coverage_tracker <- coverage_tracker
     }
   )
 )
@@ -182,6 +185,16 @@ CompiledRuntime <- R6::R6Class(
       self$context$env$push_env(env)
       on.exit(self$context$env$pop_env(), add = TRUE)
       self$install_helpers(env)
+
+      # Track coverage if enabled
+      coverage_tracker <- self$context$coverage_tracker
+      if (!is.null(coverage_tracker) && coverage_tracker$enabled) {
+        rye_src <- self$context$source_tracker$src_get(compiled_expr)
+        if (!is.null(rye_src)) {
+          coverage_tracker$track(rye_src)
+        }
+      }
+
       result_with_vis <- withVisible(eval(compiled_expr, envir = env))
       value <- self$context$source_tracker$strip_src(result_with_vis$value)
       if (result_with_vis$visible) {
