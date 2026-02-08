@@ -71,7 +71,7 @@ RyeREPL <- R6::R6Class(
       bpm_start <- "\033[200~"
       bpm_end <- "\033[201~"
       read_one = function(p) {
-        if (isTRUE(interactive()) && isTRUE(capabilities("readline"))) {
+        if (isTRUE(interactive()) && isTRUE(capabilities("cledit"))) {
           return(readline(p))
         }
         cat(p)
@@ -124,7 +124,7 @@ RyeREPL <- R6::R6Class(
         }
         return(isTRUE(override))
       }
-      isTRUE(interactive()) && isTRUE(capabilities("readline"))
+      isTRUE(interactive()) && isTRUE(capabilities("cledit"))
     },
     # @description Detect parse errors that indicate incomplete input.
     is_incomplete_error = function(e) {
@@ -275,8 +275,8 @@ RyeREPL <- R6::R6Class(
         self$output_fn("Type '(license)' w/o quotes for legal information.\n")
         self$output_fn("Type '(quit)' w/o quotes or press Ctrl+C to exit.\n")
         self$output_fn(
-          "Builtin readline support: ",
-          ifelse(isTRUE(capabilities("readline")), "yes", "no (try rlwrap)"),
+          "Builtin readline/libedit: ",
+          ifelse(isTRUE(capabilities("cledit")), "yes", "no (try rlwrap)"),
           "\n\n",
           sep = ""
         )
@@ -284,7 +284,7 @@ RyeREPL <- R6::R6Class(
 
       use_bpm <- isTRUE(getOption("rye.repl_bracketed_paste", TRUE)) &&
         isTRUE(interactive()) &&
-        isTRUE(capabilities("readline"))
+        isTRUE(capabilities("cledit"))
       if (use_bpm) {
         self$output_fn("\033[?2004h", sep = "")
         utils::flush.console()
