@@ -67,7 +67,7 @@
     (lambda (x)
       "Return #t if x is a non-list atomic vector."
       (if (is.atomic x)
-        (if (is.character x) #f (if (is.list x) #f #t))
+        (if (is.list x) #f #t)
         #f)))
 
   (define true?

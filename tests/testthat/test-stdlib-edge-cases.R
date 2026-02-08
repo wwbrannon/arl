@@ -369,7 +369,7 @@ test_that("predicates handle edge cases", {
 
   # vector? with various types (only numeric vectors)
   expect_true(env$`vector?`(c(1, 2, 3)))
-  expect_false(env$`vector?`(c("a", "b")))  # character vectors are not considered vectors
+  expect_true(env$`vector?`(c("a", "b")))
   expect_true(env$`vector?`(1:10))
   expect_false(env$`vector?`(list(1, 2, 3)))
 
