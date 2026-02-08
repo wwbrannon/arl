@@ -1,7 +1,28 @@
 ;;; Rye Standard Library - Logical Operations
+;;;
 
 (module logic
   (export not xor)
+
+;;; Note: `and` and `or` are implemented as compiler special forms for
+;;; efficiency (short-circuit evaluation with optimizations for simple values
+;;; and flattening of nested chains). These are the old macro implementations.
+;;; (optimization: eliminate temps for simple values, flatten nested chains)
+ ; (defmacro and (first . rest)
+ ;   "Short-circuit boolean AND."
+ ;   (if (null? rest)
+ ;     first
+ ;     `((lambda (tmp)
+ ;         (if tmp (and ,@rest) tmp))
+ ;       ,first)))
+
+ ; (defmacro or (first . rest)
+ ;   "Short-circuit boolean OR."
+ ;   (if (null? rest)
+ ;     first
+ ;     `((lambda (tmp)
+ ;         (if tmp tmp (or ,@rest)))
+ ;       ,first)))
 
   (define not
     (lambda (x)
