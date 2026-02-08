@@ -20,11 +20,13 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/wwbrannon/rye/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/rye/actions/workflows/R-CMD-check.yaml)
+[![Codecov](https://codecov.io/gh/wwbrannon/rye/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/rye)
+[![R Coverage](https://codecov.io/gh/wwbrannon/rye/branch/main/graph/badge.svg?flag=r-code)](https://codecov.io/gh/wwbrannon/rye?flags%5B0%5D=r-code)
+[![Rye Coverage](https://codecov.io/gh/wwbrannon/rye/branch/main/graph/badge.svg?flag=rye-code)](https://codecov.io/gh/wwbrannon/rye?flags%5B0%5D=rye-code)
 [![CRAN status](https://www.r-pkg.org/badges/version/rye)](https://CRAN.R-project.org/package=rye)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!--
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/rye)](https://CRAN.R-project.org/package=rye)
-[![Codecov](https://codecov.io/gh/wwbrannon/rye/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/rye)
 [![R-universe](https://wwbrannon.r-universe.dev/badges/rye)](https://wwbrannon.r-universe.dev/rye)
 [![pkgdown](https://img.shields.io/badge/pkgdown-site-blue.svg)][pkgdown-site]
 -->
