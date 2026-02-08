@@ -59,6 +59,58 @@ programmatically:
 (r/call "sum" (list 1 2 3))
 ```
 
+### Non-standard evaluation
+
+Some R functions use non-standard evaluation (NSE) - they expect expressions
+that they will evaluate in a controlled context, rather than pre-evaluated
+values. Examples include `tryCatch`, `substitute`, `with`, and `eval`.
+
+When using `r/call` with NSE functions, arguments are evaluated **before**
+being passed to the R function (via `do.call`). This causes issues with
+functions like `tryCatch` that need to control when evaluation happens.
+
+**The solution**: Build an unevaluated call expression and evaluate it with `r/eval`:
+
+```lisp
+;; WRONG - thunk is evaluated before tryCatch can catch errors
+(r/call "tryCatch"
+  (list :expr (thunk) :error (lambda (e) #t)))
+
+;; CORRECT - build unevaluated expression, then eval it
+(define thunk-expr (call (list thunk)))     ; unevaluated call
+(r/eval (call (list 'tryCatch thunk-expr    ; 'tryCatch = quoted symbol
+                    :error (lambda (e) #t)))
+        (current-env))
+```
+
+**Key points:**
+
+1. Use Rye's `call` function to build unevaluated call expressions
+2. Use a quoted symbol (`'tryCatch`) not a string (`"tryCatch"`)
+3. Use `r/eval` (not `r/call`) to evaluate the constructed expression
+4. Pass `(current-env)` as the evaluation environment
+
+This pattern is used throughout the stdlib - see `try*` in `control.rye` and
+`assert-error` in `assert.rye` for working examples.
+
+#### Detecting errors with a sentinel value
+
+When wrapping error-prone code, you need to distinguish "the error handler ran"
+from "the code succeeded and happened to return the same value". Use `gensym`
+to create a unique sentinel:
+
+```lisp
+(define error-caught (gensym "error-caught"))  ; unique symbol
+(define result
+  (r/eval (call (list 'tryCatch thunk-expr
+                      :error (lambda (e) error-caught)))
+          (current-env)))
+;; Check if error-caught is identical to result
+(if (identical? result error-caught)
+  "error was caught"
+  "code ran successfully")
+```
+
 ## Working with formulas
 
 ```lisp
