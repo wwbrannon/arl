@@ -88,6 +88,17 @@ R base operators are also available directly:
 (< 3 5)
 ```
 
+### Numeric edge cases
+
+Because Rye delegates to R for numeric operations, edge cases follow R
+semantics (not Scheme's). For example, division by zero yields `Inf`, and
+`NaN` comparisons propagate `NA`:
+
+```lisp
+(/ 1 0)         ; => Inf
+(== NaN NaN)    ; => NA
+```
+
 ## Example workflow
 
 The [data analysis example](examples.html#data-analysis) shows a small analysis pipeline

@@ -54,6 +54,24 @@ structures:
 Scheme typically treats only `#f` as false. Rye treats **only** `#f`/`FALSE`
 and `#nil`/`NULL` as falsey; everything else is truthy.
 
+### Numeric edge cases (R semantics)
+
+Rye mirrors R's numeric behavior rather than Scheme's in several edge cases:
+
+- **Division by zero**: `(/ 1 0)` yields `Inf` (and `(/ -1 0)` yields `-Inf`) instead of raising an error.
+- **NaN comparisons**: `(== NaN NaN)` yields `NA` rather than `#f`, due to R's `NA` propagation rules.
+
+This is intentional for R interop, but it is a meaningful semantic difference
+from Scheme. Prefer predicates like `is.infinite`, `is.nan`, and `is.na` when
+you need to branch on these values.
+
+```lisp
+(/ 1 0)         ; => Inf
+(== NaN NaN)    ; => NA
+(is.infinite (/ 1 0))  ; => TRUE
+(is.na (== NaN NaN))   ; => TRUE
+```
+
 ### Keywords and named arguments
 
 Rye keywords (`:from`, `:to`) are self-evaluating and map to **named arguments**
