@@ -392,6 +392,37 @@ rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
   RyeCLI$new(args)$run()
 }
 
+# Check if two file paths refer to the same file (handles symlinks and hardlinks)
+# @param path1 First file path
+# @param path2 Second file path
+# @return TRUE if both paths refer to the same file, FALSE otherwise
+# @keywords internal
+# @noRd
+same_file <- function(path1, path2) {
+  # If either file doesn't exist, they can't be the same
+  if (!file.exists(path1) || !file.exists(path2)) {
+    return(FALSE)
+  }
+
+  # Resolve symlinks and compare canonical paths
+  path1_real <- normalizePath(path1, winslash = "/", mustWork = TRUE)
+  path2_real <- normalizePath(path2, winslash = "/", mustWork = TRUE)
+
+  if (path1_real == path2_real) {
+    return(TRUE)
+  }
+
+  # Also check inodes for hardlinks (Unix-like systems only)
+  info1 <- file.info(path1_real)
+  info2 <- file.info(path2_real)
+
+  if (!is.null(info1$inode) && !is.null(info2$inode)) {
+    return(info1$inode == info2$inode)
+  }
+
+  FALSE
+}
+
 #' Install the Rye CLI wrapper
 #'
 #' Copies the packaged CLI wrapper into a writable bin directory and makes it
@@ -434,11 +465,26 @@ rye_install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), 
   }
 
   target <- file.path(chosen, "rye")
+
+  # Check if source and target are the same file (can happen in dev mode)
+  # This includes symlinks and hardlinks
+  if (same_file(source, target)) {
+    message("Target already points to source, skipping copy")
+    message("Already installed at ", target)
+    return(invisible(target))
+  }
+
   if (file.exists(target) && !isTRUE(overwrite)) {
     stop("CLI already exists at ", target, ". Use overwrite = TRUE to replace it.")
   }
 
-  if (!file.copy(source, target, overwrite = TRUE)) {
+  # If target is a symlink, remove it first to avoid following the link
+  # and overwriting the source file
+  if (file.exists(target)) {
+    file.remove(target)
+  }
+
+  if (!file.copy(source, target, overwrite = FALSE)) {
     stop("Failed to install CLI to ", target)
   }
 
