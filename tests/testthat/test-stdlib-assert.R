@@ -214,41 +214,37 @@ test_that("assert-eq fails on non-identical values", {
     "Expected.*identical")
 })
 
-# NOTE: assert-error has known issues with dict/tryCatch implementation
-# Skipping these tests until the stdlib implementation is fixed
-# See: /Users/will/github/rye/inst/rye/assert.rye lines 54-64
+test_that("assert-error passes when function throws error", {
+  env <- new.env(parent = baseenv())
+  stdlib_env(engine, env)
+  import_stdlib_modules(engine, c("assert"), env)
 
-# test_that("assert-error passes when function throws error", {
-#   env <- new.env(parent = baseenv())
-#   stdlib_env(engine, env)
-#   import_stdlib_modules(engine, c("assert"), env)
-#
-#   # Function that throws error
-#   result <- engine$eval_in_env(
-#     engine$read('(assert-error (lambda () (error "boom")))')[[1]], env)
-#   expect_true(result)
-#
-#   # Function that calls stop
-#   result <- engine$eval_in_env(
-#     engine$read('(assert-error (lambda () (stop "error")))')[[1]], env)
-#   expect_true(result)
-# })
-#
-# test_that("assert-error fails when function doesn't throw", {
-#   env <- new.env(parent = baseenv())
-#   stdlib_env(engine, env)
-#   import_stdlib_modules(engine, c("assert"), env)
-#
-#   expect_error(
-#     engine$eval_in_env(
-#       engine$read("(assert-error (lambda () 42))")[[1]], env),
-#     "Expected an error to be thrown")
-#
-#   expect_error(
-#     engine$eval_in_env(
-#       engine$read("(assert-error (lambda () #t))")[[1]], env),
-#     "Expected an error to be thrown")
-# })
+  # Function that throws error
+  result <- engine$eval_in_env(
+    engine$read('(assert-error (lambda () (error "boom")))')[[1]], env)
+  expect_true(result)
+
+  # Function that calls stop
+  result <- engine$eval_in_env(
+    engine$read('(assert-error (lambda () (stop "error")))')[[1]], env)
+  expect_true(result)
+})
+
+test_that("assert-error fails when function doesn't throw", {
+  env <- new.env(parent = baseenv())
+  stdlib_env(engine, env)
+  import_stdlib_modules(engine, c("assert"), env)
+
+  expect_error(
+    engine$eval_in_env(
+      engine$read("(assert-error (lambda () 42))")[[1]], env),
+    "Expected an error to be thrown")
+
+  expect_error(
+    engine$eval_in_env(
+      engine$read("(assert-error (lambda () #t))")[[1]], env),
+    "Expected an error to be thrown")
+})
 
 test_that("assert functions work with expressions", {
   env <- new.env(parent = baseenv())

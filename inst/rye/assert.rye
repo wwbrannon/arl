@@ -54,12 +54,14 @@
   (define assert-error
     (lambda (thunk)
       "Assert thunk throws an error."
+      ;; Use a unique sentinel value to detect if error was caught
+      (define error-caught (gensym "error-caught"))
+      (define thunk-expr (call (list thunk)))
       (define result
-        (r/call "tryCatch"
-          (dict
-            :expr (thunk)
-            :error (lambda (e) #t))))
-      (if (not (== result #t))
+        (r/eval (call (list 'tryCatch thunk-expr
+                            :error (lambda (e) error-caught)))
+                (current-env)))
+      (if (not (identical? result error-caught))
         (error "Expected an error to be thrown, but none was")
         #t)))
 )

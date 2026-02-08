@@ -1,8 +1,5 @@
 test and related fixes:
 -------------------------------------------------
-o) "The assert-error function has a known issue - it's using dict() incorrectly with tryCatch"
-
-
 o) what's up here?
 ```
 tests/native/test-scoping.rye:  ;; NOTE: We don't have assert-error yet, so we can't test this properly
@@ -10,7 +7,7 @@ tests/native/test-scoping.rye:  ;; NOTE: We don't have assert-error yet, so we c
 
 o) is there a lot of duplication between the native and R tests, especially the stdlib-* tests?
 
-o) skip() mechanism for native tests
+o) let's add a skip() mechanism for native tests
 
 o) could we build instrumented coverage tooling really easily via covr? we do actually have a compiler to R now...
 
