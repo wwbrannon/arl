@@ -150,7 +150,7 @@ RyeCoverageTracker <- R6::R6Class(
 
         # Count total lines (non-empty, non-comment)
         file_lines <- readLines(file, warn = FALSE)
-        code_lines <- grep("^\\s*[^;\\s]", file_lines)
+        code_lines <- grep(private$CODE_LINE_PATTERN, file_lines)
         non_empty <- length(code_lines)
 
         # Count covered lines
@@ -258,7 +258,7 @@ RyeCoverageTracker <- R6::R6Class(
         if (!file.exists(file)) next
 
         file_lines <- readLines(file, warn = FALSE)
-        code_lines <- grep("^\\s*[^;\\s]", file_lines)
+        code_lines <- grep(private$CODE_LINE_PATTERN, file_lines)
         non_empty <- length(code_lines)
 
         covered <- if (!is.null(coverage_summary[[file]])) {
@@ -355,8 +355,8 @@ RyeCoverageTracker <- R6::R6Class(
             hit_count <- file_cov[[line_str]]
             css_class <- "covered"
             hit_display <- sprintf("%dx", hit_count)
-          } else if (grepl("^\\s*[^;\\s]", line)) {
-            # Not covered but is code
+          } else if (grepl(private$CODE_LINE_PATTERN, line)) {
+            # Not covered but is code (not a comment or blank line)
             css_class <- "uncovered"
             hit_display <- "0x"
           } else {
@@ -422,8 +422,8 @@ RyeCoverageTracker <- R6::R6Class(
           # Check if line is covered
           if (!is.null(coverage_summary[[file]][[line_str]])) {
             coverage_summary[[file]][[line_str]]  # Execution count
-          } else if (grepl("^\\s*[^;\\s]", lines[i])) {
-            0  # Not covered but is code
+          } else if (grepl(private$CODE_LINE_PATTERN, lines[i])) {
+            0  # Not covered but is code (not a comment or blank line)
           } else {
             NULL  # Not code (comment/blank)
           }
@@ -452,5 +452,12 @@ RyeCoverageTracker <- R6::R6Class(
 
       invisible(self)
     }
+  ),
+
+  private = list(
+    # Regex pattern to identify code lines (vs comments/blanks)
+    # Matches: start of line, optional whitespace, then a non-whitespace, non-semicolon char
+    # Using POSIX [:space:] because \t doesn't work inside character classes in R
+    CODE_LINE_PATTERN = "^\\s*[^[:space:];]"
   )
 )

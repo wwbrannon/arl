@@ -1,8 +1,7 @@
 coverage tracking:
 -------------------------------------------------
-o) address test gaps this reveals: equality and logic in inst/rye
+o) update make clean to delete the coverage stuff, in particular why are we tracking coverage/.gitkeep
 
-o) update make clean to delete the coverage stuff: why are we tracking coverage/.gitkeep
 o) generally sanity-check all of this, look at the coverage reports
 
 audits / comprehensive sanity checks:
