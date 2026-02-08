@@ -1,91 +1,63 @@
-;; Tests for extended math operations (Phase 1)
-;; These tests define the expected behavior BEFORE implementation
+;; Native tests for math operations - User-facing examples
+;; For comprehensive edge case testing, see tests/testthat/test-stdlib-math.R
+;; These tests demonstrate idiomatic usage patterns with simple examples.
 
 ;; ============================================================================
 ;; Rounding and Truncation Functions
 ;; ============================================================================
 
-(define test-abs-positive (lambda ()
-  (assert-equal (abs 5) 5)))
-
-(define test-abs-negative (lambda ()
-  (assert-equal (abs -5) 5)))
-
-(define test-abs-zero (lambda ()
+(define test-abs (lambda ()
+  (assert-equal (abs 5) 5)
+  (assert-equal (abs -5) 5)
   (assert-equal (abs 0) 0)))
 
-(define test-floor-positive (lambda ()
-  (assert-equal (floor 3.7) 3)))
-
-(define test-floor-negative (lambda ()
-  (assert-equal (floor -3.7) -4)))
-
-(define test-floor-integer (lambda ()
+(define test-floor (lambda ()
+  (assert-equal (floor 3.7) 3)
+  (assert-equal (floor -3.7) -4)
   (assert-equal (floor 5) 5)))
 
-(define test-ceiling-positive (lambda ()
-  (assert-equal (ceiling 3.2) 4)))
-
-(define test-ceiling-negative (lambda ()
-  (assert-equal (ceiling -3.2) -3)))
-
-(define test-ceiling-integer (lambda ()
+(define test-ceiling (lambda ()
+  (assert-equal (ceiling 3.2) 4)
+  (assert-equal (ceiling -3.2) -3)
   (assert-equal (ceiling 5) 5)))
 
-(define test-truncate-positive (lambda ()
-  (assert-equal (truncate 3.7) 3)))
-
-(define test-truncate-negative (lambda ()
-  (assert-equal (truncate -3.7) -3)))
-
-(define test-truncate-integer (lambda ()
+(define test-truncate (lambda ()
+  (assert-equal (truncate 3.7) 3)
+  (assert-equal (truncate -3.7) -3)
   (assert-equal (truncate 5) 5)))
 
-(define test-round-half (lambda ()
-  (assert-equal (round 3.5) 4)))
+(define test-round (lambda ()
+  (assert-equal (round 3.5) 4)
+  (assert-equal (round 3.7) 4)))
 
 (define test-round-with-digits (lambda ()
   (assert-equal (round 3.14159 2) 3.14)))
 
-(define test-round-default (lambda ()
-  (assert-equal (round 3.7) 4)))
-
-(define test-signum-positive (lambda ()
-  (assert-equal (signum 5) 1)))
-
-(define test-signum-negative (lambda ()
-  (assert-equal (signum -5) -1)))
-
-(define test-signum-zero (lambda ()
+(define test-signum (lambda ()
+  (assert-equal (signum 5) 1)
+  (assert-equal (signum -5) -1)
   (assert-equal (signum 0) 0)))
 
 ;; ============================================================================
 ;; Power and Roots
 ;; ============================================================================
 
-(define test-sqrt-perfect-square (lambda ()
-  (assert-equal (sqrt 4) 2)))
-
-(define test-sqrt-nine (lambda ()
-  (assert-equal (sqrt 9) 3)))
-
-(define test-sqrt-one (lambda ()
+(define test-sqrt (lambda ()
+  (assert-equal (sqrt 4) 2)
+  (assert-equal (sqrt 9) 3)
   (assert-equal (sqrt 1) 1)))
 
-(define test-expt-basic (lambda ()
-  (assert-equal (expt 2 10) 1024)))
-
-(define test-expt-cube (lambda ()
-  (assert-equal (expt 3 3) 27)))
-
-(define test-expt-zero-power (lambda ()
-  (assert-equal (expt 5 0) 1)))
-
-(define test-expt-negative-power (lambda ()
+(define test-expt (lambda ()
+  (assert-equal (expt 2 10) 1024)
+  (assert-equal (expt 3 3) 27)
+  (assert-equal (expt 5 0) 1)
   (assert-equal (expt 2 -1) 0.5)))
 
+(define test-exp (lambda ()
+  (assert-equal (exp 0) 1)))
+
 ;; ============================================================================
-;; Logarithmic and Exponential
+;; Logarithmic Functions
 ;; ============================================================================
 
 (define test-log-exp-inverse (lambda ()
@@ -93,82 +65,51 @@
   (define result (exp (log x)))
   (assert-true (< (abs (- result x)) 0.001))))
 
-(define test-log10-hundred (lambda ()
-  (assert-equal (log10 100) 2)))
-
-(define test-log10-thousand (lambda ()
+(define test-log10 (lambda ()
+  (assert-equal (log10 100) 2)
   (assert-equal (log10 1000) 3)))
 
-(define test-log2-eight (lambda ()
-  (assert-equal (log2 8) 3)))
-
-(define test-log2-1024 (lambda ()
+(define test-log2 (lambda ()
+  (assert-equal (log2 8) 3)
   (assert-equal (log2 1024) 10)))
 
 (define test-logb-with-base (lambda ()
   ;; log base 2 of 8 should be 3
   (assert-equal (logb 8 2) 3)))
 
-(define test-exp-zero (lambda ()
-  (assert-equal (exp 0) 1)))
-
 ;; ============================================================================
 ;; Trigonometric Functions
 ;; ============================================================================
 
-(define test-sin-zero (lambda ()
-  (assert-true (< (abs (sin 0)) 0.001))))
-
-(define test-sin-pi-half (lambda ()
+(define test-trig-basic (lambda ()
+  (assert-true (< (abs (sin 0)) 0.001))
+  (assert-true (< (abs (- (cos 0) 1)) 0.001))
+  (assert-true (< (abs (tan 0)) 0.001))
   (define pi-half (/ 3.141592653589793 2))
   (assert-true (< (abs (- (sin pi-half) 1)) 0.001))))
 
-(define test-cos-zero (lambda ()
-  (assert-true (< (abs (- (cos 0) 1)) 0.001))))
-
-(define test-tan-zero (lambda ()
-  (assert-true (< (abs (tan 0)) 0.001))))
-
-(define test-asin-one (lambda ()
+(define test-trig-inverse (lambda ()
+  (assert-true (< (abs (acos 1)) 0.001))
+  (assert-true (< (abs (atan 0)) 0.001))
   (define result (asin 1))
   (define pi-half (/ 3.141592653589793 2))
   (assert-true (< (abs (- result pi-half)) 0.001))))
-
-(define test-acos-one (lambda ()
-  (assert-true (< (abs (acos 1)) 0.001))))
-
-(define test-atan-zero (lambda ()
-  (assert-true (< (abs (atan 0)) 0.001))))
-
-(define test-atan2-quadrants (lambda ()
-  ;; atan2(1, 1) should be pi/4
-  (define result (atan2 1 1))
-  (define pi-quarter (/ 3.141592653589793 4))
-  (assert-true (< (abs (- result pi-quarter)) 0.001))))
 
 ;; ============================================================================
 ;; Integer Division
 ;; ============================================================================
 
-(define test-quotient-positive (lambda ()
-  (assert-equal (quotient 17 5) 3)))
-
-(define test-quotient-negative-numerator (lambda ()
-  (assert-equal (quotient -17 5) -3)))
-
-(define test-quotient-both-negative (lambda ()
+(define test-quotient (lambda ()
+  (assert-equal (quotient 17 5) 3)
+  (assert-equal (quotient -17 5) -3)
   (assert-equal (quotient -17 -5) 3)))
 
-(define test-remainder-positive (lambda ()
-  (assert-equal (remainder 17 5) 2)))
-
-(define test-remainder-negative-numerator (lambda ()
+(define test-remainder (lambda ()
+  (assert-equal (remainder 17 5) 2)
   (assert-equal (remainder -17 5) -2)))
 
-(define test-modulo-positive (lambda ()
-  (assert-equal (modulo 17 5) 2)))
-
 (define test-modulo-negative-numerator (lambda ()
+  (assert-equal (modulo 17 5) 2)
   (assert-equal (modulo -17 5) 3)))
 
 (define test-quotient-remainder-identity (lambda ()
@@ -181,25 +122,17 @@
 ;; Number Theory
 ;; ============================================================================
 
-(define test-gcd-two-numbers (lambda ()
-  (assert-equal (gcd 48 18) 6)))
-
-(define test-gcd-coprime (lambda ()
-  (assert-equal (gcd 100 35) 5)))
-
-(define test-gcd-one-arg (lambda ()
+(define test-gcd (lambda ()
+  (assert-equal (gcd 48 18) 6)
+  (assert-equal (gcd 100 35) 5)
   (assert-equal (gcd 42) 42)))
 
 (define test-gcd-multiple-args (lambda ()
   (assert-equal (gcd 48 18 12) 6)))
 
-(define test-lcm-basic (lambda ()
-  (assert-equal (lcm 12 18) 36)))
-
-(define test-lcm-coprime (lambda ()
-  (assert-equal (lcm 7 11) 77)))
-
-(define test-lcm-one-arg (lambda ()
+(define test-lcm (lambda ()
+  (assert-equal (lcm 12 18) 36)
+  (assert-equal (lcm 7 11) 77)
   (assert-equal (lcm 15) 15)))
 
 (define test-lcm-multiple-args (lambda ()

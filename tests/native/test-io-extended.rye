@@ -1,30 +1,20 @@
-;; Tests for extended I/O operations (Phase 5)
-;; read, print, file operations, environment, system
+;; Native tests for I/O operations - User-facing examples
+;; For comprehensive edge case testing, see tests/testthat/test-stdlib-io.R
+;; These tests demonstrate idiomatic usage patterns with simple examples.
 
 ;; ============================================================================
 ;; Parsing (read)
 ;; ============================================================================
 
-(define test-read-number (lambda ()
-  (define expr (read "42"))
-  (assert-equal expr 42)))
-
-(define test-read-symbol (lambda ()
-  (define expr (read "foo"))
-  (assert-equal expr 'foo)))
+(define test-read-basic (lambda ()
+  (assert-equal (read "42") 42)
+  (assert-equal (read "foo") 'foo)
+  (assert-equal (read "\"hello world\"") "hello world")))
 
 (define test-read-list (lambda ()
   (define expr (read "(+ 1 2 3)"))
   (assert-true (list? expr))
   (assert-equal (car expr) '+)))
-
-(define test-read-string (lambda ()
-  (define expr (read "\"hello world\""))
-  (assert-equal expr "hello world")))
-
-(define test-read-nested (lambda ()
-  (define expr (read "(list 1 (list 2 3) 4)"))
-  (assert-equal (car expr) 'list)))
 
 (define test-read-from-string-alias (lambda ()
   ;; read-from-string is alias for read
@@ -38,38 +28,26 @@
 ;; Note: Testing print/newline/write-string is tricky as they produce side effects
 ;; We test that they at least execute without error
 
-(define test-print-exists (lambda ()
-  ;; Just verify print can be called
-  (assert-true (fn? print))))
-
-(define test-newline-exists (lambda ()
-  (assert-true (fn? newline))))
-
-(define test-write-string-exists (lambda ()
+(define test-output-functions (lambda ()
+  ;; These functions handle output to stdout/files
+  (assert-true (fn? print))
+  (assert-true (fn? newline))
   (assert-true (fn? write-string))))
 
 ;; ============================================================================
 ;; File System Operations
 ;; ============================================================================
 
-(define test-file-size-exists (lambda ()
-  ;; Test that function exists; actual file test would require fixture
-  (assert-true (fn? file-size))))
-
-(define test-file-modified-time-exists (lambda ()
-  (assert-true (fn? file-modified-time))))
-
-(define test-directory-list-exists (lambda ()
-  (assert-true (fn? directory-list))))
-
-(define test-file-delete-exists (lambda ()
-  (assert-true (fn? file-delete))))
-
-(define test-directory-exists-predicate (lambda ()
-  (assert-true (fn? directory-exists?))))
-
 ;; For actual file operations, we would need test fixtures.
 ;; Here we just ensure the functions are defined and callable.
+;; Comprehensive I/O tests with fixtures are in test-stdlib-io.R
+
+(define test-file-operations-exist (lambda ()
+  (assert-true (fn? file-size))
+  (assert-true (fn? file-modified-time))
+  (assert-true (fn? directory-list))
+  (assert-true (fn? file-delete))
+  (assert-true (fn? directory-exists?))))
 
 ;; ============================================================================
 ;; Environment Variables
@@ -81,11 +59,6 @@
   (if (not (nil? home))
     (assert-true (string? home))
     (assert-true #t))))  ;; Skip on systems without HOME
-
-(define test-getenv-nonexistent (lambda ()
-  ;; Non-existent var should return #nil or ""
-  (define result (getenv "NONEXISTENT_VAR_12345"))
-  (assert-true (if (nil? result) #t (== result "")))))
 
 (define test-setenv-getenv-roundtrip (lambda ()
   ;; Set an env var and read it back
@@ -100,13 +73,8 @@
   ;; Don't actually call exit! Just verify it exists
   (assert-true (fn? exit))))
 
-(define test-system-exists (lambda ()
-  ;; System command execution
-  (assert-true (fn? system))))
-
-;; We can safely test system with a harmless command
-(define test-system-echo (lambda ()
-  ;; Test system call with simple echo
-  ;; Note: return value semantics may vary
+(define test-system (lambda ()
+  ;; System command execution - test with harmless command
+  (assert-true (fn? system))
   (define result (system "true"))  ;; 'true' always succeeds
   (assert-true (if (number? result) #t #f))))

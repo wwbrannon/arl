@@ -1,9 +1,6 @@
 tests and related fixes:
 -------------------------------------------------
-o) audit for test duplication and remove it
-o) is there a lot of duplication between the native and R tests, especially the stdlib-* tests?
-
-o) could we build instrumented coverage tooling really easily via covr? we do actually have a compiler to R now...
+o) could we build instrumented coverage tooling for .rye files easily via covr? we do actually have a compiler to R now...
 
 o) have opus audit the tests again:
 ```
@@ -37,10 +34,10 @@ choices. Are there other good options to get better time or space performance?
 
 small stuff:
 --------------------------------------
+o) minor output formatting issues -- TRUE printed rather than #t for example
+
 o) general code quality / duplication pass
 o) run `make lint`, fix and/or update lint rules
-
-o) minor formatting issues -- TRUE printed rather than #t for example
 
 o) run the benchmarks and profiles again after all this, commit them
 
