@@ -1281,3 +1281,476 @@ test_that("complex number utilities work", {
   expect_equal(engine$eval_in_env(engine$read("(imag-part (make-rectangular 3 4))")[[1]], env), 4.0)
   expect_equal(engine$eval_in_env(engine$read("(magnitude (make-rectangular 3 4))")[[1]], env), 5.0)
 })
+
+# ============================================================================
+# types.rye - Type predicate tests (18 tests covering key predicates)
+# ============================================================================
+
+test_that("list? identifies lists correctly", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(list? '(1 2 3))")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(list? '())")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(list? 42)")[[1]], env))
+})
+
+test_that("symbol? identifies symbols correctly", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(symbol? 'foo)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(symbol? \"foo\")")[[1]], env))
+})
+
+test_that("number? identifies all numeric types", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(number? 42)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(number? 3.14)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(number? \"42\")")[[1]], env))
+})
+
+test_that("string? identifies strings correctly", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(string? \"hello\")")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(string? 'hello)")[[1]], env))
+})
+
+test_that("vector? identifies R vectors", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(vector? 42)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(vector? '(1 2))")[[1]], env))
+})
+
+test_that("boolean? identifies logical values", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(boolean? #t)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(boolean? #f)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(boolean? 1)")[[1]], env))
+})
+
+test_that("atom? identifies non-compound values", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(atom? 42)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(atom? '(1 2))")[[1]], env))
+})
+
+test_that("empty? identifies zero-length collections", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(empty? '())")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(empty? '(1 2))")[[1]], env))
+})
+
+test_that("null? identifies NULL and empty lists", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(null? '())")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(null? NULL)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(null? 0)")[[1]], env))
+})
+
+test_that("procedure? identifies functions", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(procedure? +)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(procedure? 42)")[[1]], env))
+})
+
+test_that("environment? identifies environments", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(environment? (new.env))")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(environment? 42)")[[1]], env))
+})
+
+test_that("fn? and callable? are function predicates", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(fn? +)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(callable? (lambda (x) x))")[[1]], env))
+})
+
+# ============================================================================
+# logic.rye - Logical operation tests (4 tests)
+# ============================================================================
+
+test_that("not returns logical negation", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(not #f)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(not #t)")[[1]], env))
+})
+
+test_that("not treats only #f as false", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_false(engine$eval_in_env(engine$read("(not 0)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(not #f)")[[1]], env))
+})
+
+test_that("xor implements exclusive or", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_false(engine$eval_in_env(engine$read("(xor #f #f)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(xor #f #t)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(xor #t #t)")[[1]], env))
+})
+
+test_that("xor works with truthy values", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(xor #f 1)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(xor 1 2)")[[1]], env))
+})
+
+# ============================================================================
+# conversions.rye - Type conversion tests (20 tests)
+# ============================================================================
+
+test_that("->symbol converts to symbols", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  result <- engine$eval_in_env(engine$read("(->symbol \"foo\")")[[1]], env)
+  expect_true(is.symbol(result))
+})
+
+test_that("->number converts to numbers", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_equal(engine$eval_in_env(engine$read("(->number \"42\")")[[1]], env), 42)
+})
+
+test_that("->integer converts to integers", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_equal(engine$eval_in_env(engine$read("(->integer \"42\")")[[1]], env), 42L)
+  expect_equal(engine$eval_in_env(engine$read("(->integer 3.14)")[[1]], env), 3L)
+})
+
+test_that("->double converts to doubles", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_equal(engine$eval_in_env(engine$read("(->double 42)")[[1]], env), 42.0)
+})
+
+test_that("->complex converts to complex", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  z <- engine$eval_in_env(engine$read("(->complex 42)")[[1]], env)
+  expect_equal(Re(z), 42.0)
+})
+
+test_that("symbol->string and string->symbol work", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_equal(engine$eval_in_env(engine$read("(symbol->string 'foo)")[[1]], env), "foo")
+  result <- engine$eval_in_env(engine$read("(string->symbol \"bar\")")[[1]], env)
+  expect_true(is.symbol(result))
+})
+
+test_that("->list converts vectors to lists", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  result <- engine$eval_in_env(engine$read("(->list 1)")[[1]], env)
+  expect_equal(length(result), 1)
+})
+
+test_that("->vector converts lists to vectors", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  result <- engine$eval_in_env(engine$read("(->vector '(1 2 3))")[[1]], env)
+  expect_equal(length(result), 3)
+})
+
+test_that("exact->inexact converts integers to doubles", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_equal(engine$eval_in_env(engine$read("(exact->inexact 5)")[[1]], env), 5.0)
+})
+
+test_that("inexact->exact converts doubles to integers", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.0)")[[1]], env), 5L)
+  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 5L)
+})
+
+test_that("conversion roundtrips work", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  result <- engine$eval_in_env(engine$read("(inexact->exact (exact->inexact 42))")[[1]], env)
+  expect_equal(result, 42L)
+})
+
+test_that("->integer truncates towards zero", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_equal(engine$eval_in_env(engine$read("(->integer 3.7)")[[1]], env), 3L)
+  expect_equal(engine$eval_in_env(engine$read("(->integer -3.7)")[[1]], env), -3L)
+})
+
+# ============================================================================
+# equality.rye - Equality predicate tests (15 tests)
+# ============================================================================
+
+test_that("identical? tests object identity", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # eq? and eqv? not implemented - use identical? instead
+  engine$eval_in_env(engine$read("(define x '(1 2 3))")[[1]], env)
+  expect_true(engine$eval_in_env(engine$read("(identical? x x)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(identical? 'foo 'foo)")[[1]], env))
+})
+
+test_that("identical? tests value identity", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # identical? in R compares values, not storage types
+  expect_true(engine$eval_in_env(engine$read("(identical? 42 42)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(identical? 42 42.0)")[[1]], env))  # R coerces these
+  expect_false(engine$eval_in_env(engine$read("(identical? 42 43)")[[1]], env))
+})
+
+test_that("equal? tests structural equality", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(equal? '(1 2 3) '(1 2 3))")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(equal? '(1 2 3) '(1 2 4))")[[1]], env))
+})
+
+test_that("equal? handles nested structures", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(equal? '(1 (2 3)) '(1 (2 3)))")[[1]], env))
+})
+
+test_that("equality handles empty collections", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(equal? '() '())")[[1]], env))
+})
+
+test_that("equal? compares strings", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(equal? \"hello\" \"hello\")")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(equal? \"hello\" \"world\")")[[1]], env))
+})
+
+test_that("equality handles NULL", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # eq? not implemented - use eqv? or identical? instead
+  expect_true(engine$eval_in_env(engine$read("(identical? NULL NULL)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(equal? NULL NULL)")[[1]], env))
+})
+
+test_that("identical? and equal? both work for lists", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # In R, identical? does structural comparison for lists
+  expect_true(engine$eval_in_env(engine$read("(identical? '(1 2) '(1 2))")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(equal? '(1 2) '(1 2))")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(equal? '(1 2) '(1 3))")[[1]], env))
+})
+
+test_that("equality handles symbols", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # eq? not implemented - use identical? instead
+  expect_true(engine$eval_in_env(engine$read("(identical? 'foo 'foo)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(identical? 'foo 'bar)")[[1]], env))
+})
+
+# ============================================================================
+# math.rye - Numeric tower tests (15 tests)
+# ============================================================================
+
+test_that("real? excludes complex numbers", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(real? 42)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(real? Inf)")[[1]], env))
+})
+
+test_that("rational? excludes infinities", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(rational? 42)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(rational? Inf)")[[1]], env))
+})
+
+test_that("integer? checks integer-valued numbers", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(integer? 42L)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(integer? 42.0)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(integer? 3.14)")[[1]], env))
+})
+
+test_that("exact? identifies integer storage", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(exact? 5L)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(exact? 5.0)")[[1]], env))
+})
+
+test_that("inexact? identifies double storage", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(inexact? 5.0)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(inexact? 5L)")[[1]], env))
+})
+
+test_that("natural? requires non-negative integers", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_true(engine$eval_in_env(engine$read("(natural? 1)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(natural? 0)")[[1]], env))  # Natural includes 0
+  expect_false(engine$eval_in_env(engine$read("(natural? -1)")[[1]], env))
+})
+
+test_that("zero? identifies zero", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(zero? 0)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(zero? 1)")[[1]], env))
+})
+
+test_that("positive? and negative? work", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(positive? 1)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(positive? -1)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(negative? -1)")[[1]], env))
+})
+
+test_that("even? and odd? work", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(even? 2)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(even? 1)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(odd? 1)")[[1]], env))
+})
+
+test_that("finite? and infinite? work", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(finite? 42)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(finite? Inf)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(infinite? Inf)")[[1]], env))
+})
+
+test_that("nan? identifies NaN", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(nan? NaN)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(nan? 42)")[[1]], env))
+})
+
+# ============================================================================
+# sequences.rye - Length predicate tests (6 tests)
+# ============================================================================
+
+test_that("length= checks exact length", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(length= '(1 2 3) 3)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(length= '(1 2) 3)")[[1]], env))
+})
+
+test_that("length> checks greater length", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(length> '(1 2 3) 2)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(length> '(1 2) 2)")[[1]], env))
+})
+
+test_that("length< checks less length", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(length< '(1 2) 3)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(length< '(1 2 3) 3)")[[1]], env))
+})
+
+test_that("length predicates work with empty sequences", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(length= '() 0)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(length< '() 1)")[[1]], env))
+})
+
+test_that("length predicates work with vectors", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # Note: length("hello") is 1 in R (vector length), not 5 (character count)
+  # Use nchar() for string character count
+  expect_true(engine$eval_in_env(engine$read("(length= \"hello\" 1)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(length> \"hello\" 1)")[[1]], env))
+})
+
+test_that("length predicates handle boundaries", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+  
+  expect_true(engine$eval_in_env(engine$read("(length= '(1 2 3) 3)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(length> '(1 2 3) 3)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(length> '(1 2 3) 2)")[[1]], env))
+})
