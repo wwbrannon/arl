@@ -1,21 +1,23 @@
 ;;; Tests for skip functionality
+;;; These are demonstration tests showing how to use skip() - they are
+;;; intentionally skipped and can be ignored in test output.
 
 (define test-skip-without-reason (lambda ()
-  ;; This test should be skipped
-  (skip)
+  ;; Demo: skip without reason
+  (skip "[DEMO] Example of skip() without reason - ignore this skip")
   ;; This should never be reached
   (assert-equal 1 2)))
 
 (define test-skip-with-reason (lambda ()
-  ;; This test should be skipped with a reason
-  (skip "Not yet implemented")
+  ;; Demo: skip with custom reason
+  (skip "[DEMO] Example of skip() with reason - ignore this skip")
   ;; This should never be reached
   (assert-equal 1 2)))
 
 (define test-skip-conditional (lambda ()
-  ;; Skip based on a condition
+  ;; Demo: conditional skip
   (if (> 2 1)
-    (skip "Feature requires R >= 5.0")
+    (skip "[DEMO] Example of conditional skip() - ignore this skip")
     (assert-equal 1 1))))
 
 (define test-normal-passing (lambda ()

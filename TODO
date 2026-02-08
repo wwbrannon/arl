@@ -1,7 +1,5 @@
 test and related fixes:
 -------------------------------------------------
-o) let's add a simple mechanism for native tests like testthat's skip(). is there already one? is there an existing language construct that already fills this role?
-
 o) is there a lot of duplication between the native and R tests, especially the stdlib-* tests?
 o) audit for test duplication and remove it
 
