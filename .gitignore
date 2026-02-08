@@ -60,3 +60,7 @@ rsconnect/
 # Profiling HTML output (keep .rds files for historical comparison)
 benchmarks/profiles/*.html
 benchmarks/profiles/*_files/
+
+# Coverage output directories
+/coverage/
+!/coverage/.gitkeep

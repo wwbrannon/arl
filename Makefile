@@ -61,9 +61,94 @@ document: devdoc readme vignettes site ## help: Generate all documentation (roxy
 check: build ## help: Check the package (includes tests)
 	R -q -e 'devtools::check(args="--as-cran")'
 
+#
+## Coverage targets
+#
+
 .PHONY: coverage
-coverage: ## help: Run code coverage analysis
-	R -q -e "covr::package_coverage()"
+coverage: coverage-all ## help: Run complete coverage analysis (R + Rye)
+
+.PHONY: coverage-all
+coverage-all: coverage-r coverage-rye coverage-combined ## help: Run all coverage and generate combined report
+
+.PHONY: coverage-r
+coverage-r: ## help: Run R code coverage only
+	@echo "Running R code coverage..."
+	@mkdir -p coverage/r
+	@R -q -e "\
+	  cov <- covr::package_coverage(type='all', quiet=FALSE); \
+	  pct <- covr::percent_coverage(cov); \
+	  writeLines(c( \
+	    paste0('rye Coverage: ', sprintf('%.2f%%', pct)), \
+	    '', \
+	    capture.output(print(cov)) \
+	  ), 'coverage/r/summary.txt'); \
+	  covr::to_cobertura(cov, filename='coverage/r/coverage.xml'); \
+	  message(sprintf('R coverage: %.1f%%', pct)); \
+	  if (requireNamespace('DT', quietly=TRUE) && requireNamespace('htmltools', quietly=TRUE)) { \
+	    covr::report(cov, file='coverage/r/index.html'); \
+	    message('R coverage report: coverage/r/index.html'); \
+	  } else { \
+	    message('Skipping HTML report (install DT and htmltools packages for HTML output)'); \
+	  } \
+	"
+
+.PHONY: coverage-rye
+coverage-rye: ## help: Run Rye code coverage only
+	@echo "Running Rye code coverage..."
+	@mkdir -p coverage/rye
+	@R -q -e "\
+	  source('tools/rye-coverage.R'); \
+	  tracker <- rye_coverage_report( \
+	    output = c('console', 'html', 'json'), \
+	    html_file = 'coverage/rye/index.html', \
+	    json_file = 'coverage/rye/coverage.json' \
+	  ); \
+	" | tee coverage/rye/summary.txt
+
+.PHONY: coverage-combined
+coverage-combined: ## help: Generate combined coverage summary
+	@echo "Generating combined coverage report..."
+	@mkdir -p coverage/combined
+	@R -q -e "source('tools/coverage-combine.R'); generate_combined_report()"
+
+.PHONY: coverage-report
+coverage-report: ## help: Open coverage reports in browser
+	@echo "Opening coverage reports..."
+	@if [ -f coverage/combined/index.html ]; then \
+		open coverage/combined/index.html; \
+	elif [ -f coverage/r/index.html ]; then \
+		open coverage/r/index.html; \
+		[ -f coverage/rye/index.html ] && open coverage/rye/index.html; \
+	else \
+		echo "No coverage reports found. Run 'make coverage' first."; \
+		exit 1; \
+	fi
+
+.PHONY: coverage-upload
+coverage-upload: ## help: Upload coverage to codecov (for CI)
+	@echo "Uploading coverage to Codecov..."
+	@if [ -z "$(CODECOV_TOKEN)" ]; then \
+		echo "Warning: CODECOV_TOKEN not set"; \
+	fi
+	@if [ -f coverage/r/coverage.xml ]; then \
+		bash <(curl -s https://codecov.io/bash) \
+			-f coverage/r/coverage.xml \
+			-F r-code \
+			-n "R Coverage" || true; \
+	fi
+	@if [ -f coverage/rye/coverage.json ]; then \
+		bash <(curl -s https://codecov.io/bash) \
+			-f coverage/rye/coverage.json \
+			-F rye-code \
+			-n "Rye Coverage" || true; \
+	fi
+
+.PHONY: coverage-clean
+coverage-clean: ## help: Remove coverage output files
+	@echo "Cleaning coverage outputs..."
+	@rm -rf coverage/r coverage/rye coverage/combined
+	@echo "Coverage outputs cleaned."
 
 .PHONY: lint
 lint: ## help: Run linter checks
@@ -156,7 +241,7 @@ cran-clean: ## help: Remove CRAN check artifacts
 #
 
 .PHONY: clean
-clean: ## help: Remove build artifacts and all make document output
+clean: coverage-clean ## help: Remove build artifacts and all make document output
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
 	rm -rf site/ doc/ Meta/

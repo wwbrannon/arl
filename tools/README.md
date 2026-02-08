@@ -2,6 +2,10 @@
 
 This directory contains development tools for the Rye language implementation.
 
+## Coverage Infrastructure
+
+Rye has comprehensive coverage tracking for both R implementation code and Rye language code. Coverage reports are generated in multiple formats (HTML, JSON, XML) and integrated with CI/CD.
+
 ## rye-coverage.R
 
 Code coverage analysis tool for .rye source files.
@@ -90,7 +94,129 @@ You may notice some files show >100% coverage. This occurs because:
 ### Future Improvements
 
 - Track execution coverage using runtime instrumentation (trace actual eval calls)
-- Integration with CI/CD (GitHub Actions)
-- Codecov.io JSON export
 - Coverage history tracking
 - Per-function coverage metrics
+
+---
+
+## coverage-combine.R
+
+Combined coverage report generator that merges R and Rye coverage into unified reports.
+
+### Overview
+
+Creates comprehensive coverage summaries that show both R implementation coverage (from `covr`) and Rye language coverage (from `rye-coverage.R`) in a single view.
+
+### Usage
+
+Run via Make:
+
+```bash
+# Generate combined report (after running coverage-r and coverage-rye)
+make coverage-combined
+
+# Or run all coverage at once
+make coverage
+```
+
+Or directly from R:
+
+```r
+source('tools/coverage-combine.R')
+generate_combined_report()
+```
+
+### Output
+
+**HTML Dashboard** (`coverage/combined/index.html`):
+- Side-by-side coverage cards for R and Rye code
+- Color-coded percentages (green ≥80%, orange ≥60%, red <60%)
+- Links to detailed per-language reports
+- Overall summary table with targets and status
+
+**Markdown Summary** (`coverage/combined/COVERAGE.md`):
+- Concise text summary suitable for PR comments
+- Coverage percentages with target comparisons
+- Status indicators (✅/⚠️)
+- Links to HTML reports
+
+### Configuration
+
+Coverage thresholds and settings are defined in `.coverage.yml`:
+- R code target: 80%
+- Rye code target: 85%
+- Output directories and formats
+- Exclusion patterns
+
+---
+
+## Coverage Infrastructure Overview
+
+### Local Usage
+
+```bash
+# Run all coverage (recommended)
+make coverage
+
+# Run R coverage only
+make coverage-r
+
+# Run Rye coverage only
+make coverage-rye
+
+# Generate combined report
+make coverage-combined
+
+# Open reports in browser
+make coverage-report
+
+# Clean coverage outputs
+make coverage-clean
+```
+
+### CI Integration
+
+Coverage runs automatically on:
+- Push to `main` branch
+- All pull requests
+
+The GitHub Actions workflow (`.github/workflows/coverage.yaml`):
+1. Runs both R and Rye coverage
+2. Uploads results to Codecov with separate flags
+3. Saves HTML reports as artifacts
+4. Posts coverage summary as PR comment
+
+### Codecov Integration
+
+Coverage is tracked on [codecov.io](https://codecov.io) with:
+- **Separate flags**: `r-code` and `rye-code`
+- **Component tracking**: Compiler, Runtime, Parser, Stdlib modules
+- **Thresholds**: R≥80%, Rye≥85%
+- **PR comments**: Automatic coverage diff on pull requests
+
+View configuration in `codecov.yml`.
+
+### Output Directory Structure
+
+```
+coverage/
+├── r/                          # R code coverage
+│   ├── index.html             # Interactive HTML report
+│   ├── coverage.xml           # Cobertura format (for codecov)
+│   └── summary.txt            # Console output
+├── rye/                        # Rye code coverage
+│   ├── index.html             # Interactive HTML report
+│   ├── coverage.json          # Codecov JSON format
+│   └── summary.txt            # Console output
+└── combined/                   # Combined reports
+    ├── index.html             # Unified dashboard
+    └── COVERAGE.md            # Markdown summary
+```
+
+All `coverage/` contents are git-ignored except `.gitkeep`.
+
+### Configuration Files
+
+- **`.coverage.yml`**: Central configuration for all coverage settings
+- **`codecov.yml`**: Codecov.io integration settings
+- **`.github/workflows/coverage.yaml`**: CI workflow definition

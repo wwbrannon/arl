@@ -376,19 +376,78 @@ RyeCoverageTracker <- R6Class(
       message(sprintf("HTML report written to: %s", output_file))
 
       invisible(self)
+    },
+
+    #' @description Generate codecov-compatible JSON format
+    #' @param output_file Path to output JSON file
+    report_codecov_json = function(output_file = "coverage/rye/coverage.json") {
+      # Create output directory
+      output_dir <- dirname(output_file)
+      if (!dir.exists(output_dir)) {
+        dir.create(output_dir, recursive = TRUE)
+      }
+
+      # Build codecov-compatible JSON structure
+      coverage_data <- list()
+
+      for (file in self$all_files) {
+        if (!file.exists(file)) next
+
+        # Read file lines
+        lines <- readLines(file, warn = FALSE)
+
+        # Build line coverage array (1-indexed, NULL for non-code lines)
+        line_coverage <- lapply(seq_along(lines), function(i) {
+          line_str <- as.character(i)
+
+          # Check if line is covered
+          if (!is.null(self$rye_coverage[[file]][[line_str]])) {
+            1  # Covered
+          } else if (grepl("^\\s*[^;\\s]", lines[i])) {
+            0  # Not covered but is code
+          } else {
+            NULL  # Not code (comment/blank)
+          }
+        })
+
+        # Relative path for codecov (remove leading ./)
+        rel_path <- sub("^\\./", "", file)
+
+        coverage_data[[rel_path]] <- line_coverage
+      }
+
+      # Write JSON in codecov format
+      if (!requireNamespace("jsonlite", quietly = TRUE)) {
+        warning("jsonlite package not available, skipping JSON output")
+        return(invisible(self))
+      }
+
+      json_str <- jsonlite::toJSON(
+        list(coverage = coverage_data),
+        auto_unbox = TRUE,
+        pretty = TRUE,
+        null = "null"
+      )
+
+      writeLines(json_str, output_file)
+      message(sprintf("Codecov JSON written to: %s", output_file))
+
+      invisible(self)
     }
   )
 )
 
 #' Main entry point for Rye coverage reporting
 #'
-#' @param output Output format(s) - vector containing "console", "html"
+#' @param output Output format(s) - vector containing "console", "html", "json"
 #' @param html_file Path to HTML output file
+#' @param json_file Path to JSON output file (codecov format)
 #' @return RyeCoverageTracker instance (invisibly)
 #' @export
 rye_coverage_report <- function(
   output = c("console", "html"),
-  html_file = "coverage-rye/index.html"
+  html_file = "coverage/rye/index.html",
+  json_file = "coverage/rye/coverage.json"
 ) {
   # Create tracker
   tracker <- RyeCoverageTracker$new()
@@ -413,6 +472,9 @@ rye_coverage_report <- function(
   }
   if ("html" %in% output) {
     tracker$report_html(html_file)
+  }
+  if ("json" %in% output) {
+    tracker$report_codecov_json(json_file)
   }
 
   invisible(tracker)

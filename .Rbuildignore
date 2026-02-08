@@ -25,3 +25,5 @@
 ^CRAN-SUBMISSION$
 ^LICENSE\.md$
 (^|/)\.rye_cache($|/)
+^coverage$
+^\.coverage\.yml$

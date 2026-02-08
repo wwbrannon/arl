@@ -1,0 +1,126 @@
+# Codecov configuration for Rye package
+# Handles separate R code and Rye code coverage
+
+# Overall project settings
+coverage:
+  precision: 2
+  round: down
+  range: 70..100
+
+  status:
+    # Overall project coverage
+    project:
+      default:
+        target: auto
+        threshold: 2%
+        base: auto
+
+    # Per-commit coverage (patch)
+    patch:
+      default:
+        target: 80%
+        threshold: 5%
+
+# Flag-specific settings for R vs Rye code
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - name_prefix: ""
+        type: project
+        target: auto
+        threshold: 2%
+
+# Individual flags
+flags:
+  # R implementation code coverage
+  r-code:
+    paths:
+      - R/
+    carryforward: true
+    after_n_builds: 1
+
+  # Rye language code coverage
+  rye-code:
+    paths:
+      - inst/rye/
+      - tests/native/
+    carryforward: true
+    after_n_builds: 1
+
+# Component-level coverage tracking
+component_management:
+  individual_components:
+    # R implementation components
+    - component_id: compiler
+      name: "Compiler"
+      paths:
+        - R/compiler.R
+        - R/macro.R
+
+    - component_id: runtime
+      name: "Runtime"
+      paths:
+        - R/runtime.R
+        - R/rye-engine.R
+        - R/rye-env.R
+
+    - component_id: parser
+      name: "Parser/Tokenizer"
+      paths:
+        - R/parser.R
+        - R/tokenizer.R
+
+    - component_id: modules
+      name: "Module System"
+      paths:
+        - R/module-*.R
+        - R/file-deps.R
+
+    # Rye stdlib components
+    - component_id: stdlib-core
+      name: "Stdlib Core"
+      paths:
+        - inst/rye/core.rye
+        - inst/rye/types.rye
+        - inst/rye/logic.rye
+
+    - component_id: stdlib-collections
+      name: "Stdlib Collections"
+      paths:
+        - inst/rye/list.rye
+        - inst/rye/dict.rye
+        - inst/rye/set.rye
+
+    - component_id: stdlib-functional
+      name: "Stdlib Functional"
+      paths:
+        - inst/rye/functional.rye
+        - inst/rye/looping.rye
+
+# Comment settings for PRs
+comment:
+  layout: "diff, flags, components"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+  show_carryforward_flags: true
+
+# Ignore certain files
+ignore:
+  - "tests/**"
+  - "benchmarks/**"
+  - "vignettes/**"
+  - "man/**"
+  - "tools/**"
+  - "inst/doc/**"
+
+# Parsing settings
+parsers:
+  gcov:
+    branch_detection:
+      conditional: true
+      loop: true
+      macro: false
+      method: false
