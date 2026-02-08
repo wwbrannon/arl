@@ -1,10 +1,9 @@
 coverage tracking:
 -------------------------------------------------
-o) address test gaps this reveals
+o) address test gaps this reveals: equality and logic in inst/rye
 
+o) update make clean to delete the coverage stuff: why are we tracking coverage/.gitkeep
 o) generally sanity-check all of this, look at the coverage reports
-o) make CI configuration for this and everything else sane, figure out how to run some more during Feb, maybe shrink matrix?
-o) actually push this, get CI working
 
 audits / comprehensive sanity checks:
 -------------------------------------------------
@@ -36,7 +35,7 @@ especially desirable, but we should also think about larger architectural
 choices. Are there other good options to get better time or space performance?
 ```
 
-small stuff:
+smaller stuff:
 --------------------------------------
 o) minor output formatting issues -- TRUE printed rather than #t for example
 
@@ -44,6 +43,9 @@ o) general code quality / duplication pass
 o) run `make lint`, fix and/or update lint rules
 
 o) run benchmarks / profiles again after all this, commit them
+
+o) make CI configuration for this and everything else sane, figure out how to run some more during Feb, maybe shrink matrix?
+o) enable actions, get CI working
 
 documentation updates:
 -------------------------------------------------
@@ -54,16 +56,3 @@ o) minor pkgdown warning about site url
 o) get the site and vignettes updated
 o) actually push site somewhere
 o) get make document working
-
-# Execution Coverage Implementation Complete (2026-02-08)
-# --------------------------------------------------------
-# Implemented execution coverage tracking system:
-# - RyeCoverageTracker class in R/coverage.R (~460 lines)
-# - Runtime hooks in eval_compiled() for tracking
-# - Simplified tools/rye-coverage.R to thin wrapper (~120 lines)
-# - Tracker created BEFORE engine init to track stdlib loading
-# - Test files excluded from coverage (only stdlib tracked)
-# - All reports (console, HTML, JSON) working correctly
-# - CI integration unchanged and working
-# - Coverage: 91.7% (2,529/2,758 lines) - accurate execution tracking
-# - See inst/doc/EXECUTION_COVERAGE.md for complete documentation
