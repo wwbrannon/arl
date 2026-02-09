@@ -1,19 +1,12 @@
-coverage tracking:
--------------------------------------------------
-o) discover_files is not flexible enough for users
-o) any other hardcoded inflexibilities?
-
-o) generally sanity-check all of this, look at the coverage reports
-
 audits / comprehensive sanity checks:
 -------------------------------------------------
 o) have opus audit the tests again:
 ```
-Take a look at the tests in tests/, maybe especially the native ones in
-tests/native/. Keep in mind that the language being tested is supposed to be a
-lisp, generally scheme-like, but implemented on top of R. So that makes for a
-few peculiarities -- R's type system, no tail call optimization, the whole
-"r/call" apparatus, etc.
+Take a look at the tests in tests/, including the native ones in tests/native/.
+Keep in mind that the language being tested is supposed to be a lisp, generally
+scheme-like, but implemented on top of R. So that makes for a few peculiarities
+-- R's type system, no tail call optimization, the r/call and r/eval apparatus,
+etc.
 
 Given that, let's critique these tests. Is there any behavior they implement
 that they clearly shouldn't? Mistaken behavior of the interpreter we have now
@@ -44,7 +37,7 @@ o) run `make lint`, fix and/or update lint rules
 
 o) run benchmarks / profiles again after all this, commit them
 
-o) make CI configuration for this and everything else sane, figure out how to run some more during Feb, maybe shrink matrix?
+o) make CI configuration for coverage and everything else sane, figure out how to run some more during Feb, maybe shrink matrix?
 o) enable actions, get CI working
 
 documentation updates:
