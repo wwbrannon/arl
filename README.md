@@ -181,6 +181,9 @@ position.
 (factorial 100000 1)
 ```
 
+Since self-calls become loop iterations, recursive call frames won’t
+appear in stack traces on error – only the outermost call is visible.
+
 For mutual recursion or explicit looping patterns, `loop`/`recur` from
 the `looping` module is still available:
 

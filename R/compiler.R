@@ -530,13 +530,16 @@ Compiler <- R6::R6Class(
         # Wrap compiled body in while(TRUE) { ... }
         # Use while(TRUE) instead of repeat because Rye stdlib defines a `repeat` function
         # that shadows R's repeat keyword in the engine environment.
-        loop_body <- as.call(c(list(quote(`{`)), compiled_body))
+        loop_body <- private$src_inherit(
+          as.call(c(list(quote(`{`)), compiled_body)),
+          body_exprs[[length(body_exprs)]])
         # If there's a rest param, bind it from ... before the loop
         pre_loop <- list()
         if (!is.null(rest_param_name)) {
           pre_loop <- list(as.call(list(quote(`<-`), as.symbol(rest_param_name), quote(list(...)))))
         }
-        compiled_body <- c(pre_loop, list(as.call(list(quote(`while`), TRUE, loop_body))))
+        compiled_body <- c(pre_loop, list(private$src_inherit(
+          as.call(list(quote(`while`), TRUE, loop_body)), expr)))
       } else {
         # Normal path: compile all body expressions
         compiled_body <- vector("list", length(body_exprs))
@@ -1519,7 +1522,7 @@ Compiler <- R6::R6Class(
       # Non-tail-call: compile normally and wrap in return()
       compiled <- private$compile_impl(expr)
       if (is.null(compiled)) return(NULL)
-      as.call(list(quote(return), compiled))
+      private$src_inherit(as.call(list(quote(return), compiled)), expr)
     },
 
     # Compile a self-tail-call: (name arg1 arg2 ...) -> param reassignment
@@ -1528,7 +1531,7 @@ Compiler <- R6::R6Class(
       bail <- function() {
         compiled <- private$compile_impl(expr)
         if (is.null(compiled)) return(NULL)
-        as.call(list(quote(return), compiled))
+        private$src_inherit(as.call(list(quote(return), compiled)), expr)
       }
       n_params <- length(param_names)
       # Unified arg collection: walk arg list collecting positional and keyword args
@@ -1618,11 +1621,13 @@ Compiler <- R6::R6Class(
       if (length(changed) == 1L && !rest_changed) {
         # Single param change: direct assignment, no temp needed
         j <- changed[1]
-        return(as.call(list(quote(`<-`), as.symbol(param_names[j]), compiled_args[[j]])))
+        return(private$src_inherit(
+          as.call(list(quote(`<-`), as.symbol(param_names[j]), compiled_args[[j]])), expr))
       }
       if (length(changed) == 0L && rest_changed) {
         # Only rest param changes
-        return(as.call(list(quote(`<-`), as.symbol(rest_param_name), compiled_rest)))
+        return(private$src_inherit(
+          as.call(list(quote(`<-`), as.symbol(rest_param_name), compiled_rest)), expr))
       }
       # Multiple params change (or named + rest): use temps to avoid order-dependent bugs
       all_names <- param_names[changed]
@@ -1632,7 +1637,8 @@ Compiler <- R6::R6Class(
         all_compiled <- c(all_compiled, list(compiled_rest))
       }
       if (length(all_names) == 1L) {
-        return(as.call(list(quote(`<-`), as.symbol(all_names[1]), all_compiled[[1]])))
+        return(private$src_inherit(
+          as.call(list(quote(`<-`), as.symbol(all_names[1]), all_compiled[[1]])), expr))
       }
       stmts <- vector("list", 2L * length(all_names))
       idx <- 1L
@@ -1646,7 +1652,7 @@ Compiler <- R6::R6Class(
         stmts[[idx]] <- as.call(list(quote(`<-`), as.symbol(all_names[k]), as.symbol(tmp_name)))
         idx <- idx + 1L
       }
-      as.call(c(list(quote(`{`)), stmts))
+      private$src_inherit(as.call(c(list(quote(`{`)), stmts)), expr)
     },
 
     # Compile if in tail position: both branches get tail-position treatment
@@ -1690,9 +1696,11 @@ Compiler <- R6::R6Class(
         if (is.null(else_expr)) {
           return(private$fail("if else-branch could not be compiled"))
         }
-        as.call(list(quote(`if`), test_pred, then_expr, else_expr))
+        private$src_inherit(as.call(list(quote(`if`), test_pred, then_expr, else_expr)), expr)
       } else {
-        as.call(list(quote(`if`), test_pred, then_expr, as.call(list(quote(return), private$compiled_nil()))))
+        private$src_inherit(
+          as.call(list(quote(`if`), test_pred, then_expr, as.call(list(quote(return), private$compiled_nil())))),
+          expr)
       }
     },
 
@@ -1717,7 +1725,7 @@ Compiler <- R6::R6Class(
         rest_param_name = rest_param_name
       )
       if (is.null(compiled[[length(parts)]])) return(NULL)
-      as.call(c(list(quote(`{`)), compiled))
+      private$src_inherit(as.call(c(list(quote(`{`)), compiled)), expr)
     },
 
     # Compile an IIFE in tail position: inline the lambda body
@@ -1778,7 +1786,7 @@ Compiler <- R6::R6Class(
       if (is.null(last)) return(NULL)
       stmts[[length(stmts) + 1L]] <- last
 
-      as.call(c(list(quote(`{`)), stmts))
+      private$src_inherit(as.call(c(list(quote(`{`)), stmts)), expr)
     },
 
     # Check if an expression is an IIFE: ((lambda ...) args...)

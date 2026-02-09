@@ -125,6 +125,10 @@ What is **not** covered:
 - **`apply`-based tail calls** or indirect calls through higher-order functions.
 - **Anonymous lambdas** (no name for the compiler to detect self-calls against).
 
+Like Scheme's proper tail calls, self-TCO elides recursive stack frames: on
+error inside an optimized function, only the outermost call appears in the
+stack trace rather than the full chain of recursive calls.
+
 For cases not covered by self-TCO, use `loop`/`recur` for explicit
 tail-recursive patterns.
 

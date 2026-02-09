@@ -502,3 +502,56 @@ test_that("TCO: IIFE with complex params still works at runtime", {
   result <- engine$eval_text("(iife-rest-fn2 10)")
   expect_equal(result, 0)
 })
+
+# ==============================================================================
+# Error reporting in TCO-optimized functions
+# ==============================================================================
+
+test_that("TCO: error in base case includes source location", {
+  err <- tryCatch(
+    engine$eval_text("
+      (define tco-err-base (lambda (n)
+        (if (<= n 0)
+          (+ 1 nope)
+          (tco-err-base (- n 1)))))
+      (tco-err-base 3)
+    ", source_name = "tco-base.rye"),
+    error = function(e) e
+  )
+  expect_s3_class(err, "rye_error")
+  formatted <- engine$source_tracker$format_error(err)
+  expect_match(formatted, "tco-base\\.rye")
+})
+
+test_that("TCO: error in tail-call argument includes source location", {
+  err <- tryCatch(
+    engine$eval_text("
+      (define tco-err-arg (lambda (n acc)
+        (if (<= n 0)
+          acc
+          (tco-err-arg (- n 1) (+ acc nope)))))
+      (tco-err-arg 3 0)
+    ", source_name = "tco-arg.rye"),
+    error = function(e) e
+  )
+  expect_s3_class(err, "rye_error")
+  formatted <- engine$source_tracker$format_error(err)
+  expect_match(formatted, "tco-arg\\.rye")
+})
+
+test_that("TCO: error inside let body includes source location", {
+  err <- tryCatch(
+    engine$eval_text("
+      (define tco-err-let (lambda (n)
+        (let ((m (- n 1)))
+          (if (<= m 0)
+            (+ 1 nope)
+            (tco-err-let m)))))
+      (tco-err-let 3)
+    ", source_name = "tco-let.rye"),
+    error = function(e) e
+  )
+  expect_s3_class(err, "rye_error")
+  formatted <- engine$source_tracker$format_error(err)
+  expect_match(formatted, "tco-let\\.rye")
+})
