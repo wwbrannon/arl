@@ -1818,10 +1818,27 @@ Compiler <- R6::R6Class(
     # test line since branches are tracked separately by wrap_branch_coverage.
     make_coverage_call_for_stmt = function(src_expr) {
       if (is.null(self$context$coverage_tracker)) return(NULL)
-      if (is.call(src_expr) && length(src_expr) >= 3 &&
-          is.symbol(src_expr[[1]]) && identical(as.character(src_expr[[1]]), "if")) {
+      # Narrow to start_line for forms whose sub-expressions are
+      # instrumented separately:
+      #   - if: branches tracked by wrap_branch_coverage
+      #   - define/defmacro wrapping a lambda: body tracked inside lambda
+      narrow <- FALSE
+      if (is.call(src_expr) && length(src_expr) >= 3 && is.symbol(src_expr[[1]])) {
+        head_name <- as.character(src_expr[[1]])
+        if (identical(head_name, "if")) {
+          narrow <- TRUE
+        } else if (head_name %in% c("define", "defmacro") && length(src_expr) >= 3) {
+          val <- src_expr[[3]]
+          if (is.call(val) && length(val) >= 3 && is.symbol(val[[1]]) &&
+              identical(as.character(val[[1]]), "lambda")) {
+            narrow <- TRUE
+          }
+        }
+      }
+      if (narrow) {
         src <- private$src_get(src_expr)
         if (is.null(src) || is.null(src$file) || is.null(src$start_line)) return(NULL)
+        self$context$coverage_tracker$register_coverable(src$file, src$start_line, src$start_line)
         return(as.call(list(
           as.symbol(".rye_coverage_track"),
           src$file,
@@ -1840,6 +1857,7 @@ Compiler <- R6::R6Class(
       if (is.null(src) || is.null(src$file) || is.null(src$start_line) || is.null(src$end_line)) {
         return(NULL)
       }
+      self$context$coverage_tracker$register_coverable(src$file, src$start_line, src$end_line)
       as.call(list(
         as.symbol(".rye_coverage_track"),
         src$file,

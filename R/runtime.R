@@ -365,11 +365,35 @@ CompiledRuntime <- R6::R6Class(
           if (!is.null(source_tracker) && i <= length(body_exprs)) {
             rye_src <- source_tracker$src_get(body_exprs[[i]])
             if (!is.null(rye_src) && !is.null(rye_src$file) && !is.null(rye_src$start_line)) {
+              # Narrow to start_line for forms whose sub-expressions are
+              # instrumented separately by the compiler:
+              #   - if: branches tracked by wrap_branch_coverage
+              #   - define/defmacro wrapping a lambda: body tracked inside lambda
+              # For everything else, use full source span.
+              end_line <- rye_src$start_line
+              src_expr <- body_exprs[[i]]
+              narrow <- FALSE
+              if (is.call(src_expr) && length(src_expr) >= 3 && is.symbol(src_expr[[1]])) {
+                head_name <- as.character(src_expr[[1]])
+                if (identical(head_name, "if")) {
+                  narrow <- TRUE
+                } else if (head_name %in% c("define", "defmacro") && length(src_expr) >= 3) {
+                  val <- src_expr[[3]]
+                  if (is.call(val) && length(val) >= 3 && is.symbol(val[[1]]) &&
+                      identical(as.character(val[[1]]), "lambda")) {
+                    narrow <- TRUE
+                  }
+                }
+              }
+              if (!narrow && !is.null(rye_src$end_line)) {
+                end_line <- rye_src$end_line
+              }
+              coverage_tracker$register_coverable(rye_src$file, rye_src$start_line, end_line)
               instrumented[[idx]] <- as.call(list(
                 as.symbol(".rye_coverage_track"),
                 rye_src$file,
                 rye_src$start_line,
-                rye_src$start_line
+                end_line
               ))
               idx <- idx + 1L
             }

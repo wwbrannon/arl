@@ -54,6 +54,7 @@ RyeCoverageTracker <- R6::R6Class(
     enabled = TRUE,     # flag to enable/disable tracking
     all_files = NULL,   # character vector of all .rye files to track
     code_lines = NULL,  # environment: "file" -> integer vector of code line numbers
+    coverable_lines = NULL, # environment: "file" -> integer vector of AST-derived coverable line numbers
 
     #' @description Initialize the coverage tracker
     #' @param search_paths Character vector of directories to search for .rye files (NULL = use stdlib)
@@ -74,6 +75,7 @@ RyeCoverageTracker <- R6::R6Class(
       self$enabled <- TRUE
       self$all_files <- character(0)
       self$code_lines <- new.env(hash = TRUE, parent = emptyenv())
+      self$coverable_lines <- new.env(hash = TRUE, parent = emptyenv())
 
       # Store configuration
       private$search_paths <- search_paths
@@ -118,6 +120,26 @@ RyeCoverageTracker <- R6::R6Class(
         }
       }
 
+      invisible(NULL)
+    },
+
+    #' @description Register coverable lines from an instrumented source range
+    #' @param file Source file path
+    #' @param start_line Start line of the instrumented form
+    #' @param end_line End line of the instrumented form
+    register_coverable = function(file, start_line, end_line) {
+      if (is.null(file) || is.null(start_line) || is.null(end_line)) return(invisible(NULL))
+      existing <- self$coverable_lines[[file]]
+      new_lines <- start_line:end_line
+      # Filter to actual code lines (skip blanks/comments within range)
+      code <- self$code_lines[[file]]
+      if (is.null(code) && file.exists(file)) {
+        file_text <- readLines(file, warn = FALSE)
+        code <- grep(private$code_line_pattern, file_text)
+        self$code_lines[[file]] <- code
+      }
+      if (!is.null(code)) new_lines <- intersect(new_lines, code)
+      self$coverable_lines[[file]] <- unique(c(existing, new_lines))
       invisible(NULL)
     },
 
@@ -240,16 +262,21 @@ RyeCoverageTracker <- R6::R6Class(
       for (file in self$all_files) {
         if (!file.exists(file)) next
 
-        # Count total lines (non-empty, non-comment)
-        file_lines <- readLines(file, warn = FALSE)
-        code_lines <- grep(private$code_line_pattern, file_lines)
-        non_empty <- length(code_lines)
+        # Use AST-derived coverable lines as denominator when available,
+        # fall back to regex-based code_lines for direct track() usage
+        coverable <- self$coverable_lines[[file]]
+        if (is.null(coverable)) coverable <- self$code_lines[[file]]
+        non_empty <- if (!is.null(coverable)) length(coverable) else 0L
 
-        # Count covered lines
-        covered <- if (!is.null(coverage_summary[[file]])) {
-          length(coverage_summary[[file]])
+        # Count covered lines (intersect with coverable to avoid >100%)
+        file_cov <- coverage_summary[[file]]
+        covered <- if (!is.null(file_cov) && !is.null(coverable)) {
+          covered_lines <- as.integer(names(file_cov))
+          length(intersect(covered_lines, coverable))
+        } else if (!is.null(file_cov)) {
+          length(file_cov)
         } else {
-          0
+          0L
         }
 
         # Store stats
@@ -352,14 +379,21 @@ RyeCoverageTracker <- R6::R6Class(
       for (file in self$all_files) {
         if (!file.exists(file)) next
 
-        file_lines <- readLines(file, warn = FALSE)
-        code_lines <- grep(private$code_line_pattern, file_lines)
-        non_empty <- length(code_lines)
+        # Use AST-derived coverable lines as denominator when available,
+        # fall back to regex-based code_lines for direct track() usage
+        coverable <- self$coverable_lines[[file]]
+        if (is.null(coverable)) coverable <- self$code_lines[[file]]
+        non_empty <- if (!is.null(coverable)) length(coverable) else 0L
 
-        covered <- if (!is.null(coverage_summary[[file]])) {
-          length(coverage_summary[[file]])
+        # Count covered lines (intersect with coverable to avoid >100%)
+        file_cov <- coverage_summary[[file]]
+        covered <- if (!is.null(file_cov) && !is.null(coverable)) {
+          covered_lines <- as.integer(names(file_cov))
+          length(intersect(covered_lines, coverable))
+        } else if (!is.null(file_cov)) {
+          length(file_cov)
         } else {
-          0
+          0L
         }
 
         file_stats[[file]] <- list(
@@ -435,6 +469,8 @@ RyeCoverageTracker <- R6::R6Class(
 
         file_lines <- readLines(file, warn = FALSE)
         file_cov <- coverage_summary[[file]]
+        file_coverable <- self$coverable_lines[[file]]
+        if (is.null(file_coverable)) file_coverable <- self$code_lines[[file]]
 
         for (i in seq_along(file_lines)) {
           line <- file_lines[i]
@@ -446,8 +482,8 @@ RyeCoverageTracker <- R6::R6Class(
             hit_count <- file_cov[[line_str]]
             css_class <- "covered"
             hit_display <- sprintf("%dx", hit_count)
-          } else if (grepl(private$code_line_pattern, line)) {
-            # Not covered but is code (not a comment or blank line)
+          } else if (!is.null(file_coverable) && i %in% file_coverable) {
+            # Not covered but is coverable code
             css_class <- "uncovered"
             hit_display <- "0x"
           } else {
@@ -510,6 +546,8 @@ RyeCoverageTracker <- R6::R6Class(
         if (!file.exists(file)) next
 
         lines <- readLines(file, warn = FALSE)
+        file_coverable <- self$coverable_lines[[file]]
+        if (is.null(file_coverable)) file_coverable <- self$code_lines[[file]]
 
         # Build line coverage array (1-indexed, NULL for non-code lines)
         line_coverage <- lapply(seq_along(lines), function(i) {
@@ -518,10 +556,10 @@ RyeCoverageTracker <- R6::R6Class(
           # Check if line is covered
           if (!is.null(coverage_summary[[file]][[line_str]])) {
             coverage_summary[[file]][[line_str]]  # Execution count
-          } else if (grepl(private$code_line_pattern, lines[i])) {
-            0  # Not covered but is code (not a comment or blank line)
+          } else if (!is.null(file_coverable) && i %in% file_coverable) {
+            0  # Not covered but is coverable code
           } else {
-            NULL  # Not code (comment/blank)
+            NULL  # Not code (comment/blank/unreachable)
           }
         })
 
