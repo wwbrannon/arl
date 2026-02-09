@@ -635,6 +635,7 @@ RyeEngine <- R6::R6Class(
         if (!is.null(coverage_tracker) && coverage_tracker$enabled) {
           src_cov <- source_tracker$src_get(expr)
           if (!is.null(src_cov) && !is.null(src_cov$file) && !is.null(src_cov$start_line)) {
+            coverage_tracker$register_coverable(src_cov$file, src_cov$start_line, src_cov$start_line)
             coverage_tracker$track(list(
               file = src_cov$file,
               start_line = src_cov$start_line,
