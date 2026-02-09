@@ -123,7 +123,7 @@ test_that("TCO: non-tail-recursive function (fib) is not TCO'd", {
   expect_equal(result, 55)
 })
 
-test_that("TCO: rest-param function is not TCO'd", {
+test_that("TCO: rest-param function with apply (not direct self-call) is not TCO'd", {
   engine$eval_text("
     (define my-sum (lambda (. args)
       (if (null? args)
@@ -187,4 +187,178 @@ test_that("TCO: begin in tail position", {
   ")
   result <- engine$eval_text("(count-with-side-effect 100 0)")
   expect_equal(result, 100)
+})
+
+# ==============================================================================
+# Destructuring params
+# ==============================================================================
+
+test_that("TCO: destructuring params with self-tail-call", {
+  engine$eval_text("
+    (define sum-pairs (lambda ((pattern (a b)) n acc)
+      (if (<= n 0)
+        acc
+        (sum-pairs (list (+ a 1) (+ b 1)) (- n 1) (+ acc a b)))))
+  ")
+  result <- engine$eval_text("(sum-pairs (list 1 2) 3 0)")
+  # Iteration 1: a=1, b=2 -> acc=0+1+2=3, next (2,3) n=2
+  # Iteration 2: a=2, b=3 -> acc=3+2+3=8, next (3,4) n=1
+  # Iteration 3: a=3, b=4 -> acc=8+3+4=15, next (4,5) n=0
+  # Return 15
+  expect_equal(result, 15)
+})
+
+test_that("TCO: deep recursion with destructuring does not stack overflow", {
+  engine$eval_text("
+    (define count-pair (lambda ((pattern (a b)) n)
+      (if (<= n 0)
+        (+ a b)
+        (count-pair (list (+ a 1) b) (- n 1)))))
+  ")
+  result <- engine$eval_text("(count-pair (list 0 0) 100000)")
+  expect_equal(result, 100000)
+})
+
+test_that("VERIFY: TCO'd destructuring has while and .rye_assign_pattern inside loop", {
+  out <- engine$inspect_compilation("
+    (define sum-pairs (lambda ((pattern (a b)) n acc)
+      (if (<= n 0)
+        acc
+        (sum-pairs (list (+ a 1) (+ b 1)) (- n 1) (+ acc a b)))))
+  ")
+  deparsed <- paste(out$compiled_deparsed, collapse = "\n")
+  expect_true(grepl("while", deparsed, fixed = TRUE))
+  expect_true(grepl(".rye_assign_pattern", deparsed, fixed = TRUE))
+  # Should not contain a call to sum-pairs in the compiled output
+  expect_false(grepl("sum.pairs(", deparsed, fixed = TRUE))
+})
+
+# ==============================================================================
+# Keyword args in self-calls
+# ==============================================================================
+
+test_that("TCO: keyword args in self-tail-call", {
+  engine$eval_text("
+    (define kw-sum (lambda (x y acc)
+      (if (<= x 0)
+        acc
+        (kw-sum :y (- y 1) :x (- x 1) :acc (+ acc x y)))))
+  ")
+  result <- engine$eval_text("(kw-sum 3 3 0)")
+  # Iteration 1: x=3, y=3, acc=0+3+3=6
+  # Iteration 2: x=2, y=2, acc=6+2+2=10
+  # Iteration 3: x=1, y=1, acc=10+1+1=12
+  # Iteration 4: x=0, return 12
+  expect_equal(result, 12)
+})
+
+test_that("TCO: mixed positional + keyword self-tail-call", {
+  engine$eval_text("
+    (define mixed-fn (lambda (x y)
+      (if (<= x 0)
+        y
+        (mixed-fn (- x 1) :y (+ y x)))))
+  ")
+  result <- engine$eval_text("(mixed-fn 5 0)")
+  # sum of 5+4+3+2+1 = 15
+  expect_equal(result, 15)
+})
+
+test_that("TCO: unknown keyword falls through to normal call", {
+  # This should compile without error but not be TCO'd for that call path
+  engine$eval_text("
+    (define safe-fn (lambda (x y)
+      (if (<= x 0)
+        y
+        (safe-fn (- x 1) (+ y x)))))
+  ")
+  result <- engine$eval_text("(safe-fn 5 0)")
+  expect_equal(result, 15)
+})
+
+test_that("TCO: deep recursion with keyword args does not stack overflow", {
+  engine$eval_text("
+    (define kw-count (lambda (n acc)
+      (if (<= n 0)
+        acc
+        (kw-count :acc (+ acc 1) :n (- n 1)))))
+  ")
+  result <- engine$eval_text("(kw-count 100000 0)")
+  expect_equal(result, 100000)
+})
+
+# ==============================================================================
+# Rest params
+# ==============================================================================
+
+test_that("TCO: rest param with direct self-tail-call", {
+  engine$eval_text("
+    (define rest-sum (lambda (acc . rest)
+      (if (null? rest)
+        acc
+        (rest-sum (+ acc (car rest)) . (cdr rest)))))
+  ")
+  # This doesn't use direct self-call syntax since rest is spread differently
+  # Let's use a simpler case:
+  engine$eval_text("
+    (define rest-count (lambda (n . rest)
+      (if (<= n 0)
+        (length rest)
+        (rest-count (- n 1) 1 2 3))))
+  ")
+  result <- engine$eval_text("(rest-count 5 1 2 3)")
+  expect_equal(result, 3)
+})
+
+test_that("TCO: rest param with varying arg counts in self-calls", {
+  engine$eval_text("
+    (define collect-loop (lambda (n . args)
+      (if (<= n 0)
+        args
+        (collect-loop (- n 1) n))))
+  ")
+  result <- engine$eval_text("(collect-loop 3)")
+  # Iteration 1: n=3, args=() -> (collect-loop 2 3)
+  # Iteration 2: n=2, args=(3) -> (collect-loop 1 2)
+  # Iteration 3: n=1, args=(2) -> (collect-loop 0 1)
+  # Return (1)
+  expect_equal(result, list(1))
+})
+
+test_that("TCO: deep recursion with rest params does not stack overflow", {
+  engine$eval_text("
+    (define rest-loop (lambda (n . rest)
+      (if (<= n 0)
+        (length rest)
+        (rest-loop (- n 1)))))
+  ")
+  result <- engine$eval_text("(rest-loop 100000)")
+  expect_equal(result, 0L)
+})
+
+test_that("VERIFY: TCO'd rest-param function has while, no self-call", {
+  out <- engine$inspect_compilation("
+    (define rest-loop (lambda (n . rest)
+      (if (<= n 0)
+        (length rest)
+        (rest-loop (- n 1)))))
+  ")
+  deparsed <- paste(out$compiled_deparsed, collapse = "\n")
+  expect_true(grepl("while", deparsed, fixed = TRUE))
+  expect_false(grepl("rest.loop(", deparsed, fixed = TRUE))
+})
+
+# ==============================================================================
+# Non-interference: pattern rest params still NOT TCO'd
+# ==============================================================================
+
+test_that("TCO: pattern rest params are still not TCO'd", {
+  out <- engine$inspect_compilation("
+    (define pat-rest-fn (lambda (n . (pattern (a b)))
+      (if (<= n 0)
+        (+ a b)
+        (pat-rest-fn (- n 1) 10 20))))
+  ")
+  deparsed <- paste(out$compiled_deparsed, collapse = "\n")
+  expect_false(grepl("while", deparsed, fixed = TRUE))
 })

@@ -464,9 +464,12 @@ Compiler <- R6::R6Class(
       # Check for self-tail-call optimization opportunity
       use_tco <- FALSE
       param_names <- NULL
-      if (!is.null(self_name) && !params$has_rest &&
-          length(params$param_bindings) == 0) {
-        param_names <- names(params$formals_list)
+      rest_param_name <- NULL
+      has_pattern_rest <- !is.null(params$rest_param_spec) &&
+                          identical(params$rest_param_spec$type, "pattern")
+      if (!is.null(self_name) && !has_pattern_rest) {
+        param_names <- setdiff(names(params$formals_list), "...")
+        rest_param_name <- params$rest_param  # NULL if no rest param
         if (private$has_self_tail_calls(body_exprs, self_name)) {
           use_tco <- TRUE
         }
@@ -481,17 +484,40 @@ Compiler <- R6::R6Class(
           }
         }
         last_compiled <- private$compile_tail_position(
-          body_exprs[[length(body_exprs)]], self_name, param_names
+          body_exprs[[length(body_exprs)]], self_name, param_names,
+          rest_param_name = rest_param_name
         )
         if (is.null(last_compiled)) {
           return(private$fail("lambda body could not be compiled"))
         }
         compiled_body[[length(body_exprs)]] <- last_compiled
+        # Prepend destructuring bindings inside the loop (they must re-run each iteration
+        # because the temp formals get reassigned by self-tail-calls)
+        if (length(params$param_bindings) > 0) {
+          pattern_stmts <- vector("list", length(params$param_bindings))
+          for (pb_i in seq_along(params$param_bindings)) {
+            binding <- params$param_bindings[[pb_i]]
+            pattern_arg <- as.call(list(as.symbol(".rye_quote"), binding$pattern))
+            pattern_stmts[[pb_i]] <- as.call(list(
+              as.symbol(".rye_assign_pattern"),
+              as.symbol(self$env_var_name),
+              pattern_arg,
+              as.symbol(binding$name),
+              "define"
+            ))
+          }
+          compiled_body <- c(pattern_stmts, compiled_body)
+        }
         # Wrap compiled body in while(TRUE) { ... }
         # Use while(TRUE) instead of repeat because Rye stdlib defines a `repeat` function
         # that shadows R's repeat keyword in the engine environment.
         loop_body <- as.call(c(list(quote(`{`)), compiled_body))
-        compiled_body <- list(as.call(list(quote(`while`), TRUE, loop_body)))
+        # If there's a rest param, bind it from ... before the loop
+        pre_loop <- list()
+        if (!is.null(rest_param_name)) {
+          pre_loop <- list(as.call(list(quote(`<-`), as.symbol(rest_param_name), quote(list(...)))))
+        }
+        compiled_body <- c(pre_loop, list(as.call(list(quote(`while`), TRUE, loop_body))))
       } else {
         # Normal path: compile all body expressions
         compiled_body <- vector("list", length(body_exprs))
@@ -504,21 +530,21 @@ Compiler <- R6::R6Class(
       }
       # Prepend .rye_env <- environment() so closure body sees correct current env
       env_bind <- as.call(list(quote(`<-`), as.symbol(self$env_var_name), quote(environment())))
-      # Preallocate body_parts: 1 (env_bind) + has_rest + param_bindings + rest_param_spec + compiled_body
-      size <- 1 +
-              as.integer(params$has_rest && !is.null(params$rest_param)) +
-              length(params$param_bindings) +
-              as.integer(!is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) +
-              length(compiled_body)
+      # When use_tco is TRUE, rest binding and param_bindings are already handled
+      # inside/around the TCO loop, so skip them here.
+      n_rest <- if (!use_tco && params$has_rest && !is.null(params$rest_param)) 1L else 0L
+      n_bindings <- if (!use_tco) length(params$param_bindings) else 0L
+      n_rest_spec <- if (!is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) 1L else 0L
+      size <- 1L + n_rest + n_bindings + n_rest_spec + length(compiled_body)
       body_parts <- vector("list", size)
       idx <- 1
       body_parts[[idx]] <- env_bind
       idx <- idx + 1
-      if (params$has_rest && !is.null(params$rest_param)) {
+      if (n_rest > 0L) {
         body_parts[[idx]] <- as.call(list(quote(`<-`), as.symbol(params$rest_param), quote(list(...))))
         idx <- idx + 1
       }
-      if (length(params$param_bindings) > 0) {
+      if (n_bindings > 0L) {
         for (binding in params$param_bindings) {
           pattern_arg <- as.call(list(as.symbol(".rye_quote"), binding$pattern))
           body_parts[[idx]] <- as.call(list(
@@ -531,7 +557,7 @@ Compiler <- R6::R6Class(
           idx <- idx + 1
         }
       }
-      if (!is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) {
+      if (n_rest_spec > 0L) {
         pattern_arg <- as.call(list(as.symbol(".rye_quote"), params$rest_param_spec$pattern))
         rest_val <- as.call(list(quote(list), quote(...)))
         body_parts[[idx]] <- as.call(list(
@@ -1440,17 +1466,21 @@ Compiler <- R6::R6Class(
     },
 
     # Compile an expression in tail position (for TCO)
-    compile_tail_position = function(expr, self_name, param_names) {
+    compile_tail_position = function(expr, self_name, param_names,
+                                     rest_param_name = NULL) {
       if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]])) {
         op_name <- as.character(expr[[1]])
         if (identical(op_name, self_name)) {
-          return(private$compile_self_tail_call(expr, param_names))
+          return(private$compile_self_tail_call(expr, param_names,
+                                                rest_param_name = rest_param_name))
         }
         if (identical(op_name, "if")) {
-          return(private$compile_tail_if(expr, self_name, param_names))
+          return(private$compile_tail_if(expr, self_name, param_names,
+                                         rest_param_name = rest_param_name))
         }
         if (identical(op_name, "begin")) {
-          return(private$compile_tail_begin(expr, self_name, param_names))
+          return(private$compile_tail_begin(expr, self_name, param_names,
+                                            rest_param_name = rest_param_name))
         }
       }
       # Non-tail-call: compile normally and wrap in return()
@@ -1460,35 +1490,79 @@ Compiler <- R6::R6Class(
     },
 
     # Compile a self-tail-call: (name arg1 arg2 ...) -> param reassignment
-    compile_self_tail_call = function(expr, param_names) {
-      # Collect positional args (bail on keyword args or wrong count)
+    compile_self_tail_call = function(expr, param_names,
+                                      rest_param_name = NULL) {
+      bail <- function() {
+        compiled <- private$compile_impl(expr)
+        if (is.null(compiled)) return(NULL)
+        as.call(list(quote(return), compiled))
+      }
       n_params <- length(param_names)
-      args <- list()
+      # Unified arg collection: walk arg list collecting positional and keyword args
+      positional <- list()
+      keywords <- list()  # named list: keyword_name -> raw_expr
       i <- 2L
       while (i <= length(expr)) {
         arg_expr <- expr[[i]]
         if (inherits(arg_expr, "rye_keyword")) {
-          # Keyword args: bail to normal call with return()
-          compiled <- private$compile_impl(expr)
-          if (is.null(compiled)) return(NULL)
-          return(as.call(list(quote(return), compiled)))
+          if (i + 1L > length(expr)) return(bail())
+          kw_name <- as.character(arg_expr)
+          if (!(kw_name %in% param_names)) return(bail())  # Unknown keyword
+          keywords[[kw_name]] <- expr[[i + 1L]]
+          i <- i + 2L
+        } else {
+          positional <- c(positional, list(arg_expr))
+          i <- i + 1L
         }
-        args <- c(args, list(arg_expr))
-        i <- i + 1L
       }
-      if (length(args) != n_params) {
-        # Wrong arg count: bail to normal call with return()
-        compiled <- private$compile_impl(expr)
-        if (is.null(compiled)) return(NULL)
-        return(as.call(list(quote(return), compiled)))
-      }
-      # Compile each arg
+      # Build compiled_args vector indexed by named param position
       compiled_args <- vector("list", n_params)
-      for (j in seq_len(n_params)) {
-        compiled_args[[j]] <- private$compile_impl(args[[j]])
-        if (is.null(compiled_args[[j]])) return(NULL)
+      filled <- logical(n_params)
+      # First, assign keyword args to their param slots
+      for (kw_name in names(keywords)) {
+        slot <- match(kw_name, param_names)
+        if (is.na(slot) || filled[slot]) return(bail())  # Duplicate or unknown
+        compiled_args[[slot]] <- private$compile_impl(keywords[[kw_name]])
+        if (is.null(compiled_args[[slot]])) return(NULL)
+        filled[slot] <- TRUE
       }
-      # Identify which params change (skip if compiled arg is the same symbol as param)
+      # Then fill positional args into unfilled slots left-to-right
+      pos_idx <- 1L
+      for (j in seq_len(n_params)) {
+        if (!filled[j]) {
+          if (pos_idx > length(positional)) {
+            # Not enough positional args and no rest param to absorb extras
+            if (is.null(rest_param_name)) return(bail())
+            # With rest param, unfilled named slots mean not enough args
+            return(bail())
+          }
+          compiled_args[[j]] <- private$compile_impl(positional[[pos_idx]])
+          if (is.null(compiled_args[[j]])) return(NULL)
+          filled[j] <- TRUE
+          pos_idx <- pos_idx + 1L
+        }
+      }
+      # Handle remaining positional args
+      remaining_positional <- positional[seq_len(length(positional))[seq_len(length(positional)) >= pos_idx]]
+      if (is.null(rest_param_name)) {
+        # No rest param: no extra args allowed
+        if (length(remaining_positional) > 0L) return(bail())
+      }
+      # Compile rest args if applicable
+      compiled_rest <- NULL
+      if (!is.null(rest_param_name)) {
+        if (length(remaining_positional) > 0L) {
+          rest_parts <- vector("list", length(remaining_positional))
+          for (ri in seq_along(remaining_positional)) {
+            rest_parts[[ri]] <- private$compile_impl(remaining_positional[[ri]])
+            if (is.null(rest_parts[[ri]])) return(NULL)
+          }
+          compiled_rest <- as.call(c(list(quote(list)), rest_parts))
+        } else {
+          compiled_rest <- quote(list())
+        }
+      }
+      # Identify which named params change
       changed <- integer(0)
       for (j in seq_len(n_params)) {
         ca <- compiled_args[[j]]
@@ -1497,33 +1571,54 @@ Compiler <- R6::R6Class(
         }
         changed <- c(changed, j)
       }
-      if (length(changed) == 0L) {
+      # Check if rest param changes
+      rest_changed <- FALSE
+      if (!is.null(rest_param_name) && !is.null(compiled_rest)) {
+        if (!(is.symbol(compiled_rest) && identical(as.character(compiled_rest), rest_param_name))) {
+          rest_changed <- TRUE
+        }
+      }
+      if (length(changed) == 0L && !rest_changed) {
         # No params change: just continue the loop
         return(quote(next))
       }
-      if (length(changed) == 1L) {
+      if (length(changed) == 1L && !rest_changed) {
         # Single param change: direct assignment, no temp needed
         j <- changed[1]
         return(as.call(list(quote(`<-`), as.symbol(param_names[j]), compiled_args[[j]])))
       }
-      # Multiple params change: use temps to avoid order-dependent bugs
-      stmts <- vector("list", 2L * length(changed))
+      if (length(changed) == 0L && rest_changed) {
+        # Only rest param changes
+        return(as.call(list(quote(`<-`), as.symbol(rest_param_name), compiled_rest)))
+      }
+      # Multiple params change (or named + rest): use temps to avoid order-dependent bugs
+      all_names <- param_names[changed]
+      all_compiled <- compiled_args[changed]
+      if (rest_changed) {
+        all_names <- c(all_names, rest_param_name)
+        all_compiled <- c(all_compiled, list(compiled_rest))
+      }
+      if (length(all_names) == 1L) {
+        return(as.call(list(quote(`<-`), as.symbol(all_names[1]), all_compiled[[1]])))
+      }
+      stmts <- vector("list", 2L * length(all_names))
       idx <- 1L
-      for (j in changed) {
-        tmp_name <- paste0(".tco_", param_names[j])
-        stmts[[idx]] <- as.call(list(quote(`<-`), as.symbol(tmp_name), compiled_args[[j]]))
+      for (k in seq_along(all_names)) {
+        tmp_name <- paste0(".tco_", all_names[k])
+        stmts[[idx]] <- as.call(list(quote(`<-`), as.symbol(tmp_name), all_compiled[[k]]))
         idx <- idx + 1L
       }
-      for (j in changed) {
-        tmp_name <- paste0(".tco_", param_names[j])
-        stmts[[idx]] <- as.call(list(quote(`<-`), as.symbol(param_names[j]), as.symbol(tmp_name)))
+      for (k in seq_along(all_names)) {
+        tmp_name <- paste0(".tco_", all_names[k])
+        stmts[[idx]] <- as.call(list(quote(`<-`), as.symbol(all_names[k]), as.symbol(tmp_name)))
         idx <- idx + 1L
       }
       as.call(c(list(quote(`{`)), stmts))
     },
 
     # Compile if in tail position: both branches get tail-position treatment
-    compile_tail_if = function(expr, self_name, param_names) {
+    compile_tail_if = function(expr, self_name, param_names,
+                               rest_param_name = NULL) {
       if (length(expr) < 3 || length(expr) > 4) {
         return(private$fail("if requires 2 or 3 arguments: (if test then [else])"))
       }
@@ -1535,16 +1630,19 @@ Compiler <- R6::R6Class(
       constant_test <- private$eval_constant_test(test)
       if (!is.null(constant_test)) {
         if (isTRUE(constant_test)) {
-          return(private$compile_tail_position(expr[[3]], self_name, param_names))
+          return(private$compile_tail_position(expr[[3]], self_name, param_names,
+                                               rest_param_name = rest_param_name))
         } else {
           if (length(expr) == 4) {
-            return(private$compile_tail_position(expr[[4]], self_name, param_names))
+            return(private$compile_tail_position(expr[[4]], self_name, param_names,
+                                                 rest_param_name = rest_param_name))
           } else {
             return(as.call(list(quote(return), private$compiled_nil())))
           }
         }
       }
-      then_expr <- private$compile_tail_position(expr[[3]], self_name, param_names)
+      then_expr <- private$compile_tail_position(expr[[3]], self_name, param_names,
+                                                  rest_param_name = rest_param_name)
       if (is.null(then_expr)) {
         return(private$fail("if then-branch could not be compiled"))
       }
@@ -1554,7 +1652,8 @@ Compiler <- R6::R6Class(
         as.call(list(as.symbol(".rye_true_p"), test))
       }
       if (length(expr) == 4) {
-        else_expr <- private$compile_tail_position(expr[[4]], self_name, param_names)
+        else_expr <- private$compile_tail_position(expr[[4]], self_name, param_names,
+                                                    rest_param_name = rest_param_name)
         if (is.null(else_expr)) {
           return(private$fail("if else-branch could not be compiled"))
         }
@@ -1565,13 +1664,15 @@ Compiler <- R6::R6Class(
     },
 
     # Compile begin in tail position: last expression gets tail-position treatment
-    compile_tail_begin = function(expr, self_name, param_names) {
+    compile_tail_begin = function(expr, self_name, param_names,
+                                  rest_param_name = NULL) {
       if (length(expr) <= 1) {
         return(as.call(list(quote(return), quote(invisible(NULL)))))
       }
       parts <- as.list(expr)[-1]
       if (length(parts) == 1) {
-        return(private$compile_tail_position(parts[[1]], self_name, param_names))
+        return(private$compile_tail_position(parts[[1]], self_name, param_names,
+                                             rest_param_name = rest_param_name))
       }
       compiled <- vector("list", length(parts))
       for (i in seq_len(length(parts) - 1L)) {
@@ -1579,7 +1680,8 @@ Compiler <- R6::R6Class(
         if (is.null(compiled[[i]])) return(NULL)
       }
       compiled[[length(parts)]] <- private$compile_tail_position(
-        parts[[length(parts)]], self_name, param_names
+        parts[[length(parts)]], self_name, param_names,
+        rest_param_name = rest_param_name
       )
       if (is.null(compiled[[length(parts)]])) return(NULL)
       as.call(c(list(quote(`{`)), compiled))
