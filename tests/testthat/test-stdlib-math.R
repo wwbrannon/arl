@@ -73,3 +73,73 @@ test_that("numeric operations handle boundary conditions", {
   expect_false(env$`=`(0.1 + 0.2, 0.3))  # floating point precision issues
   expect_true(env$`=`(1.0, 1.0))
 })
+
+# ============================================================================
+# Coverage: Variadic comparison operators with 1 arg (error paths)
+# ============================================================================
+
+test_that("variadic comparison operators error with < 2 arguments", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_error(engine$eval_in_env(engine$read("(< 1)")[[1]], env), "requires at least two arguments")
+  expect_error(engine$eval_in_env(engine$read("(> 1)")[[1]], env), "requires at least two arguments")
+  expect_error(engine$eval_in_env(engine$read("(<= 1)")[[1]], env), "requires at least two arguments")
+  expect_error(engine$eval_in_env(engine$read("(>= 1)")[[1]], env), "requires at least two arguments")
+  expect_error(engine$eval_in_env(engine$read("(== 1)")[[1]], env), "requires at least two arguments")
+})
+
+# ============================================================================
+# Coverage: Arithmetic/stats with 0 args (error paths)
+# ============================================================================
+
+test_that("variadic arithmetic operators error with 0 arguments", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_error(engine$eval_in_env(engine$read("(-)")[[1]], env), "requires at least one argument")
+  expect_error(engine$eval_in_env(engine$read("(/)")[[1]], env), "requires at least one argument")
+  expect_error(engine$eval_in_env(engine$read("(min)")[[1]], env), "requires at least one argument")
+  expect_error(engine$eval_in_env(engine$read("(max)")[[1]], env), "requires at least one argument")
+  expect_error(engine$eval_in_env(engine$read("(gcd)")[[1]], env), "requires at least one argument")
+  expect_error(engine$eval_in_env(engine$read("(lcm)")[[1]], env), "requires at least one argument")
+})
+
+# ============================================================================
+# Coverage: Number predicate edge cases
+# ============================================================================
+
+test_that("number predicate edge cases cover remaining lines", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # integer? with 3.0 (finite, == as.integer) -> #t
+  expect_true(engine$eval_in_env(engine$read("(integer? 3.0)")[[1]], env))
+
+  # rational? with finite real -> #t
+  expect_true(engine$eval_in_env(engine$read("(rational? 1.5)")[[1]], env))
+
+  # rational? with infinite -> #f
+  expect_false(engine$eval_in_env(engine$read("(rational? Inf)")[[1]], env))
+
+  # inexact? with double -> #t
+  expect_true(engine$eval_in_env(engine$read("(inexact? 3.14)")[[1]], env))
+
+  # inexact? with non-number -> #f
+  expect_false(engine$eval_in_env(engine$read("(inexact? \"hi\")")[[1]], env))
+})
+
+# ============================================================================
+# Coverage: Uncalled math functions (expt, atan2)
+# ============================================================================
+
+test_that("expt and atan2 work", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_equal(engine$eval_in_env(engine$read("(expt 2 10)")[[1]], env), 1024)
+  expect_equal(
+    engine$eval_in_env(engine$read("(atan2 1.0 1.0)")[[1]], env),
+    atan2(1.0, 1.0)
+  )
+})

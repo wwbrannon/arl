@@ -287,3 +287,37 @@ test_that("try* with both handlers works", {
   expect_equal(result, 99)
   expect_true(finally_ran)
 })
+
+# ============================================================================
+# Coverage: try* via R-level calls with explicit #f / NULL handlers
+# ============================================================================
+
+test_that("try* with no handlers (thunk only)", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  # Just thunk, no error or finally handler
+  result <- env$`try*`(function() 99)
+  expect_equal(result, 99)
+})
+
+test_that("try* errors when thunk is not a function", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_error(env$`try*`(42), "expects a function as first argument")
+})
+
+test_that("try* errors when error handler is not a function", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_error(env$`try*`(function() 1, 42), "error handler must be a function")
+})
+
+test_that("try* errors when finally handler is not a function", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_error(env$`try*`(function() 1, NULL, 42), "finally handler must be a function")
+})

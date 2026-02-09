@@ -397,3 +397,39 @@ test_that("system-output captures command output", {
   expect_true(is.character(result))
   expect_match(result, "hello")
 })
+
+# ============================================================================
+# Coverage: Output functions (write-string, newline, print)
+# ============================================================================
+
+test_that("write-string outputs string", {
+  env <- new.env(parent = baseenv())
+  stdlib_env(engine, env)
+  import_stdlib_modules(engine, c("io"), env)
+
+  output <- capture.output(
+    result <- engine$eval_in_env(engine$read('(write-string "hello")')[[1]], env))
+  expect_null(result)  # write-string returns #nil
+  expect_true(any(grepl("hello", output)))
+})
+
+test_that("newline outputs a newline", {
+  env <- new.env(parent = baseenv())
+  stdlib_env(engine, env)
+  import_stdlib_modules(engine, c("io"), env)
+
+  output <- capture.output(
+    result <- engine$eval_in_env(engine$read("(newline)")[[1]], env))
+  expect_null(result)  # newline returns #nil
+})
+
+test_that("print outputs value and returns it", {
+  env <- new.env(parent = baseenv())
+  stdlib_env(engine, env)
+  import_stdlib_modules(engine, c("io"), env)
+
+  output <- capture.output(
+    result <- engine$eval_in_env(engine$read("(print 42)")[[1]], env))
+  expect_equal(result, 42)
+  expect_true(any(grepl("42", output)))
+})

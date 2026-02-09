@@ -237,3 +237,38 @@ test_that("string operations handle edge cases", {
   # trim with only whitespace
   expect_equal(env$trim("   "), "")
 })
+
+# ============================================================================
+# Coverage: string-find not found, substring negative start, number->string base error
+# ============================================================================
+
+test_that("string-find returns #nil when pattern not found", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  result <- engine$eval_in_env(
+    engine$read('(string-find "hello" "xyz")')[[1]], env)
+  expect_null(result)
+})
+
+test_that("substring errors on negative start", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_error(
+    engine$eval_in_env(engine$read('(substring "hello" -1 3)')[[1]], env),
+    "start index cannot be negative")
+})
+
+test_that("number->string errors on base out of range", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_error(
+    engine$eval_in_env(engine$read("(number->string 10 1)")[[1]], env),
+    "base must be between 2 and 36")
+
+  expect_error(
+    engine$eval_in_env(engine$read("(number->string 10 37)")[[1]], env),
+    "base must be between 2 and 36")
+})

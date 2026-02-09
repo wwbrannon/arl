@@ -184,3 +184,39 @@ test_that("gensym generates unique symbols", {
   expect_true(is.symbol(sym_custom))
   expect_true(grepl("^foo", as.character(sym_custom)))
 })
+
+# ============================================================================
+# Coverage: call-with-values error paths
+# ============================================================================
+
+test_that("call-with-values errors when producer is not a function", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_error(
+    engine$eval_in_env(engine$read("(call-with-values 42 +)")[[1]], env),
+    "expects a function as the producer")
+})
+
+test_that("call-with-values errors when consumer is not a function", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_error(
+    engine$eval_in_env(engine$read("(call-with-values (lambda () 1) 42)")[[1]], env),
+    "expects a function as the consumer")
+})
+
+# ============================================================================
+# Coverage: license function
+# ============================================================================
+
+test_that("license function executes without error", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  # license prints output; just verify it doesn't error
+  expect_no_error(
+    capture.output(engine$eval_in_env(engine$read("(license)")[[1]], env))
+  )
+})

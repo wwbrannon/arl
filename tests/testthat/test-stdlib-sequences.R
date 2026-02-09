@@ -75,3 +75,33 @@ test_that("length predicates handle boundaries", {
   expect_false(engine$eval_in_env(engine$read("(length> '(1 2 3) 3)")[[1]], env))
   expect_true(engine$eval_in_env(engine$read("(length> '(1 2 3) 2)")[[1]], env))
 })
+
+# ============================================================================
+# Coverage: partition zero-n error, flatten recursive
+# ============================================================================
+
+test_that("partition errors when n is zero", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_error(
+    engine$eval_in_env(engine$read("(partition 0 (list 1 2 3))")[[1]], env),
+    "requires positive n and step")
+})
+
+test_that("flatten handles deeply nested lists", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  result <- engine$eval_in_env(
+    engine$read("(flatten (list 1 (list 2 (list 3))))")[[1]], env)
+  expect_equal(result, list(1, 2, 3))
+})
+
+test_that("zip with no arguments returns empty list", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  result <- engine$eval_in_env(engine$read("(zip)")[[1]], env)
+  expect_equal(result, list())
+})

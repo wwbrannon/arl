@@ -416,3 +416,23 @@ test_that("list-tail returns list without first k elements", {
     engine$eval_in_env(engine$read("(list-tail '(1 2 3) 0)")[[1]], env),
     list(1, 2, 3))
 })
+
+# ============================================================================
+# Coverage: range zero-step error, nth negative index error
+# ============================================================================
+
+test_that("range errors when step is zero", {
+  env <- stdlib_env(engine, new.env())
+  import_stdlib_modules(engine, c("list"), env)
+
+  expect_error(
+    engine$eval_in_env(engine$read("(range 1 10 0)")[[1]], env),
+    "step cannot be zero")
+})
+
+test_that("nth errors on negative index", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  expect_error(env$nth(list(1, 2, 3), -1), "out of bounds")
+})

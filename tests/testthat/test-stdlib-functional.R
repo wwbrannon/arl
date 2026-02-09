@@ -346,3 +346,42 @@ test_that("iterate-until collects values until predicate is true", {
     engine$read("(iterate-until (lambda (x) (* x 2)) 200 (lambda (x) (> x 100)))")[[1]], env)
   expect_equal(result, list(200))  # First value before checking next
 })
+
+# ============================================================================
+# Coverage: mapcat with empty result, foldl/foldr no-init in Rye, curry 3-arg
+# ============================================================================
+
+test_that("mapcat with empty results returns empty list", {
+  env <- new.env()
+  stdlib_env(engine, env)
+  import_stdlib_modules(engine, c("functional"), env)
+
+  result <- engine$eval_in_env(
+    engine$read("(mapcat (lambda (x) (list)) (list 1 2 3))")[[1]], env)
+  expect_equal(result, list())
+})
+
+test_that("foldl and foldr with no init value from Rye code", {
+  env <- new.env()
+  stdlib_env(engine, env)
+  import_stdlib_modules(engine, c("functional"), env)
+
+  # foldl with no init (uses Rye's + which is variadic)
+  result <- engine$eval_in_env(
+    engine$read("(foldl + (list 1 2 3))")[[1]], env)
+  expect_equal(result, 6)
+
+  # foldr with no init
+  result <- engine$eval_in_env(
+    engine$read("(foldr + (list 1 2 3))")[[1]], env)
+  expect_equal(result, 6)
+})
+
+test_that("curry with 3-arg function enables multi-step partial application", {
+  env <- stdlib_env(engine, new.env())
+  import_stdlib_modules(engine, c("functional"), env)
+
+  engine$eval_in_env(engine$read("(define add3 (curry (lambda (a b c) (+ a b c))))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(((add3 1) 2) 3)")[[1]], env)
+  expect_equal(result, 6)
+})

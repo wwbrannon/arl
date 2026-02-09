@@ -96,3 +96,103 @@ test_that("->integer truncates towards zero", {
   expect_equal(engine$eval_in_env(engine$read("(->integer 3.7)")[[1]], env), 3L)
   expect_equal(engine$eval_in_env(engine$read("(->integer -3.7)")[[1]], env), -3L)
 })
+
+# ============================================================================
+# Coverage: Type validation error paths
+# ============================================================================
+
+test_that("symbol->string errors on non-symbol", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_error(
+    engine$eval_in_env(engine$read("(symbol->string 42)")[[1]], env),
+    "must be a symbol")
+})
+
+test_that("string->symbol errors on non-string", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_error(
+    engine$eval_in_env(engine$read("(string->symbol 42)")[[1]], env),
+    "must be a string")
+})
+
+test_that("exact->inexact errors on non-number", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_error(
+    engine$eval_in_env(engine$read('(exact->inexact "foo")')[[1]], env),
+    "must be a number")
+})
+
+test_that("inexact->exact errors on non-number", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_error(
+    engine$eval_in_env(engine$read('(inexact->exact "foo")')[[1]], env),
+    "must be a number")
+})
+
+# ============================================================================
+# Coverage: String-to-number conversion paths and errors
+# ============================================================================
+
+test_that("->integer string path and error paths", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # String -> integer success
+  expect_equal(engine$eval_in_env(engine$read('(->integer "42")')[[1]], env), 42L)
+
+  # String -> integer failure
+  expect_error(
+    engine$eval_in_env(engine$read('(->integer "not-a-number")')[[1]], env),
+    "Cannot convert")
+
+  # Non-string, non-number -> error
+  expect_error(
+    engine$eval_in_env(engine$read("(->integer #t)")[[1]], env),
+    "cannot convert to integer")
+})
+
+test_that("->double string path and error paths", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # String -> double success
+  expect_equal(engine$eval_in_env(engine$read('(->double "3.14")')[[1]], env), 3.14)
+
+  # String -> double failure
+  expect_error(
+    engine$eval_in_env(engine$read('(->double "nope")')[[1]], env),
+    "Cannot convert")
+
+  # Non-string, non-number -> error
+  expect_error(
+    engine$eval_in_env(engine$read("(->double #t)")[[1]], env),
+    "cannot convert to double")
+})
+
+test_that("->complex string path and error paths", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # String -> complex success
+  result <- engine$eval_in_env(engine$read('(->complex "1+2i")')[[1]], env)
+  expect_equal(Re(result), 1)
+  expect_equal(Im(result), 2)
+
+  # String -> complex failure
+  expect_error(
+    engine$eval_in_env(engine$read('(->complex "nope")')[[1]], env),
+    "Cannot convert")
+
+  # Non-string, non-number -> error
+  expect_error(
+    engine$eval_in_env(engine$read("(->complex #t)")[[1]], env),
+    "cannot convert to complex")
+})
