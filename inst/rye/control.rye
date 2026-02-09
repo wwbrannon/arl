@@ -33,17 +33,23 @@
           `(if ,test (begin ,@body) (cond ,@rest)))))))
 
 (defmacro case (key clause . rest)
-  "Branch on key equality."
+  "Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...)."
   (if (null? clause)
     (error "case: Missing required parameter (else clause)")
     (begin
-      (define datum (car clause))
+      (define datums (car clause))
       (define body (cdr clause))
-      (if (and (symbol? datum) (= (as.character datum) "else"))
+      (if (and (symbol? datums) (= (as.character datums) "else"))
         `(begin ,@body)
-        (if (null? rest)
-          `(if (= ,key ,datum) (begin ,@body) #nil)
-          `(if (= ,key ,datum) (begin ,@body) (case ,key ,@rest)))))))
+        (begin
+          ;; datums is a list of values to match against
+          (define test-expr
+            (if (= (length datums) 1)
+              `(= ,key (quote ,(car datums)))
+              `(or ,@(map (lambda (d) `(= ,key (quote ,d))) datums))))
+          (if (null? rest)
+            `(if ,test-expr (begin ,@body) #nil)
+            `(if ,test-expr (begin ,@body) (case ,key ,@rest))))))))
 
 ;;; Error handling helper
 

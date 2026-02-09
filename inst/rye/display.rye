@@ -114,7 +114,7 @@
       "Concatenate formatted values into string."
       (define parts (lapply (__as-list args) format-value))
       (if (= (length parts) 0)
-        (character 0)
+        ""
         (string-join parts ""))))
 
   (define trace

@@ -208,7 +208,7 @@ test_that("stdlib macros from files work", {
   result <- engine$eval_in_env(engine$read("(cond ((> 1 2) 1) ((< 1 2) 2) (else 3))")[[1]], env)
   expect_equal(result, 2)
 
-  result <- engine$eval_in_env(engine$read("(case 2 (1 \"a\") (2 \"b\") (else \"c\"))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(case 2 ((1) \"a\") ((2) \"b\") (else \"c\"))")[[1]], env)
   expect_equal(result, "b")
 
   result <- engine$eval_in_env(engine$read("(let ((x 1) (y 2)) (+ x y))")[[1]], env)

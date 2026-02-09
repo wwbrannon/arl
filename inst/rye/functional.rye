@@ -2,7 +2,7 @@
 
 (module functional
   (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial
-          curry juxt constantly iterate iterate-until memoize repeatedly)
+          curry juxt constantly iterate iterate-until memoize)
 
   (import list)
   (import logic)
@@ -144,13 +144,4 @@
             (r/call "assign" (list key result :envir cache))
             result)))))
 
-  (define repeatedly
-    (lambda (fn n)
-      "Call function n times, return list of results."
-      (define acc (list))
-      (define count n)
-      (while (> count 0)
-        (begin
-          (set! acc (append acc (list (fn))))
-          (set! count (- count 1))))
-      acc)))
+)

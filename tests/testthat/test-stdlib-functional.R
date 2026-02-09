@@ -159,22 +159,6 @@ test_that("partial applies arguments partially", {
   expect_equal(multiply_by_2_3(5), 30)  # 2 * 3 * 5
 })
 
-test_that("repeatedly calls function n times", {
-  env <- new.env()
-  stdlib_env(engine, env)
-
-  counter <- 0
-  increment <- function() {
-    counter <<- counter + 1
-    counter
-  }
-
-  result <- env$repeatedly(5, increment)
-  expect_equal(length(result), 5)
-  expect_equal(result[[1]], 1)
-  expect_equal(result[[5]], 5)
-})
-
 test_that("repeat creates list with repeated value", {
   env <- new.env()
   stdlib_env(engine, env)

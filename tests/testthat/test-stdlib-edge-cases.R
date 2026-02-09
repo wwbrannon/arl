@@ -301,14 +301,13 @@ test_that("foldl and foldr with init value from Rye", {
   expect_equal(result, 16)
 })
 
-test_that("repeatedly from Rye code", {
+test_that("repeatedly from Rye code (sequences version, n fn order)", {
   env <- new.env()
   stdlib_env(engine, env)
-  import_stdlib_modules(engine, c("functional"), env)
 
   engine$eval_in_env(engine$read("(define counter 0)")[[1]], env)
   result <- engine$eval_in_env(
-    engine$read("(repeatedly (lambda () (set! counter (+ counter 1)) counter) 3)")[[1]], env)
+    engine$read("(repeatedly 3 (lambda () (set! counter (+ counter 1)) counter))")[[1]], env)
   expect_equal(result, list(1, 2, 3))
 })
 

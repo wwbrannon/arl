@@ -76,13 +76,9 @@
 (define fizzbuzz-case
   (lambda (n)
     (case (% n 15)
-      (0 "FizzBuzz")
-      (3 "Fizz")
-      (5 "Buzz")
-      (6 "Fizz")
-      (9 "Fizz")
-      (10 "Buzz")
-      (12 "Fizz")
+      ((0) "FizzBuzz")
+      ((3 6 9 12) "Fizz")
+      ((5 10) "Buzz")
       (else (str n)))))
 
 (println "\nUsing case (note: case checks exact value, not pattern):")

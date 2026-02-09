@@ -107,44 +107,58 @@ test_that("cond selects first matching clause", {
   expect_equal(result, 15)
 })
 
-test_that("case branches on key equality", {
+test_that("case branches on key equality (Scheme syntax)", {
   env <- new.env(parent = baseenv())
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("control"), env)
 
-  # Match first case
+  # Match first case — datums are lists
   result <- engine$eval_in_env(
-    engine$read("(case 1 (1 'one) (2 'two) (3 'three))")[[1]], env)
+    engine$read("(case 1 ((1) 'one) ((2) 'two) ((3) 'three))")[[1]], env)
   expect_equal(as.character(result), "one")
 
   # Match middle case
   result <- engine$eval_in_env(
-    engine$read("(case 2 (1 'one) (2 'two) (3 'three))")[[1]], env)
+    engine$read("(case 2 ((1) 'one) ((2) 'two) ((3) 'three))")[[1]], env)
   expect_equal(as.character(result), "two")
 
   # Match last case
   result <- engine$eval_in_env(
-    engine$read("(case 3 (1 'one) (2 'two) (3 'three))")[[1]], env)
+    engine$read("(case 3 ((1) 'one) ((2) 'two) ((3) 'three))")[[1]], env)
   expect_equal(as.character(result), "three")
 
   # Else clause
   result <- engine$eval_in_env(
-    engine$read("(case 4 (1 'one) (2 'two) (else 'other))")[[1]], env)
+    engine$read("(case 4 ((1) 'one) ((2) 'two) (else 'other))")[[1]], env)
   expect_equal(as.character(result), "other")
 
   # No matching case without else returns #nil
-  result <- engine$eval_in_env(engine$read("(case 5 (1 'one) (2 'two))")[[1]], env)
+  result <- engine$eval_in_env(engine$read("(case 5 ((1) 'one) ((2) 'two))")[[1]], env)
   expect_null(result)
 
-  # Works with symbols
+  # Works with symbols — datums are auto-quoted
   result <- engine$eval_in_env(
-    engine$read("(case 'b ('a 'first) ('b 'second) ('c 'third))")[[1]], env)
+    engine$read("(case 'b ((a) 'first) ((b) 'second) ((c) 'third))")[[1]], env)
   expect_equal(as.character(result), "second")
 
   # Multiple expressions in body
   result <- engine$eval_in_env(
-    engine$read("(case 1 (1 (define x 10) (* x 2)) (2 'two))")[[1]], env)
+    engine$read("(case 1 ((1) (define x 10) (* x 2)) ((2) 'two))")[[1]], env)
   expect_equal(result, 20)
+
+  # Multi-datum clause
+  result <- engine$eval_in_env(
+    engine$read("(case 2 ((1 2 3) 'small) ((4 5 6) 'big))")[[1]], env)
+  expect_equal(as.character(result), "small")
+
+  result <- engine$eval_in_env(
+    engine$read("(case 5 ((1 2 3) 'small) ((4 5 6) 'big))")[[1]], env)
+  expect_equal(as.character(result), "big")
+
+  # Multi-datum with else
+  result <- engine$eval_in_env(
+    engine$read("(case 99 ((1 2 3) 'small) ((4 5 6) 'big) (else 'other))")[[1]], env)
+  expect_equal(as.character(result), "other")
 })
 
 # ============================================================================

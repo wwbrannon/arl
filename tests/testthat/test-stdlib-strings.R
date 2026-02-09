@@ -204,9 +204,8 @@ test_that("string operations handle edge cases", {
   env <- new.env()
   stdlib_env(engine, env)
 
-  # str with no arguments (returns character(0), not empty string)
-  expect_equal(length(env$str()), 0)
-  expect_true(is.character(env$str()))
+  # str with no arguments returns empty string
+  expect_equal(env$str(), "")
 
   # str with single argument
   expect_equal(env$str("hello"), "hello")
