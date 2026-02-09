@@ -81,7 +81,7 @@ coverage-r: ## help: Run R code coverage only
 	  writeLines(c( \
 	    paste0('rye Coverage: ', sprintf('%.2f%%', pct)), \
 	    '', \
-	    capture.output(print(cov)) \
+	    capture.output(print(cov), type = 'message') \
 	  ), 'coverage/r/summary.txt'); \
 	  covr::to_cobertura(cov, filename='coverage/r/coverage.xml'); \
 	  message(sprintf('R coverage: %.1f%%', pct)); \

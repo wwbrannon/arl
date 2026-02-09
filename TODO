@@ -1,14 +1,9 @@
-o) self-TCO?
-Does NOT handle (v1 limitations):
-- Mutual recursion, let/letrec body tail calls (they expand to IIFEs — nested lambdas), rest params (...), destructuring params, keyword args in self-calls
+o) the coverage/rye/summary.txt file produced by `make coverage` says we have 100% coverage of all rye code, which I'm sure is wrong. can you take a look?
 
-o) `make coverage` doesn't write the R coverage outputs by file to summary.txt
-o) do we really have 100% coverage for all rye code?
+o) run the test auditor agent again on the whole codebase
 
 smaller stuff:
 --------------------------------------
-o) minor output formatting issues -- TRUE printed rather than #t for example
-
 o) general code quality / duplication pass
 o) run `make lint`, fix and/or update lint rules
 
