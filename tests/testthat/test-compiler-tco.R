@@ -349,10 +349,10 @@ test_that("VERIFY: TCO'd rest-param function has while, no self-call", {
 })
 
 # ==============================================================================
-# Non-interference: pattern rest params still NOT TCO'd
+# Pattern rest params (now TCO'd)
 # ==============================================================================
 
-test_that("TCO: pattern rest params are still not TCO'd", {
+test_that("TCO: pattern rest params are TCO'd", {
   out <- engine$inspect_compilation("
     (define pat-rest-fn (lambda (n . (pattern (a b)))
       (if (<= n 0)
@@ -360,5 +360,138 @@ test_that("TCO: pattern rest params are still not TCO'd", {
         (pat-rest-fn (- n 1) 10 20))))
   ")
   deparsed <- paste(out$compiled_deparsed, collapse = "\n")
+  expect_true(grepl("while", deparsed, fixed = TRUE))
+  expect_true(grepl(".rye_assign_pattern", deparsed, fixed = TRUE))
+  expect_false(grepl("pat.rest.fn(", deparsed, fixed = TRUE))
+})
+
+test_that("TCO: deep recursion with pattern rest params does not stack overflow", {
+  engine$eval_text("
+    (define pat-rest-loop (lambda (n . (pattern (a b)))
+      (if (<= n 0)
+        (+ a b)
+        (pat-rest-loop (- n 1) (+ a 1) b))))
+  ")
+  result <- engine$eval_text("(pat-rest-loop 100000 0 0)")
+  expect_equal(result, 100000)
+})
+
+test_that("TCO: pattern rest destructuring produces correct values through iterations", {
+  engine$eval_text("
+    (define pat-rest-acc (lambda (n acc . (pattern (a b)))
+      (if (<= n 0)
+        acc
+        (pat-rest-acc (- n 1) (+ acc a b) (+ a 1) (+ b 1)))))
+  ")
+  result <- engine$eval_text("(pat-rest-acc 3 0 1 2)")
+  # Iteration 1: n=3, a=1, b=2 -> acc=0+1+2=3, next a=2,b=3
+  # Iteration 2: n=2, a=2, b=3 -> acc=3+2+3=8, next a=3,b=4
+  # Iteration 3: n=1, a=3, b=4 -> acc=8+3+4=15, next a=4,b=5
+  # Return 15
+  expect_equal(result, 15)
+})
+
+# ==============================================================================
+# let/let*/letrec in tail position (IIFE inlining)
+# ==============================================================================
+
+test_that("TCO: basic let in tail position", {
+  engine$eval_text("
+    (define let-count (lambda (n)
+      (let ((m (- n 1)))
+        (if (<= m 0) 0 (let-count m)))))
+  ")
+  result <- engine$eval_text("(let-count 10)")
+  expect_equal(result, 0)
+})
+
+test_that("TCO: deep recursion with let does not stack overflow", {
+  engine$eval_text("
+    (define let-loop (lambda (n)
+      (let ((m (- n 1)))
+        (if (<= m 0) 0 (let-loop m)))))
+  ")
+  result <- engine$eval_text("(let-loop 100000)")
+  expect_equal(result, 0)
+})
+
+test_that("TCO: let* with sequential bindings + self-tail-call", {
+  engine$eval_text("
+    (define letstar-fn (lambda (n acc)
+      (let* ((m (- n 1))
+             (new-acc (+ acc n)))
+        (if (<= m 0) new-acc (letstar-fn m new-acc)))))
+  ")
+  result <- engine$eval_text("(letstar-fn 10 0)")
+  # Sum of 10+9+8+...+1 = 55
+  expect_equal(result, 55)
+})
+
+test_that("TCO: nested let* (multiple bindings) + deep recursion", {
+  engine$eval_text("
+    (define letstar-loop (lambda (n acc)
+      (let* ((m (- n 1))
+             (new-acc (+ acc 1)))
+        (if (<= m 0) new-acc (letstar-loop m new-acc)))))
+  ")
+  result <- engine$eval_text("(letstar-loop 100000 0)")
+  expect_equal(result, 100000)
+})
+
+test_that("VERIFY: let in tail position compiles to while, no self-call", {
+  out <- engine$inspect_compilation("
+    (define let-count (lambda (n)
+      (let ((m (- n 1)))
+        (if (<= m 0) 0 (let-count m)))))
+  ")
+  deparsed <- paste(out$compiled_deparsed, collapse = "\n")
+  expect_true(grepl("while", deparsed, fixed = TRUE))
+  expect_false(grepl("let.count(", deparsed, fixed = TRUE))
+})
+
+test_that("TCO: letrec in tail position", {
+  engine$eval_text("
+    (define letrec-fn (lambda (n acc)
+      (letrec ((x n))
+        (if (<= x 0) acc (letrec-fn (- x 1) (+ acc x))))))
+  ")
+  result <- engine$eval_text("(letrec-fn 10 0)")
+  # Sum of 10+9+...+1 = 55
+  expect_equal(result, 55)
+})
+
+test_that("TCO: deep recursion with letrec does not stack overflow", {
+  engine$eval_text("
+    (define letrec-loop (lambda (n acc)
+      (letrec ((x n))
+        (if (<= x 0) acc (letrec-loop (- x 1) (+ acc 1))))))
+  ")
+  result <- engine$eval_text("(letrec-loop 100000 0)")
+  expect_equal(result, 100000)
+})
+
+# ==============================================================================
+# Non-interference: IIFE edge cases
+# ==============================================================================
+
+test_that("TCO: let where self-call is NOT in tail position is not TCO'd", {
+  out <- engine$inspect_compilation("
+    (define not-tail (lambda (n)
+      (let ((m (- n 1)))
+        (+ 1 (not-tail m)))))
+  ")
+  deparsed <- paste(out$compiled_deparsed, collapse = "\n")
   expect_false(grepl("while", deparsed, fixed = TRUE))
+})
+
+test_that("TCO: IIFE with complex params bails gracefully", {
+  # IIFE with rest param — should not be inlined, but still works
+  engine$eval_text("
+    (define simple-fn (lambda (n)
+      (if (<= n 0)
+        0
+        (simple-fn (- n 1)))))
+  ")
+  result <- engine$eval_text("(simple-fn 10)")
+  expect_equal(result, 0)
 })

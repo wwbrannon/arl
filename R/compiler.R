@@ -465,11 +465,18 @@ Compiler <- R6::R6Class(
       use_tco <- FALSE
       param_names <- NULL
       rest_param_name <- NULL
-      has_pattern_rest <- !is.null(params$rest_param_spec) &&
-                          identical(params$rest_param_spec$type, "pattern")
-      if (!is.null(self_name) && !has_pattern_rest) {
+      if (!is.null(self_name)) {
         param_names <- setdiff(names(params$formals_list), "...")
         rest_param_name <- params$rest_param  # NULL if no rest param
+        # For pattern rest params, generate a temp name for collection
+        if (is.null(rest_param_name) && !is.null(params$rest_param_spec) &&
+            identical(params$rest_param_spec$type, "pattern")) {
+          rest_param_name <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
+            as.character(self$context$macro_expander$gensym(".__rye_rest"))
+          } else {
+            paste0(".__rye_rest", as.integer(stats::runif(1, 1, 1e9)))
+          }
+        }
         if (private$has_self_tail_calls(body_exprs, self_name)) {
           use_tco <- TRUE
         }
@@ -508,6 +515,18 @@ Compiler <- R6::R6Class(
           }
           compiled_body <- c(pattern_stmts, compiled_body)
         }
+        # Add pattern rest binding inside the loop (re-runs each iteration)
+        if (!is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) {
+          pattern_arg <- as.call(list(as.symbol(".rye_quote"), params$rest_param_spec$pattern))
+          rest_pattern_stmt <- as.call(list(
+            as.symbol(".rye_assign_pattern"),
+            as.symbol(self$env_var_name),
+            pattern_arg,
+            as.symbol(rest_param_name),
+            "define"
+          ))
+          compiled_body <- c(list(rest_pattern_stmt), compiled_body)
+        }
         # Wrap compiled body in while(TRUE) { ... }
         # Use while(TRUE) instead of repeat because Rye stdlib defines a `repeat` function
         # that shadows R's repeat keyword in the engine environment.
@@ -534,7 +553,7 @@ Compiler <- R6::R6Class(
       # inside/around the TCO loop, so skip them here.
       n_rest <- if (!use_tco && params$has_rest && !is.null(params$rest_param)) 1L else 0L
       n_bindings <- if (!use_tco) length(params$param_bindings) else 0L
-      n_rest_spec <- if (!is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) 1L else 0L
+      n_rest_spec <- if (!use_tco && !is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) 1L else 0L
       size <- 1L + n_rest + n_bindings + n_rest_spec + length(compiled_body)
       body_parts <- vector("list", size)
       idx <- 1
@@ -1445,7 +1464,16 @@ Compiler <- R6::R6Class(
     expr_has_self_tail_call = function(expr, self_name) {
       if (!is.call(expr) || length(expr) == 0) return(FALSE)
       op <- expr[[1]]
-      if (!is.symbol(op)) return(FALSE)
+      if (!is.symbol(op)) {
+        # IIFE: ((lambda (params...) body...) args...)
+        if (private$is_iife(expr)) {
+          iife_body <- as.list(expr[[1]])[-(1:2)]
+          if (length(iife_body) > 0) {
+            return(private$expr_has_self_tail_call(iife_body[[length(iife_body)]], self_name))
+          }
+        }
+        return(FALSE)
+      }
       op_name <- as.character(op)
       # Direct call to self_name in tail position
       if (identical(op_name, self_name)) return(TRUE)
@@ -1482,6 +1510,11 @@ Compiler <- R6::R6Class(
           return(private$compile_tail_begin(expr, self_name, param_names,
                                             rest_param_name = rest_param_name))
         }
+      } else if (is.call(expr) && length(expr) > 0 && private$is_iife(expr)) {
+        result <- private$compile_tail_iife(expr, self_name, param_names,
+                                            rest_param_name = rest_param_name)
+        if (!is.null(result)) return(result)
+        # Fall through to normal compilation if compile_tail_iife returns NULL
       }
       # Non-tail-call: compile normally and wrap in return()
       compiled <- private$compile_impl(expr)
@@ -1685,6 +1718,75 @@ Compiler <- R6::R6Class(
       )
       if (is.null(compiled[[length(parts)]])) return(NULL)
       as.call(c(list(quote(`{`)), compiled))
+    },
+
+    # Compile an IIFE in tail position: inline the lambda body
+    # Returns NULL if the IIFE has complex params (bail to normal compilation)
+    compile_tail_iife = function(expr, self_name, param_names,
+                                 rest_param_name = NULL) {
+      lambda_expr <- expr[[1]]
+      iife_params <- private$lambda_params(lambda_expr[[2]])
+      if (is.null(iife_params)) return(NULL)  # bail
+
+      # Only handle simple params: no rest, no destructuring, no defaults
+      if (iife_params$has_rest || length(iife_params$param_bindings) > 0) return(NULL)
+      iife_param_names <- names(iife_params$formals_list)
+      for (nm in iife_param_names) {
+        if (!identical(iife_params$formals_list[[nm]], quote(expr = ))) return(NULL)  # has default
+      }
+
+      # Collect args — bail on keywords
+      iife_args <- list()
+      i <- 2L
+      while (i <= length(expr)) {
+        if (inherits(expr[[i]], "rye_keyword")) return(NULL)
+        iife_args <- c(iife_args, list(expr[[i]]))
+        i <- i + 1L
+      }
+      if (length(iife_args) != length(iife_param_names)) return(NULL)  # wrong count
+
+      # Build block: param assignments + body with tail-position treatment
+      stmts <- list()
+      for (j in seq_along(iife_args)) {
+        compiled_arg <- private$compile_impl(iife_args[[j]])
+        if (is.null(compiled_arg)) return(NULL)
+        stmts[[length(stmts) + 1L]] <- as.call(list(quote(`<-`), as.symbol(iife_param_names[j]), compiled_arg))
+      }
+
+      iife_body <- as.list(lambda_expr)[-(1:2)]
+      # Skip docstring
+      if (length(iife_body) > 0) {
+        first <- private$strip_src(iife_body[[1]])
+        if (is.character(first) && length(first) == 1L) iife_body <- iife_body[-1]
+      }
+      if (length(iife_body) == 0) {
+        return(as.call(list(quote(return), private$compiled_nil())))
+      }
+
+      # Non-last body exprs: compile normally
+      for (i in seq_len(max(0, length(iife_body) - 1))) {
+        compiled <- private$compile_impl(iife_body[[i]])
+        if (is.null(compiled)) return(NULL)
+        stmts[[length(stmts) + 1L]] <- compiled
+      }
+
+      # Last body expr: compile in tail position (recurses for nested IIFEs)
+      last <- private$compile_tail_position(
+        iife_body[[length(iife_body)]], self_name, param_names,
+        rest_param_name = rest_param_name
+      )
+      if (is.null(last)) return(NULL)
+      stmts[[length(stmts) + 1L]] <- last
+
+      as.call(c(list(quote(`{`)), stmts))
+    },
+
+    # Check if an expression is an IIFE: ((lambda ...) args...)
+    is_iife = function(expr) {
+      is.call(expr) && length(expr) > 0 &&
+        is.call(expr[[1]]) && length(expr[[1]]) >= 3 &&
+        is.symbol(expr[[1]][[1]]) &&
+        identical(as.character(expr[[1]][[1]]), "lambda")
     },
 
     # Check if a compiled expression is a "simple value" that doesn't need a temp
