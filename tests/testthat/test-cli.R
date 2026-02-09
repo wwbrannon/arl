@@ -134,7 +134,7 @@ test_that("rye_install_cli installs wrapper to target dir", {
 # Environment Loading ----
 
 test_that("RyeEngine initializes environment with stdlib", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
   expect_true(is.environment(env))
   expect_true(exists("map", envir = env))  # stdlib function
@@ -143,7 +143,7 @@ test_that("RyeEngine initializes environment with stdlib", {
 # Evaluation Functions ----
 
 test_that("cli_eval_text prints non-NULL results", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   cli <- rye:::RyeCLI$new()
   output <- capture.output(result <- cli$cli_eval_text("(+ 2 3)", engine))
   expect_equal(result, 5)
@@ -151,7 +151,7 @@ test_that("cli_eval_text prints non-NULL results", {
 })
 
 test_that("cli_eval_text does not print define results", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   cli <- rye:::RyeCLI$new()
   output <- capture.output(result <- cli$cli_eval_text("(define y 10)", engine))
   expect_equal(result, 10)  # define returns the value (invisibly)

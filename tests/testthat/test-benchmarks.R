@@ -1,7 +1,7 @@
 # Test Benchmark Infrastructure
 # Smoke tests to ensure benchmark and profiling infrastructure works
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # Helper to find benchmark directory
 find_bench_dir <- function() {
@@ -154,7 +154,7 @@ test_that("profiling helper functions work", {
   # May fail in some environments due to profvis limitations
   output_path <- tryCatch({
     profile_component({
-      engine <- RyeEngine$new()
+      engine <- make_engine()
       for (i in 1:10) {
         engine$read("(+ 1 2)")
       }

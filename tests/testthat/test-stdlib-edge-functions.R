@@ -1,6 +1,6 @@
 # Edge case tests for higher-order functions
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # Helper to create test env with stdlib
 setup_env <- function() {

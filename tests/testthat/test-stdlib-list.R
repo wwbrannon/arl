@@ -1,6 +1,6 @@
 # List operation tests: car/cdr, cons, append, reverse, ordinal accessors, assoc
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("car returns first element", {
   env <- new.env()

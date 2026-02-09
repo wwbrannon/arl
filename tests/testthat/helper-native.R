@@ -83,7 +83,7 @@ run_native_tests <- function(dir = "tests/native") {
   for (test_file in test_files) {
     # Create a fresh engine for this test file
     # This ensures complete test isolation - no state leaks between files
-    engine <- RyeEngine$new()
+    engine <- make_engine()
     env <- engine$env$env
 
     # Load test-specific helpers (like skip function)

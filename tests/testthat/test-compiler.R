@@ -1,4 +1,4 @@
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("compiled eval handles simple arithmetic", {
   expect_equal(engine$eval(engine$read("(+ 1 2)")[[1]]), 3)
@@ -147,7 +147,7 @@ test_that("r/eval with no env uses current environment", {
 
 test_that("r/eval with no env sees bindings from same evaluation context", {
   # current-env returns the active env (with bindings from previous evals in same engine)
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   eng$eval(eng$read("(define _reval_secret 99)")[[1]])
   curr <- eng$eval(eng$read("(current-env)")[[1]])
   expect_equal(get("_reval_secret", envir = curr, inherits = FALSE), 99)
@@ -157,8 +157,8 @@ test_that("r/eval with no env sees bindings from same evaluation context", {
 })
 
 test_that("multiple engines have independent current-env", {
-  engine_a <- RyeEngine$new()
-  engine_b <- RyeEngine$new()
+  engine_a <- make_engine()
+  engine_b <- make_engine()
   engine_a$eval(engine_a$read("(define _eng_x 1)")[[1]])
   engine_b$eval(engine_b$read("(define _eng_x 2)")[[1]])
   curr_a <- engine_a$eval(engine_a$read("(current-env)")[[1]])
@@ -343,7 +343,7 @@ test_that("macro pipeline matches engine eval", {
 
 # Optimization Tests: Constant Folding
 test_that("compiler performs constant folding for arithmetic operations", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Test that pure arithmetic with literals gets folded
   # We verify by checking the result is correct (semantic test)
@@ -358,7 +358,7 @@ test_that("compiler performs constant folding for arithmetic operations", {
 })
 
 test_that("compiler performs constant folding for comparison operations", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Comparison operators should fold
   expect_true(engine$eval(engine$read("(< 1 2)")[[1]]))
@@ -370,7 +370,7 @@ test_that("compiler performs constant folding for comparison operations", {
 })
 
 test_that("compiler performs constant folding for logical operations", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Logical operators should fold
   expect_true(engine$eval(engine$read("(& #t #t)")[[1]]))
@@ -382,7 +382,7 @@ test_that("compiler performs constant folding for logical operations", {
 })
 
 test_that("compiler does NOT fold when arguments have side effects", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- new.env(parent = baseenv())
 
   # Define a function with side effects
@@ -396,7 +396,7 @@ test_that("compiler does NOT fold when arguments have side effects", {
 })
 
 test_that("compiler does NOT fold when operators are not pure", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Non-literal arguments should not fold
   env <- new.env(parent = baseenv())
@@ -411,7 +411,7 @@ test_that("compiler does NOT fold when operators are not pure", {
 })
 
 test_that("compiler performs constant folding for math functions", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Math functions with literal arguments should fold
   expect_equal(engine$eval(engine$read("(abs -5)")[[1]]), 5)
@@ -422,7 +422,7 @@ test_that("compiler performs constant folding for math functions", {
 })
 
 test_that("compiler handles constant folding edge cases", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Division by zero produces Inf (R behavior)
   expect_equal(engine$eval(engine$read("(/ 1 0)")[[1]]), Inf)
@@ -437,7 +437,7 @@ test_that("compiler handles constant folding edge cases", {
 
 # Optimization Tests: Truthiness Optimization
 test_that("compiler optimizes truthiness checks for literal booleans", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Literal TRUE/FALSE should work without .rye_true_p wrapper
   expect_equal(engine$eval(engine$read("(if #t 1 2)")[[1]]), 1)
@@ -446,7 +446,7 @@ test_that("compiler optimizes truthiness checks for literal booleans", {
 })
 
 test_that("compiler optimizes truthiness checks for comparison operators", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Comparison operators return proper R logicals - no wrapper needed
   expect_equal(engine$eval(engine$read("(if (< 1 2) 1 2)")[[1]]), 1)
@@ -458,7 +458,7 @@ test_that("compiler optimizes truthiness checks for comparison operators", {
 })
 
 test_that("compiler optimizes truthiness checks for logical operators", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Logical operators return proper R logicals - no wrapper needed
   expect_equal(engine$eval(engine$read("(if (& #t #t) 1 2)")[[1]]), 1)
@@ -467,7 +467,7 @@ test_that("compiler optimizes truthiness checks for logical operators", {
 })
 
 test_that("compiler preserves Rye truthiness semantics", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # #f, #nil, and 0 are false in Rye (0 follows R semantics)
   # Strings, empty lists, etc. are truthy
@@ -481,7 +481,7 @@ test_that("compiler preserves Rye truthiness semantics", {
 })
 
 test_that("compiler handles constant-folded boolean tests", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # When constant folding produces a boolean literal, skip wrapper
   expect_equal(engine$eval(engine$read("(if (< 1 2) 1 2)")[[1]]), 1)
@@ -490,7 +490,7 @@ test_that("compiler handles constant-folded boolean tests", {
 
 # Optimization Tests: Dead Code Elimination
 test_that("compiler eliminates dead branches for constant true test", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # When test is literally TRUE, only then-branch should remain
   expect_equal(engine$eval(engine$read("(if #t 42 99)")[[1]]), 42)
@@ -501,7 +501,7 @@ test_that("compiler eliminates dead branches for constant true test", {
 })
 
 test_that("compiler eliminates dead branches for constant false test", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # When test is literally FALSE, only else-branch should remain
   expect_equal(engine$eval(engine$read("(if #f 42 99)")[[1]]), 99)
@@ -511,14 +511,14 @@ test_that("compiler eliminates dead branches for constant false test", {
 })
 
 test_that("compiler eliminates dead branches for null test", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # NULL is falsy in Rye, so else-branch is taken
   expect_equal(engine$eval(engine$read("(if #nil 42 99)")[[1]]), 99)
 })
 
 test_that("compiler handles missing else branch with constant test", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # (if #t a) should become just a
   expect_equal(engine$eval(engine$read("(if #t 42)")[[1]]), 42)
@@ -528,7 +528,7 @@ test_that("compiler handles missing else branch with constant test", {
 })
 
 test_that("dead code elimination preserves side effects in taken branch", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- new.env(parent = baseenv())
   env$x <- 0
 
@@ -545,7 +545,7 @@ test_that("dead code elimination preserves side effects in taken branch", {
 })
 
 test_that("dead code elimination does NOT eliminate for variable tests", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- new.env(parent = baseenv())
   env$x <- TRUE
 
@@ -560,7 +560,7 @@ test_that("dead code elimination does NOT eliminate for variable tests", {
 
 # Optimization Tests: Begin Simplification
 test_that("compiler simplifies single-expression begin blocks", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Single expression should not have block wrapper
   expect_equal(engine$eval(engine$read("(begin 42)")[[1]]), 42)
@@ -568,7 +568,7 @@ test_that("compiler simplifies single-expression begin blocks", {
 })
 
 test_that("compiler preserves multi-expression begin blocks", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- new.env(parent = baseenv())
   env$x <- 0
 
@@ -578,7 +578,7 @@ test_that("compiler preserves multi-expression begin blocks", {
 })
 
 test_that("compiler handles empty begin", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Empty begin should return NULL (invisible)
   result <- engine$eval(engine$read("(begin)")[[1]])
@@ -587,7 +587,7 @@ test_that("compiler handles empty begin", {
 
 # Optimization Tests: Identity Elimination
 test_that("compiler eliminates simple identity lambda", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # ((lambda (x) x) value) should become just value
   expect_equal(engine$eval(engine$read("((lambda (x) x) 42)")[[1]]), 42)
@@ -595,7 +595,7 @@ test_that("compiler eliminates simple identity lambda", {
 })
 
 test_that("compiler eliminates identity lambda selecting first arg", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # ((lambda (a b) a) v1 v2) should become just v1
   expect_equal(engine$eval(engine$read("((lambda (a b) a) 10 20)")[[1]]), 10)
@@ -603,7 +603,7 @@ test_that("compiler eliminates identity lambda selecting first arg", {
 })
 
 test_that("compiler does NOT eliminate non-identity lambdas", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # These are not identity functions - should not be optimized away
   expect_equal(engine$eval(engine$read("((lambda (x) (+ x 1)) 5)")[[1]]), 6)
@@ -611,7 +611,7 @@ test_that("compiler does NOT eliminate non-identity lambdas", {
 })
 
 test_that("identity elimination preserves evaluation order", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- new.env(parent = baseenv())
   env$counter <- 0
   engine$eval_in_env(engine$read("(define inc! (lambda () (set! counter (+ counter 1)) counter))")[[1]], env)

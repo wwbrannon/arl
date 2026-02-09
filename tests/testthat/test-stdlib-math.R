@@ -1,6 +1,6 @@
 # Comprehensive math and numeric helper tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # ============================================================================
 # Numeric Helpers

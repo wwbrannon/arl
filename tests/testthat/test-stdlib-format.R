@@ -1,6 +1,6 @@
 # Comprehensive format-value system tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("format-value handles environments correctly", {
   env <- new.env()

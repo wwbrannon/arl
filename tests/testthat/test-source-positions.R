@@ -2,7 +2,7 @@
 # Verifies that line and column information is preserved through parsing and macro expansion
 
 test_that("parsed expressions have source positions", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   parsed <- engine$read("(+ 1 2)")
 
   # Check that parsed result has some structure
@@ -15,7 +15,7 @@ test_that("parsed expressions have source positions", {
 })
 
 test_that("multiline expressions preserve line numbers", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   code <- "(define foo (lambda (x)
   (+ x 1)
   (* x 2)))"
@@ -28,7 +28,7 @@ test_that("multiline expressions preserve line numbers", {
 })
 
 test_that("nested expressions have positions", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   code <- "(* (+ 1 2) 3)"
 
   parsed <- engine$read(code)
@@ -40,7 +40,7 @@ test_that("nested expressions have positions", {
 })
 
 test_that("quoted expressions preserve positions", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   code <- "'(a b c)"
 
   parsed <- engine$read(code)
@@ -52,7 +52,7 @@ test_that("quoted expressions preserve positions", {
 })
 
 test_that("quasiquoted expressions preserve positions", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   code <- "`(a ~b c)"
 
   parsed <- engine$read(code)
@@ -60,7 +60,7 @@ test_that("quasiquoted expressions preserve positions", {
 })
 
 test_that("macro expansion preserves source info", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Define a simple macro
   engine$eval_text("(defmacro double (x) `(* 2 ,x))")
@@ -75,7 +75,7 @@ test_that("macro expansion preserves source info", {
 })
 
 test_that("error location is reported for syntax errors", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # This should error with location info
   expect_error(
@@ -85,7 +85,7 @@ test_that("error location is reported for syntax errors", {
 })
 
 test_that("error location for runtime errors", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Division by zero returns Inf in R, not an error
   # Let's test with an actual error: undefined function
@@ -96,7 +96,7 @@ test_that("error location for runtime errors", {
 })
 
 test_that("line numbers in multiline function definition", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   code <- "(define multi-line (lambda (a b c)
   (begin
@@ -113,7 +113,7 @@ test_that("line numbers in multiline function definition", {
 })
 
 test_that("positions preserved through multiple forms", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   code <- "(define x 5)\n(define y 10)\n(+ x y)"
   parsed <- engine$read(code)
@@ -130,7 +130,7 @@ test_that("positions preserved through multiple forms", {
 })
 
 test_that("source positions in do blocks", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   code <- "(begin
   (define a 1)
@@ -143,7 +143,7 @@ test_that("source positions in do blocks", {
 })
 
 test_that("positions in nested function calls", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   code <- "(+ (* 2 3) (- 10 5))"
   parsed <- engine$read(code)
@@ -152,7 +152,7 @@ test_that("positions in nested function calls", {
 })
 
 test_that("comment positions don't break parsing", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   code <- "; This is a comment\n(+ 1 2) ; inline comment\n; another comment"
   parsed <- engine$read(code)

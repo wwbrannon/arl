@@ -6,7 +6,7 @@
 # String edge cases moved to test-stdlib-strings.R
 # Math boundary conditions moved to test-stdlib-math.R
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # Helper to create test env with stdlib
 setup_env <- function() {

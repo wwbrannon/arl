@@ -1,6 +1,6 @@
 # Comprehensive error and debug helper tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("error and debug helpers work", {
   env <- new.env()

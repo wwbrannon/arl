@@ -1,4 +1,4 @@
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("suppressWarnings suppresses warnings", {
   env <- stdlib_env(engine)

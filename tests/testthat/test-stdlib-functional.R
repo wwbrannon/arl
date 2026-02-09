@@ -1,6 +1,6 @@
 # Functional programming tests: map, filter, reduce, foldl/foldr, every?, any?, mapcat, remove
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("map applies function to list", {
   env <- new.env()

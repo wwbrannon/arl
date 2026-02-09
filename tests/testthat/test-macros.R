@@ -1,4 +1,4 @@
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("gensym generates unique symbols", {
   s1 <- engine$macro_expander$gensym()

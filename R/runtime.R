@@ -116,6 +116,17 @@ CompiledRuntime <- R6::R6Class(
     install_helpers = function(env) {
       # Fast path: skip if already installed
       if (exists(".rye_helpers_installed", envir = env, inherits = FALSE)) {
+        # .rye_env may point to the wrong environment when helpers were
+        # copied from a module sub-environment during stdlib loading
+        # (e.g. with use_env_cache = FALSE under coverage).
+        if (!identical(get0(".rye_env", envir = env, inherits = FALSE), env)) {
+          if (exists(".rye_env", envir = env, inherits = FALSE) &&
+              bindingIsLocked(".rye_env", env)) {
+            unlockBinding(".rye_env", env)
+          }
+          assign(".rye_env", env, envir = env)
+          lockBinding(".rye_env", env)
+        }
         return(invisible(NULL))
       }
 

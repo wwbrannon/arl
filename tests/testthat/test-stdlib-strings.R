@@ -1,6 +1,6 @@
 # Comprehensive string operation tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("substring extracts string portions", {
   env <- new.env()

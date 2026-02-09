@@ -1,6 +1,6 @@
 # Self-Tail-Call Optimization Tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # ==============================================================================
 # Core correctness tests

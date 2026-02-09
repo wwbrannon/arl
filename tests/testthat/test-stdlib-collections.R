@@ -1,6 +1,6 @@
 # Comprehensive dict and set collection tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # ============================================================================
 # Dict Operations

@@ -1,7 +1,7 @@
 # Core stdlib functions: identity, values, call-with-values, funcall, r/call,
 # delay/force, call/cc
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("stdlib loads successfully", {
   env <- new.env()

@@ -68,6 +68,10 @@ rye_coverage_report <- function(
 
   message(sprintf("Found %d .rye files", length(tracker$all_files)))
 
+  # Set global option so test engines pick up the tracker
+  options(rye.coverage_tracker = tracker)
+  on.exit(options(rye.coverage_tracker = NULL), add = TRUE)
+
   # Run tests (stdlib loads automatically during engine creation)
   run_tests_with_coverage(engine)
 

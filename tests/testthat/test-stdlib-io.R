@@ -1,6 +1,6 @@
 # Comprehensive I/O operation tests: file I/O, directories, parsing, system operations
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # ============================================================================
 # File I/O Operations

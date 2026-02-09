@@ -91,6 +91,11 @@ RyeEngine <- R6::R6Class(
       context$macro_expander <- self$macro_expander
 
       self$compiler <- Compiler$new(context)
+      # Disable constant folding when coverage is active — folding evaluates
+      # via base:: and bypasses Rye function bodies, defeating instrumentation.
+      if (!is.null(coverage_tracker)) {
+        self$compiler$enable_constant_folding <- FALSE
+      }
       context$compiler <- self$compiler
 
       self$compiled_runtime <- CompiledRuntime$new(

@@ -1,4 +1,4 @@
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("tokenizer handles basic tokens", {
   tokens <- engine$tokenize("(+ 1 2)")

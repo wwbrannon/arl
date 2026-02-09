@@ -2,7 +2,7 @@
 # Covers unicode, partial input, numeric edge cases, escape sequences
 
 test_that("unicode characters in symbols", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Should handle unicode in symbols
   result <- engine$eval_text("(define café 42)")
@@ -13,7 +13,7 @@ test_that("unicode characters in symbols", {
 })
 
 test_that("unicode in strings", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   result <- engine$eval_text('"Hello 世界"')
   expect_equal(result, "Hello 世界")
@@ -23,7 +23,7 @@ test_that("unicode in strings", {
 })
 
 test_that("escape sequences in strings", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   result <- engine$eval_text('"Hello\\nWorld"')
   expect_equal(result, "Hello\nWorld")
@@ -39,7 +39,7 @@ test_that("escape sequences in strings", {
 })
 
 test_that("numeric literals - integers", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   result <- engine$eval_text("42")
   expect_equal(result, 42)
@@ -52,7 +52,7 @@ test_that("numeric literals - integers", {
 })
 
 test_that("numeric literals - floats", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   result <- engine$eval_text("3.14")
   expect_equal(result, 3.14)
@@ -65,7 +65,7 @@ test_that("numeric literals - floats", {
 })
 
 test_that("numeric literals - scientific notation", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Basic scientific notation
   result <- engine$eval_text("1e5")
@@ -127,7 +127,7 @@ test_that("numeric literals - scientific notation", {
 })
 
 test_that("scientific notation - more edge cases", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Multiple digit exponents
   result <- engine$eval_text("1e10")
@@ -158,7 +158,7 @@ test_that("scientific notation - more edge cases", {
 })
 
 test_that("scientific notation - invalid formats treated as symbols", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # These should be parsed as symbols, not numbers
 
@@ -181,7 +181,7 @@ test_that("scientific notation - invalid formats treated as symbols", {
 })
 
 test_that("numeric edge cases - very large numbers", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Very large numbers using scientific notation
   result <- engine$eval_text("1e100")
@@ -207,7 +207,7 @@ test_that("numeric edge cases - very large numbers", {
 })
 
 test_that("numeric edge cases - very small numbers", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Very small numbers using scientific notation
   result <- engine$eval_text("1e-100")
@@ -234,7 +234,7 @@ test_that("numeric edge cases - very small numbers", {
 })
 
 test_that("special numeric values", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Inf
   result <- engine$eval_text("(/ 1 0)")
@@ -250,14 +250,14 @@ test_that("special numeric values", {
 })
 
 test_that("empty list", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   result <- engine$eval_text("'()")
   expect_equal(length(result), 0)
 })
 
 test_that("whitespace handling", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Multiple spaces
   result <- engine$eval_text("(+    1    2)")
@@ -273,7 +273,7 @@ test_that("whitespace handling", {
 })
 
 test_that("comment handling", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Line comment
   result <- engine$eval_text("; comment\n(+ 1 2)")
@@ -290,7 +290,7 @@ test_that("comment handling", {
 })
 
 test_that("partial input errors", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Unclosed paren - should error
   expect_error(engine$eval_text("(+ 1 2"))
@@ -303,7 +303,7 @@ test_that("partial input errors", {
 })
 
 test_that("symbols with special characters", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Symbols can have hyphens
   engine$eval_text("(define test-var 42)")
@@ -322,7 +322,7 @@ test_that("symbols with special characters", {
 })
 
 test_that("keywords", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Keywords start with colon and are self-evaluating
   result <- engine$eval_text(":keyword")
@@ -341,7 +341,7 @@ test_that("keywords", {
 })
 
 test_that("dotted pairs / improper lists", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # This may not be supported, but test that it doesn't crash
   expect_error(
@@ -351,7 +351,7 @@ test_that("dotted pairs / improper lists", {
 })
 
 test_that("nested quotes", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   result <- engine$eval_text("''x")
   # Should be (quote (quote x)) - returns a call/quote object
@@ -359,14 +359,14 @@ test_that("nested quotes", {
 })
 
 test_that("empty string", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   result <- engine$eval_text('""')
   expect_equal(result, "")
 })
 
 test_that("string with only whitespace", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   result <- engine$eval_text('"   "')
   expect_equal(result, "   ")
@@ -376,7 +376,7 @@ test_that("string with only whitespace", {
 })
 
 test_that("very long symbol names", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   long_name <- paste(rep("a", 1000), collapse = "")
   code <- sprintf("(define %s 42)", long_name)
@@ -387,7 +387,7 @@ test_that("very long symbol names", {
 })
 
 test_that("very long strings", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   long_string <- paste(rep("a", 10000), collapse = "")
   code <- sprintf('"%s"', long_string)
@@ -396,7 +396,7 @@ test_that("very long strings", {
 })
 
 test_that("deeply nested lists", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Create deeply nested list
   nested <- "'("

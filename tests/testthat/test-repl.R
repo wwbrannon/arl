@@ -1,4 +1,4 @@
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 make_repl_input <- function(lines) {
   i <- 0
@@ -228,7 +228,7 @@ test_that("RyeREPL add_history handles missing addHistory", {
 # Print Value Function ----
 
 test_that("RyeREPL print_value handles NULL", {
-  env <- RyeEngine$new()
+  env <- make_engine()
   repl <- rye:::RyeREPL$new(engine = env)
   result <- capture.output(val <- repl$print_value(NULL))
   expect_length(result, 0)
@@ -236,7 +236,7 @@ test_that("RyeREPL print_value handles NULL", {
 })
 
 test_that("RyeREPL print_value handles calls with str", {
-  env <- RyeEngine$new()
+  env <- make_engine()
   repl <- rye:::RyeREPL$new(engine = env)
   call_obj <- quote(f(a, b))
   output <- capture.output(val <- repl$print_value(call_obj))
@@ -245,7 +245,7 @@ test_that("RyeREPL print_value handles calls with str", {
 })
 
 test_that("RyeREPL print_value handles lists with str", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   repl <- rye:::RyeREPL$new(engine = engine)
   list_obj <- list(a = 1, b = 2)
   output <- capture.output(val <- repl$print_value(list_obj))
@@ -254,7 +254,7 @@ test_that("RyeREPL print_value handles lists with str", {
 })
 
 test_that("RyeREPL print_value handles vectors with print", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   repl <- rye:::RyeREPL$new(engine = engine)
   output <- capture.output(val <- repl$print_value(c(1, 2, 3)))
   expect_true(any(grepl("1.*2.*3", output)))
@@ -444,7 +444,7 @@ test_that("RyeREPL read_form works with multi-line paste (BPM simulation)", {
 
 test_that("RyeREPL BPM enable sequence used when conditions met", {
   # Test that BPM enable sequence would be emitted with correct options
-  engine_test <- RyeEngine$new()
+  engine_test <- make_engine()
 
   withr::local_options(list(
     rye.repl_quiet = TRUE,

@@ -1,6 +1,6 @@
 # Comprehensive binding form tests: let, let*, letrec, destructuring-bind, when-let, if-let
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("let binds variables in parallel", {
   env <- new.env(parent = baseenv())

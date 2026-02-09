@@ -1,6 +1,6 @@
 # Sequence helper tests: take, drop, partition, flatten, member, contains?
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("sequence helpers work", {
   env <- new.env()

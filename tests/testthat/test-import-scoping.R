@@ -3,7 +3,7 @@
 
 test_that("imports are not visible in a different file (two load_file calls)", {
   # Each engine$load_file runs in its own scope; file B must not see file A's imports.
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()
@@ -34,7 +34,7 @@ test_that("imports are not visible in a different file (two load_file calls)", {
 })
 
 test_that("imports are visible in the same file", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()
@@ -52,7 +52,7 @@ test_that("imports are visible in the same file", {
 })
 
 test_that("(load path) runs in caller env - definitions visible", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -72,7 +72,7 @@ test_that("(load path) runs in caller env - definitions visible", {
 })
 
 test_that("(load path) runs in caller env - imports visible to caller", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -92,7 +92,7 @@ test_that("(load path) runs in caller env - imports visible to caller", {
 })
 
 test_that("(run path) runs in child env - definitions not visible in caller", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -112,7 +112,7 @@ test_that("(run path) runs in child env - definitions not visible in caller", {
 
 test_that("(run path) runs in child env - imports not visible in caller", {
   # Use a custom module with a unique export; the engine env already has stdlib (e.g. cadr).
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -140,7 +140,7 @@ test_that("(run path) runs in child env - imports not visible in caller", {
 test_that("global module cache: same module loaded once per engine, shared across files", {
   # Module with side effect (counter); two files each import it and call tick.
   # With global cache, module runs once so counter is shared: file_a returns 1, file_b returns 2.
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()

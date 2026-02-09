@@ -12,7 +12,7 @@ test_that("global engine state is not accessible", {
 })
 
 test_that("RyePromise uses private fields", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Create a promise
   promise <- engine$eval_text('(delay (+ 1 2))')
@@ -33,7 +33,7 @@ test_that("RyePromise uses private fields", {
 })
 
 test_that("RyePromise caching works correctly", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Create a promise with side effect
   engine$eval_text('(define counter 0)')
@@ -53,7 +53,7 @@ test_that("RyePromise caching works correctly", {
 })
 
 test_that("module registry bindings are locked", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Create a test module
   engine$eval_text('(module testmod (export x) (define x 42))')
@@ -79,7 +79,7 @@ test_that("module registry bindings are locked", {
 })
 
 test_that("r/eval without env parameter works correctly", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # r/eval should work without explicit env parameter
   result <- engine$eval_text('
@@ -100,7 +100,7 @@ test_that("r/eval without env parameter works correctly", {
 test_that(".rye_env is documented as internal", {
   # This test documents that .rye_env still exists in lambda bodies
   # but is clearly internal (not part of public API)
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # .rye_env exists in compiled lambda bodies for internal use
   fn <- engine$eval_text('(lambda (x) (r/eval (quote (environment))))')
@@ -130,7 +130,7 @@ test_that("default engine uses closure pattern", {
 })
 
 test_that("module registry entries are truly immutable", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Create a module
   engine$eval_text('(module immutmod (export val) (define val 123))')
@@ -160,7 +160,7 @@ test_that("module registry entries are truly immutable", {
 })
 
 test_that("RyeEnv fields are read-only via active bindings", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Can read fields
   expect_true(is.environment(engine$env$env))
@@ -186,7 +186,7 @@ test_that("RyeEnv fields are read-only via active bindings", {
 })
 
 test_that("RyeEnv internal operations still work with private fields", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Test env stack operations
   test_env <- new.env()

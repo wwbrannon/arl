@@ -1,6 +1,6 @@
 # Looping construct tests: until, loop/recur
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("until macro repeats until test is truthy", {
   env <- new.env(parent = baseenv())

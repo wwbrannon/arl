@@ -1,4 +1,4 @@
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("quote returns unevaluated expression", {
   result <- engine$eval(engine$read("(quote x)")[[1]])

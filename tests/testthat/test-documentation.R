@@ -1,5 +1,5 @@
 test_that("doc! macro attaches docstrings to functions", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
 
   # Import core module for doc! and doc
@@ -17,7 +17,7 @@ test_that("doc! macro attaches docstrings to functions", {
 })
 
 test_that("doc returns NULL for undocumented functions", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
 
   engine$eval_in_env(engine$read('(import core)')[[1]], env)
@@ -28,7 +28,7 @@ test_that("doc returns NULL for undocumented functions", {
 })
 
 test_that("doc! works with direct assignment functions", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
 
   engine$eval_in_env(engine$read('(import core)')[[1]], env)
@@ -42,7 +42,7 @@ test_that("doc! works with direct assignment functions", {
 })
 
 test_that("doc! updates existing docstrings", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
 
   engine$eval_in_env(engine$read('(import core)')[[1]], env)
@@ -60,7 +60,7 @@ test_that("doc! updates existing docstrings", {
 })
 
 test_that("lambda docstrings are preserved (existing behavior)", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
 
   # Lambda with docstring as first expression
@@ -74,7 +74,7 @@ test_that("lambda docstrings are preserved (existing behavior)", {
 })
 
 test_that("optimized math functions have docstrings", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
 
   engine$eval_in_env(engine$read('(import math)')[[1]], env)
@@ -92,7 +92,7 @@ test_that("optimized math functions have docstrings", {
 })
 
 test_that("optimized predicate functions have docstrings", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
 
   engine$eval_in_env(engine$read('(import types)')[[1]], env)
@@ -106,7 +106,7 @@ test_that("optimized predicate functions have docstrings", {
 })
 
 test_that("optimized string functions have docstrings", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
 
   engine$eval_in_env(engine$read('(import strings)')[[1]], env)

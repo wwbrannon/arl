@@ -1,6 +1,6 @@
 # Comprehensive control flow tests: when, unless, cond, case, and, or, not, xor, try*
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # ============================================================================
 # NEW: Comprehensive control flow macro tests

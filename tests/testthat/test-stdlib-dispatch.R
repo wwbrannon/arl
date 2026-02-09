@@ -1,6 +1,6 @@
 # Comprehensive generic method dispatch tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("equal? dispatches on class of first argument", {
   env <- new.env()
@@ -43,7 +43,7 @@ test_that("equal? dispatches on class of first argument", {
 
 test_that("set-method! registers and overwrites methods", {
   # Fresh engine so equal? and set-method! share one env (no prior test env / copy)
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   env <- stdlib_env(eng)
 
   # Register a method and use it

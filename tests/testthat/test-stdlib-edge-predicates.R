@@ -1,6 +1,6 @@
 # Edge case tests for type predicates
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # Helper to create test env with stdlib
 setup_env <- function() {

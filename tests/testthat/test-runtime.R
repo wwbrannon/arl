@@ -2,7 +2,7 @@
 
 # Helper installation tests
 test_that("install_helpers() creates all required helpers", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
@@ -21,7 +21,7 @@ test_that("install_helpers() creates all required helpers", {
 })
 
 test_that("install_helpers() locks all bindings", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
@@ -34,7 +34,7 @@ test_that("install_helpers() locks all bindings", {
 })
 
 test_that("install_helpers() skips already locked bindings", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
 
   # Pre-lock a binding
@@ -49,7 +49,7 @@ test_that("install_helpers() skips already locked bindings", {
 })
 
 test_that("install_helpers() sets rye_doc attributes", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
@@ -61,7 +61,7 @@ test_that("install_helpers() sets rye_doc attributes", {
 })
 
 test_that(".rye_true_p helper handles truthiness correctly", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
@@ -82,7 +82,7 @@ test_that(".rye_true_p helper handles truthiness correctly", {
 })
 
 test_that(".rye_env helper points to current environment", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
@@ -90,7 +90,7 @@ test_that(".rye_env helper points to current environment", {
 })
 
 test_that(".rye_quote helper wraps base::quote", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
@@ -99,7 +99,7 @@ test_that(".rye_quote helper wraps base::quote", {
 
 # Module compilation tests
 test_that("module_compiled() creates and registers module", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   eng$compiled_runtime$module_compiled(
     "test-mod",
     c("foo"),
@@ -115,7 +115,7 @@ test_that("module_compiled() creates and registers module", {
 })
 
 test_that("module_compiled() evaluates body expressions", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   eng$compiled_runtime$module_compiled(
     "test-mod",
     c("foo", "bar"),
@@ -131,7 +131,7 @@ test_that("module_compiled() evaluates body expressions", {
 })
 
 test_that("module_compiled() handles export_all flag", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   eng$compiled_runtime$module_compiled(
     "test-mod",
     character(0),
@@ -151,7 +151,7 @@ test_that("module_compiled() handles export_all flag", {
 })
 
 test_that("module_compiled() marks module environment", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   eng$compiled_runtime$module_compiled(
     "test-mod",
     c("foo"),
@@ -167,7 +167,7 @@ test_that("module_compiled() marks module environment", {
 })
 
 test_that("module_compiled() creates path alias when src_file provided", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   tmp_file <- tempfile(fileext = ".rye")
   writeLines("(module test (export foo) (define foo 42))", tmp_file)
   on.exit(unlink(tmp_file))
@@ -188,7 +188,7 @@ test_that("module_compiled() creates path alias when src_file provided", {
 })
 
 test_that("module_compiled() installs helpers in module environment", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   eng$compiled_runtime$module_compiled(
     "test-mod",
     c("foo"),
@@ -208,7 +208,7 @@ test_that("module_compiled() installs helpers in module environment", {
 
 # Import handling tests
 test_that("import_compiled() by module name loads stdlib module", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env(parent = eng$env$raw())
 
   # Import a simple stdlib module (math is one of the core modules)
@@ -222,7 +222,7 @@ test_that("import_compiled() by module name loads stdlib module", {
 })
 
 test_that("import_compiled() by module name as symbol", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env(parent = eng$env$raw())
 
   # Import using a symbol (which is how compiled code calls it)
@@ -235,7 +235,7 @@ test_that("import_compiled() by module name as symbol", {
 })
 
 test_that("import_compiled() errors on missing module", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env(parent = eng$env$raw())
 
   expect_error(
@@ -245,7 +245,7 @@ test_that("import_compiled() errors on missing module", {
 })
 
 test_that("import_compiled() loads module only once", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env1 <- new.env(parent = eng$env$raw())
   test_env2 <- new.env(parent = eng$env$raw())
 
@@ -262,7 +262,7 @@ test_that("import_compiled() loads module only once", {
 })
 
 test_that("import_compiled() by path loads and attaches exports", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   # Create a temporary .rye file with a simple module
   tmp_file <- tempfile(fileext = ".rye")
@@ -283,7 +283,7 @@ test_that("import_compiled() by path loads and attaches exports", {
 })
 
 test_that("import_compiled() attaches exports to target environment", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env(parent = eng$env$raw())
 
   # Before import, the environment should be empty
@@ -309,7 +309,7 @@ test_that("import_compiled() attaches exports to target environment", {
 
 # Package access tests
 test_that("pkg_access_compiled() with :: gets exported value", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   result <- eng$compiled_runtime$pkg_access_compiled("::", "base", "identity", eng$env$raw())
 
@@ -317,7 +317,7 @@ test_that("pkg_access_compiled() with :: gets exported value", {
 })
 
 test_that("pkg_access_compiled() with ::: gets internal value", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   # Get an internal function from base (example: .deparseOpts)
   result <- eng$compiled_runtime$pkg_access_compiled(":::", "base", ".deparseOpts", eng$env$raw())
@@ -326,7 +326,7 @@ test_that("pkg_access_compiled() with ::: gets internal value", {
 })
 
 test_that("pkg_access_compiled() errors on invalid operator", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   expect_error(
     eng$compiled_runtime$pkg_access_compiled(":::", "base", "identity", eng$env$raw()),
@@ -340,7 +340,7 @@ test_that("pkg_access_compiled() errors on invalid operator", {
 })
 
 test_that("pkg_access_compiled() requires string arguments", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   expect_error(
     eng$compiled_runtime$pkg_access_compiled("::", 123, "identity", eng$env$raw()),
@@ -355,7 +355,7 @@ test_that("pkg_access_compiled() requires string arguments", {
 
 # Quasiquote tests
 test_that("quasiquote_compiled() returns simple values unchanged", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   expect_equal(eng$compiled_runtime$quasiquote_compiled(42, eng$env$raw()), 42)
   expect_equal(eng$compiled_runtime$quasiquote_compiled("test", eng$env$raw()), "test")
@@ -363,7 +363,7 @@ test_that("quasiquote_compiled() returns simple values unchanged", {
 })
 
 test_that("quasiquote_compiled() handles unquote", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   env <- eng$env$raw()
   env$x <- 42
 
@@ -376,7 +376,7 @@ test_that("quasiquote_compiled() handles unquote", {
 })
 
 test_that("quasiquote_compiled() handles unquote-splicing", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   env <- eng$env$raw()
   env$lst <- list(1, 2, 3)
 
@@ -395,7 +395,7 @@ test_that("quasiquote_compiled() handles unquote-splicing", {
 })
 
 test_that("quasiquote_compiled() handles nested quasiquote", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   expr <- as.call(list(
     as.symbol("quasiquote"),
@@ -409,7 +409,7 @@ test_that("quasiquote_compiled() handles nested quasiquote", {
 })
 
 test_that("quasiquote_compiled() errors on misplaced unquote-splicing", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   # unquote-splicing not in list context should error
   expr <- as.call(list(as.symbol("unquote-splicing"), as.symbol("x")))
@@ -421,7 +421,7 @@ test_that("quasiquote_compiled() errors on misplaced unquote-splicing", {
 })
 
 test_that("quasiquote_compiled() requires exactly one argument", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   # quasiquote with wrong number of args
   expr <- as.call(list(as.symbol("quasiquote")))
@@ -432,7 +432,7 @@ test_that("quasiquote_compiled() requires exactly one argument", {
 })
 
 test_that("quasiquote_compiled() preserves quoted expressions", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   expr <- quote(quote(foo))
   result <- eng$compiled_runtime$quasiquote_compiled(expr, eng$env$raw())
@@ -443,7 +443,7 @@ test_that("quasiquote_compiled() preserves quoted expressions", {
 
 # Macro definition tests
 test_that("defmacro_compiled() creates macro in macro registry", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- eng$env$raw()
 
   eng$compiled_runtime$defmacro_compiled(
@@ -459,7 +459,7 @@ test_that("defmacro_compiled() creates macro in macro registry", {
 })
 
 test_that("defmacro_compiled() handles begin body", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- eng$env$raw()
 
   body <- as.call(list(as.symbol("begin"), quote(x), quote(y)))
@@ -477,7 +477,7 @@ test_that("defmacro_compiled() handles begin body", {
 })
 
 test_that("defmacro_compiled() handles non-begin body", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- eng$env$raw()
 
   eng$compiled_runtime$defmacro_compiled(
@@ -493,7 +493,7 @@ test_that("defmacro_compiled() handles non-begin body", {
 })
 
 test_that("defmacro_compiled() preserves docstring", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- eng$env$raw()
 
   eng$compiled_runtime$defmacro_compiled(
@@ -514,7 +514,7 @@ test_that("defmacro_compiled() preserves docstring", {
 
 # Promise/delay tests
 test_that("promise_new_compiled() creates RyePromise", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
 
   promise <- eng$compiled_runtime$promise_new_compiled(quote(1 + 1), eng$env$raw())
 
@@ -522,7 +522,7 @@ test_that("promise_new_compiled() creates RyePromise", {
 })
 
 test_that("promise_new_compiled() delays evaluation", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   env <- eng$env$raw()
   env$side_effect <- 0
 
@@ -536,7 +536,7 @@ test_that("promise_new_compiled() delays evaluation", {
 })
 
 test_that("promise_new_compiled() evaluates when forced", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   env <- eng$env$raw()
   env$x <- 42
 
@@ -547,7 +547,7 @@ test_that("promise_new_compiled() evaluates when forced", {
 })
 
 test_that("promise_new_compiled() caches result", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   env <- eng$env$raw()
   env$counter <- 0
 
@@ -567,7 +567,7 @@ test_that("promise_new_compiled() caches result", {
 
 # eval_compiled tests
 test_that("eval_compiled() evaluates compiled expressions", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
 
   result <- eng$compiled_runtime$eval_compiled(quote(1 + 1), test_env)
@@ -576,7 +576,7 @@ test_that("eval_compiled() evaluates compiled expressions", {
 })
 
 test_that("eval_compiled() installs helpers", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
 
   eng$compiled_runtime$eval_compiled(quote(NULL), test_env)
@@ -586,7 +586,7 @@ test_that("eval_compiled() installs helpers", {
 })
 
 test_that("eval_compiled() handles visibility", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
 
   # Visible result
@@ -599,7 +599,7 @@ test_that("eval_compiled() handles visibility", {
 })
 
 test_that("eval_compiled() manages environment stack", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
 
   # Stack should be empty initially
@@ -614,7 +614,7 @@ test_that("eval_compiled() manages environment stack", {
 
 # subscript_call_compiled tests
 test_that("subscript_call_compiled() handles $ operator", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
   obj <- list(foo = 42)
 
@@ -624,7 +624,7 @@ test_that("subscript_call_compiled() handles $ operator", {
 })
 
 test_that("subscript_call_compiled() handles [ operator", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
   vec <- c(1, 2, 3)
 
@@ -634,7 +634,7 @@ test_that("subscript_call_compiled() handles [ operator", {
 })
 
 test_that("subscript_call_compiled() handles [[ operator", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
   lst <- list(a = 10, b = 20)
 
@@ -644,7 +644,7 @@ test_that("subscript_call_compiled() handles [[ operator", {
 })
 
 test_that("subscript_call_compiled() requires valid operator name", {
-  eng <- RyeEngine$new()
+  eng <- make_engine()
   test_env <- new.env()
 
   expect_error(

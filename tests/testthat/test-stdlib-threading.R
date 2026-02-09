@@ -1,6 +1,6 @@
 # Comprehensive threading macro tests: -> (thread-first) and ->> (thread-last)
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("-> threads value as first argument", {
   env <- new.env(parent = baseenv())

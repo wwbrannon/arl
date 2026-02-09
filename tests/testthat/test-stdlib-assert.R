@@ -1,6 +1,6 @@
 # Comprehensive assertion function tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("assert passes on true condition", {
   env <- new.env(parent = baseenv())

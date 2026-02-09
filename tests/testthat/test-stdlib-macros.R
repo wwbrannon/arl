@@ -1,6 +1,6 @@
 # Comprehensive macro expansion and introspection tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("macroexpand-1 expands macros one level", {
   env <- new.env()

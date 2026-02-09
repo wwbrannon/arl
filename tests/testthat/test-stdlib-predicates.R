@@ -1,6 +1,6 @@
 # Type predicates and boolean tests from types.rye, math.rye, logic.rye
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("predicates work correctly", {
   env <- new.env()

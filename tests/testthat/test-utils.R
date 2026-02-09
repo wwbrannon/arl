@@ -1,5 +1,5 @@
 test_that("rye_do_call quotes symbols except for accessors", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   a <- 10
   result <- engine$compiled_runtime$do_call(base::list, list(as.symbol("a")))
   expect_true(is.symbol(result[[1]]))

@@ -2,7 +2,7 @@
 # Covers circular imports, module caching, error cleanup
 
 test_that("import non-existent module fails gracefully", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   expect_error(
     engine$eval_text('(import "non_existent_module_12345")'),
@@ -11,7 +11,7 @@ test_that("import non-existent module fails gracefully", {
 })
 
 test_that("import with invalid path", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   expect_error(
     engine$eval_text('(import "/invalid/path/to/module")'),
@@ -20,7 +20,7 @@ test_that("import with invalid path", {
 })
 
 test_that("same file imported with different path strings uses one module (absolute path alias)", {
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- engine$env$env
 
   tmp_dir <- tempfile()
@@ -60,7 +60,7 @@ test_that("module is cached after first load", {
   module_path <- file.path(temp_dir, "test_cache_module.rye")
   writeLines('(define cached-var 42)', module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- stdlib_env(engine)
 
   # First load
@@ -89,7 +89,7 @@ test_that("load returns last value from module", {
     '(+ x y)'
   ), module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   result <- engine$eval_text(sprintf('(load "%s")', module_path))
 
   # Should return 30 (the last expression)
@@ -108,7 +108,7 @@ test_that("load with syntax error in module", {
     '(+ x 5)'
   ), module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   expect_error(
     engine$eval_text(sprintf('(load "%s")', module_path)),
@@ -128,7 +128,7 @@ test_that("load with runtime error in module", {
     '(/ x 0)'  # Division by zero
   ), module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # In R, division by zero returns Inf, not an error
   result <- engine$eval_text(sprintf('(load "%s")', module_path))
@@ -144,7 +144,7 @@ test_that("multiple loads of same module", {
   module_path <- file.path(temp_dir, "test_multiple_load.rye")
   writeLines('(define multi-load-var 123)', module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Load multiple times
   engine$eval_text(sprintf('(load "%s")', module_path))
@@ -164,7 +164,7 @@ test_that("load can access previously defined symbols", {
   module_path <- file.path(temp_dir, "test_access_symbols.rye")
   writeLines('(+ existing-x 10)', module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- stdlib_env(engine)
 
   # Define a symbol first
@@ -192,7 +192,7 @@ test_that("nested module loads", {
     '(define a-var (+ b-var 10))'
   ), module_a_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- stdlib_env(engine)
 
   # Load module A (which loads B)
@@ -223,7 +223,7 @@ test_that("circular module dependency detection", {
   writeLines(sprintf('(load "%s")', module_b_path), module_a_path)
   writeLines(sprintf('(load "%s")', module_a_path), module_b_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- stdlib_env(engine)
 
   # Circular dependencies should error (recursion limit or C stack limit on older R)
@@ -246,7 +246,7 @@ test_that("load with relative path", {
   module_path <- "test_relative.rye"
   writeLines('(define relative-var 777)', module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- stdlib_env(engine)
 
   result <- engine$eval_text(sprintf('(load "%s")', module_path))
@@ -263,7 +263,7 @@ test_that("load empty module", {
   module_path <- file.path(temp_dir, "test_empty.rye")
   writeLines('', module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Loading empty module should succeed and return NULL or similar
   result <- engine$eval_text(sprintf('(load "%s")', module_path))
@@ -283,7 +283,7 @@ test_that("load module with only comments", {
     '; ; More comments'
   ), module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
 
   # Should succeed
   result <- engine$eval_text(sprintf('(load "%s")', module_path))
@@ -300,7 +300,7 @@ test_that("module defines macro", {
     '(defmacro triple (x) `(* 3 ,x))'
   ), module_path)
 
-  engine <- RyeEngine$new()
+  engine <- make_engine()
   env <- stdlib_env(engine)
 
   # Load module with macro

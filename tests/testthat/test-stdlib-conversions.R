@@ -1,6 +1,6 @@
 # Comprehensive type conversion tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 # Type conversion tests
 test_that("->symbol converts to symbols", {

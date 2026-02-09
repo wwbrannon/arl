@@ -1,6 +1,6 @@
 # Comprehensive struct definition tests
 
-engine <- RyeEngine$new()
+engine <- make_engine()
 
 test_that("defstruct macro defines constructor and accessors", {
   env <- new.env(parent = baseenv())
