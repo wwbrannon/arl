@@ -162,21 +162,34 @@ ModuleRegistry <- R6::R6Class(
       }
       exports <- entry$exports
       module_env <- entry$env
-      target_rye <- RyeEnv$new(target_env)
-      target_macro_registry <- target_rye$macro_registry_env(create = TRUE)
+
+      # Inline macro registry lookup to avoid RyeEnv$new() allocation
+      target_macro_registry <- get0(".rye_macros", envir = target_env, inherits = TRUE)
+      if (is.null(target_macro_registry)) {
+        target_macro_registry <- new.env(parent = emptyenv())
+        base::assign(".rye_macros", target_macro_registry, envir = target_env)
+        lockBinding(".rye_macros", target_env)
+      }
       module_macro_registry <- self$rye_env$macro_registry_env(module_env, create = FALSE)
 
+      # Partition into regular vs macro-only exports
+      regular <- character(0)
       for (export_name in exports) {
-        if (!exists(export_name, envir = module_env, inherits = FALSE)) {
-          if (!is.null(module_macro_registry) && exists(export_name, envir = module_macro_registry, inherits = FALSE)) {
-            macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
-            assign(export_name, macro_fn, envir = target_macro_registry)
-            lockBinding(export_name, target_macro_registry)
-            next
-          }
+        if (exists(export_name, envir = module_env, inherits = FALSE)) {
+          regular <- c(regular, export_name)
+        } else if (!is.null(module_macro_registry) &&
+                   exists(export_name, envir = module_macro_registry, inherits = FALSE)) {
+          macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
+          base::assign(export_name, macro_fn, envir = target_macro_registry)
+          lockBinding(export_name, target_macro_registry)
+        } else {
           stop(sprintf("module '%s' does not export '%s'", name, export_name))
         }
-        assign(export_name, get(export_name, envir = module_env, inherits = FALSE), envir = target_env)
+      }
+
+      # Bulk copy regular exports
+      if (length(regular) > 0L) {
+        list2env(mget(regular, envir = module_env, inherits = FALSE), envir = target_env)
       }
       invisible(NULL)
     }

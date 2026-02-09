@@ -383,8 +383,9 @@ RyeEngine <- R6::R6Class(
         stop("load requires a single file path string")
       }
       resolved <- private$resolve_env_arg(env)
+      module_registry <- self$env$module_registry
       if (!grepl("[/\\\\]", path)) {
-        if (RyeEnv$new(resolved)$module_registry$exists(path)) {
+        if (module_registry$exists(path)) {
           return(invisible(NULL))
         }
         stdlib_path <- rye_resolve_stdlib_path(path)
@@ -412,12 +413,11 @@ RyeEngine <- R6::R6Class(
               module_name <- cache_data$module_name
               exports <- cache_data$exports
 
-              rye_env <- RyeEnv$new(target_env)
-              rye_env$module_registry$register(module_name, module_env, exports)
+              module_registry$register(module_name, module_env, exports)
 
               # Also register by absolute path
               absolute_path <- rye_normalize_path_absolute(path)
-              rye_env$module_registry$alias(absolute_path, module_name)
+              module_registry$alias(absolute_path, module_name)
 
               return(invisible(NULL))
             }
@@ -436,12 +436,11 @@ RyeEngine <- R6::R6Class(
               assign(".rye_module", TRUE, envir = module_env)
               lockBinding(".rye_module", module_env)
 
-              rye_env <- RyeEnv$new(target_env)
-              rye_env$module_registry$register(module_name, module_env, exports)
+              module_registry$register(module_name, module_env, exports)
 
               # Register by absolute path
               absolute_path <- rye_normalize_path_absolute(path)
-              rye_env$module_registry$alias(absolute_path, module_name)
+              module_registry$alias(absolute_path, module_name)
 
               # Install helpers and setup
               self$compiled_runtime$install_helpers(module_env)
@@ -455,7 +454,7 @@ RyeEngine <- R6::R6Class(
               # Handle export_all
               if (export_all) {
                 exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
-                rye_env$module_registry$update_exports(module_name, exports)
+                module_registry$update_exports(module_name, exports)
               }
 
               return(invisible(result))
@@ -613,13 +612,18 @@ RyeEngine <- R6::R6Class(
       if (length(exprs) == 0) {
         return(invisible(NULL))
       }
+      # Cache R6 method references to avoid repeated self$foo lookups in loop
+      compiler <- self$compiler
+      source_tracker <- self$source_tracker
+      compiled_runtime <- self$compiled_runtime
+      strict <- isTRUE(compiled_only)
       result <- NULL
       result_visible <- FALSE
       for (expr in exprs) {
         expanded <- self$macroexpand_in_env(expr, target_env, preserve_src = TRUE)
-        compiled <- self$compiler$compile(expanded, target_env, strict = isTRUE(compiled_only))
+        compiled <- compiler$compile(expanded, target_env, strict = strict)
         if (is.null(compiled)) {
-          msg <- self$compiler$last_error
+          msg <- compiler$last_error
           if (is.null(msg) || !nzchar(msg)) {
             msg <- "Expression sequence could not be compiled"
           } else {
@@ -627,18 +631,18 @@ RyeEngine <- R6::R6Class(
           }
           stop(msg, call. = FALSE)
         }
-        src <- self$source_tracker$src_get(expr)
+        src <- source_tracker$src_get(expr)
         if (!is.null(src)) {
-          self$source_tracker$push(src)
+          source_tracker$push(src)
         }
-        result_with_vis <- withVisible(self$compiled_runtime$eval_compiled(compiled, target_env))
+        result_with_vis <- withVisible(compiled_runtime$eval_compiled(compiled, target_env))
         if (!is.null(src)) {
-          self$source_tracker$pop()
+          source_tracker$pop()
         }
         result <- result_with_vis$value
         result_visible <- isTRUE(result_with_vis$visible)
       }
-      result <- self$source_tracker$strip_src(result)
+      result <- source_tracker$strip_src(result)
       if (isTRUE(result_visible)) {
         return(result)
       }

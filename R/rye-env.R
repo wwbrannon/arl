@@ -15,7 +15,8 @@ RyeEnv <- R6::R6Class(
     .env = NULL,
     .macro_registry = NULL,
     .module_registry = NULL,
-    .env_stack = NULL
+    .env_stack = NULL,       # environment used as hash map for O(1) push/pop
+    .env_stack_top = 0L      # integer counter
   ),
   active = list(
     # Read-only access to internal environment
@@ -33,10 +34,13 @@ RyeEnv <- R6::R6Class(
       if (!missing(value)) stop("Cannot reassign module_registry field")
       private$.module_registry
     },
-    # Read-only access to env stack
+    # Read-only access to env stack (returns list for backward compatibility)
     env_stack = function(value) {
       if (!missing(value)) stop("Cannot reassign env_stack field")
-      private$.env_stack
+      top <- private$.env_stack_top
+      if (top == 0L) return(list())
+      keys <- as.character(seq_len(top))
+      mget(keys, envir = private$.env_stack)
     }
   ),
   public = list(
@@ -59,28 +63,32 @@ RyeEnv <- R6::R6Class(
       private$.env <- env
       private$.macro_registry <- self$macro_registry_env(env, create = TRUE)
       private$.module_registry <- ModuleRegistry$new(self)
-      private$.env_stack <- list()
+      private$.env_stack <- new.env(parent = emptyenv())
+      private$.env_stack_top <- 0L
     },
     # @description Push an environment onto the env stack (e.g. current eval env).
     # @param env Environment to push.
     push_env = function(env) {
-      private$.env_stack <- c(private$.env_stack, list(env))
+      top <- private$.env_stack_top + 1L
+      private$.env_stack_top <- top
+      private$.env_stack[[as.character(top)]] <- env
       invisible(NULL)
     },
     # @description Pop the most recently pushed environment from the stack.
     pop_env = function() {
-      n <- length(private$.env_stack)
-      if (n > 0) {
-        private$.env_stack <- private$.env_stack[-n]
+      top <- private$.env_stack_top
+      if (top > 0L) {
+        rm(list = as.character(top), envir = private$.env_stack)
+        private$.env_stack_top <- top - 1L
       }
       invisible(NULL)
     },
     # @description Return the top of the env stack, or globalenv() if stack is empty.
     # @return Environment.
     current_env = function() {
-      n <- length(private$.env_stack)
-      if (n > 0) {
-        return(private$.env_stack[[n]])
+      top <- private$.env_stack_top
+      if (top > 0L) {
+        return(private$.env_stack[[as.character(top)]])
       }
       globalenv()
     },

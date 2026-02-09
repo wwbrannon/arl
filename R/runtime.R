@@ -23,6 +23,25 @@ rye_missing_default <- function() {
   if (is.character(pattern) && length(pattern) == 1L) {
     pattern <- as.symbol(pattern)
   }
+  # Fast path: inline simple symbol case to avoid RyeEnv$new() allocation
+  if (is.symbol(pattern)) {
+    name <- as.character(pattern)
+    if (identical(mode, "define")) {
+      base::assign(name, value, envir = env)
+    } else {
+      # set! — walk parent chain (replicates RyeEnv$find_existing_env)
+      if (!exists(name, envir = env, inherits = TRUE)) {
+        stop(sprintf("set!: variable '%s' is not defined", name), call. = FALSE)
+      }
+      target <- env
+      while (!exists(name, envir = target, inherits = FALSE)) {
+        target <- parent.env(target)
+      }
+      base::assign(name, value, envir = target)
+    }
+    return(invisible(NULL))
+  }
+  # Slow path: destructuring (cons cells, lists, calls) — need full RyeEnv
   RyeEnv$new(env)$assign_pattern(pattern, value, mode = mode, context = if (identical(mode, "define")) "define" else "set!")
 }
 
@@ -193,14 +212,18 @@ CompiledRuntime <- R6::R6Class(
       if (!is.environment(env)) {
         stop("eval_compiled requires an environment")
       }
-      self$context$env$push_env(env)
-      on.exit(self$context$env$pop_env(), add = TRUE)
+      # Cache context chain to avoid repeated R6 field lookups
+      ctx <- self$context
+      rye_env <- ctx$env
+      rye_env$push_env(env)
+      on.exit(rye_env$pop_env(), add = TRUE)
       self$install_helpers(env)
 
       # Track coverage if enabled
-      coverage_tracker <- self$context$coverage_tracker
+      coverage_tracker <- ctx$coverage_tracker
       if (!is.null(coverage_tracker) && coverage_tracker$enabled) {
-        rye_src <- self$context$source_tracker$src_get(compiled_expr)
+        source_tracker <- ctx$source_tracker
+        rye_src <- source_tracker$src_get(compiled_expr)
         if (!is.null(rye_src)) {
           coverage_tracker$track(rye_src)
         }
@@ -394,10 +417,13 @@ CompiledRuntime <- R6::R6Class(
       if (!is.list(exprs)) {
         exprs <- list(exprs)
       }
+      # Cache R6 method references to avoid repeated context lookups in loop
+      macro_expander <- self$context$macro_expander
+      compiler <- self$context$compiler
       result <- NULL
       for (expr in exprs) {
-        expanded <- self$context$macro_expander$macroexpand(expr, env = env, preserve_src = TRUE)
-        compiled <- self$context$compiler$compile(expanded, env, strict = TRUE)
+        expanded <- macro_expander$macroexpand(expr, env = env, preserve_src = TRUE)
+        compiled <- compiler$compile(expanded, env, strict = TRUE)
         result <- self$eval_compiled(compiled, env)
       }
       result
