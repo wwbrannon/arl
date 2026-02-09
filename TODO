@@ -1,32 +1,9 @@
-audits / comprehensive sanity checks:
--------------------------------------------------
-o) have opus audit the tests again:
-```
-Take a look at the tests in tests/, including the native ones in tests/native/.
-Keep in mind that the language being tested is supposed to be a lisp, generally
-scheme-like, but implemented on top of R. So that makes for a few peculiarities
--- R's type system, no tail call optimization, the r/call and r/eval apparatus,
-etc.
+o) self-TCO?
+Does NOT handle (v1 limitations):
+- Mutual recursion, let/letrec body tail calls (they expand to IIFEs — nested lambdas), rest params (...), destructuring params, keyword args in self-calls
 
-Given that, let's critique these tests. Is there any behavior they implement
-that they clearly shouldn't? Mistaken behavior of the interpreter we have now
-that's been hardcoded into the tests? You're looking for things that clearly
-don't make sense and aren't how an R-based lisp should behave. Use your
-judgment!
-```
-
-o) have opus audit/critique the architecture and make performance-related suggestions:
-```
-Take a look at the architecture of this rye language implementation. We've made
-several improvements to get better performance, especially implementing a
-compiler in lieu of an AST-walking evaluator and adding disk-backed module
-caching. And performance is indeed much better: the examples test suite has
-gone from about 85s runtime to about 7.5s.
-
-But let's think about other ways to improve performance. Low-hanging fruit is
-especially desirable, but we should also think about larger architectural
-choices. Are there other good options to get better time or space performance?
-```
+o) `make coverage` doesn't write the R coverage outputs by file to summary.txt
+o) do we really have 100% coverage for all rye code?
 
 smaller stuff:
 --------------------------------------

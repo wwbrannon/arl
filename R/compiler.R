@@ -381,7 +381,18 @@ Compiler <- R6::R6Class(
       if (is.symbol(name) && identical(as.character(name), self$env_var_name)) {
         return(private$fail("define cannot bind reserved name .rye_env"))
       }
-      val <- private$compile_impl(expr[[3]])
+      # Detect (define name (lambda ...)) for self-tail-call optimization
+      val_expr <- expr[[3]]
+      self_name <- NULL
+      if (is.symbol(name) && is.call(val_expr) && length(val_expr) >= 3 &&
+          is.symbol(val_expr[[1]]) && identical(as.character(val_expr[[1]]), "lambda")) {
+        self_name <- as.character(name)
+      }
+      val <- if (!is.null(self_name)) {
+        private$compile_lambda(val_expr, self_name = self_name)
+      } else {
+        private$compile_impl(expr[[3]])
+      }
       if (is.null(val)) {
         return(private$fail("define value could not be compiled"))
       }
@@ -425,7 +436,7 @@ Compiler <- R6::R6Class(
         "set"
       ))
     },
-    compile_lambda = function(expr) {
+    compile_lambda = function(expr, self_name = NULL) {
       if (length(expr) < 3) {
         return(private$fail("lambda requires at least 2 arguments: (lambda (args...) body...)"))
       }
@@ -450,12 +461,45 @@ Compiler <- R6::R6Class(
       if (length(body_exprs) == 0) {
         body_exprs <- list(private$compiled_nil())
       }
-      # Use early-exit loop with preallocation
-      compiled_body <- vector("list", length(body_exprs))
-      for (i in seq_along(body_exprs)) {
-        compiled_body[[i]] <- private$compile_impl(body_exprs[[i]])
-        if (is.null(compiled_body[[i]])) {
-          return(private$fail("lambda body could not be compiled"))  # Early exit on failure
+      # Check for self-tail-call optimization opportunity
+      use_tco <- FALSE
+      param_names <- NULL
+      if (!is.null(self_name) && !params$has_rest &&
+          length(params$param_bindings) == 0) {
+        param_names <- names(params$formals_list)
+        if (private$has_self_tail_calls(body_exprs, self_name)) {
+          use_tco <- TRUE
+        }
+      }
+      if (use_tco) {
+        # TCO path: compile all but last normally, last via tail-position compiler
+        compiled_body <- vector("list", length(body_exprs))
+        for (i in seq_len(length(body_exprs) - 1L)) {
+          compiled_body[[i]] <- private$compile_impl(body_exprs[[i]])
+          if (is.null(compiled_body[[i]])) {
+            return(private$fail("lambda body could not be compiled"))
+          }
+        }
+        last_compiled <- private$compile_tail_position(
+          body_exprs[[length(body_exprs)]], self_name, param_names
+        )
+        if (is.null(last_compiled)) {
+          return(private$fail("lambda body could not be compiled"))
+        }
+        compiled_body[[length(body_exprs)]] <- last_compiled
+        # Wrap compiled body in while(TRUE) { ... }
+        # Use while(TRUE) instead of repeat because Rye stdlib defines a `repeat` function
+        # that shadows R's repeat keyword in the engine environment.
+        loop_body <- as.call(c(list(quote(`{`)), compiled_body))
+        compiled_body <- list(as.call(list(quote(`while`), TRUE, loop_body)))
+      } else {
+        # Normal path: compile all body expressions
+        compiled_body <- vector("list", length(body_exprs))
+        for (i in seq_along(body_exprs)) {
+          compiled_body[[i]] <- private$compile_impl(body_exprs[[i]])
+          if (is.null(compiled_body[[i]])) {
+            return(private$fail("lambda body could not be compiled"))
+          }
         }
       }
       # Prepend .rye_env <- environment() so closure body sees correct current env
@@ -1362,6 +1406,183 @@ Compiler <- R6::R6Class(
 
       # Return the corresponding argument
       compiled_args[[param_index]]
+    },
+
+    # Self-tail-call optimization: check if body has self-tail-calls (Rye AST level)
+    has_self_tail_calls = function(body_exprs, self_name) {
+      if (length(body_exprs) == 0) return(FALSE)
+      # Only the last body expression is in tail position
+      private$expr_has_self_tail_call(body_exprs[[length(body_exprs)]], self_name)
+    },
+
+    # Recursive walk of tail positions in Rye AST to find self-calls
+    expr_has_self_tail_call = function(expr, self_name) {
+      if (!is.call(expr) || length(expr) == 0) return(FALSE)
+      op <- expr[[1]]
+      if (!is.symbol(op)) return(FALSE)
+      op_name <- as.character(op)
+      # Direct call to self_name in tail position
+      if (identical(op_name, self_name)) return(TRUE)
+      # (if test then else) -> recurse into both branches
+      if (identical(op_name, "if")) {
+        if (length(expr) >= 3 && private$expr_has_self_tail_call(expr[[3]], self_name)) return(TRUE)
+        if (length(expr) >= 4 && private$expr_has_self_tail_call(expr[[4]], self_name)) return(TRUE)
+        return(FALSE)
+      }
+      # (begin e1 ... en) -> recurse into last expression
+      if (identical(op_name, "begin")) {
+        if (length(expr) <= 1) return(FALSE)
+        return(private$expr_has_self_tail_call(expr[[length(expr)]], self_name))
+      }
+      # Don't descend into lambda, quote, quasiquote
+      if (op_name %in% c("lambda", "quote", "quasiquote")) return(FALSE)
+      FALSE
+    },
+
+    # Compile an expression in tail position (for TCO)
+    compile_tail_position = function(expr, self_name, param_names) {
+      if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]])) {
+        op_name <- as.character(expr[[1]])
+        if (identical(op_name, self_name)) {
+          return(private$compile_self_tail_call(expr, param_names))
+        }
+        if (identical(op_name, "if")) {
+          return(private$compile_tail_if(expr, self_name, param_names))
+        }
+        if (identical(op_name, "begin")) {
+          return(private$compile_tail_begin(expr, self_name, param_names))
+        }
+      }
+      # Non-tail-call: compile normally and wrap in return()
+      compiled <- private$compile_impl(expr)
+      if (is.null(compiled)) return(NULL)
+      as.call(list(quote(return), compiled))
+    },
+
+    # Compile a self-tail-call: (name arg1 arg2 ...) -> param reassignment
+    compile_self_tail_call = function(expr, param_names) {
+      # Collect positional args (bail on keyword args or wrong count)
+      n_params <- length(param_names)
+      args <- list()
+      i <- 2L
+      while (i <= length(expr)) {
+        arg_expr <- expr[[i]]
+        if (inherits(arg_expr, "rye_keyword")) {
+          # Keyword args: bail to normal call with return()
+          compiled <- private$compile_impl(expr)
+          if (is.null(compiled)) return(NULL)
+          return(as.call(list(quote(return), compiled)))
+        }
+        args <- c(args, list(arg_expr))
+        i <- i + 1L
+      }
+      if (length(args) != n_params) {
+        # Wrong arg count: bail to normal call with return()
+        compiled <- private$compile_impl(expr)
+        if (is.null(compiled)) return(NULL)
+        return(as.call(list(quote(return), compiled)))
+      }
+      # Compile each arg
+      compiled_args <- vector("list", n_params)
+      for (j in seq_len(n_params)) {
+        compiled_args[[j]] <- private$compile_impl(args[[j]])
+        if (is.null(compiled_args[[j]])) return(NULL)
+      }
+      # Identify which params change (skip if compiled arg is the same symbol as param)
+      changed <- integer(0)
+      for (j in seq_len(n_params)) {
+        ca <- compiled_args[[j]]
+        if (is.symbol(ca) && identical(as.character(ca), param_names[j])) {
+          next  # Unchanged
+        }
+        changed <- c(changed, j)
+      }
+      if (length(changed) == 0L) {
+        # No params change: just continue the loop
+        return(quote(next))
+      }
+      if (length(changed) == 1L) {
+        # Single param change: direct assignment, no temp needed
+        j <- changed[1]
+        return(as.call(list(quote(`<-`), as.symbol(param_names[j]), compiled_args[[j]])))
+      }
+      # Multiple params change: use temps to avoid order-dependent bugs
+      stmts <- vector("list", 2L * length(changed))
+      idx <- 1L
+      for (j in changed) {
+        tmp_name <- paste0(".tco_", param_names[j])
+        stmts[[idx]] <- as.call(list(quote(`<-`), as.symbol(tmp_name), compiled_args[[j]]))
+        idx <- idx + 1L
+      }
+      for (j in changed) {
+        tmp_name <- paste0(".tco_", param_names[j])
+        stmts[[idx]] <- as.call(list(quote(`<-`), as.symbol(param_names[j]), as.symbol(tmp_name)))
+        idx <- idx + 1L
+      }
+      as.call(c(list(quote(`{`)), stmts))
+    },
+
+    # Compile if in tail position: both branches get tail-position treatment
+    compile_tail_if = function(expr, self_name, param_names) {
+      if (length(expr) < 3 || length(expr) > 4) {
+        return(private$fail("if requires 2 or 3 arguments: (if test then [else])"))
+      }
+      test <- private$compile_impl(expr[[2]])
+      if (is.null(test)) {
+        return(private$fail("if test could not be compiled"))
+      }
+      # Dead code elimination: if test is a compile-time constant
+      constant_test <- private$eval_constant_test(test)
+      if (!is.null(constant_test)) {
+        if (isTRUE(constant_test)) {
+          return(private$compile_tail_position(expr[[3]], self_name, param_names))
+        } else {
+          if (length(expr) == 4) {
+            return(private$compile_tail_position(expr[[4]], self_name, param_names))
+          } else {
+            return(as.call(list(quote(return), private$compiled_nil())))
+          }
+        }
+      }
+      then_expr <- private$compile_tail_position(expr[[3]], self_name, param_names)
+      if (is.null(then_expr)) {
+        return(private$fail("if then-branch could not be compiled"))
+      }
+      test_pred <- if (private$returns_r_logical(test)) {
+        test
+      } else {
+        as.call(list(as.symbol(".rye_true_p"), test))
+      }
+      if (length(expr) == 4) {
+        else_expr <- private$compile_tail_position(expr[[4]], self_name, param_names)
+        if (is.null(else_expr)) {
+          return(private$fail("if else-branch could not be compiled"))
+        }
+        as.call(list(quote(`if`), test_pred, then_expr, else_expr))
+      } else {
+        as.call(list(quote(`if`), test_pred, then_expr, as.call(list(quote(return), private$compiled_nil()))))
+      }
+    },
+
+    # Compile begin in tail position: last expression gets tail-position treatment
+    compile_tail_begin = function(expr, self_name, param_names) {
+      if (length(expr) <= 1) {
+        return(as.call(list(quote(return), quote(invisible(NULL)))))
+      }
+      parts <- as.list(expr)[-1]
+      if (length(parts) == 1) {
+        return(private$compile_tail_position(parts[[1]], self_name, param_names))
+      }
+      compiled <- vector("list", length(parts))
+      for (i in seq_len(length(parts) - 1L)) {
+        compiled[[i]] <- private$compile_impl(parts[[i]])
+        if (is.null(compiled[[i]])) return(NULL)
+      }
+      compiled[[length(parts)]] <- private$compile_tail_position(
+        parts[[length(parts)]], self_name, param_names
+      )
+      if (is.null(compiled[[length(parts)]])) return(NULL)
+      as.call(c(list(quote(`{`)), compiled))
     },
 
     # Check if a compiled expression is a "simple value" that doesn't need a temp
