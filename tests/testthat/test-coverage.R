@@ -1440,3 +1440,97 @@ test_that("HTML escaping prevents XSS", {
   expect_false(grepl("<script>alert", html_content))
   expect_false(grepl("<img src=x onerror", html_content))
 })
+
+# ============================================================================
+# Phase 6: Call-time Coverage Tests (function body instrumentation)
+# ============================================================================
+
+test_that("uncalled function body is NOT covered", {
+  tmp <- tempfile(fileext = ".rye")
+  writeLines(c(
+    "(define f",
+    "  (lambda (x)",
+    "    (+ x 1)",
+    "    (* x 2)))"
+  ), tmp)
+  on.exit(unlink(tmp))
+
+  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
+  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker$discover_files()
+
+  # Load file but do NOT call f
+  engine$load_file(tmp)
+
+  summary <- tracker$get_summary()
+
+  # Line 1 should be covered (top-level define is evaluated)
+  expect_true("1" %in% names(summary[[tmp]]))
+
+  # Lines 3 and 4 (lambda body) should NOT be covered since f was never called
+  expect_null(summary[[tmp]][["3"]])
+  expect_null(summary[[tmp]][["4"]])
+})
+
+test_that("called function body IS covered", {
+  tmp <- tempfile(fileext = ".rye")
+  writeLines(c(
+    "(define f",
+    "  (lambda (x)",
+    "    (+ x 1)",
+    "    (* x 2)))",
+    "(f 5)"
+  ), tmp)
+  on.exit(unlink(tmp))
+
+  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
+  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker$discover_files()
+
+  engine$load_file(tmp)
+
+  summary <- tracker$get_summary()
+
+  # Line 1 should be covered (top-level define)
+  expect_true("1" %in% names(summary[[tmp]]))
+
+  # Line 5 should be covered (top-level call)
+  expect_true("5" %in% names(summary[[tmp]]))
+
+  # Lines 3 and 4 (lambda body) should now be covered since f was called
+  expect_true(!is.null(summary[[tmp]][["3"]]))
+  expect_true(!is.null(summary[[tmp]][["4"]]))
+})
+
+test_that("module loading does not mark entire file as covered", {
+  tmp <- tempfile(fileext = ".rye")
+  writeLines(c(
+    "(module test-cov-mod (export f g)",
+    "  (define f",
+    "    (lambda (x)",
+    "      (+ x 1)))",
+    "  (define g",
+    "    (lambda (x)",
+    "      (* x 2)))",
+    "  (define h",
+    "    (lambda (x)",
+    "      (- x 1))))"
+  ), tmp)
+  on.exit(unlink(tmp))
+
+  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
+  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker$discover_files()
+
+  # Load the module - defines f, g, h but doesn't call them
+  engine$load_file(tmp)
+
+  summary <- tracker$get_summary()
+
+  # Module line and define lines should be partially covered
+  # but function body lines (4, 7, 10) should NOT be covered
+  # since none of f, g, h were actually called
+  expect_null(summary[[tmp]][["4"]])
+  expect_null(summary[[tmp]][["7"]])
+  expect_null(summary[[tmp]][["10"]])
+})

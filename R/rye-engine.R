@@ -398,7 +398,10 @@ RyeEngine <- R6::R6Class(
       }
 
       # Try cache loading (only for module files, not create_scope loads)
-      if (!create_scope) {
+      # Skip cache when coverage is enabled — cached expressions lack source info for instrumentation
+      coverage_active <- !is.null(self$compiled_runtime$context$coverage_tracker) &&
+                         self$compiled_runtime$context$coverage_tracker$enabled
+      if (!create_scope && !coverage_active) {
         cache_paths <- self$module_cache$get_paths(path)
         if (!is.null(cache_paths)) {
           target_env <- resolved
@@ -618,10 +621,22 @@ RyeEngine <- R6::R6Class(
       compiler <- self$compiler
       source_tracker <- self$source_tracker
       compiled_runtime <- self$compiled_runtime
+      coverage_tracker <- compiled_runtime$context$coverage_tracker
       strict <- isTRUE(compiled_only)
       result <- NULL
       result_visible <- FALSE
       for (expr in exprs) {
+        # Track top-level expression start line only (don't paint body ranges)
+        if (!is.null(coverage_tracker) && coverage_tracker$enabled) {
+          src_cov <- source_tracker$src_get(expr)
+          if (!is.null(src_cov) && !is.null(src_cov$file) && !is.null(src_cov$start_line)) {
+            coverage_tracker$track(list(
+              file = src_cov$file,
+              start_line = src_cov$start_line,
+              end_line = src_cov$start_line
+            ))
+          }
+        }
         expanded <- self$macroexpand_in_env(expr, target_env, preserve_src = TRUE)
         compiled <- compiler$compile(expanded, target_env, strict = strict)
         if (is.null(compiled)) {

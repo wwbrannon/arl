@@ -498,6 +498,8 @@ Compiler <- R6::R6Class(
           return(private$fail("lambda body could not be compiled"))
         }
         compiled_body[[length(body_exprs)]] <- last_compiled
+        # Interleave coverage tracking calls (fires at call time, not definition time)
+        compiled_body <- private$interleave_coverage(body_exprs, compiled_body)
         # Prepend destructuring bindings inside the loop (they must re-run each iteration
         # because the temp formals get reassigned by self-tail-calls)
         if (length(params$param_bindings) > 0) {
@@ -549,6 +551,8 @@ Compiler <- R6::R6Class(
             return(private$fail("lambda body could not be compiled"))
           }
         }
+        # Interleave coverage tracking calls (fires at call time, not definition time)
+        compiled_body <- private$interleave_coverage(body_exprs, compiled_body)
       }
       # Prepend .rye_env <- environment() so closure body sees correct current env
       env_bind <- as.call(list(quote(`<-`), as.symbol(self$env_var_name), quote(environment())))
@@ -1795,6 +1799,42 @@ Compiler <- R6::R6Class(
         is.call(expr[[1]]) && length(expr[[1]]) >= 3 &&
         is.symbol(expr[[1]][[1]]) &&
         identical(as.character(expr[[1]][[1]]), "lambda")
+    },
+
+    # Build a .rye_coverage_track(file, start, end) call for the given source expression.
+    # Returns NULL if coverage is disabled or no source info.
+    make_coverage_call = function(src_expr) {
+      if (is.null(self$context$coverage_tracker)) return(NULL)
+      src <- private$src_get(src_expr)
+      if (is.null(src) || is.null(src$file) || is.null(src$start_line) || is.null(src$end_line)) {
+        return(NULL)
+      }
+      as.call(list(
+        as.symbol(".rye_coverage_track"),
+        src$file,
+        src$start_line,
+        src$end_line
+      ))
+    },
+
+    # Interleave coverage calls before each compiled body statement.
+    # body_exprs: original Rye AST expressions (for source info)
+    # compiled_body: compiled R expressions (same length as body_exprs)
+    # Returns new list with coverage calls interleaved.
+    interleave_coverage = function(body_exprs, compiled_body) {
+      if (is.null(self$context$coverage_tracker)) return(compiled_body)
+      result <- vector("list", length(compiled_body) * 2L)
+      idx <- 1L
+      for (i in seq_along(compiled_body)) {
+        cov_call <- private$make_coverage_call(body_exprs[[i]])
+        if (!is.null(cov_call)) {
+          result[[idx]] <- cov_call
+          idx <- idx + 1L
+        }
+        result[[idx]] <- compiled_body[[i]]
+        idx <- idx + 1L
+      }
+      result[seq_len(idx - 1L)]
     },
 
     # Check if a compiled expression is a "simple value" that doesn't need a temp

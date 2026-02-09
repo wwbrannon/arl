@@ -201,6 +201,14 @@ CompiledRuntime <- R6::R6Class(
         self$pkg_access_compiled(op_name, pkg, name, env)
       }, "R package access handler (r/pkg::fn).")
 
+      # Coverage tracking hook: installed when coverage is enabled
+      tracker <- self$context$coverage_tracker
+      if (!is.null(tracker)) {
+        assign_and_lock(".rye_coverage_track", function(file, start_line, end_line) {
+          tracker$track(list(file = file, start_line = start_line, end_line = end_line))
+        }, "Coverage tracking hook.")
+      }
+
       # Mark helpers as installed for fast-path check
       assign(".rye_helpers_installed", TRUE, envir = env)
       lockBinding(".rye_helpers_installed", env)
@@ -218,16 +226,6 @@ CompiledRuntime <- R6::R6Class(
       rye_env$push_env(env)
       on.exit(rye_env$pop_env(), add = TRUE)
       self$install_helpers(env)
-
-      # Track coverage if enabled
-      coverage_tracker <- ctx$coverage_tracker
-      if (!is.null(coverage_tracker) && coverage_tracker$enabled) {
-        source_tracker <- ctx$source_tracker
-        rye_src <- source_tracker$src_get(compiled_expr)
-        if (!is.null(rye_src)) {
-          coverage_tracker$track(rye_src)
-        }
-      }
 
       eval(compiled_expr, envir = env)
     },
@@ -344,12 +342,39 @@ CompiledRuntime <- R6::R6Class(
         })
       }
 
+      # Build evaluation body: interleave coverage calls if coverage is enabled
+      coverage_tracker <- self$context$coverage_tracker
+      coverage_active <- !is.null(coverage_tracker) && coverage_tracker$enabled
+      eval_body <- compiled_body
+      if (!is.null(eval_body) && coverage_active) {
+        source_tracker <- self$context$source_tracker
+        instrumented <- vector("list", length(eval_body) * 2L)
+        idx <- 1L
+        for (i in seq_along(eval_body)) {
+          if (!is.null(source_tracker) && i <= length(body_exprs)) {
+            rye_src <- source_tracker$src_get(body_exprs[[i]])
+            if (!is.null(rye_src) && !is.null(rye_src$file) && !is.null(rye_src$start_line)) {
+              instrumented[[idx]] <- as.call(list(
+                as.symbol(".rye_coverage_track"),
+                rye_src$file,
+                rye_src$start_line,
+                rye_src$start_line
+              ))
+              idx <- idx + 1L
+            }
+          }
+          instrumented[[idx]] <- eval_body[[i]]
+          idx <- idx + 1L
+        }
+        eval_body <- instrumented[seq_len(idx - 1L)]
+      }
+
       # Evaluate (use compiled version if we made it, otherwise compile on-the-fly)
-      if (!is.null(compiled_body)) {
-        if (length(compiled_body) == 1L) {
-          result <- self$eval_compiled(compiled_body[[1L]], module_env)
+      if (!is.null(eval_body)) {
+        if (length(eval_body) == 1L) {
+          result <- self$eval_compiled(eval_body[[1L]], module_env)
         } else {
-          block <- as.call(c(list(quote(`{`)), compiled_body))
+          block <- as.call(c(list(quote(`{`)), eval_body))
           result <- self$eval_compiled(block, module_env)
         }
       } else {
@@ -361,8 +386,9 @@ CompiledRuntime <- R6::R6Class(
         self$context$env$module_registry$update_exports(module_name, exports)
       }
 
-      # Write caches after successful module load
-      if (should_cache && !is.null(self$module_cache)) {
+      # Write caches after successful module load (skip when coverage is active
+      # to avoid caching instrumented code)
+      if (should_cache && !is.null(self$module_cache) && !coverage_active) {
         cache_paths <- self$module_cache$get_paths(src_file)
         if (!is.null(cache_paths)) {
           # Always write Option A (safe fallback)
@@ -417,8 +443,21 @@ CompiledRuntime <- R6::R6Class(
       # Cache R6 method references to avoid repeated context lookups in loop
       macro_expander <- self$context$macro_expander
       compiler <- self$context$compiler
+      coverage_tracker <- self$context$coverage_tracker
+      source_tracker <- self$context$source_tracker
       result <- NULL
       for (expr in exprs) {
+        # Track top-level expression start line only (don't paint body ranges)
+        if (!is.null(coverage_tracker) && coverage_tracker$enabled && !is.null(source_tracker)) {
+          rye_src <- source_tracker$src_get(expr)
+          if (!is.null(rye_src) && !is.null(rye_src$file) && !is.null(rye_src$start_line)) {
+            coverage_tracker$track(list(
+              file = rye_src$file,
+              start_line = rye_src$start_line,
+              end_line = rye_src$start_line
+            ))
+          }
+        }
         expanded <- macro_expander$macroexpand(expr, env = env, preserve_src = TRUE)
         compiled <- compiler$compile(expanded, env, strict = TRUE)
         result <- self$eval_compiled(compiled, env)
