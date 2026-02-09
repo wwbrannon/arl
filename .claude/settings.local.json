@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(R -e:*)",
+      "Bash(Rscript:*)",
+      "Bash(make test:*)",
+      "Bash(R:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(make:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(git show:*)"
+    ]
+  }
+}
