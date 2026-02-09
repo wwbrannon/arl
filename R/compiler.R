@@ -333,6 +333,7 @@ Compiler <- R6::R6Class(
       if (is.null(then_expr)) {
         return(private$fail("if then-branch could not be compiled"))
       }
+      then_expr <- private$wrap_branch_coverage(then_expr, expr[[3]])
       # Rye: only #f and #nil are false
       # Skip .rye_true_p wrapper if test is known to return proper R logical
       test_pred <- if (private$returns_r_logical(test)) {
@@ -346,6 +347,7 @@ Compiler <- R6::R6Class(
         if (is.null(else_expr)) {
           return(private$fail("if else-branch could not be compiled"))
         }
+        else_expr <- private$wrap_branch_coverage(else_expr, expr[[4]])
         as.call(list(quote(`if`), test_pred, then_expr, else_expr))
       } else {
         as.call(list(quote(`if`), test_pred, then_expr, private$compiled_nil()))
@@ -1689,6 +1691,7 @@ Compiler <- R6::R6Class(
       if (is.null(then_expr)) {
         return(private$fail("if then-branch could not be compiled"))
       }
+      then_expr <- private$wrap_branch_coverage(then_expr, expr[[3]])
       test_pred <- if (private$returns_r_logical(test)) {
         test
       } else {
@@ -1700,6 +1703,7 @@ Compiler <- R6::R6Class(
         if (is.null(else_expr)) {
           return(private$fail("if else-branch could not be compiled"))
         }
+        else_expr <- private$wrap_branch_coverage(else_expr, expr[[4]])
         private$src_inherit(as.call(list(quote(`if`), test_pred, then_expr, else_expr)), expr)
       } else {
         private$src_inherit(
@@ -1801,6 +1805,33 @@ Compiler <- R6::R6Class(
         identical(as.character(expr[[1]][[1]]), "lambda")
     },
 
+    # Wrap a compiled branch expression with a coverage tracking call.
+    # Used by compile_if / compile_tail_if to track which branch was taken.
+    wrap_branch_coverage = function(compiled_expr, source_expr) {
+      if (is.null(self$context$coverage_tracker)) return(compiled_expr)
+      cov_call <- private$make_coverage_call(source_expr)
+      if (is.null(cov_call)) return(compiled_expr)
+      as.call(list(quote(`{`), cov_call, compiled_expr))
+    },
+
+    # Build a statement-level coverage call. For `if` forms, narrow to just the
+    # test line since branches are tracked separately by wrap_branch_coverage.
+    make_coverage_call_for_stmt = function(src_expr) {
+      if (is.null(self$context$coverage_tracker)) return(NULL)
+      if (is.call(src_expr) && length(src_expr) >= 3 &&
+          is.symbol(src_expr[[1]]) && identical(as.character(src_expr[[1]]), "if")) {
+        src <- private$src_get(src_expr)
+        if (is.null(src) || is.null(src$file) || is.null(src$start_line)) return(NULL)
+        return(as.call(list(
+          as.symbol(".rye_coverage_track"),
+          src$file,
+          src$start_line,
+          src$start_line
+        )))
+      }
+      private$make_coverage_call(src_expr)
+    },
+
     # Build a .rye_coverage_track(file, start, end) call for the given source expression.
     # Returns NULL if coverage is disabled or no source info.
     make_coverage_call = function(src_expr) {
@@ -1826,7 +1857,7 @@ Compiler <- R6::R6Class(
       result <- vector("list", length(compiled_body) * 2L)
       idx <- 1L
       for (i in seq_along(compiled_body)) {
-        cov_call <- private$make_coverage_call(body_exprs[[i]])
+        cov_call <- private$make_coverage_call_for_stmt(body_exprs[[i]])
         if (!is.null(cov_call)) {
           result[[idx]] <- cov_call
           idx <- idx + 1L

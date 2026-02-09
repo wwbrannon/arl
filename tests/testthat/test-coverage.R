@@ -1534,3 +1534,87 @@ test_that("module loading does not mark entire file as covered", {
   expect_null(summary[[tmp]][["7"]])
   expect_null(summary[[tmp]][["10"]])
 })
+
+# ============================================================================
+# Phase 7: Branch-level Coverage Tests
+# ============================================================================
+
+test_that("if expression only covers taken then-branch", {
+  tmp <- tempfile(fileext = ".rye")
+  writeLines(c(
+    "(define f",
+    "  (lambda (x)",
+    "    (if (> x 0)",
+    "      (+ x 1)",
+    "      (* x 2))))",
+    "(f 5)"
+  ), tmp)
+  on.exit(unlink(tmp))
+
+  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
+  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker$discover_files()
+
+  engine$load_file(tmp)
+
+  summary <- tracker$get_summary()
+
+  # Line 4 (then-branch) should be covered
+  expect_true(!is.null(summary[[tmp]][["4"]]))
+
+  # Line 5 (else-branch) should NOT be covered
+  expect_null(summary[[tmp]][["5"]])
+})
+
+test_that("if expression only covers taken else-branch", {
+  tmp <- tempfile(fileext = ".rye")
+  writeLines(c(
+    "(define f",
+    "  (lambda (x)",
+    "    (if (> x 0)",
+    "      (+ x 1)",
+    "      (* x 2))))",
+    "(f -3)"
+  ), tmp)
+  on.exit(unlink(tmp))
+
+  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
+  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker$discover_files()
+
+  engine$load_file(tmp)
+
+  summary <- tracker$get_summary()
+
+  # Line 4 (then-branch) should NOT be covered
+  expect_null(summary[[tmp]][["4"]])
+
+  # Line 5 (else-branch) should be covered
+  expect_true(!is.null(summary[[tmp]][["5"]]))
+})
+
+test_that("if expression covers both branches when both are taken", {
+  tmp <- tempfile(fileext = ".rye")
+  writeLines(c(
+    "(define f",
+    "  (lambda (x)",
+    "    (if (> x 0)",
+    "      (+ x 1)",
+    "      (* x 2))))",
+    "(f 5)",
+    "(f -3)"
+  ), tmp)
+  on.exit(unlink(tmp))
+
+  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
+  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker$discover_files()
+
+  engine$load_file(tmp)
+
+  summary <- tracker$get_summary()
+
+  # Both branches should be covered since we called f with positive and negative
+  expect_true(!is.null(summary[[tmp]][["4"]]))
+  expect_true(!is.null(summary[[tmp]][["5"]]))
+})
