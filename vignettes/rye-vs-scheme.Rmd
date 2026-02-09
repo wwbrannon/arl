@@ -112,6 +112,36 @@ inexact? (number? AND NOT is.integer)
 Rye keywords (`:from`, `:to`) are self-evaluating and map to **named arguments**
 in R calls. This is a major ergonomic difference from Scheme.
 
+### Tail-call optimization
+
+Scheme mandates full tail-call optimization (proper tail calls). Rye implements
+**self-TCO**: the compiler detects `(define name (lambda ...))` where the lambda
+body has self-calls in tail position and rewrites them as `while` loops. This
+covers tail calls through `if`, `begin`, `cond`, `let`, `let*`, and `letrec`.
+
+What is **not** covered:
+
+- **Mutual recursion** (`f` calls `g` in tail position, `g` calls `f`).
+- **`apply`-based tail calls** or indirect calls through higher-order functions.
+- **Anonymous lambdas** (no name for the compiler to detect self-calls against).
+
+For cases not covered by self-TCO, use `loop`/`recur` for explicit
+tail-recursive patterns.
+
+```lisp
+;; Self-TCO optimizes this automatically
+(define factorial
+  (lambda (n acc)
+    (if (< n 2) acc
+        (factorial (- n 1) (* acc n)))))
+
+;; loop/recur for explicit control
+(import looping)
+(loop ((i 10) (acc 1))
+  (if (< i 2) acc
+      (recur (- i 1) (* acc i))))
+```
+
 ### Interop
 
 Rye can call R functions directly:

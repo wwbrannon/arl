@@ -39,7 +39,7 @@ Look at `R/compiler.R`. Ask:
 - Does the compiler emit redundant instructions?
 - Are there peephole optimizations that would help (e.g., combining load+call, eliminating dead stores)?
 - Is constant folding done? Could it be?
-- Are tail calls optimized at the bytecode level (even if R can't do TCO, the VM could)?
+- Self-TCO is implemented (the compiler rewrites self-tail-calls as `while` loops). Are there opportunities to extend this to mutual recursion or general tail calls?
 
 ### 3. Memory allocation patterns
 - How are cons cells allocated? Every `cons(a, d)` creates a new S3 object. Is there a lighter-weight representation?

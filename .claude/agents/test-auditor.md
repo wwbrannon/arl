@@ -17,7 +17,7 @@ Rye is a Scheme-like Lisp implemented in R. Key design decisions:
 
 - **Lisp-1** (single namespace for functions and values, matching R)
 - **Truthiness**: only `#f`/`FALSE` and `#nil`/`NULL` are falsy; `0` is also falsy (R convention). Everything else is truthy.
-- **No tail call optimization** -- R doesn't support it, so Rye can't either
+- **Self-tail-call optimization** -- the compiler rewrites self-recursive tail calls (through `if`/`begin`/`cond`/`let`/`let*`/`letrec`) as loops, so deep self-recursion works. Mutual TCO and general tail calls are not optimized; `loop`/`recur` handles those cases.
 - **R's type system**: Rye values *are* R values. Integers, doubles, characters, logicals, lists, environments -- all R types. There is no separate Rye type system.
 - **`r/call` and `r/eval`**: explicit bridges to R when needed, but most R functions are callable directly
 - **Cons cells**: implemented via a custom `rye_cons` S3 class (not R's native pairlist)

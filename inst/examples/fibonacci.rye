@@ -1,11 +1,14 @@
 ;; Fibonacci Sequence Implementations
 ;; Demonstrates recursion, iteration, and functional approaches
 ;;
-;; IMPORTANT NOTE: R does not optimize tail calls (TCO). The tail-recursive
-;; implementation in `fib-sequence` using `generate-next` is included here
-;; for educational purposes only to demonstrate the recursive pattern.
-;; In production code, always prefer iterative approaches like `fib-iterative`
-;; to avoid stack overflow on large inputs.
+;; NOTE: Rye's compiler implements self-tail-call optimization (self-TCO).
+;; The `generate-next` helper inside `fib-sequence` benefits from this:
+;; its self-call is in tail position within a `let*` body inside `letrec`,
+;; so the compiler rewrites it as a loop.
+;;
+;; The classic `fib-recursive` is NOT tail-recursive (it's doubly recursive),
+;; so TCO does not apply there. For large inputs, prefer `fib-iterative`
+;; or the sequence-based approach.
 
 (import binding)
 (import control)

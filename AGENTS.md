@@ -93,7 +93,7 @@ Rye leverages R's existing eval/quote/environment system rather than reimplement
 - **Special forms**: `quote`, `if`, `define`, `lambda`, `begin`, `defmacro`, `quasiquote`, `~`
 - **Scoping**: Lexical scoping via R environments
 - **Macros**: Compile-time code transformation with quasiquote/unquote
-- **Tail call optimization**: Not implemented! Efficient code should use loops
+- **Tail call optimization**: Self-TCO is implemented by the compiler for `(define name (lambda ...))` patterns -- self-tail-calls through `if`/`begin`/`cond`/`let`/`let*`/`letrec` are rewritten as loops. `loop`/`recur` is still useful for mutual recursion.
 
 **R Interoperability**:
 - All R functions callable directly: `(mean (c 1 2 3))` → `3`

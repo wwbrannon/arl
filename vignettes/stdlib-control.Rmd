@@ -267,6 +267,7 @@ Tail-recursive looping with explicit rebinding.
 **Signature:** `(recur expr1 expr2 ...)`
 
 **Notes:**
+- The compiler now automatically optimizes self-tail-calls in `(define name (lambda ...))` patterns, so many recursive functions no longer need `loop`/`recur`. Use `loop`/`recur` when you want explicit looping control or need mutual recursion.
 - `recur` must be used inside `loop`.
 - `recur` must supply one value per loop binding.
 - `recur` is not supported inside nested `lambda` or `defmacro` bodies.
