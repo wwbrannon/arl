@@ -11,20 +11,58 @@ R6 class for tracking and reporting Rye code execution coverage
 \details{
 Tracks which lines of .rye source files actually execute during runtime.
 Maintains execution counts per file/line and generates reports.
+Supports flexible configuration for tracking custom directories,
+test files, and custom comment syntax.
 }
 \examples{
 \dontrun{
-# In R session:
+# Default usage: Track Rye stdlib
 engine <- rye::RyeEngine$new()
 tracker <- engine$enable_coverage()
-
-# Run some code
 engine$eval(engine$read("(+ 1 2)"))
-
-# Generate reports
 tracker$report_console()
-tracker$report_html("coverage.html")
+tracker$report_html()  # Outputs to coverage/rye/index.html
+
+# Track custom directories
+tracker <- RyeCoverageTracker$new(
+  search_paths = c("src/rye", "lib/rye"),
+  output_prefix = "myproject",
+  report_title = "My Project Coverage"
+)
+tracker$discover_files()
+tracker$report_html()  # Outputs to coverage/myproject/index.html
+
+# Include test files in coverage
+tracker <- RyeCoverageTracker$new(
+  search_paths = "src",
+  include_tests = TRUE
+)
+
+# Custom path display in reports
+tracker <- RyeCoverageTracker$new(
+  search_paths = "/home/user/myproject/rye",
+  path_strip_patterns = c(".*/myproject/rye/", ".*/myproject/tests/")
+)
+
+# Custom comment syntax (e.g., # instead of ;)
+tracker <- RyeCoverageTracker$new(
+  search_paths = "src",
+  code_line_pattern = "^\\\\s*[^[:space:]#]"
+)
 }
+}
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{coverage}}{Environment mapping "file:line" keys to execution counts}
+
+\item{\code{enabled}}{Logical flag to enable/disable tracking}
+
+\item{\code{all_files}}{Character vector of all .rye files being tracked}
+
+\item{\code{code_lines}}{Environment mapping file paths to integer vectors of code line numbers}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -47,9 +85,33 @@ tracker$report_html("coverage.html")
 \subsection{Method \code{new()}}{
 Initialize the coverage tracker
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeCoverageTracker$new()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeCoverageTracker$new(
+  search_paths = NULL,
+  include_tests = FALSE,
+  path_strip_patterns = NULL,
+  output_prefix = "rye",
+  report_title = "Rye Code Coverage",
+  code_line_pattern = "^\\\\s*[^[:space:];]"
+)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{search_paths}}{Character vector of directories to search for .rye files (NULL = use stdlib)}
+
+\item{\code{include_tests}}{Whether to include test files in coverage tracking (default: FALSE)}
+
+\item{\code{path_strip_patterns}}{Custom regex patterns for stripping paths in reports (NULL = use defaults)}
+
+\item{\code{output_prefix}}{Subdirectory name for report outputs (default: "rye")}
+
+\item{\code{report_title}}{Title to use in coverage reports (default: "Rye Code Coverage")}
+
+\item{\code{code_line_pattern}}{Regex pattern to identify code lines vs comments/blanks}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeCoverageTracker-track"></a>}}
@@ -84,8 +146,8 @@ Get coverage summary as list: file -> line -> count
 \subsection{Method \code{discover_files()}}{
 Discover all .rye files to track
 
-Only tracks stdlib files in inst/rye/, not test files.
-Tests are in tests/ and should not be tracked for coverage.
+Searches for .rye files in configured search paths or stdlib by default.
+By default excludes test files unless include_tests = TRUE.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RyeCoverageTracker$discover_files()}\if{html}{\out{</div>}}
 }
@@ -110,6 +172,13 @@ Enable/disable tracking
 \if{html}{\out{<div class="r">}}\preformatted{RyeCoverageTracker$set_enabled(enabled)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{enabled}}{Logical value to enable (TRUE) or disable (FALSE) coverage tracking}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RyeCoverageTracker-report_console"></a>}}
@@ -134,13 +203,13 @@ Generate console coverage report
 \subsection{Method \code{report_html()}}{
 Generate HTML coverage report
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeCoverageTracker$report_html(output_file = "coverage/rye/index.html")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeCoverageTracker$report_html(output_file = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{output_file}}{Path to output HTML file}
+\item{\code{output_file}}{Path to output HTML file (NULL = use default based on output_prefix)}
 }
 \if{html}{\out{</div>}}
 }
@@ -151,13 +220,13 @@ Generate HTML coverage report
 \subsection{Method \code{report_json()}}{
 Generate codecov-compatible JSON format
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RyeCoverageTracker$report_json(output_file = "coverage/rye/coverage.json")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RyeCoverageTracker$report_json(output_file = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{output_file}}{Path to output JSON file}
+\item{\code{output_file}}{Path to output JSON file (NULL = use default based on output_prefix)}
 }
 \if{html}{\out{</div>}}
 }

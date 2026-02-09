@@ -2,19 +2,49 @@
 #'
 #' Tracks which lines of .rye source files actually execute during runtime.
 #' Maintains execution counts per file/line and generates reports.
+#' Supports flexible configuration for tracking custom directories,
+#' test files, and custom comment syntax.
+#'
+#' @field coverage Environment mapping "file:line" keys to execution counts
+#' @field enabled Logical flag to enable/disable tracking
+#' @field all_files Character vector of all .rye files being tracked
+#' @field code_lines Environment mapping file paths to integer vectors of code line numbers
 #'
 #' @examples
 #' \dontrun{
-#' # In R session:
+#' # Default usage: Track Rye stdlib
 #' engine <- rye::RyeEngine$new()
 #' tracker <- engine$enable_coverage()
-#'
-#' # Run some code
 #' engine$eval(engine$read("(+ 1 2)"))
-#'
-#' # Generate reports
 #' tracker$report_console()
-#' tracker$report_html("coverage.html")
+#' tracker$report_html()  # Outputs to coverage/rye/index.html
+#'
+#' # Track custom directories
+#' tracker <- RyeCoverageTracker$new(
+#'   search_paths = c("src/rye", "lib/rye"),
+#'   output_prefix = "myproject",
+#'   report_title = "My Project Coverage"
+#' )
+#' tracker$discover_files()
+#' tracker$report_html()  # Outputs to coverage/myproject/index.html
+#'
+#' # Include test files in coverage
+#' tracker <- RyeCoverageTracker$new(
+#'   search_paths = "src",
+#'   include_tests = TRUE
+#' )
+#'
+#' # Custom path display in reports
+#' tracker <- RyeCoverageTracker$new(
+#'   search_paths = "/home/user/myproject/rye",
+#'   path_strip_patterns = c(".*/myproject/rye/", ".*/myproject/tests/")
+#' )
+#'
+#' # Custom comment syntax (e.g., # instead of ;)
+#' tracker <- RyeCoverageTracker$new(
+#'   search_paths = "src",
+#'   code_line_pattern = "^\\s*[^[:space:]#]"
+#' )
 #' }
 #' @export
 RyeCoverageTracker <- R6::R6Class(
@@ -26,11 +56,32 @@ RyeCoverageTracker <- R6::R6Class(
     code_lines = NULL,  # environment: "file" -> integer vector of code line numbers
 
     #' @description Initialize the coverage tracker
-    initialize = function() {
+    #' @param search_paths Character vector of directories to search for .rye files (NULL = use stdlib)
+    #' @param include_tests Whether to include test files in coverage tracking (default: FALSE)
+    #' @param path_strip_patterns Custom regex patterns for stripping paths in reports (NULL = use defaults)
+    #' @param output_prefix Subdirectory name for report outputs (default: "rye")
+    #' @param report_title Title to use in coverage reports (default: "Rye Code Coverage")
+    #' @param code_line_pattern Regex pattern to identify code lines vs comments/blanks
+    initialize = function(
+      search_paths = NULL,
+      include_tests = FALSE,
+      path_strip_patterns = NULL,
+      output_prefix = "rye",
+      report_title = "Rye Code Coverage",
+      code_line_pattern = "^\\s*[^[:space:];]"
+    ) {
       self$coverage <- new.env(hash = TRUE, parent = emptyenv())
       self$enabled <- TRUE
       self$all_files <- character(0)
       self$code_lines <- new.env(hash = TRUE, parent = emptyenv())
+
+      # Store configuration
+      private$search_paths <- search_paths
+      private$include_tests <- isTRUE(include_tests)
+      private$path_strip_patterns <- path_strip_patterns
+      private$output_prefix <- output_prefix
+      private$report_title <- report_title
+      private$code_line_pattern <- code_line_pattern
     },
 
     #' @description Track execution of an expression with source info
@@ -53,7 +104,7 @@ RyeCoverageTracker <- R6::R6Class(
       if (is.null(code_line_nums) && file.exists(file)) {
         # First time tracking this file - cache which lines are code
         file_lines <- readLines(file, warn = FALSE)
-        code_line_nums <- grep(private$CODE_LINE_PATTERN, file_lines)
+        code_line_nums <- grep(private$code_line_pattern, file_lines)
         self$code_lines[[file]] <- code_line_nums
       }
 
@@ -93,31 +144,46 @@ RyeCoverageTracker <- R6::R6Class(
 
     #' @description Discover all .rye files to track
     #'
-    #' Only tracks stdlib files in inst/rye/, not test files.
-    #' Tests are in tests/ and should not be tracked for coverage.
+    #' Searches for .rye files in configured search paths or stdlib by default.
+    #' By default excludes test files unless include_tests = TRUE.
     discover_files = function() {
       rye_files <- c()
 
-      # Add stdlib only - these are the files we want to track coverage for
-      stdlib_dir <- system.file("rye", package = "rye")
-      if (stdlib_dir == "") {
-        stdlib_dir <- "inst/rye"  # Development mode
-      }
-      if (dir.exists(stdlib_dir)) {
-        stdlib_files <- list.files(stdlib_dir, pattern = "\\.rye$",
-                                   full.names = TRUE, recursive = TRUE)
-        rye_files <- c(rye_files, stdlib_files)
+      # Use custom search paths if provided, otherwise use stdlib helper
+      if (!is.null(private$search_paths)) {
+        # Custom: user-provided directories
+        for (search_path in private$search_paths) {
+          if (dir.exists(search_path)) {
+            found_files <- list.files(
+              search_path,
+              pattern = "\\.rye$",
+              full.names = TRUE,
+              recursive = TRUE
+            )
+
+            # Filter out tests unless explicitly included
+            if (!private$include_tests) {
+              # Exclude files in directories named "test" or "tests"
+              found_files <- found_files[!grepl("/tests?/", found_files)]
+            }
+
+            rye_files <- c(rye_files, found_files)
+          }
+        }
+      } else {
+        # Default: use stdlib helper
+        rye_files <- private$find_stdlib_files()
       }
 
-      # Do NOT add test files - they are tests, not code to instrument
-
+      # Remove duplicates if overlapping paths were provided
+      rye_files <- unique(rye_files)
       self$all_files <- rye_files
 
       # Build cache of which lines are code (non-blank, non-comment) for each file
       for (file in rye_files) {
         if (file.exists(file)) {
           file_lines <- readLines(file, warn = FALSE)
-          code_line_nums <- grep(private$CODE_LINE_PATTERN, file_lines)
+          code_line_nums <- grep(private$code_line_pattern, file_lines)
           self$code_lines[[file]] <- code_line_nums
         }
       }
@@ -132,6 +198,7 @@ RyeCoverageTracker <- R6::R6Class(
     },
 
     #' @description Enable/disable tracking
+    #' @param enabled Logical value to enable (TRUE) or disable (FALSE) coverage tracking
     set_enabled = function(enabled) {
       self$enabled <- enabled
       invisible(self)
@@ -142,9 +209,10 @@ RyeCoverageTracker <- R6::R6Class(
     report_console = function(output_file = NULL) {
       lines <- c()
 
+      title <- sprintf("%s (Execution Coverage)", private$report_title)
       lines <- c(lines, "")
-      lines <- c(lines, "Rye Code Coverage Report (Execution Coverage)")
-      lines <- c(lines, "==============================================")
+      lines <- c(lines, title)
+      lines <- c(lines, strrep("=", nchar(title)))
       lines <- c(lines, "")
 
       if (length(self$coverage) == 0) {
@@ -174,7 +242,7 @@ RyeCoverageTracker <- R6::R6Class(
 
         # Count total lines (non-empty, non-comment)
         file_lines <- readLines(file, warn = FALSE)
-        code_lines <- grep(private$CODE_LINE_PATTERN, file_lines)
+        code_lines <- grep(private$code_line_pattern, file_lines)
         non_empty <- length(code_lines)
 
         # Count covered lines
@@ -202,9 +270,7 @@ RyeCoverageTracker <- R6::R6Class(
       # Print per-file stats
       for (file in files) {
         stats <- file_stats[[file]]
-        display_path <- sub("^\\./", "", file)
-        display_path <- sub(".*/inst/rye/", "", display_path)
-        display_path <- sub(".*/tests/native/", "tests/", display_path)
+        display_path <- private$strip_display_path(file)
 
         lines <- c(lines, sprintf("%-40s %4d/%4d lines (%5.1f%%)",
                     display_path, stats$covered, stats$total, stats$pct))
@@ -227,8 +293,13 @@ RyeCoverageTracker <- R6::R6Class(
     },
 
     #' @description Generate HTML coverage report
-    #' @param output_file Path to output HTML file
-    report_html = function(output_file = "coverage/rye/index.html") {
+    #' @param output_file Path to output HTML file (NULL = use default based on output_prefix)
+    report_html = function(output_file = NULL) {
+      # Set default output file if not provided
+      if (is.null(output_file)) {
+        output_file <- sprintf("coverage/%s/index.html", private$output_prefix)
+      }
+
       # Create output directory
       output_dir <- dirname(output_file)
       if (!dir.exists(output_dir)) {
@@ -248,7 +319,7 @@ RyeCoverageTracker <- R6::R6Class(
         "<html>",
         "<head>",
         "<meta charset='utf-8'>",
-        "<title>Rye Code Coverage</title>",
+        sprintf("<title>%s</title>", private$report_title),
         "<style>",
         "body { font-family: monospace; margin: 20px; background: #f5f5f5; }",
         "h1 { font-size: 24px; color: #333; }",
@@ -269,7 +340,7 @@ RyeCoverageTracker <- R6::R6Class(
         "</style>",
         "</head>",
         "<body>",
-        "<h1>Rye Code Coverage Report</h1>",
+        sprintf("<h1>%s</h1>", private$report_title),
         "<p><em>Note: This report shows execution coverage - lines that actually executed during tests.</em></p>"
       )
 
@@ -282,7 +353,7 @@ RyeCoverageTracker <- R6::R6Class(
         if (!file.exists(file)) next
 
         file_lines <- readLines(file, warn = FALSE)
-        code_lines <- grep(private$CODE_LINE_PATTERN, file_lines)
+        code_lines <- grep(private$code_line_pattern, file_lines)
         non_empty <- length(code_lines)
 
         covered <- if (!is.null(coverage_summary[[file]])) {
@@ -310,9 +381,7 @@ RyeCoverageTracker <- R6::R6Class(
 
       for (file in files) {
         stats <- file_stats[[file]]
-        display_path <- sub("^\\./", "", file)
-        display_path <- sub(".*/inst/rye/", "", display_path)
-        display_path <- sub(".*/tests/native/", "tests/", display_path)
+        display_path <- private$strip_display_path(file)
 
         pct_class <- if (stats$pct >= 80) {
           "pct-high"
@@ -358,9 +427,7 @@ RyeCoverageTracker <- R6::R6Class(
       for (file in files) {
         if (!file.exists(file)) next
 
-        display_path <- sub("^\\./", "", file)
-        display_path <- sub(".*/inst/rye/", "", display_path)
-        display_path <- sub(".*/tests/native/", "tests/", display_path)
+        display_path <- private$strip_display_path(file)
 
         file_id <- gsub("[^a-zA-Z0-9]", "_", file)
         html_parts <- c(html_parts, sprintf("<h3 id='%s'>%s</h3>", file_id, display_path))
@@ -379,7 +446,7 @@ RyeCoverageTracker <- R6::R6Class(
             hit_count <- file_cov[[line_str]]
             css_class <- "covered"
             hit_display <- sprintf("%dx", hit_count)
-          } else if (grepl(private$CODE_LINE_PATTERN, line)) {
+          } else if (grepl(private$code_line_pattern, line)) {
             # Not covered but is code (not a comment or blank line)
             css_class <- "uncovered"
             hit_display <- "0x"
@@ -416,8 +483,13 @@ RyeCoverageTracker <- R6::R6Class(
     },
 
     #' @description Generate codecov-compatible JSON format
-    #' @param output_file Path to output JSON file
-    report_json = function(output_file = "coverage/rye/coverage.json") {
+    #' @param output_file Path to output JSON file (NULL = use default based on output_prefix)
+    report_json = function(output_file = NULL) {
+      # Set default output file if not provided
+      if (is.null(output_file)) {
+        output_file <- sprintf("coverage/%s/coverage.json", private$output_prefix)
+      }
+
       # Create output directory
       output_dir <- dirname(output_file)
       if (!dir.exists(output_dir)) {
@@ -446,7 +518,7 @@ RyeCoverageTracker <- R6::R6Class(
           # Check if line is covered
           if (!is.null(coverage_summary[[file]][[line_str]])) {
             coverage_summary[[file]][[line_str]]  # Execution count
-          } else if (grepl(private$CODE_LINE_PATTERN, lines[i])) {
+          } else if (grepl(private$code_line_pattern, lines[i])) {
             0  # Not covered but is code (not a comment or blank line)
           } else {
             NULL  # Not code (comment/blank)
@@ -479,9 +551,51 @@ RyeCoverageTracker <- R6::R6Class(
   ),
 
   private = list(
-    # Regex pattern to identify code lines (vs comments/blanks)
-    # Matches: start of line, optional whitespace, then a non-whitespace, non-semicolon char
-    # Using POSIX [:space:] because \t doesn't work inside character classes in R
-    CODE_LINE_PATTERN = "^\\s*[^[:space:];]"
+    # Configuration fields
+    search_paths = NULL,
+    include_tests = FALSE,
+    path_strip_patterns = NULL,
+    output_prefix = "rye",
+    report_title = "Rye Code Coverage",
+    code_line_pattern = "^\\s*[^[:space:];]",
+
+    # Helper: Find stdlib files (default behavior)
+    find_stdlib_files = function() {
+      rye_files <- c()
+
+      stdlib_dir <- system.file("rye", package = "rye")
+      if (stdlib_dir == "") {
+        stdlib_dir <- "inst/rye"  # Development mode
+      }
+
+      if (dir.exists(stdlib_dir)) {
+        stdlib_files <- list.files(
+          stdlib_dir,
+          pattern = "\\.rye$",
+          full.names = TRUE,
+          recursive = TRUE
+        )
+        rye_files <- c(rye_files, stdlib_files)
+      }
+
+      rye_files
+    },
+
+    # Helper: Strip paths for display in reports
+    strip_display_path = function(file) {
+      display_path <- sub("^\\./", "", file)
+
+      if (!is.null(private$path_strip_patterns)) {
+        for (pattern in private$path_strip_patterns) {
+          display_path <- sub(pattern, "", display_path)
+        }
+      } else {
+        # Default patterns for stdlib
+        display_path <- sub(".*/inst/rye/", "", display_path)
+        display_path <- sub(".*/tests/native/", "tests/", display_path)
+      }
+
+      display_path
+    }
   )
 )
