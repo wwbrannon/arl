@@ -114,7 +114,7 @@ test_that("One-time warning shown per session", {
 })
 
 test_that("Dependency change causes stale data with Option C", {
-  skip("This is a known limitation documented in CACHE_INVALIDATION.md")
+  skip("This is a known limitation documented in inst/design-docs/CACHE_INVALIDATION.md")
   # This test documents WHY Option C is off by default
   # Implementation would require:
   # 1. Create module-a.rye with (define x 1)
