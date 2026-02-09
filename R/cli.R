@@ -295,7 +295,7 @@ RyeCLI <- R6::R6Class(
       if (!is.null(result) && result_with_vis$visible) {
         cli::cat_line(engine$env$format_value(result))
       }
-      invisible(result      )
+      invisible(result)
     },
     # @description Parse and evaluate text in engine; return result. Used by do_eval and tests.
     # @param text Character string of Rye code.
