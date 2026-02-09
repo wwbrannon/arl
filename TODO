@@ -1,6 +1,5 @@
 coverage tracking:
 -------------------------------------------------
-o) looping.rye has > 100% test coverage
 o) discover_files is not flexible enough for users
 o) any other hardcoded inflexibilities?
 

@@ -23,12 +23,14 @@ RyeCoverageTracker <- R6::R6Class(
     coverage = NULL,    # environment: "file:line" -> count
     enabled = TRUE,     # flag to enable/disable tracking
     all_files = NULL,   # character vector of all .rye files to track
+    code_lines = NULL,  # environment: "file" -> integer vector of code line numbers
 
     #' @description Initialize the coverage tracker
     initialize = function() {
       self$coverage <- new.env(hash = TRUE, parent = emptyenv())
       self$enabled <- TRUE
       self$all_files <- character(0)
+      self$code_lines <- new.env(hash = TRUE, parent = emptyenv())
     },
 
     #' @description Track execution of an expression with source info
@@ -46,11 +48,23 @@ RyeCoverageTracker <- R6::R6Class(
         return(invisible(NULL))
       }
 
-      # Mark all lines in range as executed
+      # Get cached code lines for this file (lazy load if not cached yet)
+      code_line_nums <- self$code_lines[[file]]
+      if (is.null(code_line_nums) && file.exists(file)) {
+        # First time tracking this file - cache which lines are code
+        file_lines <- readLines(file, warn = FALSE)
+        code_line_nums <- grep(private$CODE_LINE_PATTERN, file_lines)
+        self$code_lines[[file]] <- code_line_nums
+      }
+
+      # Mark only code lines in range as executed (skip comments and blanks)
       for (line in start_line:end_line) {
-        key <- paste0(file, ":", line)
-        current <- self$coverage[[key]]
-        self$coverage[[key]] <- if (is.null(current)) 1L else current + 1L
+        # Only track if this line is a code line
+        if (!is.null(code_line_nums) && line %in% code_line_nums) {
+          key <- paste0(file, ":", line)
+          current <- self$coverage[[key]]
+          self$coverage[[key]] <- if (is.null(current)) 1L else current + 1L
+        }
       }
 
       invisible(NULL)
@@ -98,6 +112,16 @@ RyeCoverageTracker <- R6::R6Class(
       # Do NOT add test files - they are tests, not code to instrument
 
       self$all_files <- rye_files
+
+      # Build cache of which lines are code (non-blank, non-comment) for each file
+      for (file in rye_files) {
+        if (file.exists(file)) {
+          file_lines <- readLines(file, warn = FALSE)
+          code_line_nums <- grep(private$CODE_LINE_PATTERN, file_lines)
+          self$code_lines[[file]] <- code_line_nums
+        }
+      }
+
       invisible(self)
     },
 
