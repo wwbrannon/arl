@@ -57,7 +57,7 @@ test_that("fizzbuzz example runs end-to-end", {
 test_that("macro examples run end-to-end", {
   result <- run_example("macro-examples.rye")
   expect_snapshot(result$output)
-  expect_equal(result$env$`example-result`$threading_result, 15)
+  expect_equal(result$env$`example-result`$threading_result, 15, ignore_attr = "rye_src")
   expect_equal(result$env$`example-result`$aif_result, 5)
   expect_true(file.exists(file.path(result$out_dir, "macro-report.txt")))
 })

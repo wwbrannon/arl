@@ -95,6 +95,11 @@ CompiledRuntime <- R6::R6Class(
     },
     # @description Install bindings required for compiled code into env.
     install_helpers = function(env) {
+      # Fast path: skip if already installed
+      if (exists(".rye_helpers_installed", envir = env, inherits = FALSE)) {
+        return(invisible(NULL))
+      }
+
       # Helper to assign, document, and lock internal functions
       assign_and_lock <- function(name, value, description) {
         # Check if binding already exists and is locked
@@ -125,7 +130,6 @@ CompiledRuntime <- R6::R6Class(
 
       # Core helpers
       assign_and_lock(".rye_assign_pattern", function(env, pattern, value, mode) {
-        value <- self$context$source_tracker$strip_src(value)
         .rye_assign_pattern(env, pattern, value, mode)
       }, "Pattern assignment for define/set!.")
 
@@ -178,6 +182,10 @@ CompiledRuntime <- R6::R6Class(
         self$pkg_access_compiled(op_name, pkg, name, env)
       }, "R package access handler (r/pkg::fn).")
 
+      # Mark helpers as installed for fast-path check
+      assign(".rye_helpers_installed", TRUE, envir = env)
+      lockBinding(".rye_helpers_installed", env)
+
       invisible(NULL)
     },
     # @description Run compiled R expression in env (helpers must be installed).
@@ -199,11 +207,10 @@ CompiledRuntime <- R6::R6Class(
       }
 
       result_with_vis <- withVisible(eval(compiled_expr, envir = env))
-      value <- self$context$source_tracker$strip_src(result_with_vis$value)
       if (result_with_vis$visible) {
-        value
+        result_with_vis$value
       } else {
-        invisible(value)
+        invisible(result_with_vis$value)
       }
     },
     # Import logic for compiled (import x): same semantics as import special form.

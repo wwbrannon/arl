@@ -185,9 +185,11 @@ eval_compiled_in_env <- function(engine, expr, env) {
   expanded <- engine$macroexpand_in_env(expr, env, preserve_src = TRUE)
   compiled <- engine$compiler$compile(expanded, env, strict = TRUE)
   expect_false(is.null(compiled))
+  result <- withVisible(engine$compiled_runtime$eval_compiled(compiled, env))
+  result$value <- engine$source_tracker$strip_src(result$value)
   list(
     compiled = compiled,
-    result = withVisible(engine$compiled_runtime$eval_compiled(compiled, env))
+    result = result
   )
 }
 
@@ -332,6 +334,7 @@ test_that("macro pipeline matches engine eval", {
     compiled <- engine$compiler$compile(expanded, env_compiled, strict = TRUE)
     expect_false(is.null(compiled))
     actual <- withVisible(engine$compiled_runtime$eval_compiled(compiled, env_compiled))
+    actual$value <- engine$source_tracker$strip_src(actual$value)
 
     expect_equal(actual$value, expected$value)
     expect_identical(actual$visible, expected$visible)

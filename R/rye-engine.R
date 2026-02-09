@@ -593,7 +593,13 @@ RyeEngine <- R6::R6Class(
       expanded <- self$macroexpand_in_env(expr, env, preserve_src = TRUE)
       compiled <- self$compiler$compile(expanded, env, strict = isTRUE(compiled_only))
       if (!is.null(compiled)) {
-        return(self$compiled_runtime$eval_compiled(compiled, env))
+        result_with_vis <- withVisible(self$compiled_runtime$eval_compiled(compiled, env))
+        value <- self$source_tracker$strip_src(result_with_vis$value)
+        if (result_with_vis$visible) {
+          return(value)
+        } else {
+          return(invisible(value))
+        }
       }
       msg <- self$compiler$last_error
       if (is.null(msg) || !nzchar(msg)) {
@@ -632,6 +638,7 @@ RyeEngine <- R6::R6Class(
         result <- result_with_vis$value
         result_visible <- isTRUE(result_with_vis$visible)
       }
+      result <- self$source_tracker$strip_src(result)
       if (isTRUE(result_visible)) {
         return(result)
       }

@@ -25,14 +25,18 @@ Tokenizer <- R6::R6Class(
       line <- 1
       col <- 1
       i <- 1
-      n <- nchar(source)
+      chars <- strsplit(source, "")[[1]]
+      n <- length(chars)
       delimiters <- self$delimiters
+      # O(1) delimiter lookup via environment
+      is_delim <- new.env(parent = emptyenv())
+      for (d in delimiters) assign(d, TRUE, envir = is_delim)
       add_token <- function(type, value, line_pos = line, col_pos = col) {
         tokens[[length(tokens) + 1]] <<- list(type = type, value = value, line = line_pos, col = col_pos)
       }
 
       while (i <= n) {
-        char <- substr(source, i, i)
+        char <- chars[i]
 
         # Skip whitespace
         if (char %in% c(" ", "\t", "\r")) {
@@ -51,7 +55,7 @@ Tokenizer <- R6::R6Class(
 
         # Skip comments (semicolon to end of line)
         if (char == ";") {
-          while (i <= n && substr(source, i, i) != "\n") {
+          while (i <= n && chars[i] != "\n") {
             i <- i + 1
           }
           next
@@ -91,7 +95,7 @@ Tokenizer <- R6::R6Class(
 
         # Unquote/unquote-splicing
         if (char == ",") {
-          if (i + 1 <= n && substr(source, i + 1, i + 1) == "@") {
+          if (i + 1 <= n && chars[i + 1L] == "@") {
             add_token("UNQUOTE_SPLICING", ",@")
             col <- col + 2
             i <- i + 2
@@ -105,7 +109,7 @@ Tokenizer <- R6::R6Class(
 
         # Standalone dot (dotted-pair notation): emit DOT only when . is alone
         if (char == ".") {
-          next_char <- if (i + 1 <= n) substr(source, i + 1, i + 1) else ""
+          next_char <- if (i + 1L <= n) chars[i + 1L] else ""
           if (next_char == "" || next_char %in% delimiters) {
             add_token("DOT", ".")
             col <- col + 1
@@ -122,12 +126,12 @@ Tokenizer <- R6::R6Class(
           str_chars <- list()
           str_idx <- 1
 
-          while (i <= n && substr(source, i, i) != '"') {
-            ch <- substr(source, i, i)
+          while (i <= n && chars[i] != '"') {
+            ch <- chars[i]
             if (ch == "\\") {
               # Handle escape sequences
               if (i + 1 <= n) {
-                next_ch <- substr(source, i + 1, i + 1)
+                next_ch <- chars[i + 1L]
                 if (next_ch == "n") {
                   str_chars[[str_idx]] <- "\n"
                   str_idx <- str_idx + 1
@@ -188,12 +192,12 @@ Tokenizer <- R6::R6Class(
           start <- i
 
           # Check if this is :: or ::: (package accessor operators)
-          if (i + 1 <= n && substr(source, i + 1, i + 1) == ":") {
+          if (i + 1L <= n && chars[i + 1L] == ":") {
             # It's :: or :::, treat as a symbol
             i <- i + 2
             col <- col + 2
             # Check for third colon
-            if (i <= n && substr(source, i, i) == ":") {
+            if (i <= n && chars[i] == ":") {
               i <- i + 1
               col <- col + 1
               tokens[[length(tokens) + 1]] <- list(type = "SYMBOL", value = ":::", line = line, col = start_col)
@@ -208,7 +212,7 @@ Tokenizer <- R6::R6Class(
           col <- col + 1
 
           # Read the keyword name
-          while (i <= n && !substr(source, i, i) %in% delimiters) {
+          while (i <= n && !exists(chars[i], envir = is_delim, inherits = FALSE)) {
             i <- i + 1
             col <- col + 1
           }
@@ -217,30 +221,30 @@ Tokenizer <- R6::R6Class(
             stop(sprintf("Empty keyword at line %d, column %d", line, start_col))
           }
 
-          keyword_name <- substr(source, start + 1, i - 1)
+          keyword_name <- paste(chars[(start + 1L):(i - 1L)], collapse = "")
           tokens[[length(tokens) + 1]] <- list(type = "KEYWORD", value = keyword_name, line = line, col = start_col)
           next
         }
 
         # Numbers and symbols (atoms)
         # Check if this is the start of an atom (not a delimiter)
-        if (!char %in% delimiters) {
+        if (!exists(char, envir = is_delim, inherits = FALSE)) {
           start_col <- col
           start <- i
 
           # Read until we hit a delimiter, but handle :: and ::: specially
           while (i <= n) {
-            curr_char <- substr(source, i, i)
+            curr_char <- chars[i]
 
             # Check for :: or ::: within the symbol
             if (curr_char == ":") {
               # Look ahead to see if this is :: or :::
-              if (i + 1 <= n && substr(source, i + 1, i + 1) == ":") {
+              if (i + 1L <= n && chars[i + 1L] == ":") {
                 # It's at least ::, include it
                 i <- i + 2
                 col <- col + 2
                 # Check for third colon (:::)
-                if (i <= n && substr(source, i, i) == ":") {
+                if (i <= n && chars[i] == ":") {
                   i <- i + 1
                   col <- col + 1
                 }
@@ -253,7 +257,7 @@ Tokenizer <- R6::R6Class(
             }
 
             # Check for other delimiters
-            if (curr_char %in% delimiters) {
+            if (exists(curr_char, envir = is_delim, inherits = FALSE)) {
               break
             }
 
@@ -261,7 +265,7 @@ Tokenizer <- R6::R6Class(
             col <- col + 1
           }
 
-          token_text <- substr(source, start, i - 1)
+          token_text <- paste(chars[start:(i - 1L)], collapse = "")
           token_type <- "SYMBOL"
           token_value <- token_text
 
