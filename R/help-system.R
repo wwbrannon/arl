@@ -267,7 +267,12 @@ HelpSystem <- R6::R6Class(
         return(paste0("(", topic, ")"))
       }
       params <- info$params
-      paste0("(", topic, if (length(params) > 0) paste0(" ", paste(params, collapse = " ")) else "", ")")
+      rest <- info$rest_param
+      parts <- if (length(params) > 0) paste(params, collapse = " ") else ""
+      if (!is.null(rest)) {
+        parts <- if (nzchar(parts)) paste0(parts, " . ", rest) else paste0(". ", rest)
+      }
+      paste0("(", topic, if (nzchar(parts)) paste0(" ", parts) else "", ")")
     }
   )
 )

@@ -193,11 +193,11 @@ test_that("not returns logical negation", {
   expect_false(engine$eval_in_env(engine$read("(not #t)")[[1]], env))
 })
 
-test_that("not treats only #f as false", {
+test_that("not treats #f and 0 as false", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
 
-  expect_false(engine$eval_in_env(engine$read("(not 0)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(not 0)")[[1]], env))
   expect_true(engine$eval_in_env(engine$read("(not #f)")[[1]], env))
 })
 

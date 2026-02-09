@@ -33,7 +33,7 @@ test_that("type coercion functions work", {
   stdlib_env(engine, env)
 
   expect_equal(engine$eval_in_env(engine$read("(exact->inexact 5)")[[1]], env), 5.0)
-  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 5L)
+  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 6L)
   expect_equal(engine$eval_in_env(engine$read("(->integer \"42\")")[[1]], env), 42L)
   expect_equal(engine$eval_in_env(engine$read("(->double 5)")[[1]], env), 5.0)
 })

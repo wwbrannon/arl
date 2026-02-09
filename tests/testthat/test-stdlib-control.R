@@ -32,6 +32,11 @@ test_that("when evaluates body when test is truthy", {
   engine$eval_in_env(engine$read("(set! x 0)")[[1]], env)
   engine$eval_in_env(engine$read("(when #f (set! x 20))")[[1]], env)
   expect_equal(env$x, 0)
+
+  # Multiple body forms
+  result <- engine$eval_in_env(
+    engine$read("(when #t (define x 5) (+ x 10))")[[1]], env)
+  expect_equal(result, 15)
 })
 
 test_that("unless evaluates body when test is falsy", {
@@ -60,6 +65,11 @@ test_that("unless evaluates body when test is falsy", {
   engine$eval_in_env(engine$read("(set! x 0)")[[1]], env)
   engine$eval_in_env(engine$read("(unless #t (set! x 20))")[[1]], env)
   expect_equal(env$x, 0)
+
+  # Multiple body forms
+  result <- engine$eval_in_env(
+    engine$read("(unless #f (define x 5) (+ x 10))")[[1]], env)
+  expect_equal(result, 15)
 })
 
 test_that("cond selects first matching clause", {
@@ -87,10 +97,9 @@ test_that("cond selects first matching clause", {
     engine$read("(cond ((= 1 2) 'first) ((= 2 2) 'second) (else 'third))")[[1]], env)
   expect_equal(as.character(result), "second")
 
-  # No matching clause without else is ill-formed syntax
-  expect_error(
-    engine$eval_in_env(engine$read("(cond (#f 'first) (#f 'second))")[[1]], env),
-    "Missing required parameter")
+  # No matching clause without else returns #nil
+  result <- engine$eval_in_env(engine$read("(cond (#f 'first) (#f 'second))")[[1]], env)
+  expect_null(result)
 
   # Multiple expressions in body
   result <- engine$eval_in_env(
@@ -123,10 +132,9 @@ test_that("case branches on key equality", {
     engine$read("(case 4 (1 'one) (2 'two) (else 'other))")[[1]], env)
   expect_equal(as.character(result), "other")
 
-  # No matching case without else is ill-formed syntax
-  expect_error(
-    engine$eval_in_env(engine$read("(case 5 (1 'one) (2 'two))")[[1]], env),
-    "Missing required parameter")
+  # No matching case without else returns #nil
+  result <- engine$eval_in_env(engine$read("(case 5 (1 'one) (2 'two))")[[1]], env)
+  expect_null(result)
 
   # Works with symbols
   result <- engine$eval_in_env(

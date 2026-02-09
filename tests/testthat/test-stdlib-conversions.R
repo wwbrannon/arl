@@ -78,7 +78,7 @@ test_that("inexact->exact converts doubles to integers", {
   stdlib_env(engine, env)
 
   expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.0)")[[1]], env), 5L)
-  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 5L)
+  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 6L)
 })
 
 test_that("conversion roundtrips work", {

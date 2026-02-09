@@ -16,8 +16,8 @@
 
   (define list?
     (lambda (x)
-      "Return #t if x is a list, call, or dotted pair."
-      (if (pair? x) #t
+      "Return #t if x is a proper list (R list or call), not a dotted pair."
+      (if (pair? x) #f
         (if (is.list x) #t (if (is.call x) #t #f)))))
 
   (define list-or-pair?

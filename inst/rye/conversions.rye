@@ -56,9 +56,9 @@
 
   (define inexact->exact
     (lambda (x)
-      "Convert inexact number to exact (double to integer, may round)."
+      "Convert inexact number to exact (double to integer, rounds to nearest)."
       (if (number? x)
-        (as.integer x)
+        (as.integer (round x))
         (stop "inexact->exact: argument must be a number"))))
 
   ;; R-style type conversions (shortcuts)

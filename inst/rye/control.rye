@@ -9,13 +9,13 @@
 
 ;;; Control flow macros
 
-(defmacro when (test body)
-  "Evaluate body when test is truthy."
-  `(if ,test ,body #nil))
+(defmacro when (test . body)
+  "Evaluate body forms when test is truthy."
+  `(if ,test (begin ,@body) #nil))
 
-(defmacro unless (test body)
-  "Evaluate body when test is falsy."
-  `(if ,test #nil ,body))
+(defmacro unless (test . body)
+  "Evaluate body forms when test is falsy."
+  `(if ,test #nil (begin ,@body)))
 
 ;;; Conditional macros
 
@@ -29,7 +29,7 @@
       (if (and (symbol? test) (= (as.character test) "else"))
         `(begin ,@body)
         (if (null? rest)
-          `(if ,test (begin ,@body) (error "Missing required parameter (else clause)"))
+          `(if ,test (begin ,@body) #nil)
           `(if ,test (begin ,@body) (cond ,@rest)))))))
 
 (defmacro case (key clause . rest)
@@ -42,7 +42,7 @@
       (if (and (symbol? datum) (= (as.character datum) "else"))
         `(begin ,@body)
         (if (null? rest)
-          `(if (= ,key ,datum) (begin ,@body) (error "Missing required parameter (else clause)"))
+          `(if (= ,key ,datum) (begin ,@body) #nil)
           `(if (= ,key ,datum) (begin ,@body) (case ,key ,@rest)))))))
 
 ;;; Error handling helper

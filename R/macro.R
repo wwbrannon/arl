@@ -972,9 +972,11 @@ MacroExpander <- R6::R6Class(
         result
       }
 
+      rest_name <- if (!is.null(rest_param_spec) && !is.null(rest_param_spec$name)) rest_param_spec$name else NULL
       attr(macro_fn, "rye_macro") <- list(
         params = param_names,
-        param_defaults = param_defaults
+        param_defaults = param_defaults,
+        rest_param = rest_name
       )
       if (!is.null(docstring)) {
         attr(macro_fn, "rye_doc") <- list(description = docstring)

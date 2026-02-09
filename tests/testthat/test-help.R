@@ -27,7 +27,7 @@ test_that("help shows Rye macro docs from stdlib files", {
   import_stdlib_modules(engine, c("control"))
   output <- capture.output(engine$eval_text("(help when)", env = env))
   expect_true(any(grepl("Topic: when", output)))
-  expect_true(any(grepl("\\(when test body\\)", output)))
+  expect_true(any(grepl("\\(when test \\. body\\)", output)))
 })
 
 test_that("help reads lambda docstrings", {

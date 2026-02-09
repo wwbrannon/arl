@@ -22,7 +22,7 @@
 (define test-logic-xor-truthy (lambda ()
   ;; Test xor with truthy values
   (assert-true (xor #f 1))
-  (assert-true (xor 0 #f))  ; 0 is truthy in Rye
+  (assert-false (xor 0 #f))  ; 0 is falsy in Rye
   (assert-false (xor 1 2))
   (assert-true (xor #nil "string"))
   (assert-false (xor "a" "b"))))

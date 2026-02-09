@@ -6,7 +6,7 @@
 
 (define test-exact-inexact-conversion (lambda ()
   (assert-equal (exact->inexact 5) 5.0)
-  (assert-equal (inexact->exact 5.7) 5L)))
+  (assert-equal (inexact->exact 5.7) 6L)))
 
 (define test-integer-conversion (lambda ()
   (assert-equal (->integer 5.7) 5L)

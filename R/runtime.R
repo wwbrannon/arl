@@ -3,12 +3,15 @@ rye_missing_default <- function() {
 }
 
 # Compiled-mode helpers: installed in env before eval(compiled, env).
-# Rye truthiness: only #f (FALSE) and #nil (NULL) are false.
+# Rye truthiness: #f (FALSE), #nil (NULL), and 0 are false.
 .rye_true_p <- function(x) {
   if (is.null(x)) {
     return(FALSE)
   }
   if (is.logical(x) && length(x) == 1L && !is.na(x) && identical(x[[1]], FALSE)) {
+    return(FALSE)
+  }
+  if (is.numeric(x) && length(x) == 1L && !is.na(x) && x == 0) {
     return(FALSE)
   }
   TRUE

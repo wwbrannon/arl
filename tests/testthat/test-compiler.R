@@ -466,9 +466,9 @@ test_that("compiler optimizes truthiness checks for logical operators", {
 test_that("compiler preserves Rye truthiness semantics", {
   engine <- RyeEngine$new()
 
-  # Only #f and #nil are false in Rye
-  # Numbers, strings, empty lists, etc. are truthy
-  expect_equal(engine$eval(engine$read("(if 0 1 2)")[[1]]), 1)  # 0 is truthy
+  # #f, #nil, and 0 are false in Rye (0 follows R semantics)
+  # Strings, empty lists, etc. are truthy
+  expect_equal(engine$eval(engine$read("(if 0 1 2)")[[1]]), 2)  # 0 is falsy
   expect_equal(engine$eval(engine$read('(if "" 1 2)')[[1]]), 1)  # empty string is truthy
   expect_equal(engine$eval(engine$read("(if (list) 1 2)")[[1]]), 1)  # empty list is truthy
 

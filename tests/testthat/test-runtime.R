@@ -71,9 +71,11 @@ test_that(".rye_true_p helper handles truthiness correctly", {
   expect_false(true_p(FALSE))
   expect_false(true_p(NULL))
 
+  # 0 is also falsy (follows R semantics)
+  expect_false(true_p(0))
+
   # Everything else is truthy
   expect_true(true_p(TRUE))
-  expect_true(true_p(0))
   expect_true(true_p(""))
   expect_true(true_p(list()))
   expect_true(true_p(NA))

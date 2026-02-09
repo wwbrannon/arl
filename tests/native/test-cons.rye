@@ -19,7 +19,7 @@
 
 (define test-cons-list-pair-predicates (lambda ()
   (define pair (cons 1 2))
-  (assert-true (list? pair))
+  (assert-false (list? pair))
   (assert-true (pair? pair))))
 
 (define test-cons-improper-list (lambda ()

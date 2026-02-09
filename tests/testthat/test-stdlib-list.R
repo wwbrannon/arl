@@ -178,10 +178,10 @@ test_that("car and cdr on dotted pair", {
   expect_equal(env$cdr(pair), 42)
 })
 
-test_that("list? and pair? are true for dotted pair (RyeCons)", {
+test_that("list? is false but pair? is true for dotted pair (RyeCons)", {
   env <- stdlib_env(engine, new.env())
   pair <- engine$eval_in_env(engine$read("(cons 1 2)")[[1]], env)
-  expect_true(env$`list?`(pair))
+  expect_false(env$`list?`(pair))
   expect_true(env$`pair?`(pair))  # pair? = dotted pair (RyeCons)
 })
 
