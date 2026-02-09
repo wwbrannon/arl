@@ -446,9 +446,11 @@ RyeEngine <- R6::R6Class(
               self$compiled_runtime$install_helpers(module_env)
 
               # Evaluate cached compiled expressions in module environment
-              result <- NULL
-              for (compiled_expr in cache_data$compiled_body) {
-                result <- self$compiled_runtime$eval_compiled(compiled_expr, module_env)
+              if (length(cache_data$compiled_body) == 1L) {
+                result <- self$compiled_runtime$eval_compiled(cache_data$compiled_body[[1L]], module_env)
+              } else {
+                block <- as.call(c(list(quote(`{`)), cache_data$compiled_body))
+                result <- self$compiled_runtime$eval_compiled(block, module_env)
               }
 
               # Handle export_all

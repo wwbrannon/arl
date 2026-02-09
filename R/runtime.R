@@ -229,12 +229,7 @@ CompiledRuntime <- R6::R6Class(
         }
       }
 
-      result_with_vis <- withVisible(eval(compiled_expr, envir = env))
-      if (result_with_vis$visible) {
-        result_with_vis$value
-      } else {
-        invisible(result_with_vis$value)
-      }
+      eval(compiled_expr, envir = env)
     },
     # Import logic for compiled (import x): same semantics as import special form.
     import_compiled = function(arg_value, env) {
@@ -351,9 +346,11 @@ CompiledRuntime <- R6::R6Class(
 
       # Evaluate (use compiled version if we made it, otherwise compile on-the-fly)
       if (!is.null(compiled_body)) {
-        result <- NULL
-        for (compiled_expr in compiled_body) {
-          result <- self$eval_compiled(compiled_expr, module_env)
+        if (length(compiled_body) == 1L) {
+          result <- self$eval_compiled(compiled_body[[1L]], module_env)
+        } else {
+          block <- as.call(c(list(quote(`{`)), compiled_body))
+          result <- self$eval_compiled(block, module_env)
         }
       } else {
         result <- private$eval_seq_compiled(body_exprs, module_env)
