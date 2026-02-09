@@ -27,3 +27,4 @@
 (^|/)\.rye_cache($|/)
 ^coverage$
 ^\.coverage\.yml$
+^codecov\.yml$
