@@ -70,7 +70,7 @@ test_that("TCO: works with cond (macro-expands to nested if)", {
   expect_equal(result, quote(zero))
 })
 
-test_that("TCO: single-param self-call (no temp needed)", {
+test_that("TCO: sum-to with two-param self-call", {
   engine$eval_text("
     (define sum-to (lambda (n acc)
       (if (<= n 0)
@@ -144,7 +144,7 @@ test_that("TCO: rest-param function with apply (not direct self-call) is not TCO
 # Compiled output verification
 # ==============================================================================
 
-test_that("VERIFY: TCO'd function has repeat and return, no self-call", {
+test_that("VERIFY: TCO'd function has while-loop and return, no self-call", {
   out <- engine$inspect_compilation("
     (define fact (lambda (n acc)
       (if (<= n 1)
@@ -264,16 +264,20 @@ test_that("TCO: mixed positional + keyword self-tail-call", {
   expect_equal(result, 15)
 })
 
-test_that("TCO: unknown keyword falls through to normal call", {
-  # This should compile without error but not be TCO'd for that call path
-  engine$eval_text("
-    (define safe-fn (lambda (x y)
+test_that("TCO: unknown keyword in self-call bails to normal call", {
+  # Self-call uses :z which doesn't match any param — compile_self_tail_call
+  # bails, so the self-call remains as a normal recursive call in the output
+  out <- engine$inspect_compilation("
+    (define bad-kw-fn (lambda (x y)
       (if (<= x 0)
         y
-        (safe-fn (- x 1) (+ y x)))))
+        (bad-kw-fn (- x 1) :z (+ y x)))))
   ")
-  result <- engine$eval_text("(safe-fn 5 0)")
-  expect_equal(result, 15)
+  deparsed <- paste(out$compiled_deparsed, collapse = "\n")
+  # while loop is present (detector found the self-call)
+  expect_true(grepl("while", deparsed, fixed = TRUE))
+  # but the self-call is still in the output (bail means not actually optimized)
+  expect_true(grepl("bad-kw-fn", deparsed, fixed = TRUE))
 })
 
 test_that("TCO: deep recursion with keyword args does not stack overflow", {
@@ -292,14 +296,6 @@ test_that("TCO: deep recursion with keyword args does not stack overflow", {
 # ==============================================================================
 
 test_that("TCO: rest param with direct self-tail-call", {
-  engine$eval_text("
-    (define rest-sum (lambda (acc . rest)
-      (if (null? rest)
-        acc
-        (rest-sum (+ acc (car rest)) . (cdr rest)))))
-  ")
-  # This doesn't use direct self-call syntax since rest is spread differently
-  # Let's use a simpler case:
   engine$eval_text("
     (define rest-count (lambda (n . rest)
       (if (<= n 0)
@@ -484,14 +480,25 @@ test_that("TCO: let where self-call is NOT in tail position is not TCO'd", {
   expect_false(grepl("while", deparsed, fixed = TRUE))
 })
 
-test_that("TCO: IIFE with complex params bails gracefully", {
-  # IIFE with rest param — should not be inlined, but still works
-  engine$eval_text("
-    (define simple-fn (lambda (n)
-      (if (<= n 0)
-        0
-        (simple-fn (- n 1)))))
+test_that("TCO: IIFE with complex params bails on inlining", {
+  # Hand-written IIFE with rest param in tail position — compile_tail_iife
+  # should bail, leaving the self-call in compiled output
+  out <- engine$inspect_compilation("
+    (define iife-rest-fn (lambda (n)
+      ((lambda (m . rest) (if (<= m 0) 0 (iife-rest-fn m))) (- n 1))))
   ")
-  result <- engine$eval_text("(simple-fn 10)")
+  deparsed <- paste(out$compiled_deparsed, collapse = "\n")
+  # while loop is present (detector found the self-call inside IIFE)
+  expect_true(grepl("while", deparsed, fixed = TRUE))
+  # but self-call is still present (IIFE inlining bailed due to rest param)
+  expect_true(grepl("iife-rest-fn", deparsed, fixed = TRUE))
+})
+
+test_that("TCO: IIFE with complex params still works at runtime", {
+  engine$eval_text("
+    (define iife-rest-fn2 (lambda (n)
+      ((lambda (m . rest) (if (<= m 0) 0 (iife-rest-fn2 m))) (- n 1))))
+  ")
+  result <- engine$eval_text("(iife-rest-fn2 10)")
   expect_equal(result, 0)
 })
