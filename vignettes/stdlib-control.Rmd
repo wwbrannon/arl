@@ -95,23 +95,6 @@ Logical OR with short-circuit evaluation.
 
 ---
 
-### not
-
-Logical NOT.
-
-**Signature:** `(not expr)`
-
-**Examples:**
-```lisp
-(not #t)              ; => #f
-(not #f)              ; => #t
-(not 42)              ; => #f  (only #f is falsy)
-```
-
-**See also:** and, or
-
----
-
 ### cond
 
 Multi-way conditional.
@@ -157,7 +140,7 @@ Pattern matching on a value.
 
 ### let
 
-Creates local bindings (sequential).
+Creates local bindings.
 
 **Signature:** `(let ((var1 val1) (var2 val2) ...) body...)`
 
@@ -215,6 +198,45 @@ Creates local bindings (allows recursive definitions).
 
 ---
 
+### when-let
+
+Bind a value and evaluate body only if the value is truthy.
+
+**Signature:** `(when-let ((var expr)) body...)`
+
+**Examples:**
+```lisp
+(when-let ((x (dict-get d "key")))
+  (println (str "Found: " x)))
+; prints if key exists, does nothing if dict-get returns #nil
+```
+
+**Defined in:** `inst/rye/binding.rye`
+
+**See also:** if-let, when, let
+
+---
+
+### if-let
+
+Bind a value and choose branch based on its truthiness.
+
+**Signature:** `(if-let ((var expr)) then-expr else-expr)`
+
+**Examples:**
+```lisp
+(if-let ((x (string->number "42")))
+  (+ x 1)
+  (error "not a number"))
+; => 43
+```
+
+**Defined in:** `inst/rye/binding.rye`
+
+**See also:** when-let, if, let
+
+---
+
 ## Looping Macros
 
 ### while
@@ -231,7 +253,7 @@ Executes body repeatedly while test is truthy.
   (set! i (+ i 1)))
 ```
 
-**Defined in:** `inst/rye/looping.rye`
+**Defined in:** Built-in special form (compiled by `R/compiler.R`)
 
 **See also:** for, while-r
 
@@ -333,6 +355,26 @@ Execute an R `for` loop using R's native control flow.
 **Defined in:** `inst/rye/looping.rye`
 
 **See also:** for
+
+---
+
+### until
+
+Repeat body until test becomes truthy.
+
+**Signature:** `(until test body...)`
+
+**Examples:**
+```lisp
+(define i 0)
+(until (>= i 5)
+  (set! i (+ i 1)))
+i  ; => 5
+```
+
+**Defined in:** `inst/rye/looping.rye`
+
+**See also:** while
 
 ---
 

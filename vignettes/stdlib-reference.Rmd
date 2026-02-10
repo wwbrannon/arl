@@ -34,12 +34,12 @@ For the full, per-function reference, see the individual stdlib reference pages:
 ## Loading
 
 ```lisp
-; Load focused modules
-(load "control")   ; when/unless/and/or/cond/case
-(load "binding")   ; let/let*/letrec
-(load "looping")   ; while/for
-(load "threading") ; -> and ->>
-(load "error")     ; try/catch/finally
+; Import focused modules
+(import control)   ; when/unless/and/or/cond/case
+(import binding)   ; let/let*/letrec
+(import looping)   ; for/loop/recur/until
+(import threading) ; -> and ->>
+(import error)     ; try/catch/finally
 ```
 
 From R, you can create an engine with the stdlib already loaded:
@@ -111,7 +111,7 @@ engine <- RyeEngine$new()
 
 ## Source mapping
 
-The base R parts of the stdlib implementation live in `R/stdlib.R`. The rye
+The base R parts of the stdlib implementation live in `R/runtime.R`. The rye
 parts are organized by topic in `inst/rye/` (each file defines a module). The
 engine loads these modules in dependency order when initializing.
 

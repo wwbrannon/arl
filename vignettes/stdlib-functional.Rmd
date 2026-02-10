@@ -164,6 +164,108 @@ Returns true if any element satisfies the predicate.
 
 ---
 
+## Advanced Functional Programming
+
+### curry
+
+Curry a function, enabling incremental partial application until all arguments are supplied.
+
+**Signature:** `(curry fn [initial-args...])`
+
+**Examples:**
+```lisp
+(define add (lambda (a b) (+ a b)))
+(define add5 (curry add 5))
+(add5 3)               ; => 8
+
+(define cadd (curry add))
+((cadd 5) 3)           ; => 8
+```
+
+**See also:** partial
+
+---
+
+### juxt
+
+Create a function that applies multiple functions to the same arguments, returning a list of results.
+
+**Signature:** `(juxt fn1 fn2 ...)`
+
+**Examples:**
+```lisp
+(define stats (juxt min max))
+(stats (list 3 1 4 1 5))  ; => (1 5)
+```
+
+**See also:** map, compose
+
+---
+
+### constantly
+
+Return a function that always returns the given value, ignoring its arguments.
+
+**Signature:** `(constantly value)`
+
+**Examples:**
+```lisp
+(define always-42 (constantly 42))
+(always-42)           ; => 42
+(always-42 "ignored") ; => 42
+(map (constantly 0) (list 1 2 3))  ; => (0 0 0)
+```
+
+---
+
+### iterate
+
+Apply a function n times to an initial value.
+
+**Signature:** `(iterate fn n init)`
+
+**Examples:**
+```lisp
+(iterate (lambda (x) (* x 2)) 3 1)  ; => 8  (1 -> 2 -> 4 -> 8)
+(iterate inc 5 0)                    ; => 5
+```
+
+**See also:** iterate-until, reduce
+
+---
+
+### iterate-until
+
+Apply a function starting from an initial value, collecting values until a predicate becomes true.
+
+**Signature:** `(iterate-until fn init pred)`
+
+**Examples:**
+```lisp
+(iterate-until (lambda (x) (* x 2)) 1 (lambda (x) (> x 10)))
+; => (1 2 4 8)
+```
+
+**See also:** iterate, take-while
+
+---
+
+### memoize
+
+Return a memoized version of a function that caches results for previously seen arguments.
+
+**Signature:** `(memoize fn)`
+
+**Examples:**
+```lisp
+(define slow-fn (memoize (lambda (n)
+  (if (< n 2) n
+      (+ (slow-fn (- n 1)) (slow-fn (- n 2)))))))
+(slow-fn 30)  ; fast due to caching
+```
+
+---
+
 ## Logical Operations
 
 These functions are provided by the `logic` module (`inst/rye/logic.rye`).
@@ -178,12 +280,12 @@ Logical negation with Rye truthiness semantics.
 ```lisp
 (not #t)              ; => #f
 (not #f)              ; => #t
-(not 0)               ; => #f (0 is truthy in Rye)
+(not 0)               ; => #t (0 is falsy in Rye)
 (not #nil)            ; => #t
-(not "hello")         ; => #f (non-#f values are truthy)
+(not "hello")         ; => #f (non-falsy values are truthy)
 ```
 
-**Note:** In Rye (like Scheme), only `#f` is falsy. All other values including `0`, `""`, and `()` are truthy.
+**Note:** In Rye, `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsy. All other values including `""` and `()` are truthy.
 
 **See also:** xor, and, or (special forms)
 
@@ -201,7 +303,7 @@ Logical exclusive OR with Rye truthiness semantics.
 (xor #f #t)           ; => #t
 (xor #t #t)           ; => #f
 (xor #f #f)           ; => #f
-(xor 1 0)             ; => #f (both truthy)
+(xor 1 0)             ; => #t (1 is truthy, 0 is falsy)
 (xor #nil 5)          ; => #t (one falsy, one truthy)
 ```
 

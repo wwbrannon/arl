@@ -212,7 +212,7 @@ Converts a value to a list.
 **Examples:**
 ```lisp
 (->list [1 2 3])          ; => (1 2 3)
-(->list (list 1 2))       ; => (1 2 3) (already a list)
+(->list (list 1 2))       ; => (1 2) (already a list)
 (->list "hello")          ; => ("h" "e" "l" "l" "o")
 ```
 

@@ -431,9 +431,395 @@ Computes the angle (argument) of a complex number in radians.
 
 ---
 
-## Arithmetic Operations
+## Arithmetic Helpers
 
-The `math` module also provides standard arithmetic operators and functions. For complete documentation of arithmetic operations (+, -, *, /, etc.) and mathematical functions (sqrt, sin, cos, log, etc.), see the math module source code at `inst/rye/math.rye`.
+### inc
+
+Increment a number.
+
+**Signature:** `(inc x [n 1])`
+
+**Examples:**
+```lisp
+(inc 5)       ; => 6
+(inc 5 3)     ; => 8
+```
+
+**See also:** dec
+
+---
+
+### dec
+
+Decrement a number.
+
+**Signature:** `(dec x [n 1])`
+
+**Examples:**
+```lisp
+(dec 5)       ; => 4
+(dec 5 3)     ; => 2
+```
+
+**See also:** inc
+
+---
+
+### clamp
+
+Clamp a value to an inclusive range.
+
+**Signature:** `(clamp x lo hi)`
+
+**Examples:**
+```lisp
+(clamp 5 0 10)   ; => 5
+(clamp -3 0 10)  ; => 0
+(clamp 15 0 10)  ; => 10
+```
+
+**See also:** within?
+
+---
+
+### within?
+
+Test if a value is within an inclusive range.
+
+**Signature:** `(within? x lo hi)`
+
+**Examples:**
+```lisp
+(within? 5 0 10)   ; => #t
+(within? -3 0 10)  ; => #f
+(within? 10 0 10)  ; => #t
+```
+
+**See also:** clamp
+
+---
+
+## Rounding and Truncation
+
+### abs
+
+Return absolute value.
+
+**Signature:** `(abs x)`
+
+**Examples:**
+```lisp
+(abs -5)      ; => 5
+(abs 5)       ; => 5
+```
+
+---
+
+### floor
+
+Round down to nearest integer.
+
+**Signature:** `(floor x)`
+
+**Examples:**
+```lisp
+(floor 3.7)   ; => 3
+(floor -3.2)  ; => -4
+```
+
+**See also:** ceiling, truncate, round
+
+---
+
+### ceiling
+
+Round up to nearest integer.
+
+**Signature:** `(ceiling x)`
+
+**Examples:**
+```lisp
+(ceiling 3.2)  ; => 4
+(ceiling -3.7) ; => -3
+```
+
+**See also:** floor, truncate, round
+
+---
+
+### truncate
+
+Truncate toward zero.
+
+**Signature:** `(truncate x)`
+
+**Examples:**
+```lisp
+(truncate 3.7)  ; => 3
+(truncate -3.7) ; => -3
+```
+
+**See also:** floor, ceiling, round
+
+---
+
+### round
+
+Round to given number of decimal places (default 0).
+
+**Signature:** `(round x [digits 0])`
+
+**Examples:**
+```lisp
+(round 3.567)    ; => 4
+(round 3.567 2)  ; => 3.57
+```
+
+**See also:** floor, ceiling, truncate
+
+---
+
+### signum
+
+Return the sign of a number: -1, 0, or 1.
+
+**Signature:** `(signum x)`
+
+**Examples:**
+```lisp
+(signum 42)    ; => 1
+(signum -5)    ; => -1
+(signum 0)     ; => 0
+```
+
+---
+
+## Power, Roots, and Logarithms
+
+### sqrt
+
+Return square root.
+
+**Signature:** `(sqrt x)`
+
+**Examples:**
+```lisp
+(sqrt 16)     ; => 4
+(sqrt 2)      ; => 1.414...
+```
+
+**See also:** expt
+
+---
+
+### expt
+
+Raise base to a power.
+
+**Signature:** `(expt base power)`
+
+**Examples:**
+```lisp
+(expt 2 10)   ; => 1024
+(expt 3 3)    ; => 27
+```
+
+**See also:** sqrt
+
+---
+
+### log
+
+Natural logarithm, or logarithm to a given base.
+
+**Signature:** `(log x [base])`
+
+**Examples:**
+```lisp
+(log 1)           ; => 0
+(log (exp 1))     ; => 1.0
+(log 100 10)      ; => 2.0
+```
+
+**See also:** exp, log10, log2
+
+---
+
+### exp
+
+Return e raised to a power.
+
+**Signature:** `(exp x)`
+
+**Examples:**
+```lisp
+(exp 0)       ; => 1
+(exp 1)       ; => 2.718...
+```
+
+**See also:** log
+
+---
+
+### log10
+
+Base-10 logarithm.
+
+**Signature:** `(log10 x)`
+
+**Examples:**
+```lisp
+(log10 100)   ; => 2
+(log10 1000)  ; => 3
+```
+
+**See also:** log, log2
+
+---
+
+### log2
+
+Base-2 logarithm.
+
+**Signature:** `(log2 x)`
+
+**Examples:**
+```lisp
+(log2 8)      ; => 3
+(log2 1024)   ; => 10
+```
+
+**See also:** log, log10
+
+---
+
+## Trigonometric Functions
+
+### sin / cos / tan
+
+Standard trigonometric functions (argument in radians).
+
+**Signatures:** `(sin x)`, `(cos x)`, `(tan x)`
+
+**Examples:**
+```lisp
+(sin 0)       ; => 0
+(cos 0)       ; => 1
+(tan 0)       ; => 0
+```
+
+---
+
+### asin / acos / atan
+
+Inverse trigonometric functions (result in radians).
+
+**Signatures:** `(asin x)`, `(acos x)`, `(atan x)`
+
+**Examples:**
+```lisp
+(asin 1)      ; => 1.5707... (pi/2)
+(acos 1)      ; => 0
+(atan 1)      ; => 0.7853... (pi/4)
+```
+
+---
+
+### atan2
+
+Two-argument arctangent, respecting quadrant.
+
+**Signature:** `(atan2 y x)`
+
+**Examples:**
+```lisp
+(atan2 1 1)   ; => 0.7853... (pi/4)
+(atan2 -1 -1) ; => -2.356... (-3*pi/4)
+```
+
+---
+
+## Integer Division
+
+### quotient
+
+Integer quotient (truncated toward zero).
+
+**Signature:** `(quotient x y)`
+
+**Examples:**
+```lisp
+(quotient 10 3)   ; => 3
+(quotient -10 3)  ; => -3
+```
+
+**See also:** remainder, modulo
+
+---
+
+### remainder
+
+Remainder after integer division (same sign as dividend).
+
+**Signature:** `(remainder x y)`
+
+**Examples:**
+```lisp
+(remainder 10 3)   ; => 1
+(remainder -10 3)  ; => -1
+```
+
+**See also:** quotient, modulo
+
+---
+
+### modulo
+
+Modulo operation (same sign as divisor).
+
+**Signature:** `(modulo x y)`
+
+**Examples:**
+```lisp
+(modulo 10 3)    ; => 1
+(modulo -10 3)   ; => 2
+```
+
+**See also:** quotient, remainder, %
+
+---
+
+## Number Theory
+
+### gcd
+
+Greatest common divisor (variadic).
+
+**Signature:** `(gcd a b ...)`
+
+**Examples:**
+```lisp
+(gcd 12 8)      ; => 4
+(gcd 12 8 6)    ; => 2
+```
+
+**See also:** lcm
+
+---
+
+### lcm
+
+Least common multiple (variadic).
+
+**Signature:** `(lcm a b ...)`
+
+**Examples:**
+```lisp
+(lcm 4 6)       ; => 12
+(lcm 3 4 5)     ; => 60
+```
+
+**See also:** gcd
 
 ---
 

@@ -51,8 +51,8 @@ structures:
 
 ### Truthiness
 
-Scheme typically treats only `#f` as false. Rye treats **only** `#f`/`FALSE`
-and `#nil`/`NULL` as falsey; everything else is truthy.
+Scheme typically treats only `#f` as false. Rye treats `#f`/`FALSE`,
+`#nil`/`NULL`, and `0` as falsey; everything else is truthy.
 
 ### Numeric edge cases (R semantics)
 
