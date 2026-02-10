@@ -489,8 +489,7 @@ generate_rmd <- function(vignette_name, config, all_parsed) {
 
   out <- character()
 
-  # YAML frontmatter
-  out <- c(out, AUTOGEN_HEADER)
+  # YAML frontmatter (--- must be on line 1 for Rmd title rendering)
   out <- c(out, "---")
   out <- c(out, paste0('title: "', title, '"'))
   out <- c(out, "output:")
@@ -502,6 +501,7 @@ generate_rmd <- function(vignette_name, config, all_parsed) {
   out <- c(out, "  %\\VignetteEncoding{UTF-8}")
   out <- c(out, "---")
   out <- c(out, "")
+  out <- c(out, AUTOGEN_HEADER)
   out <- c(out, "```{r setup, include = FALSE}")
   out <- c(out, 'knitr::opts_chunk$set(collapse = TRUE, comment = "#>")')
   out <- c(out, "```")
