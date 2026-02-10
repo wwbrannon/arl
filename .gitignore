@@ -1,3 +1,20 @@
+# Ctags files
+tags
+tags.lock
+tags.temp
+
+# Vim stuff
+*~
+*.sw?
+*.vimsession
+
+# macOS stuff
+*.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Claude files
 .claude/docs/
 
 # History files
