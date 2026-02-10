@@ -69,6 +69,7 @@ tracker <- RyeCoverageTracker$new(
 \itemize{
 \item \href{#method-RyeCoverageTracker-new}{\code{RyeCoverageTracker$new()}}
 \item \href{#method-RyeCoverageTracker-track}{\code{RyeCoverageTracker$track()}}
+\item \href{#method-RyeCoverageTracker-register_coverable}{\code{RyeCoverageTracker$register_coverable()}}
 \item \href{#method-RyeCoverageTracker-get_summary}{\code{RyeCoverageTracker$get_summary()}}
 \item \href{#method-RyeCoverageTracker-discover_files}{\code{RyeCoverageTracker$discover_files()}}
 \item \href{#method-RyeCoverageTracker-reset}{\code{RyeCoverageTracker$reset()}}
@@ -126,6 +127,27 @@ Track execution of an expression with source info
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{rye_src}}{Source information object with file, start_line, end_line}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeCoverageTracker-register_coverable"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeCoverageTracker-register_coverable}{}}}
+\subsection{Method \code{register_coverable()}}{
+Register coverable lines from an instrumented source range
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeCoverageTracker$register_coverable(file, start_line, end_line)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{file}}{Source file path}
+
+\item{\code{start_line}}{Start line of the instrumented form}
+
+\item{\code{end_line}}{End line of the instrumented form}
 }
 \if{html}{\out{</div>}}
 }
