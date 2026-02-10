@@ -116,7 +116,7 @@ get_real_workload <- function(name) {
          paste(names(examples), collapse = ", "))
   }
 
-  load_example_workload(examples[[name]])
+  load_example_workload(examples[[name]]) # nolint: object_usage_linter.
 }
 
 # String-heavy workload

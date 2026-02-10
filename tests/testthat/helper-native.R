@@ -35,19 +35,19 @@ run_native_test_file <- function(path, engine, env) {
   for (test_name in test_names) {
     # Wrap test_that in tryCatch to prevent abort on failure
     tryCatch({
-      test_that(sprintf("%s: %s", basename(path), test_name), {
+      test_that(sprintf("%s: %s", basename(path), test_name), { # nolint: object_usage_linter.
         # Call the test function
         tryCatch({
           exprs <- engine$read(sprintf('(%s)', test_name))
           engine$eval_in_env(exprs[[1]], env)
           # If we get here, the test passed
-          expect_true(TRUE)
+          expect_true(TRUE) # nolint: object_usage_linter.
         }, skip = function(e) {
           # Test was skipped - re-signal the skip condition
           testthat::skip(e$message)
         }, error = function(e) {
           # Test failed with an error
-          expect_true(FALSE, info = sprintf("Test %s failed: %s", test_name, e$message))
+          expect_true(FALSE, info = sprintf("Test %s failed: %s", test_name, e$message)) # nolint: object_usage_linter.
         })
       })
     }, error = function(e) {
@@ -83,7 +83,7 @@ run_native_tests <- function(dir = "tests/native") {
   for (test_file in test_files) {
     # Create a fresh engine for this test file
     # This ensures complete test isolation - no state leaks between files
-    engine <- make_engine()
+    engine <- make_engine() # nolint: object_usage_linter.
     env <- engine$env$env
 
     # Load test-specific helpers (like skip function)

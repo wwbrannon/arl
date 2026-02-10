@@ -11,7 +11,7 @@ engine <- make_engine()
 # Helper to create test env with stdlib
 setup_env <- function() {
   env <- new.env()
-  stdlib_env(engine, env)
+  stdlib_env(engine, env) # nolint: object_usage_linter.
   env
 }
 

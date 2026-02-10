@@ -174,7 +174,7 @@ test_that("multiple engines have independent current-env", {
 
 make_env <- function(engine, init = NULL) {
   env <- new.env()
-  stdlib_env(engine, env)
+  stdlib_env(engine, env) # nolint: object_usage_linter.
   if (is.function(init)) {
     init(env)
   }
@@ -184,7 +184,7 @@ make_env <- function(engine, init = NULL) {
 eval_compiled_in_env <- function(engine, expr, env) {
   expanded <- engine$macroexpand_in_env(expr, env, preserve_src = TRUE)
   compiled <- engine$compiler$compile(expanded, env, strict = TRUE)
-  expect_false(is.null(compiled))
+  expect_false(is.null(compiled)) # nolint: object_usage_linter.
   result <- withVisible(engine$compiled_runtime$eval_compiled(compiled, env))
   result$value <- engine$source_tracker$strip_src(result$value)
   list(

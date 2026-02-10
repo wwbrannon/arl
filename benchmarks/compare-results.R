@@ -29,8 +29,8 @@ compare_benchmarks <- function(old_file, new_file, regression_threshold = 5) {
 
   # Load results
   cat("Loading benchmark results...\n")
-  old_results <- load_benchmark_results(old_file)
-  new_results <- load_benchmark_results(new_file)
+  old_results <- load_benchmark_results(old_file) # nolint: object_usage_linter.
+  new_results <- load_benchmark_results(new_file) # nolint: object_usage_linter.
 
   cat(sprintf("  Old: %s\n", basename(old_file)))
   cat(sprintf("  New: %s\n", basename(new_file)))
