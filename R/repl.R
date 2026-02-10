@@ -194,7 +194,10 @@ RyeREPL <- R6::R6Class(
       if (is.null(value)) {
         return(invisible(NULL))
       }
-      cat(self$engine$env$format_value(value), "\n", sep = "")
+      formatted <- self$engine$env$format_value(value)
+      if (nzchar(formatted)) {
+        cat(formatted, "\n", sep = "")
+      }
       utils::flush.console()
       invisible(value)
     },

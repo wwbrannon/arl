@@ -390,6 +390,18 @@ test_that("equality handles NULL", {
   expect_true(engine$eval_in_env(engine$read("(equal? NULL NULL)")[[1]], env))
 })
 
+test_that("= handles NULL (Scheme semantics, not R logical(0))", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  expect_true(engine$eval_in_env(engine$read("(= NULL NULL)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(= NULL 1)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(= 1 NULL)")[[1]], env))
+  # variadic path
+  expect_true(engine$eval_in_env(engine$read("(= NULL NULL NULL)")[[1]], env))
+  expect_false(engine$eval_in_env(engine$read("(= 1 NULL 1)")[[1]], env))
+})
+
 test_that("identical? and equal? both work for lists", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
