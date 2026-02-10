@@ -25,6 +25,115 @@ AUTOGEN_HEADER <- paste0(
 )
 
 # ---------------------------------------------------------------------------
+# Anchor / slug helpers
+# ---------------------------------------------------------------------------
+
+#' Convert a function name to a stable HTML anchor ID.
+#' Special characters are mapped to readable alternatives so that
+#' headings like `string<?` and `string>?` get distinct anchors.
+slugify_func_name <- function(name) {
+  # Pure operator names
+  op_map <- list(
+    "+"  = "plus",  "-"  = "minus", "*"  = "star", "/" = "div",
+    "%"  = "modulo", "="  = "num-eq", "==" = "num-eq-eq",
+    "<"  = "lt",    ">"  = "gt",    "<=" = "lte",  ">=" = "gte"
+  )
+  if (name %in% names(op_map)) return(op_map[[name]])
+
+  # Threading macro names
+  if (name == "->>") return("thread-last")
+  if (name == "->")  return("thread-first")
+
+  s <- name
+
+  # Arrow conversions (must come before single-char replacements)
+  s <- gsub("->", "-to-", s, fixed = TRUE)
+
+  # Comparison operators in names (longer patterns first)
+  s <- gsub("<=", "-lte", s, fixed = TRUE)
+  s <- gsub(">=", "-gte", s, fixed = TRUE)
+  s <- gsub("==", "-eq-eq", s, fixed = TRUE)
+  s <- gsub("<",  "-lt",  s, fixed = TRUE)
+  s <- gsub(">",  "-gt",  s, fixed = TRUE)
+  s <- gsub("=",  "-eq",  s, fixed = TRUE)
+
+  # Other special chars
+  s <- gsub("!",  "-bang", s, fixed = TRUE)
+  s <- gsub("?",  "",      s, fixed = TRUE)
+  s <- gsub("*",  "-star", s, fixed = TRUE)
+  s <- gsub("/",  "-",     s, fixed = TRUE)
+  s <- gsub(".",  "-",     s, fixed = TRUE)
+
+  # Clean up runs of hyphens and leading/trailing hyphens
+  s <- gsub("-+", "-", s)
+  s <- gsub("^-|-$", "", s)
+  tolower(s)
+}
+
+#' Build a global lookup: func_name -> list(vignette, slug).
+#' Used to resolve cross-vignette "See also" links.
+build_func_index <- function(vignettes_config, all_parsed) {
+  index <- list()
+  for (vname in names(vignettes_config)) {
+    vconfig <- vignettes_config[[vname]]
+    for (mod_name in vconfig$modules) {
+      parsed <- all_parsed[[mod_name]]
+      if (is.null(parsed)) next
+      for (fn in parsed$functions) {
+        index[[fn$name]] <- list(
+          vignette = vname,
+          slug     = slugify_func_name(fn$name)
+        )
+      }
+    }
+  }
+  index
+}
+
+#' Turn a "See also" string into markdown with hyperlinks.
+#'
+#' Input examples:
+#'   "car, cdr, cons"
+#'   "exact? (in `math` module), inexact? (in `math` module)"
+#'
+#' Each recognised function name becomes a markdown link; parenthetical
+#' notes and unknown names are left as plain text.
+linkify_seealso <- function(seealso, func_index, current_vignette) {
+  # Split on commas
+  parts <- strsplit(seealso, ",")[[1]]
+  linked <- vapply(parts, function(part) {
+    part <- trimws(part)
+    if (nchar(part) == 0) return("")
+
+    # Separate optional parenthetical note:  "exact? (in `math` module)"
+    paren_note <- ""
+    m <- regexpr("\\s+\\(.*\\)$", part, perl = TRUE)
+    if (m != -1L) {
+      paren_note <- substr(part, m, nchar(part))
+      part_name  <- trimws(substr(part, 1L, m - 1L))
+    } else {
+      part_name <- part
+    }
+
+    # Look up in index
+    entry <- func_index[[part_name]]
+    if (is.null(entry)) {
+      return(paste0(part_name, paren_note))
+    }
+
+    # Build link
+    if (entry$vignette == current_vignette) {
+      link <- paste0("[", part_name, "](#", entry$slug, ")")
+    } else {
+      link <- paste0("[", part_name, "](", entry$vignette, ".html#", entry$slug, ")")
+    }
+    paste0(link, paren_note)
+  }, character(1), USE.NAMES = FALSE)
+
+  paste(linked, collapse = ", ")
+}
+
+# ---------------------------------------------------------------------------
 # Annotation parser
 # ---------------------------------------------------------------------------
 
@@ -481,7 +590,7 @@ tokenize_params <- function(s) {
 #' @param config Config entry with title, modules, preamble
 #' @param all_parsed List of parse results from parse_rye_annotations(), keyed by module name
 #' @return Character string with the full Rmd content
-generate_rmd <- function(vignette_name, config, all_parsed) {
+generate_rmd <- function(vignette_name, config, all_parsed, func_index = list()) {
   title <- config$title
   preamble <- config$preamble
   if (is.null(preamble)) preamble <- ""
@@ -551,8 +660,9 @@ generate_rmd <- function(vignette_name, config, all_parsed) {
       }
     }
 
-    # Emit function entry
-    out <- c(out, paste0("### ", fn$name))
+    # Emit function entry with explicit anchor
+    slug <- slugify_func_name(fn$name)
+    out <- c(out, paste0("### ", fn$name, " {#", slug, "}"))
     out <- c(out, "")
 
     if (nchar(fn$description) > 0) {
@@ -579,7 +689,8 @@ generate_rmd <- function(vignette_name, config, all_parsed) {
     }
 
     if (!is.null(fn$seealso) && nchar(fn$seealso) > 0) {
-      out <- c(out, paste0("**See also:** ", fn$seealso))
+      linked_seealso <- linkify_seealso(fn$seealso, func_index, vignette_name)
+      out <- c(out, paste0("**See also:** ", linked_seealso))
       out <- c(out, "")
     }
 
@@ -651,11 +762,15 @@ generate_all <- function(
   # Check for undocumented exports
   check_undocumented(all_parsed, rye_dir, all_modules)
 
+  # Build global function index for cross-vignette links
+  func_index <- build_func_index(vignettes, all_parsed)
+  message("Indexed ", length(func_index), " functions for cross-linking")
+
   # Generate each vignette
   for (vname in names(vignettes)) {
     vconfig <- vignettes[[vname]]
     message("Generating: ", vname, ".Rmd")
-    rmd <- generate_rmd(vname, vconfig, all_parsed)
+    rmd <- generate_rmd(vname, vconfig, all_parsed, func_index)
     output_file <- file.path(output_dir, paste0(vname, ".Rmd"))
     writeLines(rmd, output_file, useBytes = TRUE)
     message("  Wrote: ", output_file)

@@ -25,7 +25,7 @@ and `identical?` for R's native identity comparison. The Scheme predicates
 `eq?` and `eqv?` are intentionally not implemented because R does not
 provide the pointer-level semantics they require.
 
-### equal?
+### equal? {#equal}
 
 **Signature:** `(equal? a b [strict #f])`
 
@@ -38,11 +38,11 @@ provide the pointer-level semantics they require.
 (equal? "hello" "hello")        ; => #t
 ```
 
-**See also:** identical?, eq?, eqv?, set-method!
+**See also:** identical?, [eq?](#eq), [eqv?](#eqv), [set-method!](#set-method-bang)
 
 ---
 
-### eq?
+### eq? {#eq}
 
 **Not implemented in Rye.** Raises an error when called.
 
@@ -50,11 +50,11 @@ provide the pointer-level semantics they require.
 
 **Note:** True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
 
-**See also:** identical?, equal?
+**See also:** identical?, [equal?](#equal)
 
 ---
 
-### eqv?
+### eqv? {#eqv}
 
 **Not implemented in Rye.** Raises an error when called.
 
@@ -62,7 +62,7 @@ provide the pointer-level semantics they require.
 
 **Note:** True Scheme `eqv?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. Use `identical?` for R's native equality, or `equal?` for deep structural equality.
 
-**See also:** identical?, equal?
+**See also:** identical?, [equal?](#equal)
 
 ---
 
@@ -71,7 +71,7 @@ provide the pointer-level semantics they require.
 Internal helper functions used by the `equal?` dispatch methods to perform
 recursive structural comparison of environments and lists.
 
-### env-equal?
+### env-equal? {#env-equal}
 
 Compare two environments by their bindings and values.
 
@@ -88,11 +88,11 @@ Compare two environments by their bindings and values.
 
 **Note:** Used internally by `equal?.environment`. Compares environments by sorting their bindings and recursively comparing values.
 
-**See also:** equal?.environment
+**See also:** [equal?.environment](#equal-environment)
 
 ---
 
-### list-equal?
+### list-equal? {#list-equal}
 
 Recursively compare list elements.
 
@@ -107,7 +107,7 @@ Recursively compare list elements.
 
 **Note:** Used internally by `equal?.list`. Recursively compares list elements using `equal?`.
 
-**See also:** equal?.list
+**See also:** [equal?.list](#equal-list)
 
 ---
 
@@ -117,7 +117,7 @@ Rye implements a simplified S3-style dispatch system for generic functions
 like `equal?`. Types are identified by their first S3 class, and methods
 are registered as `generic.class` bindings in the stdlib environment.
 
-### s3-type
+### s3-type {#s3-type}
 
 Extract the first S3 class from an object.
 
@@ -133,7 +133,7 @@ Extract the first S3 class from an object.
 
 ---
 
-### check-s3-type-match
+### check-s3-type-match {#check-s3-type-match}
 
 Check if all objects have the same S3 type.
 
@@ -149,7 +149,7 @@ Check if all objects have the same S3 type.
 
 ---
 
-### set-method!
+### set-method! {#set-method-bang}
 
 Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
 
@@ -164,11 +164,11 @@ Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a 
          (equal? ($ a "y") ($ b "y")))))
 ```
 
-**See also:** use-method
+**See also:** [use-method](#use-method)
 
 ---
 
-### use-method
+### use-method {#use-method}
 
 Dispatch to an S3 method based on object class.
 
@@ -181,7 +181,7 @@ Dispatch to an S3 method based on object class.
 
 **Note:** Internal function. Dispatches to the appropriate S3 method based on the object's class, falling back to the `.default` method if no class-specific method is found.
 
-**See also:** set-method!, s3-type
+**See also:** [set-method!](#set-method-bang), [s3-type](#s3-type)
 
 ---
 
@@ -191,7 +191,7 @@ These methods handle equality comparison for R's core types. The dispatch
 system selects the appropriate method based on the S3 class of the first
 argument. Users can register additional methods with `set-method!`.
 
-### equal?.default
+### equal?.default {#equal-default}
 
 **Signature:** `(equal?.default a b [strict #f])`
 
@@ -205,7 +205,7 @@ argument. Users can register additional methods with `set-method!`.
 
 ---
 
-### equal?.list
+### equal?.list {#equal-list}
 
 **Signature:** `(equal?.list a b [strict #f])`
 
@@ -218,7 +218,7 @@ argument. Users can register additional methods with `set-method!`.
 
 ---
 
-### equal?.environment
+### equal?.environment {#equal-environment}
 
 **Signature:** `(equal?.environment a b [strict #f])`
 

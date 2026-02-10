@@ -20,7 +20,7 @@ These functions are provided by the `conversions` module (`inst/rye/conversions.
 
 ## Symbol Conversions
 
-### symbol->string
+### symbol->string {#symbol-to-string}
 
 Convert symbol to string.
 
@@ -34,11 +34,11 @@ Convert symbol to string.
 
 **Note:** Signals an error if the argument is not a symbol.
 
-**See also:** string->symbol, ->symbol
+**See also:** [string->symbol](#string-to-symbol), [->symbol](#to-symbol)
 
 ---
 
-### string->symbol
+### string->symbol {#string-to-symbol}
 
 Convert string to symbol.
 
@@ -52,11 +52,11 @@ Convert string to symbol.
 
 **Note:** Signals an error if the argument is not a string.
 
-**See also:** symbol->string, ->symbol
+**See also:** [symbol->string](#symbol-to-string), [->symbol](#to-symbol)
 
 ---
 
-### ->symbol
+### ->symbol {#to-symbol}
 
 Convert value to symbol.
 
@@ -69,7 +69,7 @@ Convert value to symbol.
 (->symbol 'x)       ; => x (already a symbol, returned as-is)
 ```
 
-**See also:** symbol->string, string->symbol
+**See also:** [symbol->string](#symbol-to-string), [string->symbol](#string-to-symbol)
 
 ---
 
@@ -77,7 +77,7 @@ Convert value to symbol.
 
 R-style type conversions providing explicit control over the target numeric type.
 
-### ->number
+### ->number {#to-number}
 
 Convert value to number.
 
@@ -92,13 +92,13 @@ Convert value to number.
 
 **Note:** Signals an error for non-numeric strings (e.g. `(->number "abc")`).
 
-**See also:** ->integer, ->double, ->complex
+**See also:** [->integer](#to-integer), [->double](#to-double), [->complex](#to-complex)
 
 ---
 
 ## Scheme-Style Exact/Inexact Conversions
 
-### exact->inexact
+### exact->inexact {#exact-to-inexact}
 
 Convert exact number to inexact (integer to double).
 
@@ -112,11 +112,11 @@ Convert exact number to inexact (integer to double).
 
 **Note:** In Scheme, exactness is a property of any number. In R (and Rye), exact means integer storage type and inexact means double or complex. See also `exact?` and `inexact?` in the `math` module.
 
-**See also:** inexact->exact, exact? (in `math` module), inexact? (in `math` module)
+**See also:** [inexact->exact](#inexact-to-exact), [exact?](stdlib-math.html#exact) (in `math` module), [inexact?](stdlib-math.html#inexact) (in `math` module)
 
 ---
 
-### inexact->exact
+### inexact->exact {#inexact-to-exact}
 
 Convert inexact number to exact (double to integer, rounds to nearest).
 
@@ -131,7 +131,7 @@ Convert inexact number to exact (double to integer, rounds to nearest).
 
 **Note:** **Warning:** Converting double to integer rounds to the nearest integer, which may lose precision. For example, `(inexact->exact 3.7)` returns `4L`, not `3L`.
 
-**See also:** exact->inexact, exact? (in `math` module), inexact? (in `math` module)
+**See also:** [exact->inexact](#exact-to-inexact), [exact?](stdlib-math.html#exact) (in `math` module), [inexact?](stdlib-math.html#inexact) (in `math` module)
 
 ---
 
@@ -139,7 +139,7 @@ Convert inexact number to exact (double to integer, rounds to nearest).
 
 R-style type conversions providing explicit control over the target numeric type.
 
-### ->integer
+### ->integer {#to-integer}
 
 Convert value to integer.
 
@@ -154,11 +154,11 @@ Convert value to integer.
 
 **Note:** Signals an error for non-numeric strings. Note that `->integer` truncates toward zero (like R's `as.integer`), whereas `inexact->exact` rounds to nearest.
 
-**See also:** ->number, ->double, inexact->exact
+**See also:** [->number](#to-number), [->double](#to-double), [inexact->exact](#inexact-to-exact)
 
 ---
 
-### ->double
+### ->double {#to-double}
 
 Convert value to double.
 
@@ -171,11 +171,11 @@ Convert value to double.
 (->double 2.5)      ; => 2.5 (already double)
 ```
 
-**See also:** ->number, ->integer, exact->inexact
+**See also:** [->number](#to-number), [->integer](#to-integer), [exact->inexact](#exact-to-inexact)
 
 ---
 
-### ->complex
+### ->complex {#to-complex}
 
 Convert value to complex number (imaginary part = 0).
 
@@ -188,13 +188,13 @@ Convert value to complex number (imaginary part = 0).
 (->complex "2+3i")  ; => 2+3i
 ```
 
-**See also:** ->number, ->double, make-rectangular (in `math` module)
+**See also:** [->number](#to-number), [->double](#to-double), [make-rectangular](stdlib-math.html#make-rectangular) (in `math` module)
 
 ---
 
 ## Collection Conversions
 
-### ->list
+### ->list {#to-list}
 
 Convert value to list.
 
@@ -206,11 +206,11 @@ Convert value to list.
 (->list '(1 2 3))        ; => (1 2 3) (already a list)
 ```
 
-**See also:** ->vector
+**See also:** [->vector](#to-vector)
 
 ---
 
-### ->vector
+### ->vector {#to-vector}
 
 Convert value to vector.
 
@@ -224,7 +224,7 @@ Convert value to vector.
 
 **Note:** When given a list, `->vector` flattens it into an atomic vector using `unlist`. Nested lists will be recursively flattened.
 
-**See also:** ->list
+**See also:** [->list](#to-list)
 
 ---
 

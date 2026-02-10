@@ -18,7 +18,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Control Flow Macros
 
-### when
+### when {#when}
 
 Evaluate body forms when test is truthy.
 
@@ -31,11 +31,11 @@ Evaluate body forms when test is truthy.
 (when (> 3 2) (+ 1 1))   ; => 2
 ```
 
-**See also:** unless, if, cond
+**See also:** [unless](#unless), if, [cond](#cond)
 
 ---
 
-### unless
+### unless {#unless}
 
 Evaluate body forms when test is falsy.
 
@@ -48,13 +48,13 @@ Evaluate body forms when test is falsy.
 (unless (= 1 2) "nope")  ; => "nope"
 ```
 
-**See also:** when, if
+**See also:** [when](#when), if
 
 ---
 
 ## Conditional Macros
 
-### cond
+### cond {#cond}
 
 Multi-branch conditional.
 
@@ -72,11 +72,11 @@ Multi-branch conditional.
   (else "small"))        ; => "small"
 ```
 
-**See also:** case, if, when
+**See also:** [case](#case), if, [when](#when)
 
 ---
 
-### case
+### case {#case}
 
 Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). Key expression is evaluated only once.
 
@@ -98,13 +98,13 @@ Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). 
 
 **Note:** The key expression is evaluated only once. Each clause datum list can contain multiple values.
 
-**See also:** cond, if
+**See also:** [cond](#cond), if
 
 ---
 
 ## Error Handling Helper
 
-### try*
+### try* {#try-star}
 
 **Signature:** `(try* thunk [error_handler] [finally_handler])`
 
@@ -119,33 +119,33 @@ Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). 
 
 **Note:** Low-level functional interface to R's tryCatch. Prefer the `try` macro for cleaner syntax.
 
-**See also:** try (in `error` module), catch, finally
+**See also:** [try](#try) (in `error` module), catch, finally
 
 ---
 
 ## Binding Macros
 
-### pattern-symbols
+### pattern-symbols {#pattern-symbols}
 
 Collect all symbols from a destructuring pattern, ignoring dots.
 
 **Signature:** `(pattern-symbols pattern)`
 
-**See also:** destructuring-bind
+**See also:** [destructuring-bind](#destructuring-bind)
 
 ---
 
-### destructuring-bind
+### destructuring-bind {#destructuring-bind}
 
 Bind a destructuring pattern to a value, then evaluate body forms.
 
 **Signature:** `(destructuring-bind pattern value body...)`
 
-**See also:** let, let*, pattern-symbols
+**See also:** [let](#let), [let*](#let-star), [pattern-symbols](#pattern-symbols)
 
 ---
 
-### let
+### let {#let}
 
 Bind names to values within body.
 
@@ -162,11 +162,11 @@ Bind names to values within body.
 
 **Note:** Bindings are evaluated in parallel: earlier bindings are NOT visible to later ones. Use `let*` for sequential binding.
 
-**See also:** let*, letrec
+**See also:** [let*](#let-star), [letrec](#letrec)
 
 ---
 
-### let*
+### let* {#let-star}
 
 Sequential let bindings.
 
@@ -181,11 +181,11 @@ Sequential let bindings.
 
 **Note:** Bindings are evaluated sequentially: each binding can refer to previously bound names. Supports destructuring patterns.
 
-**See also:** let, letrec
+**See also:** [let](#let), [letrec](#letrec)
 
 ---
 
-### letrec
+### letrec {#letrec}
 
 Recursive bindings.
 
@@ -200,11 +200,11 @@ Recursive bindings.
 
 **Note:** All bindings are visible to all init expressions, enabling mutual recursion. Init values are assigned via `set!` into pre-allocated slots.
 
-**See also:** let, let*
+**See also:** [let](#let), [let*](#let-star)
 
 ---
 
-### when-let
+### when-let {#when-let}
 
 Bind pattern to value and evaluate body when value is truthy.
 
@@ -219,11 +219,11 @@ Bind pattern to value and evaluate body when value is truthy.
   "never reached")       ; => #nil
 ```
 
-**See also:** if-let, when, let
+**See also:** [if-let](#if-let), [when](#when), [let](#let)
 
 ---
 
-### if-let
+### if-let {#if-let}
 
 Bind pattern to value and choose branch based on its truthiness.
 
@@ -240,13 +240,13 @@ Bind pattern to value and choose branch based on its truthiness.
   "falsy")               ; => "falsy"
 ```
 
-**See also:** when-let, if, let
+**See also:** [when-let](#when-let), if, [let](#let)
 
 ---
 
 ## Looping Macros
 
-### for
+### for {#for}
 
 Loop over seq binding var each iteration. Expands to while.
 
@@ -267,21 +267,21 @@ result                      ; => ("a" "b" "c")
 
 **Note:** Expands to a `while` loop over the sequence converted to a list.
 
-**See also:** while, map, loop
+**See also:** while, [map](stdlib-functional.html#map), [loop](#loop)
 
 ---
 
-### recur
+### recur {#recur}
 
 Signal a recur back to the enclosing `loop`. Only valid inside a `loop` body.
 
 **Signature:** `(recur args...)`
 
-**See also:** loop
+**See also:** [loop](#loop)
 
 ---
 
-### loop
+### loop {#loop}
 
 Clojure-style loop/recur that expands to an R while loop.
 
@@ -304,11 +304,11 @@ Clojure-style loop/recur that expands to an R while loop.
 
 **Note:** The compiler auto-optimizes self-tail-calls in `(define name (lambda ...))` patterns, so `loop`/`recur` is primarily useful for anonymous iteration and mutual recursion patterns. Expands to an R `while` loop internally.
 
-**See also:** recur, while, for
+**See also:** [recur](#recur), while, [for](#for)
 
 ---
 
-### until
+### until {#until}
 
 Repeat body until test is truthy.
 
@@ -328,7 +328,7 @@ i                          ; => 5
 
 ## Threading Macros
 
-### ->
+### -> {#thread-first}
 
 Thread value through forms (first argument).
 
@@ -344,11 +344,11 @@ Thread value through forms (first argument).
 
 **Note:** Threads the value as the FIRST argument to each successive form. If a form is a bare symbol, it is called as a one-argument function.
 
-**See also:** ->>
+**See also:** [->>](#thread-last)
 
 ---
 
-### ->>
+### ->> {#thread-last}
 
 Thread value through forms (last argument).
 
@@ -365,13 +365,13 @@ Thread value through forms (last argument).
 
 **Note:** Threads the value as the LAST argument to each successive form. Compare with `->` which threads as the first argument.
 
-**See also:** ->
+**See also:** [->](#thread-first)
 
 ---
 
 ## Error Handling
 
-### try
+### try {#try}
 
 Macro wrapper around try* with catch/finally.
 
@@ -398,7 +398,7 @@ Macro wrapper around try* with catch/finally.
 
 **Note:** Macro wrapper around `try*` that provides familiar catch/finally syntax. The catch clause binds the error condition to the given variable. The finally clause runs regardless of success or failure.
 
-**See also:** try* (in `control` module)
+**See also:** [try*](#try-star) (in `control` module)
 
 ---
 

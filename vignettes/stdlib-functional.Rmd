@@ -22,7 +22,7 @@ The fundamental building blocks for functional programming in Rye.
 These functions operate on lists and follow the convention of taking
 the function argument first, then the data argument.
 
-### map
+### map {#map}
 
 Apply function to each element.
 
@@ -35,11 +35,11 @@ Apply function to each element.
 (map string-length (list "hi" "hello"))     ; => (2 5)
 ```
 
-**See also:** filter, mapcat, reduce
+**See also:** [filter](#filter), [mapcat](#mapcat), [reduce](#reduce)
 
 ---
 
-### mapcat
+### mapcat {#mapcat}
 
 Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
 
@@ -51,11 +51,11 @@ Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
 (mapcat (lambda (x) (list x x)) (list 1 2 3))          ; => (1 1 2 2 3 3)
 ```
 
-**See also:** map, flatten
+**See also:** [map](#map), [flatten](stdlib-list-seq.html#flatten)
 
 ---
 
-### filter
+### filter {#filter}
 
 Filter items by predicate.
 
@@ -68,11 +68,11 @@ Filter items by predicate.
 (filter string? (list 1 "a" 2 "b"))               ; => ("a" "b")
 ```
 
-**See also:** remove, take-while, drop-while
+**See also:** [remove](#remove), [take-while](stdlib-list-seq.html#take-while), [drop-while](stdlib-list-seq.html#drop-while)
 
 ---
 
-### remove
+### remove {#remove}
 
 Remove items where predicate is true.
 
@@ -84,11 +84,11 @@ Remove items where predicate is true.
 (remove (lambda (x) (> x 3)) (list 1 2 3 4 5))   ; => (1 2 3)
 ```
 
-**See also:** filter
+**See also:** [filter](#filter)
 
 ---
 
-### reduce
+### reduce {#reduce}
 
 Reduce list with function.
 
@@ -102,11 +102,11 @@ Reduce list with function.
 (reduce string-append (list "a" "b" "c"))  ; => "abc"
 ```
 
-**See also:** foldl, foldr, map
+**See also:** [foldl](#foldl), [foldr](#foldr), [map](#map)
 
 ---
 
-### foldl
+### foldl {#foldl}
 
 Left fold alias for reduce.
 
@@ -119,11 +119,11 @@ Left fold alias for reduce.
 (foldl cons (list 1 2 3) (list)) ; => (3 2 1) (reverses)
 ```
 
-**See also:** foldr, reduce
+**See also:** [foldr](#foldr), [reduce](#reduce)
 
 ---
 
-### foldr
+### foldr {#foldr}
 
 Right fold.
 
@@ -136,11 +136,11 @@ Right fold.
 (foldr cons (list 1 2 3) (list)) ; => (1 2 3) (preserves order)
 ```
 
-**See also:** foldl, reduce
+**See also:** [foldl](#foldl), [reduce](#reduce)
 
 ---
 
-### every?
+### every? {#every}
 
 Return #t if predicate true for all items.
 
@@ -154,11 +154,11 @@ Return #t if predicate true for all items.
 (every? string? (list "a" "b" "c"))   ; => #t
 ```
 
-**See also:** any?, filter
+**See also:** [any?](#any), [filter](#filter)
 
 ---
 
-### any?
+### any? {#any}
 
 Return #t if predicate true for any item.
 
@@ -171,11 +171,11 @@ Return #t if predicate true for any item.
 (any? string? (list 1 "a" 2))         ; => #t
 ```
 
-**See also:** every?, filter
+**See also:** [every?](#every), [filter](#filter)
 
 ---
 
-### complement
+### complement {#complement}
 
 Negate predicate.
 
@@ -189,11 +189,11 @@ Negate predicate.
 (filter (complement null?) (list 1 #nil 2 #nil 3))  ; => (1 2 3)
 ```
 
-**See also:** not, filter
+**See also:** [not](#not), [filter](#filter)
 
 ---
 
-### compose
+### compose {#compose}
 
 Compose two functions.
 
@@ -207,11 +207,11 @@ Compose two functions.
 (abs-sum -3 -4)                        ; => 7
 ```
 
-**See also:** partial
+**See also:** [partial](#partial)
 
 ---
 
-### partial
+### partial {#partial}
 
 Partially apply function.
 
@@ -225,7 +225,7 @@ Partially apply function.
 (greet "world")                        ; => "Hello, world"
 ```
 
-**See also:** compose
+**See also:** [compose](#compose)
 
 ---
 
@@ -234,7 +234,7 @@ Partially apply function.
 Higher-order combinators for advanced functional patterns including
 currying, juxtaposition, memoization, and iteration.
 
-### curry
+### curry {#curry}
 
 Curry a function - enables partial application with optional initial arguments.
 
@@ -249,11 +249,11 @@ Curry a function - enables partial application with optional initial arguments.
 ((multiply 3) 4)                       ; => 12
 ```
 
-**See also:** partial
+**See also:** [partial](#partial)
 
 ---
 
-### juxt
+### juxt {#juxt}
 
 Juxtaposition - apply multiple functions to same args, return list of results.
 
@@ -267,11 +267,11 @@ Juxtaposition - apply multiple functions to same args, return list of results.
 (first-and-last (list 1 2 3))          ; => (1 3)
 ```
 
-**See also:** map, compose
+**See also:** [map](#map), [compose](#compose)
 
 ---
 
-### constantly
+### constantly {#constantly}
 
 Return a function that always returns the given value.
 
@@ -287,7 +287,7 @@ Return a function that always returns the given value.
 
 ---
 
-### iterate
+### iterate {#iterate}
 
 Apply function n times to initial value.
 
@@ -300,11 +300,11 @@ Apply function n times to initial value.
 (iterate (lambda (x) (* x x)) 2 2)     ; => 65536  (2 -> 4 -> 16 -> 65536... wait: 2^2=4, 4^2=16)
 ```
 
-**See also:** iterate-until, reduce
+**See also:** [iterate-until](#iterate-until), [reduce](#reduce)
 
 ---
 
-### iterate-until
+### iterate-until {#iterate-until}
 
 Apply function starting from init, collecting values until predicate becomes true. Includes all values where predicate is false, stops when next value would satisfy predicate.
 
@@ -318,11 +318,11 @@ Apply function starting from init, collecting values until predicate becomes tru
   ; => (0 1 2 3 4)
 ```
 
-**See also:** iterate, take-while
+**See also:** [iterate](#iterate), [take-while](stdlib-list-seq.html#take-while)
 
 ---
 
-### memoize
+### memoize {#memoize}
 
 Memoize function - cache results for previously seen arguments.
 
@@ -344,7 +344,7 @@ Core logical operations for Rye. Note that `and` and `or` are compiler
 special forms (not functions) with short-circuit evaluation, so they
 are not part of this module.
 
-### not
+### not {#not}
 
 Logical negation with Rye truthiness.
 
@@ -362,11 +362,11 @@ Logical negation with Rye truthiness.
 
 **Note:** Rye follows Scheme-like truthiness: #f/FALSE, #nil/NULL, and 0 are falsy. Everything else is truthy. This differs from R where only FALSE and NULL are falsy.
 
-**See also:** xor, and, or (special forms)
+**See also:** [xor](#xor), and, or (special forms)
 
 ---
 
-### xor
+### xor {#xor}
 
 Logical exclusive OR with Rye truthiness.
 
@@ -384,7 +384,7 @@ Logical exclusive OR with Rye truthiness.
 
 **Note:** Exclusive OR: returns #t when exactly one argument is truthy, #f when both are truthy or both are falsy.
 
-**See also:** not, and, or (special forms)
+**See also:** [not](#not), and, or (special forms)
 
 ---
 

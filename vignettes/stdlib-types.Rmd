@@ -20,7 +20,7 @@ These functions are provided by the `types` module (`inst/rye/types.rye`).
 
 ## List and Pair Predicates
 
-### list?
+### list? {#list}
 
 Return #t if x is a proper list (R list or call), not a dotted pair.
 
@@ -33,11 +33,11 @@ Return #t if x is a proper list (R list or call), not a dotted pair.
 (list? "hello")  ; => #f
 ```
 
-**See also:** pair?, list-or-pair?, null?
+**See also:** pair?, [list-or-pair?](#list-or-pair), [null?](#null)
 
 ---
 
-### list-or-pair?
+### list-or-pair? {#list-or-pair}
 
 Return #t if x is a non-empty list or dotted pair (pairlist cell).
 
@@ -48,11 +48,11 @@ Return #t if x is a non-empty list or dotted pair (pairlist cell).
 (list-or-pair? (list 1))  ; => #t
 ```
 
-**See also:** list?, pair?, null?, atom?
+**See also:** [list?](#list), pair?, [null?](#null), [atom?](#atom)
 
 ---
 
-### null?
+### null? {#null}
 
 Return #t for empty list or #nil.
 
@@ -65,21 +65,21 @@ Return #t for empty list or #nil.
 (null? (list 1))  ; => #f
 ```
 
-**See also:** nil?, pair?, list-or-pair?
+**See also:** [nil?](#nil), pair?, [list-or-pair?](#list-or-pair)
 
 ---
 
-### nil?
+### nil? {#nil}
 
 Alias for null?.
 
 **Signature:** `(nil? x)`
 
-**See also:** null?
+**See also:** [null?](#null)
 
 ---
 
-### atom?
+### atom? {#atom}
 
 Return #t if x is not a non-empty list or dotted pair (i.e. not list-or-pair?).
 
@@ -93,11 +93,11 @@ Return #t if x is not a non-empty list or dotted pair (i.e. not list-or-pair?).
 (atom? ())  ; => #t  (empty list is atomic)
 ```
 
-**See also:** list-or-pair?
+**See also:** [list-or-pair?](#list-or-pair)
 
 ---
 
-### empty?
+### empty? {#empty}
 
 Return #t if x is empty (0-length). (Note the empty string "" has length 1 and is not "empty"!)
 
@@ -113,13 +113,13 @@ Return #t if x is empty (0-length). (Note the empty string "" has length 1 and i
 
 **Note:** The empty string `""` has length 1 in R and is NOT considered empty!
 
-**See also:** null?, length= (in `sequences` module)
+**See also:** [null?](#null), [length=](stdlib-list-seq.html#length-eq) (in `sequences` module)
 
 ---
 
 ## Symbol Predicates
 
-### symbol?
+### symbol? {#symbol}
 
 **Signature:** `(symbol? x)`
 
@@ -132,7 +132,7 @@ Return #t if x is empty (0-length). (Note the empty string "" has length 1 and i
 
 ---
 
-### keyword?
+### keyword? {#keyword}
 
 Return #t if x is a Rye keyword.
 
@@ -148,7 +148,7 @@ Return #t if x is a Rye keyword.
 
 ## Basic Type Predicates
 
-### number?
+### number? {#number}
 
 Return #t if x is a number (real or complex).
 
@@ -161,11 +161,11 @@ Return #t if x is a number (real or complex).
 
 **Note:** For numeric type hierarchy predicates (real?, complex?, etc.), see the `math` module documentation.
 
-**See also:** stdlib-math vignette for real?, complex?, rational?, exact?, inexact?
+**See also:** stdlib-math vignette for real?, [complex?](stdlib-math.html#complex), [rational?](stdlib-math.html#rational), [exact?](stdlib-math.html#exact), [inexact?](stdlib-math.html#inexact)
 
 ---
 
-### string?
+### string? {#string}
 
 **Signature:** `(string? x)`
 
@@ -176,7 +176,7 @@ Return #t if x is a number (real or complex).
 
 ---
 
-### vector?
+### vector? {#vector}
 
 Return #t if x is a non-list atomic vector.
 
@@ -191,7 +191,7 @@ Return #t if x is a non-list atomic vector.
 
 ---
 
-### boolean?
+### boolean? {#boolean}
 
 Return #t if x is a single logical value.
 
@@ -207,7 +207,7 @@ Return #t if x is a single logical value.
 
 ---
 
-### true?
+### true? {#true}
 
 Return #t if x is TRUE.
 
@@ -220,7 +220,7 @@ Return #t if x is TRUE.
 
 ---
 
-### false?
+### false? {#false}
 
 Return #t if x is #f.
 
@@ -235,7 +235,7 @@ Return #t if x is #f.
 
 ## Function Predicates
 
-### fn?
+### fn? {#fn}
 
 **Signature:** `(fn? x)`
 
@@ -244,31 +244,31 @@ Return #t if x is #f.
 (fn? car)  ; => #t
 ```
 
-**See also:** callable?, procedure?
+**See also:** [callable?](#callable), [procedure?](#procedure)
 
 ---
 
-### callable?
+### callable? {#callable}
 
 **Signature:** `(callable? x)`
 
-**See also:** fn?
+**See also:** [fn?](#fn)
 
 ---
 
-### procedure?
+### procedure? {#procedure}
 
 Alias for fn? - return #t if x is a function.
 
 **Signature:** `(procedure? x)`
 
-**See also:** fn?, callable?
+**See also:** [fn?](#fn), [callable?](#callable)
 
 ---
 
 ## Environment Predicates
 
-### environment?
+### environment? {#environment}
 
 Test if x is an environment (including R6 objects).
 
@@ -283,7 +283,7 @@ Test if x is an environment (including R6 objects).
 
 ---
 
-### is-refclass?
+### is-refclass? {#is-refclass}
 
 Test if x is a Reference Class object.
 
@@ -298,7 +298,7 @@ Test if x is a Reference Class object.
 
 ## Type Introspection
 
-### type-of
+### type-of {#type-of}
 
 Return the type of value (alias for R's typeof).
 

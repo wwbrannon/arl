@@ -38,7 +38,7 @@ inexact? (number? AND NOT is.integer)
 
 **Note:** `number?` is provided by the `types` module, not `math`.
 
-### real?
+### real? {#real}
 
 Return #t if x is a real number (includes ±Inf, excludes complex).
 
@@ -52,11 +52,11 @@ Return #t if x is a real number (includes ±Inf, excludes complex).
 (real? (make-rectangular 3 4))  ; => #f
 ```
 
-**See also:** rational?, complex?, number? (in `types` module)
+**See also:** [rational?](#rational), [complex?](#complex), [number?](stdlib-types.html#number) (in `types` module)
 
 ---
 
-### complex?
+### complex? {#complex}
 
 Return #t if x is a complex number.
 
@@ -68,11 +68,11 @@ Return #t if x is a complex number.
 (complex? 42)         ; => #f
 ```
 
-**See also:** real?, number? (in `types` module), make-rectangular
+**See also:** [real?](#real), [number?](stdlib-types.html#number) (in `types` module), [make-rectangular](#make-rectangular)
 
 ---
 
-### rational?
+### rational? {#rational}
 
 Return #t if x is a finite real number (rational in R are finite floats).
 
@@ -88,11 +88,11 @@ Return #t if x is a finite real number (rational in R are finite floats).
 
 **Note:** In R, all finite floating-point numbers can be represented as rationals (IEEE 754). R does not have a built-in rational or decimal type like some Schemes.
 
-**See also:** real?, integer?, number? (in `types` module)
+**See also:** [real?](#real), [integer?](#integer), [number?](stdlib-types.html#number) (in `types` module)
 
 ---
 
-### exact?
+### exact? {#exact}
 
 Return #t if x is an exact number (integer storage type in R).
 
@@ -107,11 +107,11 @@ Return #t if x is an exact number (integer storage type in R).
 
 **Note:** In Scheme, exactness is a property of the number. In R (and Rye), exactness corresponds to integer storage type. All integers are exact; all doubles and complex numbers are inexact.
 
-**See also:** inexact?, exact->inexact (in `conversions` module)
+**See also:** [inexact?](#inexact), [exact->inexact](stdlib-conversions.html#exact-to-inexact) (in `conversions` module)
 
 ---
 
-### inexact?
+### inexact? {#inexact}
 
 Return #t if x is an inexact number (double or complex in R).
 
@@ -124,11 +124,11 @@ Return #t if x is an inexact number (double or complex in R).
 (inexact? 5L)         ; => #f
 ```
 
-**See also:** exact?, inexact->exact (in `conversions` module)
+**See also:** [exact?](#exact), [inexact->exact](stdlib-conversions.html#inexact-to-exact) (in `conversions` module)
 
 ---
 
-### integer?
+### integer? {#integer}
 
 Return #t if x is an integer-valued number.
 
@@ -144,11 +144,11 @@ Return #t if x is an integer-valued number.
 
 **Note:** Tests for integer VALUE, not storage type. Use `exact?` to test storage type.
 
-**See also:** natural?, exact?, rational?
+**See also:** [natural?](#natural), [exact?](#exact), [rational?](#rational)
 
 ---
 
-### natural?
+### natural? {#natural}
 
 Return #t if x is a natural number (integer >= 0).
 
@@ -162,11 +162,11 @@ Return #t if x is a natural number (integer >= 0).
 (natural? 3.14)       ; => #f
 ```
 
-**See also:** integer?, positive?, non-negative?
+**See also:** [integer?](#integer), [positive?](#positive), [non-negative?](#non-negative)
 
 ---
 
-### finite?
+### finite? {#finite}
 
 Return #t if x is finite.
 
@@ -180,11 +180,11 @@ Return #t if x is finite.
 (finite? -Inf)        ; => #f
 ```
 
-**See also:** infinite?, nan?, rational?
+**See also:** [infinite?](#infinite), [nan?](#nan), [rational?](#rational)
 
 ---
 
-### infinite?
+### infinite? {#infinite}
 
 Return #t if x is infinite.
 
@@ -198,11 +198,11 @@ Return #t if x is infinite.
 (infinite? NaN)       ; => #f
 ```
 
-**See also:** finite?, nan?
+**See also:** [finite?](#finite), [nan?](#nan)
 
 ---
 
-### nan?
+### nan? {#nan}
 
 Return #t if x is NaN.
 
@@ -216,13 +216,13 @@ Return #t if x is NaN.
 (nan? Inf)            ; => #f
 ```
 
-**See also:** finite?, infinite?
+**See also:** [finite?](#finite), [infinite?](#infinite)
 
 ---
 
 ## Value Predicates
 
-### even?
+### even? {#even}
 
 Return #t if x is an even number.
 
@@ -235,11 +235,11 @@ Return #t if x is an even number.
 (even? 0)             ; => #t
 ```
 
-**See also:** odd?
+**See also:** [odd?](#odd)
 
 ---
 
-### odd?
+### odd? {#odd}
 
 Return #t if x is an odd number.
 
@@ -251,11 +251,11 @@ Return #t if x is an odd number.
 (odd? 4)              ; => #f
 ```
 
-**See also:** even?
+**See also:** [even?](#even)
 
 ---
 
-### zero?
+### zero? {#zero}
 
 Return #t if x is zero.
 
@@ -268,11 +268,11 @@ Return #t if x is zero.
 (zero? 1)             ; => #f
 ```
 
-**See also:** positive?, negative?
+**See also:** [positive?](#positive), [negative?](#negative)
 
 ---
 
-### positive?
+### positive? {#positive}
 
 Return #t if x is greater than zero.
 
@@ -285,11 +285,11 @@ Return #t if x is greater than zero.
 (positive? -5)        ; => #f
 ```
 
-**See also:** negative?, non-negative?, zero?
+**See also:** [negative?](#negative), [non-negative?](#non-negative), [zero?](#zero)
 
 ---
 
-### negative?
+### negative? {#negative}
 
 Return #t if x is less than zero.
 
@@ -302,11 +302,11 @@ Return #t if x is less than zero.
 (negative? 5)         ; => #f
 ```
 
-**See also:** positive?, non-positive?, zero?
+**See also:** [positive?](#positive), [non-positive?](#non-positive), [zero?](#zero)
 
 ---
 
-### non-negative?
+### non-negative? {#non-negative}
 
 Return #t if x is greater than or equal to zero.
 
@@ -319,11 +319,11 @@ Return #t if x is greater than or equal to zero.
 (non-negative? -5)    ; => #f
 ```
 
-**See also:** positive?, natural?
+**See also:** [positive?](#positive), [natural?](#natural)
 
 ---
 
-### non-positive?
+### non-positive? {#non-positive}
 
 Return #t if x is less than or equal to zero.
 
@@ -336,13 +336,13 @@ Return #t if x is less than or equal to zero.
 (non-positive? 5)     ; => #f
 ```
 
-**See also:** negative?
+**See also:** [negative?](#negative)
 
 ---
 
 ## Complex Number Utilities
 
-### make-rectangular
+### make-rectangular {#make-rectangular}
 
 Construct a complex number from real and imaginary parts.
 
@@ -353,11 +353,11 @@ Construct a complex number from real and imaginary parts.
 (make-rectangular 3 4)  ; => 3+4i
 ```
 
-**See also:** make-polar, real-part, imag-part
+**See also:** [make-polar](#make-polar), [real-part](#real-part), [imag-part](#imag-part)
 
 ---
 
-### make-polar
+### make-polar {#make-polar}
 
 Construct a complex number from polar coordinates (magnitude and angle).
 
@@ -368,11 +368,11 @@ Construct a complex number from polar coordinates (magnitude and angle).
 (make-polar 5 0)      ; => 5+0i
 ```
 
-**See also:** make-rectangular, magnitude, angle
+**See also:** [make-rectangular](#make-rectangular), [magnitude](#magnitude), [angle](#angle)
 
 ---
 
-### real-part
+### real-part {#real-part}
 
 Extract the real part of a complex number.
 
@@ -383,11 +383,11 @@ Extract the real part of a complex number.
 (real-part (make-rectangular 3 4))  ; => 3.0
 ```
 
-**See also:** imag-part, make-rectangular
+**See also:** [imag-part](#imag-part), [make-rectangular](#make-rectangular)
 
 ---
 
-### imag-part
+### imag-part {#imag-part}
 
 Extract the imaginary part of a complex number.
 
@@ -398,11 +398,11 @@ Extract the imaginary part of a complex number.
 (imag-part (make-rectangular 3 4))  ; => 4.0
 ```
 
-**See also:** real-part, make-rectangular
+**See also:** [real-part](#real-part), [make-rectangular](#make-rectangular)
 
 ---
 
-### magnitude
+### magnitude {#magnitude}
 
 Compute the magnitude (modulus) of a complex number.
 
@@ -413,11 +413,11 @@ Compute the magnitude (modulus) of a complex number.
 (magnitude (make-rectangular 3 4))  ; => 5.0
 ```
 
-**See also:** angle, make-polar
+**See also:** [angle](#angle), [make-polar](#make-polar)
 
 ---
 
-### angle
+### angle {#angle}
 
 Compute the angle (argument) of a complex number.
 
@@ -428,13 +428,13 @@ Compute the angle (argument) of a complex number.
 (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (π/4)
 ```
 
-**See also:** magnitude, make-polar
+**See also:** [magnitude](#magnitude), [make-polar](#make-polar)
 
 ---
 
 ## Arithmetic Helpers
 
-### %
+### % {#modulo}
 
 Modulo helper using R %%.
 
@@ -448,7 +448,7 @@ Modulo helper using R %%.
 
 ---
 
-### <
+### < {#lt}
 
 Variadic less-than comparison. Checks all adjacent pairs.
 
@@ -463,7 +463,7 @@ Variadic less-than comparison. Checks all adjacent pairs.
 
 ---
 
-### >
+### > {#gt}
 
 Variadic greater-than comparison. Checks all adjacent pairs.
 
@@ -478,7 +478,7 @@ Variadic greater-than comparison. Checks all adjacent pairs.
 
 ---
 
-### <=
+### <= {#lte}
 
 Variadic less-than-or-equal comparison. Checks all adjacent pairs.
 
@@ -493,7 +493,7 @@ Variadic less-than-or-equal comparison. Checks all adjacent pairs.
 
 ---
 
-### >=
+### >= {#gte}
 
 Variadic greater-than-or-equal comparison. Checks all adjacent pairs.
 
@@ -508,7 +508,7 @@ Variadic greater-than-or-equal comparison. Checks all adjacent pairs.
 
 ---
 
-### ==
+### == {#num-eq-eq}
 
 Variadic equality comparison. Checks all adjacent pairs.
 
@@ -523,7 +523,7 @@ Variadic equality comparison. Checks all adjacent pairs.
 
 ---
 
-### =
+### = {#num-eq}
 
 **Signature:** `(= a b ...)`
 
@@ -536,7 +536,7 @@ Variadic equality comparison. Checks all adjacent pairs.
 
 ---
 
-### +
+### + {#plus}
 
 Variadic addition.
 
@@ -551,7 +551,7 @@ Variadic addition.
 
 ---
 
-### *
+### * {#star}
 
 Variadic multiplication.
 
@@ -566,7 +566,7 @@ Variadic multiplication.
 
 ---
 
-### -
+### - {#minus}
 
 Variadic subtraction.
 
@@ -581,7 +581,7 @@ Variadic subtraction.
 
 ---
 
-### /
+### / {#div}
 
 Variadic division.
 
@@ -596,7 +596,7 @@ Variadic division.
 
 ---
 
-### min
+### min {#min}
 
 Variadic min.
 
@@ -609,7 +609,7 @@ Variadic min.
 
 ---
 
-### max
+### max {#max}
 
 Variadic max.
 
@@ -622,7 +622,7 @@ Variadic max.
 
 ---
 
-### inc
+### inc {#inc}
 
 **Signature:** `(inc x [n 1])`
 
@@ -632,11 +632,11 @@ Variadic max.
 (inc 5 3)     ; => 8
 ```
 
-**See also:** dec
+**See also:** [dec](#dec)
 
 ---
 
-### dec
+### dec {#dec}
 
 **Signature:** `(dec x [n 1])`
 
@@ -646,11 +646,11 @@ Variadic max.
 (dec 5 3)     ; => 2
 ```
 
-**See also:** inc
+**See also:** [inc](#inc)
 
 ---
 
-### clamp
+### clamp {#clamp}
 
 Clamp numeric value x to the inclusive range [lo, hi].
 
@@ -663,11 +663,11 @@ Clamp numeric value x to the inclusive range [lo, hi].
 (clamp 15 0 10)  ; => 10
 ```
 
-**See also:** within?
+**See also:** [within?](#within)
 
 ---
 
-### within?
+### within? {#within}
 
 Return #t if x is within the inclusive range [lo, hi].
 
@@ -680,13 +680,13 @@ Return #t if x is within the inclusive range [lo, hi].
 (within? 10 0 10)  ; => #t
 ```
 
-**See also:** clamp
+**See also:** [clamp](#clamp)
 
 ---
 
 ## Rounding and Truncation
 
-### abs
+### abs {#abs}
 
 Return absolute value of x.
 
@@ -700,7 +700,7 @@ Return absolute value of x.
 
 ---
 
-### floor
+### floor {#floor}
 
 Return floor (round down) of x.
 
@@ -712,11 +712,11 @@ Return floor (round down) of x.
 (floor -3.2)  ; => -4
 ```
 
-**See also:** ceiling, truncate, round
+**See also:** [ceiling](#ceiling), [truncate](#truncate), [round](#round)
 
 ---
 
-### ceiling
+### ceiling {#ceiling}
 
 Return ceiling (round up) of x.
 
@@ -728,11 +728,11 @@ Return ceiling (round up) of x.
 (ceiling -3.7) ; => -3
 ```
 
-**See also:** floor, truncate, round
+**See also:** [floor](#floor), [truncate](#truncate), [round](#round)
 
 ---
 
-### truncate
+### truncate {#truncate}
 
 Return truncated (towards zero) value of x.
 
@@ -744,11 +744,11 @@ Return truncated (towards zero) value of x.
 (truncate -3.7) ; => -3
 ```
 
-**See also:** floor, ceiling, round
+**See also:** [floor](#floor), [ceiling](#ceiling), [round](#round)
 
 ---
 
-### round
+### round {#round}
 
 **Signature:** `(round x [digits 0])`
 
@@ -758,11 +758,11 @@ Return truncated (towards zero) value of x.
 (round 3.567 2)  ; => 3.57
 ```
 
-**See also:** floor, ceiling, truncate
+**See also:** [floor](#floor), [ceiling](#ceiling), [truncate](#truncate)
 
 ---
 
-### signum
+### signum {#signum}
 
 Return sign of x: -1, 0, or 1.
 
@@ -779,7 +779,7 @@ Return sign of x: -1, 0, or 1.
 
 ## Power, Roots, and Logarithms
 
-### sqrt
+### sqrt {#sqrt}
 
 Return square root of x.
 
@@ -791,11 +791,11 @@ Return square root of x.
 (sqrt 2)      ; => 1.414...
 ```
 
-**See also:** expt
+**See also:** [expt](#expt)
 
 ---
 
-### expt
+### expt {#expt}
 
 Return base raised to power.
 
@@ -807,11 +807,11 @@ Return base raised to power.
 (expt 3 3)    ; => 27
 ```
 
-**See also:** sqrt
+**See also:** [sqrt](#sqrt)
 
 ---
 
-### log
+### log {#log}
 
 **Signature:** `(log x [base #nil])`
 
@@ -822,11 +822,11 @@ Return base raised to power.
 (log 100 10)      ; => 2.0
 ```
 
-**See also:** exp, log10, log2
+**See also:** [exp](#exp), [log10](#log10), [log2](#log2)
 
 ---
 
-### exp
+### exp {#exp}
 
 Return e raised to power x.
 
@@ -838,11 +838,11 @@ Return e raised to power x.
 (exp 1)       ; => 2.718...
 ```
 
-**See also:** log
+**See also:** [log](#log)
 
 ---
 
-### log10
+### log10 {#log10}
 
 Return base-10 logarithm of x.
 
@@ -854,11 +854,11 @@ Return base-10 logarithm of x.
 (log10 1000)  ; => 3
 ```
 
-**See also:** log, log2
+**See also:** [log](#log), [log2](#log2)
 
 ---
 
-### log2
+### log2 {#log2}
 
 Return base-2 logarithm of x.
 
@@ -870,13 +870,13 @@ Return base-2 logarithm of x.
 (log2 1024)   ; => 10
 ```
 
-**See also:** log, log10
+**See also:** [log](#log), [log10](#log10)
 
 ---
 
 ## Trigonometric Functions
 
-### sin
+### sin {#sin}
 
 Standard trigonometric functions (argument in radians).
 
@@ -891,7 +891,7 @@ Standard trigonometric functions (argument in radians).
 
 ---
 
-### cos
+### cos {#cos}
 
 Return cosine of x (in radians).
 
@@ -899,7 +899,7 @@ Return cosine of x (in radians).
 
 ---
 
-### tan
+### tan {#tan}
 
 Return tangent of x (in radians).
 
@@ -907,7 +907,7 @@ Return tangent of x (in radians).
 
 ---
 
-### asin
+### asin {#asin}
 
 Inverse trigonometric functions (result in radians).
 
@@ -922,7 +922,7 @@ Inverse trigonometric functions (result in radians).
 
 ---
 
-### acos
+### acos {#acos}
 
 Return arccosine of x (in radians).
 
@@ -930,7 +930,7 @@ Return arccosine of x (in radians).
 
 ---
 
-### atan
+### atan {#atan}
 
 Return arctangent of x (in radians).
 
@@ -938,7 +938,7 @@ Return arctangent of x (in radians).
 
 ---
 
-### atan2
+### atan2 {#atan2}
 
 Return arctangent of y/x (in radians), respecting quadrant.
 
@@ -954,7 +954,7 @@ Return arctangent of y/x (in radians), respecting quadrant.
 
 ## Integer Division
 
-### quotient
+### quotient {#quotient}
 
 Return integer quotient of x divided by y.
 
@@ -966,11 +966,11 @@ Return integer quotient of x divided by y.
 (quotient -10 3)  ; => -3
 ```
 
-**See also:** remainder, modulo
+**See also:** [remainder](#remainder), [modulo](#modulo)
 
 ---
 
-### remainder
+### remainder {#remainder}
 
 Return remainder of x divided by y (same sign as x).
 
@@ -982,11 +982,11 @@ Return remainder of x divided by y (same sign as x).
 (remainder -10 3)  ; => -1
 ```
 
-**See also:** quotient, modulo
+**See also:** [quotient](#quotient), [modulo](#modulo)
 
 ---
 
-### modulo
+### modulo {#modulo}
 
 Return modulo of x and y (same sign as y).
 
@@ -998,13 +998,13 @@ Return modulo of x and y (same sign as y).
 (modulo -10 3)   ; => 2
 ```
 
-**See also:** quotient, remainder, %
+**See also:** [quotient](#quotient), [remainder](#remainder), [%](#modulo)
 
 ---
 
 ## Number Theory
 
-### gcd
+### gcd {#gcd}
 
 Return greatest common divisor of arguments.
 
@@ -1016,11 +1016,11 @@ Return greatest common divisor of arguments.
 (gcd 12 8 6)    ; => 2
 ```
 
-**See also:** lcm
+**See also:** [lcm](#lcm)
 
 ---
 
-### lcm
+### lcm {#lcm}
 
 Return least common multiple of arguments.
 
@@ -1032,7 +1032,7 @@ Return least common multiple of arguments.
 (lcm 3 4 5)     ; => 60
 ```
 
-**See also:** gcd
+**See also:** [gcd](#gcd)
 
 ---
 

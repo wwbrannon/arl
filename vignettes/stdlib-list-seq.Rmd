@@ -22,7 +22,7 @@ Core list constructors and accessors, following Scheme conventions.
 Lists in Rye are backed by R lists; `car`/`cdr` provide the fundamental
 decomposition and `cons` the fundamental construction.
 
-### __as-list
+### __as-list {#__as-list}
 
 Coerce calls and vectors to list; dotted pair to proper prefix.
 
@@ -30,7 +30,7 @@ Coerce calls and vectors to list; dotted pair to proper prefix.
 
 ---
 
-### call
+### call {#call}
 
 Convert a list to a callable form.
 
@@ -45,7 +45,7 @@ Convert a list to a callable form.
 
 ---
 
-### car
+### car {#car}
 
 Return first element or #nil.
 
@@ -58,11 +58,11 @@ Return first element or #nil.
 (car (cons 'a 'b))    ; => a
 ```
 
-**See also:** cdr, cons, first
+**See also:** [cdr](#cdr), [cons](#cons), [first](#first)
 
 ---
 
-### cdr
+### cdr {#cdr}
 
 Return list without first element (or cdr of dotted pair).
 
@@ -75,11 +75,11 @@ Return list without first element (or cdr of dotted pair).
 (cdr (cons 'a 'b))    ; => b
 ```
 
-**See also:** car, cons, rest
+**See also:** [car](#car), [cons](#cons), [rest](#rest)
 
 ---
 
-### cons
+### cons {#cons}
 
 Prepend item to list or call; dotted pair when cdr is not a list.
 
@@ -92,11 +92,11 @@ Prepend item to list or call; dotted pair when cdr is not a list.
 (cons 'a 'b)          ; => dotted pair (a . b)
 ```
 
-**See also:** car, cdr, append
+**See also:** [car](#car), [cdr](#cdr), [append](#append)
 
 ---
 
-### list*
+### list* {#list-star}
 
 Build list ending with last arg.
 
@@ -109,11 +109,11 @@ Build list ending with last arg.
 (list*)                  ; => ()
 ```
 
-**See also:** list, cons, append
+**See also:** list, [cons](#cons), [append](#append)
 
 ---
 
-### append
+### append {#append}
 
 Concatenate multiple lists into one.
 
@@ -126,11 +126,11 @@ Concatenate multiple lists into one.
 (append (list 1 2) (list))         ; => (1 2)
 ```
 
-**See also:** cons, list*
+**See also:** [cons](#cons), [list*](#list-star)
 
 ---
 
-### reverse
+### reverse {#reverse}
 
 Reverse list.
 
@@ -144,27 +144,27 @@ Reverse list.
 
 ---
 
-### first
+### first {#first}
 
 Alias for car.
 
 **Signature:** `(first lst)`
 
-**See also:** car, rest, last
+**See also:** [car](#car), [rest](#rest), [last](#last)
 
 ---
 
-### rest
+### rest {#rest}
 
 Alias for cdr.
 
 **Signature:** `(rest lst)`
 
-**See also:** cdr, first
+**See also:** [cdr](#cdr), [first](#first)
 
 ---
 
-### last
+### last {#last}
 
 Return last item or #nil.
 
@@ -177,11 +177,11 @@ Return last item or #nil.
 (last (list))         ; => #nil
 ```
 
-**See also:** first, nth
+**See also:** [first](#first), [nth](#nth)
 
 ---
 
-### nth
+### nth {#nth}
 
 Return nth item (0-based).
 
@@ -193,7 +193,7 @@ Return nth item (0-based).
 (nth (list 'a 'b 'c) 2)  ; => c
 ```
 
-**See also:** first, last
+**See also:** [first](#first), [last](#last)
 
 ---
 
@@ -203,7 +203,7 @@ Association lists (alists) map keys to values. Each entry is a list
 whose `car` is the key and whose `cadr` is the value. `assoc` and
 friends search by key; `rassoc` searches by value.
 
-### __r==-pred
+### __r==-pred {#__r-eq-eq-pred}
 
 Wrap R's == to handle vector results; returns #t only if all elements match.
 
@@ -211,7 +211,7 @@ Wrap R's == to handle vector results; returns #t only if all elements match.
 
 ---
 
-### assoc
+### assoc {#assoc}
 
 Find first alist entry (list or dotted pair) with matching key (uses equal?).
 
@@ -223,41 +223,41 @@ Find first alist entry (list or dotted pair) with matching key (uses equal?).
 (assoc 'z (list (list 'a 1) (list 'b 2)))               ; => #nil
 ```
 
-**See also:** rassoc, assoc-by-identical?, assoc-by-==
+**See also:** [rassoc](#rassoc), [assoc-by-identical?](#assoc-by-identical), [assoc-by-==](#assoc-by-eq-eq)
 
 ---
 
-### assoc-by-equal?
+### assoc-by-equal? {#assoc-by-equal}
 
 Alias for assoc: find first alist entry with key matching under equal?.
 
 **Signature:** `(assoc-by-equal? key alist)`
 
-**See also:** assoc
+**See also:** [assoc](#assoc)
 
 ---
 
-### assoc-by-identical?
+### assoc-by-identical? {#assoc-by-identical}
 
 Find first alist entry with matching key (uses R's identical?).
 
 **Signature:** `(assoc-by-identical? key alist)`
 
-**See also:** assoc, assoc-by-==
+**See also:** [assoc](#assoc), [assoc-by-==](#assoc-by-eq-eq)
 
 ---
 
-### assoc-by-==
+### assoc-by-== {#assoc-by-eq-eq}
 
 Find first alist entry with matching key (uses R's ==).
 
 **Signature:** `(assoc-by-== key alist)`
 
-**See also:** assoc, assoc-by-identical?
+**See also:** [assoc](#assoc), [assoc-by-identical?](#assoc-by-identical)
 
 ---
 
-### assq
+### assq {#assq}
 
 assq cannot be properly implemented in R (no eq?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
 
@@ -267,7 +267,7 @@ assq cannot be properly implemented in R (no eq?). Use assoc (equal?), assoc-by-
 
 ---
 
-### assv
+### assv {#assv}
 
 assv cannot be properly implemented in R (no eqv?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
 
@@ -277,7 +277,7 @@ assv cannot be properly implemented in R (no eqv?). Use assoc (equal?), assoc-by
 
 ---
 
-### rassoc
+### rassoc {#rassoc}
 
 Find first alist entry with matching value (searches cdr of entries; uses equal?).
 
@@ -289,17 +289,17 @@ Find first alist entry with matching value (searches cdr of entries; uses equal?
 (rassoc 9 (list (list 'a 1) (list 'b 2)))               ; => #nil
 ```
 
-**See also:** assoc, rassoc-by-equal?
+**See also:** [assoc](#assoc), [rassoc-by-equal?](#rassoc-by-equal)
 
 ---
 
-### rassoc-by-equal?
+### rassoc-by-equal? {#rassoc-by-equal}
 
 Alias for rassoc: find first alist entry with value matching under equal?.
 
 **Signature:** `(rassoc-by-equal? value alist)`
 
-**See also:** rassoc
+**See also:** [rassoc](#rassoc)
 
 ---
 
@@ -307,7 +307,7 @@ Alias for rassoc: find first alist entry with value matching under equal?.
 
 Utilities for creating lists of numbers or repeated values.
 
-### range
+### range {#range}
 
 Generate numeric range from start to end (exclusive) with optional step.
 
@@ -320,11 +320,11 @@ Generate numeric range from start to end (exclusive) with optional step.
 (range 5 0 -1)    ; => (5 4 3 2 1)
 ```
 
-**See also:** iota, make-list
+**See also:** [iota](#iota), [make-list](#make-list)
 
 ---
 
-### iota
+### iota {#iota}
 
 Generate sequence of count numbers starting from start (default 0) with step (default 1).
 
@@ -337,11 +337,11 @@ Generate sequence of count numbers starting from start (default 0) with step (de
 (iota 5 0 2)      ; => (0 2 4 6 8)
 ```
 
-**See also:** range, make-list
+**See also:** [range](#range), [make-list](#make-list)
 
 ---
 
-### make-list
+### make-list {#make-list}
 
 Create list of n copies of value.
 
@@ -353,13 +353,13 @@ Create list of n copies of value.
 (make-list 0 'x)    ; => ()
 ```
 
-**See also:** iota, range
+**See also:** [iota](#iota), [range](#range)
 
 ---
 
 ## Additional List Accessors
 
-### list-ref
+### list-ref {#list-ref}
 
 Scheme-style list accessor (alias for nth).
 
@@ -370,11 +370,11 @@ Scheme-style list accessor (alias for nth).
 (list-ref (list 'a 'b 'c) 1)  ; => b
 ```
 
-**See also:** nth
+**See also:** [nth](#nth)
 
 ---
 
-### list-tail
+### list-tail {#list-tail}
 
 Return list without first k elements.
 
@@ -386,7 +386,7 @@ Return list without first k elements.
 (list-tail (list 1 2 3) 0)         ; => (1 2 3)
 ```
 
-**See also:** drop
+**See also:** [drop](#drop)
 
 ---
 
@@ -396,7 +396,7 @@ Higher-level operations for slicing, chunking, and transforming
 sequences. These complement the core list operations in the `list`
 module with lazy-style idioms common in functional programming.
 
-### take
+### take {#take}
 
 Take first n items.
 
@@ -409,11 +409,11 @@ Take first n items.
 (take 10 (list 1 2))       ; => (1 2)
 ```
 
-**See also:** drop, take-while
+**See also:** [drop](#drop), [take-while](#take-while)
 
 ---
 
-### drop
+### drop {#drop}
 
 Drop first n items.
 
@@ -426,11 +426,11 @@ Drop first n items.
 (drop 10 (list 1 2))       ; => ()
 ```
 
-**See also:** take, drop-while
+**See also:** [take](#take), [drop-while](#drop-while)
 
 ---
 
-### take-while
+### take-while {#take-while}
 
 Take items while predicate is true.
 
@@ -442,11 +442,11 @@ Take items while predicate is true.
 (take-while even? (list 1 2 3))       ; => ()
 ```
 
-**See also:** take, drop-while, filter
+**See also:** [take](#take), [drop-while](#drop-while), [filter](stdlib-functional.html#filter)
 
 ---
 
-### drop-while
+### drop-while {#drop-while}
 
 Drop items while predicate is true.
 
@@ -458,11 +458,11 @@ Drop items while predicate is true.
 (drop-while even? (list 1 2 3))       ; => (1 2 3)
 ```
 
-**See also:** drop, take-while, filter
+**See also:** [drop](#drop), [take-while](#take-while), [filter](stdlib-functional.html#filter)
 
 ---
 
-### partition
+### partition {#partition}
 
 **Signature:** `(partition n lst [step n])`
 
@@ -473,11 +473,11 @@ Drop items while predicate is true.
 (partition 2 (list 1 2 3 4 5))          ; => ((1 2) (3 4))
 ```
 
-**See also:** take, drop
+**See also:** [take](#take), [drop](#drop)
 
 ---
 
-### flatten
+### flatten {#flatten}
 
 Flatten nested lists.
 
@@ -489,11 +489,11 @@ Flatten nested lists.
 (flatten (list 1 2 3))                            ; => (1 2 3)
 ```
 
-**See also:** mapcat, append
+**See also:** [mapcat](stdlib-functional.html#mapcat), [append](#append)
 
 ---
 
-### repeatedly
+### repeatedly {#repeatedly}
 
 Call fn n times collecting results.
 
@@ -504,11 +504,11 @@ Call fn n times collecting results.
 (repeatedly 3 (lambda () 42))  ; => (42 42 42)
 ```
 
-**See also:** repeat, map
+**See also:** [repeat](#repeat), [map](stdlib-functional.html#map)
 
 ---
 
-### repeat
+### repeat {#repeat}
 
 Repeat value n times.
 
@@ -520,11 +520,11 @@ Repeat value n times.
 (repeat 3 0)     ; => (0 0 0)
 ```
 
-**See also:** repeatedly
+**See also:** [repeatedly](#repeatedly)
 
 ---
 
-### zip
+### zip {#zip}
 
 Zip lists into list of tuples.
 
@@ -536,7 +536,7 @@ Zip lists into list of tuples.
 (zip (list 1 2) (list 'a 'b) (list 'x 'y))  ; => ((1 a x) (2 b y))
 ```
 
-**See also:** map
+**See also:** [map](stdlib-functional.html#map)
 
 ---
 
@@ -544,7 +544,7 @@ Zip lists into list of tuples.
 
 Efficient length comparisons that short-circuit when possible.
 
-### length=
+### length= {#length-eq}
 
 Return #t if length of x equals n.
 
@@ -556,11 +556,11 @@ Return #t if length of x equals n.
 (length= (list 1 2) 3)    ; => #f
 ```
 
-**See also:** length>, length<, empty?
+**See also:** [length>](#length-gt), [length<](#length-lt), [empty?](stdlib-types.html#empty)
 
 ---
 
-### length>
+### length> {#length-gt}
 
 Return #t if length of x is greater than n.
 
@@ -572,11 +572,11 @@ Return #t if length of x is greater than n.
 (length> (list 1 2) 3)    ; => #f
 ```
 
-**See also:** length=, length<
+**See also:** [length=](#length-eq), [length<](#length-lt)
 
 ---
 
-### length<
+### length< {#length-lt}
 
 Return #t if length of x is less than n.
 
@@ -588,7 +588,7 @@ Return #t if length of x is less than n.
 (length< (list 1 2 3) 2)  ; => #f
 ```
 
-**See also:** length=, length>
+**See also:** [length=](#length-eq), [length>](#length-gt)
 
 ---
 
@@ -599,7 +599,7 @@ General-purpose sorting with user-supplied comparator functions.
 and preserves the relative order of equal elements. `merge` combines
 two already-sorted lists.
 
-### sort
+### sort {#sort}
 
 Sort list using comparison function (simple quicksort implementation).
 
@@ -611,11 +611,11 @@ Sort list using comparison function (simple quicksort implementation).
 (sort (list "b" "a" "c") string<); => ("a" "b" "c")
 ```
 
-**See also:** stable-sort, sort-by
+**See also:** [stable-sort](#stable-sort), [sort-by](#sort-by)
 
 ---
 
-### sort-by
+### sort-by {#sort-by}
 
 Sort list by applying key-fn to each element, then comparing.
 
@@ -627,11 +627,11 @@ Sort list by applying key-fn to each element, then comparing.
 (sort-by (list 3 -1 2) abs <)                            ; => (-1 2 3)
 ```
 
-**See also:** sort, stable-sort
+**See also:** [sort](#sort), [stable-sort](#stable-sort)
 
 ---
 
-### merge
+### merge {#merge}
 
 Merge two sorted lists into one sorted list. Stable: when elements are equal (neither comparator direction is true), takes from list1 first.
 
@@ -643,11 +643,11 @@ Merge two sorted lists into one sorted list. Stable: when elements are equal (ne
 (merge (list 1 2) (list) <)           ; => (1 2)
 ```
 
-**See also:** stable-sort, sort
+**See also:** [stable-sort](#stable-sort), [sort](#sort)
 
 ---
 
-### stable-sort
+### stable-sort {#stable-sort}
 
 Stable sort - preserves order of equal elements. Uses merge sort internally.
 
@@ -660,7 +660,7 @@ Stable sort - preserves order of equal elements. Uses merge sort internally.
 
 **Note:** Preserves the relative order of elements that compare equal, unlike `sort`.
 
-**See also:** sort, merge, sort-by
+**See also:** [sort](#sort), [merge](#merge), [sort-by](#sort-by)
 
 ---
 
