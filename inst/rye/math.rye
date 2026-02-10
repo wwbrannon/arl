@@ -11,7 +11,7 @@
           finite? infinite? nan?
           abs floor ceiling truncate round signum
           sqrt expt
-          log logb exp log10 log2
+          log exp log10 log2
           sin cos tan asin acos atan atan2
           quotient remainder modulo
           gcd lcm
@@ -378,16 +378,12 @@
       (__r^ base power)))
 
   ;; Logarithmic and exponential
-  ;; FIXME: Cannot override R's primitive 'log' with optional parameters due to
-  ;; module system issue - optional params don't survive module export when
-  ;; overriding existing functions. Using separate 'logb' function as workaround.
-  (define log __rlog)
-  (doc! log "Return natural logarithm of x.")
-
-  (define logb
-    (lambda (x base)
-      "Return logarithm of x with given base."
-      (__rlog x base)))
+  (define log
+    (lambda (x (base #nil))
+      "Return logarithm of x. With one argument, returns natural log. With two, returns log base."
+      (if (is.null base)
+        (__rlog x)
+        (__rlog x base))))
 
   (define exp __rexp)
   (doc! exp "Return e raised to power x.")

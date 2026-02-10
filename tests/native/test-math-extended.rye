@@ -73,9 +73,11 @@
   (assert-equal (log2 8) 3)
   (assert-equal (log2 1024) 10)))
 
-(define test-logb-with-base (lambda ()
-  ;; log base 2 of 8 should be 3
-  (assert-equal (logb 8 2) 3)))
+(define test-log-with-base (lambda ()
+  ;; log with optional base argument
+  (assert-equal (log 8 2) 3)
+  (assert-equal (log 1000 10) 3)))
+
 
 ;; ============================================================================
 ;; Trigonometric Functions
