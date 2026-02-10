@@ -12,7 +12,6 @@
           first second third fourth rest last nth
           assoc assoc-by-equal? assoc-by-identical? assoc-by-==
           assq assv rassoc rassoc-by-equal?
-          sort sort-by merge stable-sort
           range iota make-list
           list-ref list-tail)
 
@@ -257,78 +256,6 @@
     (lambda (value alist)
       "Alias for rassoc: find first alist entry with value matching under equal?."
       (rassoc value alist)))
-
-  ;; Sorting
-  (define sort
-    (lambda (lst comparator)
-      "Sort list using comparison function (simple quicksort implementation)."
-      (define items (__as-list lst))
-      (if (<= (__rlength items) 1)
-        items
-        (begin
-          ;; Simple quicksort
-          (define pivot (car items))
-          (define rest-items (cdr items))
-          ;; Partition into less and greater
-          (define less (list))
-          (define greater (list))
-          (define remaining rest-items)
-          (while (not (null? remaining))
-            (if (comparator (car remaining) pivot)
-              (set! less (append less (list (car remaining))))
-              (set! greater (append greater (list (car remaining)))))
-            (set! remaining (cdr remaining)))
-          (append (sort less comparator)
-                  (list pivot)
-                  (sort greater comparator))))))
-
-  (define sort-by
-    (lambda (lst key-fn comparator)
-      "Sort list by applying key-fn to each element, then comparing."
-      (define items (__as-list lst))
-      (if (<= (__rlength items) 1)
-        items
-        (begin
-          ;; Create list of (key, value) entries
-          (define pairs (lapply items (lambda (x) (list (key-fn x) x))))
-          ;; Sort by first element of each entry
-          (define sorted-pairs (sort pairs (lambda (a b) (comparator (car a) (car b)))))
-          ;; Extract values
-          (lapply sorted-pairs cadr)))))
-
-  (define merge
-    (lambda (list1 list2 comparator)
-      "Merge two sorted lists into one sorted list.
-       Stable: when elements are equal (neither comparator direction is true), takes from list1 first."
-      (define l1 (__as-list list1))
-      (define l2 (__as-list list2))
-      (define acc (list))
-      (while (and (not (null? l1)) (not (null? l2)))
-        ;; Take from l2 only when l2 is strictly less than l1; otherwise take from l1 (stable)
-        (if (comparator (car l2) (car l1))
-          (begin
-            (set! acc (cons (car l2) acc))
-            (set! l2 (cdr l2)))
-          (begin
-            (set! acc (cons (car l1) acc))
-            (set! l1 (cdr l1)))))
-      (if (null? l1)
-        (append (reverse acc) l2)
-        (append (reverse acc) l1))))
-
-  (define stable-sort
-    (lambda (lst comparator)
-      "Stable sort - preserves order of equal elements. Uses merge sort internally."
-      (define items (__as-list lst))
-      (if (<= (__rlength items) 1)
-        items
-        (begin
-          (define mid (as.integer (/ (__rlength items) 2)))
-          (define left (r/call "[" (list items (seq_len mid))))
-          (define right (r/call "[" (list items (seq (+ mid 1) (__rlength items)))))
-          (merge (stable-sort left comparator)
-                 (stable-sort right comparator)
-                 comparator)))))
 
   ;; List generation
   (define range

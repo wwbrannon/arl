@@ -2,6 +2,8 @@
 ;; For comprehensive edge case testing, see tests/testthat/test-stdlib-list.R
 ;; These tests demonstrate idiomatic usage patterns with simple examples.
 
+(import sort)
+
 ;; ============================================================================
 ;; Association Lists
 ;; ============================================================================

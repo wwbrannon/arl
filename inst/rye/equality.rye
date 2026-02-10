@@ -81,8 +81,8 @@
   (define env-equal?
     (lambda (env1 env2)
       "Compare two environments by their bindings and values."
-      (define names1 (sort (r/call "ls" (list env1 :all.names #t))))
-      (define names2 (sort (r/call "ls" (list env2 :all.names #t))))
+      (define names1 (__as-list (r/call "sort" (list (r/call "ls" (list env1 :all.names #t))))))
+      (define names2 (__as-list (r/call "sort" (list (r/call "ls" (list env2 :all.names #t))))))
       (if (equal? names1 names2)
         ;; Same names - recursively compare values
         (begin
