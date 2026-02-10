@@ -173,7 +173,7 @@ RyeEngine <- R6::R6Class(
         self$macro_expander$gensym(prefix = prefix)
       }
 
-      env$capture <- function(symbol, expr) {
+      env$`__capture` <- function(symbol, expr) {
         self$macro_expander$capture(symbol, expr)
       }
 
@@ -243,7 +243,7 @@ RyeEngine <- R6::R6Class(
         self$tokenize(source)
       }
 
-      env$rye_set_doc <- function(fn, docstring) {
+      env$`__set_doc` <- function(fn, docstring) {
         # If fn is a primitive, wrap it in a regular function
         if (is.primitive(fn)) {
           prim <- fn
@@ -253,7 +253,7 @@ RyeEngine <- R6::R6Class(
         fn
       }
 
-      env$rye_get_doc <- function(fn) {
+      env$`__get_doc` <- function(fn) {
         doc_attr <- attr(fn, "rye_doc", exact = TRUE)
         if (is.null(doc_attr)) NULL else doc_attr$description
       }

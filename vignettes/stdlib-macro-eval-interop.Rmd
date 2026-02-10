@@ -896,6 +896,8 @@ Recursively expand all macros in expr until no macro calls remain.
 (macroexpand '(my-when #t 42))  ; => (if #t 42 #nil)
 ```
 
+**Note:** Also available as `macroexpand-all` (alias).
+
 **See also:** [macroexpand-1](#macroexpand-1), [macro?](#macro), [gensym](#gensym)
 
 ---

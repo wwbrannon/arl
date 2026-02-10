@@ -18,7 +18,7 @@
   ;;' @seealso doc, help
   (defmacro doc! (sym docstring)
     "Attach docstring to function. Usage: (doc! function-name \"docstring\")"
-    `(set! ,sym (rye_set_doc ,sym ,docstring)))
+    `(set! ,sym (__set_doc ,sym ,docstring)))
 
   ;;' @examples
   ;;' (define add (lambda (a b) "Add two numbers." (+ a b)))
@@ -28,7 +28,7 @@
   (define doc
     (lambda (fn)
       "Retrieve docstring from function's rye_doc attribute."
-      (rye_get_doc fn)))
+      (__get_doc fn)))
 
 ;;' @section Error and Warning
 

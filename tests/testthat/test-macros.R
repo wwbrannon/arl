@@ -183,14 +183,14 @@ test_that("macro-introduced bindings are hygienic", {
   expect_equal(result, 100)
 })
 
-test_that("capture allows intentional binding capture", {
+test_that("__capture allows intentional binding capture", {
   env <- new.env(parent = baseenv())
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   engine$eval_in_env(
     engine$read(
-      "(defmacro aif (test then alt)\n  `(let ((it ,test))\n     (if it ,(capture 'it then) ,(capture 'it alt))))"
+      "(defmacro aif (test then alt)\n  `(let ((it ,test))\n     (if it ,(__capture 'it then) ,(__capture 'it alt))))"
     )[[1]],
     env
   )

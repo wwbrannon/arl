@@ -70,6 +70,7 @@ builtins:
         `(if ,test ,body #nil))
       (macroexpand '(my-when #t 42))  ; => (if #t 42 #nil)
     seealso: "macroexpand-1, macro?, gensym"
+    note: "Also available as `macroexpand-all` (alias)."
 
   macroexpand-1:
     vignette: stdlib-macro-eval-interop
