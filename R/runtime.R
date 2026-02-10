@@ -121,9 +121,8 @@ CompiledRuntime <- R6::R6Class(
         # copied from a module sub-environment during stdlib loading
         # (e.g. with use_env_cache = FALSE under coverage).
         if (!identical(get0(".rye_env", envir = env, inherits = FALSE), env)) {
-          if (exists(".rye_env", envir = env, inherits = FALSE) &&
-              bindingIsLocked(".rye_env", env)) {
-            unlockBinding(".rye_env", env)
+          if (exists(".rye_env", envir = env, inherits = FALSE) {
+            rye_unlock_binding(".rye_env", env)
           }
           assign(".rye_env", env, envir = env)
           lockBinding(".rye_env", env)
