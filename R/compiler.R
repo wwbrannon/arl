@@ -1204,7 +1204,6 @@ Compiler <- R6::R6Class(
           identity_result <- private$try_identity_elimination(expr[[1]], args)
           if (!is.null(identity_result)) {
             return(identity_result)
-          } else {
           }
         }
       }
