@@ -30,6 +30,12 @@
         (as.character lines)
         (paste lines :collapse sep))))
 
+  ;;' @section Console I/O
+  ;;' Functions for reading from standard input and writing to standard output.
+
+  ;;' @examples
+  ;;' (read-line)              ; waits for user input, returns string
+  ;;' (read-line "Name? ")     ; prints prompt, then waits for input
   (define read-line
     (lambda ((prompt ""))
       "Read single line from stdin."
@@ -38,6 +44,52 @@
       (if (nzchar prompt) (cat prompt) #nil)
       (r/call "readLines" (list :con con :n 1 :warn #f))))
 
+  ;;' @examples
+  ;;' (read "(+ 1 2)")  ; => (+ 1 2) (unevaluated)
+  ;;' @seealso read-from-string, eval
+  (define read
+    (lambda (source)
+      "Parse Rye expression from string."
+      (define exprs (rye_read source))
+      (if (> (length exprs) 0)
+        (r/call "[[" (list exprs 1))
+        #nil)))
+
+  ;;' @seealso read
+  (define read-from-string read)  ;; Alias for read
+
+  ;;' @examples
+  ;;' (print 42)              ; prints "42" and returns 42
+  ;;' (print (list 1 2 3))    ; prints "(1 2 3)" and returns the list
+  ;;' @seealso display, write-string
+  (define print
+    (lambda (x)
+      "Print value in Rye representation."
+      (__rprint x)
+      x))
+
+  ;;' @examples
+  ;;' (write-string "hello")  ; outputs "hello" with no newline
+  ;;' @seealso display, newline
+  (define write-string
+    (lambda (x)
+      "Write string to output (alias for cat)."
+      (cat x)
+      #nil))
+
+  ;;' @seealso display, write-string
+  (define newline
+    (lambda ()
+      "Output a newline."
+      (cat "\n")
+      #nil))
+
+  ;;' @section File I/O
+  ;;' Functions for reading from and writing to files.
+
+  ;;' @examples
+  ;;' (read-file "data.txt")                  ; => file contents as string
+  ;;' (read-file "data.txt" "latin1")         ; read with specific encoding
   (define read-file
     (lambda (path (encoding "UTF-8"))
       "Read entire file as string."
@@ -46,6 +98,8 @@
       (close con)
       (paste lines :collapse "\n")))
 
+  ;;' @examples
+  ;;' (read-lines "data.txt")  ; => ("line1" "line2" "line3")
   (define read-lines
     (lambda (path (encoding "UTF-8"))
       "Read file into list of lines."
@@ -54,6 +108,9 @@
       (close con)
       (as.list lines)))
 
+  ;;' @examples
+  ;;' (write-file "out.txt" "hello world")
+  ;;' (write-file "out.txt" (list "line1" "line2"))
   (define write-file
     (lambda (path content (sep "\n") (encoding "UTF-8"))
       "Write string or lines to file."
@@ -63,6 +120,8 @@
       (close con)
       #t))
 
+  ;;' @examples
+  ;;' (write-lines "out.txt" (list "line1" "line2" "line3"))
   (define write-lines
     (lambda (path lines (encoding "UTF-8"))
       "Write list of lines to file."
@@ -72,6 +131,8 @@
       (close con)
       #t))
 
+  ;;' @examples
+  ;;' (append-file "log.txt" "new entry\n")
   (define append-file
     (lambda (path content (sep "\n") (encoding "UTF-8"))
       "Append content to file."
@@ -81,50 +142,20 @@
       (close con)
       #t))
 
+  ;;' @examples
+  ;;' (file-exists? "data.txt")    ; => #t or #f
+  ;;' (file-exists? "nope.txt")    ; => #f
   (define file-exists?
     (lambda (path)
       "Return #t if file exists."
       (isTRUE (file.exists path))))
 
-  ;; ==========================================================================
-  ;; Phase 5: I/O and System Operations
-  ;; ==========================================================================
-
   ;; Get R base functions to avoid infinite recursion
   (define __rprint (get "print" :envir (baseenv)))
   (define __rsystem (get "system" :envir (baseenv)))
 
-  ;; Parsing operations
-  (define read
-    (lambda (source)
-      "Parse Rye expression from string."
-      (define exprs (rye_read source))
-      (if (> (length exprs) 0)
-        (r/call "[[" (list exprs 1))
-        #nil)))
-
-  (define read-from-string read)  ;; Alias for read
-
-  ;; Output operations
-  (define print
-    (lambda (x)
-      "Print value in Rye representation."
-      (__rprint x)
-      x))
-
-  (define write-string
-    (lambda (x)
-      "Write string to output (alias for cat)."
-      (cat x)
-      #nil))
-
-  (define newline
-    (lambda ()
-      "Output a newline."
-      (cat "\n")
-      #nil))
-
-  ;; File operations
+  ;;' @examples
+  ;;' (file-size "data.txt")       ; => 1024 (bytes)
   (define file-size
     (lambda (path)
       "Return size of file in bytes."
@@ -132,6 +163,8 @@
         (r/call "[[" (list (r/call "file.info" (list path)) "size"))
         (stop (sprintf "file-size: file does not exist: %s" path)))))
 
+  ;;' @examples
+  ;;' (file-modified-time "data.txt")  ; => 1700000000 (numeric timestamp)
   (define file-modified-time
     (lambda (path)
       "Return file modification time as numeric timestamp."
@@ -141,6 +174,8 @@
           (as.numeric mtime))
         (stop (sprintf "file-modified-time: file does not exist: %s" path)))))
 
+  ;;' @examples
+  ;;' (file-delete "temp.txt")     ; => #t
   (define file-delete
     (lambda (path)
       "Delete file. Return #t on success."
@@ -150,12 +185,20 @@
           #t)
         (stop (sprintf "file-delete: file does not exist: %s" path)))))
 
-  ;; Directory operations
+  ;;' @section Directory Operations
+  ;;' Functions for querying and manipulating directories.
+
+  ;;' @examples
+  ;;' (directory-exists? "/tmp")         ; => #t
+  ;;' (directory-exists? "/nonexistent") ; => #f
   (define directory-exists?
     (lambda (path)
       "Return #t if directory exists."
       (isTRUE (dir.exists path))))
 
+  ;;' @examples
+  ;;' (directory-list ".")               ; => ("file1.txt" "file2.txt")
+  ;;' (directory-list "." #t)            ; => ("./file1.txt" "./file2.txt")
   (define directory-list
     (lambda (path (full.names #f))
       "List directory contents as list of filenames."
@@ -163,6 +206,8 @@
         (as.list (list.files path :full.names full.names))
         (stop (sprintf "directory-list: directory does not exist: %s" path)))))
 
+  ;;' @examples
+  ;;' (directory-delete "/tmp/mydir")    ; => #t
   (define directory-delete
     (lambda (path (recursive #t))
       "Delete directory. Return #t on success."
@@ -172,7 +217,13 @@
           #t)
         (stop (sprintf "directory-delete: directory does not exist: %s" path)))))
 
-  ;; Environment variables
+  ;;' @section Environment and System
+  ;;' Functions for environment variables, shell commands, and process control.
+
+  ;;' @examples
+  ;;' (getenv "HOME")           ; => "/home/user"
+  ;;' (getenv "UNDEFINED_VAR")  ; => #nil
+  ;;' @seealso setenv
   (define getenv
     (lambda (name)
       "Get environment variable value. Return #nil if not set."
@@ -181,6 +232,9 @@
         #nil
         value)))
 
+  ;;' @examples
+  ;;' (setenv "MY_VAR" "hello")  ; => #t
+  ;;' @seealso getenv
   (define setenv
     (lambda (name value)
       "Set environment variable."
@@ -193,17 +247,24 @@
       (r/call "do.call" (list "Sys.setenv" named-list))
       #t))
 
-  ;; System operations
+  ;;' @examples
+  ;;' (system "ls")              ; => 0 (exit status)
+  ;;' @seealso system-output
   (define system
     (lambda (command)
       "Execute shell command. Return exit status."
       (__rsystem command)))
 
+  ;;' @examples
+  ;;' (system-output "whoami")   ; => "username"
+  ;;' (system-output "echo hi")  ; => "hi"
+  ;;' @seealso system
   (define system-output
     (lambda (command)
       "Execute shell command and capture output as string."
       (paste (__rsystem command #t) :collapse "\n")))
 
+  ;;' @signature (exit status)
   (define exit
     (lambda ((status 0))
       "Exit program with status code."

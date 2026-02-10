@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
 ---
 title: "Standard Library: Lists and Sequences"
 output:
@@ -15,17 +18,44 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## List Operations
 
+Core list constructors and accessors, following Scheme conventions.
+Lists in Rye are backed by R lists; `car`/`cdr` provide the fundamental
+decomposition and `cons` the fundamental construction.
+
+### __as-list
+
+Coerce calls and vectors to list; dotted pair to proper prefix.
+
+**Signature:** `(__as-list x)`
+
+---
+
+### call
+
+Convert a list to a callable form.
+
+**Signature:** `(call lst)`
+
+**Examples:**
+```lisp
+(call (list '+ 1 2))  ; => language: (+ 1 2)
+```
+
+**See also:** eval, apply
+
+---
+
 ### car
 
-Returns the first element of a list.
+Return first element or #nil.
 
 **Signature:** `(car lst)`
 
 **Examples:**
 ```lisp
-(car (list 1 2 3))  ; => 1
-(car ())            ; => #nil
-(car (list "a" "b")) ; => "a"
+(car (list 1 2 3))    ; => 1
+(car (list))           ; => #nil
+(car (cons 'a 'b))    ; => a
 ```
 
 **See also:** cdr, cons, first
@@ -34,15 +64,15 @@ Returns the first element of a list.
 
 ### cdr
 
-Returns all elements except the first (the "rest" of the list).
+Return list without first element (or cdr of dotted pair).
 
 **Signature:** `(cdr lst)`
 
 **Examples:**
 ```lisp
-(cdr (list 1 2 3))  ; => (2 3)
-(cdr (list 1))      ; => ()
-(cdr ())            ; => ()
+(cdr (list 1 2 3))    ; => (2 3)
+(cdr (list 1))        ; => ()
+(cdr (cons 'a 'b))    ; => b
 ```
 
 **See also:** car, cons, rest
@@ -51,48 +81,32 @@ Returns all elements except the first (the "rest" of the list).
 
 ### cons
 
-Adds an element to the front of a list.
+Prepend item to list or call; dotted pair when cdr is not a list.
 
-**Signature:** `(cons elem lst)`
+**Signature:** `(cons item lst)`
 
 **Examples:**
 ```lisp
-(cons 1 (list 2 3))     ; => (1 2 3)
-(cons "a" ())           ; => ("a")
-(cons (list 1 2) (list 3)) ; => ((1 2) 3)
+(cons 1 (list 2 3))   ; => (1 2 3)
+(cons 'a (list 'b))   ; => (a b)
+(cons 'a 'b)          ; => dotted pair (a . b)
 ```
 
 **See also:** car, cdr, append
 
 ---
 
-### call
-
-Converts a list to a call expression.
-
-**Signature:** `(call lst)`
-
-**Examples:**
-```lisp
-(call (list + 1 2))  ; => (+ 1 2)
-(eval (call (list * 3 4))) ; => 12
-```
-
-**See also:** eval, apply
-
----
-
 ### list*
 
-Creates a list from elements, with the last argument providing the tail.
+Build list ending with last arg.
 
-**Signature:** `(list* elem1 elem2 ... tail)`
+**Signature:** `(list* args...)`
 
 **Examples:**
 ```lisp
-(list* 1 (list 2 3))     ; => (1 2 3)
-(list* 1 2 (list 3 4))   ; => (1 2 3 4)
-(list* 1 ())             ; => (1)
+(list* 1 2 (list 3 4))  ; => (1 2 3 4)
+(list* 1 2 3)           ; => (1 2 3)
+(list*)                  ; => ()
 ```
 
 **See also:** list, cons, append
@@ -101,15 +115,15 @@ Creates a list from elements, with the last argument providing the tail.
 
 ### append
 
-Concatenates two lists.
+Concatenate multiple lists into one.
 
-**Signature:** `(append lst1 lst2)`
+**Signature:** `(append lists...)`
 
 **Examples:**
 ```lisp
-(append (list 1 2) (list 3 4))  ; => (1 2 3 4)
-(append () (list 1))            ; => (1)
-(append (list "a") (list "b" "c")) ; => ("a" "b" "c")
+(append (list 1 2) (list 3 4))    ; => (1 2 3 4)
+(append (list 1) (list 2) (list 3)); => (1 2 3)
+(append (list 1 2) (list))         ; => (1 2)
 ```
 
 **See also:** cons, list*
@@ -118,49 +132,281 @@ Concatenates two lists.
 
 ### reverse
 
-Reverses a list.
+Reverse list.
 
-**Signature:** `(reverse lst)`
+**Signature:** `(reverse x)`
 
 **Examples:**
 ```lisp
 (reverse (list 1 2 3))  ; => (3 2 1)
-(reverse ())            ; => ()
-(reverse (list "a" "b")) ; => ("b" "a")
+(reverse (list))        ; => ()
 ```
 
 ---
 
-### apply
+### first
 
-Applies a function to a list of arguments.
+Alias for car.
 
-**Signature:** `(apply fn args)`
+**Signature:** `(first lst)`
+
+**See also:** car, rest, last
+
+---
+
+### rest
+
+Alias for cdr.
+
+**Signature:** `(rest lst)`
+
+**See also:** cdr, first
+
+---
+
+### last
+
+Return last item or #nil.
+
+**Signature:** `(last lst)`
 
 **Examples:**
 ```lisp
-(apply + (list 1 2 3))  ; => 6
-(apply max (list 5 2 9 1)) ; => 9
-(apply str (list "a" "b" "c")) ; => "abc"
+(last (list 1 2 3))   ; => 3
+(last (list 42))      ; => 42
+(last (list))         ; => #nil
 ```
 
-**See also:** map, reduce
+**See also:** first, nth
+
+---
+
+### nth
+
+Return nth item (0-based).
+
+**Signature:** `(nth lst n)`
+
+**Examples:**
+```lisp
+(nth (list 'a 'b 'c) 0)  ; => a
+(nth (list 'a 'b 'c) 2)  ; => c
+```
+
+**See also:** first, last
+
+---
+
+## Association Lists
+
+Association lists (alists) map keys to values. Each entry is a list
+whose `car` is the key and whose `cadr` is the value. `assoc` and
+friends search by key; `rassoc` searches by value.
+
+### __r==-pred
+
+Wrap R's == to handle vector results; returns #t only if all elements match.
+
+**Signature:** `(__r==-pred a b)`
+
+---
+
+### assoc
+
+Find first alist entry (list or dotted pair) with matching key (uses equal?).
+
+**Signature:** `(assoc key alist)`
+
+**Examples:**
+```lisp
+(assoc 'b (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
+(assoc 'z (list (list 'a 1) (list 'b 2)))               ; => #nil
+```
+
+**See also:** rassoc, assoc-by-identical?, assoc-by-==
+
+---
+
+### assoc-by-equal?
+
+Alias for assoc: find first alist entry with key matching under equal?.
+
+**Signature:** `(assoc-by-equal? key alist)`
+
+**See also:** assoc
+
+---
+
+### assoc-by-identical?
+
+Find first alist entry with matching key (uses R's identical?).
+
+**Signature:** `(assoc-by-identical? key alist)`
+
+**See also:** assoc, assoc-by-==
+
+---
+
+### assoc-by-==
+
+Find first alist entry with matching key (uses R's ==).
+
+**Signature:** `(assoc-by-== key alist)`
+
+**See also:** assoc, assoc-by-identical?
+
+---
+
+### assq
+
+assq cannot be properly implemented in R (no eq?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
+
+**Signature:** `(assq key alist)`
+
+**Note:** assq cannot be properly implemented in R (no eq?). Use assoc, assoc-by-identical?, or assoc-by-== instead.
+
+---
+
+### assv
+
+assv cannot be properly implemented in R (no eqv?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
+
+**Signature:** `(assv key alist)`
+
+**Note:** assv cannot be properly implemented in R (no eqv?). Use assoc, assoc-by-identical?, or assoc-by-== instead.
+
+---
+
+### rassoc
+
+Find first alist entry with matching value (searches cdr of entries; uses equal?).
+
+**Signature:** `(rassoc value alist)`
+
+**Examples:**
+```lisp
+(rassoc 2 (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
+(rassoc 9 (list (list 'a 1) (list 'b 2)))               ; => #nil
+```
+
+**See also:** assoc, rassoc-by-equal?
+
+---
+
+### rassoc-by-equal?
+
+Alias for rassoc: find first alist entry with value matching under equal?.
+
+**Signature:** `(rassoc-by-equal? value alist)`
+
+**See also:** rassoc
+
+---
+
+## List Generation
+
+Utilities for creating lists of numbers or repeated values.
+
+### range
+
+Generate numeric range from start to end (exclusive) with optional step.
+
+**Signature:** `(range start end step-args...)`
+
+**Examples:**
+```lisp
+(range 0 5)       ; => (0 1 2 3 4)
+(range 0 10 2)    ; => (0 2 4 6 8)
+(range 5 0 -1)    ; => (5 4 3 2 1)
+```
+
+**See also:** iota, make-list
+
+---
+
+### iota
+
+Generate sequence of count numbers starting from start (default 0) with step (default 1).
+
+**Signature:** `(iota count args...)`
+
+**Examples:**
+```lisp
+(iota 5)          ; => (0 1 2 3 4)
+(iota 5 1)        ; => (1 2 3 4 5)
+(iota 5 0 2)      ; => (0 2 4 6 8)
+```
+
+**See also:** range, make-list
+
+---
+
+### make-list
+
+Create list of n copies of value.
+
+**Signature:** `(make-list n value)`
+
+**Examples:**
+```lisp
+(make-list 3 'x)    ; => (x x x)
+(make-list 0 'x)    ; => ()
+```
+
+**See also:** iota, range
+
+---
+
+## Additional List Accessors
+
+### list-ref
+
+Scheme-style list accessor (alias for nth).
+
+**Signature:** `(list-ref lst index)`
+
+**Examples:**
+```lisp
+(list-ref (list 'a 'b 'c) 1)  ; => b
+```
+
+**See also:** nth
+
+---
+
+### list-tail
+
+Return list without first k elements.
+
+**Signature:** `(list-tail lst k)`
+
+**Examples:**
+```lisp
+(list-tail (list 'a 'b 'c 'd) 2)  ; => (c d)
+(list-tail (list 1 2 3) 0)         ; => (1 2 3)
+```
+
+**See also:** drop
 
 ---
 
 ## Sequence Helpers
 
+Higher-level operations for slicing, chunking, and transforming
+sequences. These complement the core list operations in the `list`
+module with lazy-style idioms common in functional programming.
+
 ### take
 
-Takes the first n elements from a list.
+Take first n items.
 
 **Signature:** `(take n lst)`
 
 **Examples:**
 ```lisp
-(take 2 (list 1 2 3 4))  ; => (1 2)
-(take 0 (list 1 2 3))    ; => ()
-(take 10 (list 1 2))     ; => (1 2)
+(take 3 (list 1 2 3 4 5))  ; => (1 2 3)
+(take 0 (list 1 2 3))      ; => ()
+(take 10 (list 1 2))       ; => (1 2)
 ```
 
 **See also:** drop, take-while
@@ -169,15 +415,15 @@ Takes the first n elements from a list.
 
 ### drop
 
-Drops the first n elements from a list.
+Drop first n items.
 
 **Signature:** `(drop n lst)`
 
 **Examples:**
 ```lisp
-(drop 2 (list 1 2 3 4))  ; => (3 4)
-(drop 0 (list 1 2 3))    ; => (1 2 3)
-(drop 10 (list 1 2))     ; => ()
+(drop 2 (list 1 2 3 4 5))  ; => (3 4 5)
+(drop 0 (list 1 2 3))      ; => (1 2 3)
+(drop 10 (list 1 2))       ; => ()
 ```
 
 **See also:** take, drop-while
@@ -186,14 +432,14 @@ Drops the first n elements from a list.
 
 ### take-while
 
-Takes elements while they satisfy a predicate.
+Take items while predicate is true.
 
 **Signature:** `(take-while pred lst)`
 
 **Examples:**
 ```lisp
-(take-while (lambda (x) (< x 5)) (list 1 2 3 6 4))  ; => (1 2 3)
-(take-while number? (list 1 2 "a" 3))               ; => (1 2)
+(take-while odd? (list 1 3 5 2 4))   ; => (1 3 5)
+(take-while even? (list 1 2 3))       ; => ()
 ```
 
 **See also:** take, drop-while, filter
@@ -202,14 +448,14 @@ Takes elements while they satisfy a predicate.
 
 ### drop-while
 
-Drops elements while they satisfy a predicate.
+Drop items while predicate is true.
 
 **Signature:** `(drop-while pred lst)`
 
 **Examples:**
 ```lisp
-(drop-while (lambda (x) (< x 5)) (list 1 2 3 6 4))  ; => (6 4)
-(drop-while number? (list 1 2 "a" 3))               ; => ("a" 3)
+(drop-while odd? (list 1 3 5 2 4))   ; => (2 4)
+(drop-while even? (list 1 2 3))       ; => (1 2 3)
 ```
 
 **See also:** drop, take-while, filter
@@ -218,15 +464,13 @@ Drops elements while they satisfy a predicate.
 
 ### partition
 
-Divides a list into chunks of size n.
-
-**Signature:** `(partition n lst)` or `(partition n lst step)`
+**Signature:** `(partition n lst [step n])`
 
 **Examples:**
 ```lisp
-(partition 2 (list 1 2 3 4))     ; => ((1 2) (3 4))
-(partition 3 (list 1 2 3 4 5))   ; => ((1 2 3))  ; incomplete chunks dropped
-(partition 2 (list 1 2 3 4 5) 1) ; => ((1 2) (2 3) (3 4) (4 5))  ; overlapping
+(partition 2 (list 1 2 3 4 5 6))       ; => ((1 2) (3 4) (5 6))
+(partition 3 (list 1 2 3 4 5 6) 2)     ; => ((1 2 3) (3 4 5))
+(partition 2 (list 1 2 3 4 5))          ; => ((1 2) (3 4))
 ```
 
 **See also:** take, drop
@@ -235,34 +479,61 @@ Divides a list into chunks of size n.
 
 ### flatten
 
-Flattens nested lists into a single list.
+Flatten nested lists.
 
 **Signature:** `(flatten lst)`
 
 **Examples:**
 ```lisp
-(flatten (list 1 (list 2 3) 4))           ; => (1 2 3 4)
-(flatten (list (list 1 2) (list 3 4)))    ; => (1 2 3 4)
-(flatten (list 1 (list 2 (list 3 4)) 5))  ; => (1 2 3 4 5)
+(flatten (list 1 (list 2 3) (list 4 (list 5))))  ; => (1 2 3 4 5)
+(flatten (list 1 2 3))                            ; => (1 2 3)
 ```
 
 **See also:** mapcat, append
 
 ---
 
-### zip
+### repeatedly
 
-Combines multiple lists element-wise.
+Call fn n times collecting results.
 
-**Signature:** `(zip lst1 lst2 ...)`
+**Signature:** `(repeatedly n fn)`
 
 **Examples:**
 ```lisp
-(zip (list 1 2 3) (list "a" "b" "c"))
-; => ((1 "a") (2 "b") (3 "c"))
+(repeatedly 3 (lambda () 42))  ; => (42 42 42)
+```
 
-(zip (list 1 2) (list "a" "b") (list #t #f))
-; => ((1 "a" #t) (2 "b" #f))
+**See also:** repeat, map
+
+---
+
+### repeat
+
+Repeat value n times.
+
+**Signature:** `(repeat n value)`
+
+**Examples:**
+```lisp
+(repeat 4 'x)   ; => (x x x x)
+(repeat 3 0)     ; => (0 0 0)
+```
+
+**See also:** repeatedly
+
+---
+
+### zip
+
+Zip lists into list of tuples.
+
+**Signature:** `(zip lists...)`
+
+**Examples:**
+```lisp
+(zip (list 1 2 3) (list 'a 'b 'c))          ; => ((1 a) (2 b) (3 c))
+(zip (list 1 2) (list 'a 'b) (list 'x 'y))  ; => ((1 a x) (2 b y))
 ```
 
 **See also:** map
@@ -271,20 +542,18 @@ Combines multiple lists element-wise.
 
 ## Length Predicates
 
-These predicates are provided by the `sequences` module for testing sequence lengths.
+Efficient length comparisons that short-circuit when possible.
 
 ### length=
 
-Tests if the length of a sequence equals a given value.
+Return #t if length of x equals n.
 
 **Signature:** `(length= x n)`
 
 **Examples:**
 ```lisp
-(length= (list 1 2 3) 3)      ; => #t
-(length= [1 2 3 4] 3)         ; => #f
-(length= "hello" 5)           ; => #t
-(length= () 0)                ; => #t
+(length= (list 1 2 3) 3)  ; => #t
+(length= (list 1 2) 3)    ; => #f
 ```
 
 **See also:** length>, length<, empty?
@@ -293,15 +562,14 @@ Tests if the length of a sequence equals a given value.
 
 ### length>
 
-Tests if the length of a sequence is greater than a given value.
+Return #t if length of x is greater than n.
 
 **Signature:** `(length> x n)`
 
 **Examples:**
 ```lisp
-(length> (list 1 2 3) 2)      ; => #t
-(length> [1 2] 5)             ; => #f
-(length> "hello" 3)           ; => #t
+(length> (list 1 2 3) 2)  ; => #t
+(length> (list 1 2) 3)    ; => #f
 ```
 
 **See also:** length=, length<
@@ -310,15 +578,14 @@ Tests if the length of a sequence is greater than a given value.
 
 ### length<
 
-Tests if the length of a sequence is less than a given value.
+Return #t if length of x is less than n.
 
 **Signature:** `(length< x n)`
 
 **Examples:**
 ```lisp
-(length< (list 1 2) 3)        ; => #t
-(length< [1 2 3 4] 3)         ; => #f
-(length< "hi" 5)              ; => #t
+(length< (list 1 2) 3)    ; => #t
+(length< (list 1 2 3) 2)  ; => #f
 ```
 
 **See also:** length=, length>
@@ -327,21 +594,21 @@ Tests if the length of a sequence is less than a given value.
 
 ## Sorting
 
-These functions are provided by the `sort` module. All accept a comparator
-function that returns `#t` when its first argument should come before its
-second.
+General-purpose sorting with user-supplied comparator functions.
+`sort` uses quicksort (not stable); `stable-sort` uses merge sort
+and preserves the relative order of equal elements. `merge` combines
+two already-sorted lists.
 
 ### sort
 
-Sorts a list using a custom comparator (quicksort).
+Sort list using comparison function (simple quicksort implementation).
 
 **Signature:** `(sort lst comparator)`
 
 **Examples:**
 ```lisp
-(sort (list 3 1 2) <)         ; => (1 2 3)
-(sort (list "b" "a" "c")
-      (lambda (a b) (< (nchar a) (nchar b))))
+(sort (list 3 1 4 1 5) <)        ; => (1 1 3 4 5)
+(sort (list "b" "a" "c") string<); => ("a" "b" "c")
 ```
 
 **See also:** stable-sort, sort-by
@@ -350,15 +617,14 @@ Sorts a list using a custom comparator (quicksort).
 
 ### sort-by
 
-Sorts a list by applying a key-extraction function to each element.
+Sort list by applying key-fn to each element, then comparing.
 
 **Signature:** `(sort-by lst key-fn comparator)`
 
 **Examples:**
 ```lisp
-(sort-by (list "hello" "hi" "hey")
-         nchar <)
-; => ("hi" "hey" "hello")
+(sort-by (list (list "b" 2) (list "a" 1)) car string<)  ; => (("a" 1) ("b" 2))
+(sort-by (list 3 -1 2) abs <)                            ; => (-1 2 3)
 ```
 
 **See also:** sort, stable-sort
@@ -367,15 +633,14 @@ Sorts a list by applying a key-extraction function to each element.
 
 ### merge
 
-Merges two sorted lists into one sorted list. Stable: equal elements from
-the first list come before those from the second.
+Merge two sorted lists into one sorted list. Stable: when elements are equal (neither comparator direction is true), takes from list1 first.
 
 **Signature:** `(merge list1 list2 comparator)`
 
 **Examples:**
 ```lisp
-(merge (list 1 3 5) (list 2 4 6) <)
-; => (1 2 3 4 5 6)
+(merge (list 1 3 5) (list 2 4 6) <)  ; => (1 2 3 4 5 6)
+(merge (list 1 2) (list) <)           ; => (1 2)
 ```
 
 **See also:** stable-sort, sort
@@ -384,13 +649,18 @@ the first list come before those from the second.
 
 ### stable-sort
 
-Sorts a list preserving the relative order of equal elements (merge sort).
+Stable sort - preserves order of equal elements. Uses merge sort internally.
 
 **Signature:** `(stable-sort lst comparator)`
 
 **Examples:**
 ```lisp
-(stable-sort (list 3 1 2 1) <)  ; => (1 1 2 3)
+(stable-sort (list 3 1 4 1 5) <)  ; => (1 1 3 4 5)
 ```
 
+**Note:** Preserves the relative order of elements that compare equal, unlike `sort`.
+
 **See also:** sort, merge, sort-by
+
+---
+

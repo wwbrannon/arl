@@ -5,6 +5,24 @@
 
   (import functional)
 
+;;' @section Struct Definition
+
+;;' @examples
+;;' ;; Define a Point struct
+;;' (defstruct Point (x y))
+;;'
+;;' ;; Constructor: make-Point
+;;' (define p (make-Point 3 4))
+;;'
+;;' ;; Predicate: Point?
+;;' (Point? p)                  ; => #t
+;;' (Point? 42)                 ; => #f
+;;'
+;;' ;; Accessors: Point-x, Point-y
+;;' (Point-x p)                 ; => 3
+;;' (Point-y p)                 ; => 4
+;;' @note `defstruct` generates a constructor (`make-Name`), a type predicate (`Name?`), and field accessors (`Name-field`) for each field. The struct is backed by an R named list with an S3 class.
+;;' @seealso dict
 (defmacro defstruct (name fields)
   "Define a struct constructor, predicate, and accessors."
   (define struct-name (as.character name))

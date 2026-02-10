@@ -8,6 +8,16 @@
   (import strings)
   (import dict)
 
+;;' @section Assertion Helpers
+;;' These functions provide test-style assertions that signal errors on failure
+;;' and return `#t` on success.
+
+  ;;' @examples
+  ;;' (assert #t)               ; => #t
+  ;;' (assert (> 3 2))          ; => #t
+  ;;' (assert #f "must be true")  ; signals "must be true"
+  ;;' (assert #f)               ; signals "Assertion failed"
+  ;;' @seealso error
   (define assert
     (lambda (cond (msg "Assertion failed"))
       "Assert condition or raise error."
@@ -15,6 +25,11 @@
         #t
         (error msg))))
 
+  ;;' @examples
+  ;;' (assert-equal 3 (+ 1 2))  ; => #t
+  ;;' (assert-equal "a" "a")    ; => #t
+  ;;' (assert-equal 1 2)        ; signals error
+  ;;' @seealso assert-eq, assert-true
   (define assert-equal
     (lambda (expected actual)
       "Assert expected and actual are equal?."
@@ -24,6 +39,11 @@
           (error error-msg))
         #t)))
 
+  ;;' @examples
+  ;;' (assert-true #t)          ; => #t
+  ;;' (assert-true 1)           ; => #t
+  ;;' (assert-true #f)          ; signals error
+  ;;' @seealso assert-false, assert
   (define assert-true
     (lambda (value)
       "Assert value is truthy."
@@ -33,6 +53,11 @@
           (error error-msg))
         #t)))
 
+  ;;' @examples
+  ;;' (assert-false #f)         ; => #t
+  ;;' (assert-false #nil)       ; => #t
+  ;;' (assert-false #t)         ; signals error
+  ;;' @seealso assert-true, assert
   (define assert-false
     (lambda (value)
       "Assert value is falsy."
@@ -42,6 +67,12 @@
           (error error-msg))
         #t)))
 
+  ;;' @examples
+  ;;' (define x '(1 2 3))
+  ;;' (assert-eq x x)           ; => #t (same object)
+  ;;' (assert-eq '(1) '(1))     ; signals error (not identical)
+  ;;' @note Uses `identical?` (pointer equality), not `equal?` (structural equality). Use `assert-equal` for value comparison.
+  ;;' @seealso assert-equal, assert
   (define assert-eq
     (lambda (expected actual)
       "Assert expected and actual are identical?."
@@ -51,6 +82,11 @@
           (error error-msg))
         #t)))
 
+  ;;' @examples
+  ;;' (assert-error (lambda () (error "boom")))   ; => #t
+  ;;' (assert-error (lambda () (/ 1 0)))           ; => #t
+  ;;' (assert-error (lambda () 42))                ; signals error
+  ;;' @seealso assert, error
   (define assert-error
     (lambda (thunk)
       "Assert thunk throws an error."

@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
 ---
 title: "Standard Library: Math and Numeric Functions"
 output:
@@ -35,11 +38,9 @@ inexact? (number? AND NOT is.integer)
 
 **Note:** `number?` is provided by the `types` module, not `math`.
 
----
-
 ### real?
 
-Tests if a value is a real number (includes infinities, excludes complex).
+Return #t if x is a real number (includes ±Inf, excludes complex).
 
 **Signature:** `(real? x)`
 
@@ -57,7 +58,7 @@ Tests if a value is a real number (includes infinities, excludes complex).
 
 ### complex?
 
-Tests if a value is a complex number.
+Return #t if x is a complex number.
 
 **Signature:** `(complex? x)`
 
@@ -73,7 +74,7 @@ Tests if a value is a complex number.
 
 ### rational?
 
-Tests if a value is a rational number (finite real number in R).
+Return #t if x is a finite real number (rational in R are finite floats).
 
 **Signature:** `(rational? x)`
 
@@ -93,7 +94,7 @@ Tests if a value is a rational number (finite real number in R).
 
 ### exact?
 
-Tests if a number is exact (integer storage type in R).
+Return #t if x is an exact number (integer storage type in R).
 
 **Signature:** `(exact? x)`
 
@@ -112,7 +113,7 @@ Tests if a number is exact (integer storage type in R).
 
 ### inexact?
 
-Tests if a number is inexact (double or complex storage type in R).
+Return #t if x is an inexact number (double or complex in R).
 
 **Signature:** `(inexact? x)`
 
@@ -129,7 +130,7 @@ Tests if a number is inexact (double or complex storage type in R).
 
 ### integer?
 
-Tests if a value is an integer-valued number.
+Return #t if x is an integer-valued number.
 
 **Signature:** `(integer? x)`
 
@@ -149,7 +150,7 @@ Tests if a value is an integer-valued number.
 
 ### natural?
 
-Tests if a value is a natural number (non-negative integer).
+Return #t if x is a natural number (integer >= 0).
 
 **Signature:** `(natural? x)`
 
@@ -167,7 +168,7 @@ Tests if a value is a natural number (non-negative integer).
 
 ### finite?
 
-Tests if a value is finite (not infinite or NaN).
+Return #t if x is finite.
 
 **Signature:** `(finite? x)`
 
@@ -185,7 +186,7 @@ Tests if a value is finite (not infinite or NaN).
 
 ### infinite?
 
-Tests if a value is infinite (±Inf).
+Return #t if x is infinite.
 
 **Signature:** `(infinite? x)`
 
@@ -203,7 +204,7 @@ Tests if a value is infinite (±Inf).
 
 ### nan?
 
-Tests if a value is NaN (Not a Number).
+Return #t if x is NaN.
 
 **Signature:** `(nan? x)`
 
@@ -223,7 +224,7 @@ Tests if a value is NaN (Not a Number).
 
 ### even?
 
-Tests if a number is even.
+Return #t if x is an even number.
 
 **Signature:** `(even? x)`
 
@@ -240,7 +241,7 @@ Tests if a number is even.
 
 ### odd?
 
-Tests if a number is odd.
+Return #t if x is an odd number.
 
 **Signature:** `(odd? x)`
 
@@ -256,7 +257,7 @@ Tests if a number is odd.
 
 ### zero?
 
-Tests if a number equals zero.
+Return #t if x is zero.
 
 **Signature:** `(zero? x)`
 
@@ -273,7 +274,7 @@ Tests if a number equals zero.
 
 ### positive?
 
-Tests if a number is greater than zero.
+Return #t if x is greater than zero.
 
 **Signature:** `(positive? x)`
 
@@ -290,7 +291,7 @@ Tests if a number is greater than zero.
 
 ### negative?
 
-Tests if a number is less than zero.
+Return #t if x is less than zero.
 
 **Signature:** `(negative? x)`
 
@@ -307,7 +308,7 @@ Tests if a number is less than zero.
 
 ### non-negative?
 
-Tests if a number is greater than or equal to zero.
+Return #t if x is greater than or equal to zero.
 
 **Signature:** `(non-negative? x)`
 
@@ -324,7 +325,7 @@ Tests if a number is greater than or equal to zero.
 
 ### non-positive?
 
-Tests if a number is less than or equal to zero.
+Return #t if x is less than or equal to zero.
 
 **Signature:** `(non-positive? x)`
 
@@ -343,7 +344,7 @@ Tests if a number is less than or equal to zero.
 
 ### make-rectangular
 
-Constructs a complex number from real and imaginary parts.
+Construct a complex number from real and imaginary parts.
 
 **Signature:** `(make-rectangular real imag)`
 
@@ -358,7 +359,7 @@ Constructs a complex number from real and imaginary parts.
 
 ### make-polar
 
-Constructs a complex number from polar coordinates (magnitude and angle).
+Construct a complex number from polar coordinates (magnitude and angle).
 
 **Signature:** `(make-polar magnitude angle)`
 
@@ -373,7 +374,7 @@ Constructs a complex number from polar coordinates (magnitude and angle).
 
 ### real-part
 
-Extracts the real part of a complex number.
+Extract the real part of a complex number.
 
 **Signature:** `(real-part z)`
 
@@ -388,7 +389,7 @@ Extracts the real part of a complex number.
 
 ### imag-part
 
-Extracts the imaginary part of a complex number.
+Extract the imaginary part of a complex number.
 
 **Signature:** `(imag-part z)`
 
@@ -403,7 +404,7 @@ Extracts the imaginary part of a complex number.
 
 ### magnitude
 
-Computes the magnitude (modulus) of a complex number.
+Compute the magnitude (modulus) of a complex number.
 
 **Signature:** `(magnitude z)`
 
@@ -418,7 +419,7 @@ Computes the magnitude (modulus) of a complex number.
 
 ### angle
 
-Computes the angle (argument) of a complex number in radians.
+Compute the angle (argument) of a complex number.
 
 **Signature:** `(angle z)`
 
@@ -433,9 +434,195 @@ Computes the angle (argument) of a complex number in radians.
 
 ## Arithmetic Helpers
 
-### inc
+### %
 
-Increment a number.
+Modulo helper using R %%.
+
+**Signature:** `(% x y)`
+
+**Examples:**
+```lisp
+(% 10 3)   ; => 1
+(% 17 5)   ; => 2
+```
+
+---
+
+### <
+
+Variadic less-than comparison. Checks all adjacent pairs.
+
+**Signature:** `(< a b ...)`
+
+**Examples:**
+```lisp
+(< 1 2)     ; => #t
+(< 1 2 3)   ; => #t
+(< 1 3 2)   ; => #f
+```
+
+---
+
+### >
+
+Variadic greater-than comparison. Checks all adjacent pairs.
+
+**Signature:** `(> a b ...)`
+
+**Examples:**
+```lisp
+(> 3 2)     ; => #t
+(> 3 2 1)   ; => #t
+(> 3 1 2)   ; => #f
+```
+
+---
+
+### <=
+
+Variadic less-than-or-equal comparison. Checks all adjacent pairs.
+
+**Signature:** `(<= a b ...)`
+
+**Examples:**
+```lisp
+(<= 1 2)    ; => #t
+(<= 1 1 2)  ; => #t
+(<= 2 1)    ; => #f
+```
+
+---
+
+### >=
+
+Variadic greater-than-or-equal comparison. Checks all adjacent pairs.
+
+**Signature:** `(>= a b ...)`
+
+**Examples:**
+```lisp
+(>= 3 2)    ; => #t
+(>= 2 2 1)  ; => #t
+(>= 1 2)    ; => #f
+```
+
+---
+
+### ==
+
+Variadic equality comparison. Checks all adjacent pairs.
+
+**Signature:** `(== a b ...)`
+
+**Examples:**
+```lisp
+(== 1 1)     ; => #t
+(== 1 1 1)   ; => #t
+(== 1 2)     ; => #f
+```
+
+---
+
+### =
+
+**Signature:** `(= a b ...)`
+
+**Examples:**
+```lisp
+(= 1 1)           ; => #t
+(= "a" "a")       ; => #t
+(= 1 2)           ; => #f
+```
+
+---
+
+### +
+
+Variadic addition.
+
+**Signature:** `(+ a ...)`
+
+**Examples:**
+```lisp
+(+ 1 2 3)    ; => 6
+(+)           ; => 0
+(+ 5)         ; => 5
+```
+
+---
+
+### *
+
+Variadic multiplication.
+
+**Signature:** `(* a ...)`
+
+**Examples:**
+```lisp
+(* 2 3 4)    ; => 24
+(*)           ; => 1
+(* 5)         ; => 5
+```
+
+---
+
+### -
+
+Variadic subtraction.
+
+**Signature:** `(- a ...)`
+
+**Examples:**
+```lisp
+(- 10 3)     ; => 7
+(- 5)        ; => -5
+(- 10 3 2)   ; => 5
+```
+
+---
+
+### /
+
+Variadic division.
+
+**Signature:** `(/ a ...)`
+
+**Examples:**
+```lisp
+(/ 10 2)     ; => 5
+(/ 5)        ; => 0.2
+(/ 100 5 2)  ; => 10
+```
+
+---
+
+### min
+
+Variadic min.
+
+**Signature:** `(min a ...)`
+
+**Examples:**
+```lisp
+(min 3 1 2)  ; => 1
+```
+
+---
+
+### max
+
+Variadic max.
+
+**Signature:** `(max a ...)`
+
+**Examples:**
+```lisp
+(max 3 1 2)  ; => 3
+```
+
+---
+
+### inc
 
 **Signature:** `(inc x [n 1])`
 
@@ -451,8 +638,6 @@ Increment a number.
 
 ### dec
 
-Decrement a number.
-
 **Signature:** `(dec x [n 1])`
 
 **Examples:**
@@ -467,7 +652,7 @@ Decrement a number.
 
 ### clamp
 
-Clamp a value to an inclusive range.
+Clamp numeric value x to the inclusive range [lo, hi].
 
 **Signature:** `(clamp x lo hi)`
 
@@ -484,7 +669,7 @@ Clamp a value to an inclusive range.
 
 ### within?
 
-Test if a value is within an inclusive range.
+Return #t if x is within the inclusive range [lo, hi].
 
 **Signature:** `(within? x lo hi)`
 
@@ -503,7 +688,7 @@ Test if a value is within an inclusive range.
 
 ### abs
 
-Return absolute value.
+Return absolute value of x.
 
 **Signature:** `(abs x)`
 
@@ -517,7 +702,7 @@ Return absolute value.
 
 ### floor
 
-Round down to nearest integer.
+Return floor (round down) of x.
 
 **Signature:** `(floor x)`
 
@@ -533,7 +718,7 @@ Round down to nearest integer.
 
 ### ceiling
 
-Round up to nearest integer.
+Return ceiling (round up) of x.
 
 **Signature:** `(ceiling x)`
 
@@ -549,7 +734,7 @@ Round up to nearest integer.
 
 ### truncate
 
-Truncate toward zero.
+Return truncated (towards zero) value of x.
 
 **Signature:** `(truncate x)`
 
@@ -565,8 +750,6 @@ Truncate toward zero.
 
 ### round
 
-Round to given number of decimal places (default 0).
-
 **Signature:** `(round x [digits 0])`
 
 **Examples:**
@@ -581,7 +764,7 @@ Round to given number of decimal places (default 0).
 
 ### signum
 
-Return the sign of a number: -1, 0, or 1.
+Return sign of x: -1, 0, or 1.
 
 **Signature:** `(signum x)`
 
@@ -598,7 +781,7 @@ Return the sign of a number: -1, 0, or 1.
 
 ### sqrt
 
-Return square root.
+Return square root of x.
 
 **Signature:** `(sqrt x)`
 
@@ -614,7 +797,7 @@ Return square root.
 
 ### expt
 
-Raise base to a power.
+Return base raised to power.
 
 **Signature:** `(expt base power)`
 
@@ -630,9 +813,7 @@ Raise base to a power.
 
 ### log
 
-Natural logarithm, or logarithm to a given base.
-
-**Signature:** `(log x [base])`
+**Signature:** `(log x [base #nil])`
 
 **Examples:**
 ```lisp
@@ -647,7 +828,7 @@ Natural logarithm, or logarithm to a given base.
 
 ### exp
 
-Return e raised to a power.
+Return e raised to power x.
 
 **Signature:** `(exp x)`
 
@@ -663,7 +844,7 @@ Return e raised to a power.
 
 ### log10
 
-Base-10 logarithm.
+Return base-10 logarithm of x.
 
 **Signature:** `(log10 x)`
 
@@ -679,7 +860,7 @@ Base-10 logarithm.
 
 ### log2
 
-Base-2 logarithm.
+Return base-2 logarithm of x.
 
 **Signature:** `(log2 x)`
 
@@ -695,11 +876,11 @@ Base-2 logarithm.
 
 ## Trigonometric Functions
 
-### sin / cos / tan
+### sin
 
 Standard trigonometric functions (argument in radians).
 
-**Signatures:** `(sin x)`, `(cos x)`, `(tan x)`
+**Signature:** `(sin x)`
 
 **Examples:**
 ```lisp
@@ -710,11 +891,27 @@ Standard trigonometric functions (argument in radians).
 
 ---
 
-### asin / acos / atan
+### cos
+
+Return cosine of x (in radians).
+
+**Signature:** `(cos x)`
+
+---
+
+### tan
+
+Return tangent of x (in radians).
+
+**Signature:** `(tan x)`
+
+---
+
+### asin
 
 Inverse trigonometric functions (result in radians).
 
-**Signatures:** `(asin x)`, `(acos x)`, `(atan x)`
+**Signature:** `(asin x)`
 
 **Examples:**
 ```lisp
@@ -725,9 +922,25 @@ Inverse trigonometric functions (result in radians).
 
 ---
 
+### acos
+
+Return arccosine of x (in radians).
+
+**Signature:** `(acos x)`
+
+---
+
+### atan
+
+Return arctangent of x (in radians).
+
+**Signature:** `(atan x)`
+
+---
+
 ### atan2
 
-Two-argument arctangent, respecting quadrant.
+Return arctangent of y/x (in radians), respecting quadrant.
 
 **Signature:** `(atan2 y x)`
 
@@ -743,7 +956,7 @@ Two-argument arctangent, respecting quadrant.
 
 ### quotient
 
-Integer quotient (truncated toward zero).
+Return integer quotient of x divided by y.
 
 **Signature:** `(quotient x y)`
 
@@ -759,7 +972,7 @@ Integer quotient (truncated toward zero).
 
 ### remainder
 
-Remainder after integer division (same sign as dividend).
+Return remainder of x divided by y (same sign as x).
 
 **Signature:** `(remainder x y)`
 
@@ -775,7 +988,7 @@ Remainder after integer division (same sign as dividend).
 
 ### modulo
 
-Modulo operation (same sign as divisor).
+Return modulo of x and y (same sign as y).
 
 **Signature:** `(modulo x y)`
 
@@ -793,7 +1006,7 @@ Modulo operation (same sign as divisor).
 
 ### gcd
 
-Greatest common divisor (variadic).
+Return greatest common divisor of arguments.
 
 **Signature:** `(gcd a b ...)`
 
@@ -809,7 +1022,7 @@ Greatest common divisor (variadic).
 
 ### lcm
 
-Least common multiple (variadic).
+Return least common multiple of arguments.
 
 **Signature:** `(lcm a b ...)`
 
@@ -837,3 +1050,4 @@ Numeric type predicates were previously in the `predicates` module. They are now
 ```
 
 The function signatures and behavior remain unchanged.
+

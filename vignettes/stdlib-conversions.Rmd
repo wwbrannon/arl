@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
 ---
 title: "Standard Library: Type Conversions"
 output:
@@ -19,17 +22,17 @@ These functions are provided by the `conversions` module (`inst/rye/conversions.
 
 ### symbol->string
 
-Converts a symbol to a string.
+Convert symbol to string.
 
 **Signature:** `(symbol->string sym)`
 
 **Examples:**
 ```lisp
-(symbol->string 'foo)     ; => "foo"
-(symbol->string 'hello)   ; => "hello"
+(symbol->string 'hello)  ; => "hello"
+(symbol->string 'x)      ; => "x"
 ```
 
-**Errors:** Raises error if argument is not a symbol.
+**Note:** Signals an error if the argument is not a symbol.
 
 **See also:** string->symbol, ->symbol
 
@@ -37,17 +40,17 @@ Converts a symbol to a string.
 
 ### string->symbol
 
-Converts a string to a symbol.
+Convert string to symbol.
 
 **Signature:** `(string->symbol str)`
 
 **Examples:**
 ```lisp
-(string->symbol "foo")    ; => 'foo
-(string->symbol "hello")  ; => 'hello
+(string->symbol "hello")  ; => hello (a symbol)
+(string->symbol "x")      ; => x
 ```
 
-**Errors:** Raises error if argument is not a string.
+**Note:** Signals an error if the argument is not a string.
 
 **See also:** symbol->string, ->symbol
 
@@ -55,15 +58,15 @@ Converts a string to a symbol.
 
 ### ->symbol
 
-Coerces any value to a symbol.
+Convert value to symbol.
 
 **Signature:** `(->symbol x)`
 
 **Examples:**
 ```lisp
-(->symbol 'foo)           ; => 'foo (already a symbol)
-(->symbol "hello")        ; => 'hello
-(->symbol 42)             ; => '42
+(->symbol "hello")  ; => hello (a symbol)
+(->symbol 42)       ; => 42 (symbol named "42")
+(->symbol 'x)       ; => x (already a symbol, returned as-is)
 ```
 
 **See also:** symbol->string, string->symbol
@@ -72,89 +75,24 @@ Coerces any value to a symbol.
 
 ## Numeric Conversions
 
+R-style type conversions providing explicit control over the target numeric type.
+
 ### ->number
 
-Converts a value to a number.
+Convert value to number.
 
 **Signature:** `(->number x)`
 
 **Examples:**
 ```lisp
-(->number 42)             ; => 42 (already a number)
-(->number "3.14")         ; => 3.14
-(->number "42")           ; => 42
+(->number "42")     ; => 42
+(->number "3.14")   ; => 3.14
+(->number 5)        ; => 5 (already a number)
 ```
 
-**Errors:**
-- Raises error if string cannot be parsed as a number
-- Raises error if value cannot be converted to number
+**Note:** Signals an error for non-numeric strings (e.g. `(->number "abc")`).
 
 **See also:** ->integer, ->double, ->complex
-
----
-
-### ->integer
-
-Converts a value to an integer.
-
-**Signature:** `(->integer x)`
-
-**Examples:**
-```lisp
-(->integer 5.7)           ; => 5 (truncates toward zero)
-(->integer "42")          ; => 42
-(->integer 3.14)          ; => 3
-```
-
-**Errors:**
-- Raises error if string cannot be parsed as integer
-- Raises error if value cannot be converted
-
-**Note:** R's `as.integer()` truncates toward zero (like C's `(int)` cast).
-
-**See also:** ->double, ->number, inexact->exact
-
----
-
-### ->double
-
-Converts a value to a double (floating-point number).
-
-**Signature:** `(->double x)`
-
-**Examples:**
-```lisp
-(->double 5)              ; => 5.0
-(->double "3.14")         ; => 3.14
-(->double 42L)            ; => 42.0
-```
-
-**Errors:**
-- Raises error if string cannot be parsed as double
-- Raises error if value cannot be converted
-
-**See also:** ->integer, ->number, exact->inexact
-
----
-
-### ->complex
-
-Converts a value to a complex number (imaginary part = 0 if not specified).
-
-**Signature:** `(->complex x)`
-
-**Examples:**
-```lisp
-(->complex 5)             ; => 5+0i
-(->complex "3+4i")        ; => 3+4i
-(->complex 3.14)          ; => 3.14+0i
-```
-
-**Errors:**
-- Raises error if string cannot be parsed as complex
-- Raises error if value cannot be converted
-
-**See also:** make-rectangular, make-polar (in `math` module)
 
 ---
 
@@ -162,42 +100,95 @@ Converts a value to a complex number (imaginary part = 0 if not specified).
 
 ### exact->inexact
 
-Converts an exact number to inexact (integer storage to double storage).
+Convert exact number to inexact (integer to double).
 
 **Signature:** `(exact->inexact x)`
 
 **Examples:**
 ```lisp
-(exact->inexact 5)        ; => 5.0
-(exact->inexact 42L)      ; => 42.0
+(exact->inexact 5L)     ; => 5.0 (integer to double)
+(exact->inexact 3.14)   ; => 3.14 (already double, returned as double)
 ```
 
-**Errors:** Raises error if argument is not a number.
+**Note:** In Scheme, exactness is a property of any number. In R (and Rye), exact means integer storage type and inexact means double or complex. See also `exact?` and `inexact?` in the `math` module.
 
-**Note:** In Scheme, exactness is a mathematical property. In R (and Rye), it corresponds to storage type: integers are exact, doubles and complex are inexact.
-
-**See also:** inexact->exact, exact? (in `math` module)
+**See also:** inexact->exact, exact? (in `math` module), inexact? (in `math` module)
 
 ---
 
 ### inexact->exact
 
-Converts an inexact number to exact (double storage to integer storage).
+Convert inexact number to exact (double to integer, rounds to nearest).
 
 **Signature:** `(inexact->exact x)`
 
 **Examples:**
 ```lisp
-(inexact->exact 5.7)      ; => 5 (truncates)
-(inexact->exact 3.14)     ; => 3
-(inexact->exact 5.0)      ; => 5
+(inexact->exact 3.7)    ; => 4L (rounds to nearest integer)
+(inexact->exact 3.2)    ; => 3L
+(inexact->exact 5L)     ; => 5L (already integer)
 ```
 
-**Errors:** Raises error if argument is not a number.
+**Note:** **Warning:** Converting double to integer rounds to the nearest integer, which may lose precision. For example, `(inexact->exact 3.7)` returns `4L`, not `3L`.
 
-**Warning:** This operation may lose precision! Floating-point numbers are truncated toward zero.
+**See also:** exact->inexact, exact? (in `math` module), inexact? (in `math` module)
 
-**See also:** exact->inexact, inexact? (in `math` module), ->integer
+---
+
+## Numeric Conversions
+
+R-style type conversions providing explicit control over the target numeric type.
+
+### ->integer
+
+Convert value to integer.
+
+**Signature:** `(->integer x)`
+
+**Examples:**
+```lisp
+(->integer 3.7)     ; => 3L (truncates toward zero)
+(->integer "42")    ; => 42L
+(->integer 5L)      ; => 5L (already integer)
+```
+
+**Note:** Signals an error for non-numeric strings. Note that `->integer` truncates toward zero (like R's `as.integer`), whereas `inexact->exact` rounds to nearest.
+
+**See also:** ->number, ->double, inexact->exact
+
+---
+
+### ->double
+
+Convert value to double.
+
+**Signature:** `(->double x)`
+
+**Examples:**
+```lisp
+(->double 5L)       ; => 5.0
+(->double "3.14")   ; => 3.14
+(->double 2.5)      ; => 2.5 (already double)
+```
+
+**See also:** ->number, ->integer, exact->inexact
+
+---
+
+### ->complex
+
+Convert value to complex number (imaginary part = 0).
+
+**Signature:** `(->complex x)`
+
+**Examples:**
+```lisp
+(->complex 5)       ; => 5+0i
+(->complex 3.14)    ; => 3.14+0i
+(->complex "2+3i")  ; => 2+3i
+```
+
+**See also:** ->number, ->double, make-rectangular (in `math` module)
 
 ---
 
@@ -205,92 +196,53 @@ Converts an inexact number to exact (double storage to integer storage).
 
 ### ->list
 
-Converts a value to a list.
+Convert value to list.
 
 **Signature:** `(->list x)`
 
 **Examples:**
 ```lisp
-(->list [1 2 3])          ; => (1 2 3)
-(->list (list 1 2))       ; => (1 2) (already a list)
-(->list "hello")          ; => ("h" "e" "l" "l" "o")
+(->list (vector 1 2 3))  ; => (1 2 3)
+(->list '(1 2 3))        ; => (1 2 3) (already a list)
 ```
 
-**See also:** ->vector, as.list (R function)
+**See also:** ->vector
 
 ---
 
 ### ->vector
 
-Converts a value to an atomic vector (flattens lists).
+Convert value to vector.
 
 **Signature:** `(->vector x)`
 
 **Examples:**
 ```lisp
-(->vector (list 1 2 3))   ; => [1 2 3]
-(->vector [1 2 3])        ; => [1 2 3] (already a vector)
+(->vector '(1 2 3))   ; => [1] 1 2 3 (atomic vector)
+(->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)
 ```
 
-**Errors:** Raises error if value cannot be converted to vector.
+**Note:** When given a list, `->vector` flattens it into an atomic vector using `unlist`. Nested lists will be recursively flattened.
 
-**Note:** Lists are flattened using R's `unlist()`. Nested structures become flat vectors.
-
-**See also:** ->list, unlist (R function)
-
----
-
-## Usage Notes
-
-### Type Coercion Philosophy
-
-Rye provides two styles of type conversion:
-
-1. **Strict conversions** (e.g., `symbol->string`, `string->symbol`):
-   - Require specific input types
-   - Raise errors on type mismatch
-   - Use when type safety is important
-
-2. **Coercive conversions** (e.g., `->symbol`, `->number`):
-   - Accept multiple input types
-   - Attempt reasonable coercion
-   - Use for flexible/forgiving code
-
-### Numeric Type Conversions
-
-```
-->number    : string/number → number (any numeric type)
-->integer   : any → integer (exact)
-->double    : any → double (inexact)
-->complex   : any → complex (inexact)
-
-exact->inexact   : integer → double
-inexact->exact   : double → integer (truncates!)
-```
-
-### Error Handling
-
-Most conversion functions raise errors on failure:
-
-```lisp
-(->number "not-a-number")  ; ERROR: Cannot convert 'not-a-number' to number
-(symbol->string 42)        ; ERROR: symbol->string: argument must be a symbol
-```
-
-Use `try`/`catch` for graceful error handling if needed.
+**See also:** ->list
 
 ---
 
 ## Migration from predicates Module
 
-In previous versions of Rye, type conversion functions were in the `predicates` module. They are now in the dedicated `conversions` module:
+Type conversion functions have always been in the `conversions` module.
+However, the related numeric type predicates (`exact?`, `inexact?`, `integer?`, etc.)
+were previously in the `predicates` module and are now in the `math` module:
 
 ```lisp
 ; Old (before reorganization)
 (import predicates)
 
 ; New (after reorganization)
-(import conversions)
+(import conversions)  ; for ->number, ->integer, exact->inexact, etc.
+(import math)         ; for exact?, inexact?, integer?, real?, etc.
+(import types)        ; for number?, string?, symbol?, etc.
 ```
 
 The function signatures and behavior remain unchanged.
+

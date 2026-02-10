@@ -8,6 +8,10 @@
   (import list)
   (import looping)
 
+;;' @section Dictionary (Hash Table)
+;;' Dictionaries are mutable key-value stores backed by R environments.
+;;' Keys must be strings, symbols, or keywords; values can be anything.
+
 ;;; Internal helpers (defined early for use in constructors)
 
 (define dict-new
@@ -29,6 +33,12 @@
 
 ;;; Dictionary constructor
 
+;;' @examples
+;;' (dict :x 1 :y 2)           ; => dict with keys "x" and "y"
+;;' (dict)                      ; => empty dict
+;;' (define d (dict :name "Alice" :age 30))
+;;' (dict-get d "name")         ; => "Alice"
+;;' @seealso hash
 (define dict
   (lambda (. args)
     "Create a hash-backed dictionary from key/value pairs."
@@ -51,10 +61,17 @@
             (r/call "assign" (list ".rye_keys" keys :envir dict-obj))
             dict-obj))))))
 
+;;' @signature (hash . args)
+;;' @note Alias for `dict`.
+;;' @seealso dict
 (define hash dict)
 
 ;;; Type predicate
 
+;;' @examples
+;;' (dict? (dict :x 1))        ; => #t
+;;' (dict? (list 1 2))         ; => #f
+;;' (dict? 42)                 ; => #f
 (define dict?
   (lambda (x)
     "Return #t if x is a dictionary."
@@ -75,6 +92,12 @@
 
 ;;; Dictionary operations
 
+;;' @examples
+;;' (define d (dict :x 1 :y 2))
+;;' (dict-get d "x")           ; => 1
+;;' (dict-get d "z")           ; => #nil
+;;' (dict-get d "z" 99)        ; => 99  (default value)
+;;' @seealso dict-set, dict-has?
 (define dict-get
   (lambda (dict key . rest)
     "Get value for key or default if missing."
@@ -86,6 +109,11 @@
         (r/call "get" (list name :envir dict :inherits #f))
         default))))
 
+;;' @examples
+;;' (define d (dict))
+;;' (dict-set d "x" 42)        ; => d (mutated, x=42)
+;;' (dict-get d "x")           ; => 42
+;;' @seealso dict-get, dict-remove
 (define dict-set
   (lambda (dict key value)
     "Set key to value in dict and return dict."
@@ -101,6 +129,11 @@
           (r/call "assign" (list name value :envir dict))
           dict)))))
 
+;;' @examples
+;;' (define d (dict :x 1 :y 2))
+;;' (dict-remove d "x")        ; => d (mutated, x removed)
+;;' (dict-has? d "x")          ; => #f
+;;' @seealso dict-set
 (define dict-remove
   (lambda (dict key)
     "Remove key from dict and return dict."
@@ -116,6 +149,11 @@
           dict)
         dict))))
 
+;;' @examples
+;;' (define d (dict :x 1 :y 2))
+;;' (dict-keys d)              ; => ("x" "y")
+;;' (dict-keys (dict))         ; => ()
+;;' @seealso dict-values
 (define dict-keys
   (lambda (dict)
     "Return a list of dict keys."
@@ -125,6 +163,10 @@
         (define keys (dict-keys-ordered dict))
         (__as-list keys)))))
 
+;;' @examples
+;;' (define d (dict :x 1 :y 2))
+;;' (dict-values d)            ; => (1 2)
+;;' @seealso dict-keys
 (define dict-values
   (lambda (dict)
     "Return a list of dict values."
@@ -138,6 +180,11 @@
             (define values (r/call "mget" (list keys :envir dict :inherits #f)))
             (__as-list (r/call "unname" (list values)))))))))
 
+;;' @examples
+;;' (define d (dict :x 1 :y 2))
+;;' (dict-has? d "x")          ; => #t
+;;' (dict-has? d "z")          ; => #f
+;;' @seealso dict-get
 (define dict-has?
   (lambda (dict key)
     "Return #t if dict contains key."
@@ -146,6 +193,13 @@
       #f
       (r/call "exists" (list name :envir dict :inherits #f)))))
 
+;;' @examples
+;;' (define a (dict :x 1 :y 2))
+;;' (define b (dict :y 99 :z 3))
+;;' (define m (dict-merge a b))
+;;' (dict-get m "y")           ; => 99  (b overrides a)
+;;' (dict-get m "z")           ; => 3
+;;' @seealso dict, dict-set
 (define dict-merge
   (lambda (. dicts)
     "Merge dicts, later values override earlier."

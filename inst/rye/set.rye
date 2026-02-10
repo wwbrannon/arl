@@ -8,6 +8,10 @@
   (import list)
   (import looping)
 
+;;' @section Set (Hash-Backed)
+;;' Sets are mutable collections of unique items backed by R environments.
+;;' Any value can be a set element; uniqueness is determined by serialization.
+
 ;;; Internal helpers (defined early for use in constructors)
 
 (define set-new
@@ -25,6 +29,11 @@
 
 ;;; Set constructor
 
+;;' @examples
+;;' (set 1 2 3)                ; => set of {1, 2, 3}
+;;' (set 1 1 2)                ; => set of {1, 2} (duplicates removed)
+;;' (set)                      ; => empty set
+;;' (set '(a b c))             ; => set from list
 (define set
   (lambda (. args)
     "Create a hash-backed set of unique items."
@@ -44,6 +53,10 @@
 
 ;;; Type predicate
 
+;;' @examples
+;;' (set? (set 1 2))           ; => #t
+;;' (set? (list 1 2))          ; => #f
+;;' (set? 42)                  ; => #f
 (define set?
   (lambda (x)
     "Return #t if x is a set."
@@ -51,6 +64,11 @@
 
 ;;; Set operations
 
+;;' @examples
+;;' (define s (set 1 2))
+;;' (set-add s 3)              ; => s (mutated, now {1, 2, 3})
+;;' (set-contains? s 3)        ; => #t
+;;' @seealso set-remove
 (define set-add
   (lambda (set item)
     "Add item to set and return set."
@@ -62,6 +80,11 @@
           (r/call "assign" (list key item :envir set)))
         set))))
 
+;;' @examples
+;;' (define s (set 1 2 3))
+;;' (set-remove s 2)           ; => s (mutated, now {1, 3})
+;;' (set-contains? s 2)        ; => #f
+;;' @seealso set-add
 (define set-remove
   (lambda (set item)
     "Remove item from set and return set."
@@ -73,6 +96,10 @@
           (r/call "rm" (list :list (c key) :envir set :inherits #f)))
         set))))
 
+;;' @examples
+;;' (define s (set 1 2 3))
+;;' (set-contains? s 2)        ; => #t
+;;' (set-contains? s 99)       ; => #f
 (define set-contains?
   (lambda (set item)
     "Return #t if set contains item."
@@ -82,6 +109,13 @@
         (define key (set-key item))
         (r/call "exists" (list key :envir set :inherits #f))))))
 
+;;' @examples
+;;' (define a (set 1 2 3))
+;;' (define b (set 3 4 5))
+;;' (define u (set-union a b))
+;;' (set-contains? u 1)        ; => #t
+;;' (set-contains? u 5)        ; => #t
+;;' @seealso set-intersection, set-difference
 (define set-union
   (lambda (a b)
     "Return union of two sets."
@@ -90,6 +124,13 @@
     (set-copy-into result b)
     result))
 
+;;' @examples
+;;' (define a (set 1 2 3))
+;;' (define b (set 2 3 4))
+;;' (define i (set-intersection a b))
+;;' (set-contains? i 2)        ; => #t
+;;' (set-contains? i 1)        ; => #f
+;;' @seealso set-union, set-difference
 (define set-intersection
   (lambda (a b)
     "Return intersection of two sets."
@@ -107,6 +148,13 @@
         result))
     result))
 
+;;' @examples
+;;' (define a (set 1 2 3))
+;;' (define b (set 2 3 4))
+;;' (define d (set-difference a b))
+;;' (set-contains? d 1)        ; => #t
+;;' (set-contains? d 2)        ; => #f
+;;' @seealso set-union, set-intersection
 (define set-difference
   (lambda (a b)
     "Return items in a that are not in b."

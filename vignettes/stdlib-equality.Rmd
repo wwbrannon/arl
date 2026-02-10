@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
 ---
 title: "Standard Library: Equality and S3 Dispatch"
 output:
@@ -17,56 +20,25 @@ These functions are provided by the `equality` module (`inst/rye/equality.rye`).
 
 ## Equality Predicates
 
+Rye provides `equal?` for deep structural equality with S3-style dispatch,
+and `identical?` for R's native identity comparison. The Scheme predicates
+`eq?` and `eqv?` are intentionally not implemented because R does not
+provide the pointer-level semantics they require.
+
 ### equal?
 
-Deep structural equality with S3 dispatch. Compares values by their content rather than identity.
-
-**Signature:** `(equal? a b [:strict #t/#f])`
-
-**Parameters:**
-- `a`, `b`: Values to compare
-- `:strict` (optional): If `#t`, uses `identical?` for atomic values. Default: `#f`
+**Signature:** `(equal? a b [strict #f])`
 
 **Examples:**
 ```lisp
-(equal? (list 1 2 3) (list 1 2 3))  ; => #t
-(equal? [1 2 3] [1 2 3])            ; => #t
-(equal? "hello" "hello")            ; => #t
-(equal? (dict :a 1) (dict :a 1))    ; => #t (compares env contents)
-
-; With strict mode
-(equal? 5 5.0)                      ; => #t (type coercion)
-(equal? 5 5.0 :strict #t)           ; => #f (no coercion)
+(equal? 1 1)                    ; => #t
+(equal? 1 1.0)                  ; => #t (type coercion)
+(equal? 1 1.0 :strict #t)      ; => #f (strict mode, uses identical?)
+(equal? (list 1 2) (list 1 2))  ; => #t (deep structural)
+(equal? "hello" "hello")        ; => #t
 ```
-
-**Dispatch:** `equal?` dispatches on the class of the first argument:
-- `equal?.default` - for atomic/vector types
-- `equal?.list` - for lists (recursive comparison)
-- `equal?.environment` - for environments, dicts, sets, R6 objects
-- User-defined methods via `set-method!`
 
 **See also:** identical?, eq?, eqv?, set-method!
-
----
-
-### identical?
-
-Native R identity comparison. Tests if two objects are identical in memory/value.
-
-**Signature:** `(identical? a b)`
-
-**Examples:**
-```lisp
-(define x (list 1 2))
-(define y (list 1 2))
-(identical? x x)       ; => #t (same object)
-(identical? x y)       ; => #f (different objects, same content)
-(identical? 5 5)       ; => #t (primitive values)
-```
-
-**Note:** `identical?` is implemented natively in R and provided by the runtime, not the equality module.
-
-**See also:** equal?
 
 ---
 
@@ -74,9 +46,11 @@ Native R identity comparison. Tests if two objects are identical in memory/value
 
 **Not implemented in Rye.** Raises an error when called.
 
-**Rationale:** True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. Use `identical?` for R's native equality or `equal?` for deep structural equality.
+**Signature:** `(eq? a b)`
 
-**Signature:** `(eq? a b)` - raises error
+**Note:** True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
+
+**See also:** identical?, equal?
 
 ---
 
@@ -84,30 +58,35 @@ Native R identity comparison. Tests if two objects are identical in memory/value
 
 **Not implemented in Rye.** Raises an error when called.
 
-**Rationale:** True Scheme `eqv?` semantics cannot be properly implemented in R. Use `identical?` for R's native equality or `equal?` for deep structural equality.
+**Signature:** `(eqv? a b)`
 
-**Signature:** `(eqv? a b)` - raises error
+**Note:** True Scheme `eqv?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. Use `identical?` for R's native equality, or `equal?` for deep structural equality.
+
+**See also:** identical?, equal?
 
 ---
 
 ## Helper Functions for Equal?
 
+Internal helper functions used by the `equal?` dispatch methods to perform
+recursive structural comparison of environments and lists.
+
 ### env-equal?
 
-Compares two environments by their bindings and values (recursive).
+Compare two environments by their bindings and values.
 
 **Signature:** `(env-equal? env1 env2)`
 
 **Examples:**
 ```lisp
-(define e1 (new.env))
-(define e2 (new.env))
-(assign "x" 42 :envir e1)
-(assign "x" 42 :envir e2)
-(env-equal? e1 e2)  ; => #t
+(define e1 (new.env :parent emptyenv))
+(define e2 (new.env :parent emptyenv))
+(assign "x" 1 :envir e1)
+(assign "x" 1 :envir e2)
+(env-equal? e1 e2)              ; => #t
 ```
 
-**Note:** Used internally by `equal?.environment`. You can call this directly but usually you'd use `equal?`.
+**Note:** Used internally by `equal?.environment`. Compares environments by sorting their bindings and recursively comparing values.
 
 **See also:** equal?.environment
 
@@ -115,17 +94,18 @@ Compares two environments by their bindings and values (recursive).
 
 ### list-equal?
 
-Recursively compares list elements.
+Recursively compare list elements.
 
 **Signature:** `(list-equal? lst1 lst2)`
 
 **Examples:**
 ```lisp
-(list-equal? (list 1 (list 2 3)) (list 1 (list 2 3)))  ; => #t
-(list-equal? (list 1 2) (list 1 3))                    ; => #f
+(list-equal? (list 1 2 3) (list 1 2 3))  ; => #t
+(list-equal? (list 1 2) (list 1 2 3))     ; => #f
+(list-equal? (list 1 "a") (list 1 "a"))   ; => #t
 ```
 
-**Note:** Used internally by `equal?.list`. You can call this directly but usually you'd use `equal?`.
+**Note:** Used internally by `equal?.list`. Recursively compares list elements using `equal?`.
 
 **See also:** equal?.list
 
@@ -133,73 +113,56 @@ Recursively compares list elements.
 
 ## S3 Dispatch System
 
-Rye implements a simplified S3-style dispatch system for generic functions like `equal?`.
+Rye implements a simplified S3-style dispatch system for generic functions
+like `equal?`. Types are identified by their first S3 class, and methods
+are registered as `generic.class` bindings in the stdlib environment.
 
 ### s3-type
 
-Returns the first class of an object (equivalent to `class(obj)[1]` in R).
+Extract the first S3 class from an object.
 
 **Signature:** `(s3-type obj)`
 
 **Examples:**
 ```lisp
-(s3-type (list 1 2))     ; => "list"
-(s3-type (dict :a 1))    ; => "rye_dict"
-(s3-type 42)             ; => "numeric"
+(s3-type 42)                    ; => "numeric"
+(s3-type "hello")               ; => "character"
+(s3-type (list 1 2))            ; => "list"
+(s3-type (new.env))             ; => "environment"
 ```
 
 ---
 
 ### check-s3-type-match
 
-Checks if objects have compatible S3 types for dispatch.
+Check if all objects have the same S3 type.
 
-**Signature:** `(check-s3-type-match obj . rest)`
+**Signature:** `(check-s3-type-match obj rest...)`
 
 **Examples:**
 ```lisp
-(check-s3-type-match (list 1) (list 2))  ; => #t (both lists)
-(check-s3-type-match (list 1) 42)        ; => #f (different types)
+(check-s3-type-match 1 2 3)     ; => #t (all numeric)
+(check-s3-type-match 1 "a")     ; => #f (numeric vs character)
 ```
 
-**Note:** Internal function used by `equal?` to ensure type compatibility before dispatch.
+**Note:** Internal function used by `equal?` to verify type consistency before dispatch.
 
 ---
 
 ### set-method!
 
-Registers an S3-style method for a generic function.
+Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
 
 **Signature:** `(set-method! generic-name class-name method-fun)`
 
-**Parameters:**
-- `generic-name`: Symbol or string naming the generic (e.g., `'equal?`)
-- `class-name`: Symbol or string naming the class (e.g., `'my-class`)
-- `method-fun`: Lambda implementing the method
-
 **Examples:**
 ```lisp
-; Define a custom type
-(define make-point
-  (lambda (x y)
-    (define obj (list x y))
-    (class<- obj "point")
-    obj))
-
-; Register equal? method for points
+;; Register a custom equality method for "point" objects:
 (set-method! 'equal? 'point
   (lambda (a b strict)
-    (if (not (equal? (class a) (class b)))
-      #f
-      (and (equal? (car a) (car b))
-           (equal? (cadr a) (cadr b))))))
-
-; Now equal? works with points
-(equal? (make-point 1 2) (make-point 1 2))  ; => #t
-(equal? (make-point 1 2) (make-point 3 4))  ; => #f
+    (and (equal? ($ a "x") ($ b "x"))
+         (equal? ($ a "y") ($ b "y")))))
 ```
-
-**Method naming convention:** Methods are named `<generic>.<class>`, e.g., `equal?.point`.
 
 **See also:** use-method
 
@@ -207,22 +170,16 @@ Registers an S3-style method for a generic function.
 
 ### use-method
 
-Dispatches to an S3 method based on object class.
+Dispatch to an S3 method based on object class.
 
 **Signature:** `(use-method generic-name obj args)`
 
-**Parameters:**
-- `generic-name`: String naming the generic function
-- `obj`: Object whose class determines dispatch
-- `args`: List of arguments to pass to the method
-
 **Examples:**
 ```lisp
-; Typically used internally by generic functions
-(use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f))
+(use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f))  ; dispatches to equal?.list
 ```
 
-**Note:** This is an internal function used by generic implementations. Users typically don't call this directly - instead, they call the generic function (e.g., `equal?`) which handles dispatch automatically.
+**Note:** Internal function. Dispatches to the appropriate S3 method based on the object's class, falling back to the `.default` method if no class-specific method is found.
 
 **See also:** set-method!, s3-type
 
@@ -230,69 +187,64 @@ Dispatches to an S3 method based on object class.
 
 ## Built-in Equal? Methods
 
+These methods handle equality comparison for R's core types. The dispatch
+system selects the appropriate method based on the S3 class of the first
+argument. Users can register additional methods with `set-method!`.
+
 ### equal?.default
 
-Default equality method for atomic/vector types.
-
-**Signature:** `(equal?.default a b [:strict #f])`
-
-**Behavior:**
-- If `:strict #t`: uses `identical?`
-- Otherwise: uses `==` with type coercion
+**Signature:** `(equal?.default a b [strict #f])`
 
 **Examples:**
 ```lisp
-(equal?.default 5 5.0)              ; => #t (coercion)
-(equal?.default 5 5.0 :strict #t)   ; => #f (strict)
-(equal?.default [1 2] [1 2])        ; => #t
+(equal?.default 1 1)             ; => #t
+(equal?.default 1 1.0)           ; => #t (coercion via ==)
+(equal?.default 1 1.0 :strict #t) ; => #f (strict uses identical?)
+(equal?.default (c 1 2 3) (c 1 2 3))  ; => #t (element-wise)
 ```
 
 ---
 
 ### equal?.list
 
-List equality method (recursive).
-
-**Signature:** `(equal?.list a b [:strict #f])`
-
-**Behavior:** Recursively compares list elements using `equal?`.
+**Signature:** `(equal?.list a b [strict #f])`
 
 **Examples:**
 ```lisp
-(equal?.list (list 1 (list 2)) (list 1 (list 2)))  ; => #t
+(equal?.list (list 1 2 3) (list 1 2 3))          ; => #t
+(equal?.list (list 1 (list 2 3)) (list 1 (list 2 3)))  ; => #t (nested)
+(equal?.list (list 1 2) (list 1 2 3))             ; => #f
 ```
 
 ---
 
 ### equal?.environment
 
-Environment equality method.
-
-**Signature:** `(equal?.environment a b [:strict #f])`
-
-**Behavior:** Compares environments by their bindings and values. Works for dicts, sets, R6 objects, and reference classes since they're all environment-based.
+**Signature:** `(equal?.environment a b [strict #f])`
 
 **Examples:**
 ```lisp
-(define e1 (new.env))
-(define e2 (new.env))
+(define e1 (new.env :parent emptyenv))
+(define e2 (new.env :parent emptyenv))
 (assign "x" 1 :envir e1)
 (assign "x" 1 :envir e2)
-(equal?.environment e1 e2)  ; => #t
+(equal?.environment e1 e2)       ; => #t
 ```
 
 ---
 
 ## Migration from predicates Module
 
-In previous versions of Rye, equality functions were in the `predicates` module. They are now in the dedicated `equality` module:
+Equality predicates were previously in the `predicates` module. They are now
+in the `equality` module:
 
 ```lisp
 ; Old (before reorganization)
 (import predicates)
 
 ; New (after reorganization)
-(import equality)
+(import equality)  ; for equal?, identical?, eq?, eqv?
 ```
 
 The function signatures and behavior remain unchanged.
+

@@ -8,10 +8,24 @@
   (import types)
   (import sequences)
 
+  ;;' @section Looping Macros
+
   ;;
   ;; for loops (defined in terms of while, which is a built-in special form)
   ;;
 
+  ;;' @examples
+  ;;' (define total 0)
+  ;;' (for (x '(1 2 3))
+  ;;'   (set! total (+ total x)))
+  ;;' total                       ; => 6
+  ;;'
+  ;;' (define result (list))
+  ;;' (for (ch '("a" "b" "c"))
+  ;;'   (set! result (append result (list ch))))
+  ;;' result                      ; => ("a" "b" "c")
+  ;;' @note Expands to a `while` loop over the sequence converted to a list.
+  ;;' @seealso while, map, loop
   (defmacro for (binding . body)
     "Loop over seq binding var each iteration. Expands to while."
     (begin
@@ -29,6 +43,8 @@
   ;; loop/recur, clojure-style
   ;;
 
+  ;;' @description Signal a recur back to the enclosing `loop`. Only valid inside a `loop` body.
+  ;;' @seealso loop
   (defmacro recur (. args)
     "Rebind loop locals and repeat. Only valid inside loop."
     (stop "recur can only be used inside loop"))
@@ -108,6 +124,20 @@
           (car rebinds)
           `(begin ,@rebinds)))))
 
+  ;;' @examples
+  ;;' ;; Factorial via loop/recur
+  ;;' (loop ((n 5) (acc 1))
+  ;;'   (if (= n 0)
+  ;;'     acc
+  ;;'     (recur (- n 1) (* acc n))))  ; => 120
+  ;;'
+  ;;' ;; Sum of a list via loop/recur
+  ;;' (loop ((xs '(1 2 3 4)) (total 0))
+  ;;'   (if (null? xs)
+  ;;'     total
+  ;;'     (recur (cdr xs) (+ total (car xs)))))  ; => 10
+  ;;' @note The compiler auto-optimizes self-tail-calls in `(define name (lambda ...))` patterns, so `loop`/`recur` is primarily useful for anonymous iteration and mutual recursion patterns. Expands to an R `while` loop internally.
+  ;;' @seealso recur, while, for
   (defmacro loop (bindings . body)
     "Clojure-style loop/recur that expands to an R while loop."
     (begin
@@ -154,6 +184,12 @@
   ;; misc loops
   ;;
 
+  ;;' @examples
+  ;;' (define i 0)
+  ;;' (until (= i 5)
+  ;;'   (set! i (+ i 1)))
+  ;;' i                          ; => 5
+  ;;' @seealso while
   (defmacro until (test . body)
     "Repeat body until test is truthy."
     `(while (not ,test) ,@body))

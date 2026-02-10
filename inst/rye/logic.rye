@@ -24,11 +24,34 @@
  ;         (if tmp tmp (or ,@rest)))
  ;       ,first)))
 
+  ;;' @section Logical Operations
+  ;;' Core logical operations for Rye. Note that `and` and `or` are compiler
+  ;;' special forms (not functions) with short-circuit evaluation, so they
+  ;;' are not part of this module.
+
+  ;;' @examples
+  ;;' (not #t)          ; => #f
+  ;;' (not #f)          ; => #t
+  ;;' (not 0)           ; => #t (0 is falsy)
+  ;;' (not 1)           ; => #f (non-zero is truthy)
+  ;;' (not #nil)        ; => #t (NULL is falsy)
+  ;;' (not "hello")     ; => #f (non-empty values are truthy)
+  ;;' @note Rye follows Scheme-like truthiness: #f/FALSE, #nil/NULL, and 0 are falsy. Everything else is truthy. This differs from R where only FALSE and NULL are falsy.
+  ;;' @seealso xor, and, or (special forms)
   (define not
     (lambda (x)
       "Logical negation with Rye truthiness."
       (if x #f #t)))
 
+  ;;' @examples
+  ;;' (xor #t #f)       ; => #t
+  ;;' (xor #f #t)       ; => #t
+  ;;' (xor #t #t)       ; => #f
+  ;;' (xor #f #f)       ; => #f
+  ;;' (xor 1 0)         ; => #t (1 is truthy, 0 is falsy)
+  ;;' (xor 1 2)         ; => #f (both truthy)
+  ;;' @note Exclusive OR: returns #t when exactly one argument is truthy, #f when both are truthy or both are falsy.
+  ;;' @seealso not, and, or (special forms)
   (define xor
     (lambda (a b)
       "Logical exclusive OR with Rye truthiness."

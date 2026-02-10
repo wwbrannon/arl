@@ -9,6 +9,16 @@
   (import list)
   (import types)
 
+  ;;' @section Sequence Helpers
+  ;;' Higher-level operations for slicing, chunking, and transforming
+  ;;' sequences. These complement the core list operations in the `list`
+  ;;' module with lazy-style idioms common in functional programming.
+
+  ;;' @examples
+  ;;' (take 3 (list 1 2 3 4 5))  ; => (1 2 3)
+  ;;' (take 0 (list 1 2 3))      ; => ()
+  ;;' (take 10 (list 1 2))       ; => (1 2)
+  ;;' @seealso drop, take-while
   (define take
     (lambda (n lst)
       "Take first n items."
@@ -17,6 +27,11 @@
         (list)
         (r/call "[" (list items (seq_len (min n (length items))))))))
 
+  ;;' @examples
+  ;;' (drop 2 (list 1 2 3 4 5))  ; => (3 4 5)
+  ;;' (drop 0 (list 1 2 3))      ; => (1 2 3)
+  ;;' (drop 10 (list 1 2))       ; => ()
+  ;;' @seealso take, drop-while
   (define drop
     (lambda (n lst)
       "Drop first n items."
@@ -27,6 +42,10 @@
           (list)
           (r/call "[" (list items (seq (+ n 1) (length items))))))))
 
+  ;;' @examples
+  ;;' (take-while odd? (list 1 3 5 2 4))   ; => (1 3 5)
+  ;;' (take-while even? (list 1 2 3))       ; => ()
+  ;;' @seealso take, drop-while, filter
   (define take-while
     (lambda (pred lst)
       "Take items while predicate is true."
@@ -39,6 +58,10 @@
           (set! remaining (cdr remaining))))
       acc))
 
+  ;;' @examples
+  ;;' (drop-while odd? (list 1 3 5 2 4))   ; => (2 4)
+  ;;' (drop-while even? (list 1 2 3))       ; => (1 2 3)
+  ;;' @seealso drop, take-while, filter
   (define drop-while
     (lambda (pred lst)
       "Drop items while predicate is true."
@@ -48,6 +71,11 @@
         (set! remaining (cdr remaining)))
       remaining))
 
+  ;;' @examples
+  ;;' (partition 2 (list 1 2 3 4 5 6))       ; => ((1 2) (3 4) (5 6))
+  ;;' (partition 3 (list 1 2 3 4 5 6) 2)     ; => ((1 2 3) (3 4 5))
+  ;;' (partition 2 (list 1 2 3 4 5))          ; => ((1 2) (3 4))
+  ;;' @seealso take, drop
   (define partition
     (lambda (n lst (step n))
       "Split list into chunks of size n."
@@ -69,6 +97,10 @@
                 (set! idx (+ idx step)))
               acc))))))
 
+  ;;' @examples
+  ;;' (flatten (list 1 (list 2 3) (list 4 (list 5))))  ; => (1 2 3 4 5)
+  ;;' (flatten (list 1 2 3))                            ; => (1 2 3)
+  ;;' @seealso mapcat, append
   (define flatten
     (lambda (lst)
       "Flatten nested lists."
@@ -83,16 +115,27 @@
         (set! remaining (cdr remaining)))
       acc))
 
+  ;;' @examples
+  ;;' (repeatedly 3 (lambda () 42))  ; => (42 42 42)
+  ;;' @seealso repeat, map
   (define repeatedly
     (lambda (n fn)
       "Call fn n times collecting results."
       (lapply (seq_len n) (lambda (i) (fn)))))
 
+  ;;' @examples
+  ;;' (repeat 4 'x)   ; => (x x x x)
+  ;;' (repeat 3 0)     ; => (0 0 0)
+  ;;' @seealso repeatedly
   (define repeat
     (lambda (n value)
       "Repeat value n times."
       (replicate n value :simplify #f)))
 
+  ;;' @examples
+  ;;' (zip (list 1 2 3) (list 'a 'b 'c))          ; => ((1 a) (2 b) (3 c))
+  ;;' (zip (list 1 2) (list 'a 'b) (list 'x 'y))  ; => ((1 a x) (2 b y))
+  ;;' @seealso map
   (define zip
     (lambda (. lists)
       "Zip lists into list of tuples."
@@ -130,17 +173,31 @@
       "Return #t if lst contains element equal to x."
       (if (member x lst) #t #f)))
 
-  ;; Length predicates
+  ;;' @section Length Predicates
+  ;;' Efficient length comparisons that short-circuit when possible.
+
+  ;;' @examples
+  ;;' (length= (list 1 2 3) 3)  ; => #t
+  ;;' (length= (list 1 2) 3)    ; => #f
+  ;;' @seealso length>, length<, empty?
   (define length=
     (lambda (x n)
       "Return #t if length of x equals n."
       (isTRUE (== (length x) n))))
 
+  ;;' @examples
+  ;;' (length> (list 1 2 3) 2)  ; => #t
+  ;;' (length> (list 1 2) 3)    ; => #f
+  ;;' @seealso length=, length<
   (define length>
     (lambda (x n)
       "Return #t if length of x is greater than n."
       (isTRUE (> (length x) n))))
 
+  ;;' @examples
+  ;;' (length< (list 1 2) 3)    ; => #t
+  ;;' (length< (list 1 2 3) 2)  ; => #f
+  ;;' @seealso length=, length>
   (define length<
     (lambda (x n)
       "Return #t if length of x is less than n."

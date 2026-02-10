@@ -97,6 +97,14 @@
                           (__format-seq x)
                           (__format-atomic x))))))))))))))
 
+  ;;' @section Display and Output
+  ;;' Functions for formatting and printing values.
+
+  ;;' @examples
+  ;;' (display 42)             ; prints "42" with newline
+  ;;' (display "hello")        ; prints "hello" with newline
+  ;;' (display (list 1 2 3))   ; prints "1 2 3" with newline
+  ;;' @seealso println, trace
   (define display
     (lambda (x)
       "Print value with newline."
@@ -105,11 +113,16 @@
         (r/call "cat" (list (format-value x) "\n"))
         #nil)))
 
+  ;;' @seealso display
   (define println
     (lambda (x)
       "Alias for display."
       (display x)))
 
+  ;;' @examples
+  ;;' (str "hello" " " "world")  ; => "hello world"
+  ;;' (str 1 "+" 2)              ; => "1+2"
+  ;;' @seealso string-join, format
   (define str
     (lambda (. args)
       "Concatenate formatted values into string."
@@ -118,6 +131,10 @@
         ""
         (string-join parts ""))))
 
+  ;;' @examples
+  ;;' (trace 42)               ; prints "42", returns 42
+  ;;' (trace 42 "result")      ; prints "result: 42", returns 42
+  ;;' @seealso warn, display
   (define trace
     (lambda (x . rest)
       "Print value and return it."

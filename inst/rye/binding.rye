@@ -9,6 +9,11 @@
   (import sequences)
   (import control)
 
+;;' @section Binding Macros
+
+;;' @signature (pattern-symbols pattern)
+;;' @description Collect all symbols from a destructuring pattern, ignoring dots.
+;;' @seealso destructuring-bind
 (define pattern-symbols
   (lambda (pattern)
     "Collect symbols from a destructuring pattern."
@@ -25,6 +30,8 @@
             (append (pattern-symbols head) (pattern-symbols tail))))
         (list)))))
 
+;;' @description Bind a destructuring pattern to a value, then evaluate body forms.
+;;' @seealso let, let*, pattern-symbols
 (defmacro destructuring-bind (pattern value . body)
   "Bind pattern to value, then evaluate body."
   (define tmp (gensym "tmp"))
@@ -33,6 +40,14 @@
       (begin ,@body))
     ,value))
 
+;;' @examples
+;;' (let ((x 1) (y 2))
+;;'   (+ x y))               ; => 3
+;;'
+;;' (let ((x 10))
+;;'   (* x x))               ; => 100
+;;' @note Bindings are evaluated in parallel: earlier bindings are NOT visible to later ones. Use `let*` for sequential binding.
+;;' @seealso let*, letrec
 (defmacro let (bindings . body)
   "Bind names to values within body."
   (if (null? bindings)
@@ -48,6 +63,14 @@
           (begin ,@body))
         ,@values))))
 
+;;' @examples
+;;' (let* ((x 1) (y (+ x 1)))
+;;'   (+ x y))               ; => 3
+;;'
+;;' (let* ((a 10) (b (* a 2)) (c (+ a b)))
+;;'   c)                      ; => 30
+;;' @note Bindings are evaluated sequentially: each binding can refer to previously bound names. Supports destructuring patterns.
+;;' @seealso let, letrec
 (defmacro let* (bindings . body)
   "Sequential let bindings."
   (if (null? bindings)
@@ -59,6 +82,12 @@
       `(destructuring-bind ,pattern ,value
          (let* ,(cdr bindings) ,@body)))))
 
+;;' @examples
+;;' (letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
+;;'          (odd?  (lambda (n) (if (= n 0) #f (even? (- n 1))))))
+;;'   (even? 10))             ; => #t
+;;' @note All bindings are visible to all init expressions, enabling mutual recursion. Init values are assigned via `set!` into pre-allocated slots.
+;;' @seealso let, let*
 (defmacro letrec (bindings . body)
   "Recursive bindings."
   (define names (mapcat (lambda (b) (pattern-symbols (car b))) bindings))
@@ -66,6 +95,13 @@
      ,@(map (lambda (b) `(set! ,(car b) ,(car (cdr b)))) bindings)
      (begin ,@body)))
 
+;;' @examples
+;;' (when-let ((x (assoc 'a '((a . 1) (b . 2)))))
+;;'   (cdr x))               ; => 1
+;;'
+;;' (when-let ((x #f))
+;;'   "never reached")       ; => #nil
+;;' @seealso if-let, when, let
 (defmacro when-let (binding . body)
   "Bind pattern to value and evaluate body when value is truthy."
   (begin
@@ -79,6 +115,15 @@
           #nil))
       (list ,value))))
 
+;;' @examples
+;;' (if-let ((x 42))
+;;'   (+ x 1)
+;;'   "nothing")             ; => 43
+;;'
+;;' (if-let ((x #f))
+;;'   "truthy"
+;;'   "falsy")               ; => "falsy"
+;;' @seealso when-let, if, let
 (defmacro if-let (binding then . rest)
   "Bind pattern to value and choose branch based on its truthiness."
   (begin

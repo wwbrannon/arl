@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
 ---
 title: "Standard Library: Macro, Eval, Interop, and Convenience"
 output:
@@ -13,206 +16,405 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-## Macro and Eval
-
-### gensym
-
-Generates a unique symbol.
-
-**Signature:** `(gensym)` or `(gensym prefix)`
-
-**Examples:**
-```lisp
-(gensym)       ; => 'g1234
-(gensym "tmp") ; => 'tmp5678
-```
-
-**See also:** defmacro
-
----
-
-### macro?
-
-Tests if a symbol names a macro.
-
-**Signature:** `(macro? sym)`
-
-**Examples:**
-```lisp
-(macro? 'when)   ; => #t
-(macro? 'car)    ; => #f
-```
-
-**See also:** defmacro
-
----
-
-### eval
-
-Evaluates an expression.
-
-**Signature:** `(eval expr)` or `(eval expr env)`
-
-**Examples:**
-```lisp
-(eval '(+ 1 2))  ; => 3
-(eval (list '+ 1 2))  ; => 3
-```
-
-**See also:** apply, call
-
----
-
-### r/eval
-
-Evaluate an R expression in the current Rye environment.
-
-Use this when you need to execute R special forms (like `for` or `while`) that
-cannot be called as regular functions.
-
-**Signature:** `(r/eval expr)` or `(r/eval expr env)`
-
-**Examples:**
-```lisp
-(begin
-  (define i 0)
-  (r/eval (call (list 'while
-                      '(< i 3)
-                      '(<- i (+ i 1)))))
-  i)
-```
-
-**See also:** eval, for-r, while-r
-
----
-
-### macroexpand
-
-Fully expands all macros in an expression.
-
-**Signature:** `(macroexpand expr)` or `(macroexpand expr env)`
-
-**Examples:**
-```lisp
-(macroexpand '(when #t 42))
-; => (if #t (begin 42) #nil)
-```
-
-**See also:** macroexpand-1, macro?
-
----
-
-### macroexpand-1
-
-Expands macros one level.
-
-**Signature:** `(macroexpand-1 expr)` or `(macroexpand-1 expr env)`
-
-**Examples:**
-```lisp
-(macroexpand-1 '(when #t 42))
-; => (if #t (begin 42) #nil)
-```
-
-**See also:** macroexpand, macro?
-
----
-
-### defstruct
-
-Defines a simple S3-backed struct constructor, predicate, and accessors.
-
-**Signature:** `(defstruct Name (field ...))`
-
-**Examples:**
-```lisp
-(defstruct Point (x y))
-(define p (make-Point 1 2))
-(Point? p)      ; => #t
-(Point-x p)     ; => 1
-(Point-y p)     ; => 2
-```
-
----
-
 ## Documentation Helpers
-
-### doc
-
-Retrieves the docstring attached to a function.
-
-**Signature:** `(doc fn)`
-
-**Examples:**
-```lisp
-(doc map)      ; => "Apply fn to each element of lst."
-(doc filter)   ; => "Return elements of lst satisfying pred."
-```
-
-**See also:** doc!, help
-
----
 
 ### doc!
 
-Attaches a docstring to an existing function.
+Attach docstring to function. Usage: (doc! function-name "docstring")
 
-**Signature:** `(doc! fn "docstring")`
+**Signature:** `(doc! sym docstring)`
 
 **Examples:**
 ```lisp
-(define add (lambda (a b) (+ a b)))
-(doc! add "Add two numbers.")
-(doc add)   ; => "Add two numbers."
+(doc! my-fn "Compute the frobnitz of x.")
+(doc my-fn)               ; => "Compute the frobnitz of x."
 ```
 
 **See also:** doc, help
 
 ---
 
-## Interop Helpers
+### doc
 
-### dict
+Retrieve docstring from function's rye_doc attribute.
 
-Creates a hash-backed dictionary.
-
-**Signature:** `(dict key1: value1 key2: value2 ...)`
+**Signature:** `(doc fn)`
 
 **Examples:**
 ```lisp
-(dict :name "Alice" :age 30)
-; => (name: "Alice" age: 30)
+(define add (lambda (a b) "Add two numbers." (+ a b)))
+(doc add)                 ; => "Add two numbers."
+(doc car)                 ; => #nil  (no docstring set)
+```
+
+**See also:** doc!, help
+
+---
+
+## Error and Warning
+
+### error
+
+Signal an error with message.
+
+**Signature:** `(error msg)`
+
+**Examples:**
+```lisp
+(error "something went wrong")   ; signals error
+(try (error "oops")
+  (catch e "caught"))            ; => "caught"
+```
+
+**See also:** warn, assert, try
+
+---
+
+### warn
+
+Emit warning with message.
+
+**Signature:** `(warn msg)`
+
+**Examples:**
+```lisp
+(warn "check your input")       ; emits warning, returns #nil
+```
+
+**See also:** error, trace
+
+---
+
+## Identity and Values
+
+### identity
+
+Return argument.
+
+**Signature:** `(identity x)`
+
+**Examples:**
+```lisp
+(identity 42)             ; => 42
+(identity "hello")        ; => "hello"
+(map identity '(1 2 3))   ; => (1 2 3)
+```
+
+**See also:** map
+
+---
+
+### values
+
+Return multiple values to a call-with-values consumer.
+
+**Signature:** `(values args...)`
+
+**Examples:**
+```lisp
+(values 1 2 3)            ; => multiple-values container
+```
+
+**See also:** values?, call-with-values
+
+---
+
+### values?
+
+Return #t if x is a multiple-values container.
+
+**Signature:** `(values? x)`
+
+**Examples:**
+```lisp
+(values? (values 1 2))    ; => #t
+(values? 42)              ; => #f
+```
+
+**See also:** values, call-with-values
+
+---
+
+### call-with-values
+
+Call producer and pass its values to consumer.
+
+**Signature:** `(call-with-values producer consumer)`
+
+**Examples:**
+```lisp
+(call-with-values
+  (lambda () (values 1 2))
+  (lambda (a b) (+ a b)))  ; => 3
+```
+
+**See also:** values, values?
+
+---
+
+## Continuations
+
+### call/cc
+
+**Signature:** `(call/cc receiver)`
+
+**Note:** Alias for R's `callCC`. The receiver is passed the current continuation.
+
+**See also:** call-with-current-continuation
+
+---
+
+### call-with-current-continuation
+
+**Signature:** `(call-with-current-continuation receiver)`
+
+**Note:** Full name alias for `call/cc`.
+
+**See also:** call/cc
+
+---
+
+## Function Application
+
+### funcall
+
+Apply a function with a provided list of arguments.
+
+**Signature:** `(funcall fn args)`
+
+**Examples:**
+```lisp
+(funcall + (list 1 2 3))  ; => 6
+(funcall c (list 1 2 3))  ; => c(1, 2, 3)
+```
+
+**See also:** apply, r/call
+
+---
+
+### r/call
+
+**Signature:** `(r/call fn [args (list])`
+
+**Examples:**
+```lisp
+(r/call "mean" (list (c 1 2 3)))   ; => 2
+(r/call "ls" (list))                ; list .GlobalEnv bindings
+(r/call "Sys.time" (list))          ; current time
+```
+
+**Note:** R functions are directly available in Rye without `r/call`. Use `r/call` when you need to look up a function by string name or specify the search environment.
+
+**See also:** funcall, r/eval
+
+---
+
+### get
+
+**Signature:** `(get name [envir] [inherits])`
+
+**Examples:**
+```lisp
+(get "mean")              ; => the `mean` function
+(get "pi" (baseenv))      ; => 3.141593
+```
+
+**See also:** r/call
+
+---
+
+## License
+
+### license
+
+Display Rye and R license information.
+
+**Signature:** `(license)`
+
+**Examples:**
+```lisp
+(license)                 ; prints Rye and R license info
+```
+
+---
+
+## R Nonstandard Evaluation Wrappers
+
+These macros provide Rye-friendly interfaces to R functions that use
+nonstandard evaluation (NSE). They automatically quote expressions so
+you can write natural Rye code without manual quoting.
+
+### suppressWarnings
+
+Suppress warnings generated by evaluating expr.
+
+**Signature:** `(suppressWarnings expr)`
+
+**Examples:**
+```lisp
+(suppressWarnings (as.numeric "not a number"))  ; => NA (warning suppressed)
+(suppressWarnings (log -1))                     ; => NaN (warning suppressed)
+```
+
+**See also:** suppressMessages
+
+---
+
+### suppressMessages
+
+Suppress messages generated by evaluating expr.
+
+**Signature:** `(suppressMessages expr)`
+
+**Examples:**
+```lisp
+(suppressMessages (message "hello"))            ; => #nil (message suppressed)
+```
+
+**See also:** suppressWarnings
+
+---
+
+### with
+
+Evaluate expr in the context of data (a data frame or list).
+
+**Signature:** `(with data expr)`
+
+**Examples:**
+```lisp
+(define df (data.frame :x (c 1 2 3) :y (c 4 5 6)))
+(with df (+ x y))         ; => c(5, 7, 9)
+```
+
+**See also:** within
+
+---
+
+### within
+
+Evaluate expr within data, returning modified data.
+
+**Signature:** `(within data expr)`
+
+**Examples:**
+```lisp
+(define df (data.frame :x (c 1 2 3)))
+(within df (define z (* x 2)))   ; returns df with new column z
+```
+
+**See also:** with
+
+---
+
+### subset
+
+Subset x using condition. Optional rest args for select, drop, etc.
+
+**Signature:** `(subset x condition rest...)`
+
+**Examples:**
+```lisp
+(define df (data.frame :x (c 1 2 3) :y (c 10 20 30)))
+(subset df (> x 1))       ; rows where x > 1
+```
+
+**See also:** with, within
+
+---
+
+### transform
+
+transform is difficult to implement - use within() or dplyr::mutate() instead.
+
+**Signature:** `(transform args...)`
+
+**Note:** Not yet supported due to R named-argument syntax. Use `within` or `dplyr::mutate` instead.
+
+**See also:** within
+
+---
+
+### substitute
+
+Perform substitution in an expression, or error if called with 1 arg.
+
+**Signature:** `(substitute args...)`
+
+**Note:** Single-argument `substitute` does not work in Rye due to eager evaluation. Use macros or explicit quoting instead. Two-argument form works normally.
+
+**See also:** defmacro
+
+---
+
+## Dictionary (Hash Table)
+
+Dictionaries are mutable key-value stores backed by R environments.
+Keys must be strings, symbols, or keywords; values can be anything.
+
+### dict-new
+
+Create a new empty dictionary environment.
+
+**Signature:** `(dict-new)`
+
+---
+
+### dict
+
+Create a hash-backed dictionary from key/value pairs.
+
+**Signature:** `(dict args...)`
+
+**Examples:**
+```lisp
+(dict :x 1 :y 2)           ; => dict with keys "x" and "y"
+(dict)                      ; => empty dict
+(define d (dict :name "Alice" :age 30))
+(dict-get d "name")         ; => "Alice"
 ```
 
 **See also:** hash
 
 ---
 
+### hash
+
+**Signature:** `(hash . args)`
+
+**Note:** Alias for `dict`.
+
+**See also:** dict
+
+---
+
 ### dict?
 
-Tests if a value is a dictionary.
+Return #t if x is a dictionary.
 
 **Signature:** `(dict? x)`
 
 **Examples:**
 ```lisp
-(dict? (dict :a 1))  ; => #t
-(dict? (list 1 2))   ; => #f
+(dict? (dict :x 1))        ; => #t
+(dict? (list 1 2))         ; => #f
+(dict? 42)                 ; => #f
 ```
 
 ---
 
 ### dict-get
 
-Gets the value for a key, or a default if missing.
+Get value for key or default if missing.
 
-**Signature:** `(dict-get dict key)` or `(dict-get dict key default)`
+**Signature:** `(dict-get dict key rest...)`
 
 **Examples:**
 ```lisp
-(define d (dict :name "Alice" :age 30))
-(dict-get d "name")         ; => "Alice"
-(dict-get d "missing" 0)    ; => 0
+(define d (dict :x 1 :y 2))
+(dict-get d "x")           ; => 1
+(dict-get d "z")           ; => #nil
+(dict-get d "z" 99)        ; => 99  (default value)
 ```
 
 **See also:** dict-set, dict-has?
@@ -221,15 +423,15 @@ Gets the value for a key, or a default if missing.
 
 ### dict-set
 
-Sets a key to a value in the dictionary (mutates and returns the dict).
+Set key to value in dict and return dict.
 
 **Signature:** `(dict-set dict key value)`
 
 **Examples:**
 ```lisp
-(define d (dict :a 1))
-(dict-set d "b" 2)
-(dict-get d "b")  ; => 2
+(define d (dict))
+(dict-set d "x" 42)        ; => d (mutated, x=42)
+(dict-get d "x")           ; => 42
 ```
 
 **See also:** dict-get, dict-remove
@@ -238,15 +440,15 @@ Sets a key to a value in the dictionary (mutates and returns the dict).
 
 ### dict-remove
 
-Removes a key from the dictionary (mutates and returns the dict).
+Remove key from dict and return dict.
 
 **Signature:** `(dict-remove dict key)`
 
 **Examples:**
 ```lisp
-(define d (dict :a 1 :b 2))
-(dict-remove d "a")
-(dict-has? d "a")  ; => #f
+(define d (dict :x 1 :y 2))
+(dict-remove d "x")        ; => d (mutated, x removed)
+(dict-has? d "x")          ; => #f
 ```
 
 **See also:** dict-set
@@ -255,13 +457,15 @@ Removes a key from the dictionary (mutates and returns the dict).
 
 ### dict-keys
 
-Returns a list of the dictionary's keys.
+Return a list of dict keys.
 
 **Signature:** `(dict-keys dict)`
 
 **Examples:**
 ```lisp
-(dict-keys (dict :a 1 :b 2))  ; => ("a" "b")
+(define d (dict :x 1 :y 2))
+(dict-keys d)              ; => ("x" "y")
+(dict-keys (dict))         ; => ()
 ```
 
 **See also:** dict-values
@@ -270,13 +474,14 @@ Returns a list of the dictionary's keys.
 
 ### dict-values
 
-Returns a list of the dictionary's values.
+Return a list of dict values.
 
 **Signature:** `(dict-values dict)`
 
 **Examples:**
 ```lisp
-(dict-values (dict :a 1 :b 2))  ; => (1 2)
+(define d (dict :x 1 :y 2))
+(dict-values d)            ; => (1 2)
 ```
 
 **See also:** dict-keys
@@ -285,15 +490,15 @@ Returns a list of the dictionary's values.
 
 ### dict-has?
 
-Tests if a dictionary contains a key.
+Return #t if dict contains key.
 
 **Signature:** `(dict-has? dict key)`
 
 **Examples:**
 ```lisp
-(define d (dict :x 10))
-(dict-has? d "x")  ; => #t
-(dict-has? d "y")  ; => #f
+(define d (dict :x 1 :y 2))
+(dict-has? d "x")          ; => #t
+(dict-has? d "z")          ; => #f
 ```
 
 **See also:** dict-get
@@ -302,63 +507,78 @@ Tests if a dictionary contains a key.
 
 ### dict-merge
 
-Merges multiple dictionaries. Later values override earlier ones.
+Merge dicts, later values override earlier.
 
-**Signature:** `(dict-merge dict1 dict2 ...)`
+**Signature:** `(dict-merge dicts...)`
 
 **Examples:**
 ```lisp
-(define d1 (dict :a 1 :b 2))
-(define d2 (dict :b 99 :c 3))
-(define merged (dict-merge d1 d2))
-(dict-get merged "b")  ; => 99
-(dict-get merged "c")  ; => 3
+(define a (dict :x 1 :y 2))
+(define b (dict :y 99 :z 3))
+(define m (dict-merge a b))
+(dict-get m "y")           ; => 99  (b overrides a)
+(dict-get m "z")           ; => 3
 ```
 
 **See also:** dict, dict-set
 
 ---
 
+## Set (Hash-Backed)
+
+Sets are mutable collections of unique items backed by R environments.
+Any value can be a set element; uniqueness is determined by serialization.
+
+### set-new
+
+Create a new empty set environment.
+
+**Signature:** `(set-new)`
+
+---
+
 ### set
 
-Creates a hash-backed set.
+Create a hash-backed set of unique items.
 
-**Signature:** `(set item ...)`
+**Signature:** `(set args...)`
 
 **Examples:**
 ```lisp
-(define s (set 1 2 3 3))
-(set-contains? s 2)   ; => #t
-(set-contains? s 9)   ; => #f
+(set 1 2 3)                ; => set of {1, 2, 3}
+(set 1 1 2)                ; => set of {1, 2} (duplicates removed)
+(set)                      ; => empty set
+(set '(a b c))             ; => set from list
 ```
 
 ---
 
 ### set?
 
-Tests if a value is a set.
+Return #t if x is a set.
 
 **Signature:** `(set? x)`
 
 **Examples:**
 ```lisp
-(set? (set 1 2 3))  ; => #t
-(set? (list 1 2))   ; => #f
+(set? (set 1 2))           ; => #t
+(set? (list 1 2))          ; => #f
+(set? 42)                  ; => #f
 ```
 
 ---
 
 ### set-add
 
-Adds an item to a set (mutates and returns the set).
+Add item to set and return set.
 
 **Signature:** `(set-add set item)`
 
 **Examples:**
 ```lisp
 (define s (set 1 2))
-(set-add s 3)
-(set-contains? s 3)  ; => #t
+(set-add s 3)              ; => s (mutated, now {1, 2, 3})
+(set-contains? s 3)        ; => #t
 ```
 
 **See also:** set-remove
@@ -367,15 +587,15 @@ Adds an item to a set (mutates and returns the set).
 
 ### set-remove
 
-Removes an item from a set (mutates and returns the set).
+Remove item from set and return set.
 
 **Signature:** `(set-remove set item)`
 
 **Examples:**
 ```lisp
 (define s (set 1 2 3))
-(set-remove s 2)
-(set-contains? s 2)  ; => #f
+(set-remove s 2)           ; => s (mutated, now {1, 3})
+(set-contains? s 2)        ; => #f
 ```
 
 **See also:** set-add
@@ -384,32 +604,32 @@ Removes an item from a set (mutates and returns the set).
 
 ### set-contains?
 
-Tests if a set contains an item.
+Return #t if set contains item.
 
 **Signature:** `(set-contains? set item)`
 
 **Examples:**
 ```lisp
 (define s (set 1 2 3))
-(set-contains? s 2)  ; => #t
-(set-contains? s 9)  ; => #f
+(set-contains? s 2)        ; => #t
+(set-contains? s 99)       ; => #f
 ```
 
 ---
 
 ### set-union
 
-Returns the union of two sets.
+Return union of two sets.
 
 **Signature:** `(set-union a b)`
 
 **Examples:**
 ```lisp
-(define a (set 1 2))
-(define b (set 2 3))
+(define a (set 1 2 3))
+(define b (set 3 4 5))
 (define u (set-union a b))
-(set-contains? u 1)  ; => #t
-(set-contains? u 3)  ; => #t
+(set-contains? u 1)        ; => #t
+(set-contains? u 5)        ; => #t
 ```
 
 **See also:** set-intersection, set-difference
@@ -418,7 +638,7 @@ Returns the union of two sets.
 
 ### set-intersection
 
-Returns the intersection of two sets.
+Return intersection of two sets.
 
 **Signature:** `(set-intersection a b)`
 
@@ -427,8 +647,8 @@ Returns the intersection of two sets.
 (define a (set 1 2 3))
 (define b (set 2 3 4))
 (define i (set-intersection a b))
-(set-contains? i 2)  ; => #t
-(set-contains? i 1)  ; => #f
+(set-contains? i 2)        ; => #t
+(set-contains? i 1)        ; => #f
 ```
 
 **See also:** set-union, set-difference
@@ -437,7 +657,7 @@ Returns the intersection of two sets.
 
 ### set-difference
 
-Returns items in the first set that are not in the second.
+Return items in a that are not in b.
 
 **Signature:** `(set-difference a b)`
 
@@ -446,255 +666,150 @@ Returns items in the first set that are not in the second.
 (define a (set 1 2 3))
 (define b (set 2 3 4))
 (define d (set-difference a b))
-(set-contains? d 1)  ; => #t
-(set-contains? d 2)  ; => #f
+(set-contains? d 1)        ; => #t
+(set-contains? d 2)        ; => #f
 ```
 
 **See also:** set-union, set-intersection
 
 ---
 
-### hash
+## Struct Definition
 
-Alias for `dict`.
+### defstruct
 
-**Signature:** `(hash key1: value1 key2: value2 ...)`
+Define a struct constructor, predicate, and accessors.
+
+**Signature:** `(defstruct name fields)`
+
+**Examples:**
+```lisp
+;; Define a Point struct
+(defstruct Point (x y))
+
+;; Constructor: make-Point
+(define p (make-Point 3 4))
+
+;; Predicate: Point?
+(Point? p)                  ; => #t
+(Point? 42)                 ; => #f
+
+;; Accessors: Point-x, Point-y
+(Point-x p)                 ; => 3
+(Point-y p)                 ; => 4
+```
+
+**Note:** `defstruct` generates a constructor (`make-Name`), a type predicate (`Name?`), and field accessors (`Name-field`) for each field. The struct is backed by an R named list with an S3 class.
 
 **See also:** dict
 
 ---
 
-### r/call
+## Assertion Helpers
 
-Calls an R function with arguments.
+These functions provide test-style assertions that signal errors on failure
+and return `#t` on success.
 
-**Signature:** `(r/call fn args)`
+### assert
 
-**Examples:**
-```lisp
-(r/call "sum" (list 1 2 3))  ; => 6
-(r/call 'sqrt (list 16))     ; => 4
-```
-
-**Note:** R functions are also available directly in Rye code (e.g., `(sum 1 2 3)`).
-
----
-
-## Convenience Functions
-
-### identity
-
-Identity function - returns its argument unchanged.
-
-**Signature:** `(identity x)`
+**Signature:** `(assert cond [msg "Assertion failed"])`
 
 **Examples:**
 ```lisp
-(identity 42)        ; => 42
-(map identity lst)   ; => lst
+(assert #t)               ; => #t
+(assert (> 3 2))          ; => #t
+(assert #f "must be true")  ; signals "must be true"
+(assert #f)               ; signals "Assertion failed"
 ```
 
-**See also:** map
+**See also:** error
 
 ---
 
-### first
+### assert-equal
 
-Alias for `car` - returns first element.
+Assert expected and actual are equal?.
 
-**Signature:** `(first lst)`
+**Signature:** `(assert-equal expected actual)`
 
 **Examples:**
 ```lisp
-(first (list 1 2 3))  ; => 1
+(assert-equal 3 (+ 1 2))  ; => #t
+(assert-equal "a" "a")    ; => #t
+(assert-equal 1 2)        ; signals error
 ```
 
-**See also:** car, rest, last
+**See also:** assert-eq, assert-true
 
 ---
 
-### rest
+### assert-true
 
-Alias for `cdr` - returns all but first element.
+Assert value is truthy.
 
-**Signature:** `(rest lst)`
+**Signature:** `(assert-true value)`
 
 **Examples:**
 ```lisp
-(rest (list 1 2 3))  ; => (2 3)
+(assert-true #t)          ; => #t
+(assert-true 1)           ; => #t
+(assert-true #f)          ; signals error
 ```
 
-**See also:** cdr, first
+**See also:** assert-false, assert
 
 ---
 
-### last
+### assert-false
 
-Returns the last element of a list.
+Assert value is falsy.
 
-**Signature:** `(last lst)`
+**Signature:** `(assert-false value)`
 
 **Examples:**
 ```lisp
-(last (list 1 2 3))  ; => 3
-(last (list 42))     ; => 42
-(last ())            ; => #nil
+(assert-false #f)         ; => #t
+(assert-false #nil)       ; => #t
+(assert-false #t)         ; signals error
 ```
 
-**See also:** first, nth
+**See also:** assert-true, assert
 
 ---
 
-### nth
+### assert-eq
 
-Returns the nth element of a list (0-indexed).
+Assert expected and actual are identical?.
 
-**Signature:** `(nth lst n)`
+**Signature:** `(assert-eq expected actual)`
 
 **Examples:**
 ```lisp
-(nth (list 10 20 30) 0)  ; => 10
-(nth (list 10 20 30) 1)  ; => 20
-(nth (list 10 20 30) 2)  ; => 30
+(define x '(1 2 3))
+(assert-eq x x)           ; => #t (same object)
+(assert-eq '(1) '(1))     ; signals error (not identical)
 ```
 
-**See also:** first, last
+**Note:** Uses `identical?` (pointer equality), not `equal?` (structural equality). Use `assert-equal` for value comparison.
+
+**See also:** assert-equal, assert
 
 ---
 
-### complement
+### assert-error
 
-Returns the negation of a predicate function.
+Assert thunk throws an error.
 
-**Signature:** `(complement pred)`
+**Signature:** `(assert-error thunk)`
 
 **Examples:**
 ```lisp
-(define odd? (complement even?))
-(filter odd? (list 1 2 3 4))  ; => (1 3)
+(assert-error (lambda () (error "boom")))   ; => #t
+(assert-error (lambda () (/ 1 0)))           ; => #t
+(assert-error (lambda () 42))                ; signals error
 ```
 
-**See also:** not, filter
+**See also:** assert, error
 
 ---
 
-### compose
-
-Composes two functions (right-to-left application).
-
-**Signature:** `(compose f g)`
-
-**Examples:**
-```lisp
-(define double (lambda (x) (* x 2)))
-(define add-one (lambda (x) (+ x 1)))
-(define f (compose add-one double))
-(f 5)  ; => 11  (equivalent to (add-one (double 5)))
-```
-
-**See also:** partial
-
----
-
-### repeatedly
-
-Calls a function n times, collecting results.
-
-**Signature:** `(repeatedly n fn)`
-
-**Examples:**
-```lisp
-(repeatedly 3 random)  ; => (0.123 0.456 0.789)
-(repeatedly 5 (lambda () 42))  ; => (42 42 42 42 42)
-```
-
-**See also:** repeat, map
-
----
-
-### repeat
-
-Repeats a value n times.
-
-**Signature:** `(repeat n value)`
-
-**Examples:**
-```lisp
-(repeat 3 "x")  ; => ("x" "x" "x")
-(repeat 5 0)    ; => (0 0 0 0 0)
-```
-
-**See also:** repeatedly
-
----
-
-### partial
-
-Partially applies arguments to a function.
-
-**Signature:** `(partial fn arg1 arg2 ...)`
-
-**Examples:**
-```lisp
-(define add-five (partial + 5))
-(add-five 10)  ; => 15
-
-(define multiply-by-2-3 (partial * 2 3))
-(multiply-by-2-3 4)  ; => 24
-```
-
-**See also:** compose
-
----
-
-## Quick Reference by Category
-
-### Core List Operations
-`car`, `cdr`, `cons`, `call`, `list*`, `append`, `reverse`, `apply`, `first`, `rest`, `last`, `nth`
-
-### Iteration & Transformation
-`map`, `mapcat`, `filter`, `remove`, `reduce`, `foldl`, `foldr`
-
-### Sequence Operations
-`take`, `drop`, `take-while`, `drop-while`, `partition`, `flatten`, `zip`
-
-### Predicates
-`list?`, `pair?`, `list-or-pair?`, `null?`, `nil?`, `symbol?`, `keyword?`, `number?`, `string?`, `vector?`, `true?`, `false?`, `fn?`, `callable?`
-
-### Control Flow
-`when`, `unless`, `and`, `or`, `not`, `cond`, `case`
-
-### Looping
-`while`, `for`
-
-### Binding
-`let`, `let*`, `letrec`
-
-### Error Handling
-`error`, `warn`, `assert`, `trace`, `try`, `catch`, `finally`, `try*`
-
-### String Operations
-`str`, `string-join`, `string-split`, `trim`, `format`
-
-### I/O
-`display`, `println`, `read-line`
-
-### Higher-Order Utilities
-`every?`, `any?`, `identity`, `complement`, `compose`, `partial`, `repeatedly`, `repeat`
-
-### Macro System
-`gensym`, `macro?`, `eval`, `macroexpand`, `macroexpand-1`
-
-### Documentation
-`help`, `doc`, `doc!`
-
-### Sorting
-`sort`, `sort-by`, `merge`, `stable-sort`
-
-### Interop
-`dict`, `hash`, `dict?`, `dict-get`, `dict-set`, `dict-remove`, `dict-keys`, `dict-values`, `dict-has?`, `dict-merge`,
-`set`, `set?`, `set-add`, `set-remove`, `set-contains?`, `set-union`, `set-intersection`, `set-difference`,
-`r/call`
-
-### Threading
-`->`, `->>`

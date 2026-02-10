@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
 ---
 title: "Standard Library: Strings, I/O, and Arithmetic"
 output:
@@ -13,34 +16,20 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-## String and I/O
+## String Operations
 
-### str
-
-Concatenates values into a string.
-
-**Signature:** `(str value...)`
-
-**Examples:**
-```lisp
-(str "hello" " " "world")  ; => "hello world"
-(str "x = " 42)            ; => "x = 42"
-(str)                      ; => ""
-```
-
-**See also:** string-join, format
-
----
+Core string manipulation functions: joining, splitting, searching,
+replacing, and accessing characters. Most search/replace functions
+default to fixed (literal) matching; pass `:fixed #f` for regex.
 
 ### string-join
 
-Joins a list of strings with a separator.
-
-**Signature:** `(string-join lst [sep ""])`
+**Signature:** `(string-join x [sep ""])`
 
 **Examples:**
 ```lisp
 (string-join (list "a" "b" "c") "-")  ; => "a-b-c"
+(string-join (list "x" "y" "z"))      ; => "xyz"
 (string-join (list "hello" "world") " ")  ; => "hello world"
 ```
 
@@ -50,14 +39,12 @@ Joins a list of strings with a separator.
 
 ### string-split
 
-Splits a string by a separator.
-
-**Signature:** `(string-split str [sep ""])`
+**Signature:** `(string-split x [sep ""])`
 
 **Examples:**
 ```lisp
-(string-split "a-b-c" "-")  ; => ["a" "b" "c"]
-(string-split "hello world" " ")  ; => ["hello" "world"]
+(string-split "a-b-c" "-")  ; => ("a" "b" "c")
+(string-split "hello" "")   ; => ("h" "e" "l" "l" "o")
 ```
 
 **See also:** string-join
@@ -66,98 +53,118 @@ Splits a string by a separator.
 
 ### trim
 
-Removes leading and trailing whitespace.
+Trim leading and trailing whitespace.
 
 **Signature:** `(trim str)`
 
 **Examples:**
 ```lisp
 (trim "  hello  ")  ; => "hello"
-(trim "world")      ; => "world"
+(trim "no spaces")  ; => "no spaces"
 ```
+
+---
+
+### format
+
+Format string with sprintf.
+
+**Signature:** `(format fmt args...)`
+
+**Examples:**
+```lisp
+(format "Hello, %s!" "world")   ; => "Hello, world!"
+(format "%d + %d = %d" 1 2 3)   ; => "1 + 2 = 3"
+(format "%.2f" 3.14159)          ; => "3.14"
+```
+
+**See also:** str
 
 ---
 
 ### string-contains?
 
-Checks whether a substring occurs in a string.
-
-**Signature:** `(string-contains? str pattern [:fixed #t])`
+**Signature:** `(string-contains? str pattern [fixed #t])`
 
 **Examples:**
 ```lisp
-(string-contains? "hello" "ell")          ; => #t
-(string-contains? "hello" "^ell")         ; => #f
-(string-contains? "hello" "^he" :fixed #f) ; => #t
+(string-contains? "hello world" "world")       ; => #t
+(string-contains? "hello world" "xyz")          ; => #f
+(string-contains? "hello world" "o.*d" :fixed #f)  ; => #t
 ```
+
+**See also:** string-match?, string-find
 
 ---
 
 ### string-match?
 
-Checks whether a regex pattern matches a string.
-
-**Signature:** `(string-match? str pattern [:fixed #f])`
+**Signature:** `(string-match? str pattern [fixed #f])`
 
 **Examples:**
 ```lisp
-(string-match? "hello" "^he")           ; => #t
-(string-match? "hello" "ELL")           ; => #f
-(string-match? "hello" "ELL" :fixed #t) ; => #f
+(string-match? "hello" "^h.*o$" :fixed #f)  ; => #t
+(string-match? "hello" "xyz" :fixed #f)      ; => #f
+(string-match? "hello" "hello" :fixed #t)     ; => #t
 ```
+
+**See also:** string-contains?, string-find
 
 ---
 
 ### string-find
 
-Returns the 0-based index of the first match or `#nil`.
-
-**Signature:** `(string-find str pattern [:fixed #t])`
+**Signature:** `(string-find str pattern [fixed #t])`
 
 **Examples:**
 ```lisp
-(string-find "hello" "ll")         ; => 2
-(string-find "hello" "nope")       ; => #nil
-(string-find "hello" "^he" :fixed #f) ; => 0
+(string-find "hello world" "world")  ; => 6
+(string-find "hello world" "xyz")    ; => #nil
+(string-find "hello" "l")            ; => 2
 ```
+
+**See also:** string-contains?, string-match?
 
 ---
 
 ### string-replace
 
-Replaces the first match in a string.
-
-**Signature:** `(string-replace str pattern replacement [:fixed #t])`
+**Signature:** `(string-replace str pattern replacement [fixed #t])`
 
 **Examples:**
 ```lisp
-(string-replace "hello" "l" "L") ; => "heLlo"
+(string-replace "hello world" "world" "there")    ; => "hello there"
+(string-replace "aaa" "a" "b")                     ; => "baa"
 ```
+
+**See also:** string-replace-all
 
 ---
 
 ### string-replace-all
 
-Replaces all matches in a string.
-
-**Signature:** `(string-replace-all str pattern replacement [:fixed #t])`
+**Signature:** `(string-replace-all str pattern replacement [fixed #t])`
 
 **Examples:**
 ```lisp
-(string-replace-all "hello" "l" "L") ; => "heLLo"
+(string-replace-all "aaa" "a" "b")   ; => "bbb"
+(string-replace-all "hello world world" "world" "there")  ; => "hello there there"
 ```
+
+**See also:** string-replace
 
 ---
 
 ### string-append
 
-Concatenates strings together.
+Concatenate strings together.
 
-**Signature:** `(string-append str1 str2 ...)`
+**Signature:** `(string-append args...)`
 
 **Examples:**
 ```lisp
 (string-append "hello" " " "world")  ; => "hello world"
+(string-append "a" "b" "c")          ; => "abc"
 (string-append)                       ; => ""
 ```
 
@@ -167,22 +174,22 @@ Concatenates strings together.
 
 ### ->string
 
-Converts any value to its string representation.
+Convert value to string representation.
 
 **Signature:** `(->string x)`
 
 **Examples:**
 ```lisp
-(->string 42)        ; => "42"
-(->string #t)        ; => "TRUE"
-(->string 'foo)      ; => "foo"
+(->string 42)     ; => "42"
+(->string #t)     ; => "TRUE"
+(->string 3.14)   ; => "3.14"
 ```
 
 ---
 
 ### char-at
 
-Get character at a 0-based index.
+Get character at index (0-based).
 
 **Signature:** `(char-at str index)`
 
@@ -192,15 +199,13 @@ Get character at a 0-based index.
 (char-at "hello" 4)  ; => "o"
 ```
 
-**Errors:** Raises error if index is out of bounds.
-
 **See also:** string-ref, substring
 
 ---
 
 ### string-ref
 
-Scheme-style character accessor (alias for `char-at`).
+Scheme-style character accessor (alias for char-at).
 
 **Signature:** `(string-ref str index)`
 
@@ -218,9 +223,8 @@ Extract substring from start (inclusive) to end (exclusive), 0-based.
 ```lisp
 (substring "hello" 1 4)  ; => "ell"
 (substring "hello" 0 5)  ; => "hello"
+(substring "hello" 2 2)  ; => ""
 ```
-
-**Errors:** Raises error if indices are out of bounds or start > end.
 
 **See also:** char-at
 
@@ -228,17 +232,21 @@ Extract substring from start (inclusive) to end (exclusive), 0-based.
 
 ### string-length
 
-Return the length of a string.
+Return length of string.
 
 **Signature:** `(string-length str)`
 
 **Examples:**
 ```lisp
 (string-length "hello")  ; => 5
-(string-length "")        ; => 0
+(string-length "")       ; => 0
 ```
 
 ---
+
+## String Case
+
+Functions for converting string case.
 
 ### string-upcase
 
@@ -249,6 +257,7 @@ Convert string to uppercase.
 **Examples:**
 ```lisp
 (string-upcase "hello")  ; => "HELLO"
+(string-upcase "Hello World")  ; => "HELLO WORLD"
 ```
 
 **See also:** string-downcase, string-titlecase
@@ -264,6 +273,7 @@ Convert string to lowercase.
 **Examples:**
 ```lisp
 (string-downcase "HELLO")  ; => "hello"
+(string-downcase "Hello World")  ; => "hello world"
 ```
 
 **See also:** string-upcase, string-titlecase
@@ -279,37 +289,105 @@ Convert string to title case (capitalize first letter of each word).
 **Examples:**
 ```lisp
 (string-titlecase "hello world")  ; => "Hello World"
+(string-titlecase "HELLO WORLD")  ; => "Hello World"
 ```
 
 **See also:** string-upcase, string-downcase
 
 ---
 
-### string\<? / string>? / string=? / string\<=? / string>=?
+## String Comparison
 
-Lexicographic string comparison predicates.
+Lexicographic comparison functions for strings.
 
-**Signatures:** `(string<? a b)`, `(string>? a b)`, `(string=? a b)`, `(string<=? a b)`, `(string>=? a b)`
+### string<?
+
+Lexicographic less-than comparison.
+
+**Signature:** `(string<? a b)`
 
 **Examples:**
 ```lisp
-(string<? "abc" "abd")   ; => #t
-(string=? "hello" "hello") ; => #t
-(string>? "b" "a")       ; => #t
+(string<? "abc" "def")  ; => #t
+(string<? "def" "abc")  ; => #f
+(string<? "abc" "abc")  ; => #f
 ```
 
 ---
 
+### string>?
+
+Lexicographic greater-than comparison.
+
+**Signature:** `(string>? a b)`
+
+**Examples:**
+```lisp
+(string>? "def" "abc")  ; => #t
+(string>? "abc" "def")  ; => #f
+(string>? "abc" "abc")  ; => #f
+```
+
+---
+
+### string=?
+
+String equality comparison.
+
+**Signature:** `(string=? a b)`
+
+**Examples:**
+```lisp
+(string=? "hello" "hello")  ; => #t
+(string=? "hello" "world")  ; => #f
+```
+
+---
+
+### string<=?
+
+Lexicographic less-than-or-equal comparison.
+
+**Signature:** `(string<=? a b)`
+
+**Examples:**
+```lisp
+(string<=? "abc" "abc")  ; => #t
+(string<=? "abc" "def")  ; => #t
+(string<=? "def" "abc")  ; => #f
+```
+
+---
+
+### string>=?
+
+Lexicographic greater-than-or-equal comparison.
+
+**Signature:** `(string>=? a b)`
+
+**Examples:**
+```lisp
+(string>=? "abc" "abc")  ; => #t
+(string>=? "def" "abc")  ; => #t
+(string>=? "abc" "def")  ; => #f
+```
+
+---
+
+## String/List Conversion
+
+Functions for converting between strings, lists, and numbers.
+
 ### string->list
 
-Convert a string to a list of single-character strings.
+Convert string to list of characters.
 
 **Signature:** `(string->list str)`
 
 **Examples:**
 ```lisp
 (string->list "hello")  ; => ("h" "e" "l" "l" "o")
-(string->list "")        ; => ()
+(string->list "")       ; => ()
 ```
 
 **See also:** list->string
@@ -318,13 +396,14 @@ Convert a string to a list of single-character strings.
 
 ### list->string
 
-Convert a list of characters to a string.
+Convert list of characters to string.
 
 **Signature:** `(list->string lst)`
 
 **Examples:**
 ```lisp
-(list->string (list "h" "i"))  ; => "hi"
+(list->string (list "h" "e" "l" "l" "o"))  ; => "hello"
+(list->string (list))                        ; => ""
 ```
 
 **See also:** string->list
@@ -333,15 +412,16 @@ Convert a list of characters to a string.
 
 ### number->string
 
-Convert a number to a string, with optional base (2, 8, 10, 16).
+Convert number to string with optional base (2-36).
 
-**Signature:** `(number->string num [base])`
+**Signature:** `(number->string num base-args...)`
 
 **Examples:**
 ```lisp
-(number->string 42)      ; => "42"
-(number->string 255 16)  ; => "ff"
-(number->string 10 2)    ; => "1010"
+(number->string 42)       ; => "42"
+(number->string 255 16)   ; => "ff"
+(number->string 10 2)     ; => "1010"
+(number->string 8 8)      ; => "10"
 ```
 
 **See also:** string->number
@@ -350,166 +430,48 @@ Convert a number to a string, with optional base (2, 8, 10, 16).
 
 ### string->number
 
-Parse a string to a number, with optional base. Returns `#f` on parse failure.
+Parse string to number with optional base (2-36).
 
-**Signature:** `(string->number str [base])`
+**Signature:** `(string->number str base-args...)`
 
 **Examples:**
 ```lisp
-(string->number "42")      ; => 42
-(string->number "3.14")    ; => 3.14
-(string->number "ff" 16)   ; => 255
-(string->number "nope")    ; => #f
+(string->number "42")       ; => 42
+(string->number "3.14")     ; => 3.14
+(string->number "ff" 16)    ; => 255
+(string->number "1010" 2)   ; => 10
+(string->number "bad")      ; => #f
 ```
 
 **See also:** number->string
 
 ---
 
-### format
+## Console I/O
 
-Formats a string with values (using R's sprintf).
-
-**Signature:** `(format fmt ...)`
-
-**Examples:**
-```lisp
-(format "x = %d, y = %d" 10 20)  ; => "x = 10, y = 20"
-(format "%.2f" 3.14159)          ; => "3.14"
-```
-
-**See also:** str
-
----
-
-### display
-
-Prints a value (alias: `println`).
-
-**Signature:** `(display value)`
-
-**Examples:**
-```lisp
-(display "Hello, world!")
-(display (+ 1 2))
-```
-
-**See also:** println, trace
-
----
-
-### println
-
-Alias for `display`.
-
-**Signature:** `(println value)`
-
-**See also:** display
-
----
+Functions for reading from standard input and writing to standard output.
 
 ### read-line
 
-Reads a line from stdin.
-
-**Signature:** `(read-line)`
+**Signature:** `(read-line [prompt ""])`
 
 **Examples:**
 ```lisp
-(define name (read-line))
-(println (str "Hello, " name))
-```
-
----
-
-### read-file
-
-Reads an entire file into a single string.
-
-**Signature:** `(read-file path [:encoding enc])`
-
-**Examples:**
-```lisp
-(read-file "notes.txt")
-```
-
----
-
-### read-lines
-
-Reads a file into a list of lines.
-
-**Signature:** `(read-lines path [:encoding enc])`
-
-**Examples:**
-```lisp
-(read-lines "notes.txt")
-```
-
----
-
-### write-file
-
-Writes content to a file, replacing any existing contents.
-
-**Signature:** `(write-file path content [:sep s] [:encoding enc])`
-
-**Examples:**
-```lisp
-(write-file "notes.txt" "hello")
-(write-file "notes.txt" (list "a" "b" "c") :sep "\n")
-```
-
----
-
-### write-lines
-
-Writes a list of lines to a file.
-
-**Signature:** `(write-lines path lines [:encoding enc])`
-
-**Examples:**
-```lisp
-(write-lines "notes.txt" (list "a" "b" "c"))
-```
-
----
-
-### append-file
-
-Appends content to a file.
-
-**Signature:** `(append-file path content [:sep s] [:encoding enc])`
-
-**Examples:**
-```lisp
-(append-file "notes.txt" (list "more" "lines"))
-```
-
----
-
-### file-exists?
-
-Checks whether a file exists.
-
-**Signature:** `(file-exists? path)`
-
-**Examples:**
-```lisp
-(file-exists? "notes.txt")
+(read-line)              ; waits for user input, returns string
+(read-line "Name? ")     ; prints prompt, then waits for input
 ```
 
 ---
 
 ### read
 
-Parse a Rye expression from a string.
+Parse Rye expression from string.
 
 **Signature:** `(read source)`
 
 **Examples:**
 ```lisp
-(read "(+ 1 2)")     ; => (+ 1 2) (unevaluated)
+(read "(+ 1 2)")  ; => (+ 1 2) (unevaluated)
 ```
 
 **See also:** read-from-string, eval
@@ -518,9 +480,7 @@ Parse a Rye expression from a string.
 
 ### read-from-string
 
-Alias for `read`.
-
-**Signature:** `(read-from-string source)`
+**Signature:** `(read-from-string x)`
 
 **See also:** read
 
@@ -528,13 +488,14 @@ Alias for `read`.
 
 ### print
 
-Print a value in its Rye representation.
+Print value in Rye representation.
 
 **Signature:** `(print x)`
 
 **Examples:**
 ```lisp
-(print (list 1 2 3))  ; prints list, returns it
+(print 42)              ; prints "42" and returns 42
+(print (list 1 2 3))    ; prints "(1 2 3)" and returns the list
 ```
 
 **See also:** display, write-string
@@ -543,13 +504,13 @@ Print a value in its Rye representation.
 
 ### write-string
 
-Write a string directly to output (no newline).
+Write string to output (alias for cat).
 
 **Signature:** `(write-string x)`
 
 **Examples:**
 ```lisp
-(write-string "hello")  ; outputs "hello"
+(write-string "hello")  ; outputs "hello" with no newline
 ```
 
 **See also:** display, newline
@@ -558,7 +519,7 @@ Write a string directly to output (no newline).
 
 ### newline
 
-Output a newline character.
+Output a newline.
 
 **Signature:** `(newline)`
 
@@ -566,89 +527,175 @@ Output a newline character.
 
 ---
 
+## File I/O
+
+Functions for reading from and writing to files.
+
+### read-file
+
+**Signature:** `(read-file path [encoding "UTF-8"])`
+
+**Examples:**
+```lisp
+(read-file "data.txt")                  ; => file contents as string
+(read-file "data.txt" "latin1")         ; read with specific encoding
+```
+
+---
+
+### read-lines
+
+**Signature:** `(read-lines path [encoding "UTF-8"])`
+
+**Examples:**
+```lisp
+(read-lines "data.txt")  ; => ("line1" "line2" "line3")
+```
+
+---
+
+### write-file
+
+**Signature:** `(write-file path content [sep "\n"])`
+
+**Examples:**
+```lisp
+(write-file "out.txt" "hello world")
+(write-file "out.txt" (list "line1" "line2"))
+```
+
+---
+
+### write-lines
+
+**Signature:** `(write-lines path lines [encoding "UTF-8"])`
+
+**Examples:**
+```lisp
+(write-lines "out.txt" (list "line1" "line2" "line3"))
+```
+
+---
+
+### append-file
+
+**Signature:** `(append-file path content [sep "\n"])`
+
+**Examples:**
+```lisp
+(append-file "log.txt" "new entry\n")
+```
+
+---
+
+### file-exists?
+
+Return #t if file exists.
+
+**Signature:** `(file-exists? path)`
+
+**Examples:**
+```lisp
+(file-exists? "data.txt")    ; => #t or #f
+(file-exists? "nope.txt")    ; => #f
+```
+
+---
+
 ### file-size
 
-Return the size of a file in bytes.
+Return size of file in bytes.
 
 **Signature:** `(file-size path)`
 
 **Examples:**
 ```lisp
-(file-size "notes.txt")  ; => 1234
+(file-size "data.txt")       ; => 1024 (bytes)
 ```
-
-**Errors:** Raises error if file does not exist.
 
 ---
 
 ### file-modified-time
 
-Return file modification time as a numeric timestamp.
+Return file modification time as numeric timestamp.
 
 **Signature:** `(file-modified-time path)`
 
-**Errors:** Raises error if file does not exist.
+**Examples:**
+```lisp
+(file-modified-time "data.txt")  ; => 1700000000 (numeric timestamp)
+```
 
 ---
 
 ### file-delete
 
-Delete a file. Returns `#t` on success.
+Delete file. Return #t on success.
 
 **Signature:** `(file-delete path)`
 
-**Errors:** Raises error if file does not exist.
+**Examples:**
+```lisp
+(file-delete "temp.txt")     ; => #t
+```
 
 ---
 
+## Directory Operations
+
+Functions for querying and manipulating directories.
+
 ### directory-exists?
 
-Check whether a directory exists.
+Return #t if directory exists.
 
 **Signature:** `(directory-exists? path)`
 
 **Examples:**
 ```lisp
-(directory-exists? "/tmp")  ; => #t
+(directory-exists? "/tmp")         ; => #t
+(directory-exists? "/nonexistent") ; => #f
 ```
 
 ---
 
 ### directory-list
 
-List directory contents as a list of filenames.
-
 **Signature:** `(directory-list path [full.names #f])`
 
 **Examples:**
 ```lisp
-(directory-list ".")  ; => ("file1.txt" "file2.txt" ...)
+(directory-list ".")               ; => ("file1.txt" "file2.txt")
+(directory-list "." #t)            ; => ("./file1.txt" "./file2.txt")
 ```
-
-**Errors:** Raises error if directory does not exist.
 
 ---
 
 ### directory-delete
 
-Delete a directory. Returns `#t` on success.
-
 **Signature:** `(directory-delete path [recursive #t])`
 
-**Errors:** Raises error if directory does not exist.
+**Examples:**
+```lisp
+(directory-delete "/tmp/mydir")    ; => #t
+```
 
 ---
 
+## Environment and System
+
+Functions for environment variables, shell commands, and process control.
+
 ### getenv
 
-Get an environment variable value. Returns `#nil` if not set.
+Get environment variable value. Return #nil if not set.
 
 **Signature:** `(getenv name)`
 
 **Examples:**
 ```lisp
-(getenv "HOME")   ; => "/home/user"
-(getenv "UNSET")  ; => #nil
+(getenv "HOME")           ; => "/home/user"
+(getenv "UNDEFINED_VAR")  ; => #nil
 ```
 
 **See also:** setenv
@@ -657,13 +704,13 @@ Get an environment variable value. Returns `#nil` if not set.
 
 ### setenv
 
-Set an environment variable.
+Set environment variable.
 
 **Signature:** `(setenv name value)`
 
 **Examples:**
 ```lisp
-(setenv "MY_VAR" "hello")
+(setenv "MY_VAR" "hello")  ; => #t
 ```
 
 **See also:** getenv
@@ -672,13 +719,13 @@ Set an environment variable.
 
 ### system
 
-Execute a shell command. Returns exit status.
+Execute shell command. Return exit status.
 
 **Signature:** `(system command)`
 
 **Examples:**
 ```lisp
-(system "ls")  ; => 0 (on success)
+(system "ls")              ; => 0 (exit status)
 ```
 
 **See also:** system-output
@@ -687,13 +734,14 @@ Execute a shell command. Returns exit status.
 
 ### system-output
 
-Execute a shell command and capture output as a string.
+Execute shell command and capture output as string.
 
 **Signature:** `(system-output command)`
 
 **Examples:**
 ```lisp
-(system-output "echo hello")  ; => "hello"
+(system-output "whoami")   ; => "username"
+(system-output "echo hi")  ; => "hi"
 ```
 
 **See also:** system
@@ -702,43 +750,70 @@ Execute a shell command and capture output as a string.
 
 ### exit
 
-Exit the program with a status code.
-
-**Signature:** `(exit [status 0])`
+**Signature:** `(exit status)`
 
 ---
 
-## Arithmetic and Comparison
+## Display and Output
 
-### %
+Functions for formatting and printing values.
 
-Modulo operation.
+### display
 
-**Signature:** `(% a b)`
+Print value with newline.
+
+**Signature:** `(display x)`
 
 **Examples:**
 ```lisp
-(% 10 3)   ; => 1
-(% 17 5)   ; => 2
+(display 42)             ; prints "42" with newline
+(display "hello")        ; prints "hello" with newline
+(display (list 1 2 3))   ; prints "1 2 3" with newline
 ```
+
+**See also:** println, trace
 
 ---
 
-### =
+### println
 
-Equality test.
+Alias for display.
 
-**Signature:** `(= a b)`
+**Signature:** `(println x)`
+
+**See also:** display
+
+---
+
+### str
+
+Concatenate formatted values into string.
+
+**Signature:** `(str args...)`
 
 **Examples:**
 ```lisp
-(= 1 1)           ; => #t
-(= "a" "a")       ; => #t
-(= 1 2)           ; => #f
+(str "hello" " " "world")  ; => "hello world"
+(str 1 "+" 2)              ; => "1+2"
 ```
 
-**Note:** Standard arithmetic helpers (`+`, `-`, `*`, `/`, `%`, `min`, `max`) and numeric predicates
-(`even?`, `odd?`, `zero?`, `positive?`, `negative?`, `non-negative?`, `non-positive?`,
-`integer?`, `natural?`, `finite?`, `infinite?`, `nan?`) are defined in `inst/rye/math.rye`
-and loaded as part of the base stdlib. All other R arithmetic operators (`<`, `>`, `<=`, `>=`, etc.)
-are available directly.
+**See also:** string-join, format
+
+---
+
+### trace
+
+Print value and return it.
+
+**Signature:** `(trace x rest...)`
+
+**Examples:**
+```lisp
+(trace 42)               ; prints "42", returns 42
+(trace 42 "result")      ; prints "result: 42", returns 42
+```
+
+**See also:** warn, display
+
+---
+

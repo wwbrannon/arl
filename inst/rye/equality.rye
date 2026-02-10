@@ -11,76 +11,60 @@
   (import types)  ; for environment?, list?, nil?
   (import list)   ; for car, cdr, null?
 
-  ;; ============================================================================
-  ;; Implement S3 dispatch
-  ;; ============================================================================
-  (define s3-type
-    (lambda (obj)
-      "Extract the first S3 class from an object."
-      (__r[[ (__rclass obj) 1)))
+  ;;' @section Equality Predicates
+  ;;' Rye provides `equal?` for deep structural equality with S3-style dispatch,
+  ;;' and `identical?` for R's native identity comparison. The Scheme predicates
+  ;;' `eq?` and `eqv?` are intentionally not implemented because R does not
+  ;;' provide the pointer-level semantics they require.
 
-  (define check-s3-type-match
-    (lambda (obj . rest)
-      "Check if all objects have the same S3 type."
-      (begin
-        (define type-a (s3-type obj))
-        (if (__r== (__rlength rest) 0)
+  ;;' @examples
+  ;;' (equal? 1 1)                    ; => #t
+  ;;' (equal? 1 1.0)                  ; => #t (type coercion)
+  ;;' (equal? 1 1.0 :strict #t)      ; => #f (strict mode, uses identical?)
+  ;;' (equal? (list 1 2) (list 1 2))  ; => #t (deep structural)
+  ;;' (equal? "hello" "hello")        ; => #t
+  ;;' @seealso identical?, eq?, eqv?, set-method!
+  (define equal?
+    (lambda (a b (strict #f))
+      "Deep structural equality. Dispatches on class of first argument. Optional :strict #t uses identical? for atomics. Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
+       (if (__r! (check-s3-type-match (list a b)))
+         #f
+        (if (identical? a b)
           #t
-          (begin
-            (define cand-types (__runique (__rlapply rest s3-type)))
-            (if (__r> (__rlength cand-types) 1)
-              #f
-              (if (__r!= type-a (__r[[ cand-types 1))
-                #f
-                #t)))))))
+          (use-method "equal?" a (list a b strict))))))
 
-  (define use-method
-    ; pass args explicitly because we can't use R's magic internals
-    (lambda (generic-name obj args)
-      "Dispatch to an S3 method based on object class."
-      (begin
-        (define env (stdlib-env))
-        (define class-name (s3-type obj))
-        (define method-name (paste0 (as.character generic-name) "." class-name))
-        (define method (get0 method-name :envir env :inherits #f))
-        (if (nil? method)
-          (set! method (get (paste0 (as.character generic-name) ".default") :envir env)))
-        (funcall method args))))
+  ;;' @description Native R identity comparison. Tests if two objects are identical in memory/value.
+  ;;' @note Implemented natively in R (see R/rye-engine.R). Not redefined in this module.
+  ;;' @seealso equal?
 
-  ; a wrapper for clarity's sake around define
-  ; you can of course also just do (define equal?.my-class (lambda (a b string) ...))
-  (define set-method!
-    (lambda (generic-name class-name method-fun)
-      "Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
-      (define env (stdlib-env))
-      (define method-name (paste0 (as.character generic-name) "." (as.character class-name)))
-      (assign method-name method-fun :envir env)))
-
-  ;; ============================================================================
-  ;; Enhanced Equality Predicates
-  ;; ============================================================================
-
-  ;; Equality predicates
-  ;;
-  ;; NOTE: True Scheme eq? and eqv? semantics cannot be properly implemented in R
-  ;; because R does not provide reliable pointer equality for all object types.
-  ;; R's identical() does structural comparison for some types (lists, vectors)
-  ;; but pointer comparison for others (environments, reference classes).
-
+  ;;' @description **Not implemented in Rye.** Raises an error when called.
+  ;;' @note True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
+  ;;' @seealso identical?, equal?
   (define eq?
     (lambda (a b)
       "eq? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality."
       (error "eq? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality.")))
 
+  ;;' @description **Not implemented in Rye.** Raises an error when called.
+  ;;' @note True Scheme `eqv?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. Use `identical?` for R's native equality, or `equal?` for deep structural equality.
+  ;;' @seealso identical?, equal?
   (define eqv?
     (lambda (a b)
       "eqv? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality."
       (error "eqv? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality.")))
 
-  ;; identical? is implemented natively in R (see R/rye-engine.R)
-  ;; We don't redefine it, it's already in the environment
+  ;;' @section Helper Functions for Equal?
+  ;;' Internal helper functions used by the `equal?` dispatch methods to perform
+  ;;' recursive structural comparison of environments and lists.
 
-  ;; Helper: compare environment contents
+  ;;' @examples
+  ;;' (define e1 (new.env :parent emptyenv))
+  ;;' (define e2 (new.env :parent emptyenv))
+  ;;' (assign "x" 1 :envir e1)
+  ;;' (assign "x" 1 :envir e2)
+  ;;' (env-equal? e1 e2)              ; => #t
+  ;;' @note Used internally by `equal?.environment`. Compares environments by sorting their bindings and recursively comparing values.
+  ;;' @seealso equal?.environment
   (define env-equal?
     (lambda (env1 env2)
       "Compare two environments by their bindings and values."
@@ -101,7 +85,12 @@
           result)
         #f)))
 
-  ;; Helper: recursively compare lists
+  ;;' @examples
+  ;;' (list-equal? (list 1 2 3) (list 1 2 3))  ; => #t
+  ;;' (list-equal? (list 1 2) (list 1 2 3))     ; => #f
+  ;;' (list-equal? (list 1 "a") (list 1 "a"))   ; => #t
+  ;;' @note Used internally by `equal?.list`. Recursively compares list elements using `equal?`.
+  ;;' @seealso equal?.list
   (define list-equal?
     (lambda (lst1 lst2)
       "Recursively compare list elements."
@@ -120,20 +109,81 @@
           result)
         #f)))
 
-  (define equal?.environment
-    (lambda (a b (strict #f))
-      "Compare environments by bindings and values (dict, set, R6, refclass are env-based)."
-      (if (not (environment? b))
-        #f
-        (env-equal? a b))))
+  ;;' @section S3 Dispatch System
+  ;;' Rye implements a simplified S3-style dispatch system for generic functions
+  ;;' like `equal?`. Types are identified by their first S3 class, and methods
+  ;;' are registered as `generic.class` bindings in the stdlib environment.
 
-  (define equal?.list
-    (lambda (a b (strict #f))
-      "Compare lists recursively by structure and elements."
-      (if (not (list? b))
-        #f
-        (list-equal? a b))))
+  ;;' @examples
+  ;;' (s3-type 42)                    ; => "numeric"
+  ;;' (s3-type "hello")               ; => "character"
+  ;;' (s3-type (list 1 2))            ; => "list"
+  ;;' (s3-type (new.env))             ; => "environment"
+  (define s3-type
+    (lambda (obj)
+      "Extract the first S3 class from an object."
+      (__r[[ (__rclass obj) 1)))
 
+  ;;' @examples
+  ;;' (check-s3-type-match 1 2 3)     ; => #t (all numeric)
+  ;;' (check-s3-type-match 1 "a")     ; => #f (numeric vs character)
+  ;;' @note Internal function used by `equal?` to verify type consistency before dispatch.
+  (define check-s3-type-match
+    (lambda (obj . rest)
+      "Check if all objects have the same S3 type."
+      (begin
+        (define type-a (s3-type obj))
+        (if (__r== (__rlength rest) 0)
+          #t
+          (begin
+            (define cand-types (__runique (__rlapply rest s3-type)))
+            (if (__r> (__rlength cand-types) 1)
+              #f
+              (if (__r!= type-a (__r[[ cand-types 1))
+                #f
+                #t)))))))
+
+  ;;' @examples
+  ;;' ;; Register a custom equality method for "point" objects:
+  ;;' (set-method! 'equal? 'point
+  ;;'   (lambda (a b strict)
+  ;;'     (and (equal? ($ a "x") ($ b "x"))
+  ;;'          (equal? ($ a "y") ($ b "y")))))
+  ;;' @seealso use-method
+  (define set-method!
+    (lambda (generic-name class-name method-fun)
+      "Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
+      (define env (stdlib-env))
+      (define method-name (paste0 (as.character generic-name) "." (as.character class-name)))
+      (assign method-name method-fun :envir env)))
+
+  ;;' @note Internal function. Dispatches to the appropriate S3 method based on the object's class, falling back to the `.default` method if no class-specific method is found.
+  ;;' @examples
+  ;;' (use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f))  ; dispatches to equal?.list
+  ;;' @seealso set-method!, s3-type
+  (define use-method
+    ; pass args explicitly because we can't use R's magic internals
+    (lambda (generic-name obj args)
+      "Dispatch to an S3 method based on object class."
+      (begin
+        (define env (stdlib-env))
+        (define class-name (s3-type obj))
+        (define method-name (paste0 (as.character generic-name) "." class-name))
+        (define method (get0 method-name :envir env :inherits #f))
+        (if (nil? method)
+          (set! method (get (paste0 (as.character generic-name) ".default") :envir env)))
+        (funcall method args))))
+
+  ;;' @section Built-in Equal? Methods
+  ;;' These methods handle equality comparison for R's core types. The dispatch
+  ;;' system selects the appropriate method based on the S3 class of the first
+  ;;' argument. Users can register additional methods with `set-method!`.
+
+  ;;' @examples
+  ;;' (equal?.default 1 1)             ; => #t
+  ;;' (equal?.default 1 1.0)           ; => #t (coercion via ==)
+  ;;' (equal?.default 1 1.0 :strict #t) ; => #f (strict uses identical?)
+  ;;' (equal?.default (c 1 2 3) (c 1 2 3))  ; => #t (element-wise)
   (define equal?.default
     (lambda (a b (strict #f))
       "Default equality: atomic/vector comparison. :strict #t => #f; else use == with type coercion."
@@ -145,15 +195,41 @@
             (isTRUE comp-result))
           #f))))
 
-  ;; equal? - S3-style generic: dispatch on class of first argument.
-  ;; Methods: equal?.default, equal?.environment, equal?.list (and user-defined).
-  ;; Use (set-method! 'equal? 'my-class fn) to add methods for new types.
-  (define equal?
+  ;;' @examples
+  ;;' (equal?.list (list 1 2 3) (list 1 2 3))          ; => #t
+  ;;' (equal?.list (list 1 (list 2 3)) (list 1 (list 2 3)))  ; => #t (nested)
+  ;;' (equal?.list (list 1 2) (list 1 2 3))             ; => #f
+  (define equal?.list
     (lambda (a b (strict #f))
-      "Deep structural equality. Dispatches on class of first argument. Optional :strict #t uses identical? for atomics. Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...))."
-       (if (__r! (check-s3-type-match (list a b)))
-         #f
-        (if (identical? a b)
-          #t
-          (use-method "equal?" a (list a b strict))))))
+      "Compare lists recursively by structure and elements."
+      (if (not (list? b))
+        #f
+        (list-equal? a b))))
+
+  ;;' @examples
+  ;;' (define e1 (new.env :parent emptyenv))
+  ;;' (define e2 (new.env :parent emptyenv))
+  ;;' (assign "x" 1 :envir e1)
+  ;;' (assign "x" 1 :envir e2)
+  ;;' (equal?.environment e1 e2)       ; => #t
+  (define equal?.environment
+    (lambda (a b (strict #f))
+      "Compare environments by bindings and values (dict, set, R6, refclass are env-based)."
+      (if (not (environment? b))
+        #f
+        (env-equal? a b))))
+
+  ;;' @section Migration from predicates Module
+  ;;' Equality predicates were previously in the `predicates` module. They are now
+  ;;' in the `equality` module:
+  ;;'
+  ;;' ```lisp
+  ;;' ; Old (before reorganization)
+  ;;' (import predicates)
+  ;;'
+  ;;' ; New (after reorganization)
+  ;;' (import equality)  ; for equal?, identical?, eq?, eqv?
+  ;;' ```
+  ;;'
+  ;;' The function signatures and behavior remain unchanged.
 )

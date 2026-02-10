@@ -27,6 +27,10 @@ build: stdlib-cache ## help: Build the package tarball
 ## Documentation targets
 #
 
+.PHONY: stdlib-docs
+stdlib-docs: ## help: Generate stdlib reference vignettes from .rye source
+	Rscript tools/generate-stdlib-docs.R
+
 .PHONY: devdoc
 devdoc: ## help: Generate roxygen documentation
 	R -q -e "devtools::document()"
@@ -51,7 +55,7 @@ site: ## help: Build pkgdown site
 	rm -rf $$tmp
 
 .PHONY: document
-document: devdoc readme vignettes site ## help: Generate all documentation (roxygen, README, vignettes, site)
+document: stdlib-docs devdoc readme vignettes site ## help: Generate all documentation (roxygen, README, vignettes, site)
 
 #
 ## QA targets

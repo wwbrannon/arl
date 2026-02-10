@@ -7,18 +7,38 @@
   (import types)
   (import list)
 
-;;; Control flow macros
+;;' @section Control Flow Macros
 
+;;' @examples
+;;' (when #t "yes")          ; => "yes"
+;;' (when #f "yes")          ; => #nil
+;;' (when (> 3 2) (+ 1 1))   ; => 2
+;;' @seealso unless, if, cond
 (defmacro when (test . body)
   "Evaluate body forms when test is truthy."
   `(if ,test (begin ,@body) #nil))
 
+;;' @examples
+;;' (unless #f "fallback")    ; => "fallback"
+;;' (unless #t "fallback")    ; => #nil
+;;' (unless (= 1 2) "nope")  ; => "nope"
+;;' @seealso when, if
 (defmacro unless (test . body)
   "Evaluate body forms when test is falsy."
   `(if ,test #nil (begin ,@body)))
 
-;;; Conditional macros
+;;' @section Conditional Macros
 
+;;' @examples
+;;' (cond
+;;'   ((= 1 2) "a")
+;;'   ((= 1 1) "b")
+;;'   (else "c"))            ; => "b"
+;;'
+;;' (cond
+;;'   ((> 10 20) "big")
+;;'   (else "small"))        ; => "small"
+;;' @seealso case, if, when
 (defmacro cond (clause . rest)
   "Multi-branch conditional."
   (if (null? clause)
@@ -53,13 +73,35 @@
               `(if ,test-expr (begin ,@body)
                    ,(__case-clauses key-sym (car rest) (cdr rest))))))))))
 
+;;' @examples
+;;' (case (+ 1 1)
+;;'   ((1) "one")
+;;'   ((2) "two")
+;;'   ((3) "three")
+;;'   (else "other"))        ; => "two"
+;;'
+;;' (case 'x
+;;'   ((a b) "ab")
+;;'   ((x y) "xy")
+;;'   (else "?"))            ; => "xy"
+;;' @note The key expression is evaluated only once. Each clause datum list can contain multiple values.
+;;' @seealso cond, if
 (defmacro case (key clause . rest)
   "Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). Key expression is evaluated only once."
   (define key-sym (gensym "case-key"))
   `((lambda (,key-sym) ,(__case-clauses key-sym clause rest)) ,key))
 
-;;; Error handling helper
+;;' @section Error Handling Helper
 
+;;' @signature (try* thunk [error_handler] [finally_handler])
+;;' @examples
+;;' (try* (lambda () 42))                           ; => 42
+;;' (try* (lambda () (stop "oops"))
+;;'       :error_handler (lambda (e) "caught"))      ; => "caught"
+;;' (try* (lambda () 1)
+;;'       :finally_handler (lambda () (display "done")))  ; => 1
+;;' @note Low-level functional interface to R's tryCatch. Prefer the `try` macro for cleaner syntax.
+;;' @seealso try (in `error` module), catch, finally
 (define try*
   (lambda (thunk (error_handler #f) (finally_handler #f))
     "Evaluate thunk with error/finally handlers."

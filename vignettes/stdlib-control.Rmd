@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
 ---
 title: "Standard Library: Control Flow and Macros"
 output:
@@ -17,20 +20,16 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ### when
 
-Executes body if test is truthy.
+Evaluate body forms when test is truthy.
 
 **Signature:** `(when test body...)`
 
 **Examples:**
 ```lisp
-(when (> 5 3)
-  (println "5 is greater than 3"))  ; prints message
-
-(when #f
-  (println "not printed"))          ; nothing happens
+(when #t "yes")          ; => "yes"
+(when #f "yes")          ; => #nil
+(when (> 3 2) (+ 1 1))   ; => 2
 ```
-
-**Defined in:** `inst/rye/control.rye`
 
 **See also:** unless, if, cond
 
@@ -38,78 +37,40 @@ Executes body if test is truthy.
 
 ### unless
 
-Executes body if test is falsy.
+Evaluate body forms when test is falsy.
 
 **Signature:** `(unless test body...)`
 
 **Examples:**
 ```lisp
-(unless (> 3 5)
-  (println "3 is not greater than 5"))  ; prints message
-
-(unless #t
-  (println "not printed"))              ; nothing happens
+(unless #f "fallback")    ; => "fallback"
+(unless #t "fallback")    ; => #nil
+(unless (= 1 2) "nope")  ; => "nope"
 ```
-
-**Defined in:** `inst/rye/control.rye`
 
 **See also:** when, if
 
 ---
 
-### and
-
-Logical AND with short-circuit evaluation.
-
-**Signature:** `(and expr1 expr2 ...)`
-
-**Examples:**
-```lisp
-(and #t #t)           ; => #t
-(and #t #f)           ; => #f
-(and (> 5 3) (< 2 4)) ; => #t
-```
-
-**Defined in:** `inst/rye/control.rye`
-
-**See also:** or, not
-
----
-
-### or
-
-Logical OR with short-circuit evaluation.
-
-**Signature:** `(or expr1 expr2 ...)`
-
-**Examples:**
-```lisp
-(or #f #t)            ; => #t
-(or #f #f)            ; => #f
-(or (> 3 5) (< 2 4))  ; => #t
-```
-
-**Defined in:** `inst/rye/control.rye`
-
-**See also:** and, not
-
----
+## Conditional Macros
 
 ### cond
 
-Multi-way conditional.
+Multi-branch conditional.
 
-**Signature:** `(cond (test1 result1) (test2 result2) ... (else result))`
+**Signature:** `(cond clause rest...)`
 
 **Examples:**
 ```lisp
 (cond
-  ((> x 10) "big")
-  ((> x 5) "medium")
-  (else "small"))
-```
+  ((= 1 2) "a")
+  ((= 1 1) "b")
+  (else "c"))            ; => "b"
 
-**Defined in:** `inst/rye/control.rye`
+(cond
+  ((> 10 20) "big")
+  (else "small"))        ; => "small"
+```
 
 **See also:** case, if, when
 
@@ -117,41 +78,89 @@ Multi-way conditional.
 
 ### case
 
-Pattern matching on a value.
+Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). Key expression is evaluated only once.
 
-**Signature:** `(case expr (pattern1 result1) (pattern2 result2) ... (else result))`
+**Signature:** `(case key clause rest...)`
 
 **Examples:**
 ```lisp
-(case x
-  (1 "one")
-  (2 "two")
-  (3 "three")
-  (else "other"))
+(case (+ 1 1)
+  ((1) "one")
+  ((2) "two")
+  ((3) "three")
+  (else "other"))        ; => "two"
+
+(case 'x
+  ((a b) "ab")
+  ((x y) "xy")
+  (else "?"))            ; => "xy"
 ```
 
-**Defined in:** `inst/rye/control.rye`
+**Note:** The key expression is evaluated only once. Each clause datum list can contain multiple values.
 
 **See also:** cond, if
 
 ---
 
-## Binding Macros
+## Error Handling Helper
 
-### let
+### try*
 
-Creates local bindings.
-
-**Signature:** `(let ((var1 val1) (var2 val2) ...) body...)`
+**Signature:** `(try* thunk [error_handler] [finally_handler])`
 
 **Examples:**
 ```lisp
-(let ((x 10)
-      (y 20))
-  (+ x y))  ; => 30
+(try* (lambda () 42))                           ; => 42
+(try* (lambda () (stop "oops"))
+      :error_handler (lambda (e) "caught"))      ; => "caught"
+(try* (lambda () 1)
+      :finally_handler (lambda () (display "done")))  ; => 1
 ```
 
-**Defined in:** `inst/rye/binding.rye`
+**Note:** Low-level functional interface to R's tryCatch. Prefer the `try` macro for cleaner syntax.
+
+**See also:** try (in `error` module), catch, finally
+
+---
+
+## Binding Macros
+
+### pattern-symbols
+
+Collect all symbols from a destructuring pattern, ignoring dots.
+
+**Signature:** `(pattern-symbols pattern)`
+
+**See also:** destructuring-bind
+
+---
+
+### destructuring-bind
+
+Bind a destructuring pattern to a value, then evaluate body forms.
+
+**Signature:** `(destructuring-bind pattern value body...)`
+
+**See also:** let, let*, pattern-symbols
+
+---
+
+### let
+
+Bind names to values within body.
+
+**Signature:** `(let bindings body...)`
+
+**Examples:**
+```lisp
+(let ((x 1) (y 2))
+  (+ x y))               ; => 3
+
+(let ((x 10))
+  (* x x))               ; => 100
+```
+
+**Note:** Bindings are evaluated in parallel: earlier bindings are NOT visible to later ones. Use `let*` for sequential binding.
 
 **See also:** let*, letrec
 
@@ -159,18 +168,18 @@ Creates local bindings.
 
 ### let*
 
-Creates local bindings (each binding can reference previous ones).
-
-**Signature:** `(let* ((var1 val1) (var2 val2) ...) body...)`
+Sequential let bindings.
 
 **Examples:**
 ```lisp
-(let* ((x 10)
-       (y (* x 2)))
-  (+ x y))  ; => 30
+(let* ((x 1) (y (+ x 1)))
+  (+ x y))               ; => 3
+
+(let* ((a 10) (b (* a 2)) (c (+ a b)))
+  c)                      ; => 30
 ```
 
-**Defined in:** `inst/rye/binding.rye`
+**Note:** Bindings are evaluated sequentially: each binding can refer to previously bound names. Supports destructuring patterns.
 
 **See also:** let, letrec
 
@@ -178,21 +187,18 @@ Creates local bindings (each binding can reference previous ones).
 
 ### letrec
 
-Creates local bindings (allows recursive definitions).
+Recursive bindings.
 
-**Signature:** `(letrec ((var1 val1) (var2 val2) ...) body...)`
+**Signature:** `(letrec bindings body...)`
 
 **Examples:**
 ```lisp
-(letrec ((factorial
-         (lambda (n)
-           (if (= n 0)
-               1
-               (* n (factorial (- n 1)))))))
-  (factorial 5))  ; => 120
+(letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
+         (odd?  (lambda (n) (if (= n 0) #f (even? (- n 1))))))
+  (even? 10))             ; => #t
 ```
 
-**Defined in:** `inst/rye/binding.rye`
+**Note:** All bindings are visible to all init expressions, enabling mutual recursion. Init values are assigned via `set!` into pre-allocated slots.
 
 **See also:** let, let*
 
@@ -200,18 +206,18 @@ Creates local bindings (allows recursive definitions).
 
 ### when-let
 
-Bind a value and evaluate body only if the value is truthy.
+Bind pattern to value and evaluate body when value is truthy.
 
-**Signature:** `(when-let ((var expr)) body...)`
+**Signature:** `(when-let binding body...)`
 
 **Examples:**
 ```lisp
-(when-let ((x (dict-get d "key")))
-  (println (str "Found: " x)))
-; prints if key exists, does nothing if dict-get returns #nil
-```
+(when-let ((x (assoc 'a '((a . 1) (b . 2)))))
+  (cdr x))               ; => 1
 
-**Defined in:** `inst/rye/binding.rye`
+(when-let ((x #f))
+  "never reached")       ; => #nil
+```
 
 **See also:** if-let, when, let
 
@@ -219,19 +225,20 @@ Bind a value and evaluate body only if the value is truthy.
 
 ### if-let
 
-Bind a value and choose branch based on its truthiness.
+Bind pattern to value and choose branch based on its truthiness.
 
-**Signature:** `(if-let ((var expr)) then-expr else-expr)`
+**Signature:** `(if-let binding then rest...)`
 
 **Examples:**
 ```lisp
-(if-let ((x (string->number "42")))
+(if-let ((x 42))
   (+ x 1)
-  (error "not a number"))
-; => 43
-```
+  "nothing")             ; => 43
 
-**Defined in:** `inst/rye/binding.rye`
+(if-let ((x #f))
+  "truthy"
+  "falsy")               ; => "falsy"
+```
 
 **See also:** when-let, if, let
 
@@ -239,140 +246,81 @@ Bind a value and choose branch based on its truthiness.
 
 ## Looping Macros
 
-### while
-
-Executes body repeatedly while test is truthy.
-
-**Signature:** `(while test body...)`
-
-**Examples:**
-```lisp
-(define i 0)
-(while (< i 5)
-  (println i)
-  (set! i (+ i 1)))
-```
-
-**Defined in:** Built-in special form (compiled by `R/compiler.R`)
-
-**See also:** for, while-r
-
----
-
 ### for
 
-Iterates over a sequence.
+Loop over seq binding var each iteration. Expands to while.
 
-**Signature:** `(for (var lst) body...)`
+**Signature:** `(for binding body...)`
 
 **Examples:**
 ```lisp
-(for (x (list 1 2 3))
-  (println x))
+(define total 0)
+(for (x '(1 2 3))
+  (set! total (+ total x)))
+total                       ; => 6
 
-(for (item items)
-  (process item))
+(define result (list))
+(for (ch '("a" "b" "c"))
+  (set! result (append result (list ch))))
+result                      ; => ("a" "b" "c")
 ```
 
-**Defined in:** `inst/rye/looping.rye`
+**Note:** Expands to a `while` loop over the sequence converted to a list.
 
-**See also:** while, for-r, map
+**See also:** while, map, loop
 
 ---
 
-### loop / recur
+### recur
 
-Tail-recursive looping with explicit rebinding.
+Signal a recur back to the enclosing `loop`. Only valid inside a `loop` body.
 
-**Signature:** `(loop ((var1 init1) (var2 init2) ...) body...)`
+**Signature:** `(recur args...)`
 
-**Signature:** `(recur expr1 expr2 ...)`
-
-**Notes:**
-- The compiler now automatically optimizes self-tail-calls in `(define name (lambda ...))` patterns, so many recursive functions no longer need `loop`/`recur`. Use `loop`/`recur` when you want explicit looping control or need mutual recursion.
-- `recur` must be used inside `loop`.
-- `recur` must supply one value per loop binding.
-- `recur` is not supported inside nested `lambda` or `defmacro` bodies.
-
-**Examples:**
-```lisp
-(loop ((i 0) (acc 0))
-  (if (< i 5)
-    (recur (+ i 1) (+ acc i))
-    acc))  ; => 10
-```
-
-**Defined in:** `inst/rye/looping.rye`
-
-**See also:** while, for
+**See also:** loop
 
 ---
 
-### while-r
+### loop
 
-Execute an R `while` loop using R's native control flow.
+Clojure-style loop/recur that expands to an R while loop.
 
-**Signature:** `(while-r test body...)`
-
-**Notes:**
-- The body is evaluated by R, not Rye.
-- Use R assignment (`<-`, or `assign` with `:envir (environment)`) rather than `set!`.
+**Signature:** `(loop bindings body...)`
 
 **Examples:**
 ```lisp
-(begin
-  (define i 0)
-  (while-r (< i 3)
-    (<- i (+ i 1)))
-  i)
+;; Factorial via loop/recur
+(loop ((n 5) (acc 1))
+  (if (= n 0)
+    acc
+    (recur (- n 1) (* acc n))))  ; => 120
+
+;; Sum of a list via loop/recur
+(loop ((xs '(1 2 3 4)) (total 0))
+  (if (null? xs)
+    total
+    (recur (cdr xs) (+ total (car xs)))))  ; => 10
 ```
 
-**Defined in:** `inst/rye/looping.rye`
+**Note:** The compiler auto-optimizes self-tail-calls in `(define name (lambda ...))` patterns, so `loop`/`recur` is primarily useful for anonymous iteration and mutual recursion patterns. Expands to an R `while` loop internally.
 
-**See also:** while
-
----
-
-### for-r
-
-Execute an R `for` loop using R's native control flow.
-
-**Signature:** `(for-r (var seq) body...)`
-
-**Notes:**
-- The body is evaluated by R, not Rye.
-- Use R assignment (`<-`, or `assign` with `:envir (environment)`) rather than `set!`.
-
-**Examples:**
-```lisp
-(begin
-  (define acc (list))
-  (for-r (i (seq 1 3))
-    (<- acc (append acc (list i))))
-  acc)
-```
-
-**Defined in:** `inst/rye/looping.rye`
-
-**See also:** for
+**See also:** recur, while, for
 
 ---
 
 ### until
 
-Repeat body until test becomes truthy.
+Repeat body until test is truthy.
 
 **Signature:** `(until test body...)`
 
 **Examples:**
 ```lisp
 (define i 0)
-(until (>= i 5)
+(until (= i 5)
   (set! i (+ i 1)))
-i  ; => 5
+i                          ; => 5
 ```
-
-**Defined in:** `inst/rye/looping.rye`
 
 **See also:** while
 
@@ -382,22 +330,19 @@ i  ; => 5
 
 ### ->
 
-Thread-first macro: threads value through forms as first argument.
+Thread value through forms (first argument).
 
-**Signature:** `(-> value form1 form2 ...)`
+**Signature:** `(-> value forms...)`
 
 **Examples:**
 ```lisp
-(-> 5
-    (+ 3)
-    (* 2))  ; => 16  (equivalent to (* (+ 5 3) 2))
-
-(-> data
-    (filter even?)
-    (map double))
+(-> 5 (+ 3) (* 2))       ; => 16  ; (5+3)*2
+(-> '(1 2 3) (cons 0))   ; => (0 1 2 3)
+(-> "hello"
+    nchar)                ; => 5
 ```
 
-**Defined in:** `inst/rye/threading.rye`
+**Note:** Threads the value as the FIRST argument to each successive form. If a form is a bare symbol, it is called as a one-argument function.
 
 **See also:** ->>
 
@@ -405,19 +350,20 @@ Thread-first macro: threads value through forms as first argument.
 
 ### ->>
 
-Thread-last macro: threads value through forms as last argument.
+Thread value through forms (last argument).
 
-**Signature:** `(->> value form1 form2 ...)`
+**Signature:** `(->> value forms...)`
 
 **Examples:**
 ```lisp
-(->> (list 1 2 3 4 5)
-     (filter even?)
-     (map double)
-     (reduce +))  ; => 12
+(->> '(1 2 3) (map (lambda (x) (* x x))))  ; => (1 4 9)
+(->> 5 (- 10))           ; => 5  ; (- 10 5)
+(->> '(3 1 2)
+     (sort)
+     (car))              ; => 1
 ```
 
-**Defined in:** `inst/rye/threading.rye`
+**Note:** Threads the value as the LAST argument to each successive form. Compare with `->` which threads as the first argument.
 
 **See also:** ->
 
@@ -425,110 +371,34 @@ Thread-last macro: threads value through forms as last argument.
 
 ## Error Handling
 
-### error
+### try
 
-Raises an error with a message.
+Macro wrapper around try* with catch/finally.
 
-**Signature:** `(error message)`
+**Signature:** `(try body clauses...)`
 
 **Examples:**
 ```lisp
-(error "Something went wrong")
-(error (str "Invalid value: " x))
+;; Basic try with catch
+(try (/ 1 0)
+  (catch e (string "caught: " ($ e "message"))))
+
+;; try with finally (always runs)
+(try (+ 1 2)
+  (finally (display "cleanup")))    ; => 3
+
+;; try with both catch and finally
+(try (stop "oops")
+  (catch e (string "error: " ($ e "message")))
+  (finally (display "done")))       ; => "error: oops"
+
+;; try with no handlers (just evaluates body)
+(try (+ 1 2))                       ; => 3
 ```
 
-**See also:** warn, assert, try
+**Note:** Macro wrapper around `try*` that provides familiar catch/finally syntax. The catch clause binds the error condition to the given variable. The finally clause runs regardless of success or failure.
+
+**See also:** try* (in `control` module)
 
 ---
 
-### warn
-
-Issues a warning with a message.
-
-**Signature:** `(warn message)`
-
-**Examples:**
-```lisp
-(warn "Deprecated function")
-(warn (str "Unusual value: " x))
-```
-
-**See also:** error, trace
-
----
-
-### assert
-
-Asserts that a condition is true, or raises an error.
-
-**Signature:** `(assert test message)`
-
-**Examples:**
-```lisp
-(assert (> x 0) "x must be positive")
-(assert (list? data) "data must be a list")
-```
-
-**See also:** error
-
----
-
-### trace
-
-Prints a debug trace message.
-
-**Signature:** `(trace value label)`
-
-**Examples:**
-```lisp
-(trace x "x value")
-(trace (+ 1 2) "sum")
-```
-
-**See also:** warn, display
-
----
-
-### try / catch / finally
-
-Exception handling.
-
-**Signature:** `(try body... (catch error handler...) (finally cleanup...))`
-
-**Examples:**
-```lisp
-(try
-  (divide x y)
-  (catch e
-    (println "Error:" e)
-    0))
-
-(try
-  (risky-operation)
-  (catch e
-    (println "Failed:" e))
-  (finally
-    (cleanup)))
-```
-
-**Defined in:** `inst/rye/error.rye`
-
-**See also:** error, try*
-
----
-
-### try*
-
-Low-level exception handling with handlers.
-
-**Signature:** `(try* thunk error-handler finally-handler)`
-
-**Examples:**
-```lisp
-(try*
-  (lambda () (divide x y))
-  (lambda (e) (println "Error:" e))
-  (lambda () (cleanup)))
-```
-
-**See also:** try, catch, finally

@@ -1,3 +1,6 @@
+<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
 ---
 title: "Standard Library: Higher-Order Functions"
 output:
@@ -13,19 +16,23 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-These functions are provided by the `functional` module (`inst/rye/functional.rye`).
+## Core Higher-Order Functions
+
+The fundamental building blocks for functional programming in Rye.
+These functions operate on lists and follow the convention of taking
+the function argument first, then the data argument.
 
 ### map
 
-Applies a function to each element of a list, returning a new list.
+Apply function to each element.
 
 **Signature:** `(map fn lst)`
 
 **Examples:**
 ```lisp
 (map (lambda (x) (* x 2)) (list 1 2 3))  ; => (2 4 6)
-(map str (list 1 2 3))                   ; => ("1" "2" "3")
-(map first (list (list 1 2) (list 3 4))) ; => (1 3)
+(map (lambda (x) (* x x)) (list 1 2 3 4)) ; => (1 4 9 16)
+(map string-length (list "hi" "hello"))     ; => (2 5)
 ```
 
 **See also:** filter, mapcat, reduce
@@ -34,14 +41,14 @@ Applies a function to each element of a list, returning a new list.
 
 ### mapcat
 
-Maps a function over a list and concatenates the results.
+Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
 
 **Signature:** `(mapcat fn lst)`
 
 **Examples:**
 ```lisp
-(mapcat (lambda (x) (list x x)) (list 1 2 3))  ; => (1 1 2 2 3 3)
-(mapcat identity (list (list 1 2) (list 3 4))) ; => (1 2 3 4)
+(mapcat (lambda (x) (list x (* x 10))) (list 1 2 3))  ; => (1 10 2 20 3 30)
+(mapcat (lambda (x) (list x x)) (list 1 2 3))          ; => (1 1 2 2 3 3)
 ```
 
 **See also:** map, flatten
@@ -50,15 +57,15 @@ Maps a function over a list and concatenates the results.
 
 ### filter
 
-Returns a list of elements that satisfy a predicate.
+Filter items by predicate.
 
 **Signature:** `(filter pred lst)`
 
 **Examples:**
 ```lisp
-(filter (lambda (x) (> x 5)) (list 1 10 3 8))  ; => (10 8)
-(filter number? (list 1 "a" 2 "b"))            ; => (1 2)
-(filter even? (list 1 2 3 4 5 6))              ; => (2 4 6)
+(filter (lambda (x) (> x 2)) (list 1 2 3 4 5))  ; => (3 4 5)
+(filter even? (list 1 2 3 4 5 6))                 ; => (2 4 6)
+(filter string? (list 1 "a" 2 "b"))               ; => ("a" "b")
 ```
 
 **See also:** remove, take-while, drop-while
@@ -67,14 +74,14 @@ Returns a list of elements that satisfy a predicate.
 
 ### remove
 
-Returns a list of elements that do NOT satisfy a predicate.
+Remove items where predicate is true.
 
 **Signature:** `(remove pred lst)`
 
 **Examples:**
 ```lisp
-(remove (lambda (x) (> x 5)) (list 1 10 3 8))  ; => (1 3)
-(remove string? (list 1 "a" 2 "b"))            ; => (1 2)
+(remove even? (list 1 2 3 4 5 6))                 ; => (1 3 5)
+(remove (lambda (x) (> x 3)) (list 1 2 3 4 5))   ; => (1 2 3)
 ```
 
 **See also:** filter
@@ -83,15 +90,16 @@ Returns a list of elements that do NOT satisfy a predicate.
 
 ### reduce
 
-Reduces a list to a single value by repeatedly applying a function.
+Reduce list with function.
 
-**Signature:** `(reduce fn lst)` or `(reduce fn lst init)`
+**Signature:** `(reduce fn lst rest...)`
 
 **Examples:**
 ```lisp
 (reduce + (list 1 2 3 4))       ; => 10
-(reduce * (list 2 3 4))         ; => 24
-(reduce + (list 1 2 3) 10)      ; => 16
+(reduce * (list 1 2 3 4))       ; => 24
+(reduce + (list 1 2 3) 100)     ; => 106 (with initial value)
+(reduce string-append (list "a" "b" "c"))  ; => "abc"
 ```
 
 **See also:** foldl, foldr, map
@@ -100,14 +108,15 @@ Reduces a list to a single value by repeatedly applying a function.
 
 ### foldl
 
-Left fold - reduces from left to right.
+Left fold alias for reduce.
 
-**Signature:** `(foldl fn lst)`
+**Signature:** `(foldl fn lst rest...)`
 
 **Examples:**
 ```lisp
-(foldl - (list 1 2 3))  ; => -4  (equivalent to ((1 - 2) - 3))
-(foldl / (list 8 2 2))  ; => 2   (equivalent to ((8 / 2) / 2))
+(foldl + (list 1 2 3 4))        ; => 10
+(foldl - (list 1 2 3) 10)       ; => 4 (10 - 1 - 2 - 3)
+(foldl cons (list 1 2 3) (list)) ; => (3 2 1) (reverses)
 ```
 
 **See also:** foldr, reduce
@@ -116,14 +125,15 @@ Left fold - reduces from left to right.
 
 ### foldr
 
-Right fold - reduces from right to left.
+Right fold.
 
-**Signature:** `(foldr fn lst)`
+**Signature:** `(foldr fn lst rest...)`
 
 **Examples:**
 ```lisp
-(foldr - (list 1 2 3))  ; => 2   (equivalent to (1 - (2 - 3)))
-(foldr / (list 8 2 2))  ; => 8   (equivalent to (8 / (2 / 2)))
+(foldr + (list 1 2 3 4))        ; => 10
+(foldr - (list 1 2 3) 10)       ; => -8 (1 - (2 - (3 - 10)))
+(foldr cons (list 1 2 3) (list)) ; => (1 2 3) (preserves order)
 ```
 
 **See also:** foldl, reduce
@@ -132,15 +142,16 @@ Right fold - reduces from right to left.
 
 ### every?
 
-Returns true if all elements satisfy the predicate.
+Return #t if predicate true for all items.
 
 **Signature:** `(every? pred lst)`
 
 **Examples:**
 ```lisp
-(every? number? (list 1 2 3))         ; => #t
-(every? (lambda (x) (> x 0)) (list 1 2 3)) ; => #t
-(every? even? (list 2 4 5))           ; => #f
+(every? positive? (list 1 2 3))       ; => #t
+(every? even? (list 2 4 6))           ; => #t
+(every? even? (list 2 3 6))           ; => #f
+(every? string? (list "a" "b" "c"))   ; => #t
 ```
 
 **See also:** any?, filter
@@ -149,37 +160,93 @@ Returns true if all elements satisfy the predicate.
 
 ### any?
 
-Returns true if any element satisfies the predicate.
+Return #t if predicate true for any item.
 
 **Signature:** `(any? pred lst)`
 
 **Examples:**
 ```lisp
-(any? number? (list "a" 1 "b"))       ; => #t
-(any? (lambda (x) (> x 10)) (list 1 2 3)) ; => #f
-(any? even? (list 1 3 5 6))           ; => #t
+(any? even? (list 1 3 4 5))           ; => #t
+(any? negative? (list 1 2 3))         ; => #f
+(any? string? (list 1 "a" 2))         ; => #t
 ```
 
 **See also:** every?, filter
 
 ---
 
-## Advanced Functional Programming
+### complement
 
-### curry
+Negate predicate.
 
-Curry a function, enabling incremental partial application until all arguments are supplied.
-
-**Signature:** `(curry fn [initial-args...])`
+**Signature:** `(complement pred)`
 
 **Examples:**
 ```lisp
-(define add (lambda (a b) (+ a b)))
-(define add5 (curry add 5))
-(add5 3)               ; => 8
+(define not-even? (complement even?))
+(not-even? 3)                          ; => #t
+(not-even? 4)                          ; => #f
+(filter (complement null?) (list 1 #nil 2 #nil 3))  ; => (1 2 3)
+```
 
-(define cadd (curry add))
-((cadd 5) 3)           ; => 8
+**See also:** not, filter
+
+---
+
+### compose
+
+Compose two functions.
+
+**Signature:** `(compose f g)`
+
+**Examples:**
+```lisp
+(define add1-then-double (compose (lambda (x) (* x 2)) (lambda (x) (+ x 1))))
+(add1-then-double 3)                   ; => 8  ((3+1)*2)
+(define abs-sum (compose abs +))
+(abs-sum -3 -4)                        ; => 7
+```
+
+**See also:** partial
+
+---
+
+### partial
+
+Partially apply function.
+
+**Signature:** `(partial fn captured...)`
+
+**Examples:**
+```lisp
+(define add5 (partial + 5))
+(add5 3)                               ; => 8
+(define greet (partial string-append "Hello, "))
+(greet "world")                        ; => "Hello, world"
+```
+
+**See also:** compose
+
+---
+
+## Advanced Functional Programming
+
+Higher-order combinators for advanced functional patterns including
+currying, juxtaposition, memoization, and iteration.
+
+### curry
+
+Curry a function - enables partial application with optional initial arguments.
+
+**Signature:** `(curry fn initial-args...)`
+
+**Examples:**
+```lisp
+(define add (curry (lambda (a b) (+ a b))))
+(define add5 (add 5))
+(add5 3)                               ; => 8
+(define multiply (curry (lambda (a b) (* a b))))
+((multiply 3) 4)                       ; => 12
 ```
 
 **See also:** partial
@@ -188,14 +255,16 @@ Curry a function, enabling incremental partial application until all arguments a
 
 ### juxt
 
-Create a function that applies multiple functions to the same arguments, returning a list of results.
+Juxtaposition - apply multiple functions to same args, return list of results.
 
-**Signature:** `(juxt fn1 fn2 ...)`
+**Signature:** `(juxt fns...)`
 
 **Examples:**
 ```lisp
-(define stats (juxt min max))
-(stats (list 3 1 4 1 5))  ; => (1 5)
+(define stats (juxt min max mean))
+(stats (c 1 2 3 4 5))                  ; => (1 5 3)
+(define first-and-last (juxt car last))
+(first-and-last (list 1 2 3))          ; => (1 3)
 ```
 
 **See also:** map, compose
@@ -204,30 +273,31 @@ Create a function that applies multiple functions to the same arguments, returni
 
 ### constantly
 
-Return a function that always returns the given value, ignoring its arguments.
+Return a function that always returns the given value.
 
 **Signature:** `(constantly value)`
 
 **Examples:**
 ```lisp
 (define always-42 (constantly 42))
-(always-42)           ; => 42
-(always-42 "ignored") ; => 42
-(map (constantly 0) (list 1 2 3))  ; => (0 0 0)
+(always-42)                             ; => 42
+(always-42 "ignored" "args")            ; => 42
+(map (constantly 0) (list 1 2 3))       ; => (0 0 0)
 ```
 
 ---
 
 ### iterate
 
-Apply a function n times to an initial value.
+Apply function n times to initial value.
 
 **Signature:** `(iterate fn n init)`
 
 **Examples:**
 ```lisp
-(iterate (lambda (x) (* x 2)) 3 1)  ; => 8  (1 -> 2 -> 4 -> 8)
-(iterate inc 5 0)                    ; => 5
+(iterate (lambda (x) (* x 2)) 5 1)     ; => 32  (1 -> 2 -> 4 -> 8 -> 16 -> 32)
+(iterate inc 3 0)                       ; => 3   (0 -> 1 -> 2 -> 3)
+(iterate (lambda (x) (* x x)) 2 2)     ; => 65536  (2 -> 4 -> 16 -> 65536... wait: 2^2=4, 4^2=16)
 ```
 
 **See also:** iterate-until, reduce
@@ -236,14 +306,16 @@ Apply a function n times to an initial value.
 
 ### iterate-until
 
-Apply a function starting from an initial value, collecting values until a predicate becomes true.
+Apply function starting from init, collecting values until predicate becomes true. Includes all values where predicate is false, stops when next value would satisfy predicate.
 
 **Signature:** `(iterate-until fn init pred)`
 
 **Examples:**
 ```lisp
-(iterate-until (lambda (x) (* x 2)) 1 (lambda (x) (> x 10)))
-; => (1 2 4 8)
+(iterate-until (lambda (x) (* x 2)) 1 (lambda (x) (> x 100)))
+  ; => (1 2 4 8 16 32 64)  (stops before 128 which exceeds 100)
+(iterate-until inc 0 (lambda (x) (>= x 5)))
+  ; => (0 1 2 3 4)
 ```
 
 **See also:** iterate, take-while
@@ -252,40 +324,43 @@ Apply a function starting from an initial value, collecting values until a predi
 
 ### memoize
 
-Return a memoized version of a function that caches results for previously seen arguments.
+Memoize function - cache results for previously seen arguments.
 
 **Signature:** `(memoize fn)`
 
 **Examples:**
 ```lisp
-(define slow-fn (memoize (lambda (n)
-  (if (< n 2) n
-      (+ (slow-fn (- n 1)) (slow-fn (- n 2)))))))
-(slow-fn 30)  ; fast due to caching
+(define slow-fib (lambda (n) (if (< n 2) n (+ (slow-fib (- n 1)) (slow-fib (- n 2))))))
+(define fast-fib (memoize slow-fib))
+(fast-fib 10)                          ; => 55
+(fast-fib 10)                          ; => 55 (cached, instant)
 ```
 
 ---
 
 ## Logical Operations
 
-These functions are provided by the `logic` module (`inst/rye/logic.rye`).
+Core logical operations for Rye. Note that `and` and `or` are compiler
+special forms (not functions) with short-circuit evaluation, so they
+are not part of this module.
 
 ### not
 
-Logical negation with Rye truthiness semantics.
+Logical negation with Rye truthiness.
 
 **Signature:** `(not x)`
 
 **Examples:**
 ```lisp
-(not #t)              ; => #f
-(not #f)              ; => #t
-(not 0)               ; => #t (0 is falsy in Rye)
-(not #nil)            ; => #t
-(not "hello")         ; => #f (non-falsy values are truthy)
+(not #t)          ; => #f
+(not #f)          ; => #t
+(not 0)           ; => #t (0 is falsy)
+(not 1)           ; => #f (non-zero is truthy)
+(not #nil)        ; => #t (NULL is falsy)
+(not "hello")     ; => #f (non-empty values are truthy)
 ```
 
-**Note:** In Rye, `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsy. All other values including `""` and `()` are truthy.
+**Note:** Rye follows Scheme-like truthiness: #f/FALSE, #nil/NULL, and 0 are falsy. Everything else is truthy. This differs from R where only FALSE and NULL are falsy.
 
 **See also:** xor, and, or (special forms)
 
@@ -293,20 +368,23 @@ Logical negation with Rye truthiness semantics.
 
 ### xor
 
-Logical exclusive OR with Rye truthiness semantics.
+Logical exclusive OR with Rye truthiness.
 
 **Signature:** `(xor a b)`
 
 **Examples:**
 ```lisp
-(xor #t #f)           ; => #t
-(xor #f #t)           ; => #t
-(xor #t #t)           ; => #f
-(xor #f #f)           ; => #f
-(xor 1 0)             ; => #t (1 is truthy, 0 is falsy)
-(xor #nil 5)          ; => #t (one falsy, one truthy)
+(xor #t #f)       ; => #t
+(xor #f #t)       ; => #t
+(xor #t #t)       ; => #f
+(xor #f #f)       ; => #f
+(xor 1 0)         ; => #t (1 is truthy, 0 is falsy)
+(xor 1 2)         ; => #f (both truthy)
 ```
 
-**Note:** Returns `#t` if exactly one argument is truthy, `#f` otherwise.
+**Note:** Exclusive OR: returns #t when exactly one argument is truthy, #f when both are truthy or both are falsy.
 
 **See also:** not, and, or (special forms)
+
+---
+
