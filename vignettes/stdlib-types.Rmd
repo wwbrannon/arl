@@ -33,7 +33,7 @@ Return #t if x is a proper list (R list or call), not a dotted pair.
 (list? "hello")  ; => #f
 ```
 
-**See also:** pair?, [list-or-pair?](#list-or-pair), [null?](#null)
+**See also:** [pair?](#pair), [list-or-pair?](#list-or-pair), [null?](#null)
 
 ---
 
@@ -48,7 +48,7 @@ Return #t if x is a non-empty list or dotted pair (pairlist cell).
 (list-or-pair? (list 1))  ; => #t
 ```
 
-**See also:** [list?](#list), pair?, [null?](#null), [atom?](#atom)
+**See also:** [list?](#list), [pair?](#pair), [null?](#null), [atom?](#atom)
 
 ---
 
@@ -65,7 +65,7 @@ Return #t for empty list or #nil.
 (null? (list 1))  ; => #f
 ```
 
-**See also:** [nil?](#nil), pair?, [list-or-pair?](#list-or-pair)
+**See also:** [nil?](#nil), [pair?](#pair), [list-or-pair?](#list-or-pair)
 
 ---
 
@@ -114,6 +114,23 @@ Return #t if x is empty (0-length). (Note the empty string "" has length 1 and i
 **Note:** The empty string `""` has length 1 in R and is NOT considered empty!
 
 **See also:** [null?](#null), [length=](stdlib-list-seq.html#length-eq) (in `sequences` module)
+
+---
+
+### pair? {#pair}
+
+Return #t if x is a cons cell (dotted pair).
+
+**Signature:** `(pair? x)`
+
+**Examples:**
+```lisp
+(pair? (cons 1 2))        ; => #t
+(pair? '(1 2 3))          ; => #t
+(pair? '())               ; => #f
+```
+
+**See also:** [list?](#list), [null?](#null), [atom?](#atom)
 
 ---
 

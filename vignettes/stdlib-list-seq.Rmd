@@ -41,7 +41,7 @@ Convert a list to a callable form.
 (call (list '+ 1 2))  ; => language: (+ 1 2)
 ```
 
-**See also:** eval, apply
+**See also:** [eval](stdlib-macro-eval-interop.html#eval), apply
 
 ---
 

@@ -205,7 +205,7 @@ Apply a function with a provided list of arguments.
 
 **Note:** R functions are directly available in Rye without `r/call`. Use `r/call` when you need to look up a function by string name or specify the search environment.
 
-**See also:** [funcall](#funcall), r/eval
+**See also:** [funcall](#funcall), [r/eval](#r-eval)
 
 ---
 
@@ -810,6 +810,196 @@ Assert thunk throws an error.
 ```
 
 **See also:** [assert](#assert), [error](#error)
+
+---
+
+## Evaluation
+
+### eval {#eval}
+
+Evaluate a Rye expression in the current environment.
+
+**Signature:** `(eval expr)`
+
+**Examples:**
+```lisp
+(eval '(+ 1 2))           ; => 3
+(eval '(list 1 2 3))      ; => (1 2 3)
+```
+
+**See also:** [r/eval](#r-eval), [macroexpand](#macroexpand)
+
+---
+
+### r/eval {#r-eval}
+
+Evaluate an R expression directly via R's eval(), bypassing Rye's compiler.
+
+**Signature:** `(r/eval expr)`
+
+**Examples:**
+```lisp
+(r/eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
+```
+
+**Note:** Useful for evaluating raw R calls that use R control flow (for, while) or other constructs that Rye normally overrides.
+
+**See also:** [eval](#eval), [r/call](#r-call)
+
+---
+
+## Macro Utilities
+
+### gensym {#gensym}
+
+Generate a unique uninterned symbol, useful for writing hygienic macros.
+
+**Signature:** `(gensym [prefix])`
+
+**Examples:**
+```lisp
+(gensym)                  ; => G1 (unique symbol)
+(gensym "tmp")            ; => tmp2 (unique with prefix)
+```
+
+**Note:** Each call returns a fresh symbol guaranteed not to conflict with user-defined names. The optional prefix defaults to "G".
+
+**See also:** [macroexpand](#macroexpand), [macroexpand-1](#macroexpand-1)
+
+---
+
+### macro? {#macro}
+
+Return #t if the symbol names a currently-defined macro.
+
+**Signature:** `(macro? sym)`
+
+**Examples:**
+```lisp
+(defmacro my-mac (x) x)
+(macro? 'my-mac)          ; => #t
+(macro? 'car)             ; => #f
+```
+
+---
+
+### macroexpand {#macroexpand}
+
+Recursively expand all macros in expr until no macro calls remain.
+
+**Signature:** `(macroexpand expr)`
+
+**Examples:**
+```lisp
+(defmacro my-when (test body)
+  `(if ,test ,body #nil))
+(macroexpand '(my-when #t 42))  ; => (if #t 42 #nil)
+```
+
+**See also:** [macroexpand-1](#macroexpand-1), [macro?](#macro), [gensym](#gensym)
+
+---
+
+### macroexpand-1 {#macroexpand-1}
+
+Expand only the outermost macro call in expr (one step).
+
+**Signature:** `(macroexpand-1 expr)`
+
+**Examples:**
+```lisp
+(defmacro my-when (test body)
+  `(if ,test ,body #nil))
+(macroexpand-1 '(my-when #t 42))  ; => (if #t 42 #nil)
+```
+
+**See also:** [macroexpand](#macroexpand), [macro?](#macro)
+
+---
+
+## Promises (Lazy Evaluation)
+
+### promise? {#promise}
+
+Return #t if x is a promise (created with `delay`).
+
+**Signature:** `(promise? x)`
+
+**Examples:**
+```lisp
+(define p (delay (+ 1 2)))
+(promise? p)              ; => #t
+(promise? 42)             ; => #f
+```
+
+**See also:** [force](#force), [promise-expr](#promise-expr)
+
+---
+
+### force {#force}
+
+Force a promise, evaluating its delayed expression and returning the result. If x is not a promise, returns x unchanged.
+
+**Signature:** `(force x)`
+
+**Examples:**
+```lisp
+(define p (delay (+ 1 2)))
+(force p)                 ; => 3
+(force 42)                ; => 42 (non-promise passed through)
+```
+
+**See also:** [promise?](#promise), [promise-expr](#promise-expr), delay
+
+---
+
+### promise-expr {#promise-expr}
+
+Extract the unevaluated expression from a promise.
+
+**Signature:** `(promise-expr p)`
+
+**Examples:**
+```lisp
+(define p (delay (+ 1 2)))
+(promise-expr p)          ; => (+ 1 2)
+```
+
+**Note:** Signals an error if p is not a promise.
+
+**See also:** [promise?](#promise), [force](#force), delay
+
+---
+
+## Environment Introspection
+
+### stdlib-env {#stdlib-env}
+
+Return the stdlib environment (the environment where all standard library bindings live).
+
+**Signature:** `(stdlib-env)`
+
+**Examples:**
+```lisp
+(environment? (stdlib-env))  ; => #t
+```
+
+**See also:** [current-env](#current-env)
+
+---
+
+### current-env {#current-env}
+
+Return the current Rye evaluation environment.
+
+**Signature:** `(current-env)`
+
+**Examples:**
+```lisp
+(environment? (current-env))  ; => #t
+```
+
+**See also:** [stdlib-env](#stdlib-env)
 
 ---
 

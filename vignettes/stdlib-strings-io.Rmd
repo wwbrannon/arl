@@ -474,7 +474,7 @@ Parse Rye expression from string.
 (read "(+ 1 2)")  ; => (+ 1 2) (unevaluated)
 ```
 
-**See also:** [read-from-string](#read-from-string), eval
+**See also:** [read-from-string](#read-from-string), [eval](stdlib-macro-eval-interop.html#eval)
 
 ---
 

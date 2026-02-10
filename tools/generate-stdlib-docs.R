@@ -581,6 +581,64 @@ tokenize_params <- function(s) {
 }
 
 # ---------------------------------------------------------------------------
+# Builtins loader
+# ---------------------------------------------------------------------------
+
+#' Load documentation for R-defined builtins from builtins-docs.yml.
+#'
+#' Returns a list keyed by vignette name. Each entry has:
+#'   $functions — named list of function entries (same format as parse_rye_annotations output)
+#'   $sections  — list of section entries in order: list(name, prose)
+load_builtins_docs <- function(path = "tools/builtins-docs.yml") {
+  if (!file.exists(path)) return(list())
+
+  raw <- yaml::yaml.load_file(path)
+  if (is.null(raw$builtins)) return(list())
+
+  by_vignette <- list()
+
+  for (func_name in names(raw$builtins)) {
+    entry <- raw$builtins[[func_name]]
+    vname <- entry$vignette
+    if (is.null(vname)) next
+
+    if (is.null(by_vignette[[vname]])) {
+      by_vignette[[vname]] <- list(functions = list(), sections = list())
+    }
+
+    sec_name <- entry$section
+    if (!is.null(sec_name)) {
+      existing_secs <- vapply(
+        by_vignette[[vname]]$sections,
+        function(s) s$name, character(1)
+      )
+      if (length(existing_secs) == 0 || !sec_name %in% existing_secs) {
+        by_vignette[[vname]]$sections[[length(by_vignette[[vname]]$sections) + 1L]] <- list(
+          name = sec_name, prose = NULL
+        )
+      }
+    }
+
+    # Trim trailing whitespace from multi-line YAML strings
+    examples <- entry$examples
+    if (!is.null(examples)) examples <- sub("\\s+$", "", examples)
+
+    by_vignette[[vname]]$functions[[func_name]] <- list(
+      name         = func_name,
+      description  = if (is.null(entry$description)) "" else entry$description,
+      signature    = if (is.null(entry$signature)) "" else entry$signature,
+      examples     = examples,
+      seealso      = entry$seealso,
+      note         = entry$note,
+      section      = sec_name,
+      section_prose = NULL
+    )
+  }
+
+  by_vignette
+}
+
+# ---------------------------------------------------------------------------
 # Rmd generator
 # ---------------------------------------------------------------------------
 
@@ -590,7 +648,8 @@ tokenize_params <- function(s) {
 #' @param config Config entry with title, modules, preamble
 #' @param all_parsed List of parse results from parse_rye_annotations(), keyed by module name
 #' @return Character string with the full Rmd content
-generate_rmd <- function(vignette_name, config, all_parsed, func_index = list()) {
+generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
+                         builtin_funcs = NULL) {
   title <- config$title
   preamble <- config$preamble
   if (is.null(preamble)) preamble <- ""
@@ -635,6 +694,32 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list())
     }
     for (fn in parsed$functions) {
       all_funcs[[length(all_funcs) + 1L]] <- fn
+    }
+  }
+
+  # Merge R-defined builtin entries into the appropriate sections
+  if (!is.null(builtin_funcs) && length(builtin_funcs$functions) > 0) {
+    # Add new sections that don't already exist
+    existing_sec_names <- vapply(all_sections, function(s) s$name, character(1))
+    for (bsec in builtin_funcs$sections) {
+      if (!bsec$name %in% existing_sec_names) {
+        all_sections[[length(all_sections) + 1L]] <- bsec
+      }
+    }
+    # Insert each builtin after the last function in its section (or at end)
+    for (bfn in builtin_funcs$functions) {
+      insert_pos <- length(all_funcs) + 1L
+      for (idx in rev(seq_along(all_funcs))) {
+        if (identical(all_funcs[[idx]]$section, bfn$section)) {
+          insert_pos <- idx + 1L
+          break
+        }
+      }
+      if (insert_pos > length(all_funcs)) {
+        all_funcs[[length(all_funcs) + 1L]] <- bfn
+      } else {
+        all_funcs <- append(all_funcs, list(bfn), after = insert_pos - 1L)
+      }
     }
   }
 
@@ -762,15 +847,33 @@ generate_all <- function(
   # Check for undocumented exports
   check_undocumented(all_parsed, rye_dir, all_modules)
 
+  # Load R-defined builtin documentation
+  builtins_path <- file.path(dirname(config_path), "builtins-docs.yml")
+  builtins_by_vignette <- load_builtins_docs(builtins_path)
+  n_builtins <- sum(vapply(builtins_by_vignette, function(v) length(v$functions), integer(1)))
+  if (n_builtins > 0) {
+    message("Loaded ", n_builtins, " R-defined builtin entries from ", builtins_path)
+  }
+
   # Build global function index for cross-vignette links
   func_index <- build_func_index(vignettes, all_parsed)
+  # Add builtins to the func index
+  for (vname in names(builtins_by_vignette)) {
+    for (fn in builtins_by_vignette[[vname]]$functions) {
+      func_index[[fn$name]] <- list(
+        vignette = vname,
+        slug     = slugify_func_name(fn$name)
+      )
+    }
+  }
   message("Indexed ", length(func_index), " functions for cross-linking")
 
   # Generate each vignette
   for (vname in names(vignettes)) {
     vconfig <- vignettes[[vname]]
     message("Generating: ", vname, ".Rmd")
-    rmd <- generate_rmd(vname, vconfig, all_parsed, func_index)
+    rmd <- generate_rmd(vname, vconfig, all_parsed, func_index,
+                        builtin_funcs = builtins_by_vignette[[vname]])
     output_file <- file.path(output_dir, paste0(vname, ".Rmd"))
     writeLines(rmd, output_file, useBytes = TRUE)
     message("  Wrote: ", output_file)
