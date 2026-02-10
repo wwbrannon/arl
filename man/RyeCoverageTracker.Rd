@@ -61,6 +61,8 @@ tracker <- RyeCoverageTracker$new(
 \item{\code{all_files}}{Character vector of all .rye files being tracked}
 
 \item{\code{code_lines}}{Environment mapping file paths to integer vectors of code line numbers}
+
+\item{\code{coverable_lines}}{Environment mapping file paths to integer vectors of AST-derived coverable line numbers}
 }
 \if{html}{\out{</div>}}
 }

@@ -16,6 +16,9 @@ reference:
     contents:
       - RyeEngine
       - rye_default_engine
+  - title: Coverage
+    contents:
+      - RyeCoverageTracker
   - title: CLI
     contents:
       - rye_cli
@@ -29,6 +32,8 @@ articles:
       - modules
       - r-interop
       - stdlib-reference
+      - internals
+      - troubleshooting
       - rye-vs-scheme
   - title: Examples
     contents:
@@ -37,6 +42,10 @@ articles:
     contents:
       - stdlib-list-seq
       - stdlib-functional
+      - stdlib-types
+      - stdlib-math
+      - stdlib-equality
+      - stdlib-conversions
       - stdlib-control
       - stdlib-strings-io
       - stdlib-macro-eval-interop

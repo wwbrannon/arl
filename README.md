@@ -123,9 +123,9 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 (seq :from 1 :to 10 :by 2)  ; => 1 3 5 7 9
 
 ; Macros
-(defmacro when (test body)
+(defmacro when (test . body)
   "Evaluate body when test is truthy."
-  `(if ,test ,body #nil))
+  `(if ,test (begin ,@body) #nil))
 
 (when (> 5 3) (print "yes"))  ; => "yes"
 
@@ -245,15 +245,15 @@ helpers and access to all base R functions.
 For detailed documentation of all functions, see the [**Standard Library
 Reference**](docs/stdlib-reference.md).
 
-Additional Rye stdlib modules live in `inst/rye` so you can load just
+Additional Rye stdlib modules live in `inst/rye` so you can import just
 what you need:
 
 ``` lisp
-(load "control")   ; when/unless/and/or/cond/case
-(load "binding")   ; let/let*/letrec
-(load "looping")   ; while/for
-(load "threading") ; -> and ->>
-(load "error")     ; try/catch/finally
+(import control)   ; when/unless/and/or/cond/case
+(import binding)   ; let/let*/letrec
+(import looping)   ; for/loop/recur/until
+(import threading) ; -> and ->>
+(import error)     ; try/catch/finally
 ```
 
 **Modules and loading:** `load` runs a file in the current environment
@@ -296,7 +296,7 @@ algorithms to macro techniques, data pipelines, and report outputs:
 
 ### Semantics
 
-- **Truthiness**: only `#f`/`FALSE` and `#nil`/`NULL` are falsey;
+- **Truthiness**: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsey;
   everything else is truthy.
 - **Lists**: Rye lists are backed by R lists or calls; `car` returns the
   head and `cdr` returns the tail as a list.
@@ -348,10 +348,13 @@ citation("rye")
 
 Rye leverages R’s existing eval/quote/environment system:
 
-1.  **Parser**: Converts S-expressions to R calls
-2.  **Macro expander**: Processes `defmacro` definitions
-3.  **Evaluator**: Handles special forms, delegates to R’s `eval()`
-4.  **R bridge**: Seamless access to all R functions
+1.  **Tokenizer**: Lexical analysis of Rye source
+2.  **Parser**: Converts S-expressions to R calls
+3.  **Macro expander**: Processes `defmacro` definitions
+4.  **Compiler**: Compiles Rye AST to R code, handling all special forms
+    and self-TCO
+5.  **R bridge**: Compiled code is evaluated via R’s `eval()`, with
+    seamless access to all R functions
 
 ## License
 

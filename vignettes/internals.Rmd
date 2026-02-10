@@ -1,0 +1,213 @@
+---
+title: "Compiler and Internals"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Compiler and Internals}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+This vignette explains how Rye code is compiled and executed. It is intended
+for contributors and curious users who want to understand what happens between
+typing an expression and seeing its result.
+
+## Pipeline overview
+
+Every Rye expression passes through five stages:
+
+```
+Source text -> Tokenizer -> Parser -> Macro Expander -> Compiler -> R eval()
+```
+
+1. **Tokenizer** (`R/tokenizer.R`) -- Lexical analysis using regex-based
+   lexing. Produces a flat token stream (LPAREN, RPAREN, SYMBOL, NUMBER,
+   STRING, KEYWORD, etc.).
+
+2. **Parser** (`R/parser.R`) -- Converts the token stream into R call
+   objects representing Rye S-expressions. Reader macros (`'`, `` ` ``,
+   `,`, `,@`) are expanded into explicit `quote`, `quasiquote`, `unquote`,
+   and `unquote-splicing` forms during parsing.
+
+3. **Macro Expander** (`R/macro.R`) -- Walks the parsed AST and expands
+   `defmacro`-defined macros. Supports `macroexpand` (recursive) and
+   `macroexpand-1` (single level). Quasiquote templates are processed by
+   a shared walker (`R/quasiquote.R`).
+
+4. **Compiler** (`R/compiler.R`) -- Translates the macro-expanded Rye AST
+   into R language objects. Handles all special forms, applies
+   optimizations (constant folding, dead code elimination, self-TCO),
+   and optionally inserts coverage instrumentation.
+
+5. **R eval()** -- The compiled R expression is evaluated with R's native
+   `eval()`. Because Rye compiles to R code, all R functions and data
+   structures are directly accessible.
+
+## What "compilation" means
+
+Rye does not produce bytecode or machine code. Instead, the compiler
+translates Rye AST nodes into R `language` objects -- the same objects
+you get from `quote()` in R. For example:
+
+```lisp
+(define x (+ 1 2))
+```
+
+compiles to something like:
+
+```r
+assign("x", 1 + 2, envir = .rye_env)
+```
+
+The result is a single R expression that can be passed to `eval()`. This
+approach piggybacks on R's own evaluation machinery, giving Rye access to
+R's scoping, garbage collection, and entire function library for free.
+
+## Inspecting the compilation pipeline
+
+Use `engine$inspect_compilation(text)` to see each stage:
+
+```{r eval=FALSE}
+engine <- RyeEngine$new()
+info <- engine$inspect_compilation("(when #t (+ 1 2))")
+
+info$parsed           # Rye AST after parsing
+info$expanded         # After macro expansion
+info$compiled         # Compiled R expression
+info$compiled_deparsed # R source as a character vector
+```
+
+The `compiled_deparsed` field is especially useful for understanding
+what R code the compiler generates.
+
+## Special form dispatch
+
+The compiler's core is a dispatch table in `compile_impl` (line ~191 of
+`compiler.R`). When it encounters a call, it checks the operator against
+known special forms:
+
+- `quote` -- return the quoted value as-is
+- `if` -- conditional with truthiness wrapping (`.rye_true_p()`)
+- `define` -- binding with self-TCO detection for lambda definitions
+- `set!` -- mutation of existing bindings
+- `lambda` -- closure creation with parameter patterns and optional TCO
+- `begin` -- sequential evaluation (compiled to R `{ }` blocks)
+- `defmacro` -- macro definition (registers with the macro expander)
+- `while`, `and`, `or` -- control flow compiled to R equivalents
+- `quasiquote` -- template expansion with unquote/splicing
+- `load`, `run`, `import`, `module` -- file and module operations
+- `help` -- dispatches to the help system
+- `~` -- R formula construction
+- `::`, `:::` -- R package namespace access
+
+Anything not in this list falls through to `compile_application`, which
+compiles a regular function call.
+
+## Self-tail-call optimization
+
+When the compiler sees `(define name (lambda ...))` and the lambda body
+contains self-calls in tail position, it rewrites the entire function as a
+`while(TRUE)` loop. Tail calls become parameter reassignments followed by
+`next`, eliminating stack growth.
+
+The key methods:
+
+- `has_self_tail_calls` -- checks if a lambda body has self-recursive
+  tail calls
+- `expr_has_self_tail_call` -- recursively walks the AST looking for
+  self-calls in tail positions (through `if`, `begin`, `cond`, `let`,
+  `let*`, `letrec`)
+- `compile_self_tail_call` -- transforms the recursive call into
+  parameter reassignments within the loop body
+- `compile_tail_if`, `compile_tail_begin` -- ensure both branches of
+  `if` and the last expression of `begin` get tail-position treatment
+
+For example:
+
+```lisp
+(define factorial
+  (lambda (n acc)
+    (if (< n 2)
+      acc
+      (factorial (- n 1) (* acc n)))))
+```
+
+compiles to something like:
+
+```r
+function(n, acc) {
+  while (TRUE) {
+    if (.rye_true_p(n < 2)) {
+      return(acc)
+    } else {
+      .tco_n <- n - 1
+      .tco_acc <- acc * n
+      n <- .tco_n
+      acc <- .tco_acc
+      next
+    }
+  }
+}
+```
+
+Self-TCO works with destructuring parameters, keyword arguments, and rest
+parameters. Since self-calls become loop iterations, recursive frames do not
+appear in stack traces -- only the outermost call is visible.
+
+## Constant folding and dead code elimination
+
+The compiler evaluates pure function calls on compile-time literals at
+compile time. This is controlled by `try_constant_fold`, which maintains
+a whitelist of safe functions (arithmetic, comparisons, math, string
+operations).
+
+When an `if` test is a compile-time constant, the compiler eliminates the
+dead branch entirely (`eval_constant_test` in `compile_if`). For example:
+
+```lisp
+(if #t "yes" "no")
+```
+
+compiles to just `"yes"`.
+
+Constant folding is automatically disabled when coverage tracking is
+active, because folding would bypass the instrumented function bodies
+and produce inaccurate coverage numbers.
+
+## Coverage instrumentation
+
+When a `RyeCoverageTracker` is attached to the engine, the compiler
+inserts tracking calls at three points:
+
+1. **Statement-level:** Before each statement in a lambda body, a
+   `.rye_coverage_track(file, start_line, end_line)` call is interleaved.
+
+2. **Branch-level:** Both branches of `if` expressions are wrapped with
+   coverage calls, tracking which branches execute.
+
+3. **If-test narrowing:** For `if` forms, coverage is narrowed to just
+   the test line (since branches are tracked separately).
+
+The tracker maintains a set of coverable lines derived from AST analysis,
+and coverage reports compare executed lines against this set.
+
+## Compiled vs interpreted fallback
+
+The compiler returns `NULL` when it cannot compile an expression (e.g.,
+unrecognized forms or constructs that require interpreter features). In
+this case, the engine falls back to the interpreted evaluation path. The
+`last_error` field on the compiler records why compilation failed.
+
+In practice, the compiler handles all standard Rye code. The fallback
+exists as a safety net for edge cases.
+
+## Related guides
+
+- [Getting Started](getting-started.html)
+- [Macros and Quasiquote](macros.html)
+- [Standard Library Overview](stdlib-reference.html)

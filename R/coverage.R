@@ -9,6 +9,7 @@
 #' @field enabled Logical flag to enable/disable tracking
 #' @field all_files Character vector of all .rye files being tracked
 #' @field code_lines Environment mapping file paths to integer vectors of code line numbers
+#' @field coverable_lines Environment mapping file paths to integer vectors of AST-derived coverable line numbers
 #'
 #' @examples
 #' \dontrun{

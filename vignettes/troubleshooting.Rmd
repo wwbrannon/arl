@@ -1,0 +1,150 @@
+---
+title: "Troubleshooting"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Troubleshooting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Common pitfalls and how to resolve them.
+
+## Zero is falsy
+
+Unlike many Lisps, Rye treats `0` as falsy (along with `#f`/`FALSE`,
+`#nil`/`NULL`). This matches R's convention where `0` is equivalent to
+`FALSE`.
+
+```lisp
+(if 0 "truthy" "falsy")   ; => "falsy"
+(if 1 "truthy" "falsy")   ; => "truthy"
+(when 0 (print "nope"))   ; => #nil
+```
+
+If you need to distinguish zero from false, test explicitly:
+
+```lisp
+(if (not (nil? x)) ...)   ; check for nil/NULL
+(if (number? x) ...)      ; check for any number
+```
+
+## Use `#t` / `#f`, not `T` / `F`
+
+In R, `T` and `F` are ordinary variables (not reserved words) that happen
+to be bound to `TRUE` and `FALSE` by default. In Rye, use the literal
+boolean syntax instead:
+
+```lisp
+;; Correct
+(if #t "yes" "no")
+(define flag #f)
+
+;; Fragile -- T/F can be rebound
+(define T 42)
+(if T "oops" "no")   ; => "oops" (42 is truthy)
+```
+
+## `load` vs `import` vs `run`
+
+These three forms load code differently:
+
+| Form | Scope | Definitions visible? | Use case |
+|------|-------|---------------------|----------|
+| `(load "file.rye")` | Current env | Yes | Source a script into REPL |
+| `(import module)` | Current scope | Exports only | Use a module's public API |
+| `(run "file.rye")` | Isolated child | No | Execute a script without side effects |
+
+From R:
+
+- `engine$load_file(path)` -- isolated scope (like `run`)
+- `engine$load_file_in_env(path, engine$env$env)` -- definitions visible
+  (like `load`)
+
+If you get "symbol not found" after loading a file, you may have used
+`run` or `engine$load_file()` when you needed `load` or
+`engine$load_file_in_env()`.
+
+## Self-TCO only works with the `define`/`lambda` form
+
+The compiler's self-tail-call optimization requires the specific pattern
+`(define name (lambda ...))`. Other definition styles are not optimized:
+
+```lisp
+;; TCO works here
+(define factorial
+  (lambda (n acc)
+    (if (< n 2) acc
+      (factorial (- n 1) (* acc n)))))
+
+;; TCO does NOT apply -- anonymous lambda
+((lambda (n acc)
+   (if (< n 2) acc
+     ;; This will overflow the stack for large n
+     ...)) 100000 1)
+```
+
+For mutual recursion or cases where self-TCO does not apply, use
+`loop`/`recur` from the `looping` module:
+
+```lisp
+(loop ((i n) (acc 1))
+  (if (< i 2) acc
+    (recur (- i 1) (* acc i))))
+```
+
+## Macro hygiene: use `gensym` for temporaries
+
+Macros that introduce temporary bindings should use `gensym` to avoid
+name collisions with user code:
+
+```lisp
+;; BAD -- 'tmp' could shadow a user variable
+(defmacro my-swap (a b)
+  `(let ((tmp ,a))
+     (set! ,a ,b)
+     (set! ,b tmp)))
+
+;; GOOD -- unique symbol avoids collision
+(defmacro my-swap (a b)
+  (let ((tmp (gensym "tmp")))
+    `(let ((,tmp ,a))
+       (set! ,a ,b)
+       (set! ,b ,tmp))))
+```
+
+## Module not found errors
+
+When `(import name)` fails, check:
+
+1. **Stdlib modules** are resolved from `inst/rye/` in the installed
+   package. They are loaded automatically by the engine.
+
+2. **User modules** are resolved relative to the current working
+   directory. Make sure your file is named `name.rye` and is in the CWD.
+
+3. **String imports** (`(import "path/to/file.rye")`) use path-only
+   resolution -- no stdlib search.
+
+## Stack traces with TCO-optimized functions
+
+When a TCO-optimized function errors, the stack trace shows only the
+outermost call frame because the recursive calls have been compiled into
+a loop. To debug:
+
+1. Use `engine$inspect_compilation()` to see the compiled R code.
+2. Temporarily add `(print ...)` statements inside the function body.
+3. Or define the function without TCO (e.g., as a `let`-bound lambda)
+   to get full stack traces during debugging.
+
+## Related guides
+
+- [Getting Started](getting-started.html)
+- [Compiler and Internals](internals.html)
+- [Macros and Quasiquote](macros.html)
+- [Modules and Imports](modules.html)

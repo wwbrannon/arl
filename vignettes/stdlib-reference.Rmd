@@ -97,6 +97,14 @@ engine <- RyeEngine$new()
 
 `gensym`, `macro?`, `eval`, `macroexpand`, `macroexpand-1`
 
+## Sorting
+
+`sort`, `sort-by`, `merge`, `stable-sort`
+
+## Help and documentation
+
+`help`, `doc`, `doc!`
+
 ## Interop helpers
 
 `dict`, `hash`, `dict?`, `dict-get`, `dict-set`, `dict-remove`,
@@ -125,6 +133,7 @@ engine loads these modules in dependency order when initializing.
 - `control.rye`
 - `functional.rye`
 - `sequences.rye`
+- `sort.rye`
 - `struct.rye`
 - `error.rye`
 - `threading.rye`

@@ -19,9 +19,9 @@ Macros let you transform code before evaluation. Rye supports `defmacro`,
 ## Defining a macro
 
 ```lisp
-(defmacro when (test body)
-  "Evaluate body when test is truthy."
-  `(if ,test ,body #nil))
+(defmacro when (test . body)
+  "Evaluate body forms when test is truthy."
+  `(if ,test (begin ,@body) #nil))
 ```
 
 With that macro defined, you can write:
@@ -44,9 +44,9 @@ You can attach a docstring by adding a leading string literal in the macro body:
 Macros can take any number of parameters:
 
 ```lisp
-(defmacro unless (test body)
-  "Evaluate body when test is falsy."
-  `(if ,test #nil ,body))
+(defmacro unless (test . body)
+  "Evaluate body forms when test is falsy."
+  `(if ,test #nil (begin ,@body)))
 ```
 
 ## Generating symbols safely
@@ -91,7 +91,7 @@ You can inspect expansions from R using `engine$macroexpand()`:
 
 ```{r eval=FALSE}
 engine <- RyeEngine$new()
-engine$eval(engine$read("(defmacro when (test body) \"Evaluate body when test is truthy.\" `(if ,test ,body #nil))")[[1]])
+engine$eval(engine$read("(defmacro when (test . body) \"Evaluate body forms when test is truthy.\" `(if ,test (begin ,@body) #nil))")[[1]])
 engine$macroexpand(engine$read("(when #t 1)")[[1]])
 ```
 

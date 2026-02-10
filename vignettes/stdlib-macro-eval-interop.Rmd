@@ -135,6 +135,41 @@ Defines a simple S3-backed struct constructor, predicate, and accessors.
 
 ---
 
+## Documentation Helpers
+
+### doc
+
+Retrieves the docstring attached to a function.
+
+**Signature:** `(doc fn)`
+
+**Examples:**
+```lisp
+(doc map)      ; => "Apply fn to each element of lst."
+(doc filter)   ; => "Return elements of lst satisfying pred."
+```
+
+**See also:** doc!, help
+
+---
+
+### doc!
+
+Attaches a docstring to an existing function.
+
+**Signature:** `(doc! fn "docstring")`
+
+**Examples:**
+```lisp
+(define add (lambda (a b) (+ a b)))
+(doc! add "Add two numbers.")
+(doc add)   ; => "Add two numbers."
+```
+
+**See also:** doc, help
+
+---
+
 ## Interop Helpers
 
 ### dict
@@ -151,8 +186,136 @@ Creates a hash-backed dictionary.
 
 **See also:** hash
 
-**Related helpers:** dict?, dict-get, dict-set, dict-remove, dict-keys,
-dict-values, dict-has?, dict-merge
+---
+
+### dict?
+
+Tests if a value is a dictionary.
+
+**Signature:** `(dict? x)`
+
+**Examples:**
+```lisp
+(dict? (dict :a 1))  ; => #t
+(dict? (list 1 2))   ; => #f
+```
+
+---
+
+### dict-get
+
+Gets the value for a key, or a default if missing.
+
+**Signature:** `(dict-get dict key)` or `(dict-get dict key default)`
+
+**Examples:**
+```lisp
+(define d (dict :name "Alice" :age 30))
+(dict-get d "name")         ; => "Alice"
+(dict-get d "missing" 0)    ; => 0
+```
+
+**See also:** dict-set, dict-has?
+
+---
+
+### dict-set
+
+Sets a key to a value in the dictionary (mutates and returns the dict).
+
+**Signature:** `(dict-set dict key value)`
+
+**Examples:**
+```lisp
+(define d (dict :a 1))
+(dict-set d "b" 2)
+(dict-get d "b")  ; => 2
+```
+
+**See also:** dict-get, dict-remove
+
+---
+
+### dict-remove
+
+Removes a key from the dictionary (mutates and returns the dict).
+
+**Signature:** `(dict-remove dict key)`
+
+**Examples:**
+```lisp
+(define d (dict :a 1 :b 2))
+(dict-remove d "a")
+(dict-has? d "a")  ; => #f
+```
+
+**See also:** dict-set
+
+---
+
+### dict-keys
+
+Returns a list of the dictionary's keys.
+
+**Signature:** `(dict-keys dict)`
+
+**Examples:**
+```lisp
+(dict-keys (dict :a 1 :b 2))  ; => ("a" "b")
+```
+
+**See also:** dict-values
+
+---
+
+### dict-values
+
+Returns a list of the dictionary's values.
+
+**Signature:** `(dict-values dict)`
+
+**Examples:**
+```lisp
+(dict-values (dict :a 1 :b 2))  ; => (1 2)
+```
+
+**See also:** dict-keys
+
+---
+
+### dict-has?
+
+Tests if a dictionary contains a key.
+
+**Signature:** `(dict-has? dict key)`
+
+**Examples:**
+```lisp
+(define d (dict :x 10))
+(dict-has? d "x")  ; => #t
+(dict-has? d "y")  ; => #f
+```
+
+**See also:** dict-get
+
+---
+
+### dict-merge
+
+Merges multiple dictionaries. Later values override earlier ones.
+
+**Signature:** `(dict-merge dict1 dict2 ...)`
+
+**Examples:**
+```lisp
+(define d1 (dict :a 1 :b 2))
+(define d2 (dict :b 99 :c 3))
+(define merged (dict-merge d1 d2))
+(dict-get merged "b")  ; => 99
+(dict-get merged "c")  ; => 3
+```
+
+**See also:** dict, dict-set
 
 ---
 
@@ -169,8 +332,125 @@ Creates a hash-backed set.
 (set-contains? s 9)   ; => #f
 ```
 
-**Related helpers:** set?, set-add, set-remove, set-contains?,
-set-union, set-intersection, set-difference
+---
+
+### set?
+
+Tests if a value is a set.
+
+**Signature:** `(set? x)`
+
+**Examples:**
+```lisp
+(set? (set 1 2 3))  ; => #t
+(set? (list 1 2))   ; => #f
+```
+
+---
+
+### set-add
+
+Adds an item to a set (mutates and returns the set).
+
+**Signature:** `(set-add set item)`
+
+**Examples:**
+```lisp
+(define s (set 1 2))
+(set-add s 3)
+(set-contains? s 3)  ; => #t
+```
+
+**See also:** set-remove
+
+---
+
+### set-remove
+
+Removes an item from a set (mutates and returns the set).
+
+**Signature:** `(set-remove set item)`
+
+**Examples:**
+```lisp
+(define s (set 1 2 3))
+(set-remove s 2)
+(set-contains? s 2)  ; => #f
+```
+
+**See also:** set-add
+
+---
+
+### set-contains?
+
+Tests if a set contains an item.
+
+**Signature:** `(set-contains? set item)`
+
+**Examples:**
+```lisp
+(define s (set 1 2 3))
+(set-contains? s 2)  ; => #t
+(set-contains? s 9)  ; => #f
+```
+
+---
+
+### set-union
+
+Returns the union of two sets.
+
+**Signature:** `(set-union a b)`
+
+**Examples:**
+```lisp
+(define a (set 1 2))
+(define b (set 2 3))
+(define u (set-union a b))
+(set-contains? u 1)  ; => #t
+(set-contains? u 3)  ; => #t
+```
+
+**See also:** set-intersection, set-difference
+
+---
+
+### set-intersection
+
+Returns the intersection of two sets.
+
+**Signature:** `(set-intersection a b)`
+
+**Examples:**
+```lisp
+(define a (set 1 2 3))
+(define b (set 2 3 4))
+(define i (set-intersection a b))
+(set-contains? i 2)  ; => #t
+(set-contains? i 1)  ; => #f
+```
+
+**See also:** set-union, set-difference
+
+---
+
+### set-difference
+
+Returns items in the first set that are not in the second.
+
+**Signature:** `(set-difference a b)`
+
+**Examples:**
+```lisp
+(define a (set 1 2 3))
+(define b (set 2 3 4))
+(define d (set-difference a b))
+(set-contains? d 1)  ; => #t
+(set-contains? d 2)  ; => #f
+```
+
+**See also:** set-union, set-intersection
 
 ---
 
@@ -405,8 +685,16 @@ Partially applies arguments to a function.
 ### Macro System
 `gensym`, `macro?`, `eval`, `macroexpand`, `macroexpand-1`
 
+### Documentation
+`help`, `doc`, `doc!`
+
+### Sorting
+`sort`, `sort-by`, `merge`, `stable-sort`
+
 ### Interop
-`dict`, `hash`, `r/call`
+`dict`, `hash`, `dict?`, `dict-get`, `dict-set`, `dict-remove`, `dict-keys`, `dict-values`, `dict-has?`, `dict-merge`,
+`set`, `set?`, `set-add`, `set-remove`, `set-contains?`, `set-union`, `set-intersection`, `set-difference`,
+`r/call`
 
 ### Threading
 `->`, `->>`

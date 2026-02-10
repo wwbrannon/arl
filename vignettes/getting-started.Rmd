@@ -95,17 +95,21 @@ engine$load_file_in_env("script.rye", engine$env$env)
 
 ## Loading stdlib modules
 
-The engine loads the base stdlib. You can load extra modules from `inst/rye`:
+The engine loads all stdlib modules automatically, so functions like `when`,
+`let`, `for`, `->`, and `try` are available immediately. If you want to
+understand the module structure or are working with a bare engine, you can
+import modules explicitly:
 
 ```lisp
-(load "control")
-(load "binding")
-(load "looping")
-(load "threading")
-(load "error")
+(import control)   ; when/unless/cond/case
+(import binding)   ; let/let*/letrec
+(import looping)   ; for/loop/recur/until
+(import threading) ; -> and ->>
+(import error)     ; try/catch/finally
 ```
 
-You can also use `import` to load modules with explicit exports. See [Modules and Imports](modules.html) for details on creating and importing modules.
+See [Modules and Imports](modules.html) for details on creating and importing
+modules.
 
 ## Core syntax
 
@@ -142,6 +146,28 @@ You can also use `import` to load modules with explicit exports. See [Modules an
 
 For more details on the standard library and macros, see the other vignettes in
 this package.
+
+## Getting help
+
+Rye has a built-in help system. Use `help` with a string to look up any
+special form, macro, or function:
+
+```lisp
+(help "define")   ; special form
+(help "when")     ; macro -- shows docstring and usage
+(help "map")      ; stdlib function
+```
+
+For macros and functions defined with docstrings, `help` shows the signature
+and description automatically. It also falls through to R's built-in help for
+R functions.
+
+You can also work with docstrings programmatically:
+
+```lisp
+(doc map)              ; retrieve the docstring from a function
+(doc! my-fn "Does X") ; attach a docstring to an existing function
+```
 
 ## Next steps
 
