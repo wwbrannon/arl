@@ -74,6 +74,15 @@ test_that("numeric operations handle boundary conditions", {
   expect_true(env$`=`(1.0, 1.0))
 })
 
+test_that("division by zero returns Inf", {
+  env <- new.env(parent = emptyenv())
+  stdlib_env(engine, env)
+
+  # In R, division by zero returns Inf, not an error
+  expect_equal(engine$eval_in_env(engine$read("(/ 1 0)")[[1]], env), Inf)
+  expect_equal(engine$eval_in_env(engine$read("(/ -10 0)")[[1]], env), -Inf)
+})
+
 # ============================================================================
 # Coverage: Variadic comparison operators with 1 arg (error paths)
 # ============================================================================

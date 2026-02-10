@@ -125,14 +125,15 @@ test_that("load with runtime error in module", {
   module_path <- file.path(temp_dir, "test_runtime_error.rye")
   writeLines(c(
     '(define x 10)',
-    '(/ x 0)'  # Division by zero
+    '(stop "deliberate runtime error")'
   ), module_path)
 
   engine <- make_engine()
 
-  # In R, division by zero returns Inf, not an error
-  result <- engine$eval_text(sprintf('(load "%s")', module_path))
-  expect_equal(result, Inf)
+  expect_error(
+    engine$eval_text(sprintf('(load "%s")', module_path)),
+    "deliberate runtime error"
+  )
 
   # Clean up
   unlink(module_path)

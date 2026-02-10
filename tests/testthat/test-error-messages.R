@@ -9,13 +9,6 @@ test_that("undefined variable error contains variable name", {
   )
 })
 
-test_that("division by zero returns Inf", {
-  engine <- make_engine()
-  # In R, division by zero returns Inf, not an error
-  result <- engine$eval_text("(/ 1 0)")
-  expect_equal(result, Inf)
-})
-
 test_that("wrong number of arguments error", {
   engine <- make_engine()
   # (+) with 0 args returns identity element 0
