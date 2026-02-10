@@ -11,6 +11,74 @@ home:
   title: Rye
   description: A Lisp dialect implemented in and with access to R.
 
+navbar:
+  components:
+    get-started:
+      text: Get Started
+      href: articles/getting-started.html
+    guides:
+      text: Guides
+      menu:
+        - text: "Language"
+        - text: Macros
+          href: articles/macros.html
+        - text: Modules
+          href: articles/modules.html
+        - text: R Interop
+          href: articles/r-interop.html
+        - text: "---------"
+        - text: "Deep Dives"
+        - text: Internals
+          href: articles/internals.html
+        - text: Troubleshooting
+          href: articles/troubleshooting.html
+        - text: Rye vs Scheme
+          href: articles/rye-vs-scheme.html
+    stdlib:
+      text: Standard Library
+      menu:
+        - text: Overview
+          href: articles/stdlib-reference.html
+        - text: "---------"
+        - text: Lists & Sequences
+          href: articles/stdlib-list-seq.html
+        - text: Functional Programming
+          href: articles/stdlib-functional.html
+        - text: Types & Predicates
+          href: articles/stdlib-types.html
+        - text: Math
+          href: articles/stdlib-math.html
+        - text: Equality & Comparison
+          href: articles/stdlib-equality.html
+        - text: Conversions
+          href: articles/stdlib-conversions.html
+        - text: Control Flow
+          href: articles/stdlib-control.html
+        - text: Strings & I/O
+          href: articles/stdlib-strings-io.html
+        - text: Macros, Eval & Interop
+          href: articles/stdlib-macro-eval-interop.html
+    examples:
+      text: Examples
+      href: articles/examples.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    changelog:
+      text: Changelog
+      href: news/index.html
+  structure:
+    left:
+      - get-started
+      - guides
+      - stdlib
+      - examples
+      - reference
+    right:
+      - changelog
+      - search
+      - github
+
 reference:
   - title: Core engine
     contents:
@@ -26,6 +94,7 @@ reference:
 
 articles:
   - title: Guides
+    desc: Step-by-step guides for learning Rye.
     contents:
       - getting-started
       - macros
@@ -36,9 +105,11 @@ articles:
       - troubleshooting
       - rye-vs-scheme
   - title: Examples
+    desc: Complete working programs demonstrating Rye features.
     contents:
       - examples
-  - title: Reference
+  - title: Standard Library Reference
+    desc: Per-function reference for Rye's standard library.
     contents:
       - stdlib-list-seq
       - stdlib-functional
