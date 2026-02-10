@@ -36,6 +36,7 @@
   ;; Helper: Check if a form should skip recur rewriting
   (define skip-rewrite-form?
     (lambda (head)
+      "Check if a form should skip recur rewriting (quote, lambda, defmacro, loop)."
       (if (symbol? head)
         (begin
           (define name (as.character head))
@@ -49,12 +50,14 @@
   ;; Helper: Validate binding pairs
   (define valid-binding-pair?
     (lambda (pair)
+      "Validate that a binding pair is a list of length 2."
       (if (list-or-pair? pair)
         (isTRUE (= (length pair) 2))
         #f)))
 
   (define valid-bindings?
     (lambda (bindings)
+      "Validate that bindings is a list of valid binding pairs."
       (if (list? bindings)
         (every? valid-binding-pair? bindings)
         #f)))
@@ -62,6 +65,7 @@
   ;; Helper: Transform recur calls in an expression
   (define rewrite-recur
     (lambda (expr vars recur-flag recur-vals)
+      "Transform recur calls in an expression tree."
       (if (list? expr)
         (begin
           (define head (car expr))
@@ -89,6 +93,7 @@
   ;; Helper: Generate variable rebinding code (set! so LHS is not evaluated)
   (define generate-rebindings
     (lambda (vars recur-vals)
+      "Generate code to rebind loop variables from recur-vals list."
       (define index-op (as.symbol "[["))
       (define rebinds
         (map (lambda (pair)

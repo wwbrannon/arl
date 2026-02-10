@@ -122,6 +122,7 @@
 
   (define append
     (lambda (. lists)
+      "Concatenate multiple lists into one."
       (define result (list))
       (define remaining (__as-list lists))
       (while (__r> (__rlength remaining) 0)
@@ -184,6 +185,7 @@
   ;; __r== can return a vector; treat as match only when scalar #t or all true.
   (define __r==-pred
     (lambda (a b)
+      "Wrap R's == to handle vector results; returns #t only if all elements match."
       (define comp-result (__r== a b))
       (if (r/call "is.logical" (list comp-result))
         (if (__r> (r/call "length" (list comp-result)) 1)
@@ -193,6 +195,7 @@
 
   (define __assoc-by-pred
     (lambda (key alist pred)
+      "Find first alist entry with matching key using given predicate."
       (define result #nil)
       (define remaining (__as-list alist))
       (while (and (not (null? remaining)) (not result))

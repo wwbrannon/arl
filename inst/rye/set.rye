@@ -1,7 +1,8 @@
 ;;; Rye Standard Library - Set (Hash Table)
 
 (module set
-  (export set set? set-add set-remove set-contains? set-union set-intersection set-difference)
+  (export set set? set-add set-remove set-contains? set-union set-intersection
+          set-difference)
 
   (import types)
   (import list)

@@ -2,7 +2,7 @@
 
 (module control
   (export when unless cond case try*)
-  ;; Note: 'and' and 'or' removed from exports - now handled as compiler special forms
+  ;; Note: 'and' and 'or' removed from exports - now compiler special forms
 
   (import types)
   (import list)
@@ -54,8 +54,7 @@
                    ,(__case-clauses key-sym (car rest) (cdr rest))))))))))
 
 (defmacro case (key clause . rest)
-  "Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...).
-   Key expression is evaluated only once."
+  "Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). Key expression is evaluated only once."
   (define key-sym (gensym "case-key"))
   `((lambda (,key-sym) ,(__case-clauses key-sym clause rest)) ,key))
 

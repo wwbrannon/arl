@@ -1,7 +1,8 @@
 ;;; Rye Standard Library - String Helpers
 
 (module strings
-  (export string-join string-split trim format string-contains? string-match? string-find string-replace string-replace-all string-append ->string
+  (export string-join string-split trim format string-contains? string-match?
+          string-find string-replace string-replace-all string-append ->string
           char-at string-ref
           substring string-length
           string-upcase string-downcase string-titlecase
@@ -23,8 +24,9 @@
       "Split string on separator."
       (unname (r/call "[[" (list (strsplit x :split sep :fixed #t) 1)))))
 
-  ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
-  ;; to avoid unnecessary stack frames. Docstrings attached using doc!.
+  ;; DESIGN NOTE: Simple one-argument pass-through functions use direct
+  ;; assignment to avoid unnecessary stack frames.
+  ;; Docstrings attached using doc!.
 
   (define trim trimws)
   (doc! trim "Trim leading and trailing whitespace.")
@@ -71,9 +73,9 @@
   (define ->string as.character)
   (doc! ->string "Convert value to string representation.")
 
-  ;; ============================================================================
+  ;; ==========================================================================
   ;; Phase 3: Extended String Operations
-  ;; ============================================================================
+  ;; ==========================================================================
 
   ;; Character access
   (define char-at

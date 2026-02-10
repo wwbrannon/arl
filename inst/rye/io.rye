@@ -1,7 +1,9 @@
 ;;; Rye Standard Library - IO Helpers
 
 (module io
-  (export __normalize-line-vector __normalize-lines read-line read-file read-lines write-file write-lines append-file file-exists?
+  (export __normalize-line-vector __normalize-lines
+          read-line read-file read-lines
+          write-file write-lines append-file file-exists?
           read print newline
           read-from-string write-string
           file-size file-modified-time file-delete
@@ -84,9 +86,9 @@
       "Return #t if file exists."
       (isTRUE (file.exists path))))
 
-  ;; ============================================================================
+  ;; ==========================================================================
   ;; Phase 5: I/O and System Operations
-  ;; ============================================================================
+  ;; ==========================================================================
 
   ;; Get R base functions to avoid infinite recursion
   (define __rprint (get "print" :envir (baseenv)))

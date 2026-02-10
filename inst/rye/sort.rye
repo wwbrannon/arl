@@ -50,8 +50,7 @@
 
   (define merge
     (lambda (list1 list2 comparator)
-      "Merge two sorted lists into one sorted list.
-       Stable: when elements are equal (neither comparator direction is true), takes from list1 first."
+      "Merge two sorted lists into one sorted list. Stable: when elements are equal (neither comparator direction is true), takes from list1 first."
       (define l1 (__as-list list1))
       (define l2 (__as-list list2))
       (define acc (list))

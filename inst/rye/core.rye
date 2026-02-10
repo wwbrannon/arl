@@ -1,9 +1,12 @@
 ;;; Rye Standard Library - Core Functions
 
 (module core
-  (export error warn
-            identity values values? call-with-values call/cc call-with-current-continuation doc! doc
-            funcall r/call get license)
+  (export license
+          error warn
+          identity values values?
+          call-with-values call/cc call-with-current-continuation
+          doc! doc
+          funcall r/call get)
 
   (import _r)
 

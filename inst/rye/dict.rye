@@ -1,7 +1,8 @@
 ;;; Rye Standard Library - Dictionary (Hash Table)
 
 (module dict
-  (export dict hash dict? dict-get dict-set dict-remove dict-keys dict-values dict-has? dict-merge)
+  (export dict hash dict? dict-get dict-set dict-remove dict-keys dict-values
+          dict-has? dict-merge)
 
   (import types)
   (import list)

@@ -60,7 +60,8 @@
       (if (not (is.null fn-tag))
         fn-tag
         (begin
-          ;; Check dotted pair before environment (R6 instances are environments in R)
+          ;; Check dotted pair before environment
+          ;; (R6 instances are environments in R)
           (if (pair? x)
               (begin
                 (define parts (__cons-parts x))

@@ -11,8 +11,9 @@
   (import _r)
   (import core)  ; for doc!
 
-  ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
-  ;; to avoid unnecessary stack frames. Docstrings attached using doc!.
+  ;; DESIGN NOTE: Simple one-argument pass-through functions use direct
+  ;; assignment to avoid unnecessary stack frames.
+  ;; Docstrings attached using doc!.
 
   (define list?
     (lambda (x)
@@ -113,7 +114,7 @@
 
   (define empty?
     (lambda (x)
-     "Return #t if x is empty (0-length).  (Note the empty string \"\" has length 1 and is not \"empty\"!)"
+     "Return #t if x is empty (0-length). (Note the empty string \"\" has length 1 and is not \"empty\"!)"
       (isTRUE (== (length x) 0))))
 
   ;; Type introspection

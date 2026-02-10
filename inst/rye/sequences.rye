@@ -112,8 +112,7 @@
 
   (define member
     (lambda (x lst (use-identical #f))
-      "Return sublist of lst starting at first element equal to x, or #f if not found.
-       Uses equal? by default; pass :use-identical #t for R's identical()."
+      "Return sublist of lst starting at first element equal to x, or #f if not found. Uses equal? by default; pass :use-identical #t for R's identical()."
       (define items (__as-list lst))
       (define result #f)
       (define remaining items)

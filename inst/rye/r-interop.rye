@@ -5,7 +5,8 @@
 ;;; appropriately before passing them to the underlying R functions.
 
 (module r-interop
-  (export suppressWarnings suppressMessages with within subset transform substitute)
+  (export suppressWarnings suppressMessages with within subset
+          transform substitute)
 
   (import core)
 
@@ -43,7 +44,8 @@
     (lambda (. args)
       "transform is difficult to implement - use within() or dplyr::mutate() instead."
       (error (string-append
-        "transform() is difficult to implement and is not yet supported due to its use of R's named argument syntax.\n"
+        "transform() is difficult to implement and is not yet supported due to
+         its use of R's named argument syntax.\n"
         "Alternatives:\n"
         "  - Use (within df ...) for simple transformations\n"
         "  - Use dplyr::mutate() for more complex cases\n"
@@ -56,7 +58,8 @@
       (if (= nargs 1)
         (error (string-append
           "substitute(x) doesn't work in Rye functions due to eager evaluation.\n"
-          "Rye evaluates arguments before calling functions, so there's no unevaluated expression to capture.\n"
+          "Rye evaluates arguments before calling functions, so there's no
+           unevaluated expression to capture.\n"
           "For NSE in Rye:\n"
           "  - Use macros: (defmacro my-fn (x) `(quote ,x))\n"
           "  - Or require explicit quoting: (my-fn 'expr)\n"

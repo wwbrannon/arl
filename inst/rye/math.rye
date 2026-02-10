@@ -103,6 +103,7 @@
   ;; instead: (= NULL NULL) => #t, (= NULL x) => #f.
   (define __null_safe_eq
     (lambda (a b)
+      "NULL-safe equality comparison following Scheme semantics."
       (if (is.null a)
         (is.null b)
         (if (is.null b)
@@ -380,7 +381,7 @@
   ;; Logarithmic and exponential
   (define log
     (lambda (x (base #nil))
-      "Return logarithm of x. With one argument, returns natural log. With two, returns log base."
+      "Return logarithm of x. With one argument, returns natural log. With two, returns log to the given base."
       (if (is.null base)
         (__rlog x)
         (__rlog x base))))

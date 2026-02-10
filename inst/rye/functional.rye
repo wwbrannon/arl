@@ -117,8 +117,7 @@
 
   (define iterate-until
     (lambda (fn init pred)
-      "Apply function starting from init, collecting values until predicate becomes true.
-       Includes all values where predicate is false, stops when next value would satisfy predicate."
+      "Apply function starting from init, collecting values until predicate becomes true. Includes all values where predicate is false, stops when next value would satisfy predicate."
       (define current init)
       (define acc (list))
       (define done #f)
