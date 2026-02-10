@@ -121,7 +121,7 @@ CompiledRuntime <- R6::R6Class(
         # copied from a module sub-environment during stdlib loading
         # (e.g. with use_env_cache = FALSE under coverage).
         if (!identical(get0(".rye_env", envir = env, inherits = FALSE), env)) {
-          if (exists(".rye_env", envir = env, inherits = FALSE) {
+          if (exists(".rye_env", envir = env, inherits = FALSE)) {
             rye_unlock_binding(".rye_env", env)
           }
           assign(".rye_env", env, envir = env)
@@ -311,7 +311,15 @@ CompiledRuntime <- R6::R6Class(
       private$do_call_impl(fn, args, env)
     },
     quasiquote_compiled = function(expr, env) {
-      private$quasiquote_compiled_impl(expr, env, 1L)
+      eval_fn <- function(inner, e) {
+        compiled <- self$context$compiler$compile(inner, e)
+        if (is.null(compiled)) {
+          stop("unquote could not be compiled")
+        }
+        self$eval_compiled(compiled, e)
+      }
+      rye_quasiquote_expand(expr, env, 1L, eval_fn, wrap_fn = identity,
+                            skip_quote = TRUE)
     },
     promise_new_compiled = function(compiled_expr, env) {
       RyePromise$new(compiled_expr, env, self$eval_compiled)
@@ -485,81 +493,6 @@ CompiledRuntime <- R6::R6Class(
         result <- self$eval_compiled(compiled, env)
       }
       result
-    },
-    quasiquote_compiled_impl = function(expr, env, depth) {
-      if (!is.call(expr)) {
-        return(expr)
-      }
-      if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]]) && as.character(expr[[1]]) == "quote") {
-        return(expr)
-      }
-      if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]]) && as.character(expr[[1]]) == "unquote") {
-        if (length(expr) != 2) {
-          stop("unquote requires exactly 1 argument")
-        }
-        if (depth == 1) {
-          compiled <- self$context$compiler$compile(expr[[2]], env)
-          if (is.null(compiled)) {
-            stop("unquote could not be compiled")
-          }
-          return(self$eval_compiled(compiled, env))
-        }
-        return(as.call(list(as.symbol("unquote"), private$quasiquote_compiled_impl(expr[[2]], env, depth - 1L))))
-      }
-      if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]]) && as.character(expr[[1]]) == "unquote-splicing") {
-        stop("unquote-splicing can only appear in list context")
-      }
-      if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]]) && as.character(expr[[1]]) == "quasiquote") {
-        if (length(expr) != 2) {
-          stop("quasiquote requires exactly 1 argument")
-        }
-        return(as.call(list(as.symbol("quasiquote"), private$quasiquote_compiled_impl(expr[[2]], env, depth + 1L))))
-      }
-      result <- list()
-      result_idx <- 1L
-      i <- 1L
-      while (i <= length(expr)) {
-        elem <- expr[[i]]
-        is_splice <- is.call(elem) && length(elem) > 0 &&
-          is.symbol(elem[[1]]) && as.character(elem[[1]]) == "unquote-splicing"
-        if (is_splice) {
-          if (depth == 1) {
-            if (length(elem) != 2) {
-              stop("unquote-splicing requires exactly 1 argument")
-            }
-            compiled <- self$context$compiler$compile(elem[[2]], env)
-            if (is.null(compiled)) {
-              stop("unquote-splicing could not be compiled")
-            }
-            spliced <- self$eval_compiled(compiled, env)
-            if (is.call(spliced)) {
-              spliced <- as.list(spliced)
-            }
-            if (is.list(spliced)) {
-              if (length(spliced) > 0) {
-                for (item in spliced) {
-                  result[[result_idx]] <- item
-                  result_idx <- result_idx + 1L
-                }
-              }
-            } else {
-              stop("unquote-splicing requires a list")
-            }
-          } else {
-            result[[result_idx]] <- as.call(list(
-              as.symbol("unquote-splicing"),
-              private$quasiquote_compiled_impl(elem[[2]], env, depth - 1L)
-            ))
-            result_idx <- result_idx + 1L
-          }
-        } else {
-          processed <- private$quasiquote_compiled_impl(elem, env, depth)
-          result[[result_idx]] <- processed
-          result_idx <- result_idx + 1L
-        }
-        i <- i + 1L
-      }
-      as.call(result)
     },
     resolve_module_path = function(name) {
       if (!is.character(name) || length(name) != 1) {
