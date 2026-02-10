@@ -20,23 +20,24 @@ RyeCons <- R6::R6Class("RyeCons",
     # @description Traverse cdr until non-RyeCons; return list of all car values.
     # @return R list.
     as_list = function() {
-      out <- list()
+      # Count length first, then fill pre-allocated vector
+      n <- 0L
       x <- self
-      while (r6_isinstance(x, "RyeCons")) {
-        out <- c(out, list(x$car))
-        x <- x$cdr
-      }
+      while (r6_isinstance(x, "RyeCons")) { n <- n + 1L; x <- x$cdr }
+      out <- vector("list", n)
+      x <- self
+      for (i in seq_len(n)) { out[[i]] <- x$car; x <- x$cdr }
       out
     },
     # @description Split into prefix (list of car values) and tail (first non-RyeCons cdr).
     # @return List with elements prefix (list) and tail.
     parts = function() {
-      prefix <- list()
+      n <- 0L
       x <- self
-      while (r6_isinstance(x, "RyeCons")) {
-        prefix <- c(prefix, list(x$car))
-        x <- x$cdr
-      }
+      while (r6_isinstance(x, "RyeCons")) { n <- n + 1L; x <- x$cdr }
+      prefix <- vector("list", n)
+      x <- self
+      for (i in seq_len(n)) { prefix[[i]] <- x$car; x <- x$cdr }
       list(prefix = prefix, tail = x)
     }
   )

@@ -243,7 +243,9 @@ FileDeps <- R6::R6Class(
       )
       reported <- character()
       for (sym in tokens) {
-        if (sym %in% c("lambda", "define", "defmacro", "if", "begin", "quote", "set!", "import", "export", "module", "list", "not", "and", "or")) next
+        builtins <- c("lambda", "define", "defmacro", "if", "begin", "quote",
+          "set!", "import", "export", "module", "list", "not", "and", "or")
+        if (sym %in% builtins) next
         if (!sym %in% names(other_exports)) next
         from_modules <- other_exports[[sym]]
         for (k in from_modules)

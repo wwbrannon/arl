@@ -90,6 +90,52 @@ rye_resolve_path_only <- function(path) {
   NULL
 }
 
+# Resolve an env argument to a raw R environment.
+# Accepts RyeEnv (extracts $env), environment (pass-through), or NULL (uses fallback_env).
+rye_resolve_env <- function(env, fallback_env) {
+  if (r6_isinstance(env, "RyeEnv")) {
+    return(env$env)
+  }
+  if (is.environment(env)) {
+    return(env)
+  }
+  if (is.null(env)) {
+    return(fallback_env)
+  }
+  stop("Expected a RyeEnv or environment")
+}
+
+# Check whether a source expression should have its coverage narrowed to just
+# the start line. This applies to forms whose sub-expressions are instrumented
+# separately:
+#   - if: branches tracked by wrap_branch_coverage
+#   - define/defmacro wrapping a lambda: body tracked inside lambda
+rye_should_narrow_coverage <- function(src_expr) {
+  if (!is.call(src_expr) || length(src_expr) < 3 || !is.symbol(src_expr[[1]])) {
+    return(FALSE)
+  }
+  head_name <- as.character(src_expr[[1]])
+  if (identical(head_name, "if")) {
+    return(TRUE)
+  }
+  if (head_name %in% c("define", "defmacro") && length(src_expr) >= 3) {
+    val <- src_expr[[3]]
+    if (is.call(val) && length(val) >= 3 && is.symbol(val[[1]]) &&
+        identical(as.character(val[[1]]), "lambda")) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+# Extract a name as a string from a symbol or length-1 character.
+# Returns NULL if the value is neither.
+rye_as_name_string <- function(x) {
+  if (is.symbol(x)) return(as.character(x))
+  if (is.character(x) && length(x) == 1L) return(x)
+  NULL
+}
+
 # Normalize a file path to absolute form for consistent registry keys.
 # Relative paths are resolved relative to getwd(). Uses forward slashes.
 rye_normalize_path_absolute <- function(path) {

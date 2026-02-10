@@ -126,16 +126,7 @@ MacroExpander <- R6::R6Class(
     self$context$compiled_runtime$eval_compiled(compiled, env)
   },
     normalize_env = function(env) {
-      if (r6_isinstance(env, "RyeEnv")) {
-        return(env$env)
-      }
-      if (is.environment(env)) {
-        return(env)
-      }
-      if (is.null(env)) {
-        return(self$context$env$env)
-      }
-      stop("Expected a RyeEnv or environment")
+      rye_resolve_env(env, self$context$env$env)
     },
     macro_registry = function(env, create = TRUE) {
       registry <- self$context$env$get_registry(".rye_macros", env, create = create)
@@ -665,11 +656,14 @@ MacroExpander <- R6::R6Class(
       if (is.call(expr) && length(expr) > 0 && is.symbol(expr[[1]]) && as.character(expr[[1]]) == "quasiquote") {
         return(as.call(list(as.symbol("quasiquote"), private$quasiquote_impl(expr[[2]], env, depth + 1))))
       }
-      result <- list()
-      i <- 1
-      while (i <= length(expr)) {
+      # Pre-allocate with room for splicing; collect via index
+      result <- vector("list", length(expr) * 2L)
+      k <- 0L
+      for (i in seq_along(expr)) {
         elem <- expr[[i]]
-        if (is.call(elem) && length(elem) > 0 && is.symbol(elem[[1]]) && as.character(elem[[1]]) == "unquote-splicing") {
+        is_splice <- is.call(elem) && length(elem) > 0 &&
+          is.symbol(elem[[1]]) && as.character(elem[[1]]) == "unquote-splicing"
+        if (is_splice) {
           if (depth == 1) {
             if (length(elem) != 2) {
               stop("unquote-splicing requires exactly 1 argument")
@@ -680,24 +674,28 @@ MacroExpander <- R6::R6Class(
             }
             if (is.list(spliced)) {
               for (item in spliced) {
-                result <- c(result, list(private$hygiene_wrap(item, "call_site")))
+                k <- k + 1L
+                if (k > length(result)) result <- c(result, vector("list", k))
+                result[[k]] <- private$hygiene_wrap(item, "call_site")
               }
             } else {
               stop("unquote-splicing requires a list")
             }
           } else {
-            result <- c(result, list(as.call(list(
+            k <- k + 1L
+            if (k > length(result)) result <- c(result, vector("list", k))
+            result[[k]] <- as.call(list(
               as.symbol("unquote-splicing"),
               private$quasiquote_impl(elem[[2]], env, depth - 1)
-            ))))
+            ))
           }
         } else {
-          processed <- private$quasiquote_impl(elem, env, depth)
-          result <- c(result, list(processed))
+          k <- k + 1L
+          if (k > length(result)) result <- c(result, vector("list", k))
+          result[[k]] <- private$quasiquote_impl(elem, env, depth)
         }
-        i <- i + 1
       }
-      as.call(result)
+      as.call(result[seq_len(k)])
     },
     macro_parse_params = function(params) {
       # Handle rest parameters (. syntax) - similar to lambda

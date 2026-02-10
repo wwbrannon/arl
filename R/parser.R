@@ -155,7 +155,8 @@ Parser <- R6::R6Class(
               }
               pos <<- pos + 1  # consume DOT
               if (pos > length(tokens) || tokens[[pos]]$type == "RPAREN") {
-                stop(sprintf("Missing cdr after '.' at line %d, column %d", tokens[[pos - 1]]$line, tokens[[pos - 1]]$col))
+                tok <- tokens[[pos - 1]]
+                stop(sprintf("Missing cdr after '.' at line %d, column %d", tok$line, tok$col))
               }
               dot_cdr <- parse_expr()
               if (chunk_idx > 1) {
@@ -188,23 +189,27 @@ Parser <- R6::R6Class(
           end_token <- tokens[[pos]]
           pos <<- pos + 1  # Skip RPAREN
 
+          span <- tracker$src_new(
+            source_name, start_token$line, start_token$col,
+            end_token$line, end_token$col)
+
           # Dotted pair: (a . b) or (a b . c)
           if (seen_dot && !is.null(dot_cdr) && length(dotted_heads) > 0) {
             result <- dot_cdr
             for (j in rev(seq_along(dotted_heads))) {
               result <- RyeCons$new(dotted_heads[[j]], result)
             }
-            return(tracker$src_set(result, tracker$src_new(source_name, start_token$line, start_token$col, end_token$line, end_token$col)))
+            return(tracker$src_set(result, span))
           }
 
           # Empty list
           if (length(elements) == 0) {
-            return(tracker$src_set(list(), tracker$src_new(source_name, start_token$line, start_token$col, end_token$line, end_token$col)))
+            return(tracker$src_set(list(), span))
           }
 
           # Convert to R call
           expr <- as.call(elements)
-          return(tracker$src_set(expr, tracker$src_new(source_name, start_token$line, start_token$col, end_token$line, end_token$col)))
+          return(tracker$src_set(expr, span))
         }
 
         if (token$type == "RPAREN") {

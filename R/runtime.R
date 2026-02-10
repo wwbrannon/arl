@@ -42,7 +42,8 @@ rye_missing_default <- function() {
     return(invisible(NULL))
   }
   # Slow path: destructuring (cons cells, lists, calls) — need full RyeEnv
-  RyeEnv$new(env)$assign_pattern(pattern, value, mode = mode, context = if (identical(mode, "define")) "define" else "set!")
+  ctx <- if (identical(mode, "define")) "define" else "set!"
+  RyeEnv$new(env)$assign_pattern(pattern, value, mode = mode, context = ctx)
 }
 
 # EvalContext: Shared context for MacroExpander and CompiledRuntime. Holds env (RyeEnv)
@@ -334,7 +335,9 @@ CompiledRuntime <- R6::R6Class(
       assign(".rye_module", TRUE, envir = module_env)
       lockBinding(".rye_module", module_env)
       self$context$env$module_registry$register(module_name, module_env, exports)
-      if (!is.null(src_file) && is.character(src_file) && length(src_file) == 1L && nzchar(src_file) && grepl("[/\\\\]", src_file)) {
+      has_file_path <- !is.null(src_file) && is.character(src_file) &&
+        length(src_file) == 1L && nzchar(src_file) && grepl("[/\\\\]", src_file)
+      if (has_file_path) {
         absolute_path <- rye_normalize_path_absolute(src_file)
         self$context$env$module_registry$alias(absolute_path, module_name)
       }
@@ -366,25 +369,10 @@ CompiledRuntime <- R6::R6Class(
             rye_src <- source_tracker$src_get(body_exprs[[i]])
             if (!is.null(rye_src) && !is.null(rye_src$file) && !is.null(rye_src$start_line)) {
               # Narrow to start_line for forms whose sub-expressions are
-              # instrumented separately by the compiler:
-              #   - if: branches tracked by wrap_branch_coverage
-              #   - define/defmacro wrapping a lambda: body tracked inside lambda
+              # instrumented separately (if, define/defmacro wrapping lambda).
               # For everything else, use full source span.
               end_line <- rye_src$start_line
-              src_expr <- body_exprs[[i]]
-              narrow <- FALSE
-              if (is.call(src_expr) && length(src_expr) >= 3 && is.symbol(src_expr[[1]])) {
-                head_name <- as.character(src_expr[[1]])
-                if (identical(head_name, "if")) {
-                  narrow <- TRUE
-                } else if (head_name %in% c("define", "defmacro") && length(src_expr) >= 3) {
-                  val <- src_expr[[3]]
-                  if (is.call(val) && length(val) >= 3 && is.symbol(val[[1]]) &&
-                      identical(as.character(val[[1]]), "lambda")) {
-                    narrow <- TRUE
-                  }
-                }
-              }
+              narrow <- rye_should_narrow_coverage(body_exprs[[i]])
               if (!narrow && !is.null(rye_src$end_line)) {
                 end_line <- rye_src$end_line
               }
@@ -533,7 +521,9 @@ CompiledRuntime <- R6::R6Class(
       i <- 1L
       while (i <= length(expr)) {
         elem <- expr[[i]]
-        if (is.call(elem) && length(elem) > 0 && is.symbol(elem[[1]]) && as.character(elem[[1]]) == "unquote-splicing") {
+        is_splice <- is.call(elem) && length(elem) > 0 &&
+          is.symbol(elem[[1]]) && as.character(elem[[1]]) == "unquote-splicing"
+        if (is_splice) {
           if (depth == 1) {
             if (length(elem) != 2) {
               stop("unquote-splicing requires exactly 1 argument")

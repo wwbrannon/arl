@@ -587,16 +587,7 @@ RyeEngine <- R6::R6Class(
   ),
   private = list(
     resolve_env_arg = function(env) {
-      if (r6_isinstance(env, "RyeEnv")) {
-        return(env$env)
-      }
-      if (is.environment(env)) {
-        return(env)
-      }
-      if (is.null(env)) {
-        return(self$env$env)
-      }
-      stop("Expected a RyeEnv or environment")
+      rye_resolve_env(env, self$env$env)
     },
     eval_one_compiled = function(expr, env, compiled_only = TRUE) {
       expanded <- self$macroexpand_in_env(expr, env, preserve_src = TRUE)

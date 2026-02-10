@@ -8,9 +8,14 @@
 SourceTracker <- R6::R6Class(
   "SourceTracker",
   private = list(
-    stack = list()
+    stack_env = NULL,
+    stack_n = 0L
   ),
   public = list(
+    initialize = function() {
+      private$stack_env <- new.env(hash = FALSE, parent = emptyenv())
+      private$stack_n <- 0L
+    },
     # @description Create a rye_src structure for a source location.
     # @param file File name or NULL.
     # @param start_line Start line number.
@@ -123,27 +128,36 @@ SourceTracker <- R6::R6Class(
     # @description Return the current source stack (list of rye_src).
     # @return List.
     get = function() {
-      private$stack
+      n <- private$stack_n
+      if (n == 0L) return(list())
+      env <- private$stack_env
+      out <- vector("list", n)
+      for (i in seq_len(n)) out[[i]] <- env[[as.character(i)]]
+      out
     },
     # @description Clear the source stack.
     reset = function() {
-      private$stack <- list()
+      private$stack_env <- new.env(hash = FALSE, parent = emptyenv())
+      private$stack_n <- 0L
       invisible(NULL)
     },
     # @description Push a rye_src onto the stack (used during eval for error context).
     # @param src rye_src from src_new.
     push = function(src) {
-      private$stack <- c(private$stack, list(src))
+      n <- private$stack_n + 1L
+      private$stack_n <- n
+      private$stack_env[[as.character(n)]] <- src
       invisible(NULL)
     },
     # @description Pop the top rye_src from the stack.
     # @return The popped rye_src or NULL if empty.
     pop = function() {
-      if (length(private$stack) == 0) {
-        return(NULL)
-      }
-      last <- private$stack[[length(private$stack)]]
-      private$stack <- private$stack[-length(private$stack)]
+      n <- private$stack_n
+      if (n == 0L) return(NULL)
+      key <- as.character(n)
+      last <- private$stack_env[[key]]
+      rm(list = key, envir = private$stack_env)
+      private$stack_n <- n - 1L
       last
     },
     # @description Format a rye_src as "file:line:col" or "file:line:col-line:col".
@@ -221,14 +235,11 @@ SourceTracker <- R6::R6Class(
     # @param fn Function of no arguments to run.
     # @return Result of fn().
     with_error_context = function(fn) {
-      prev_stack <- self$get()
+      prev_env <- private$stack_env
+      prev_n <- private$stack_n
       on.exit({
-        self$reset()
-        if (!is.null(prev_stack) && length(prev_stack) > 0) {
-          for (src in prev_stack) {
-            self$push(src)
-          }
-        }
+        private$stack_env <- prev_env
+        private$stack_n <- prev_n
       }, add = TRUE)
       self$reset()
       result_with_vis <- tryCatch(

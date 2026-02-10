@@ -78,6 +78,78 @@ Compiler <- R6::R6Class(
     }
   ),
   private = list(
+    # Shared implementation for compile_and / compile_or.
+    # identity: value when no args (TRUE for and, FALSE for or)
+    # op_sym: quoted symbol to flatten (quote(and) or quote(or))
+    # on_true_continue: if TRUE, truthy branch continues to next arg (and);
+    #   if FALSE, truthy branch short-circuits with current value (or)
+    compile_short_circuit = function(expr, identity, op_sym, on_true_continue) {
+      if (length(expr) == 1) return(identity)
+
+      op_name <- as.character(op_sym)
+
+      # Flatten nested ops: (and (and a b) c) → (and a b c)
+      flatten <- function(e) {
+        result <- list()
+        for (i in 2:length(e)) {
+          arg <- e[[i]]
+          if (is.call(arg) && length(arg) >= 1 && identical(arg[[1]], op_sym)) {
+            result <- c(result, flatten(arg))
+          } else {
+            result[[length(result) + 1L]] <- arg
+          }
+        }
+        result
+      }
+      flat_args <- flatten(expr)
+
+      # Compile all flattened arguments
+      args <- vector("list", length(flat_args))
+      for (i in seq_along(flat_args)) {
+        compiled <- private$compile_impl(flat_args[[i]])
+        if (is.null(compiled)) {
+          return(private$fail(paste(op_name, "argument could not be compiled")))
+        }
+        args[[i]] <- compiled
+      }
+
+      gensym_tmp <- function() {
+        if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
+          return(self$context$macro_expander$gensym(".__rye_tmp"))
+        }
+        as.symbol(paste0(".__rye_tmp", as.integer(stats::runif(1, 1, 1e9))))
+      }
+
+      build <- function(idx) {
+        if (idx == length(args)) return(args[[idx]])
+
+        arg <- args[[idx]]
+        continue_expr <- build(idx + 1L)
+
+        make_if <- function(test_val, return_val) {
+          if (on_true_continue) {
+            as.call(list(quote(`if`),
+              as.call(list(as.symbol(".rye_true_p"), test_val)),
+              continue_expr, return_val))
+          } else {
+            as.call(list(quote(`if`),
+              as.call(list(as.symbol(".rye_true_p"), test_val)),
+              return_val, continue_expr))
+          }
+        }
+
+        # Simple values don't need temps - use directly
+        if (private$is_simple_value(arg)) return(make_if(arg, arg))
+
+        # Complex expressions need temps to avoid double evaluation
+        tmp_sym <- gensym_tmp()
+        as.call(c(list(quote(`{`)),
+          list(as.call(list(quote(`<-`), tmp_sym, arg))),
+          list(make_if(tmp_sym, tmp_sym))
+        ))
+      }
+      build(1L)
+    },
     compiled_nil = function() {
       as.call(list(quote(quote), NULL))
     },
@@ -144,7 +216,8 @@ Compiler <- R6::R6Class(
       if (!is.null(op_name)) {
         out <- switch(op_name,
           quote = private$compile_quote(expr),
-          quasiquote = if (isTRUE(self$macro_eval)) private$compile_macro_quasiquote(expr) else private$compile_quasiquote(expr),
+          quasiquote = if (isTRUE(self$macro_eval))
+            private$compile_macro_quasiquote(expr) else private$compile_quasiquote(expr),
           `if` = private$compile_if(expr),
           begin = private$compile_begin(expr),
           define = private$compile_define(expr),
@@ -562,7 +635,9 @@ Compiler <- R6::R6Class(
       # inside/around the TCO loop, so skip them here.
       n_rest <- if (!use_tco && params$has_rest && !is.null(params$rest_param)) 1L else 0L
       n_bindings <- if (!use_tco) length(params$param_bindings) else 0L
-      n_rest_spec <- if (!use_tco && !is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) 1L else 0L
+      has_rest_pattern <- !use_tco && !is.null(params$rest_param_spec) &&
+        identical(params$rest_param_spec$type, "pattern")
+      n_rest_spec <- if (has_rest_pattern) 1L else 0L
       size <- 1L + n_rest + n_bindings + n_rest_spec + length(compiled_body)
       body_parts <- vector("list", size)
       idx <- 1
@@ -825,142 +900,10 @@ Compiler <- R6::R6Class(
       ))
     },
     compile_and = function(expr) {
-      # (and) with no arguments returns #t (Scheme identity element)
-      if (length(expr) == 1) {
-        return(TRUE)
-      }
-
-      # Flatten nested ANDs recursively: (and (and a b) c) → (and a b c)
-      # This avoids creating temps for intermediate AND results
-      flatten_and <- function(e) {
-        result <- list()
-        for (i in 2:length(e)) {
-          arg <- e[[i]]
-          if (is.call(arg) && length(arg) >= 1 && identical(arg[[1]], quote(and))) {
-            # Recursively flatten nested AND
-            result <- c(result, flatten_and(arg))
-          } else {
-            result <- c(result, list(arg))
-          }
-        }
-        result
-      }
-      flat_args <- flatten_and(expr)
-
-      # Compile all flattened arguments
-      args <- vector("list", length(flat_args))
-      for (i in seq_along(flat_args)) {
-        compiled <- private$compile_impl(flat_args[[i]])
-        if (is.null(compiled)) {
-          return(private$fail("and argument could not be compiled"))
-        }
-        args[[i]] <- compiled
-      }
-      gensym_tmp <- function() {
-        if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-          return(self$context$macro_expander$gensym(".__rye_tmp"))
-        }
-        as.symbol(paste0(".__rye_tmp", as.integer(stats::runif(1, 1, 1e9))))
-      }
-      build <- function(idx) {
-        if (idx == length(args)) {
-          return(args[[idx]])
-        }
-
-        arg <- args[[idx]]
-
-        # Simple values don't need temps - use directly
-        if (private$is_simple_value(arg)) {
-          return(as.call(list(
-            quote(`if`),
-            as.call(list(as.symbol(".rye_true_p"), arg)),
-            build(idx + 1L),
-            arg
-          )))
-        }
-
-        # Complex expressions need temps to avoid double evaluation
-        tmp_sym <- gensym_tmp()
-        as.call(c(list(quote(`{`)),
-          list(as.call(list(quote(`<-`), tmp_sym, arg))),
-          list(as.call(list(
-            quote(`if`),
-            as.call(list(as.symbol(".rye_true_p"), tmp_sym)),
-            build(idx + 1L),
-            tmp_sym
-          )))
-        ))
-      }
-      build(1L)
+      private$compile_short_circuit(expr, TRUE, quote(and), TRUE)
     },
     compile_or = function(expr) {
-      # (or) with no arguments returns #f (Scheme identity element)
-      if (length(expr) == 1) {
-        return(FALSE)
-      }
-
-      # Flatten nested ORs recursively: (or (or a b) c) → (or a b c)
-      # This avoids creating temps for intermediate OR results
-      flatten_or <- function(e) {
-        result <- list()
-        for (i in 2:length(e)) {
-          arg <- e[[i]]
-          if (is.call(arg) && length(arg) >= 1 && identical(arg[[1]], quote(or))) {
-            # Recursively flatten nested OR
-            result <- c(result, flatten_or(arg))
-          } else {
-            result <- c(result, list(arg))
-          }
-        }
-        result
-      }
-      flat_args <- flatten_or(expr)
-
-      # Compile all flattened arguments
-      args <- vector("list", length(flat_args))
-      for (i in seq_along(flat_args)) {
-        compiled <- private$compile_impl(flat_args[[i]])
-        if (is.null(compiled)) {
-          return(private$fail("or argument could not be compiled"))
-        }
-        args[[i]] <- compiled
-      }
-      gensym_tmp <- function() {
-        if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-          return(self$context$macro_expander$gensym(".__rye_tmp"))
-        }
-        as.symbol(paste0(".__rye_tmp", as.integer(stats::runif(1, 1, 1e9))))
-      }
-      build <- function(idx) {
-        if (idx == length(args)) {
-          return(args[[idx]])
-        }
-
-        arg <- args[[idx]]
-
-        # Simple values don't need temps - use directly
-        if (private$is_simple_value(arg)) {
-          return(as.call(list(
-            quote(`if`),
-            as.call(list(as.symbol(".rye_true_p"), arg)),
-            arg,
-            build(idx + 1L)
-          )))
-        }
-
-        # Complex expressions need temps to avoid double evaluation
-        tmp_sym <- gensym_tmp()
-        as.call(c(list(quote(`{`)),
-          list(as.call(list(quote(`<-`), tmp_sym, arg))),
-          list(as.call(list(
-            quote(`if`),
-            as.call(list(as.symbol(".rye_true_p"), tmp_sym)),
-            tmp_sym,
-            build(idx + 1L)
-          )))
-        ))
-      }
-      build(1L)
+      private$compile_short_circuit(expr, FALSE, quote(or), FALSE)
     },
     compile_defmacro = function(expr) {
       if (length(expr) < 4) {
@@ -1042,7 +985,7 @@ Compiler <- R6::R6Class(
         return(private$fail("module requires at least 2 arguments: (module name (export ...) body...)"))
       }
       module_name <- expr[[2]]
-      name_str <- if (is.symbol(module_name)) as.character(module_name) else if (is.character(module_name) && length(module_name) == 1L) module_name else NULL
+      name_str <- rye_as_name_string(module_name)
       if (is.null(name_str)) {
         return(private$fail("module name must be a symbol or string"))
       }
@@ -1075,7 +1018,9 @@ Compiler <- R6::R6Class(
       body_exprs <- if (length(body_exprs) == 0) list() else body_exprs
       src <- private$src_get(expr)
       src_file <- NULL
-      if (!is.null(src) && !is.null(src$file) && is.character(src$file) && nzchar(src$file) && grepl("[/\\\\]", src$file)) {
+      has_file_path <- !is.null(src) && !is.null(src$file) &&
+        is.character(src$file) && nzchar(src$file) && grepl("[/\\\\]", src$file)
+      if (has_file_path) {
         src_file <- src$file
       }
       compiled_body_quoted <- as.call(list(quote(quote), body_exprs))
@@ -1100,11 +1045,12 @@ Compiler <- R6::R6Class(
     },
     compile_package_access = function(expr) {
       if (length(expr) != 3) {
-        return(private$fail(sprintf("%s requires exactly 2 arguments: (%s pkg name)", as.character(expr[[1]]), as.character(expr[[1]]))))
+        op <- as.character(expr[[1]])
+        return(private$fail(sprintf("%s requires exactly 2 arguments: (%s pkg name)", op, op)))
       }
       # Pass package and name as strings so lookup works without namespace in env
-      pkg_str <- if (is.symbol(expr[[2]])) as.character(expr[[2]]) else if (is.character(expr[[2]]) && length(expr[[2]]) == 1L) expr[[2]] else NULL
-      name_str <- if (is.symbol(expr[[3]])) as.character(expr[[3]]) else if (is.character(expr[[3]]) && length(expr[[3]]) == 1L) expr[[3]] else NULL
+      pkg_str <- rye_as_name_string(expr[[2]])
+      name_str <- rye_as_name_string(expr[[3]])
       if (is.null(pkg_str)) {
         return(private$fail("Package name must be a symbol or string"))
       }
@@ -1586,7 +1532,7 @@ Compiler <- R6::R6Class(
         }
       }
       # Handle remaining positional args
-      remaining_positional <- positional[seq_len(length(positional))[seq_len(length(positional)) >= pos_idx]]
+      remaining_positional <- if (pos_idx <= length(positional)) positional[pos_idx:length(positional)] else list()
       if (is.null(rest_param_name)) {
         # No rest param: no extra args allowed
         if (length(remaining_positional) > 0L) return(bail())
@@ -1819,24 +1765,7 @@ Compiler <- R6::R6Class(
     # test line since branches are tracked separately by wrap_branch_coverage.
     make_coverage_call_for_stmt = function(src_expr) {
       if (is.null(self$context$coverage_tracker)) return(NULL)
-      # Narrow to start_line for forms whose sub-expressions are
-      # instrumented separately:
-      #   - if: branches tracked by wrap_branch_coverage
-      #   - define/defmacro wrapping a lambda: body tracked inside lambda
-      narrow <- FALSE
-      if (is.call(src_expr) && length(src_expr) >= 3 && is.symbol(src_expr[[1]])) {
-        head_name <- as.character(src_expr[[1]])
-        if (identical(head_name, "if")) {
-          narrow <- TRUE
-        } else if (head_name %in% c("define", "defmacro") && length(src_expr) >= 3) {
-          val <- src_expr[[3]]
-          if (is.call(val) && length(val) >= 3 && is.symbol(val[[1]]) &&
-              identical(as.character(val[[1]]), "lambda")) {
-            narrow <- TRUE
-          }
-        }
-      }
-      if (narrow) {
+      if (rye_should_narrow_coverage(src_expr)) {
         src <- private$src_get(src_expr)
         if (is.null(src) || is.null(src$file) || is.null(src$start_line)) return(NULL)
         self$context$coverage_tracker$register_coverable(src$file, src$start_line, src$start_line)
