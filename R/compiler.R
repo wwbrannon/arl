@@ -985,7 +985,7 @@ Compiler <- R6::R6Class(
         return(private$fail("module requires at least 2 arguments: (module name (export ...) body...)"))
       }
       module_name <- expr[[2]]
-      name_str <- rye_as_name_string(module_name)
+      name_str <- private$as_name_string(module_name)
       if (is.null(name_str)) {
         return(private$fail("module name must be a symbol or string"))
       }
@@ -1049,8 +1049,8 @@ Compiler <- R6::R6Class(
         return(private$fail(sprintf("%s requires exactly 2 arguments: (%s pkg name)", op, op)))
       }
       # Pass package and name as strings so lookup works without namespace in env
-      pkg_str <- rye_as_name_string(expr[[2]])
-      name_str <- rye_as_name_string(expr[[3]])
+      pkg_str <- private$as_name_string(expr[[2]])
+      name_str <- private$as_name_string(expr[[3]])
       if (is.null(pkg_str)) {
         return(private$fail("Package name must be a symbol or string"))
       }
@@ -1830,6 +1830,13 @@ Compiler <- R6::R6Class(
       }
       # Everything else (calls, etc.) needs a temp to avoid double evaluation
       FALSE
+    },
+    # Extract a name as a string from a symbol or length-1 character.
+    # Returns NULL if the value is neither.
+    as_name_string = function(x) {
+      if (is.symbol(x)) return(as.character(x))
+      if (is.character(x) && length(x) == 1L) return(x)
+      NULL
     }
   )
 )

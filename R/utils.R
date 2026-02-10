@@ -10,18 +10,6 @@ r6_isinstance <- function(obj, cls) {
   R6::is.R6(obj) && inherits(obj, cls)
 }
 
-#' Test if an object is an R6 class generator for a given class name
-#'
-#' @param obj Any object.
-#' @param cls Character class name (e.g. \code{"RyeCons"}).
-#' @return Logical.
-#' @keywords internal
-#' @noRd
-#' @importFrom R6 is.R6Class
-r6_issubclass <- function(obj, cls) {
-  R6::is.R6Class(obj) && identical(obj$classname, cls)
-}
-
 # Wrapper for unlockBinding to avoid R CMD check NOTE
 # R CMD check flags direct calls to unlockBinding as "possibly unsafe"
 rye_unlock_binding <- function(sym, env) {
@@ -46,46 +34,6 @@ rye_resolve_stdlib_path <- function(name) {
     if (file.exists(path)) {
       return(path)
     }
-  }
-  NULL
-}
-
-rye_resolve_module_path <- function(name) {
-  if (!is.character(name) || length(name) != 1) {
-    return(NULL)
-  }
-  has_separator <- grepl("[/\\\\]", name)
-  if (has_separator) {
-    if (file.exists(name)) {
-      return(name)
-    }
-    return(NULL)
-  }
-  stdlib_path <- rye_resolve_stdlib_path(name)
-  if (!is.null(stdlib_path)) {
-    return(stdlib_path)
-  }
-  candidates <- c(name, paste0(name, ".rye"))
-  for (candidate in candidates) {
-    if (file.exists(candidate)) {
-      return(candidate)
-    }
-  }
-  NULL
-}
-
-# Path-only resolution: find file at path or path.rye (no stdlib lookup).
-# Used when import argument is a string (path). Returns NULL if not found.
-rye_resolve_path_only <- function(path) {
-  if (!is.character(path) || length(path) != 1) {
-    return(NULL)
-  }
-  if (file.exists(path)) {
-    return(path)
-  }
-  with_ext <- paste0(path, ".rye")
-  if (file.exists(with_ext)) {
-    return(with_ext)
   }
   NULL
 }
@@ -126,14 +74,6 @@ rye_should_narrow_coverage <- function(src_expr) {
     }
   }
   FALSE
-}
-
-# Extract a name as a string from a symbol or length-1 character.
-# Returns NULL if the value is neither.
-rye_as_name_string <- function(x) {
-  if (is.symbol(x)) return(as.character(x))
-  if (is.character(x) && length(x) == 1L) return(x)
-  NULL
 }
 
 # Normalize a file path to absolute form for consistent registry keys.

@@ -246,7 +246,7 @@ CompiledRuntime <- R6::R6Class(
       is_path <- is.character(arg_value) && length(arg_value) == 1
       if (is_path) {
         path_str <- arg_value
-        module_path <- rye_resolve_path_only(path_str)
+        module_path <- private$resolve_path_only(path_str)
         if (is.null(module_path)) {
           stop(sprintf("Module not found: %s", path_str))
         }
@@ -263,7 +263,7 @@ CompiledRuntime <- R6::R6Class(
           }
           self$load_file_fn(module_path, self$context$env$env, create_scope = FALSE)
         } else {
-          module_path <- rye_resolve_module_path(registry_key)
+          module_path <- private$resolve_module_path(registry_key)
           if (is.null(module_path)) {
             stop(sprintf("Module not found: %s", registry_key))
           }
@@ -561,6 +561,44 @@ CompiledRuntime <- R6::R6Class(
         i <- i + 1L
       }
       as.call(result)
+    },
+    resolve_module_path = function(name) {
+      if (!is.character(name) || length(name) != 1) {
+        return(NULL)
+      }
+      has_separator <- grepl("[/\\\\]", name)
+      if (has_separator) {
+        if (file.exists(name)) {
+          return(name)
+        }
+        return(NULL)
+      }
+      stdlib_path <- rye_resolve_stdlib_path(name)
+      if (!is.null(stdlib_path)) {
+        return(stdlib_path)
+      }
+      candidates <- c(name, paste0(name, ".rye"))
+      for (candidate in candidates) {
+        if (file.exists(candidate)) {
+          return(candidate)
+        }
+      }
+      NULL
+    },
+    # Path-only resolution: find file at path or path.rye (no stdlib lookup).
+    # Used when import argument is a string (path). Returns NULL if not found.
+    resolve_path_only = function(path) {
+      if (!is.character(path) || length(path) != 1) {
+        return(NULL)
+      }
+      if (file.exists(path)) {
+        return(path)
+      }
+      with_ext <- paste0(path, ".rye")
+      if (file.exists(with_ext)) {
+        return(with_ext)
+      }
+      NULL
     }
   )
 )
