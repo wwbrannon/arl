@@ -857,7 +857,7 @@ MacroExpander <- R6::R6Class(
     },
     define_macro = function(name, params, body, env, docstring = NULL) {
       # Debug: check body
-      if (FALSE && as.character(name) == "empty-pat") {
+      if (isTRUE(getOption("rye.debug_macro")) && as.character(name) == "empty-pat") {
         message("DEBUG define_macro for ", as.character(name))
         message("  body class: ", class(body))
         message("  body length: ", length(body))
