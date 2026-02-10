@@ -1,23 +1,18 @@
-o) the coverage/rye/summary.txt file produced by `make coverage` says we have 100% coverage of all rye code, which I'm sure is wrong. can you take a look?
+o) should we make the allowable line length 80
 
-o) run the test auditor agent again on the whole codebase
-
-smaller stuff:
---------------------------------------
-o) general code quality / duplication pass
-o) run `make lint`, fix and/or update lint rules
-
-o) run benchmarks / profiles again after all this, commit them
-
-o) make CI configuration for coverage and everything else sane, figure out how to run some more during Feb, maybe shrink matrix?
-o) enable actions, get CI working
-
-documentation updates:
+documentation updates (use the doc review agent):
 -------------------------------------------------
 o) update / systematize docs: make a plan
 o) write a compiler vignette (or inst/doc file?)
 o) internal technical docs in inst/doc
-o) minor pkgdown warning about site url
 o) get the site and vignettes updated
-o) actually push site somewhere
 o) get make document working
+
+o) consider using the github-action-benchmark GH action to run benchmarks / commit them to a separate branch / visualize them
+
+CI / publish:
+-------------------------------------------------
+o) make CI configuration for coverage and everything else sane, figure out how to run some more during Feb, maybe shrink matrix?
+o) enable actions, get CI working
+o) minor pkgdown warning about site url
+o) actually push site somewhere
