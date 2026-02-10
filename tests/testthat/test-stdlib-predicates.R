@@ -344,8 +344,10 @@ test_that("identical? tests value identity", {
   stdlib_env(engine, env)
 
   # identical? in R compares values, not storage types
+  # note that in R, "42" and "42.0" are both double; if you want
+  # an integer, you have to write "42L"
   expect_true(engine$eval_in_env(engine$read("(identical? 42 42)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(identical? 42 42.0)")[[1]], env))  # R coerces these
+  expect_true(engine$eval_in_env(engine$read("(identical? 42 42.0)")[[1]], env))
   expect_false(engine$eval_in_env(engine$read("(identical? 42 43)")[[1]], env))
 })
 

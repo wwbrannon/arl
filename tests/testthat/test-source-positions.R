@@ -53,10 +53,15 @@ test_that("quoted expressions preserve positions", {
 
 test_that("quasiquoted expressions preserve positions", {
   engine <- make_engine()
-  code <- "`(a ~b c)"
+  code <- "`(a ,b c)"
 
   parsed <- engine$read(code)
   expect_true(length(parsed) > 0)
+
+  # The parsed quasiquote should be a call with unquote structure
+  expr <- parsed[[1]]
+  expect_true(is.call(expr))
+  expect_equal(as.character(expr[[1]]), "quasiquote")
 })
 
 test_that("macro expansion preserves source info", {

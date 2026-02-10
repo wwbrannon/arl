@@ -30,7 +30,7 @@
     (lambda (. args)
       "Variadic less-than comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
-        (stop "< requires at least two arguments")
+        #t
         (if (__r== (__rlength args) 2)
           (__r< (__r[[ args 1) (__r[[ args 2))
           (begin
@@ -48,7 +48,7 @@
     (lambda (. args)
       "Variadic greater-than comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
-        (stop "> requires at least two arguments")
+        #t
         (if (__r== (__rlength args) 2)
           (__r> (__r[[ args 1) (__r[[ args 2))
           (begin
@@ -66,7 +66,7 @@
     (lambda (. args)
       "Variadic less-than-or-equal comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
-        (stop "<= requires at least two arguments")
+        #t
         (if (__r== (__rlength args) 2)
           (__r<= (__r[[ args 1) (__r[[ args 2))
           (begin
@@ -84,7 +84,7 @@
     (lambda (. args)
       "Variadic greater-than-or-equal comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
-        (stop ">= requires at least two arguments")
+        #t
         (if (__r== (__rlength args) 2)
           (__r>= (__r[[ args 1) (__r[[ args 2))
           (begin
@@ -102,7 +102,7 @@
     (lambda (. args)
       "Variadic equality comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
-        (stop "== requires at least two arguments")
+        #t
         (if (__r== (__rlength args) 2)
           (__r== (__r[[ args 1) (__r[[ args 2))
           (begin
@@ -431,8 +431,8 @@
   (define gcd
     (lambda (. args)
       "Return greatest common divisor of arguments."
-      (if (__r< (__rlength args) 1)
-        (stop "gcd requires at least one argument")
+      (if (__r== (__rlength args) 0)
+        0
         (if (__r== (__rlength args) 1)
           (__rabs (__r[[ args 1))
           (begin
@@ -447,8 +447,8 @@
   (define lcm
     (lambda (. args)
       "Return least common multiple of arguments."
-      (if (__r< (__rlength args) 1)
-        (stop "lcm requires at least one argument")
+      (if (__r== (__rlength args) 0)
+        1
         (if (__r== (__rlength args) 1)
           (__rabs (__r[[ args 1))
           (begin

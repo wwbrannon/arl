@@ -41,6 +41,30 @@ test_that("equal? dispatches on class of first argument", {
   expect_false(env$`equal?`(s1, s2, strict = FALSE))
 })
 
+test_that("use-method dispatches using generic-name parameter (not hardcoded to equal?)", {
+  eng <- make_engine()
+  env <- stdlib_env(eng)
+
+  # Register a custom generic (not equal?) via set-method!
+  # Use (begin ...) to avoid string being consumed as docstring
+  eng$eval_in_env(eng$read('(set-method! (quote describe) (quote my_obj) (lambda (a) (begin "my_obj description")))')[[1]], env)
+
+  # Register a default method for describe
+  eng$eval_in_env(eng$read('(define describe.default (lambda (a) (begin "default description")))')[[1]], env)
+
+  # Create an object of class my_obj
+  eng$eval_in_env(eng$read('(define obj (r/call "structure" (list (list 1) :class "my_obj")))')[[1]], env)
+
+  # use-method with "describe" should find describe.my_obj, not equal?.my_obj
+  result <- eng$eval_in_env(eng$read('(use-method "describe" obj (list obj))')[[1]], env)
+  expect_equal(result, "my_obj description")
+
+  # use-method with unknown class should fall back to describe.default
+  eng$eval_in_env(eng$read('(define other (r/call "structure" (list (list 2) :class "unknown_cls")))')[[1]], env)
+  result <- eng$eval_in_env(eng$read('(use-method "describe" other (list other))')[[1]], env)
+  expect_equal(result, "default description")
+})
+
 test_that("set-method! registers and overwrites methods", {
   # Fresh engine so equal? and set-method! share one env (no prior test env / copy)
   eng <- make_engine()

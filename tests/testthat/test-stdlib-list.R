@@ -263,10 +263,21 @@ test_that("stable-sort preserves order of equal elements", {
   env <- stdlib_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env)
 
-  # stable-sort is an alias for sort (R's sort is already stable)
+  # Basic sorting
   result <- engine$eval_in_env(
     engine$read("(stable-sort '(3 1 4 1 5) <)")[[1]], env)
   expect_equal(result, list(1, 1, 3, 4, 5))
+
+  # Stability test: sort pairs by first element, verify original order preserved for equal keys
+  result <- engine$eval_in_env(
+    engine$read("(stable-sort (list (list 1 'a) (list 2 'b) (list 1 'c) (list 2 'd))
+                   (lambda (x y) (< (car x) (car y))))")[[1]], env)
+  # Elements with key 1 should appear in original order: (1 a) before (1 c)
+  # Elements with key 2 should appear in original order: (2 b) before (2 d)
+  expect_equal(result[[1]], list(1, quote(a)))
+  expect_equal(result[[2]], list(1, quote(c)))
+  expect_equal(result[[3]], list(2, quote(b)))
+  expect_equal(result[[4]], list(2, quote(d)))
 })
 
 test_that("merge combines two sorted lists", {

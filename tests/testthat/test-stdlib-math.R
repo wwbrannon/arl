@@ -78,15 +78,23 @@ test_that("numeric operations handle boundary conditions", {
 # Coverage: Variadic comparison operators with 1 arg (error paths)
 # ============================================================================
 
-test_that("variadic comparison operators error with < 2 arguments", {
+test_that("variadic comparison operators return #t with 0 or 1 arguments (vacuously true)", {
   env <- new.env(parent = emptyenv())
   stdlib_env(engine, env)
 
-  expect_error(engine$eval_in_env(engine$read("(< 1)")[[1]], env), "requires at least two arguments")
-  expect_error(engine$eval_in_env(engine$read("(> 1)")[[1]], env), "requires at least two arguments")
-  expect_error(engine$eval_in_env(engine$read("(<= 1)")[[1]], env), "requires at least two arguments")
-  expect_error(engine$eval_in_env(engine$read("(>= 1)")[[1]], env), "requires at least two arguments")
-  expect_error(engine$eval_in_env(engine$read("(== 1)")[[1]], env), "requires at least two arguments")
+  # 1 argument: vacuously true
+  expect_true(engine$eval_in_env(engine$read("(< 1)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(> 1)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(<= 1)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(>= 1)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(== 1)")[[1]], env))
+
+  # 0 arguments: vacuously true
+  expect_true(engine$eval_in_env(engine$read("(<)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(>)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(<=)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(>=)")[[1]], env))
+  expect_true(engine$eval_in_env(engine$read("(==)")[[1]], env))
 })
 
 # ============================================================================
@@ -101,8 +109,10 @@ test_that("variadic arithmetic operators error with 0 arguments", {
   expect_error(engine$eval_in_env(engine$read("(/)")[[1]], env), "requires at least one argument")
   expect_error(engine$eval_in_env(engine$read("(min)")[[1]], env), "requires at least one argument")
   expect_error(engine$eval_in_env(engine$read("(max)")[[1]], env), "requires at least one argument")
-  expect_error(engine$eval_in_env(engine$read("(gcd)")[[1]], env), "requires at least one argument")
-  expect_error(engine$eval_in_env(engine$read("(lcm)")[[1]], env), "requires at least one argument")
+  # gcd with 0 args returns 0 (identity element)
+  expect_equal(engine$eval_in_env(engine$read("(gcd)")[[1]], env), 0)
+  # lcm with 0 args returns 1 (identity element)
+  expect_equal(engine$eval_in_env(engine$read("(lcm)")[[1]], env), 1)
 })
 
 # ============================================================================

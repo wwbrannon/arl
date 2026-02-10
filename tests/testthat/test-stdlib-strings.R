@@ -62,9 +62,8 @@ test_that("number->string converts with bases", {
   # Binary
   expect_equal(env$`number->string`(8, 2), "1000")
 
-  # Octal - returns octmode object, convert to string
-  result <- env$`number->string`(64, 8)
-  expect_equal(as.character(result), "100")
+  # Octal
+  expect_equal(env$`number->string`(64, 8), "100")
 })
 
 test_that("string->number parses numbers", {
@@ -194,6 +193,10 @@ test_that("string match helpers work", {
 
   expect_equal(env$`string-replace`("hello", "l", "L"), "heLlo")
   expect_equal(env$`string-replace-all`("hello", "l", "L"), "heLLo")
+
+  # Regex mode via :fixed #f
+  expect_equal(env$`string-replace`("abc123", "[0-9]+", "NUM", fixed = FALSE), "abcNUM")
+  expect_equal(env$`string-replace-all`("a1b2c3", "[0-9]", "X", fixed = FALSE), "aXbXcX")
 })
 
 # ============================================================================
@@ -222,7 +225,7 @@ test_that("string operations handle edge cases", {
   # string-join with single element
   expect_equal(env$`string-join`(list("a"), "-"), "a")
 
-  # string-split with empty string (returns character(0))
+  # string-split with empty string (R's strsplit("", "-", fixed=TRUE) returns character(0))
   result <- env$`string-split`("", "-")
   expect_equal(length(result), 0)
   expect_true(is.character(result))

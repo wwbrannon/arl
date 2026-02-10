@@ -52,13 +52,13 @@
       (if (< pos 0) #nil (- pos 1))))
 
   (define string-replace
-    (lambda (str pattern replacement (fixed #f))
-      "Replace first match."
+    (lambda (str pattern replacement (fixed #t))
+      "Replace first match. Default is literal (fixed); pass :fixed #f for regex."
       (sub pattern replacement str :fixed fixed)))
 
   (define string-replace-all
-    (lambda (str pattern replacement (fixed #f))
-      "Replace all matches."
+    (lambda (str pattern replacement (fixed #t))
+      "Replace all matches. Default is literal (fixed); pass :fixed #f for regex."
       (gsub pattern replacement str :fixed fixed)))
 
   (define string-append
@@ -188,7 +188,7 @@
               (if (== base 16)
                 (tolower (r/call "as.hexmode" (list (as.integer num))))
                 (if (== base 8)
-                  (r/call "as.octmode" (list (as.integer num)))
+                  (as.character (r/call "as.octmode" (list (as.integer num))))
                   (if (== base 2)
                     ;; Binary conversion
                     (begin

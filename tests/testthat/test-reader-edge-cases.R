@@ -336,8 +336,9 @@ test_that("keywords", {
   expect_equal(result, FALSE)
 
   # Bare keywords in argument position are treated as named argument syntax
-  # This should error because = doesn't accept a 'foo' argument
-  expect_error(engine$eval_text("(= :foo :foo)"))
+  # :foo :foo becomes a named arg foo=(symbol foo), so = sees 1 arg (vacuously true)
+  result <- engine$eval_text("(= :foo :foo)")
+  expect_true(result)
 })
 
 test_that("dotted pairs / improper lists", {
@@ -354,8 +355,8 @@ test_that("nested quotes", {
   engine <- make_engine()
 
   result <- engine$eval_text("''x")
-  # Should be (quote (quote x)) - returns a call/quote object
-  expect_true(is.call(result) || is.symbol(result))
+  # Should be (quote x) - the outer quote is evaluated, returning the inner quote form
+  expect_true(is.call(result))
 })
 
 test_that("empty string", {

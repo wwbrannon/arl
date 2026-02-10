@@ -298,27 +298,37 @@
 
   (define merge
     (lambda (list1 list2 comparator)
-      "Merge two sorted lists into one sorted list."
+      "Merge two sorted lists into one sorted list.
+       Stable: when elements are equal (neither comparator direction is true), takes from list1 first."
       (define l1 (__as-list list1))
       (define l2 (__as-list list2))
       (define acc (list))
       (while (and (not (null? l1)) (not (null? l2)))
-        (if (comparator (car l1) (car l2))
-          (begin
-            (set! acc (cons (car l1) acc))
-            (set! l1 (cdr l1)))
+        ;; Take from l2 only when l2 is strictly less than l1; otherwise take from l1 (stable)
+        (if (comparator (car l2) (car l1))
           (begin
             (set! acc (cons (car l2) acc))
-            (set! l2 (cdr l2)))))
+            (set! l2 (cdr l2)))
+          (begin
+            (set! acc (cons (car l1) acc))
+            (set! l1 (cdr l1)))))
       (if (null? l1)
         (append (reverse acc) l2)
         (append (reverse acc) l1))))
 
   (define stable-sort
     (lambda (lst comparator)
-      "Stable sort - preserves order of equal elements."
-      ;; R's sort is already stable, so this is an alias
-      (sort lst comparator)))
+      "Stable sort - preserves order of equal elements. Uses merge sort internally."
+      (define items (__as-list lst))
+      (if (<= (__rlength items) 1)
+        items
+        (begin
+          (define mid (as.integer (/ (__rlength items) 2)))
+          (define left (r/call "[" (list items (seq_len mid))))
+          (define right (r/call "[" (list items (seq (+ mid 1) (__rlength items)))))
+          (merge (stable-sort left comparator)
+                 (stable-sort right comparator)
+                 comparator)))))
 
   ;; List generation
   (define range

@@ -32,24 +32,32 @@
           `(if ,test (begin ,@body) #nil)
           `(if ,test (begin ,@body) (cond ,@rest)))))))
 
+(define __case-clauses
+  (lambda (key-sym clause rest)
+    "Helper: generate case clause expansion using already-bound key symbol."
+    (if (null? clause)
+      (error "case: Missing required parameter (else clause)")
+      (begin
+        (define datums (car clause))
+        (define body (cdr clause))
+        (if (and (symbol? datums) (= (as.character datums) "else"))
+          `(begin ,@body)
+          (begin
+            ;; datums is a list of values to match against
+            (define test-expr
+              (if (= (length datums) 1)
+                `(= ,key-sym (quote ,(car datums)))
+                `(or ,@(map (lambda (d) `(= ,key-sym (quote ,d))) datums))))
+            (if (null? rest)
+              `(if ,test-expr (begin ,@body) #nil)
+              `(if ,test-expr (begin ,@body)
+                   ,(__case-clauses key-sym (car rest) (cdr rest))))))))))
+
 (defmacro case (key clause . rest)
-  "Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...)."
-  (if (null? clause)
-    (error "case: Missing required parameter (else clause)")
-    (begin
-      (define datums (car clause))
-      (define body (cdr clause))
-      (if (and (symbol? datums) (= (as.character datums) "else"))
-        `(begin ,@body)
-        (begin
-          ;; datums is a list of values to match against
-          (define test-expr
-            (if (= (length datums) 1)
-              `(= ,key (quote ,(car datums)))
-              `(or ,@(map (lambda (d) `(= ,key (quote ,d))) datums))))
-          (if (null? rest)
-            `(if ,test-expr (begin ,@body) #nil)
-            `(if ,test-expr (begin ,@body) (case ,key ,@rest))))))))
+  "Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...).
+   Key expression is evaluated only once."
+  (define key-sym (gensym "case-key"))
+  `((lambda (,key-sym) ,(__case-clauses key-sym clause rest)) ,key))
 
 ;;; Error handling helper
 

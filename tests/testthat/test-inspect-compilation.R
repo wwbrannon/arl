@@ -41,12 +41,12 @@ test_that("inspect_compilation accepts env and uses it for expansion", {
   env <- new.env(parent = baseenv())
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("control"), env)
-  # With control loaded, (and 1 2) expands (macro); without env would use engine env
-  out <- engine$inspect_compilation("(and 1 2)", env = env)
+  # With control loaded, (when x 42) is a real macro that expands to (if x (begin 42) #nil)
+  out <- engine$inspect_compilation("(when x 42)", env = env)
   expect_named(out, c("parsed", "expanded", "compiled", "compiled_deparsed"))
   expect_true(is.language(out$parsed))
   expect_true(is.language(out$expanded))
-  # Expanded form may differ from parsed when macros are involved
+  # Expanded form should differ from parsed since when is a macro
   expect_true(is.language(out$compiled) || is.null(out$compiled))
   if (!is.null(out$compiled_deparsed)) {
     expect_type(out$compiled_deparsed, "character")

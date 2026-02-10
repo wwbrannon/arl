@@ -111,14 +111,17 @@
               (lapply (seq_len min-len) zip-at)))))))
 
   (define member
-    (lambda (x lst)
-      "Return sublist of lst starting at first element equal to x, or #f if not found."
+    (lambda (x lst (use-identical #f))
+      "Return sublist of lst starting at first element equal to x, or #f if not found.
+       Uses equal? by default; pass :use-identical #t for R's identical()."
       (define items (__as-list lst))
       (define result #f)
       (define remaining items)
       (while (and (> (length remaining) 0) (not result))
         (begin
-          (when (identical (car remaining) x)
+          (when (if use-identical
+                  (identical (car remaining) x)
+                  (equal? (car remaining) x))
             (set! result remaining))
           (set! remaining (cdr remaining))))
       result))

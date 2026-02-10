@@ -21,6 +21,15 @@ test_that("member and contains? sequence helpers work", {
   expect_equal(env$member(2, list(1, 2, 3)), list(2, 3))
   expect_false(env$member(5, list(1, 2, 3)))
 
+  # member uses equal? by default (structural equality)
+  expect_equal(env$member(list(1, 2), list(list(3, 4), list(1, 2), list(5, 6))),
+               list(list(1, 2), list(5, 6)))
+
+  # use-identical keyword for identity comparison (2 is double, identical match)
+  expect_equal(env$member(2, list(1, 2, 3), `use-identical` = TRUE), list(2, 3))
+  # 2L (integer) is not identical to 2 (double) in R
+  expect_false(env$member(2L, list(1, 2, 3), `use-identical` = TRUE))
+
   expect_true(env$`contains?`(2, list(1, 2, 3)))
   expect_false(env$`contains?`(5, list(1, 2, 3)))
 })

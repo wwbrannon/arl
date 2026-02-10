@@ -38,10 +38,10 @@
       (begin
         (define env (stdlib-env))
         (define class-name (s3-type obj))
-        (define method-name (paste0 "equal?." class-name))
+        (define method-name (paste0 (as.character generic-name) "." class-name))
         (define method (get0 method-name :envir env :inherits #f))
         (if (nil? method)
-          (set! method (get "equal?.default" :envir env)))
+          (set! method (get (paste0 (as.character generic-name) ".default") :envir env)))
         (funcall method args))))
 
   ; a wrapper for clarity's sake around define

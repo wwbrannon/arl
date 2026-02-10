@@ -825,8 +825,9 @@ Compiler <- R6::R6Class(
       ))
     },
     compile_and = function(expr) {
-      if (length(expr) < 2) {
-        return(private$fail("and requires at least 1 argument"))
+      # (and) with no arguments returns #t (Scheme identity element)
+      if (length(expr) == 1) {
+        return(TRUE)
       }
 
       # Flatten nested ANDs recursively: (and (and a b) c) → (and a b c)
@@ -893,8 +894,9 @@ Compiler <- R6::R6Class(
       build(1L)
     },
     compile_or = function(expr) {
-      if (length(expr) < 2) {
-        return(private$fail("or requires at least 1 argument"))
+      # (or) with no arguments returns #f (Scheme identity element)
+      if (length(expr) == 1) {
+        return(FALSE)
       }
 
       # Flatten nested ORs recursively: (or (or a b) c) → (or a b c)

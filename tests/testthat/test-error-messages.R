@@ -18,13 +18,14 @@ test_that("division by zero returns Inf", {
 
 test_that("wrong number of arguments error", {
   engine <- make_engine()
-  expect_error(
-    engine$eval_text("(+)"),
-    NA  # Just check it doesn't crash
-  )
-  # Should succeed with 0 args
+  # (+) with 0 args returns identity element 0
   result <- engine$eval_text("(+)")
   expect_equal(result, 0)
+
+  # User-defined lambda with wrong arity
+  engine$eval_text("(define f (lambda (x y) (+ x y)))")
+  expect_error(engine$eval_text("(f 1)"), "argument|arity|parameter")
+  expect_error(engine$eval_text("(f 1 2 3)"), "argument|arity|unused")
 })
 
 test_that("invalid define syntax", {

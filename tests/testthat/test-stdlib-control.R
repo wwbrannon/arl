@@ -159,6 +159,14 @@ test_that("case branches on key equality (Scheme syntax)", {
   result <- engine$eval_in_env(
     engine$read("(case 99 ((1 2 3) 'small) ((4 5 6) 'big) (else 'other))")[[1]], env)
   expect_equal(as.character(result), "other")
+
+  # Key expression is evaluated only once
+  engine$eval_in_env(engine$read("(define counter 0)")[[1]], env)
+  result <- engine$eval_in_env(
+    engine$read("(case (begin (set! counter (+ counter 1)) 2)
+                   ((1) 'one) ((2) 'two) ((3) 'three))")[[1]], env)
+  expect_equal(as.character(result), "two")
+  expect_equal(env$counter, 1)  # key evaluated exactly once
 })
 
 # ============================================================================
@@ -196,6 +204,17 @@ test_that("or macro works", {
 
   result <- engine$eval_in_env(engine$read("(or2 #f #f)")[[1]], env)
   expect_false(result)
+})
+
+test_that("and/or with zero arguments return identity values", {
+  env <- new.env(parent = baseenv())
+  stdlib_env(engine, env)
+
+  # (and) with no args returns #t (Scheme identity for and)
+  expect_true(engine$eval_in_env(engine$read("(and)")[[1]], env))
+
+  # (or) with no args returns #f (Scheme identity for or)
+  expect_false(engine$eval_in_env(engine$read("(or)")[[1]], env))
 })
 
 test_that("variadic and/or short-circuit correctly", {

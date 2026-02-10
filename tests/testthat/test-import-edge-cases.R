@@ -132,7 +132,7 @@ test_that("load with runtime error in module", {
 
   # In R, division by zero returns Inf, not an error
   result <- engine$eval_text(sprintf('(load "%s")', module_path))
-  expect_true(is.infinite(result) || !is.null(result))
+  expect_equal(result, Inf)
 
   # Clean up
   unlink(module_path)
