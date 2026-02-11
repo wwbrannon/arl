@@ -34,20 +34,11 @@ jobs:
             any::R6
           needs: coverage
 
-      - name: Build stdlib cache
-        run: make stdlib-cache
-
-      - name: Run R coverage
-        run: make coverage-r
-
-      - name: Run Rye coverage
-        run: make coverage-rye
-
-      - name: Generate combined report
-        run: make coverage-combined
+      - name: Run coverage
+        run: make coverage
 
       - name: Upload R coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/r/coverage.xml
@@ -56,7 +47,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload Rye coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/rye/coverage.json
