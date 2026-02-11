@@ -865,7 +865,28 @@ Evaluate a Rye expression in the current environment.
 (eval '(list 1 2 3))      ; => (1 2 3)
 ```
 
-**See also:** [r/eval](#r-eval), [macroexpand](#macroexpand)
+**See also:** [r/eval](#r-eval), [read](#read), [macroexpand](#macroexpand)
+
+---
+
+### read {#read}
+
+Parse a string into a Rye expression without evaluating it.
+
+**Signature:** `(read source)`
+
+**Examples:**
+```lisp
+(read "(+ 1 2)")          ; => (+ 1 2) (unevaluated)
+(read "42")               ; => 42
+(read "foo")              ; => foo (symbol)
+```
+
+**Note:** Returns the first expression from the source string, or #nil if
+the string contains no expressions. Like R's parse(), but returns Rye
+S-expressions.
+
+**See also:** [eval](#eval), [read-from-string](stdlib-strings-io.html#read-from-string)
 
 ---
 

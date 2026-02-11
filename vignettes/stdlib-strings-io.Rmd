@@ -479,26 +479,11 @@ Read single line from stdin.
 
 ---
 
-### read {#read}
-
-Parse Rye expression from string.
-
-**Signature:** `(read source)`
-
-**Examples:**
-```lisp
-(read "(+ 1 2)")  ; => (+ 1 2) (unevaluated)
-```
-
-**See also:** [read-from-string](#read-from-string), [eval](stdlib-macro-eval-interop.html#eval)
-
----
-
 ### read-from-string {#read-from-string}
 
 **Signature:** `(read-from-string x)`
 
-**See also:** [read](#read)
+**See also:** [read](stdlib-macro-eval-interop.html#read)
 
 ---
 

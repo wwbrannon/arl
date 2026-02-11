@@ -40,7 +40,21 @@ Signature: (eval expr)
 Examples:
   (eval '(+ 1 2))           ; => 3
   (eval '(list 1 2 3))      ; => (1 2 3)
-Seealso: r/eval, macroexpand
+Seealso: r/eval, read, macroexpand
+
+Name: read
+Vignette: stdlib-macro-eval-interop
+Section: Evaluation
+Description: Parse a string into a Rye expression without evaluating it.
+Signature: (read source)
+Examples:
+  (read "(+ 1 2)")          ; => (+ 1 2) (unevaluated)
+  (read "42")               ; => 42
+  (read "foo")              ; => foo (symbol)
+Seealso: eval, read-from-string
+Note: Returns the first expression from the source string, or #nil if
+  the string contains no expressions. Like R's parse(), but returns Rye
+  S-expressions.
 
 Name: capture
 Vignette: stdlib-macro-eval-interop

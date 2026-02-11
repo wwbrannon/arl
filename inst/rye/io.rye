@@ -4,7 +4,7 @@
   (export __normalize-line-vector __normalize-lines
           read-line read-file read-lines
           write-file write-lines append-file file-exists?
-          read print newline
+          print newline
           read-from-string write-string
           file-size file-modified-time file-delete
           directory-exists? directory-list directory-delete
@@ -43,17 +43,6 @@
       (if (is.null con) (define con (stdin)) #nil)
       (if (nzchar prompt) (cat prompt) #nil)
       (r/call "readLines" (list :con con :n 1 :warn #f))))
-
-  ;;' @description Parse Rye expression from string.
-  ;;' @examples
-  ;;' (read "(+ 1 2)")  ; => (+ 1 2) (unevaluated)
-  ;;' @seealso read-from-string, eval
-  (define read
-    (lambda (source)
-      (define exprs (rye_read source))
-      (if (> (length exprs) 0)
-        (r/call "[[" (list exprs 1))
-        #nil)))
 
   ;;' @seealso read
   (define read-from-string read)  ;; Alias for read

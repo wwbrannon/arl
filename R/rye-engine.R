@@ -223,8 +223,9 @@ RyeEngine <- R6::R6Class(
         p$get_expr()
       }
 
-      env$rye_read <- function(source, source_name = NULL) {
-        self$read(source, source_name = source_name)
+      env$read <- function(source) {
+        exprs <- self$read(source)
+        if (length(exprs) > 0L) exprs[[1L]] else NULL
       }
 
       env$`__set_doc` <- function(fn, docstring) {
