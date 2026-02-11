@@ -16,41 +16,6 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-## Documentation Helpers
-
-### doc! {#doc-bang}
-
-Attach docstring to function. Usage: (doc! function-name "docstring")
-
-**Signature:** `(doc! sym docstring)`
-
-**Examples:**
-```lisp
-(doc! my-fn "Compute the frobnitz of x.")
-(doc my-fn)               ; => "Compute the frobnitz of x."
-```
-
-**See also:** [doc](#doc), help
-
----
-
-### doc {#doc}
-
-Retrieve docstring from function's rye_doc attribute.
-
-**Signature:** `(doc fn)`
-
-**Examples:**
-```lisp
-(define add (lambda (a b) "Add two numbers." (+ a b)))
-(doc add)                 ; => "Add two numbers."
-(doc car)                 ; => #nil  (no docstring set)
-```
-
-**See also:** [doc!](#doc-bang), help
-
----
-
 ## Error and Warning
 
 ### error {#error}
@@ -194,7 +159,9 @@ Apply a function with a provided list of arguments.
 
 ### r/call {#r-call}
 
-Call an R function with optional environment. Searches from .GlobalEnv by default, finding base and loaded package functions.
+Call an R function with optional environment.
+Searches from .GlobalEnv by default, finding base and loaded
+package functions.
 
 **Signature:** `(r/call fn [args (list])`
 
@@ -887,6 +854,29 @@ the string contains no expressions. Like R's parse(), but returns Rye
 S-expressions.
 
 **See also:** [eval](#eval), [read-from-string](stdlib-strings-io.html#read-from-string)
+
+---
+
+### write {#write}
+
+Convert a Rye expression to its string representation.
+The inverse of read.
+
+**Signature:** `(write expr)`
+
+**Examples:**
+```lisp
+(write '(+ 1 2))          ; => "(+ 1 2)"
+(write 42)                ; => "42"
+(write "hello")           ; => "\"hello\""
+(write #t)                ; => "#t"
+```
+
+**Note:** Produces output that can be parsed back with read, ensuring the
+round-trip property: (read (write expr)) equals expr for any expression
+produced by read.
+
+**See also:** [read](#read), [eval](#eval), [format-value](stdlib-strings-io.html#format-value)
 
 ---
 

@@ -236,7 +236,8 @@ currying, juxtaposition, memoization, and iteration.
 
 ### curry {#curry}
 
-Curry a function - enables partial application with optional initial arguments.
+Curry a function - enables partial application
+with optional initial arguments.
 
 **Signature:** `(curry fn initial-args...)`
 
@@ -306,7 +307,9 @@ Apply function n times to initial value.
 
 ### iterate-until {#iterate-until}
 
-Apply function starting from init, collecting values until predicate becomes true. Includes all values where predicate is false, stops when next value would satisfy predicate.
+Apply function starting from init, collecting
+values until predicate becomes true. Includes all values where
+predicate is false, stops when next value would satisfy predicate.
 
 **Signature:** `(iterate-until fn init pred)`
 

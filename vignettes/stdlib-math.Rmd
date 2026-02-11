@@ -819,7 +819,8 @@ Return base raised to power.
 
 ### log {#log}
 
-Return logarithm of x. With one argument, returns natural log. With two, returns log to the given base.
+Return logarithm of x. With one argument,
+returns natural log. With two, returns log to the given base.
 
 **Signature:** `(log x [base #nil])`
 

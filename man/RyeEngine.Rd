@@ -50,6 +50,7 @@ option \code{rye.use_env_cache}.}
 \itemize{
 \item \href{#method-RyeEngine-new}{\code{RyeEngine$new()}}
 \item \href{#method-RyeEngine-read}{\code{RyeEngine$read()}}
+\item \href{#method-RyeEngine-write}{\code{RyeEngine$write()}}
 \item \href{#method-RyeEngine-tokenize}{\code{RyeEngine$tokenize()}}
 \item \href{#method-RyeEngine-parse}{\code{RyeEngine$parse()}}
 \item \href{#method-RyeEngine-eval}{\code{RyeEngine$eval()}}
@@ -123,6 +124,23 @@ Tokenize and parse source into expressions.
 \item{\code{source}}{Character string containing Rye source.}
 
 \item{\code{source_name}}{Optional source name for error reporting.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RyeEngine-write"></a>}}
+\if{latex}{\out{\hypertarget{method-RyeEngine-write}{}}}
+\subsection{Method \code{write()}}{
+Convert a Rye expression to its string representation. Inverse of read().
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RyeEngine$write(expr)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
 }
 \if{html}{\out{</div>}}
 }

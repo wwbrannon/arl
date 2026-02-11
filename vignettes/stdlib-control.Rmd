@@ -78,7 +78,9 @@ Multi-branch conditional.
 
 ### case {#case}
 
-Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). Key expression is evaluated only once.
+Branch on key equality. Each clause:
+((datum ...) body ...) or (else body ...).
+Key expression is evaluated only once.
 
 **Signature:** `(case key clause rest...)`
 

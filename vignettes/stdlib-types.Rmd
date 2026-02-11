@@ -81,7 +81,8 @@ Alias for null?.
 
 ### atom? {#atom}
 
-Return #t if x is not a non-empty list or dotted pair (i.e. not list-or-pair?).
+Return #t if x is not a non-empty list or
+dotted pair (i.e. not list-or-pair?).
 
 **Signature:** `(atom? x)`
 
@@ -99,7 +100,8 @@ Return #t if x is not a non-empty list or dotted pair (i.e. not list-or-pair?).
 
 ### empty? {#empty}
 
-Return #t if x is empty (0-length). (Note the empty string "" has length 1 and is not "empty"!)
+Return #t if x is empty (0-length).
+(Note the empty string "" has length 1 and is not "empty"!)
 
 **Signature:** `(empty? x)`
 

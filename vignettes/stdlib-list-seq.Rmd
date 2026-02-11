@@ -419,7 +419,8 @@ Find first alist entry with matching key (uses R's ==).
 
 ### assq {#assq}
 
-assq cannot be properly implemented in R (no eq?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
+assq cannot be properly implemented in R (no eq?).
+Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
 
 **Signature:** `(assq key alist)`
 
@@ -429,7 +430,8 @@ assq cannot be properly implemented in R (no eq?). Use assoc (equal?), assoc-by-
 
 ### assv {#assv}
 
-assv cannot be properly implemented in R (no eqv?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
+assv cannot be properly implemented in R (no eqv?).
+Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
 
 **Signature:** `(assv key alist)`
 
@@ -439,7 +441,8 @@ assv cannot be properly implemented in R (no eqv?). Use assoc (equal?), assoc-by
 
 ### rassoc {#rassoc}
 
-Find first alist entry with matching value (searches cdr of entries; uses equal?).
+Find first alist entry with matching value
+(searches cdr of entries; uses equal?).
 
 **Signature:** `(rassoc value alist)`
 
@@ -486,7 +489,8 @@ Generate numeric range from start to end (exclusive) with optional step.
 
 ### iota {#iota}
 
-Generate sequence of count numbers starting from start (default 0) with step (default 1).
+Generate sequence of count numbers starting from
+start (default 0) with step (default 1).
 
 **Signature:** `(iota count args...)`
 
@@ -704,7 +708,9 @@ Zip lists into list of tuples.
 
 ### member {#member}
 
-Return sublist of lst starting at first element equal to x, or #f if not found. Uses equal? by default; pass :use-identical #t for R's identical().
+Return sublist of lst starting at first element
+equal to x, or #f if not found. Uses equal? by default;
+pass :use-identical #t for R's identical().
 
 **Signature:** `(member x lst [use-identical #f])`
 
@@ -811,7 +817,9 @@ Sort list by applying key-fn to each element, then comparing.
 
 ### merge {#merge}
 
-Merge two sorted lists into one sorted list. Stable: when elements are equal (neither comparator direction is true), takes from list1 first.
+Merge two sorted lists into one sorted list.
+Stable: when elements are equal (neither comparator direction
+is true), takes from list1 first.
 
 **Signature:** `(merge list1 list2 comparator)`
 
