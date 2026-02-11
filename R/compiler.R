@@ -457,8 +457,11 @@ Compiler <- R6::R6Class(
         return(private$fail("define requires exactly 2 arguments: (define name value)"))
       }
       name <- expr[[2]]
-      if (is.symbol(name) && identical(as.character(name), self$env_var_name)) {
-        return(private$fail("define cannot bind reserved name .__env"))
+      if (is.symbol(name) && startsWith(as.character(name), ".__")) {
+        return(private$fail(sprintf(
+          "define cannot bind reserved name '%s' (names starting with '.__' are internal)",
+          as.character(name)
+        )))
       }
       # Detect (define name (lambda ...)) for self-tail-call optimization
       val_expr <- expr[[3]]
@@ -530,8 +533,11 @@ Compiler <- R6::R6Class(
         return(private$fail("set! requires exactly 2 arguments: (set! name value)"))
       }
       name <- expr[[2]]
-      if (is.symbol(name) && identical(as.character(name), self$env_var_name)) {
-        return(private$fail("set! cannot bind reserved name .__env"))
+      if (is.symbol(name) && startsWith(as.character(name), ".__")) {
+        return(private$fail(sprintf(
+          "set! cannot bind reserved name '%s' (names starting with '.__' are internal)",
+          as.character(name)
+        )))
       }
       val <- private$compile_impl(expr[[3]])
       if (is.null(val)) {
@@ -1612,12 +1618,12 @@ Compiler <- R6::R6Class(
       stmts <- vector("list", 2L * length(all_names))
       idx <- 1L
       for (k in seq_along(all_names)) {
-        tmp_name <- paste0(".tco_", all_names[k])
+        tmp_name <- paste0(".__tco_", all_names[k])
         stmts[[idx]] <- as.call(list(quote(`<-`), as.symbol(tmp_name), all_compiled[[k]]))
         idx <- idx + 1L
       }
       for (k in seq_along(all_names)) {
-        tmp_name <- paste0(".tco_", all_names[k])
+        tmp_name <- paste0(".__tco_", all_names[k])
         stmts[[idx]] <- as.call(list(quote(`<-`), as.symbol(all_names[k]), as.symbol(tmp_name)))
         idx <- idx + 1L
       }

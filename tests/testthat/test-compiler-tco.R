@@ -173,7 +173,7 @@ test_that("VERIFY: TCO with temp variables for multi-param swap", {
   ")
   deparsed <- paste(out$compiled_deparsed, collapse = "\n")
   expect_true(grepl("while", deparsed, fixed = TRUE))
-  expect_true(grepl(".tco_", deparsed, fixed = TRUE))
+  expect_true(grepl(".__tco_", deparsed, fixed = TRUE))
 })
 
 test_that("TCO: begin in tail position", {

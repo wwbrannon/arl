@@ -206,6 +206,42 @@ this case, the engine falls back to the interpreted evaluation path. The
 In practice, the compiler handles all standard Rye code. The fallback
 exists as a safety net for edge cases.
 
+## Reserved internal names
+
+If you inspect compiled output (via `inspect_compilation`) or peek inside
+Rye environments, you will see names that start with `.__` (dot,
+underscore, underscore). These are **reserved for Rye's internal
+machinery** and should not be used in user code.
+
+The convention serves two purposes:
+
+- The leading `.` hides names from `ls()`, keeping the environment tidy.
+- The `.__` prefix signals "internal -- do not touch."
+
+Examples you might encounter:
+
+| Name | Purpose |
+|------|---------|
+| `.__env` | Reference to the enclosing Rye environment |
+| `.__true_p` | Truthiness predicate for `if` tests |
+| `.__assign_pattern` | Destructuring assignment helper |
+| `.__tmp__N` | Compiler-generated temporaries |
+| `.__tco_<param>` | Swap variables for tail-call optimization |
+| `.__module` | Sentinel marking module environments |
+
+Attempting to bind a `.__`-prefixed name with `define` or `set!` is an
+error:
+
+```lisp
+(define .__foo 1)  ;; Error: reserved name
+(set! .__bar 2)    ;; Error: reserved name
+```
+
+This guard is enforced at both compile time and runtime. It cannot
+prevent all access (you can always reach into an R environment directly),
+but it makes the boundary between user code and internal machinery
+explicit.
+
 ## Related guides
 
 - [Getting Started](getting-started.html)

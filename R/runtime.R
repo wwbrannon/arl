@@ -26,6 +26,10 @@ missing_default <- function() {
   # Fast path: inline simple symbol case to avoid Env$new() allocation
   if (is.symbol(pattern)) {
     name <- as.character(pattern)
+    if (startsWith(name, ".__")) {
+      stop(sprintf("%s cannot bind reserved name '%s' (names starting with '.__' are internal)",
+                   mode, name), call. = FALSE)
+    }
     if (identical(mode, "define")) {
       base::assign(name, value, envir = env)
     } else {

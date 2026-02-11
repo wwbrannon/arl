@@ -59,6 +59,12 @@ test_that("compiled eval handles set! scoping and missing bindings", {
   expect_error(engine$eval_in_env(engine$read("(set! y 1)")[[1]], child), "variable 'y' is not defined")
 })
 
+test_that("define/set! reject reserved .__* names", {
+  expect_error(engine$eval_text('(define .__foo 1)'), "reserved name.*internal")
+  expect_error(engine$eval_text('(define .__env 1)'), "reserved name.*internal")
+  expect_error(engine$eval_text('(set! .__bar 1)'), "reserved name.*internal")
+})
+
 test_that("compiled eval validates load arguments and missing files", {
   expect_error(engine$eval(engine$read("(load 1)")[[1]]), "load requires a single file path string")
   expect_error(engine$eval(engine$read('(load "missing-file.rye")')[[1]]), "File not found")

@@ -99,6 +99,8 @@ Rye leverages R's existing eval/quote/environment system rather than reimplement
 - **Macros**: Compile-time code transformation with quasiquote/unquote
 - **Tail call optimization**: Self-TCO is implemented by the compiler for `(define name (lambda ...))` patterns -- self-tail-calls through `if`/`begin`/`cond`/`let`/`let*`/`letrec` are rewritten as loops. `loop`/`recur` is still useful for mutual recursion.
 
+**Reserved names**: Names starting with `.__` (dot-underscore-underscore) are reserved for internal use. The leading `.` hides them from `ls()` and the `__` signals internal machinery. User code cannot `define` or `set!` these names -- the compiler rejects them at compile time and the runtime rejects them as a fallback. All runtime helpers (`.__env`, `.__true_p`, `.__assign_pattern`, ...), compiler gensyms (`.__tmp__N`, `.__tco_<param>`, ...), sentinels (`.__helpers_installed`, `.__module`, ...), and registry bindings (`.__macros`, `.__module_registry`) use this prefix. The `rye_` prefix is reserved separately for S3 attributes/classes (`rye_src`, `rye_closure`, etc.) and filesystem paths (`.rye_cache`, `.rye_history`).
+
 **R Interoperability**:
 - All R functions callable directly: `(mean (c 1 2 3))` → `3`
 - Named arguments via keywords: `(seq :from 1 :to 10 :by 2)`
