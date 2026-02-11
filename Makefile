@@ -34,7 +34,7 @@ readme: clean-cache stdlib-order ## help: Render README from README.Rmd
 	R -q -e "devtools::load_all(); rmarkdown::render('README.Rmd')"
 
 .PHONY: vignettes
-vignettes: clean-cache stdlib-order ## help: Build vignettes
+vignettes: clean-cache stdlib-order stdlib-docs ## help: Build vignettes
 	R -q -e "devtools::build_vignettes()"
 
 .PHONY: site
@@ -49,7 +49,7 @@ site: clean-cache stdlib-order ## help: Build pkgdown site
 	rm -rf $$tmp
 
 .PHONY: document
-document: stdlib-docs devdoc readme vignettes site ## help: Generate all documentation
+document: devdoc readme vignettes site ## help: Generate all documentation
 
 #
 ## QA targets
