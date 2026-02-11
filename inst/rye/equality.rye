@@ -46,7 +46,7 @@
   ;;' @note This is R's `identical()` with no modifications. Use `equal?`
   ;;'   for deep structural equality with type coercion.
   (define identical?
-    (lambda (a b) (identical a b)))
+    (lambda (a b) (__ridentical a b)))
 
   ;;' @description **Not implemented in Rye.** Raises an error when called.
   ;;' @note True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
