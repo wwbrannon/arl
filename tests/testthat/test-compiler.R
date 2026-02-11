@@ -109,25 +109,6 @@ test_that("eval text errors include source and stack context", {
   expect_match(formatted, "eval_text")
 })
 
-test_that("quote_arg quotes symbols and calls by default", {
-  result <- engine$compiled_runtime$quote_arg(as.symbol("x"))
-  expect_true(is.call(result))
-  expect_equal(as.character(result[[1]]), "quote")
-  expect_equal(result[[2]], as.symbol("x"))
-
-  call_result <- engine$compiled_runtime$quote_arg(quote(f(1)))
-  expect_true(is.call(call_result))
-
-  literal_result <- engine$compiled_runtime$quote_arg(42)
-  expect_equal(literal_result, 42)
-})
-
-test_that("quote_arg can skip symbol quoting", {
-  result <- engine$compiled_runtime$quote_arg(as.symbol("x"), quote_symbols = FALSE)
-  expect_true(is.symbol(result))
-  expect_equal(as.character(result), "x")
-})
-
 # =============================================================================
 # current-env and r/eval (per-engine env stack, no global state)
 # =============================================================================

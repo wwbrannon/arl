@@ -313,13 +313,6 @@ CompiledRuntime <- R6::R6Class(
       args <- lapply(args, private$quote_arg_impl, quote_symbols = FALSE)
       do.call(fn, args)
     },
-    # @description Apply a function to evaluated args (used in tests).
-    do_call = function(fn, args, env = NULL) {
-      if (is.null(env)) {
-        env <- self$context$env$current_env()
-      }
-      private$do_call_impl(fn, args, env)
-    },
     quasiquote_compiled = function(expr, env) {
       eval_fn <- function(inner, e) {
         compiled <- self$context$compiler$compile(inner, e)
@@ -333,10 +326,6 @@ CompiledRuntime <- R6::R6Class(
     },
     promise_new_compiled = function(compiled_expr, env) {
       RyePromise$new(compiled_expr, env, self$eval_compiled)
-    },
-    # @description Quote an argument for compiled helpers (used in tests).
-    quote_arg = function(value, quote_symbols = TRUE) {
-      private$quote_arg_impl(value, quote_symbols = quote_symbols)
     },
     defmacro_compiled = function(name, params, body_arg, docstring, env) {
       body_list <- if (is.call(body_arg) && length(body_arg) >= 1 && identical(as.character(body_arg[[1]]), "begin")) {
@@ -468,25 +457,6 @@ CompiledRuntime <- R6::R6Class(
         return(as.call(list(as.symbol("quote"), value)))
       }
       value
-    },
-    do_call_impl = function(fn, args, env) {
-      # Special handling for $, [, [[ - don't quote symbols
-      if (identical(fn, base::`$`) || identical(fn, base::`[`) || identical(fn, base::`[[`)) {
-        args <- lapply(args, private$quote_arg_impl, quote_symbols = FALSE)
-        return(do.call(fn, args))
-      }
-
-      # For rye_no_quote functions, always quote symbols and calls to prevent
-      # premature evaluation during promise forcing, but do it in the Rye environment
-      # so symbols are looked up correctly.
-      if (isTRUE(attr(fn, "rye_no_quote"))) {
-        args <- lapply(args, private$quote_arg_impl, quote_symbols = TRUE)
-        return(do.call(fn, args, envir = env))
-      }
-
-      # For other functions, quote symbols and calls as usual
-      args <- lapply(args, private$quote_arg_impl, quote_symbols = TRUE)
-      do.call(fn, args)
     },
     eval_seq_compiled = function(exprs, env) {
       if (is.null(exprs) || length(exprs) == 0) {

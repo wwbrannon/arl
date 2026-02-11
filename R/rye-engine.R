@@ -407,8 +407,6 @@ RyeEngine <- R6::R6Class(
           eval(expr, envir = env)
         }
       }
-      attr(env$`r/eval`, "rye_no_quote") <- TRUE
-
       # Load rye_doc attributes from builtins-docs.dcf (single source of truth
       # shared with the vignette generator)
       private$load_builtin_docs(env)
