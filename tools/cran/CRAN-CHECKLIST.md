@@ -6,21 +6,17 @@ Run the full sequence:
 make cran
 ```
 
-Or run each step:
+## What `make cran` does
 
-```
-make cran-prep
-make cran-check
-make cran-comments
-```
+Runs `devdoc`, `readme`, `vignettes`, and `cran-comments`. All prerequisite
+targets (cache clearing, stdlib load-order rebuild, `devtools::load_all()`) are
+handled automatically. The `cran-comments` target depends on `check` (builds
+tarball + `R CMD check --as-cran`), reads the status from
+`rye.Rcheck/00check.log`, and generates `cran-comments.md` and
+`CRAN-SUBMISSION`.
 
-## What each target does
-
-- `cran-prep`: runs `devtools::document()`, renders `README.Rmd`, builds vignettes,
-  then performs `R CMD check --as-cran`.
-- `cran-check`: runs `R CMD check --as-cran` only.
-- `cran-comments`: generates `cran-comments.md` and `CRAN-SUBMISSION`.
-- `cran-clean`: removes `rye.Rcheck` and `tools/cran/cran_check_summary.txt`.
+To remove the `rye.Rcheck` directory when no longer needed, run `make
+cran-clean` or `make clean`.
 
 ## Review before submission
 

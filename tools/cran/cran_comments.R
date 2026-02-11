@@ -6,14 +6,17 @@ today <- format(Sys.Date(), "%Y-%m-%d")
 platform <- paste(Sys.info()[c("sysname", "release", "machine")], collapse = " ")
 local_r <- R.version$version.string
 
-status_line <- "Status: UNKNOWN (check not run)"
-summary_path <- file.path("tools", "cran", "cran_check_summary.txt")
-if (file.exists(summary_path)) {
-  summary_lines <- readLines(summary_path, warn = FALSE)
-  status_hits <- grep("^Status:", summary_lines, value = TRUE)
-  if (length(status_hits) > 0) {
-    status_line <- status_hits[length(status_hits)]
-  }
+# Read status from check log (expects `make check` to have run)
+log_path <- file.path("rye.Rcheck", "00check.log")
+if (!file.exists(log_path)) {
+  stop("Check log not found: ", log_path, "\nRun 'make check' first.")
+}
+log_lines <- readLines(log_path, warn = FALSE)
+status_hits <- grep("^Status:", log_lines, value = TRUE)
+status_line <- if (length(status_hits) > 0) {
+  status_hits[length(status_hits)]
+} else {
+  "Status: UNKNOWN (no Status line in log)"
 }
 
 counts <- list(errors = "0", warnings = "0", notes = "0")

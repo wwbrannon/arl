@@ -1,2 +1,0 @@
-CheckDir: /private/var/folders/mb/xhtbr_4x1qvgvdqz30bs79pw0000gn/T/RtmpDiyP1G/file77ca6e218147/rye.Rcheck
-Status: OK

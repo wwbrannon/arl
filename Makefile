@@ -49,7 +49,7 @@ site: clean-cache stdlib-order ## help: Build pkgdown site
 	rm -rf $$tmp
 
 .PHONY: document
-document: stdlib-docs devdoc readme vignettes site ## help: Generate all documentation (roxygen, README, vignettes, site)
+document: stdlib-docs devdoc readme vignettes site ## help: Generate all documentation
 
 #
 ## QA targets
@@ -57,7 +57,8 @@ document: stdlib-docs devdoc readme vignettes site ## help: Generate all documen
 
 .PHONY: check
 check: build ## help: Check the package (includes tests)
-	R -q -e 'devtools::check(args="--as-cran")'
+	@rm -rf rye.Rcheck
+	R -q -e 'devtools::check(args="--as-cran", check_dir=".", cleanup=FALSE)'
 
 #
 ## Coverage targets
@@ -207,28 +208,19 @@ stdlib-show-order: clean-cache stdlib-order ## help: Print stdlib load order (to
 #
 
 .PHONY: cran
-cran: cran-prep cran-comments ## help: Run full CRAN prep/check/comments
-
-.PHONY: cran-prep
-cran-prep: stdlib-order ## help: Prepare docs and run CRAN check
-	R -q -e "source('tools/cran/cran_prep.R')"
-
-.PHONY: cran-check
-cran-check: ## help: Run CRAN check
-	R -q -e "source('tools/cran/cran_check.R')"
+cran: devdoc readme vignettes cran-comments ## help: Run full CRAN prep/check/comments
 
 .PHONY: cran-comments
-cran-comments: ## help: Generate cran-comments and CRAN-SUBMISSION
-	R -q -e "source('tools/cran/cran_comments.R')"
-
-.PHONY: cran-clean
-cran-clean: ## help: Remove CRAN check artifacts
-	rm -rf rye.Rcheck
-	rm -f tools/cran/cran_check_summary.txt
+cran-comments: check ## help: Generate cran-comments and CRAN-SUBMISSION
+	Rscript tools/cran/cran_comments.R
 
 #
 ## Cleanup
 #
+
+.PHONY: cran-clean
+cran-clean: ## help: Remove CRAN check artifacts
+	rm -rf rye.Rcheck
 
 .PHONY: clean-coverage
 clean-coverage: ## help: Remove coverage output files
@@ -241,7 +233,7 @@ clean-cache: ## help: Remove .rye_cache directories (auto-runs before dev target
 	@find . -type d -name ".rye_cache" -exec rm -rf {} + 2>/dev/null || true
 
 .PHONY: clean
-clean: clean-coverage clean-cache ## help: Remove build artifacts and all make document output
+clean: clean-coverage clean-cache cran-clean ## help: Remove build artifacts and all make document output
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
 	rm -rf site/ doc/ Meta/
