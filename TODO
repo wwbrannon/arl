@@ -1,18 +1,13 @@
-o) should we make the allowable line length 80
+o) capture / rye_{read,parse,tokenize}: document? hide? remove? test more?
 
-documentation updates (use the doc review agent):
--------------------------------------------------
-o) update / systematize docs: make a plan
-o) write a compiler vignette (or inst/doc file?)
-o) internal technical docs in inst/doc
-o) get the site and vignettes updated
-o) get make document working
-
-o) consider using the github-action-benchmark GH action to run benchmarks / commit them to a separate branch / visualize them
+o) NEWS should be rewritten for initial CRAN submission
 
 CI / publish:
 -------------------------------------------------
-o) make CI configuration for coverage and everything else sane, figure out how to run some more during Feb, maybe shrink matrix?
 o) enable actions, get CI working
+o) make CI configuration for coverage and everything else sane, figure out how to run some more during Feb, maybe shrink matrix?
+o) consider using the github-action-benchmark GH action to run benchmarks / commit them to a separate branch / visualize them
+
 o) minor pkgdown warning about site url
 o) actually push site somewhere
+o) claude-sandbox-images: docker push and other automation

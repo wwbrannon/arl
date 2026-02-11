@@ -1,26 +1,20 @@
 SHELL := /bin/bash
 
-.PHONY: help
-help: ## help: Show this help message
-	@echo "Rye Development Commands"
-	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## help: .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## help: "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
-
 #
 ## Build/install targets
 #
 
 # Keep inst/rye/load-order.rds up to date (must run before build/install)
-.PHONY: stdlib-cache
-stdlib-cache: ## help: Build stdlib load order cache
+.PHONY: stdlib-order
+stdlib-order: ## help: Build stdlib load order cache
 	Rscript tools/build-stdlib-order.R
 
 .PHONY: install
-install: stdlib-cache ## help: Install the package
+install: clean-cache stdlib-order ## help: Install the package
 	R -q -e "devtools::install()"
 
 .PHONY: build
-build: stdlib-cache ## help: Build the package tarball
+build: clean-cache stdlib-order ## help: Build the package tarball
 	R -q -e "devtools::build()"
 
 #
@@ -76,7 +70,7 @@ coverage: coverage-all ## help: Run complete coverage analysis (R + Rye)
 coverage-all: coverage-r coverage-rye coverage-combined ## help: Run all coverage and generate combined report
 
 .PHONY: coverage-r
-coverage-r: ## help: Run R code coverage only
+coverage-r: clean-cache ## help: Run R code coverage only
 	@echo "Running R code coverage..."
 	@mkdir -p coverage/r
 	@R -q -e "\
@@ -98,7 +92,7 @@ coverage-r: ## help: Run R code coverage only
 	"
 
 .PHONY: coverage-rye
-coverage-rye: ## help: Run Rye code coverage only
+coverage-rye: clean-cache ## help: Run Rye code coverage only
 	@echo "Running Rye code coverage..."
 	@mkdir -p coverage/rye
 	@R -q -e "\
@@ -159,11 +153,11 @@ lint: ## help: Run linter checks
 	R -q -e "lintr::lint_dir(path='.')"
 
 .PHONY: test
-test: ## help: Run tests
+test: clean-cache ## help: Run tests
 	R -q -e "testthat::set_max_fails(Inf); devtools::test()"
 
 .PHONY: test-file
-test-file: ## help: Run a single test file (usage: make test-file FILE=test-parser)
+test-file: clean-cache ## help: Run a single test file (usage: make test-file FILE=test-parser)
 	@if [ -z "$(FILE)" ]; then \
 		echo "Error: FILE parameter required. Usage: make test-file FILE=test-parser"; \
 		exit 1; \
@@ -171,7 +165,7 @@ test-file: ## help: Run a single test file (usage: make test-file FILE=test-pars
 	R -q -e "devtools::load_all(); testthat::set_max_fails(Inf); testthat::test_file('tests/testthat/$(FILE).R')"
 
 .PHONY: test-native
-test-native: ## help: Run a single native test file (usage: make test-native FILE=test-equality-types)
+test-native: clean-cache ## help: Run a single native test file (usage: make test-native FILE=test-equality-types)
 	@if [ -z "$(FILE)" ]; then \
 		echo "Error: FILE parameter required. Usage: make test-native FILE=test-equality-types"; \
 		exit 1; \
@@ -179,11 +173,11 @@ test-native: ## help: Run a single native test file (usage: make test-native FIL
 	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- RyeEngine\$$new(); env <- engine\$$env\$$env; run_native_test_file('tests/native/$(FILE).rye', engine, env)"
 
 .PHONY: bench
-bench: ## help: Run all benchmarks
+bench: clean-cache ## help: Run all benchmarks
 	R -q -e "devtools::load_all(); source('benchmarks/run-all-benchmarks.R')"
 
 .PHONY: bench-component
-bench-component: ## help: Run single component benchmark (usage: make bench-component COMPONENT=tokenizer)
+bench-component: clean-cache ## help: Run single component benchmark (usage: make bench-component COMPONENT=tokenizer)
 	@if [ -z "$(COMPONENT)" ]; then \
 		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval, stdlib, e2e"; \
 		exit 1; \
@@ -191,11 +185,11 @@ bench-component: ## help: Run single component benchmark (usage: make bench-comp
 	R -q -e "devtools::load_all(); source('benchmarks/bench-$(COMPONENT).R')"
 
 .PHONY: profile
-profile: ## help: Generate profiling reports
+profile: clean-cache ## help: Generate profiling reports
 	R -q -e "devtools::load_all(); source('benchmarks/run-all-profiles.R')"
 
 .PHONY: profile-component
-profile-component: ## help: Profile single component (usage: make profile-component COMPONENT=tokenizer)
+profile-component: clean-cache ## help: Profile single component (usage: make profile-component COMPONENT=tokenizer)
 	@if [ -z "$(COMPONENT)" ]; then \
 		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval"; \
 		exit 1; \
@@ -210,8 +204,8 @@ bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD
 	fi
 	R -q -e "source('benchmarks/compare-results.R'); compare_benchmarks('$(OLD)', '$(NEW)')"
 
-.PHONY: stdlib-order
-stdlib-order: ## help: Print stdlib load order (topological sort)
+.PHONY: stdlib-show-order
+stdlib-show-order: ## help: Print stdlib load order (topological sort)
 	R -q -e "devtools::load_all(); rye:::rye_stdlib_print_order()"
 
 #
@@ -224,7 +218,7 @@ cran: ## help: Run full CRAN prep/check/comments
 	make cran-comments
 
 .PHONY: cran-prep
-cran-prep: stdlib-cache ## help: Prepare docs and run CRAN check
+cran-prep: stdlib-order ## help: Prepare docs and run CRAN check
 	R -q -e "source('tools/cran/cran_prep.R')"
 
 .PHONY: cran-check
@@ -244,16 +238,29 @@ cran-clean: ## help: Remove CRAN check artifacts
 ## Cleanup
 #
 
+.PHONY: clean-cache
+clean-cache: ## help: Remove .rye_cache directories (auto-runs before dev targets)
+	@find . -type d -name ".rye_cache" -exec rm -rf {} + 2>/dev/null || true
+
 .PHONY: clean
-clean: coverage-clean ## help: Remove build artifacts and all make document output
+clean: coverage-clean clean-cache ## help: Remove build artifacts and all make document output
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
 	rm -rf site/ doc/ Meta/
 	rm -f README.knit.md
 	rm -f vignettes/*.html vignettes/*.R vignettes/*.knit.md
-	find . -type d -name ".rye_cache" -exec rm -rf {} +
 	rm -f *.log
 	rm -f benchmarks/profiles/*.html
 	rm -rf benchmarks/profiles/*_files
 	# rm -f README.md  # version-controlled
 	# rm -rf man/  # version-controlled
+
+#
+## Help
+#
+
+.PHONY: help
+help: ## help: Show this help message
+	@echo "Rye Development Commands"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## help: .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## help: "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
