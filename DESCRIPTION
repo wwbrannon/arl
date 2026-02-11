@@ -1,6 +1,6 @@
 Package: rye
 Type: Package
-Title: A Lisp Dialect for R
+Title: A Lisp for R
 Version: 0.0.1
 Authors@R:
     person("William", "Brannon", email = "will.brannon@gmail.com",
@@ -8,11 +8,9 @@ Authors@R:
            comment = c(ORCID = "0000-0002-1435-8535"))
 Author: William Brannon
 Maintainer: William Brannon <will.brannon@gmail.com>
-Description: Rye is a Lisp dialect implemented in and with access to R,
-    leveraging R's Scheme heritage to provide a homoiconic language with
-    powerful macro capabilities and seamless R interoperability. Compatibility
-    with older R versions is intended, but versions earlier than R 4.x have not
-    been tested.
+Description: Rye is a Scheme-inspired Lisp embedded in R. It provides macros,
+    tail-call optimization, and first-class interoperability with R functions and
+    data structures. Implemented in pure R with no compiled code.
 License: MIT + file LICENSE
 Depends:
     R (>= 3.6)
