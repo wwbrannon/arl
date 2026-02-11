@@ -52,12 +52,36 @@ site: clean-cache stdlib-order ## help: Build pkgdown site
 document: devdoc readme vignettes site ## help: Generate all documentation
 
 #
-## QA targets
+## Test running, lint, R CMD check
 #
 
 .PHONY: check
 check: build ## help: Check the package (includes tests)
 	R -q -e 'devtools::check(args="--as-cran", check_dir=".")'
+
+.PHONY: lint
+lint: clean-cache stdlib-order ## help: Run linter checks
+	R -q -e "devtools::load_all(); lintr::lint_dir(path='.')"
+
+.PHONY: test
+test: clean-cache stdlib-order ## help: Run tests
+	R -q -e "testthat::set_max_fails(Inf); devtools::test()"
+
+.PHONY: test-file
+test-file: clean-cache stdlib-order ## help: Run a single test file (usage: make test-file FILE=test-parser)
+	@if [ -z "$(FILE)" ]; then \
+		echo "Error: FILE parameter required. Usage: make test-file FILE=test-parser"; \
+		exit 1; \
+	fi
+	R -q -e "devtools::load_all(); testthat::set_max_fails(Inf); testthat::test_file('tests/testthat/$(FILE).R')"
+
+.PHONY: test-native
+test-native: clean-cache stdlib-order ## help: Run a single native test file (usage: make test-native FILE=test-equality-types)
+	@if [ -z "$(FILE)" ]; then \
+		echo "Error: FILE parameter required. Usage: make test-native FILE=test-equality-types"; \
+		exit 1; \
+	fi
+	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- Engine\$$new(); env <- engine\$$env\$$env; run_native_test_file('tests/native/$(FILE).rye', engine, env)"
 
 #
 ## Coverage targets
@@ -95,29 +119,9 @@ coverage-report: ## help: Open coverage reports in browser
 		exit 1; \
 	fi
 
-.PHONY: lint
-lint: clean-cache stdlib-order ## help: Run linter checks
-	R -q -e "devtools::load_all(); lintr::lint_dir(path='.')"
-
-.PHONY: test
-test: clean-cache stdlib-order ## help: Run tests
-	R -q -e "testthat::set_max_fails(Inf); devtools::test()"
-
-.PHONY: test-file
-test-file: clean-cache stdlib-order ## help: Run a single test file (usage: make test-file FILE=test-parser)
-	@if [ -z "$(FILE)" ]; then \
-		echo "Error: FILE parameter required. Usage: make test-file FILE=test-parser"; \
-		exit 1; \
-	fi
-	R -q -e "devtools::load_all(); testthat::set_max_fails(Inf); testthat::test_file('tests/testthat/$(FILE).R')"
-
-.PHONY: test-native
-test-native: clean-cache stdlib-order ## help: Run a single native test file (usage: make test-native FILE=test-equality-types)
-	@if [ -z "$(FILE)" ]; then \
-		echo "Error: FILE parameter required. Usage: make test-native FILE=test-equality-types"; \
-		exit 1; \
-	fi
-	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- Engine\$$new(); env <- engine\$$env\$$env; run_native_test_file('tests/native/$(FILE).rye', engine, env)"
+#
+## Benchmarking and profiling
+#
 
 .PHONY: bench
 bench: clean-cache stdlib-order ## help: Run all benchmarks
