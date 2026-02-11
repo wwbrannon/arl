@@ -1,12 +1,7 @@
-o) is a load-order.rds entirely safe? binaries and such -- should it be text?
-
-o) coverage targets have a lot of embedded R code -- factor out?
-
-o) remove any other rye_ references we can
+o) rename package
 
 o) update README
 o) update citation
-o) maybe rename package?
 
 o) enable actions
 o) rationalize CI configuration for coverage and everything else

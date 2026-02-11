@@ -26,7 +26,7 @@ ModuleCache <- R6::R6Class(
       # Use MD5 for file content hashing (fast and adequate for cache invalidation)
       file_hash <- tools::md5sum(src_file)
 
-      cache_dir <- file.path(dirname(src_file), ".rye_cache")
+      cache_dir <- file.path(dirname(src_file), paste0(".", .pkg_name, "_cache"))
       base_name <- basename(src_file)
 
       list(

@@ -63,19 +63,19 @@ Engine <- R6::R6Class(
     initialize = function(env = NULL, parent = NULL, use_env_cache = NULL, coverage_tracker = NULL) {
       # Priority: explicit parameter > global option > default FALSE
       if (is.null(use_env_cache)) {
-        self$use_env_cache <- getOption("rye.use_env_cache", FALSE)
+        self$use_env_cache <- .pkg_option("use_env_cache", FALSE)
       } else {
         self$use_env_cache <- isTRUE(use_env_cache)
       }
 
       # Show one-time warning if enabled
-      if (self$use_env_cache && !getOption("rye.env_cache_warning_shown", FALSE)) {
+      if (self$use_env_cache && !.pkg_option("env_cache_warning_shown", FALSE)) {
         message(
           "Note: Environment cache is enabled. ",
           "This provides 4x speedup but is only safe when dependencies don't change. ",
-          "Disable with options(rye.use_env_cache = FALSE) if working with changing code."
+          paste0("Disable with options(", .pkg_name, ".use_env_cache = FALSE) if working with changing code.")
         )
-        options(rye.env_cache_warning_shown = TRUE)
+        .set_pkg_option("env_cache_warning_shown", TRUE)
       }
 
       self$env <- Env$new(env = env, parent = parent)

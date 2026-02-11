@@ -44,7 +44,7 @@ CLI <- R6::R6Class(
     # @param message Error message string.
     # @param show_help If TRUE, print CLI help after the message.
     cli_exit_with_error = function(message, show_help = TRUE) {
-      exit_fn <- getOption("rye.cli_exit_fn", NULL)
+      exit_fn <- .pkg_option("cli_exit_fn")
       if (!is.null(exit_fn) && is.function(exit_fn)) {
         exit_fn(message, show_help)
         return(invisible(NULL))
@@ -192,7 +192,7 @@ CLI <- R6::R6Class(
       positional <- parsed$args
 
       if (isTRUE(opt$quiet)) {
-        options(rye.repl_quiet = TRUE)
+        .set_pkg_option("repl_quiet", TRUE)
       }
 
       if (length(positional) > 0) {
@@ -230,10 +230,10 @@ CLI <- R6::R6Class(
     # @description Print package version and exit.
     do_version = function() {
       version <- tryCatch(
-        as.character(utils::packageVersion("rye")),
+        as.character(utils::packageVersion(.pkg_name)),
         error = function(...) "unknown"
       )
-      cat("rye ", version, "\n", sep = "")
+      cat(.pkg_name, " ", version, "\n", sep = "")
       invisible(NULL)
     },
     # @description Start the Rye REPL (interactive loop).
@@ -306,7 +306,7 @@ CLI <- R6::R6Class(
     # @description Check if stdin is a terminal (for REPL vs batch).
     # @return Logical.
     cli_isatty = function() {
-      override <- getOption("rye.cli_isatty_override", NULL)
+      override <- .pkg_option("cli_isatty_override")
       if (!is.null(override)) {
         if (is.function(override)) {
           return(isTRUE(override()))
@@ -322,7 +322,7 @@ CLI <- R6::R6Class(
     # @description Read all lines from stdin (for piping script into rye).
     # @return Character vector of lines.
     cli_read_stdin = function() {
-      override <- getOption("rye.cli_read_stdin_override", NULL)
+      override <- .pkg_option("cli_read_stdin_override")
       if (!is.null(override)) {
         if (is.function(override)) {
           return(override())
@@ -340,13 +340,13 @@ CLI <- R6::R6Class(
       }
 
       if (length(parsed$errors) > 0) {
-        if (!isTRUE(getOption("rye.cli_quiet", FALSE))) {
+        if (!isTRUE(.pkg_option("cli_quiet", FALSE))) {
           for (err in parsed$errors) {
             message("Error: ", err)
           }
           cat(CLI_HELP_TEXT, "\n", sep = "")
         }
-        exit_fn <- getOption("rye.cli_exit_fn", NULL)
+        exit_fn <- .pkg_option("cli_exit_fn")
         if (!is.null(exit_fn) && is.function(exit_fn)) {
           exit_fn(paste(parsed$errors, collapse = "; "), TRUE)
         } else {
@@ -429,9 +429,9 @@ same_file <- function(path1, path2) {
 #' @return The installed path, invisibly.
 #' @export
 install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), overwrite = FALSE) {
-  source <- system.file("exec", "rye", package = "rye")
+  source <- system.file("exec", .pkg_name, package = .pkg_name)
   if (!nzchar(source)) {
-    stop("CLI script not found. Is the rye package installed?")
+    stop(paste0("CLI script not found. Is the ", .pkg_name, " package installed?"))
   }
 
   candidates <- if (nzchar(target_dir)) {
@@ -459,7 +459,7 @@ install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), over
     )
   }
 
-  target <- file.path(chosen, "rye")
+  target <- file.path(chosen, .pkg_name)
 
   # Check if source and target are the same file (can happen in dev mode)
   # This includes symlinks and hardlinks
@@ -485,7 +485,7 @@ install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), over
 
   Sys.chmod(target, mode = "0755")
 
-  message("Installed rye CLI to ", target)
+  message("Installed ", .pkg_name, " CLI to ", target)
 
   path_entries <- strsplit(Sys.getenv("PATH"), .Platform$path.sep, fixed = TRUE)[[1]]
   normalized_entries <- normalizePath(path_entries, winslash = "/", mustWork = FALSE)

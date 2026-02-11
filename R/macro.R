@@ -797,7 +797,7 @@ MacroExpander <- R6::R6Class(
     },
     define_macro = function(name, params, body, env, docstring = NULL) {
       # Debug: check body
-      if (isTRUE(getOption("rye.debug_macro")) && as.character(name) == "empty-pat") {
+      if (isTRUE(.pkg_option("debug_macro")) && as.character(name) == "empty-pat") {
         message("DEBUG define_macro for ", as.character(name))
         message("  body class: ", class(body))
         message("  body length: ", length(body))
@@ -951,7 +951,7 @@ MacroExpander <- R6::R6Class(
         expanded <- tryCatch(
           do.call(macro_fn, args),
           error = function(e) {
-            if (isTRUE(getOption("rye.debug_macro"))) {
+            if (isTRUE(.pkg_option("debug_macro"))) {
               op_name <- if (is.symbol(op)) as.character(op) else "<macro>"
               stop(sprintf("macro expansion failed for %s: %s", op_name, conditionMessage(e)), call. = FALSE)
             }

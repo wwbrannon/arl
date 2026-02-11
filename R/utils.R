@@ -1,3 +1,22 @@
+# Package identity -- change this single value when renaming the package.
+# Used to derive option names (e.g. "rye.use_env_cache") and filesystem
+# paths (e.g. ".rye_cache", "~/.rye_history").
+.pkg_name <- "rye"
+
+# Get a package-namespaced option: .pkg_option("use_env_cache", FALSE)
+# is equivalent to getOption("rye.use_env_cache", FALSE).
+.pkg_option <- function(name, default = NULL) {
+  getOption(paste0(.pkg_name, ".", name), default)
+}
+
+# Set a package-namespaced option: .set_pkg_option("repl_quiet", TRUE)
+# is equivalent to options(rye.repl_quiet = TRUE).
+.set_pkg_option <- function(name, value) {
+  opt <- list(value)
+  names(opt) <- paste0(.pkg_name, ".", name)
+  do.call("options", opt)
+}
+
 #' Test if an object is an R6 instance of a given class
 #'
 #' @param obj Any object.
@@ -22,7 +41,7 @@ resolve_stdlib_path <- function(name) {
   if (!is.character(name) || length(name) != 1) {
     return(NULL)
   }
-  dir_path <- system.file("rye", package = "rye")
+  dir_path <- system.file(.pkg_name, package = .pkg_name)
   if (identical(dir_path, "")) {
     return(NULL)
   }

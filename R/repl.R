@@ -86,7 +86,7 @@ REPL <- R6::R6Class(
       if (is.null(line)) {
         return(NULL)
       }
-      use_bpm <- isTRUE(getOption("rye.repl_bracketed_paste", TRUE))
+      use_bpm <- isTRUE(.pkg_option("repl_bracketed_paste", TRUE))
       if (use_bpm && startsWith(line, bpm_start)) {
         chunk <- substring(line, nchar(bpm_start) + 1L)
         if (endsWith(chunk, bpm_end)) {
@@ -110,14 +110,14 @@ REPL <- R6::R6Class(
     },
     # @description Return the default history file path.
     history_path_default = function() {
-      path.expand("~/.rye_history")
+      path.expand(paste0("~/.", .pkg_name, "_history"))
     },
     # @description Determine whether readline history can be used.
     can_use_history = function() {
-      if (!isTRUE(getOption("rye.repl_use_history", TRUE))) {
+      if (!isTRUE(.pkg_option("repl_use_history", TRUE))) {
         return(FALSE)
       }
-      override <- getOption("rye.repl_can_use_history_override", NULL)
+      override <- .pkg_option("repl_can_use_history_override")
       if (!is.null(override)) {
         if (is.function(override)) {
           return(isTRUE(override()))
@@ -134,7 +134,7 @@ REPL <- R6::R6Class(
     # @description Read a complete Rye form from the input stream.
     read_form = function() {
       private$require_engine()
-      override <- getOption("rye.repl_read_form_override", NULL)
+      override <- .pkg_option("repl_read_form_override")
       if (!is.null(override)) {
         if (is.function(override)) {
           return(override(
@@ -270,9 +270,9 @@ REPL <- R6::R6Class(
     run = function() {
       private$require_engine()
 
-      rye_version <- as.character(utils::packageVersion("rye"))
+      rye_version <- as.character(utils::packageVersion(.pkg_name))
 
-      quiet <- isTRUE(getOption("rye.repl_quiet", FALSE))
+      quiet <- isTRUE(.pkg_option("repl_quiet", FALSE))
       if (! quiet) {
         self$output_fn(paste0("Rye REPL ", rye_version), "\n", sep = "")
         self$output_fn("Type '(license)' w/o quotes for legal information.\n")
@@ -285,7 +285,7 @@ REPL <- R6::R6Class(
         )
       }
 
-      use_bpm <- isTRUE(getOption("rye.repl_bracketed_paste", TRUE)) &&
+      use_bpm <- isTRUE(.pkg_option("repl_bracketed_paste", TRUE)) &&
         isTRUE(interactive()) &&
         isTRUE(capabilities("cledit"))
       if (use_bpm) {
