@@ -2,9 +2,6 @@ test_that("doc! macro attaches docstrings to functions", {
   engine <- make_engine()
   env <- engine$env$env
 
-  # Import core module for doc! and doc
-  engine$eval_in_env(engine$read('(import core)')[[1]], env)
-
   # Create a test function
   engine$eval_in_env(engine$read('(define test-fn (lambda (x) (* x 2)))')[[1]], env)
 
@@ -20,7 +17,6 @@ test_that("doc returns NULL for undocumented functions", {
   engine <- make_engine()
   env <- engine$env$env
 
-  engine$eval_in_env(engine$read('(import core)')[[1]], env)
   engine$eval_in_env(engine$read('(define no-doc-fn (lambda (x) x))')[[1]], env)
 
   result <- engine$eval_in_env(engine$read('(doc no-doc-fn)')[[1]], env)
@@ -30,8 +26,6 @@ test_that("doc returns NULL for undocumented functions", {
 test_that("doc! works with direct assignment functions", {
   engine <- make_engine()
   env <- engine$env$env
-
-  engine$eval_in_env(engine$read('(import core)')[[1]], env)
 
   # Direct assignment from R function
   engine$eval_in_env(engine$read('(define my-abs abs)')[[1]], env)
@@ -45,7 +39,6 @@ test_that("doc! updates existing docstrings", {
   engine <- make_engine()
   env <- engine$env$env
 
-  engine$eval_in_env(engine$read('(import core)')[[1]], env)
   engine$eval_in_env(engine$read('(define fn-with-doc (lambda (x) (+ x 1)))')[[1]], env)
 
   # First docstring
@@ -81,7 +74,6 @@ test_that("optimized math functions have docstrings", {
   env <- engine$env$env
 
   engine$eval_in_env(engine$read('(import math)')[[1]], env)
-  engine$eval_in_env(engine$read('(import core)')[[1]], env)
 
   # Test a few optimized functions
   abs_doc <- engine$eval_in_env(engine$read('(doc abs)')[[1]], env)
@@ -99,7 +91,6 @@ test_that("optimized predicate functions have docstrings", {
   env <- engine$env$env
 
   engine$eval_in_env(engine$read('(import types)')[[1]], env)
-  engine$eval_in_env(engine$read('(import core)')[[1]], env)
 
   symbol_doc <- engine$eval_in_env(engine$read('(doc symbol?)')[[1]], env)
   expect_match(symbol_doc, "symbol", ignore.case = TRUE)
@@ -113,11 +104,105 @@ test_that("optimized string functions have docstrings", {
   env <- engine$env$env
 
   engine$eval_in_env(engine$read('(import strings)')[[1]], env)
-  engine$eval_in_env(engine$read('(import core)')[[1]], env)
 
   trim_doc <- engine$eval_in_env(engine$read('(doc trim)')[[1]], env)
   expect_match(trim_doc, "trim", ignore.case = TRUE)
 
   to_string_doc <- engine$eval_in_env(engine$read('(doc ->string)')[[1]], env)
   expect_match(to_string_doc, "string", ignore.case = TRUE)
+})
+
+# --- New tests for expanded doc!/doc API ---
+
+test_that("doc! sets specific fields with keyword args", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  engine$eval_in_env(engine$read('(define my-fn (lambda (x) (* x 2)))')[[1]], env)
+  engine$eval_in_env(engine$read('(doc! my-fn :examples "(my-fn 3) ; => 6")')[[1]], env)
+
+  result <- engine$eval_in_env(engine$read('(doc my-fn "examples")')[[1]], env)
+  expect_equal(result, "(my-fn 3) ; => 6")
+
+  # description should be NULL since we only set examples
+  desc <- engine$eval_in_env(engine$read('(doc my-fn)')[[1]], env)
+  expect_null(desc)
+})
+
+test_that("doc! sets multiple fields with keyword args", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  engine$eval_in_env(engine$read('(define my-fn (lambda (x) (* x 2)))')[[1]], env)
+  engine$eval_in_env(engine$read('(doc! my-fn :description "Doubles x." :examples "(my-fn 3) ; => 6" :note "Fast.")')[[1]], env)
+
+  expect_equal(engine$eval_in_env(engine$read('(doc my-fn)')[[1]], env), "Doubles x.")
+  expect_equal(engine$eval_in_env(engine$read('(doc my-fn "examples")')[[1]], env), "(my-fn 3) ; => 6")
+  expect_equal(engine$eval_in_env(engine$read('(doc my-fn "note")')[[1]], env), "Fast.")
+})
+
+test_that("doc! merges fields — setting description then examples preserves both", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  engine$eval_in_env(engine$read('(define my-fn (lambda (x) (* x 2)))')[[1]], env)
+
+  # Set description first
+  engine$eval_in_env(engine$read('(doc! my-fn "Doubles x.")')[[1]], env)
+  # Then add examples via keyword
+  engine$eval_in_env(engine$read('(doc! my-fn :examples "(my-fn 3) ; => 6")')[[1]], env)
+
+  # Both should be present
+  expect_equal(engine$eval_in_env(engine$read('(doc my-fn)')[[1]], env), "Doubles x.")
+  expect_equal(engine$eval_in_env(engine$read('(doc my-fn "examples")')[[1]], env), "(my-fn 3) ; => 6")
+})
+
+test_that("doc with 'all' returns full named list", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  engine$eval_in_env(engine$read('(define my-fn (lambda (x) (* x 2)))')[[1]], env)
+  engine$eval_in_env(engine$read('(doc! my-fn :description "Doubles x." :examples "(my-fn 3)")')[[1]], env)
+
+  result <- engine$eval_in_env(engine$read('(doc my-fn "all")')[[1]], env)
+  expect_type(result, "list")
+  expect_equal(result$description, "Doubles x.")
+  expect_equal(result$examples, "(my-fn 3)")
+})
+
+test_that("doc returns NULL for non-existent field", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  engine$eval_in_env(engine$read('(define my-fn (lambda (x) x))')[[1]], env)
+  engine$eval_in_env(engine$read('(doc! my-fn "Some desc.")')[[1]], env)
+
+  result <- engine$eval_in_env(engine$read('(doc my-fn "examples")')[[1]], env)
+  expect_null(result)
+})
+
+test_that("doc! works on primitives", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  engine$eval_in_env(engine$read('(define my-sum sum)')[[1]], env)
+  engine$eval_in_env(engine$read('(doc! my-sum :description "Sum values." :note "Wraps primitive.")')[[1]], env)
+
+  expect_equal(engine$eval_in_env(engine$read('(doc my-sum)')[[1]], env), "Sum values.")
+  expect_equal(engine$eval_in_env(engine$read('(doc my-sum "note")')[[1]], env), "Wraps primitive.")
+  # Function should still work after wrapping
+  result <- engine$eval_in_env(engine$read('(my-sum (c 1 2 3))')[[1]], env)
+  expect_equal(result, 6)
+})
+
+test_that("doc! keyword args evaluate variable values", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  engine$eval_in_env(engine$read('(define my-fn (lambda (x) x))')[[1]], env)
+  engine$eval_in_env(engine$read('(define d "computed description")')[[1]], env)
+  engine$eval_in_env(engine$read('(doc! my-fn :description d)')[[1]], env)
+
+  result <- engine$eval_in_env(engine$read('(doc my-fn)')[[1]], env)
+  expect_equal(result, "computed description")
 })

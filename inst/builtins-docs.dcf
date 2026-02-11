@@ -186,3 +186,29 @@ Signature: (current-env)
 Examples:
   (environment? (current-env))  ; => #t
 Seealso: stdlib-env
+
+Name: doc!
+Vignette: stdlib-core
+Section: Documentation Helpers
+Description: Attach documentation fields to a function. With a single
+  string argument, sets the description (backward compatible). With keyword
+  arguments, sets specific fields and merges with existing documentation.
+Signature: (doc! fn "docstring") or (doc! fn :description "..." :examples "...")
+Examples:
+  (doc! my-fn "Doubles the input.")
+  (doc! my-fn :examples "(my-fn 3) ; => 6")
+  (doc! my-fn :description "Doubles." :note "Fast path.")
+Seealso: doc, help
+
+Name: doc
+Vignette: stdlib-core
+Section: Documentation Helpers
+Description: Retrieve documentation from a function. With no field argument,
+  returns the description. Pass a field name string to get a specific field,
+  or "all" to get the full documentation list.
+Signature: (doc fn) or (doc fn "field")
+Examples:
+  (doc my-fn)              ; => "Doubles the input."
+  (doc my-fn "examples")   ; => "(my-fn 3) ; => 6"
+  (doc my-fn "all")        ; => named list of all fields
+Seealso: doc!, help

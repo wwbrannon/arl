@@ -277,21 +277,58 @@ RyeEngine <- R6::R6Class(
       # Documentation helpers
       #
 
-      # these are exposed as the doc! and doc macros/functions
+      # doc! — attach documentation fields to a function.
+      # Uses substitute() to capture the first arg (symbol name) unevaluated.
+      # Keyword args set specific fields and merge with existing documentation.
+      # Positional string sets the description (backward compatible).
+      env$`doc!` <- function(sym, ...) {
+        rye_env <- parent.frame()
+        name <- as.character(substitute(sym))
+        fn <- get(name, envir = rye_env, inherits = TRUE)
 
-      env$`__set_doc` <- function(fn, docstring) {
-        # If fn is a primitive, wrap it in a regular function
+        args <- list(...)
+
+        # Primitive wrapping (can't set attributes on primitives)
         if (is.primitive(fn)) {
           prim <- fn
           fn <- function(...) prim(...)
         }
-        attr(fn, "rye_doc") <- list(description = docstring)
-        fn
+
+        doc <- attr(fn, "rye_doc", exact = TRUE)
+        if (is.null(doc)) doc <- list()
+
+        # Dispatch: positional "string" = description, named = keyword fields
+        arg_names <- names(args)
+        if (is.null(arg_names) || all(!nzchar(arg_names))) {
+          # (doc! fn "docstring") — backward compat
+          if (length(args) >= 1L) doc[["description"]] <- args[[1L]]
+        } else {
+          for (i in seq_along(args)) {
+            nm <- arg_names[i]
+            if (nzchar(nm)) doc[[nm]] <- args[[i]]
+          }
+        }
+
+        attr(fn, "rye_doc") <- doc
+
+        # Assign back into the environment where the binding lives
+        target <- rye_env
+        while (!exists(name, envir = target, inherits = FALSE)) {
+          target <- parent.env(target)
+        }
+        base::assign(name, fn, envir = target)
+        invisible(fn)
       }
 
-      env$`__get_doc` <- function(fn) {
+      # doc — retrieve documentation from a function.
+      # With no field argument, returns the description.
+      # Pass a field name string to get a specific field, or "all" for the
+      # full documentation list.
+      env$doc <- function(fn, field = "description") {
         doc_attr <- attr(fn, "rye_doc", exact = TRUE)
-        if (is.null(doc_attr)) NULL else doc_attr$description
+        if (is.null(doc_attr)) return(NULL)
+        if (identical(field, "all")) return(doc_attr)
+        doc_attr[[field]]
       }
 
       #
