@@ -185,6 +185,28 @@ test_that("gensym generates unique symbols", {
   expect_true(grepl("^foo", as.character(sym_custom)))
 })
 
+test_that("read is available as engine builtin without importing io", {
+  env <- new.env()
+  stdlib_env(engine, env)
+
+  # Parse expression
+  result <- engine$eval_in_env(engine$read('(read "(+ 1 2)")')[[1]], env)
+  expect_true(is.call(result))
+  expect_equal(as.character(result[[1]]), "+")
+
+  # Parse symbol
+  result <- engine$eval_in_env(engine$read('(read "foo")')[[1]], env)
+  expect_true(is.symbol(result))
+
+  # Parse number
+  result <- engine$eval_in_env(engine$read('(read "42")')[[1]], env)
+  expect_equal(result, 42)
+
+  # Empty string returns NULL
+  result <- engine$eval_in_env(engine$read('(read "")')[[1]], env)
+  expect_null(result)
+})
+
 # ============================================================================
 # Coverage: call-with-values error paths
 # ============================================================================
