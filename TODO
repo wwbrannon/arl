@@ -1,7 +1,6 @@
 o) rename package
 
 o) update README
-o) update citation
 
 o) enable actions
 o) rationalize CI configuration for coverage and everything else
