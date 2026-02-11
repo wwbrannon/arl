@@ -42,6 +42,22 @@ Note: Returns the first expression from the source string, or #nil if
   the string contains no expressions. Like R's parse(), but returns Rye
   S-expressions.
 
+Name: write
+Vignette: stdlib-macro-eval-interop
+Section: Evaluation
+Description: Convert a Rye expression to its string representation.
+  The inverse of read.
+Signature: (write expr)
+Examples:
+  (write '(+ 1 2))          ; => "(+ 1 2)"
+  (write 42)                ; => "42"
+  (write "hello")           ; => "\"hello\""
+  (write #t)                ; => "#t"
+Seealso: read, eval, format-value
+Note: Produces output that can be parsed back with read, ensuring the
+  round-trip property: (read (write expr)) equals expr for any expression
+  produced by read.
+
 Name: capture
 Vignette: stdlib-macro-eval-interop
 Section: Macro Utilities

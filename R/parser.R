@@ -225,6 +225,115 @@ Parser <- R6::R6Class(
       }
 
       expressions
+    },
+
+    # @description Convert a Rye expression back to its string representation.
+    # Inverse of parse(): the output can be parsed back with read().
+    # @param expr A Rye expression (symbol, call, atomic, RyeCons, keyword, etc.).
+    # @return Character string.
+    write = function(expr) {
+      # Strip source tracking attribute so deparse() is clean
+      attr(expr, "rye_src") <- NULL
+
+      # NULL -> #nil
+      if (is.null(expr)) return("#nil")
+
+      # RyeCons (dotted pair) -> (a b . c)
+      if (r6_isinstance(expr, "RyeCons")) {
+        p <- expr$parts()
+        elems <- vapply(p$prefix, function(e) self$write(e), character(1))
+        tail_str <- self$write(p$tail)
+        return(paste0("(", paste(elems, collapse = " "), " . ", tail_str, ")"))
+      }
+
+      # Keyword -> :foo
+      if (inherits(expr, "rye_keyword")) {
+        return(paste0(":", as.character(expr)))
+      }
+
+      # Symbol
+      if (is.symbol(expr)) {
+        name <- as.character(expr)
+        if (name == ".rye_nil") return("#nil")
+        return(name)
+      }
+
+      # Logical (#t, #f, NA)
+      if (is.logical(expr) && length(expr) == 1L) {
+        if (is.na(expr)) return("NA")
+        return(if (expr) "#t" else "#f")
+      }
+
+      # String (including NA_character_)
+      if (is.character(expr) && length(expr) == 1L) {
+        if (is.na(expr)) return("NA_character_")
+        return(paste0('"', .rye_unescape_string(expr), '"'))
+      }
+
+      # Integer (including NA_integer_)
+      if (is.integer(expr) && length(expr) == 1L) {
+        if (is.na(expr)) return("NA_integer_")
+        return(paste0(as.character(expr), "L"))
+      }
+
+      # Double (NaN, Inf, -Inf, NA_real_, regular)
+      if (is.double(expr) && length(expr) == 1L) {
+        if (is.nan(expr)) return("NaN")
+        if (is.infinite(expr)) return(if (expr > 0) "Inf" else "-Inf")
+        if (is.na(expr)) return("NA_real_")
+        return(deparse(expr))
+      }
+
+      # Complex (including NA_complex_)
+      if (is.complex(expr) && length(expr) == 1L) {
+        if (is.na(expr)) return("NA_complex_")
+        return(deparse(expr))
+      }
+
+      # Empty list -> ()
+      if (is.list(expr) && length(expr) == 0L) {
+        return("()")
+      }
+
+      # Call (S-expression)
+      if (is.call(expr)) {
+        if (is.symbol(expr[[1L]])) {
+          head_name <- as.character(expr[[1L]])
+
+          # Sugar: (quote x) -> 'x, etc. (2-element forms)
+          if (length(expr) == 2L) {
+            sugar <- switch(head_name,
+              "quote" = "'",
+              "quasiquote" = "`",
+              "unquote" = ",",
+              "unquote-splicing" = ",@",
+              NULL
+            )
+            if (!is.null(sugar)) {
+              return(paste0(sugar, self$write(expr[[2L]])))
+            }
+          }
+
+          # Sugar: (:: pkg name) -> pkg::name, (::: pkg name) -> pkg:::name
+          if (head_name %in% c("::", ":::") && length(expr) == 3L &&
+              is.symbol(expr[[2L]]) && is.symbol(expr[[3L]])) {
+            return(paste0(
+              as.character(expr[[2L]]), head_name, as.character(expr[[3L]])
+            ))
+          }
+        }
+
+        # General call: (f a b ...)
+        elems <- vapply(
+          seq_along(expr),
+          function(i) self$write(expr[[i]]),
+          character(1)
+        )
+        return(paste0("(", paste(elems, collapse = " "), ")"))
+      }
+
+      stop(sprintf("write: cannot serialize object of class %s",
+                   paste(class(expr), collapse = "/")), call. = FALSE)
     }
   )
 )

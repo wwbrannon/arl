@@ -119,6 +119,12 @@ RyeEngine <- R6::R6Class(
     },
 
     #' @description
+    #' Convert a Rye expression to its string representation. Inverse of read().
+    write = function(expr) {
+      self$parser$write(expr)
+    },
+
+    #' @description
     #' Tokenize source into Rye tokens.
     tokenize = function(source) {
       self$tokenizer$tokenize(source)
@@ -229,6 +235,10 @@ RyeEngine <- R6::R6Class(
       env$read <- function(source) {
         exprs <- self$read(source)
         if (length(exprs) > 0L) exprs[[1L]] else NULL
+      }
+
+      env$write <- function(expr) {
+        self$parser$write(expr)
       }
 
       env$`stdlib-env` <- function() env

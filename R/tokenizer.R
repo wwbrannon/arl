@@ -36,6 +36,17 @@
   s
 }
 
+# Reverse of .process_string_escapes: convert literal special chars to escape sequences
+.rye_unescape_string <- function(s) {
+  s <- gsub("\\",   "\001", s, fixed = TRUE)   # backslash -> sentinel
+  s <- gsub("\"",   "\\\"", s, fixed = TRUE)   # quote -> \"
+  s <- gsub("\n",   "\\n",  s, fixed = TRUE)   # newline -> \n
+  s <- gsub("\t",   "\\t",  s, fixed = TRUE)   # tab -> \t
+  s <- gsub("\r",   "\\r",  s, fixed = TRUE)   # CR -> \r
+  s <- gsub("\001", "\\\\", s, fixed = TRUE)   # sentinel -> \\
+  s
+}
+
 # Classify an atom token text into its type and value
 .classify_atom <- function(text) {
   # Standalone dot
