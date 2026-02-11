@@ -95,25 +95,6 @@ coverage-report: ## help: Open coverage reports in browser
 		exit 1; \
 	fi
 
-.PHONY: coverage-upload
-coverage-upload: ## help: Upload coverage to codecov (for CI)
-	@echo "Uploading coverage to Codecov..."
-	@if [ -z "$(CODECOV_TOKEN)" ]; then \
-		echo "Warning: CODECOV_TOKEN not set"; \
-	fi
-	@if [ -f coverage/r/coverage.xml ]; then \
-		bash <(curl -s https://codecov.io/bash) \
-			-f coverage/r/coverage.xml \
-			-F r-code \
-			-n "R Coverage" || true; \
-	fi
-	@if [ -f coverage/rye/coverage.json ]; then \
-		bash <(curl -s https://codecov.io/bash) \
-			-f coverage/rye/coverage.json \
-			-F rye-code \
-			-n "Rye Coverage" || true; \
-	fi
-
 .PHONY: lint
 lint: clean-cache stdlib-order ## help: Run linter checks
 	R -q -e "devtools::load_all(); lintr::lint_dir(path='.')"
