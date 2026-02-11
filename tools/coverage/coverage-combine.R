@@ -299,3 +299,8 @@ generate_combined_report <- function() {
 
   invisible(list(r = r_cov, rye = rye_cov))
 }
+
+# Self-execute when run as a script
+if (!interactive()) {
+  generate_combined_report()
+}

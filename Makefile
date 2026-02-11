@@ -65,51 +65,19 @@ check: build ## help: Check the package (includes tests)
 #
 
 .PHONY: coverage
-coverage: coverage-all ## help: Run complete coverage analysis (R + Rye)
-
-.PHONY: coverage-all
-coverage-all: coverage-r coverage-rye coverage-combined ## help: Run all coverage and generate combined report
+coverage: coverage-r coverage-rye coverage-combined ## help: Run complete coverage analysis (R + Rye)
 
 .PHONY: coverage-r
 coverage-r: clean-cache stdlib-order ## help: Run R code coverage only
-	@echo "Running R code coverage..."
-	@mkdir -p coverage/r
-	@R -q -e "\
-	  cov <- covr::package_coverage(type='all', quiet=FALSE); \
-	  pct <- covr::percent_coverage(cov); \
-	  writeLines(c( \
-	    paste0('rye Coverage: ', sprintf('%.2f%%', pct)), \
-	    '', \
-	    capture.output(print(cov), type = 'message') \
-	  ), 'coverage/r/summary.txt'); \
-	  covr::to_cobertura(cov, filename='coverage/r/coverage.xml'); \
-	  message(sprintf('R coverage: %.1f%%', pct)); \
-	  if (requireNamespace('DT', quietly=TRUE) && requireNamespace('htmltools', quietly=TRUE)) { \
-	    covr::report(cov, file='coverage/r/index.html'); \
-	    message('R coverage report: coverage/r/index.html'); \
-	  } else { \
-	    message('Skipping HTML report (install DT and htmltools packages for HTML output)'); \
-	  } \
-	"
+	Rscript tools/coverage/r-coverage.R
 
 .PHONY: coverage-rye
 coverage-rye: clean-cache stdlib-order ## help: Run Rye code coverage only
-	@echo "Running Rye code coverage..."
-	@mkdir -p coverage/rye
-	@R -q -e "\
-	  source('tools/coverage/rye-coverage.R'); \
-	  tracker <- rye_coverage_report( \
-	    output = c('console', 'html', 'json'), \
-	    html_file = 'coverage/rye/index.html', \
-	    json_file = 'coverage/rye/coverage.json' \
-	  ); \
-	" | tee coverage/rye/summary.txt
+	Rscript tools/coverage/rye-coverage.R
 
 .PHONY: coverage-combined
 coverage-combined: ## help: Generate combined coverage summary
-	@echo "Generating combined coverage report..."
-	@mkdir -p coverage/combined
-	@R -q -e "source('tools/coverage/coverage-combine.R'); generate_combined_report()"
+	Rscript tools/coverage/coverage-combine.R
 
 .PHONY: coverage-report
 coverage-report: ## help: Open coverage reports in browser
