@@ -58,7 +58,7 @@ document: devdoc readme vignettes site ## help: Generate all documentation
 .PHONY: check
 check: build ## help: Check the package (includes tests)
 	@rm -rf rye.Rcheck
-	R -q -e 'devtools::check(args="--as-cran", check_dir=".", cleanup=FALSE)'
+	R -q -e 'devtools::check(args="--as-cran", check_dir=".")'
 
 #
 ## Coverage targets
