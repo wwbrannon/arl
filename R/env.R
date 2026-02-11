@@ -3,7 +3,7 @@
 # and compiled runtime.
 #
 # @field env The underlying R environment.
-# @field macro_registry ModuleRegistry for macros (actually macro registry is per-env via .rye_macros).
+# @field macro_registry ModuleRegistry for macros (actually macro registry is per-env via .__macros).
 # @field module_registry ModuleRegistry instance for loaded modules.
 # @field env_stack List of environments pushed for evaluation (e.g. current env during eval).
 #
@@ -152,8 +152,8 @@ Env <- R6::R6Class(
       }
       stop(message)
     },
-    # @description Get (or create) a named registry environment in an env. Used for .rye_macros and .rye_module_registry.
-    # @param name Registry name (e.g. ".rye_macros").
+    # @description Get (or create) a named registry environment in an env. Used for .__macros and .__module_registry.
+    # @param name Registry name (e.g. ".__macros").
     # @param env Target environment or NULL for self$env.
     # @param create If TRUE, create the registry if missing.
     # @return Environment or NULL.
@@ -172,14 +172,14 @@ Env <- R6::R6Class(
     # @param create If TRUE, create the registry if missing.
     # @return Environment or NULL.
     macro_registry_env = function(env = NULL, create = TRUE) {
-      self$get_registry(".rye_macros", env, create = create)
+      self$get_registry(".__macros", env, create = create)
     },
     # @description Get (or create) the module registry environment for an env.
     # @param env Target environment or NULL for self$env.
     # @param create If TRUE, create the registry if missing.
     # @return Environment or NULL.
     module_registry_env = function(env = NULL, create = TRUE) {
-      self$get_registry(".rye_module_registry", env, create = create)
+      self$get_registry(".__module_registry", env, create = create)
     },
     # @description Environment where (define name ...) should create a binding (always current env).
     # @param name Unused; for interface consistency.

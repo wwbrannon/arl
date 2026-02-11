@@ -1,8 +1,8 @@
 # Compiler: Compiles macro-expanded Rye AST to R expressions for single eval().
 # Used for the optional compiled evaluation path; falls back to interpreter on failure.
 #
-# Reserved name: .rye_env is used for the current environment in compiled code.
-# (define .rye_env x) and (set! .rye_env x) are not compiled (return NULL).
+# Reserved name: .__env is used for the current environment in compiled code.
+# (define .__env x) and (set! .__env x) are not compiled (return NULL).
 
 #' @keywords internal
 #' @noRd
@@ -11,8 +11,8 @@ Compiler <- R6::R6Class(
   public = list(
     context = NULL,
     # Reserved name for current env in compiled code. User code that defines/sets this is not compiled.
-    env_var_name = ".rye_env",
-    # Env used as parent for compiled closures (so they see .rye_true_p etc.). Set by engine before compile.
+    env_var_name = ".__env",
+    # Env used as parent for compiled closures (so they see .__true_p etc.). Set by engine before compile.
     current_env = NULL,
     # When TRUE, invalid forms raise errors instead of returning NULL.
     strict = FALSE,
@@ -119,9 +119,9 @@ Compiler <- R6::R6Class(
 
       gensym_tmp <- function() {
         if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-          return(self$context$macro_expander$gensym(".__rye_tmp"))
+          return(self$context$macro_expander$gensym(".__tmp"))
         }
-        as.symbol(paste0(".__rye_tmp", as.integer(stats::runif(1, 1, 1e9))))
+        as.symbol(paste0(".__tmp", as.integer(stats::runif(1, 1, 1e9))))
       }
 
       build <- function(idx) {
@@ -133,11 +133,11 @@ Compiler <- R6::R6Class(
         make_if <- function(test_val, return_val) {
           if (on_true_continue) {
             as.call(list(quote(`if`),
-              as.call(list(as.symbol(".rye_true_p"), test_val)),
+              as.call(list(as.symbol(".__true_p"), test_val)),
               continue_expr, return_val))
           } else {
             as.call(list(quote(`if`),
-              as.call(list(as.symbol(".rye_true_p"), test_val)),
+              as.call(list(as.symbol(".__true_p"), test_val)),
               return_val, continue_expr))
           }
         }
@@ -203,9 +203,9 @@ Compiler <- R6::R6Class(
       if (inherits(expr, "rye_keyword")) {
         return(expr)
       }
-      # Symbol: .rye_nil is the parser sentinel for #nil; compile to NULL
+      # Symbol: .__nil is the parser sentinel for #nil; compile to NULL
       if (is.symbol(expr)) {
-        if (identical(expr, as.symbol(".rye_nil"))) {
+        if (identical(expr, as.symbol(".__nil"))) {
           return(private$compiled_nil())
         }
         return(expr)
@@ -268,7 +268,7 @@ Compiler <- R6::R6Class(
         return(private$fail("quasiquote requires exactly 1 argument"))
       }
       as.call(list(
-        as.symbol(".rye_macro_quasiquote"),
+        as.symbol(".__macro_quasiquote"),
         as.call(list(quote(quote), private$strip_src(expr[[2]]))),
         as.symbol(self$env_var_name)
       ))
@@ -412,11 +412,11 @@ Compiler <- R6::R6Class(
       }
       then_expr <- private$wrap_branch_coverage(then_expr, expr[[3]])
       # Rye: only #f and #nil are false
-      # Skip .rye_true_p wrapper if test is known to return proper R logical
+      # Skip .__true_p wrapper if test is known to return proper R logical
       test_pred <- if (private$returns_r_logical(test)) {
         test
       } else {
-        as.call(list(as.symbol(".rye_true_p"), test))
+        as.call(list(as.symbol(".__true_p"), test))
       }
 
       if (length(expr) == 4) {
@@ -458,7 +458,7 @@ Compiler <- R6::R6Class(
       }
       name <- expr[[2]]
       if (is.symbol(name) && identical(as.character(name), self$env_var_name)) {
-        return(private$fail("define cannot bind reserved name .rye_env"))
+        return(private$fail("define cannot bind reserved name .__env"))
       }
       # Detect (define name (lambda ...)) for self-tail-call optimization
       val_expr <- expr[[3]]
@@ -475,16 +475,16 @@ Compiler <- R6::R6Class(
       if (is.null(val)) {
         return(private$fail("define value could not be compiled"))
       }
-      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .rye_quote(pattern)
-      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".rye_quote"), name))
+      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .__quote(pattern)
+      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".__quote"), name))
       tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-        self$context$macro_expander$gensym(".__rye_define_value")
+        self$context$macro_expander$gensym(".__define_value")
       } else {
-        as.symbol(paste0(".__rye_define_value", as.integer(stats::runif(1, 1, 1e9))))
+        as.symbol(paste0(".__define_value", as.integer(stats::runif(1, 1, 1e9))))
       }
       assign_tmp <- as.call(list(quote(`<-`), tmp_sym, val))
       assign_call <- as.call(list(
-        as.symbol(".rye_assign_pattern"),
+        as.symbol(".__assign_pattern"),
         as.symbol(self$env_var_name),
         pattern_arg,
         tmp_sym,
@@ -511,11 +511,11 @@ Compiler <- R6::R6Class(
           doc_list$note <- ann$note
         }
         if (length(doc_list) > 0) {
-          # Use .rye_attach_doc helper (handles primitive wrapping)
+          # Use .__attach_doc helper (handles primitive wrapping)
           return(as.call(list(
             quote(`{`),
             as.call(list(quote(`<-`), tmp_sym,
-              as.call(list(as.symbol(".rye_attach_doc"), val, doc_list))
+              as.call(list(as.symbol(".__attach_doc"), val, doc_list))
             )),
             assign_call,
             as.call(list(quote(invisible), tmp_sym))
@@ -531,16 +531,16 @@ Compiler <- R6::R6Class(
       }
       name <- expr[[2]]
       if (is.symbol(name) && identical(as.character(name), self$env_var_name)) {
-        return(private$fail("set! cannot bind reserved name .rye_env"))
+        return(private$fail("set! cannot bind reserved name .__env"))
       }
       val <- private$compile_impl(expr[[3]])
       if (is.null(val)) {
         return(private$fail("set! value could not be compiled"))
       }
-      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .rye_quote(pattern)
-      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".rye_quote"), name))
+      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .__quote(pattern)
+      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".__quote"), name))
       as.call(list(
-        as.symbol(".rye_assign_pattern"),
+        as.symbol(".__assign_pattern"),
         as.symbol(self$env_var_name),
         pattern_arg,
         val,
@@ -575,9 +575,9 @@ Compiler <- R6::R6Class(
         if (is.null(rest_param_name) && !is.null(params$rest_param_spec) &&
             identical(params$rest_param_spec$type, "pattern")) {
           rest_param_name <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-            as.character(self$context$macro_expander$gensym(".__rye_rest"))
+            as.character(self$context$macro_expander$gensym(".__rest"))
           } else {
-            paste0(".__rye_rest", as.integer(stats::runif(1, 1, 1e9)))
+            paste0(".__rest", as.integer(stats::runif(1, 1, 1e9)))
           }
         }
         if (private$has_self_tail_calls(body_exprs, self_name)) {
@@ -609,9 +609,9 @@ Compiler <- R6::R6Class(
           pattern_stmts <- vector("list", length(params$param_bindings))
           for (pb_i in seq_along(params$param_bindings)) {
             binding <- params$param_bindings[[pb_i]]
-            pattern_arg <- as.call(list(as.symbol(".rye_quote"), binding$pattern))
+            pattern_arg <- as.call(list(as.symbol(".__quote"), binding$pattern))
             pattern_stmts[[pb_i]] <- as.call(list(
-              as.symbol(".rye_assign_pattern"),
+              as.symbol(".__assign_pattern"),
               as.symbol(self$env_var_name),
               pattern_arg,
               as.symbol(binding$name),
@@ -622,9 +622,9 @@ Compiler <- R6::R6Class(
         }
         # Add pattern rest binding inside the loop (re-runs each iteration)
         if (!is.null(params$rest_param_spec) && identical(params$rest_param_spec$type, "pattern")) {
-          pattern_arg <- as.call(list(as.symbol(".rye_quote"), params$rest_param_spec$pattern))
+          pattern_arg <- as.call(list(as.symbol(".__quote"), params$rest_param_spec$pattern))
           rest_pattern_stmt <- as.call(list(
-            as.symbol(".rye_assign_pattern"),
+            as.symbol(".__assign_pattern"),
             as.symbol(self$env_var_name),
             pattern_arg,
             as.symbol(rest_param_name),
@@ -657,7 +657,7 @@ Compiler <- R6::R6Class(
         # Interleave coverage tracking calls (fires at call time, not definition time)
         compiled_body <- private$interleave_coverage(body_exprs, compiled_body)
       }
-      # Prepend .rye_env <- environment() so closure body sees correct current env
+      # Prepend .__env <- environment() so closure body sees correct current env
       env_bind <- as.call(list(quote(`<-`), as.symbol(self$env_var_name), quote(environment())))
       # When use_tco is TRUE, rest binding and param_bindings are already handled
       # inside/around the TCO loop, so skip them here.
@@ -677,9 +677,9 @@ Compiler <- R6::R6Class(
       }
       if (n_bindings > 0L) {
         for (binding in params$param_bindings) {
-          pattern_arg <- as.call(list(as.symbol(".rye_quote"), binding$pattern))
+          pattern_arg <- as.call(list(as.symbol(".__quote"), binding$pattern))
           body_parts[[idx]] <- as.call(list(
-            as.symbol(".rye_assign_pattern"),
+            as.symbol(".__assign_pattern"),
             as.symbol(self$env_var_name),
             pattern_arg,
             as.symbol(binding$name),
@@ -689,10 +689,10 @@ Compiler <- R6::R6Class(
         }
       }
       if (n_rest_spec > 0L) {
-        pattern_arg <- as.call(list(as.symbol(".rye_quote"), params$rest_param_spec$pattern))
+        pattern_arg <- as.call(list(as.symbol(".__quote"), params$rest_param_spec$pattern))
         rest_val <- as.call(list(quote(list), quote(...)))
         body_parts[[idx]] <- as.call(list(
-          as.symbol(".rye_assign_pattern"),
+          as.symbol(".__assign_pattern"),
           as.symbol(self$env_var_name),
           pattern_arg,
           rest_val,
@@ -779,9 +779,9 @@ Compiler <- R6::R6Class(
             }
             pattern <- arg[[2]]
             tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-              self$context$macro_expander$gensym(".__rye_arg")
+              self$context$macro_expander$gensym(".__arg")
             } else {
-              as.symbol(paste0(".__rye_arg", as.integer(stats::runif(1, 1, 1e9))))
+              as.symbol(paste0(".__arg", as.integer(stats::runif(1, 1, 1e9))))
             }
             tmp_name <- as.character(tmp_sym)
             if (length(arg) == 3) {
@@ -834,7 +834,7 @@ Compiler <- R6::R6Class(
         return(private$fail("load path could not be compiled"))
       }
       as.call(list(
-        as.symbol(".rye_load"),
+        as.symbol(".__load"),
         path,
         as.symbol(self$env_var_name),
         FALSE
@@ -849,7 +849,7 @@ Compiler <- R6::R6Class(
         return(private$fail("run path could not be compiled"))
       }
       as.call(list(
-        as.symbol(".rye_load"),
+        as.symbol(".__load"),
         path,
         as.symbol(self$env_var_name),
         TRUE
@@ -862,7 +862,7 @@ Compiler <- R6::R6Class(
       # Pass argument unevaluated (module name is a symbol/string, not a variable lookup)
       arg_quoted <- as.call(list(quote(quote), expr[[2]]))
       as.call(list(
-        as.symbol(".rye_import"),
+        as.symbol(".__import"),
         arg_quoted,
         as.symbol(self$env_var_name)
       ))
@@ -873,7 +873,7 @@ Compiler <- R6::R6Class(
       }
       topic_quoted <- as.call(list(quote(quote), expr[[2]]))
       as.call(list(
-        as.symbol(".rye_help"),
+        as.symbol(".__help"),
         topic_quoted,
         as.symbol(self$env_var_name)
       ))
@@ -891,7 +891,7 @@ Compiler <- R6::R6Class(
       if (is.null(body_compiled)) {
         return(private$fail("while body could not be compiled"))
       }
-      test_pred <- as.call(list(as.symbol(".rye_true_p"), test))
+      test_pred <- as.call(list(as.symbol(".__true_p"), test))
       as.call(list(quote(`while`), test_pred, body_compiled))
     },
     compile_delay = function(expr) {
@@ -907,9 +907,9 @@ Compiler <- R6::R6Class(
       if (is.null(compiled)) {
         return(private$fail("delay expression could not be compiled"))
       }
-      # Compiled delay uses .rye_delay; promise memoization may differ from interpreter.
+      # Compiled delay uses .__delay; promise memoization may differ from interpreter.
       as.call(list(
-        as.symbol(".rye_delay"),
+        as.symbol(".__delay"),
         as.call(list(quote(quote), compiled)),
         as.symbol(self$env_var_name)
       ))
@@ -988,7 +988,7 @@ Compiler <- R6::R6Class(
       body_quoted <- as.call(list(quote(quote), as.call(c(list(quote(begin)), body_exprs))))
       docstring_arg <- if (is.null(docstring)) private$compiled_nil() else docstring
       as.call(list(
-        as.symbol(".rye_defmacro"),
+        as.symbol(".__defmacro"),
         as.call(list(quote(quote), name)),
         as.call(list(quote(quote), params_expr)),
         body_quoted,
@@ -1041,7 +1041,7 @@ Compiler <- R6::R6Class(
       }
       compiled_body_quoted <- as.call(list(quote(quote), body_exprs))
       as.call(list(
-        as.symbol(".rye_module"),
+        as.symbol(".__module"),
         name_str,
         exports,
         export_all,
@@ -1074,7 +1074,7 @@ Compiler <- R6::R6Class(
         return(private$fail("Function/object name must be a symbol or string"))
       }
       as.call(list(
-        as.symbol(".rye_pkg_access"),
+        as.symbol(".__pkg_access"),
         as.character(expr[[1]]),
         pkg_str,
         name_str,
@@ -1135,7 +1135,7 @@ Compiler <- R6::R6Class(
           args <- collect_args()
           if (is.null(args)) return(NULL)  # Error occurred
           return(as.call(list(
-            as.symbol(".rye_subscript_call"),
+            as.symbol(".__subscript_call"),
             op_char,
             as.call(c(list(quote(list)), args)),
             as.symbol(self$env_var_name)
@@ -1251,7 +1251,7 @@ Compiler <- R6::R6Class(
     },
 
     # Check if an expression is guaranteed to return a proper R logical (TRUE/FALSE)
-    # These expressions don't need .rye_true_p() wrapper
+    # These expressions don't need .__true_p() wrapper
     returns_r_logical = function(expr) {
       # Literal TRUE/FALSE/NULL
       if (is.logical(expr) && length(expr) == 1) {
@@ -1267,7 +1267,7 @@ Compiler <- R6::R6Class(
         }
       }
       # Note: quote(NULL) is how NULL is compiled, but it's NOT a boolean!
-      # It's a language object that needs .rye_true_p() wrapper
+      # It's a language object that needs .__true_p() wrapper
 
       # Check if it's a call to a function that returns logical
       if (!is.call(expr)) {
@@ -1658,7 +1658,7 @@ Compiler <- R6::R6Class(
       test_pred <- if (private$returns_r_logical(test)) {
         test
       } else {
-        as.call(list(as.symbol(".rye_true_p"), test))
+        as.call(list(as.symbol(".__true_p"), test))
       }
       if (length(expr) == 4) {
         else_expr <- private$compile_tail_position(expr[[4]], self_name, param_names,
@@ -1781,7 +1781,7 @@ Compiler <- R6::R6Class(
         if (is.null(src) || is.null(src$file) || is.null(src$start_line)) return(NULL)
         self$context$coverage_tracker$register_coverable(src$file, src$start_line, src$start_line)
         return(as.call(list(
-          as.symbol(".rye_coverage_track"),
+          as.symbol(".__coverage_track"),
           src$file,
           src$start_line,
           src$start_line
@@ -1790,7 +1790,7 @@ Compiler <- R6::R6Class(
       private$make_coverage_call(src_expr)
     },
 
-    # Build a .rye_coverage_track(file, start, end) call for the given source expression.
+    # Build a .__coverage_track(file, start, end) call for the given source expression.
     # Returns NULL if coverage is disabled or no source info.
     make_coverage_call = function(src_expr) {
       if (is.null(self$context$coverage_tracker)) return(NULL)
@@ -1800,7 +1800,7 @@ Compiler <- R6::R6Class(
       }
       self$context$coverage_tracker$register_coverable(src$file, src$start_line, src$end_line)
       as.call(list(
-        as.symbol(".rye_coverage_track"),
+        as.symbol(".__coverage_track"),
         src$file,
         src$start_line,
         src$end_line

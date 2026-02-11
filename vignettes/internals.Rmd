@@ -61,7 +61,7 @@ you get from `quote()` in R. For example:
 compiles to something like:
 
 ```r
-assign("x", 1 + 2, envir = .rye_env)
+assign("x", 1 + 2, envir = .__env)
 ```
 
 The result is a single R expression that can be passed to `eval()`. This
@@ -92,7 +92,7 @@ The compiler's core is a dispatch table in `compile_impl` (line ~191 of
 known special forms:
 
 - `quote` -- return the quoted value as-is
-- `if` -- conditional with truthiness wrapping (`.rye_true_p()`)
+- `if` -- conditional with truthiness wrapping (`.__true_p()`)
 - `define` -- binding with self-TCO detection for lambda definitions
 - `set!` -- mutation of existing bindings
 - `lambda` -- closure creation with parameter patterns and optional TCO
@@ -142,7 +142,7 @@ compiles to something like:
 ```r
 function(n, acc) {
   while (TRUE) {
-    if (.rye_true_p(n < 2)) {
+    if (.__true_p(n < 2)) {
       return(acc)
     } else {
       .tco_n <- n - 1
@@ -185,7 +185,7 @@ When a `CoverageTracker` is attached to the engine, the compiler
 inserts tracking calls at three points:
 
 1. **Statement-level:** Before each statement in a lambda body, a
-   `.rye_coverage_track(file, start_line, end_line)` call is interleaved.
+   `.__coverage_track(file, start_line, end_line)` call is interleaved.
 
 2. **Branch-level:** Both branches of `if` expressions are wrapped with
    coverage calls, tracking which branches execute.

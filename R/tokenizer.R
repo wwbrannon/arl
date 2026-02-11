@@ -37,7 +37,7 @@
 }
 
 # Reverse of .process_string_escapes: convert literal special chars to escape sequences
-.rye_unescape_string <- function(s) {
+unescape_string <- function(s) {
   s <- gsub("\\",   "\001", s, fixed = TRUE)   # backslash -> sentinel
   s <- gsub("\"",   "\\\"", s, fixed = TRUE)   # quote -> \"
   s <- gsub("\n",   "\\n",  s, fixed = TRUE)   # newline -> \n

@@ -57,20 +57,20 @@ test_that("VERIFY: constant folding does NOT fold non-constants", {
 test_that("VERIFY: truthiness optimization skips wrapper for known booleans", {
   engine <- Engine$new()
 
-  # Literal TRUE should not have .rye_true_p wrapper
+  # Literal TRUE should not have .__true_p wrapper
   out <- engine$inspect_compilation("(if #t 1 2)")
   compiled_str <- paste(out$compiled_deparsed, collapse = " ")
-  expect_false(grepl(".rye_true_p", compiled_str))
+  expect_false(grepl(".__true_p", compiled_str))
 
   # Comparison should not have wrapper
   out <- engine$inspect_compilation("(if (> x 5) 1 2)")
   compiled_str <- paste(out$compiled_deparsed, collapse = " ")
-  expect_false(grepl(".rye_true_p.*>", compiled_str))
+  expect_false(grepl(".__true_p.*>", compiled_str))
 
   # Variable SHOULD have wrapper
   out <- engine$inspect_compilation("(if x 1 2)")
   compiled_str <- paste(out$compiled_deparsed, collapse = " ")
-  expect_true(grepl(".rye_true_p", compiled_str))
+  expect_true(grepl(".__true_p", compiled_str))
 })
 
 # ==============================================================================

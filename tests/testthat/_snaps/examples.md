@@ -172,7 +172,7 @@
       [25] " "                                                     
       [26] "Original: (when (> 5 3) (println \"yes\")) "           
       [27] "Expanded: "                                            
-      [28] "if > 5 3 begin println yes .rye_nil "                  
+      [28] "if > 5 3 begin println yes .__nil "                    
       [29] ""                                                      
       [30] "Original: (let ((x 1)) (+ x 2)) "                      
       [31] "Expanded: "                                            

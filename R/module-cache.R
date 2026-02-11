@@ -47,16 +47,16 @@ ModuleCache <- R6::R6Class(
 
       for (name in ls(module_env, all.names = TRUE)) {
         # Skip special internal names that are safe
-        if (name %in% c(".rye_module", ".rye_exports")) next
+        if (name %in% c(".__module", ".__exports")) next
 
         # Skip compiler-generated intermediate values (safe)
-        if (grepl("^\\.__rye_define_value__", name)) next
+        if (grepl("^\\.__define_value__", name)) next
 
         # Skip R interop wrappers (safe - they're from other modules)
         if (grepl("^__r", name)) next
 
         # Skip Rye helper functions installed by runtime (safe)
-        if (grepl("^\\.rye_", name)) next
+        if (grepl("^\\.__", name)) next
 
         # Skip macro helpers (safe)
         if (name %in% c("quasiquote", "unquote", "unquote-splicing")) next
@@ -85,7 +85,7 @@ ModuleCache <- R6::R6Class(
                          identical(fn_env, baseenv()) ||
                          identical(fn_env, emptyenv()) ||
                          (is.environment(fn_env) && isNamespace(fn_env)) ||
-                         (is.environment(fn_env) && isTRUE(get0(".rye_module", envir = fn_env, inherits = FALSE)))
+                         (is.environment(fn_env) && isTRUE(get0(".__module", envir = fn_env, inherits = FALSE)))
 
           if (!is_safe_env) {
             # Function captured from elsewhere (might be old engine_env)

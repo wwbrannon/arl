@@ -1,5 +1,5 @@
 # Truthiness Optimization Benchmark
-# Demonstrates the impact of skipping .rye_true_p() wrapper for known-boolean expressions
+# Demonstrates the impact of skipping .__true_p() wrapper for known-boolean expressions
 
 # Load development version if running from source
 if (file.exists("DESCRIPTION")) {
@@ -39,7 +39,7 @@ for (name in names(test_cases)) {
   # Extract just the test condition from "if (TEST) 1 else 2"
   compiled_str <- paste(out$compiled_deparsed, collapse = " ")
   test_cond <- gsub("^if \\((.+)\\) .+$", "\\1", compiled_str)
-  has_wrapper <- grepl(".rye_true_p", test_cond)
+  has_wrapper <- grepl(".__true_p", test_cond)
 
   cat(sprintf("%-25s | %-29s | %s\n",
               name,
@@ -160,7 +160,7 @@ nodes_comp <- count_ast_nodes(out_comp$compiled)
 cat("Example: (if (< x 5) (+ x 1) (- x 1))\n")
 cat(sprintf("  Compiled: %s\n", paste(out_comp$compiled_deparsed, collapse = " ")))
 cat(sprintf("  AST nodes: %d\n", nodes_comp))
-cat(sprintf("  Wrapper eliminated: %s\n", if (grepl(".rye_true_p", paste(out_comp$compiled_deparsed))) "NO" else "YES"))
+cat(sprintf("  Wrapper eliminated: %s\n", if (grepl(".__true_p", paste(out_comp$compiled_deparsed))) "NO" else "YES"))
 
 cat("\n")
 
@@ -170,9 +170,9 @@ cat("\n")
 cat("=== Summary ===\n\n")
 cat("Truthiness optimization provides:\n\n")
 cat("1. CLEANER CODE:\n")
-cat("   - Literal booleans: if (TRUE) instead of if (.rye_true_p(TRUE))\n")
-cat("   - Comparisons: if (x > 5) instead of if (.rye_true_p(x > 5))\n")
-cat("   - Logical ops: if (a & b) instead of if (.rye_true_p(a & b))\n\n")
+cat("   - Literal booleans: if (TRUE) instead of if (.__true_p(TRUE))\n")
+cat("   - Comparisons: if (x > 5) instead of if (.__true_p(x > 5))\n")
+cat("   - Logical ops: if (a & b) instead of if (.__true_p(a & b))\n\n")
 
 cat("2. PERFORMANCE:\n")
 cat("   - Eliminates function call overhead for boolean tests\n")

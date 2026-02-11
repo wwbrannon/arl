@@ -19,7 +19,7 @@
   (lambda ()
     (define dict-obj (r/call "new.env" (list :hash #t :parent (r/call "emptyenv" (list)))))
     (r/call "class<-" (list dict-obj (c (list "rye_dict") (r/call "class" (list dict-obj)))))
-    (r/call "assign" (list ".rye_keys" (r/call "character" (list 0)) :envir dict-obj))
+    (r/call "assign" (list ".__keys" (r/call "character" (list 0)) :envir dict-obj))
     dict-obj))
 
 ;;' @description Convert key to string name for dict storage.
@@ -58,7 +58,7 @@
                   (define value (r/call "[[" (list args i)))
                   (r/call "assign" (list key value :envir dict-obj)))))
             (r/call "lapply" (list (r/call "seq_len" (list (length keys))) assign-pair))
-            (r/call "assign" (list ".rye_keys" keys :envir dict-obj))
+            (r/call "assign" (list ".__keys" keys :envir dict-obj))
             dict-obj))))))
 
 ;;' @signature (hash . args)
@@ -85,7 +85,7 @@
     (if (not (dict? dict))
       (r/call "character" (list 0))
       (begin
-        (define keys (r/call "get0" (list ".rye_keys" :envir dict :inherits #f)))
+        (define keys (r/call "get0" (list ".__keys" :envir dict :inherits #f)))
         (if (is.null keys)
           (r/call "sort" (list (r/call "ls" (list :envir dict :all.names #f))))
           keys)))))
@@ -125,7 +125,7 @@
         (begin
           (define keys (dict-keys-ordered dict))
           (if (not (r/call "%in%" (list name keys)))
-            (r/call "assign" (list ".rye_keys" (c keys (list name)) :envir dict)))
+            (r/call "assign" (list ".__keys" (c keys (list name)) :envir dict)))
           (r/call "assign" (list name value :envir dict))
           dict)))))
 
@@ -145,7 +145,7 @@
           (r/call "rm" (list :list (c name) :envir dict :inherits #f))
           (define keys (dict-keys-ordered dict))
           (if (> (length keys) 0)
-            (r/call "assign" (list ".rye_keys" (r/call "as.character" (list (filter (lambda (k) (not (= k name))) (as.list keys)))) :envir dict)))
+            (r/call "assign" (list ".__keys" (r/call "as.character" (list (filter (lambda (k) (not (= k name))) (as.list keys)))) :envir dict)))
           dict)
         dict))))
 
@@ -224,6 +224,6 @@
       (begin
         (merge-dict (car remaining))
         (set! remaining (cdr remaining))))
-    (r/call "assign" (list ".rye_keys" (r/call "as.character" (list result-keys)) :envir result))
+    (r/call "assign" (list ".__keys" (r/call "as.character" (list result-keys)) :envir result))
     result))
 )

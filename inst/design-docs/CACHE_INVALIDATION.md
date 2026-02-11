@@ -193,7 +193,7 @@ Modules with **captured functions** from other modules:
 is_safe_to_cache <- function(module_env, engine_env) {
   # Check for external pointers, connections (unsafe)
   # Check for functions captured from other modules
-  # Whitelist: .rye_* helpers, __r wrappers, module functions
+  # Whitelist: .__* helpers, __r wrappers, module functions
 }
 ```
 

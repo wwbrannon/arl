@@ -4,7 +4,7 @@ missing_default <- function() {
 
 # Compiled-mode helpers: installed in env before eval(compiled, env).
 # Rye truthiness: #f (FALSE), #nil (NULL), and 0 are false.
-.rye_true_p <- function(x) {
+.__true_p <- function(x) {
   if (is.null(x)) {
     return(FALSE)
   }
@@ -19,7 +19,7 @@ missing_default <- function() {
 
 # Wrapper for define/set! from compiled code (including pattern destructuring).
 # pattern can be a symbol, a string (converted to symbol for simple binding), or a list for destructuring.
-.rye_assign_pattern <- function(env, pattern, value, mode) {
+.__assign_pattern <- function(env, pattern, value, mode) {
   if (is.character(pattern) && length(pattern) == 1L) {
     pattern <- as.symbol(pattern)
   }
@@ -116,16 +116,16 @@ CompiledRuntime <- R6::R6Class(
     # @description Install bindings required for compiled code into env.
     install_helpers = function(env) {
       # Fast path: skip if already installed
-      if (exists(".rye_helpers_installed", envir = env, inherits = FALSE)) {
-        # .rye_env may point to the wrong environment when helpers were
+      if (exists(".__helpers_installed", envir = env, inherits = FALSE)) {
+        # .__env may point to the wrong environment when helpers were
         # copied from a module sub-environment during stdlib loading
         # (e.g. with use_env_cache = FALSE under coverage).
-        if (!identical(get0(".rye_env", envir = env, inherits = FALSE), env)) {
-          if (exists(".rye_env", envir = env, inherits = FALSE)) {
-            unlock_binding(".rye_env", env)
+        if (!identical(get0(".__env", envir = env, inherits = FALSE), env)) {
+          if (exists(".__env", envir = env, inherits = FALSE)) {
+            unlock_binding(".__env", env)
           }
-          assign(".rye_env", env, envir = env)
-          lockBinding(".rye_env", env)
+          assign(".__env", env, envir = env)
+          lockBinding(".__env", env)
         }
         return(invisible(NULL))
       }
@@ -134,7 +134,7 @@ CompiledRuntime <- R6::R6Class(
       assign_and_lock <- function(name, value, description) {
         # Check if binding already exists and is locked
         if (exists(name, envir = env, inherits = FALSE) && bindingIsLocked(name, env)) {
-          # Binding already locked (e.g., .rye_module marker in module envs)
+          # Binding already locked (e.g., .__module marker in module envs)
           # Skip assignment to avoid conflict
           return(invisible(NULL))
         }
@@ -152,31 +152,31 @@ CompiledRuntime <- R6::R6Class(
       }
 
       # Environment reference
-      assign_and_lock(".rye_env", env, "Current environment reference.")
+      assign_and_lock(".__env", env, "Current environment reference.")
 
       # Utility functions
-      assign_and_lock(".rye_quote", base::quote, "Quote wrapper (base::quote).")
-      assign_and_lock(".rye_true_p", .rye_true_p, "Truthiness checker.")
+      assign_and_lock(".__quote", base::quote, "Quote wrapper (base::quote).")
+      assign_and_lock(".__true_p", .__true_p, "Truthiness checker.")
 
       # Core helpers
-      assign_and_lock(".rye_assign_pattern", function(env, pattern, value, mode) {
-        .rye_assign_pattern(env, pattern, value, mode)
+      assign_and_lock(".__assign_pattern", function(env, pattern, value, mode) {
+        .__assign_pattern(env, pattern, value, mode)
       }, "Pattern assignment for define/set!.")
 
-      assign_and_lock(".rye_load", self$load_file_fn, "File loader for load/run.")
+      assign_and_lock(".__load", self$load_file_fn, "File loader for load/run.")
 
-      assign_and_lock(".rye_help", function(topic, env) {
+      assign_and_lock(".__help", function(topic, env) {
         if (is.symbol(topic)) topic <- as.character(topic)
         self$help_fn(topic, env)
       }, "Help system accessor.")
 
-      assign_and_lock(".rye_subscript_call", function(op_name, args, env) {
+      assign_and_lock(".__subscript_call", function(op_name, args, env) {
         self$subscript_call_compiled(op_name, args, env)
       }, "Subscript operator handler ($, [, [[).")
 
       assign_and_lock("quasiquote", function(expr) {
-        if (exists(".rye_macroexpanding", envir = env, inherits = TRUE) &&
-            isTRUE(get(".rye_macroexpanding", envir = env, inherits = TRUE))) {
+        if (exists(".__macroexpanding", envir = env, inherits = TRUE) &&
+            isTRUE(get(".__macroexpanding", envir = env, inherits = TRUE))) {
           if (is.null(self$context$macro_expander)) {
             stop("macro expander not initialized")
           }
@@ -185,7 +185,7 @@ CompiledRuntime <- R6::R6Class(
         self$quasiquote_compiled(expr, env)
       }, "Quasiquote template expander.")
 
-      assign_and_lock(".rye_attach_doc", function(val, doc_list) {
+      assign_and_lock(".__attach_doc", function(val, doc_list) {
         # Primitives don't support attributes; wrap in a regular function
         if (is.primitive(val)) {
           prim <- val
@@ -195,44 +195,44 @@ CompiledRuntime <- R6::R6Class(
         val
       }, "Attach rye_doc annotation to a value, wrapping primitives.")
 
-      assign_and_lock(".rye_delay", function(compiled_expr, env) {
+      assign_and_lock(".__delay", function(compiled_expr, env) {
         self$promise_new_compiled(compiled_expr, env)
       }, "Promise/delay constructor.")
 
-      assign_and_lock(".rye_defmacro", function(name, params, body_arg, docstring, env) {
+      assign_and_lock(".__defmacro", function(name, params, body_arg, docstring, env) {
         self$defmacro_compiled(name, params, body_arg, docstring, env)
       }, "Macro definition handler.")
 
-      assign_and_lock(".rye_macro_quasiquote", function(expr, env) {
+      assign_and_lock(".__macro_quasiquote", function(expr, env) {
         if (is.null(self$context$macro_expander)) {
           stop("macro expander not initialized")
         }
         self$context$macro_expander$quasiquote(expr, env)
       }, "Quasiquote for macro expansion.")
 
-      assign_and_lock(".rye_module", function(module_name, exports, export_all, body_exprs, src_file, env) {
+      assign_and_lock(".__module", function(module_name, exports, export_all, body_exprs, src_file, env) {
         self$module_compiled(module_name, exports, export_all, body_exprs, src_file, env)
       }, "Module definition handler.")
 
-      assign_and_lock(".rye_import", function(arg_value, env) {
+      assign_and_lock(".__import", function(arg_value, env) {
         self$import_compiled(arg_value, env)
       }, "Module import handler.")
 
-      assign_and_lock(".rye_pkg_access", function(op_name, pkg, name, env) {
+      assign_and_lock(".__pkg_access", function(op_name, pkg, name, env) {
         self$pkg_access_compiled(op_name, pkg, name, env)
       }, "R package access handler (r/pkg::fn).")
 
       # Coverage tracking hook: installed when coverage is enabled
       tracker <- self$context$coverage_tracker
       if (!is.null(tracker)) {
-        assign_and_lock(".rye_coverage_track", function(file, start_line, end_line) {
+        assign_and_lock(".__coverage_track", function(file, start_line, end_line) {
           tracker$track(list(file = file, start_line = start_line, end_line = end_line))
         }, "Coverage tracking hook.")
       }
 
       # Mark helpers as installed for fast-path check
-      assign(".rye_helpers_installed", TRUE, envir = env)
-      lockBinding(".rye_helpers_installed", env)
+      assign(".__helpers_installed", TRUE, envir = env)
+      lockBinding(".__helpers_installed", env)
 
       invisible(NULL)
     },
@@ -338,8 +338,8 @@ CompiledRuntime <- R6::R6Class(
     },
     module_compiled = function(module_name, exports, export_all, body_exprs, src_file, env) {
       module_env <- new.env(parent = env)
-      assign(".rye_module", TRUE, envir = module_env)
-      lockBinding(".rye_module", module_env)
+      assign(".__module", TRUE, envir = module_env)
+      lockBinding(".__module", module_env)
       self$context$env$module_registry$register(module_name, module_env, exports)
       has_file_path <- !is.null(src_file) && is.character(src_file) &&
         length(src_file) == 1L && nzchar(src_file) && grepl("[/\\\\]", src_file)
@@ -396,7 +396,7 @@ CompiledRuntime <- R6::R6Class(
               }
               coverage_tracker$register_coverable(rye_src$file, rye_src$start_line, end_line)
               instrumented[[idx]] <- as.call(list(
-                as.symbol(".rye_coverage_track"),
+                as.symbol(".__coverage_track"),
                 rye_src$file,
                 rye_src$start_line,
                 end_line
@@ -423,7 +423,7 @@ CompiledRuntime <- R6::R6Class(
       }
 
       if (export_all) {
-        exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
+        exports <- setdiff(ls(module_env, all.names = TRUE), ".__module")
         self$context$env$module_registry$update_exports(module_name, exports)
       }
 

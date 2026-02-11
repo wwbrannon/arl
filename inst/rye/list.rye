@@ -26,7 +26,7 @@
   (define __as-list
     (lambda (x)
       (if (pair? x)
-        (__cons-as-list x)
+        (.__cons-as-list x)
         (if (is.call x)
           (as.list x)
           (if (is.list x)
@@ -139,7 +139,7 @@
         (as.call (c (list item) (as.list lst)))
         (if (is.list lst)
           (c (list item) lst)
-          (__cons item lst)))))
+          (.__cons item lst)))))
 
   ;;' @description Build list ending with last arg.
   ;;' @examples

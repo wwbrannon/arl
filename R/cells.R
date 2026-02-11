@@ -45,7 +45,7 @@ Cons <- R6::R6Class("Cons",
 
 # Promise: Lazy value from (delay expr). Used by delay in compiled/runtime code.
 #
-# (No public fields; state in private .rye_promise_* bindings.)
+# (No public fields; state in private R6 fields.)
 #
 Promise <- R6::R6Class("Promise",
   private = list(

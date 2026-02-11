@@ -180,16 +180,16 @@ Engine <- R6::R6Class(
     initialize_environment = function() {
       env <- self$env$env
 
-      self$env$get_registry(".rye_module_registry", create = TRUE)
-      self$env$get_registry(".rye_macros", create = TRUE)
+      self$env$get_registry(".__module_registry", create = TRUE)
+      self$env$get_registry(".__macros", create = TRUE)
 
       #
       # Cons-cell primitives (bound in stdlib env so no globalenv/package lookup)
       #
 
-      env$`__cons` <- function(car, cdr) Cons$new(car, cdr)
-      env$`__cons-as-list` <- function(x) if (r6_isinstance(x, "Cons")) x$as_list() else list()
-      env$`__cons-parts` <- function(x) if (r6_isinstance(x, "Cons")) x$parts() else list(prefix = list(), tail = x)
+      env$`.__cons` <- function(car, cdr) Cons$new(car, cdr)
+      env$`.__cons-as-list` <- function(x) if (r6_isinstance(x, "Cons")) x$as_list() else list()
+      env$`.__cons-parts` <- function(x) if (r6_isinstance(x, "Cons")) x$parts() else list(prefix = list(), tail = x)
 
       env$`pair?` <- function(x) r6_isinstance(x, "Cons")
 
@@ -244,8 +244,8 @@ Engine <- R6::R6Class(
 
       env$`stdlib-env` <- function() env
       env$`current-env` <- function() {
-        if (exists(".rye_env", envir = parent.frame(), inherits = TRUE)) {
-          return(get(".rye_env", envir = parent.frame(), inherits = TRUE))
+        if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
+          return(get(".__env", envir = parent.frame(), inherits = TRUE))
         }
         self$env$current_env()
       }
@@ -372,7 +372,7 @@ Engine <- R6::R6Class(
 
       env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
-          # Use caller's environment directly (no .rye_env needed)
+          # Use caller's environment directly (no .__env needed)
           env <- parent.frame()
         }
         expr_expr <- substitute(expr)
@@ -539,8 +539,8 @@ Engine <- R6::R6Class(
               export_all <- cache_data$export_all
 
               module_env <- new.env(parent = target_env)
-              assign(".rye_module", TRUE, envir = module_env)
-              lockBinding(".rye_module", module_env)
+              assign(".__module", TRUE, envir = module_env)
+              lockBinding(".__module", module_env)
 
               module_registry$register(module_name, module_env, exports)
 
@@ -561,7 +561,7 @@ Engine <- R6::R6Class(
 
               # Handle export_all
               if (export_all) {
-                exports <- setdiff(ls(module_env, all.names = TRUE), ".rye_module")
+                exports <- setdiff(ls(module_env, all.names = TRUE), ".__module")
                 module_registry$update_exports(module_name, exports)
               }
 

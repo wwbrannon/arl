@@ -164,11 +164,11 @@ ModuleRegistry <- R6::R6Class(
       module_env <- entry$env
 
       # Inline macro registry lookup to avoid Env$new() allocation
-      target_macro_registry <- get0(".rye_macros", envir = target_env, inherits = TRUE)
+      target_macro_registry <- get0(".__macros", envir = target_env, inherits = TRUE)
       if (is.null(target_macro_registry)) {
         target_macro_registry <- new.env(parent = emptyenv())
-        base::assign(".rye_macros", target_macro_registry, envir = target_env)
-        lockBinding(".rye_macros", target_env)
+        base::assign(".__macros", target_macro_registry, envir = target_env)
+        lockBinding(".__macros", target_env)
       }
       module_macro_registry <- self$rye_env$macro_registry_env(module_env, create = FALSE)
 

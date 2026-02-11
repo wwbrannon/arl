@@ -78,7 +78,7 @@ Rye leverages R's existing eval/quote/environment system rather than reimplement
 
 4. **Compiler** (`compiler.R`) - Compiles Rye AST to R code; handles all special forms (`quote`, `if`, `define`, `lambda`, `begin`, `defmacro`, `quasiquote`, `~`, `while`, `set!`, etc.); implements self-tail-call optimization. The compiled R code is then evaluated via R's native `eval()`
 
-5. **Runtime** (`runtime.R`) - Runtime helpers used by compiled code: truthiness predicate (`.rye_true_p`), pattern assignment, stdlib functions (list ops, higher-order functions, predicates, etc.)
+5. **Runtime** (`runtime.R`) - Runtime helpers used by compiled code: truthiness predicate (`.__true_p`), pattern assignment, stdlib functions (list ops, higher-order functions, predicates, etc.)
 
 6. **Standard Library** (`runtime.R`, `inst/rye/*.rye`) - Core library in R (runtime helpers); modular extensions in Rye. **Module system**: `(import M)` attaches M's exports only in the scope where import was evaluated; each module is loaded once per engine (shared cache). `(load path)` runs a file in the current env; `(run path)` runs it in an isolated child env. From R, `load_file(path)` uses an isolated scope; use `load_file_in_env(path, env, create_scope = FALSE)` for source-like visibility.
 

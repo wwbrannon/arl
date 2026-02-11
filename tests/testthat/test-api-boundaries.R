@@ -97,21 +97,21 @@ test_that("r/eval without env parameter works correctly", {
   expect_equal(result2, 15)
 })
 
-test_that(".rye_env is documented as internal", {
-  # This test documents that .rye_env still exists in lambda bodies
+test_that(".__env is documented as internal", {
+  # This test documents that .__env still exists in lambda bodies
   # but is clearly internal (not part of public API)
   engine <- make_engine()
 
-  # .rye_env exists in compiled lambda bodies for internal use
+  # .__env exists in compiled lambda bodies for internal use
   fn <- engine$eval_text('(lambda (x) (r/eval (quote (environment))))')
   env <- fn(42)
 
-  # It should have .rye_env bound
-  expect_true(exists(".rye_env", envir = env, inherits = FALSE))
+  # It should have .__env bound
+  expect_true(exists(".__env", envir = env, inherits = FALSE))
 
   # Users CAN access it if they try hard enough (same R process)
   # But it's documented as internal and may change
-  rye_env_val <- get(".rye_env", envir = env)
+  rye_env_val <- get(".__env", envir = env)
   expect_true(is.environment(rye_env_val))
 })
 

@@ -81,7 +81,7 @@ Parser <- R6::R6Class(
         if (token$type == "NIL") {
           pos <<- pos + 1
           # Use a sentinel symbol so #nil survives in (as.call elements); NULL would be dropped.
-          return(tracker$src_set(as.symbol(".rye_nil"), make_src(token)))
+          return(tracker$src_set(as.symbol(".__nil"), make_src(token)))
         }
 
         if (token$type == "NA") {
@@ -254,7 +254,7 @@ Parser <- R6::R6Class(
       # Symbol
       if (is.symbol(expr)) {
         name <- as.character(expr)
-        if (name == ".rye_nil") return("#nil")
+        if (name == ".__nil") return("#nil")
         return(name)
       }
 
@@ -267,7 +267,7 @@ Parser <- R6::R6Class(
       # String (including NA_character_)
       if (is.character(expr) && length(expr) == 1L) {
         if (is.na(expr)) return("NA_character_")
-        return(paste0('"', .rye_unescape_string(expr), '"'))
+        return(paste0('"', unescape_string(expr), '"'))
       }
 
       # Integer (including NA_integer_)

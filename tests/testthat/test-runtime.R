@@ -8,10 +8,10 @@ test_that("install_helpers() creates all required helpers", {
 
   # Check all documented helpers exist
   expected_helpers <- c(
-    ".rye_env", ".rye_quote", ".rye_true_p", ".rye_assign_pattern",
-    ".rye_load", ".rye_help", ".rye_subscript_call", "quasiquote",
-    ".rye_delay", ".rye_defmacro", ".rye_macro_quasiquote",
-    ".rye_module", ".rye_import", ".rye_pkg_access"
+    ".__env", ".__quote", ".__true_p", ".__assign_pattern",
+    ".__load", ".__help", ".__subscript_call", "quasiquote",
+    ".__delay", ".__defmacro", ".__macro_quasiquote",
+    ".__module", ".__import", ".__pkg_access"
   )
 
   for (helper in expected_helpers) {
@@ -25,7 +25,7 @@ test_that("install_helpers() locks all bindings", {
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
-  helpers <- c(".rye_env", ".rye_quote", ".rye_true_p", "quasiquote")
+  helpers <- c(".__env", ".__quote", ".__true_p", "quasiquote")
 
   for (helper in helpers) {
     expect_true(bindingIsLocked(helper, test_env),
@@ -38,14 +38,14 @@ test_that("install_helpers() skips already locked bindings", {
   test_env <- new.env()
 
   # Pre-lock a binding
-  test_env$.rye_module <- TRUE
-  lockBinding(".rye_module", test_env)
+  test_env$.__module <- TRUE
+  lockBinding(".__module", test_env)
 
   # Should not error
   expect_silent(eng$compiled_runtime$install_helpers(test_env))
 
   # Original value preserved
-  expect_true(test_env$.rye_module)
+  expect_true(test_env$.__module)
 })
 
 test_that("install_helpers() sets rye_doc attributes", {
@@ -54,18 +54,18 @@ test_that("install_helpers() sets rye_doc attributes", {
   eng$compiled_runtime$install_helpers(test_env)
 
   # Check a non-primitive function has rye_doc
-  fn <- test_env$.rye_true_p
+  fn <- test_env$.__true_p
   expect_false(is.null(attr(fn, "rye_doc")))
   expect_true("description" %in% names(attr(fn, "rye_doc")))
   expect_true(grepl("INTERNAL:", attr(fn, "rye_doc")$description))
 })
 
-test_that(".rye_true_p helper handles truthiness correctly", {
+test_that(".__true_p helper handles truthiness correctly", {
   eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
-  true_p <- test_env$.rye_true_p
+  true_p <- test_env$.__true_p
 
   # FALSE and NULL are falsy
   expect_false(true_p(FALSE))
@@ -81,20 +81,20 @@ test_that(".rye_true_p helper handles truthiness correctly", {
   expect_true(true_p(NA))
 })
 
-test_that(".rye_env helper points to current environment", {
+test_that(".__env helper points to current environment", {
   eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
-  expect_identical(test_env$.rye_env, test_env)
+  expect_identical(test_env$.__env, test_env)
 })
 
-test_that(".rye_quote helper wraps base::quote", {
+test_that(".__quote helper wraps base::quote", {
   eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
-  expect_identical(test_env$.rye_quote, base::quote)
+  expect_identical(test_env$.__quote, base::quote)
 })
 
 # Module compilation tests
@@ -147,7 +147,7 @@ test_that("module_compiled() handles export_all flag", {
   expect_true("foo" %in% exports)
   expect_true("bar" %in% exports)
   expect_true("baz" %in% exports)
-  expect_false(".rye_module" %in% exports)  # Should be excluded
+  expect_false(".__module" %in% exports)  # Should be excluded
 })
 
 test_that("module_compiled() marks module environment", {
@@ -162,8 +162,8 @@ test_that("module_compiled() marks module environment", {
   )
 
   entry <- eng$env$module_registry$get("test-mod")
-  expect_true(entry$env$.rye_module)
-  expect_true(bindingIsLocked(".rye_module", entry$env))
+  expect_true(entry$env$.__module)
+  expect_true(bindingIsLocked(".__module", entry$env))
 })
 
 test_that("module_compiled() creates path alias when src_file provided", {
@@ -202,8 +202,8 @@ test_that("module_compiled() installs helpers in module environment", {
   mod_env <- entry$env
 
   # Check that helpers are installed
-  expect_true(exists(".rye_env", envir = mod_env, inherits = FALSE))
-  expect_true(exists(".rye_quote", envir = mod_env, inherits = FALSE))
+  expect_true(exists(".__env", envir = mod_env, inherits = FALSE))
+  expect_true(exists(".__quote", envir = mod_env, inherits = FALSE))
 })
 
 # Import handling tests
@@ -582,7 +582,7 @@ test_that("eval_compiled() installs helpers", {
   eng$compiled_runtime$eval_compiled(quote(NULL), test_env)
 
   # Helpers should be installed
-  expect_true(exists(".rye_env", envir = test_env, inherits = FALSE))
+  expect_true(exists(".__env", envir = test_env, inherits = FALSE))
 })
 
 test_that("eval_compiled() handles visibility", {

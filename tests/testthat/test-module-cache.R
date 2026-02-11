@@ -151,9 +151,9 @@ test_that("is_safe_to_cache() allows Rye module functions", {
   engine_env <- new.env()
 
   # Create a function from another Rye module
-  # The implementation checks isTRUE(get0(".rye_module", ...)), so needs TRUE value
+  # The implementation checks isTRUE(get0(".__module", ...)), so needs TRUE value
   other_module <- new.env()
-  other_module$.rye_module <- TRUE  # Must be TRUE, not just a string
+  other_module$.__module <- TRUE  # Must be TRUE, not just a string
   test_env$from_module <- function(x) x
   environment(test_env$from_module) <- other_module
 
@@ -197,11 +197,11 @@ test_that("is_safe_to_cache() skips special internal names", {
   engine_env <- new.env()
 
   # Add names that should be skipped
-  test_env$.rye_module <- "test"
-  test_env$.rye_exports <- c("foo")
-  assign(".__rye_define_value__1", 42, envir = test_env)
+  test_env$.__module <- "test"
+  test_env$.__exports <- c("foo")
+  assign(".__define_value__1", 42, envir = test_env)
   assign("__rye_helper", function() {}, envir = test_env)
-  test_env$.rye_internal <- 123
+  test_env$.__internal <- 123
   test_env$quasiquote <- function() {}
 
   result <- cache$is_safe_to_cache(test_env, engine_env)

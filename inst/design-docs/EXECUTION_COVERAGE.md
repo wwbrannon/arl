@@ -4,7 +4,7 @@ This document describes the execution coverage system implemented for Rye code.
 
 ## Overview
 
-The Rye coverage system tracks **execution coverage** — which lines of `.rye` source files actually execute during runtime. The compiler injects `.rye_coverage_track()` calls into compiled code; these fire at runtime and record which source lines were reached.
+The Rye coverage system tracks **execution coverage** — which lines of `.rye` source files actually execute during runtime. The compiler injects `.__coverage_track()` calls into compiled code; these fire at runtime and record which source lines were reached.
 
 ## Architecture
 
@@ -16,14 +16,14 @@ The Rye coverage system tracks **execution coverage** — which lines of `.rye` 
    - Exported for use by package users and CI tools
 
 2. **Compiler Instrumentation** (`R/compiler.R`)
-   - When a `coverage_tracker` is present in the compilation context, the compiler injects `.rye_coverage_track(file, start_line, end_line)` calls into:
+   - When a `coverage_tracker` is present in the compilation context, the compiler injects `.__coverage_track(file, start_line, end_line)` calls into:
      - **Lambda bodies**: Before each statement via `interleave_coverage()`
      - **If-expression branches**: Around each branch via `wrap_branch_coverage()`
    - Source location comes from `rye_src` attributes on the AST
    - Zero overhead when coverage is disabled (no calls injected)
 
 3. **Runtime Hook** (`R/runtime.R`)
-   - `install_helpers()` installs `.rye_coverage_track` as a closure over the tracker when coverage is enabled
+   - `install_helpers()` installs `.__coverage_track` as a closure over the tracker when coverage is enabled
    - The function is not installed at all when coverage is disabled
 
 4. **Engine Integration** (`R/rye-engine.R`)
@@ -41,7 +41,7 @@ The Rye coverage system tracks **execution coverage** — which lines of `.rye` 
 
 **Denominator** (total lines): Non-blank, non-comment lines in each `.rye` file. A line is considered code if it matches `^\s*[^[:space:];]` — i.e., it has non-whitespace content and doesn't start with `;`.
 
-**Numerator** (covered lines): Code lines where a `.rye_coverage_track()` call fired with a source range covering that line. Each hit increments a per-line execution count.
+**Numerator** (covered lines): Code lines where a `.__coverage_track()` call fired with a source range covering that line. Each hit increments a per-line execution count.
 
 The tracker filters on both sides: injected calls only record hits for lines in the code-lines set, and reports only count code lines in the denominator.
 
@@ -131,10 +131,10 @@ Codecov-compatible JSON format for CI integration:
    `use_env_cache = FALSE` is required: cached modules lack source info for instrumentation, and instrumented code must not be written to cache.
 
 2. **Compiler Instrumentation**: When the compiler has a `coverage_tracker` in its context, it injects calls:
-   - **Lambda bodies** (`interleave_coverage`): Inserts `.rye_coverage_track(file, line, line)` before each statement in the body. The compiled lambda becomes `{ .rye_env <- environment(), .rye_coverage_track(...), stmt1, .rye_coverage_track(...), stmt2, ... }`.
-   - **If branches** (`wrap_branch_coverage`): Wraps each branch in `{ .rye_coverage_track(...), branch_expr }` so that taking a branch records which source line was reached.
+   - **Lambda bodies** (`interleave_coverage`): Inserts `.__coverage_track(file, line, line)` before each statement in the body. The compiled lambda becomes `{ .__env <- environment(), .__coverage_track(...), stmt1, .__coverage_track(...), stmt2, ... }`.
+   - **If branches** (`wrap_branch_coverage`): Wraps each branch in `{ .__coverage_track(...), branch_expr }` so that taking a branch records which source line was reached.
 
-3. **Runtime Execution**: `.rye_coverage_track()` is a closure installed by `install_helpers()` that calls `tracker$track()`. The tracker records a hit for each code line in the `start_line:end_line` range.
+3. **Runtime Execution**: `.__coverage_track()` is a closure installed by `install_helpers()` that calls `tracker$track()`. The tracker records a hit for each code line in the `start_line:end_line` range.
 
 4. **Reporting**: Tracker compares executed lines against all code lines in discovered `.rye` files.
 
@@ -160,7 +160,7 @@ Some test files must use `Engine$new()` directly because they inspect compiler i
 - **Macro-generated code**: Attributed to macro call site (via `src_inherit`)
 - **Module cache**: Must be disabled during coverage (`use_env_cache = FALSE`) to avoid caching instrumented code and to ensure source info is available for instrumentation
 - **Unreachable code**: Correctly shows 0% coverage
-- **Helper leaking**: When `use_env_cache = FALSE`, module loading can copy `.rye_env` into parent environments pointing to the wrong env. `install_helpers()` corrects `.rye_env` on its fast path to handle this.
+- **Helper leaking**: When `use_env_cache = FALSE`, module loading can copy `.__env` into parent environments pointing to the wrong env. `install_helpers()` corrects `.__env` on its fast path to handle this.
 
 ## Performance
 

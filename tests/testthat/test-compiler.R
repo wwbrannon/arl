@@ -420,7 +420,7 @@ test_that("compiler handles constant folding edge cases", {
 test_that("compiler optimizes truthiness checks for literal booleans", {
   engine <- make_engine()
 
-  # Literal TRUE/FALSE should work without .rye_true_p wrapper
+  # Literal TRUE/FALSE should work without .__true_p wrapper
   expect_equal(engine$eval(engine$read("(if #t 1 2)")[[1]]), 1)
   expect_equal(engine$eval(engine$read("(if #f 1 2)")[[1]]), 2)
   expect_equal(engine$eval(engine$read("(if #nil 1 2)")[[1]]), 2)

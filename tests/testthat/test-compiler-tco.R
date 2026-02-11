@@ -219,7 +219,7 @@ test_that("TCO: deep recursion with destructuring does not stack overflow", {
   expect_equal(result, 100000)
 })
 
-test_that("VERIFY: TCO'd destructuring has while and .rye_assign_pattern inside loop", {
+test_that("VERIFY: TCO'd destructuring has while and .__assign_pattern inside loop", {
   out <- engine$inspect_compilation("
     (define sum-pairs (lambda ((pattern (a b)) n acc)
       (if (<= n 0)
@@ -228,7 +228,7 @@ test_that("VERIFY: TCO'd destructuring has while and .rye_assign_pattern inside 
   ")
   deparsed <- paste(out$compiled_deparsed, collapse = "\n")
   expect_true(grepl("while", deparsed, fixed = TRUE))
-  expect_true(grepl(".rye_assign_pattern", deparsed, fixed = TRUE))
+  expect_true(grepl(".__assign_pattern", deparsed, fixed = TRUE))
   # Should not contain a call to sum-pairs in the compiled output
   expect_false(grepl("sum.pairs(", deparsed, fixed = TRUE))
 })
@@ -357,7 +357,7 @@ test_that("TCO: pattern rest params are TCO'd", {
   ")
   deparsed <- paste(out$compiled_deparsed, collapse = "\n")
   expect_true(grepl("while", deparsed, fixed = TRUE))
-  expect_true(grepl(".rye_assign_pattern", deparsed, fixed = TRUE))
+  expect_true(grepl(".__assign_pattern", deparsed, fixed = TRUE))
   expect_false(grepl("pat.rest.fn(", deparsed, fixed = TRUE))
 })
 

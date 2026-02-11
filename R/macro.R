@@ -132,7 +132,7 @@ MacroExpander <- R6::R6Class(
       resolve_env(env, self$context$env$env)
     },
     macro_registry = function(env, create = TRUE) {
-      registry <- self$context$env$get_registry(".rye_macros", env, create = create)
+      registry <- self$context$env$get_registry(".__macros", env, create = create)
       # Invalidate cache if registry changed (optimization 1.3)
       if (!identical(registry, private$macro_names_cache_env)) {
         private$macro_names_cache <- NULL
@@ -754,7 +754,7 @@ MacroExpander <- R6::R6Class(
             }
 
             # Generate unique name for internal binding
-            tmp_name <- as.character(self$gensym(".__rye_macro_arg"))
+            tmp_name <- as.character(self$gensym(".__macro_arg"))
             param_names <- c(param_names, tmp_name)
             param_defaults[[tmp_name]] <- default_expr
             param_specs[[length(param_specs) + 1]] <- list(
@@ -815,7 +815,7 @@ MacroExpander <- R6::R6Class(
 
       macro_fn <- function(...) {
         macro_env <- new.env(parent = env)
-        assign(".rye_macroexpanding", TRUE, envir = macro_env)
+        assign(".__macroexpanding", TRUE, envir = macro_env)
         args <- match.call(expand.dots = FALSE)$...
 
         if (!is.null(rest_param_spec)) {
