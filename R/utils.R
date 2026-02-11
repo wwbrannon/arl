@@ -78,6 +78,13 @@ rye_should_narrow_coverage <- function(src_expr) {
 
 # Normalize a file path to absolute form for consistent registry keys.
 # Relative paths are resolved relative to getwd(). Uses forward slashes.
+# Read a DCF file, stripping comment lines (starting with #) before parsing.
+read_dcf_with_comments <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  lines <- lines[!grepl("^\\s*#", lines)]
+  read.dcf(textConnection(paste(lines, collapse = "\n")))
+}
+
 rye_normalize_path_absolute <- function(path) {
   if (!is.character(path) || length(path) != 1 || !nzchar(path)) {
     return(path)

@@ -871,7 +871,8 @@ Evaluate a Rye expression in the current environment.
 
 ### r/eval {#r-eval}
 
-Evaluate an R expression directly via R's eval(), bypassing Rye's compiler.
+Evaluate an R expression directly via R's eval(), bypassing
+Rye's compiler.
 
 **Signature:** `(r/eval expr)`
 
@@ -880,7 +881,8 @@ Evaluate an R expression directly via R's eval(), bypassing Rye's compiler.
 (r/eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
 ```
 
-**Note:** Useful for evaluating raw R calls that use R control flow (for, while) or other constructs that Rye normally overrides.
+**Note:** Useful for evaluating raw R calls that use R control flow (for,
+while) or other constructs that Rye normally overrides.
 
 **See also:** [eval](#eval), [r/call](#r-call)
 
@@ -890,19 +892,23 @@ Evaluate an R expression directly via R's eval(), bypassing Rye's compiler.
 
 ### capture {#capture}
 
-Mark a symbol for intentional capture in a macro body, overriding hygiene.
+Mark a symbol for intentional capture in a macro body,
+overriding hygiene.
 
 **Signature:** `(capture 'sym expr)`
 
 **Examples:**
 ```lisp
 (defmacro aif (test then alt)
-  `(let ((it ,test))
-     (if it ,(capture 'it then) ,(capture 'it alt))))
+`(let ((it ,test))
+(if it ,(capture 'it then) ,(capture 'it alt))))
 (aif (+ 2 3) it 0)          ; => 5
 ```
 
-**Note:** Use capture when writing anaphoric macros or other macros that intentionally introduce a binding visible to the caller. Without capture, Rye's automatic hygiene renames macro-introduced symbols to prevent accidental capture.
+**Note:** Use capture when writing anaphoric macros or other macros that
+intentionally introduce a binding visible to the caller. Without
+capture, Rye's automatic hygiene renames macro-introduced symbols to
+prevent accidental capture.
 
 **See also:** [gensym](#gensym), [macroexpand](#macroexpand), defmacro
 
@@ -910,7 +916,8 @@ Mark a symbol for intentional capture in a macro body, overriding hygiene.
 
 ### gensym {#gensym}
 
-Generate a unique uninterned symbol, useful for writing hygienic macros.
+Generate a unique uninterned symbol, useful for writing
+hygienic macros.
 
 **Signature:** `(gensym [prefix])`
 
@@ -920,7 +927,8 @@ Generate a unique uninterned symbol, useful for writing hygienic macros.
 (gensym "tmp")            ; => tmp2 (unique with prefix)
 ```
 
-**Note:** Each call returns a fresh symbol guaranteed not to conflict with user-defined names. The optional prefix defaults to "G".
+**Note:** Each call returns a fresh symbol guaranteed not to conflict with
+user-defined names. The optional prefix defaults to "G".
 
 **See also:** [macroexpand](#macroexpand), [macroexpand-1](#macroexpand-1)
 
@@ -943,14 +951,15 @@ Return #t if the symbol names a currently-defined macro.
 
 ### macroexpand {#macroexpand}
 
-Recursively expand all macros in expr until no macro calls remain.
+Recursively expand all macros in expr until no macro calls
+remain.
 
 **Signature:** `(macroexpand expr)`
 
 **Examples:**
 ```lisp
 (defmacro my-when (test body)
-  `(if ,test ,body #nil))
+`(if ,test ,body #nil))
 (macroexpand '(my-when #t 42))  ; => (if #t 42 #nil)
 ```
 
@@ -969,7 +978,7 @@ Expand only the outermost macro call in expr (one step).
 **Examples:**
 ```lisp
 (defmacro my-when (test body)
-  `(if ,test ,body #nil))
+`(if ,test ,body #nil))
 (macroexpand-1 '(my-when #t 42))  ; => (if #t 42 #nil)
 ```
 
@@ -998,7 +1007,8 @@ Return #t if x is a promise (created with `delay`).
 
 ### force {#force}
 
-Force a promise, evaluating its delayed expression and returning the result. If x is not a promise, returns x unchanged.
+Force a promise, evaluating its delayed expression and
+returning the result. If x is not a promise, returns x unchanged.
 
 **Signature:** `(force x)`
 
@@ -1035,7 +1045,8 @@ Extract the unevaluated expression from a promise.
 
 ### stdlib-env {#stdlib-env}
 
-Return the stdlib environment (the environment where all standard library bindings live).
+Return the stdlib environment (the environment where all
+standard library bindings live).
 
 **Signature:** `(stdlib-env)`
 

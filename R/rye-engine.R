@@ -179,9 +179,6 @@ RyeEngine <- R6::R6Class(
       env$capture <- function(symbol, expr) {
         self$macro_expander$capture(symbol, expr)
       }
-      attr(env$capture, "rye_doc") <- list(
-        description = "Mark a symbol for intentional capture in a macro body, overriding hygiene."
-      )
 
       env$`macro?` <- function(x) {
         is.symbol(x) && self$macro_expander$is_macro(x, env = env)
@@ -200,9 +197,6 @@ RyeEngine <- R6::R6Class(
       env$eval <- function(expr, env = parent.frame()) {
         self$eval_in_env(expr, env)
       }
-      attr(env$eval, "rye_doc") <- list(
-        description = "Evaluate expr in the current environment."
-      )
 
       env$`stdlib-env` <- function() env
       env$`current-env` <- function() {
@@ -229,16 +223,6 @@ RyeEngine <- R6::R6Class(
         p$get_expr()
       }
 
-      attr(env$`promise?`, "rye_doc") <- list(
-        description = "Return TRUE if x is a promise."
-      )
-      attr(env$force, "rye_doc") <- list(
-        description = "Force a promise or return x unchanged."
-      )
-      attr(env$`promise-expr`, "rye_doc") <- list(
-        description = "Extract the unevaluated expression from a promise."
-      )
-
       env$rye_read <- function(source, source_name = NULL) {
         self$read(source, source_name = source_name)
       }
@@ -258,17 +242,7 @@ RyeEngine <- R6::R6Class(
         if (is.null(doc_attr)) NULL else doc_attr$description
       }
 
-      # identical? - Thin wrapper around R's native identical() function
-      #
-      # Does structural comparison for value-semantic types (lists, vectors, S3, S4)
-      # Does pointer comparison for reference-semantic types (environments, RC, R6, external pointers)
-      #
-      # This is simply R's identical() exposed to Rye with no modifications.
-      # For configurable equality with numeric type coercion, use equal? with :strict keyword.
       env$`identical?` <- base::identical
-      attr(env$`identical?`, "rye_doc") <- list(
-        description = "R's native equality test. Structural comparison for value types, pointer comparison for reference types. This is R's identical() function with no modifications."
-      )
 
       env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
@@ -315,6 +289,10 @@ RyeEngine <- R6::R6Class(
         }
       }
       attr(env$`r/eval`, "rye_no_quote") <- TRUE
+
+      # Load rye_doc attributes from builtins-docs.dcf (single source of truth
+      # shared with the vignette generator)
+      private$load_builtin_docs(env)
 
       self$load_stdlib_into_env(env)
 
@@ -588,6 +566,35 @@ RyeEngine <- R6::R6Class(
   private = list(
     resolve_env_arg = function(env) {
       rye_resolve_env(env, self$env$env)
+    },
+    load_builtin_docs = function(env) {
+      dcf_path <- system.file("builtins-docs.dcf", package = "rye")
+      if (!nzchar(dcf_path) || !file.exists(dcf_path)) return(invisible(NULL))
+      m <- read_dcf_with_comments(dcf_path)
+      doc_fields <- c("Description", "Signature", "Examples", "Seealso", "Note")
+      for (i in seq_len(nrow(m))) {
+        name <- m[i, "Name"]
+        obj <- tryCatch(get(name, envir = env, inherits = FALSE), error = function(e) NULL)
+        if (is.null(obj)) next
+        doc <- list()
+        for (field in doc_fields) {
+          val <- m[i, field]
+          if (!is.na(val) && nzchar(val)) {
+            doc[[tolower(field)]] <- val
+          }
+        }
+        if (length(doc) > 0L) {
+          # identical? is a primitive — can't set attributes directly
+          if (is.primitive(obj)) {
+            wrapper <- obj
+            obj <- function(...) wrapper(...)
+            assign(name, obj, envir = env)
+          }
+          attr(obj, "rye_doc") <- doc
+          assign(name, obj, envir = env)
+        }
+      }
+      invisible(NULL)
     },
     eval_one_compiled = function(expr, env, compiled_only = TRUE) {
       expanded <- self$macroexpand_in_env(expr, env, preserve_src = TRUE)

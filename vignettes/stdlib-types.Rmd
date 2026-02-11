@@ -117,23 +117,6 @@ Return #t if x is empty (0-length). (Note the empty string "" has length 1 and i
 
 ---
 
-### pair? {#pair}
-
-Return #t if x is a cons cell (dotted pair).
-
-**Signature:** `(pair? x)`
-
-**Examples:**
-```lisp
-(pair? (cons 1 2))        ; => #t
-(pair? '(1 2 3))          ; => #t
-(pair? '())               ; => #f
-```
-
-**See also:** [list?](#list), [null?](#null), [atom?](#atom)
-
----
-
 ## Symbol Predicates
 
 ### symbol? {#symbol}
@@ -335,6 +318,25 @@ Return the type of value (alias for R's typeof).
 ```
 
 **See also:** class, mode (R functions)
+
+---
+
+## List and Pair Predicates
+
+### pair? {#pair}
+
+Return #t if x is a cons cell (dotted pair).
+
+**Signature:** `(pair? x)`
+
+**Examples:**
+```lisp
+(pair? (cons 1 2))        ; => #t
+(pair? '(1 2 3))          ; => #t
+(pair? '())               ; => #f
+```
+
+**See also:** [list?](#list), [null?](#null), [atom?](#atom)
 
 ---
 

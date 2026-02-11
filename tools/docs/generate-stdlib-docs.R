@@ -593,29 +593,29 @@ tokenize_params <- function(s) {
 # Builtins loader
 # ---------------------------------------------------------------------------
 
-#' Load documentation for R-defined builtins from builtins-docs.yml.
+#' Load documentation for R-defined builtins from builtins-docs.dcf.
 #'
 #' Returns a list keyed by vignette name. Each entry has:
 #'   $functions — named list of function entries (same format as parse_rye_annotations output)
 #'   $sections  — list of section entries in order: list(name, prose)
-load_builtins_docs <- function(path = "tools/docs/builtins-docs.yml") {
+load_builtins_docs <- function(path = "inst/builtins-docs.dcf") {
   if (!file.exists(path)) return(list())
 
-  raw <- yaml::yaml.load_file(path)
-  if (is.null(raw$builtins)) return(list())
-
+  lines <- readLines(path, warn = FALSE)
+  lines <- lines[!grepl("^\\s*#", lines)]
+  m <- read.dcf(textConnection(paste(lines, collapse = "\n")))
   by_vignette <- list()
 
-  for (func_name in names(raw$builtins)) {
-    entry <- raw$builtins[[func_name]]
-    vname <- entry$vignette
-    if (is.null(vname)) next
+  for (i in seq_len(nrow(m))) {
+    func_name <- m[i, "Name"]
+    vname <- m[i, "Vignette"]
+    if (is.na(vname)) next
 
     if (is.null(by_vignette[[vname]])) {
       by_vignette[[vname]] <- list(functions = list(), sections = list())
     }
 
-    sec_name <- entry$section
+    sec_name <- if (is.na(m[i, "Section"])) NULL else m[i, "Section"]
     if (!is.null(sec_name)) {
       existing_secs <- vapply(
         by_vignette[[vname]]$sections,
@@ -628,17 +628,21 @@ load_builtins_docs <- function(path = "tools/docs/builtins-docs.yml") {
       }
     }
 
-    # Trim trailing whitespace from multi-line YAML strings
-    examples <- entry$examples
+    dcf_field <- function(field) {
+      val <- m[i, field]
+      if (is.na(val) || !nzchar(val)) NULL else val
+    }
+
+    examples <- dcf_field("Examples")
     if (!is.null(examples)) examples <- sub("\\s+$", "", examples)
 
     by_vignette[[vname]]$functions[[func_name]] <- list(
       name         = func_name,
-      description  = if (is.null(entry$description)) "" else entry$description,
-      signature    = if (is.null(entry$signature)) "" else entry$signature,
+      description  = if (is.null(dcf_field("Description"))) "" else dcf_field("Description"),
+      signature    = if (is.null(dcf_field("Signature"))) "" else dcf_field("Signature"),
       examples     = examples,
-      seealso      = entry$seealso,
-      note         = entry$note,
+      seealso      = dcf_field("Seealso"),
+      note         = dcf_field("Note"),
       section      = sec_name,
       section_prose = NULL
     )
@@ -857,7 +861,7 @@ generate_all <- function(
   check_undocumented(all_parsed, rye_dir, all_modules)
 
   # Load R-defined builtin documentation
-  builtins_path <- file.path(dirname(config_path), "builtins-docs.yml")
+  builtins_path <- file.path("inst", "builtins-docs.dcf")
   builtins_by_vignette <- load_builtins_docs(builtins_path)
   n_builtins <- sum(vapply(builtins_by_vignette, function(v) length(v$functions), integer(1)))
   if (n_builtins > 0) {

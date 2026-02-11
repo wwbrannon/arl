@@ -68,25 +68,6 @@ Deep structural equality. Dispatches on class of first argument. Optional :stric
 
 ---
 
-### identical? {#identical}
-
-R's native equality test. Structural comparison for value types, pointer comparison for reference types.
-
-**Signature:** `(identical? a b)`
-
-**Examples:**
-```lisp
-(identical? 1 1)          ; => #t
-(identical? 1 1.0)        ; => #f (different types)
-(identical? "a" "a")      ; => #t
-```
-
-**Note:** This is R's `identical()` with no modifications. Use `equal?` for deep structural equality with type coercion.
-
-**See also:** [equal?](#equal), [eq?](#eq), [eqv?](#eqv)
-
----
-
 ## Helper Functions for Equal?
 
 Internal helper functions used by the `equal?` dispatch methods to perform
@@ -257,6 +238,34 @@ Compare environments by bindings and values (dict, set, R6, refclass are env-bas
 (assign "x" 1 :envir e2)
 (equal?.environment e1 e2)       ; => #t
 ```
+
+---
+
+## Equality Predicates
+
+Rye provides `equal?` for deep structural equality with S3-style dispatch,
+and `identical?` for R's native identity comparison. The Scheme predicates
+`eq?` and `eqv?` are intentionally not implemented because R does not
+provide the pointer-level semantics they require.
+
+### identical? {#identical}
+
+R's native equality test. Structural comparison for value
+types, pointer comparison for reference types.
+
+**Signature:** `(identical? a b)`
+
+**Examples:**
+```lisp
+(identical? 1 1)          ; => #t
+(identical? 1 1.0)        ; => #f (different types)
+(identical? "a" "a")      ; => #t
+```
+
+**Note:** This is R's `identical()` with no modifications. Use `equal?`
+for deep structural equality with type coercion.
+
+**See also:** [equal?](#equal), [eq?](#eq), [eqv?](#eqv)
 
 ---
 

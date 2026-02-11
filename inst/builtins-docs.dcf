@@ -1,0 +1,172 @@
+# Documentation for R-defined builtins (injected by RyeEngine$initialize_environment).
+# These functions are defined in R code (R/rye-engine.R) rather than .rye source files,
+# so they need a separate documentation source for the stdlib vignette generator and
+# the runtime help system.
+#
+# Format: Debian Control File (DCF), read by base R's read.dcf().
+# Fields: Name, Vignette, Section, Description, Signature, Examples, Seealso, Note.
+# Multi-line values use leading whitespace on continuation lines.
+
+Name: pair?
+Vignette: stdlib-types
+Section: List and Pair Predicates
+Description: Return #t if x is a cons cell (dotted pair).
+Signature: (pair? x)
+Examples:
+  (pair? (cons 1 2))        ; => #t
+  (pair? '(1 2 3))          ; => #t
+  (pair? '())               ; => #f
+Seealso: list?, null?, atom?
+
+Name: identical?
+Vignette: stdlib-equality
+Section: Equality Predicates
+Description: R's native equality test. Structural comparison for value
+  types, pointer comparison for reference types.
+Signature: (identical? a b)
+Examples:
+  (identical? 1 1)          ; => #t
+  (identical? 1 1.0)        ; => #f (different types)
+  (identical? "a" "a")      ; => #t
+Seealso: equal?, eq?, eqv?
+Note: This is R's `identical()` with no modifications. Use `equal?`
+  for deep structural equality with type coercion.
+
+Name: eval
+Vignette: stdlib-macro-eval-interop
+Section: Evaluation
+Description: Evaluate a Rye expression in the current environment.
+Signature: (eval expr)
+Examples:
+  (eval '(+ 1 2))           ; => 3
+  (eval '(list 1 2 3))      ; => (1 2 3)
+Seealso: r/eval, macroexpand
+
+Name: capture
+Vignette: stdlib-macro-eval-interop
+Section: Macro Utilities
+Description: Mark a symbol for intentional capture in a macro body,
+  overriding hygiene.
+Signature: (capture 'sym expr)
+Examples:
+  (defmacro aif (test then alt)
+    `(let ((it ,test))
+       (if it ,(capture 'it then) ,(capture 'it alt))))
+  (aif (+ 2 3) it 0)          ; => 5
+Seealso: gensym, macroexpand, defmacro
+Note: Use capture when writing anaphoric macros or other macros that
+  intentionally introduce a binding visible to the caller. Without
+  capture, Rye's automatic hygiene renames macro-introduced symbols to
+  prevent accidental capture.
+
+Name: gensym
+Vignette: stdlib-macro-eval-interop
+Section: Macro Utilities
+Description: Generate a unique uninterned symbol, useful for writing
+  hygienic macros.
+Signature: (gensym [prefix])
+Examples:
+  (gensym)                  ; => G1 (unique symbol)
+  (gensym "tmp")            ; => tmp2 (unique with prefix)
+Seealso: macroexpand, macroexpand-1
+Note: Each call returns a fresh symbol guaranteed not to conflict with
+  user-defined names. The optional prefix defaults to "G".
+
+Name: macro?
+Vignette: stdlib-macro-eval-interop
+Section: Macro Utilities
+Description: Return #t if the symbol names a currently-defined macro.
+Signature: (macro? sym)
+Examples:
+  (defmacro my-mac (x) x)
+  (macro? 'my-mac)          ; => #t
+  (macro? 'car)             ; => #f
+
+Name: macroexpand
+Vignette: stdlib-macro-eval-interop
+Section: Macro Utilities
+Description: Recursively expand all macros in expr until no macro calls
+  remain.
+Signature: (macroexpand expr)
+Examples:
+  (defmacro my-when (test body)
+    `(if ,test ,body #nil))
+  (macroexpand '(my-when #t 42))  ; => (if #t 42 #nil)
+Seealso: macroexpand-1, macro?, gensym
+Note: Also available as `macroexpand-all` (alias).
+
+Name: macroexpand-1
+Vignette: stdlib-macro-eval-interop
+Section: Macro Utilities
+Description: Expand only the outermost macro call in expr (one step).
+Signature: (macroexpand-1 expr)
+Examples:
+  (defmacro my-when (test body)
+    `(if ,test ,body #nil))
+  (macroexpand-1 '(my-when #t 42))  ; => (if #t 42 #nil)
+Seealso: macroexpand, macro?
+
+Name: promise?
+Vignette: stdlib-macro-eval-interop
+Section: Promises (Lazy Evaluation)
+Description: Return #t if x is a promise (created with `delay`).
+Signature: (promise? x)
+Examples:
+  (define p (delay (+ 1 2)))
+  (promise? p)              ; => #t
+  (promise? 42)             ; => #f
+Seealso: force, promise-expr
+
+Name: force
+Vignette: stdlib-macro-eval-interop
+Section: Promises (Lazy Evaluation)
+Description: Force a promise, evaluating its delayed expression and
+  returning the result. If x is not a promise, returns x unchanged.
+Signature: (force x)
+Examples:
+  (define p (delay (+ 1 2)))
+  (force p)                 ; => 3
+  (force 42)                ; => 42 (non-promise passed through)
+Seealso: promise?, promise-expr, delay
+
+Name: promise-expr
+Vignette: stdlib-macro-eval-interop
+Section: Promises (Lazy Evaluation)
+Description: Extract the unevaluated expression from a promise.
+Signature: (promise-expr p)
+Examples:
+  (define p (delay (+ 1 2)))
+  (promise-expr p)          ; => (+ 1 2)
+Seealso: promise?, force, delay
+Note: Signals an error if p is not a promise.
+
+Name: r/eval
+Vignette: stdlib-macro-eval-interop
+Section: Evaluation
+Description: Evaluate an R expression directly via R's eval(), bypassing
+  Rye's compiler.
+Signature: (r/eval expr)
+Examples:
+  (r/eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
+Seealso: eval, r/call
+Note: Useful for evaluating raw R calls that use R control flow (for,
+  while) or other constructs that Rye normally overrides.
+
+Name: stdlib-env
+Vignette: stdlib-macro-eval-interop
+Section: Environment Introspection
+Description: Return the stdlib environment (the environment where all
+  standard library bindings live).
+Signature: (stdlib-env)
+Examples:
+  (environment? (stdlib-env))  ; => #t
+Seealso: current-env
+
+Name: current-env
+Vignette: stdlib-macro-eval-interop
+Section: Environment Introspection
+Description: Return the current Rye evaluation environment.
+Signature: (current-env)
+Examples:
+  (environment? (current-env))  ; => #t
+Seealso: stdlib-env
