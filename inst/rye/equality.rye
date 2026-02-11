@@ -18,7 +18,9 @@
   ;;' `eq?` and `eqv?` are intentionally not implemented because R does not
   ;;' provide the pointer-level semantics they require.
 
-  ;;' @description Deep structural equality. Dispatches on class of first argument. Optional :strict #t uses identical? for atomics. Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
+  ;;' @description Deep structural equality. Dispatches on class of
+  ;;' first argument. Optional :strict #t uses identical? for atomics.
+  ;;' Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
   ;;' @examples
   ;;' (equal? 1 1)                    ; => #t
   ;;' (equal? 1 1.0)                  ; => #t (type coercion)
@@ -150,7 +152,8 @@
                 #f
                 #t)))))))
 
-  ;;' @description Register an S3-style method. Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
+  ;;' @description Register an S3-style method.
+  ;;' Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
   ;;' @examples
   ;;' ;; Register a custom equality method for "point" objects:
   ;;' (set-method! 'equal? 'point
@@ -186,7 +189,8 @@
   ;;' system selects the appropriate method based on the S3 class of the first
   ;;' argument. Users can register additional methods with `set-method!`.
 
-  ;;' @description Default equality: atomic/vector comparison. :strict #t => #f; else use == with type coercion.
+  ;;' @description Default equality: atomic/vector comparison.
+  ;;' :strict #t => #f; else use == with type coercion.
   ;;' @examples
   ;;' (equal?.default 1 1)             ; => #t
   ;;' (equal?.default 1 1.0)           ; => #t (coercion via ==)
@@ -213,7 +217,8 @@
         #f
         (list-equal? a b))))
 
-  ;;' @description Compare environments by bindings and values (dict, set, R6, refclass are env-based).
+  ;;' @description Compare environments by bindings and values
+  ;;' (dict, set, R6, refclass are env-based).
   ;;' @examples
   ;;' (define e1 (new.env :parent emptyenv))
   ;;' (define e2 (new.env :parent emptyenv))

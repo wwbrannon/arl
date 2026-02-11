@@ -54,7 +54,8 @@
     (lambda (x)
       (null? x)))
 
-  ;;' @description Return #t if x is not a non-empty list or dotted pair (i.e. not list-or-pair?).
+  ;;' @description Return #t if x is not a non-empty list or
+  ;;' dotted pair (i.e. not list-or-pair?).
   ;;' @examples
   ;;' (atom? 42)  ; => #t
   ;;' (atom? "hello")  ; => #t
@@ -65,7 +66,8 @@
     (lambda (x)
       (not (list-or-pair? x))))
 
-  ;;' @description Return #t if x is empty (0-length). (Note the empty string "" has length 1 and is not "empty"!)
+  ;;' @description Return #t if x is empty (0-length).
+  ;;' (Note the empty string "" has length 1 and is not "empty"!)
   ;;' @examples
   ;;' (empty? ())  ; => #t
   ;;' (empty? (list))  ; => #t

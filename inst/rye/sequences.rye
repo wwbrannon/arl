@@ -153,7 +153,9 @@
                   (lapply items (lambda (lst) (r/call "[[" (list lst i))))))
               (lapply (seq_len min-len) zip-at)))))))
 
-  ;;' @description Return sublist of lst starting at first element equal to x, or #f if not found. Uses equal? by default; pass :use-identical #t for R's identical().
+  ;;' @description Return sublist of lst starting at first element
+  ;;' equal to x, or #f if not found. Uses equal? by default;
+  ;;' pass :use-identical #t for R's identical().
   (define member
     (lambda (x lst (use-identical #f))
       (define items (__as-list lst))

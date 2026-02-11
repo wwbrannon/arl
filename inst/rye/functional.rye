@@ -155,7 +155,8 @@
   ;;' Higher-order combinators for advanced functional patterns including
   ;;' currying, juxtaposition, memoization, and iteration.
 
-  ;;' @description Curry a function - enables partial application with optional initial arguments.
+  ;;' @description Curry a function - enables partial application
+  ;;' with optional initial arguments.
   ;;' @examples
   ;;' (define add (curry (lambda (a b) (+ a b))))
   ;;' (define add5 (add 5))
@@ -210,7 +211,9 @@
         init
         (iterate fn (- n 1) (fn init)))))
 
-  ;;' @description Apply function starting from init, collecting values until predicate becomes true. Includes all values where predicate is false, stops when next value would satisfy predicate.
+  ;;' @description Apply function starting from init, collecting
+  ;;' values until predicate becomes true. Includes all values where
+  ;;' predicate is false, stops when next value would satisfy predicate.
   ;;' @examples
   ;;' (iterate-until (lambda (x) (* x 2)) 1 (lambda (x) (> x 100)))
   ;;'   ; => (1 2 4 8 16 32 64)  (stops before 128 which exceeds 100)

@@ -73,7 +73,9 @@
               `(if ,test-expr (begin ,@body)
                    ,(__case-clauses key-sym (car rest) (cdr rest))))))))))
 
-;;' @description Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). Key expression is evaluated only once.
+;;' @description Branch on key equality. Each clause:
+;;' ((datum ...) body ...) or (else body ...).
+;;' Key expression is evaluated only once.
 ;;' @examples
 ;;' (case (+ 1 1)
 ;;'   ((1) "one")

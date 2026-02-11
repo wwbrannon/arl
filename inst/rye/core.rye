@@ -124,7 +124,9 @@
     (lambda (fn args)
       (do.call fn args :quote #t)))
 
-  ;;' @description Call an R function with optional environment. Searches from .GlobalEnv by default, finding base and loaded package functions.
+  ;;' @description Call an R function with optional environment.
+  ;;' Searches from .GlobalEnv by default, finding base and loaded
+  ;;' package functions.
   ;;' @examples
   ;;' (r/call "mean" (list (c 1 2 3)))   ; => 2
   ;;' (r/call "ls" (list))                ; list .GlobalEnv bindings

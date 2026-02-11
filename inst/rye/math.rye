@@ -617,7 +617,8 @@
     (lambda (base power)
       (__r^ base power)))
 
-  ;;' @description Return logarithm of x. With one argument, returns natural log. With two, returns log to the given base.
+  ;;' @description Return logarithm of x. With one argument,
+  ;;' returns natural log. With two, returns log to the given base.
   ;;' @examples
   ;;' (log 1)           ; => 0
   ;;' (log (exp 1))     ; => 1.0

@@ -301,19 +301,22 @@
     (lambda (key alist)
       (__assoc-by-pred key alist __r==-pred)))
 
-  ;;' @description assq cannot be properly implemented in R (no eq?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
+  ;;' @description assq cannot be properly implemented in R (no eq?).
+  ;;' Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
   ;;' @note assq cannot be properly implemented in R (no eq?). Use assoc, assoc-by-identical?, or assoc-by-== instead.
   (define assq
     (lambda (key alist)
       (error "assq cannot be properly implemented in R. Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.")))
 
-  ;;' @description assv cannot be properly implemented in R (no eqv?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
+  ;;' @description assv cannot be properly implemented in R (no eqv?).
+  ;;' Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
   ;;' @note assv cannot be properly implemented in R (no eqv?). Use assoc, assoc-by-identical?, or assoc-by-== instead.
   (define assv
     (lambda (key alist)
       (error "assv cannot be properly implemented in R. Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.")))
 
-  ;;' @description Find first alist entry with matching value (searches cdr of entries; uses equal?).
+  ;;' @description Find first alist entry with matching value
+  ;;' (searches cdr of entries; uses equal?).
   ;;' @examples
   ;;' (rassoc 2 (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
   ;;' (rassoc 9 (list (list 'a 1) (list 'b 2)))               ; => #nil
@@ -363,7 +366,8 @@
             (list)
             (as.list (seq start (+ end 1) step)))))))
 
-  ;;' @description Generate sequence of count numbers starting from start (default 0) with step (default 1).
+  ;;' @description Generate sequence of count numbers starting from
+  ;;' start (default 0) with step (default 1).
   ;;' @examples
   ;;' (iota 5)          ; => (0 1 2 3 4)
   ;;' (iota 5 1)        ; => (1 2 3 4 5)
