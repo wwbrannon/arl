@@ -1,9 +1,8 @@
-o) capture / rye_{read,parse,tokenize}: document? hide? remove? test more?
+o) __ridentical: probably a bug
 
 o) NEWS should be rewritten for initial CRAN submission
+o) run other cran submission steps
 
-CI / publish:
--------------------------------------------------
 o) enable actions, get CI working
 o) make CI configuration for coverage and everything else sane, figure out how to run some more during Feb, maybe shrink matrix?
 o) consider using the github-action-benchmark GH action to run benchmarks / commit them to a separate branch / visualize them
