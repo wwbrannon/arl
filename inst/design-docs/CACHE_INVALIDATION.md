@@ -3,8 +3,8 @@
 ## Overview
 
 Rye implements a dual-cache system for module loading with content-based invalidation:
-- **Option C**: Full environment cache (`.env.rds`) - fast, ~50ms per module
-- **Option A**: Compiled expressions cache (`.code.rds`) - safe fallback, ~200ms per module
+- **env cache**: Full environment cache (`.env.rds`) - fast, ~50ms per module
+- **expr cache**: Compiled expressions cache (`.code.rds`) - safe fallback, ~200ms per module
 - **Inspection**: Human-readable code (`.code.R`) - for debugging
 
 This document describes the cache invalidation strategy.
@@ -62,56 +62,56 @@ cache_data$file_hash == computed_hash
 
 ## Key Properties
 
-### ✅ Robust to Filesystem Operations
-- `git checkout` changing mtimes → No false invalidation
-- `touch` command → No false invalidation
-- `rsync`/`cp` operations → Works correctly
-- Cross-platform file transfers → Hash remains valid
+### Robust to Filesystem Operations
+- `git checkout` changing mtimes -> No false invalidation
+- `touch` command -> No false invalidation
+- `rsync`/`cp` operations -> Works correctly
+- Cross-platform file transfers -> Hash remains valid
 
-### ✅ Exact Content Equality
-- Any file change (comments, whitespace, code) → Cache invalidated
+### Exact Content Equality
+- Any file change (comments, whitespace, code) -> Cache invalidated
 - Simple and correct - no special cases
 - Fast - no parsing or normalization overhead
 
-### ✅ Collision-Free
-- Hash included in filename → Different content = different file
+### Collision-Free
+- Hash included in filename -> Different content = different file
 - Multiple versions can coexist in cache directory
 - Reverting changes automatically reuses original cache
 
-### ✅ No Mtime Issues
+### No Mtime Issues
 **Test Results:**
 ```
 Mtime changed? TRUE
 Hash changed? FALSE
-✓ Hash is mtime-independent
+Hash is mtime-independent
 ```
 
-## Option C Safety and Configuration
+## Env Cache Safety and Configuration
 
-### Default Behavior: Option C Disabled
+### Default Behavior: Env Cache Disabled
 
-**As of Rye 0.1.0, Option C (environment cache) is disabled by default** to ensure correctness during active development.
+**As of Rye 0.1.0, the env cache is disabled by default** to ensure correctness during active development.
 
 **Why disabled by default:**
-- Option C caches evaluated environment state including imported bindings
-- When dependencies change, dependent modules loaded from Option C have stale references
-- Option A (compiled expressions cache) is always safe because imports are resolved dynamically at load time
+- The env cache saves evaluated environment state including imported bindings
+- When dependencies change, dependent modules loaded from the env cache have stale references
+- The expr cache is always safe because imports are resolved dynamically at load time
 
-### When is Option C Safe?
+### When is the Env Cache Safe?
 
-Option C is **only safe** in these scenarios:
+The env cache is **only safe** in these scenarios:
 - Running stable production code (no active development)
 - Performance testing / benchmarking (read-only workloads)
 - After verifying no dependency changes will occur
 - Immutable codebases (no writes to imported modules)
 
-Option C is **unsafe** when:
+The env cache is **unsafe** when:
 - Actively developing with changing dependencies
 - Hot-reloading workflows
 - Any imported modules might be modified
 - Working in multi-developer environments with ongoing changes
 
-### Enabling Option C
+### Enabling the Env Cache
 
 **Global setting** (affects all new engines):
 ```r
@@ -124,9 +124,9 @@ options(rye.use_env_cache = TRUE)
 engine <- RyeEngine$new(use_env_cache = TRUE)
 ```
 
-**Warning**: When Option C is enabled, a one-time warning is displayed:
+**Warning**: When the env cache is enabled, a one-time warning is displayed:
 ```
-Note: Environment cache (Option C) is enabled. This provides 4x speedup but is
+Note: Environment cache is enabled. This provides 4x speedup but is
 only safe when dependencies don't change. Disable with
 options(rye.use_env_cache = FALSE) if working with changing code.
 ```
@@ -138,11 +138,11 @@ options(rye.use_env_cache = FALSE) if working with changing code.
 | Default (`use_env_cache = FALSE`) | ~200ms | Always safe | Development, changing code |
 | Enabled (`use_env_cache = TRUE`) | ~50ms | Only safe without writes | Production, benchmarks |
 
-**Speedup**: ~4x faster module loading when Option C is enabled and safe to use.
+**Speedup**: ~4x faster module loading when the env cache is enabled and safe to use.
 
 ### Technical Details
 
-**Option A (Always Safe)**:
+**Expr cache (always safe)**:
 ```r
 # Cached compiled expressions with dynamic lookups
 (import a)
@@ -150,7 +150,7 @@ options(rye.use_env_cache = FALSE) if working with changing code.
 ```
 When loaded: `import` re-resolves module `a`, so changes to `a` are automatically picked up.
 
-**Option C (Unsafe with Changing Dependencies)**:
+**Env cache (unsafe with changing dependencies)**:
 ```r
 # Cached environment includes evaluated bindings
 y = 2  # Captured value based on a:x at cache time
@@ -159,33 +159,33 @@ When loaded: `y` has the stale value; changes to `a` are not reflected.
 
 ### Recommendation
 
-**For most users**: Keep Option C disabled (default). The 150ms difference per module is negligible compared to development iteration time, and correctness is paramount.
+**For most users**: Keep the env cache disabled (default). The 150ms difference per module is negligible compared to development iteration time, and correctness is paramount.
 
-**For advanced users**: Enable Option C in production/benchmark scenarios where code is stable and you've verified no dependency changes will occur.
+**For advanced users**: Enable the env cache in production/benchmark scenarios where code is stable and you've verified no dependency changes will occur.
 
 ## Dependency Handling
 
-**Why Option A works without explicit dependency tracking:**
+**Why the expr cache works without explicit dependency tracking:**
 
-1. **Option A (compiled code)** uses dynamic lookups at runtime
+1. The **expr cache** uses dynamic lookups at runtime
 2. When dependency changes, its own cache is invalidated
 3. Dependent modules automatically use new version on next load
 
 **Example:**
 ```
 Module A imports Module B
-Step 1: B changes → B's hash changes → B's cache invalidated
-Step 2: A loads from cache → compiled code: import(B) + call(B$func)
-Step 3: B loads fresh (new version) → A gets new B automatically
+Step 1: B changes -> B's hash changes -> B's cache invalidated
+Step 2: A loads from cache -> compiled code: import(B) + call(B$func)
+Step 3: B loads fresh (new version) -> A gets new B automatically
 ```
 
-This strategy applies to Option A (compiled expressions cache), which is always used regardless of the `use_env_cache` setting.
+This strategy applies to the expr cache, which is always used regardless of the `use_env_cache` setting.
 
 ### Safety Checker Prevents Stale References
 
 Modules with **captured functions** from other modules:
-- Flagged as unsafe for Option C (environment cache)
-- Use Option A (compiled expressions cache) instead
+- Flagged as unsafe for env caching
+- Use the expr cache instead
 - Dynamic lookups prevent stale function references
 
 **Safety check logic:**
@@ -207,10 +207,10 @@ is_safe_to_cache <- function(module_env, engine_env) {
 - Negligible compared to full compile time (500-1500ms)
 
 ### Cache Lookup Flow
-1. Compute hash of source file → ~1-2ms (parse + hash)
-2. Check if `.cache/<file>.<hash>.rds` exists → O(1)
-3. If yes, load and validate version → ~50-200ms
-4. If no, full compilation → ~500-1500ms
+1. Compute hash of source file -> ~1-2ms (parse + hash)
+2. Check if `.cache/<file>.<hash>.rds` exists -> O(1)
+3. If yes, load and validate version -> ~50-200ms
+4. If no, full compilation -> ~500-1500ms
 
 ### Storage
 - Multiple versions stored simultaneously
@@ -223,22 +223,22 @@ is_safe_to_cache <- function(module_env, engine_env) {
 ```
 Content: val=42, Hash: 01d5ccdc6bc14b6c
 Content: val=99, Hash: c864c386280ffc33
-Content: val=42, Hash: 01d5ccdc6bc14b6c  ← Same as first!
+Content: val=42, Hash: 01d5ccdc6bc14b6c  <- Same as first!
 ```
 
 ### Validation Behavior
 ```
 Validation with current file: TRUE
-After content change: FALSE  ✓
-After reverting: TRUE  ✓
+After content change: FALSE
+After reverting: TRUE
 After adding comment: FALSE  (any file change invalidates)
 After reformatting: FALSE  (any file change invalidates)
 ```
 
 ### Performance Impact
 ```
-First load (cache miss):  2.13s → writes caches
-Second load (cache hit):  0.27s → reads from cache
+First load (cache miss):  2.13s -> writes caches
+Second load (cache hit):  0.27s -> reads from cache
 Speedup:                  7.88x
 
 Benchmark improvement:    ~20x for module-heavy workloads
@@ -247,22 +247,22 @@ Benchmark improvement:    ~20x for module-heavy workloads
 ## Edge Cases Handled
 
 ### Version Upgrade
-- User upgrades Rye → All caches invalidated
+- User upgrades Rye -> All caches invalidated
 - Fresh compilation with new compiler
 - Automatic on first run after upgrade
 
 ### File Replaced with Same Content
-- Hash matches → Cache valid
+- Hash matches -> Cache valid
 - No unnecessary recompilation
 
 ### Formatting Changes
-- Any file modification → Hash changes → Cache invalidated
-- Comments added/removed → Cache invalidated
-- Whitespace changes → Cache invalidated
+- Any file modification -> Hash changes -> Cache invalidated
+- Comments added/removed -> Cache invalidated
+- Whitespace changes -> Cache invalidated
 - This is acceptable: formatting changes are rare after initial development
 
 ### Concurrent Edits
-- Different hash → Different cache file
+- Different hash -> Different cache file
 - No conflicts or corruption
 - Multiple versions coexist
 
@@ -273,26 +273,26 @@ Benchmark improvement:    ~20x for module-heavy workloads
 
 ## Comparison to Alternative Strategies
 
-### Mtime-Based (❌ Not Used)
-- ❌ Breaks with `git checkout`
-- ❌ False invalidation on `touch`
-- ❌ Unreliable across network filesystems
-- ❌ No semantic awareness
+### Mtime-Based (Not Used)
+- Breaks with `git checkout`
+- False invalidation on `touch`
+- Unreliable across network filesystems
+- No semantic awareness
 
-### Dependency Tracking (❌ Not Needed)
-- ❌ Complex to implement correctly
-- ❌ Requires parsing all imports
-- ❌ Transitive dependencies explode complexity
-- ❌ Cache invalidation cascades
-- ✅ Dynamic lookups make it unnecessary for Rye
+### Dependency Tracking (Not Needed)
+- Complex to implement correctly
+- Requires parsing all imports
+- Transitive dependencies explode complexity
+- Cache invalidation cascades
+- Dynamic lookups make it unnecessary for Rye
 
-### Content Hash (✅ Chosen)
-- ✅ Robust to filesystem operations
-- ✅ Simple implementation
-- ✅ No false positives or negatives
-- ✅ Works with dynamic module system
-- ✅ Very fast computation (~0.075ms per module)
-- ✅ Exact equality - any file change invalidates (simple and correct)
+### Content Hash (Chosen)
+- Robust to filesystem operations
+- Simple implementation
+- No false positives or negatives
+- Works with dynamic module system
+- Very fast computation (~0.075ms per module)
+- Exact equality - any file change invalidates (simple and correct)
 
 ## Implementation Files
 

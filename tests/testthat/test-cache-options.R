@@ -1,10 +1,10 @@
-test_that("Option C disabled by default", {
+test_that("env cache disabled by default", {
   # Create engine without parameters
   engine <- RyeEngine$new()
   expect_false(engine$use_env_cache)
 })
 
-test_that("Global option enables Option C", {
+test_that("Global option enables env cache", {
   withr::local_options(rye.use_env_cache = TRUE)
   withr::local_options(rye.env_cache_warning_shown = NULL)
 
@@ -35,7 +35,7 @@ test_that("Engine parameter overrides global option", {
   expect_false(engine2$use_env_cache)
 })
 
-test_that("Option C disabled prevents .env.rds writing", {
+test_that("env cache disabled prevents .env.rds writing", {
   # Setup: temporary module file
   temp_dir <- withr::local_tempdir()
   module_file <- file.path(temp_dir, "test-module.rye")
@@ -60,11 +60,11 @@ test_that("Option C disabled prevents .env.rds writing", {
   code_cache_exists <- any(grepl("\\.code\\.rds$", cache_files))
   env_cache_exists <- any(grepl("\\.env\\.rds$", cache_files))
 
-  expect_true(code_cache_exists, "Option A (.code.rds) should be written")
-  expect_false(env_cache_exists, "Option C (.env.rds) should NOT be written when disabled")
+  expect_true(code_cache_exists, "expr cache (.code.rds) should be written")
+  expect_false(env_cache_exists, "env cache (.env.rds) should NOT be written when disabled")
 })
 
-test_that("Option C enabled writes .env.rds when safe", {
+test_that("env cache enabled writes .env.rds when safe", {
   # Setup: temporary module file
   temp_dir <- withr::local_tempdir()
   module_file <- file.path(temp_dir, "test-module.rye")
@@ -89,15 +89,15 @@ test_that("Option C enabled writes .env.rds when safe", {
   code_cache_exists <- any(grepl("\\.code\\.rds$", cache_files))
   env_cache_exists <- any(grepl("\\.env\\.rds$", cache_files))
 
-  expect_true(code_cache_exists, "Option A (.code.rds) should be written")
-  expect_true(env_cache_exists, "Option C (.env.rds) should be written when enabled and safe")
+  expect_true(code_cache_exists, "expr cache (.code.rds) should be written")
+  expect_true(env_cache_exists, "env cache (.env.rds) should be written when enabled and safe")
 })
 
-test_that("Option C disabled uses Option A even when .env.rds exists", {
+test_that("env cache disabled uses expr cache even when .env.rds exists", {
   skip("Difficult to test directly without internal state inspection")
   # This would require adding test hooks or timing measurements
   # The behavior is correct by construction: the if (isTRUE(self$use_env_cache))
-  # check prevents Option C from being attempted
+  # check prevents the env cache from being attempted
 })
 
 test_that("One-time warning shown per session", {
@@ -113,28 +113,28 @@ test_that("One-time warning shown per session", {
   expect_silent(RyeEngine$new(use_env_cache = TRUE))
 })
 
-test_that("Dependency change causes stale data with Option C", {
+test_that("Dependency change causes stale data with env cache", {
   skip("This is a known limitation documented in inst/design-docs/CACHE_INVALIDATION.md")
-  # This test documents WHY Option C is off by default
+  # This test documents WHY the env cache is off by default
   # Implementation would require:
   # 1. Create module-a.rye with (define x 1)
   # 2. Create module-b.rye that imports a and uses x
-  # 3. Load both with Option C enabled
+  # 3. Load both with env cache enabled
   # 4. Change module-a.rye to (define x 100)
   # 5. Reload: module-a fresh, module-b from cache
   # 6. Verify module-b has stale x=1 (demonstrating the issue)
 })
 
-test_that("Option A cache is safe with file changes", {
-  # This test documents that Option A (compiled expressions cache) is the safe default
-  # It verifies that changes to module files are properly detected through cache invalidation
+test_that("expr cache is safe with file changes", {
+  # The expr cache (compiled expressions) is the safe default.
+  # It verifies that changes to module files are properly detected through cache invalidation.
   temp_dir <- withr::local_tempdir()
 
   # Create a simple file (not a module, to avoid import complexity)
   test_file <- file.path(temp_dir, "changing-file.rye")
   writeLines("(define test-value 42)", test_file)
 
-  # Load with Option C disabled (safe mode)
+  # Load with env cache disabled (safe mode)
   withr::local_options(rye.env_cache_warning_shown = TRUE)
   engine1 <- RyeEngine$new(use_env_cache = FALSE)
   engine1$eval_text(sprintf('(load "%s")', test_file))
@@ -171,7 +171,7 @@ test_that("Warning message format is correct", {
 
   expect_message(
     RyeEngine$new(use_env_cache = TRUE),
-    "Note: Environment cache \\(Option C\\) is enabled"
+    "Note: Environment cache is enabled"
   )
 
   expect_message(

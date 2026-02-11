@@ -37,10 +37,11 @@ engine$eval_text("(+ 1 2 3)")
 
 \item{\code{module_cache}}{Module cache for caching compiled modules.}
 
-\item{\code{use_env_cache}}{Logical. If TRUE, enables Option C (environment cache) which is
-faster but only safe when dependencies don't change. If FALSE (default), only
-Option A (compiled expressions cache) is used, which is always safe. Can be set
-via engine initialization parameter or global option \code{rye.use_env_cache}.}
+\item{\code{use_env_cache}}{Logical. If TRUE, enables the env cache (full serialized
+environment) which is faster but only safe when dependencies don't change.
+If FALSE (default), only the expr cache (compiled expressions) is used, which
+is always safe. Can be set via engine initialization parameter or global
+option \code{rye.use_env_cache}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -97,9 +98,9 @@ Initialize engine components and base environment.
 \item{\code{parent}}{Optional parent environment for the new environment. Only used if env is NULL.
 Defaults to baseenv(). Cannot be specified together with env.}
 
-\item{\code{use_env_cache}}{Optional logical. If TRUE, enables Option C (environment cache)
-for 4x faster module loading. Only safe when dependencies don't change. Defaults to
-NULL, which inherits from global option \code{getOption("rye.use_env_cache", FALSE)}.}
+\item{\code{use_env_cache}}{Optional logical. If TRUE, enables the env cache for 4x faster
+module loading. Only safe when dependencies don't change. Defaults to NULL, which
+inherits from global option \code{getOption("rye.use_env_cache", FALSE)}.}
 
 \item{\code{coverage_tracker}}{Optional RyeCoverageTracker instance to enable coverage tracking
 from the start. If provided, coverage will be tracked during stdlib loading.}

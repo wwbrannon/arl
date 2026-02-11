@@ -1,7 +1,7 @@
 # Module caching system for Rye
 # Implements dual-cache strategy:
-# - Option C (.env.rds): Full module environment (fast, requires safety check)
-# - Option A (.code.rds): Compiled expressions (safe fallback)
+# - env cache (.env.rds): Full module environment (fast, requires safety check)
+# - expr cache (.code.rds): Compiled expressions (safe fallback)
 
 #' @title ModuleCache
 #' @description R6 class for managing module caching
@@ -107,7 +107,7 @@ ModuleCache <- R6::R6Class(
       list(safe = length(issues) == 0, issues = issues)
     },
 
-    #' @description Write Option C cache (full module environment)
+    #' @description Write env cache (full module environment)
     #' @param module_name Module name
     #' @param module_env Module environment
     #' @param exports Export list
@@ -148,7 +148,7 @@ ModuleCache <- R6::R6Class(
       })
     },
 
-    #' @description Write Option A cache (compiled expressions)
+    #' @description Write expr cache (compiled expressions)
     #' @param module_name Module name
     #' @param compiled_body List of compiled R expressions
     #' @param exports Export list
@@ -212,7 +212,7 @@ ModuleCache <- R6::R6Class(
       })
     },
 
-    #' @description Load Option C cache (full module environment)
+    #' @description Load env cache (full module environment)
     #' @param cache_file Path to .env.rds cache file
     #' @param engine_env Engine environment to relink as parent
     #' @param src_file Source file for validation
@@ -255,7 +255,7 @@ ModuleCache <- R6::R6Class(
       cache_data
     },
 
-    #' @description Load Option A cache (compiled expressions)
+    #' @description Load expr cache (compiled expressions)
     #' @param cache_file Path to .code.rds cache file
     #' @param src_file Source file for validation
     #' @return Cache data or NULL if invalid

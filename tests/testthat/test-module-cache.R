@@ -238,7 +238,7 @@ test_that("is_safe_to_cache() reports multiple issues", {
   expect_true(length(result$issues) >= 2)
 })
 
-# Option C (env cache) tests
+# env cache tests
 test_that("write_env() creates cache files", {
   cache <- rye:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".rye")
@@ -400,7 +400,7 @@ test_that("load_env() returns NULL for hash mismatch", {
   # Cache invalidation deletes files (implementation detail, not tested here)
 })
 
-# Option A (code cache) tests
+# expr cache tests
 test_that("write_code() creates cache files", {
   cache <- rye:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".rye")
