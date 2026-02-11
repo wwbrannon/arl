@@ -284,8 +284,43 @@ RyeEngine <- R6::R6Class(
       }
 
       #
-      # Evaluate in the R environment
+      # r/eval
       #
+
+      # Execute an R expression via R's own eval(), bypassing Rye's compiler
+      # entirely. This is the escape hatch for R constructs that Rye can't
+      # compile.
+      #
+      # Why it exists: Rye overrides R's while, for, and other control-flow
+      # keywords with its own implementations in the stdlib environment. But
+      # sometimes you need R's actual while/for -- for example, the try/catch
+      # macro in control.rye builds tryCatch calls that R needs to evaluate
+      # natively, and r-interop.rye uses it for suppressWarnings,
+      # suppressMessages, withCallingHandlers, etc. These are R special forms
+      # that can't be expressed through Rye's compiler.
+      #
+      # The complexity, piece by piece:
+      #
+      # 1. substitute/value dance: Tries to get the unevaluated expression.
+      #    Since Rye's compiler may have already evaluated the argument, it
+      #    checks whether the result is a call/symbol (use as-is) or something
+      #    else (use the substituted form).
+      #
+      # 2. hygiene_unwrap: Strips Rye's macro hygiene wrappers so R sees clean
+      #    R code.
+      #
+      # 3. quote unwrapping: If you write (r/eval (quote (seq_len 5))), the
+      #    compiler passes a quote(seq_len(5)) call. R's eval(quote(x), env)
+      #    would just look up x, so this unwraps one layer.
+      #
+      # 4. R reserved word unshadowing: Rye defines while and for as regular
+      #    functions in the environment, shadowing R's keywords. Before calling
+      #    R's eval(), we temporarily remove any Rye shadows of R reserved
+      #    words so R's native control flow works, then restore them afterward.
+      #
+      # Where it's used: try/catch/finally, suppressWarnings,
+      # suppressMessages, withCallingHandlers, signal, the do looping macro,
+      # and anywhere stdlib needs to build and evaluate raw R calls.
 
       env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
@@ -300,27 +335,20 @@ RyeEngine <- R6::R6Class(
         if (is.call(expr) && length(expr) == 2L && identical(expr[[1L]], quote(quote))) {
           expr <- expr[[2L]]
         }
+        # Temporarily remove any Rye shadows of R reserved words so that
+        # R's eval() sees the built-in syntax rather than Rye's overrides.
+        r_reserved <- c("if", "else", "repeat", "while", "function",
+                        "for", "in", "next", "break", "return")
         saved <- list()
-        if (is.call(expr) && length(expr) > 0) {
-          op <- expr[[1]]
-          if (is.symbol(op)) {
-            op_name <- as.character(op)
-            if (op_name == "while" && exists("while", envir = env, inherits = FALSE)) {
-              saved[["while"]] <- get("while", envir = env, inherits = FALSE)
-              rm("while", envir = env, inherits = FALSE)
-            }
-            if (op_name == "for" && exists("for", envir = env, inherits = FALSE)) {
-              saved[["for"]] <- get("for", envir = env, inherits = FALSE)
-              rm("for", envir = env, inherits = FALSE)
-            }
+        for (kw in r_reserved) {
+          if (exists(kw, envir = env, inherits = FALSE)) {
+            saved[[kw]] <- get(kw, envir = env, inherits = FALSE)
+            rm(list = kw, envir = env)
           }
         }
         on.exit({
-          if (!is.null(saved[["while"]])) {
-            assign("while", saved[["while"]], envir = env)
-          }
-          if (!is.null(saved[["for"]])) {
-            assign("for", saved[["for"]], envir = env)
+          for (kw in names(saved)) {
+            assign(kw, saved[[kw]], envir = env)
           }
         }, add = TRUE)
         # R's eval(symbol, envir) can look up in the wrong env when called from
