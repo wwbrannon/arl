@@ -57,7 +57,6 @@ document: devdoc readme vignettes site ## help: Generate all documentation
 
 .PHONY: check
 check: build ## help: Check the package (includes tests)
-	@rm -rf rye.Rcheck
 	R -q -e 'devtools::check(args="--as-cran", check_dir=".")'
 
 #
@@ -199,7 +198,6 @@ clean-cache: ## help: Remove .rye_cache directories (auto-runs before dev target
 .PHONY: clean
 clean: clean-coverage clean-cache cran-clean ## help: Remove build artifacts and all make document output
 	rm -f rye_*.tar.gz
-	rm -rf rye.Rcheck
 	rm -rf site/ doc/ Meta/
 	rm -f README.knit.md
 	rm -f vignettes/*.html vignettes/*.R vignettes/*.knit.md
