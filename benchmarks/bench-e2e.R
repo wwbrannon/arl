@@ -49,20 +49,20 @@ workloads <- get_all_workloads()
 
 bench_synthetic <- benchmark_component(
   "Micro" = {
-    engine <- RyeEngine$new()
+    engine <- Engine$new()
     engine$eval_text(workloads$micro)
   },
   "Small" = {
-    engine <- RyeEngine$new()
+    engine <- Engine$new()
     engine$eval_text(workloads$small)
   },
   "Medium" = {
-    engine <- RyeEngine$new()
+    engine <- Engine$new()
     load_modules(engine, "binding")  # Needed for let
     engine$eval_text(workloads$medium)
   },
   "Deep recursion" = {
-    engine <- RyeEngine$new()
+    engine <- Engine$new()
     engine$eval_text(workloads$deep_recursion)
   },
   iterations = 50,
@@ -78,15 +78,15 @@ real_workloads <- get_real_workloads()
 if (length(real_workloads) > 0) {
   bench_real <- benchmark_component(
     "fibonacci.rye" = {
-      engine <- RyeEngine$new()
+      engine <- Engine$new()
       engine$eval_text(real_workloads$fibonacci)
     },
     "quicksort.rye" = {
-      engine <- RyeEngine$new()
+      engine <- Engine$new()
       engine$eval_text(real_workloads$quicksort)
     },
     "macro-examples.rye" = {
-      engine <- RyeEngine$new()
+      engine <- Engine$new()
       load_modules(engine, c("control", "binding"))
       engine$eval_text(real_workloads$macro_examples)
     },
@@ -104,7 +104,7 @@ if (length(real_workloads) > 0) {
 
     # Run multiple times and average
     timings <- replicate(10, {
-      engine <- RyeEngine$new()
+      engine <- Engine$new()
       if (name == "macro_examples") {
         load_modules(engine, c("control", "binding"))
       }
@@ -136,11 +136,11 @@ cat("Benchmark 3: String-heavy workloads\n")
 
 bench_strings <- benchmark_component(
   "1K string" = {
-    engine <- RyeEngine$new()
+    engine <- Engine$new()
     engine$eval_text(workloads$string_1k)
   },
   "10K string" = {
-    engine <- RyeEngine$new()
+    engine <- Engine$new()
     engine$eval_text(workloads$string_10k)
   },
   iterations = 50,
@@ -154,11 +154,11 @@ cat("Benchmark 4: Many arguments\n")
 
 bench_args <- benchmark_component(
   "50 args" = {
-    engine <- RyeEngine$new()
+    engine <- Engine$new()
     engine$eval_text(workloads$many_args_50)
   },
   "100 args" = {
-    engine <- RyeEngine$new()
+    engine <- Engine$new()
     engine$eval_text(workloads$many_args_100)
   },
   iterations = 100,
@@ -181,7 +181,7 @@ repl_code <- '
 
 bench_repl <- benchmark_component(
   "REPL session" = {
-    engine <- RyeEngine$new()
+    engine <- Engine$new()
     engine$eval_text(repl_code)
   },
   iterations = 100,

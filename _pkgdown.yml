@@ -82,15 +82,15 @@ navbar:
 reference:
   - title: Core engine
     contents:
-      - RyeEngine
-      - rye_default_engine
+      - Engine
+      - default_engine
   - title: Coverage
     contents:
-      - RyeCoverageTracker
+      - CoverageTracker
   - title: CLI
     contents:
-      - rye_cli
-      - rye_install_cli
+      - cli
+      - install_cli
 
 articles:
   - title: Guides

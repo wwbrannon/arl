@@ -13,5 +13,5 @@ if (run_as_script) {
   args <- commandArgs(trailingOnly = TRUE)
   args <- args[args != "--check-undeclared"]
   stdlib_dir <- if (length(args) > 0) args[1] else NULL
-  rye:::rye_stdlib_print_order(stdlib_dir)
+  rye:::stdlib_print_order(stdlib_dir)
 }

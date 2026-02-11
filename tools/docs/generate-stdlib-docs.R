@@ -15,13 +15,13 @@ if (!requireNamespace("yaml", quietly = TRUE)) {
   stop("Package 'yaml' is required. Install with: install.packages('yaml')")
 }
 
-# Load RyeDocParser (shared annotation parser)
+# Load DocParser (shared annotation parser)
 if (requireNamespace("rye", quietly = TRUE)) {
-  .doc_parser <- rye:::RyeDocParser$new()
+  .doc_parser <- rye:::DocParser$new()
 } else {
   # Fallback: source directly when running outside installed package
   source(file.path("R", "doc-parser.R"))
-  .doc_parser <- RyeDocParser$new()
+  .doc_parser <- DocParser$new()
 }
 
 # ---------------------------------------------------------------------------
@@ -143,16 +143,16 @@ linkify_seealso <- function(seealso, func_index, current_vignette) {
 }
 
 # ---------------------------------------------------------------------------
-# Annotation parser — delegates to shared RyeDocParser (R/doc-parser.R)
+# Annotation parser — delegates to shared DocParser (R/doc-parser.R)
 # ---------------------------------------------------------------------------
 
 #' Parse ;;' annotations from a .rye source file.
-#' Delegates to the shared RyeDocParser class.
+#' Delegates to the shared DocParser class.
 parse_rye_annotations <- function(file) {
   .doc_parser$parse_file(file)
 }
 
-#' Legacy inline parser (kept as unused reference; all calls go through RyeDocParser).
+#' Legacy inline parser (kept as unused reference; all calls go through DocParser).
 .parse_rye_annotations_legacy <- function(file) {
   lines <- readLines(file, warn = FALSE)
   n <- length(lines)

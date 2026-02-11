@@ -1,4 +1,4 @@
-test_that("RyeDocParser parses @description annotations", {
+test_that("DocParser parses @description annotations", {
   tmp <- tempfile(fileext = ".rye")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -14,7 +14,7 @@ test_that("RyeDocParser parses @description annotations", {
     ")"
   ), tmp)
 
-  parser <- RyeDocParser$new()
+  parser <- DocParser$new()
   result <- parser$parse_file(tmp)
 
   expect_true("my-fn" %in% names(result$functions))
@@ -24,7 +24,7 @@ test_that("RyeDocParser parses @description annotations", {
   expect_equal(fn$seealso, "sub-fn")
 })
 
-test_that("RyeDocParser parses @section annotations", {
+test_that("DocParser parses @section annotations", {
   tmp <- tempfile(fileext = ".rye")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -41,7 +41,7 @@ test_that("RyeDocParser parses @section annotations", {
     ")"
   ), tmp)
 
-  parser <- RyeDocParser$new()
+  parser <- DocParser$new()
   result <- parser$parse_file(tmp)
 
   expect_equal(length(result$sections), 1)
@@ -50,7 +50,7 @@ test_that("RyeDocParser parses @section annotations", {
   expect_equal(result$functions[["f2"]]$section, "Math Helpers")
 })
 
-test_that("RyeDocParser parses @note and @signature", {
+test_that("DocParser parses @note and @signature", {
   tmp <- tempfile(fileext = ".rye")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -64,7 +64,7 @@ test_that("RyeDocParser parses @note and @signature", {
     ")"
   ), tmp)
 
-  parser <- RyeDocParser$new()
+  parser <- DocParser$new()
   result <- parser$parse_file(tmp)
 
   fn <- result$functions[["my-fn"]]
@@ -72,7 +72,7 @@ test_that("RyeDocParser parses @note and @signature", {
   expect_equal(fn$signature, "(my-fn a b)")
 })
 
-test_that("RyeDocParser get_exports extracts module exports", {
+test_that("DocParser get_exports extracts module exports", {
   tmp <- tempfile(fileext = ".rye")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -84,7 +84,7 @@ test_that("RyeDocParser get_exports extracts module exports", {
     ")"
   ), tmp)
 
-  parser <- RyeDocParser$new()
+  parser <- DocParser$new()
   exports <- parser$get_exports(tmp)
 
   expect_true("foo" %in% exports)
@@ -92,7 +92,7 @@ test_that("RyeDocParser get_exports extracts module exports", {
   expect_true("baz" %in% exports)
 })
 
-test_that("RyeDocParser handles defmacro definitions", {
+test_that("DocParser handles defmacro definitions", {
   tmp <- tempfile(fileext = ".rye")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -106,7 +106,7 @@ test_that("RyeDocParser handles defmacro definitions", {
     ")"
   ), tmp)
 
-  parser <- RyeDocParser$new()
+  parser <- DocParser$new()
   result <- parser$parse_file(tmp)
 
   expect_true("my-macro" %in% names(result$functions))
@@ -115,7 +115,7 @@ test_that("RyeDocParser handles defmacro definitions", {
   expect_match(fn$examples, "my-macro x")
 })
 
-test_that("RyeDocParser skips standalone sections without definitions", {
+test_that("DocParser skips standalone sections without definitions", {
   tmp <- tempfile(fileext = ".rye")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -130,7 +130,7 @@ test_that("RyeDocParser skips standalone sections without definitions", {
     ")"
   ), tmp)
 
-  parser <- RyeDocParser$new()
+  parser <- DocParser$new()
   result <- parser$parse_file(tmp)
 
   # Standalone section should be recorded
@@ -149,7 +149,7 @@ test_that("parse_text parses annotations from string input", {
   (define add (lambda (a b) (+ a b)))
 )"
 
-  parser <- RyeDocParser$new()
+  parser <- DocParser$new()
   result <- parser$parse_text(code)
 
   expect_true("add" %in% names(result$functions))

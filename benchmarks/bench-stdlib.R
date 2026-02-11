@@ -10,7 +10,7 @@ cat("=== Standard Library Benchmarks ===\n\n")
 
 # Benchmark 1: List operations on varying sizes
 cat("Benchmark 1: List operations\n")
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 
 # Create test lists
 engine1$eval_text('(define list10 (list 1 2 3 4 5 6 7 8 9 10))')
@@ -33,7 +33,7 @@ cat("\n")
 
 # Benchmark 2: Higher-order functions (map, filter, reduce)
 cat("Benchmark 2: Higher-order functions\n")
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 
 engine2$eval_text('(define list10 (list 1 2 3 4 5 6 7 8 9 10))')
 engine2$eval_text('(define list100 (range 1 100))')
@@ -58,7 +58,7 @@ cat("\n")
 
 # Benchmark 3: Function composition
 cat("Benchmark 3: Function composition\n")
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 
 engine3$eval_text('
 (define inc (lambda (x) (+ x 1)))
@@ -78,7 +78,7 @@ cat("\n")
 
 # Benchmark 4: String operations
 cat("Benchmark 4: String operations\n")
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 
 bench_strings <- benchmark_component(
   "str (2 args)" = engine4$eval(engine4$read('(str "hello" "world")')[[1]]),
@@ -92,7 +92,7 @@ cat("\n")
 
 # Benchmark 5: Predicates
 cat("Benchmark 5: Predicates\n")
-engine5 <- RyeEngine$new()
+engine5 <- Engine$new()
 
 bench_predicates <- benchmark_component(
   "null?" = engine5$eval(engine5$read("(null? #nil)")[[1]]),
@@ -107,7 +107,7 @@ cat("\n")
 
 # Benchmark 6: List construction
 cat("Benchmark 6: List construction\n")
-engine6 <- RyeEngine$new()
+engine6 <- Engine$new()
 
 bench_construction <- benchmark_component(
   "cons (single)" = engine6$eval(engine6$read("(cons 1 (list 2 3))")[[1]]),
@@ -123,7 +123,7 @@ cat("\n")
 
 # Benchmark 7: Nested operations
 cat("Benchmark 7: Nested higher-order operations\n")
-engine7 <- RyeEngine$new()
+engine7 <- Engine$new()
 
 engine7$eval_text('(define list10 (range 1 10))')
 engine7$eval_text('(define inc (lambda (x) (+ x 1)))')

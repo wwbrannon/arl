@@ -4,14 +4,14 @@ test_that("global engine state is not accessible", {
   expect_false(exists(".rye_engine_state", envir = asNamespace("rye")))
 
   # Users cannot directly access or mutate the default engine's state
-  engine1 <- rye_default_engine()
-  engine2 <- rye_default_engine()
+  engine1 <- default_engine()
+  engine2 <- default_engine()
 
   # Should return the same engine instance
   expect_true(identical(engine1, engine2))
 })
 
-test_that("RyePromise uses private fields", {
+test_that("Promise uses private fields", {
   engine <- make_engine()
 
   # Create a promise
@@ -28,11 +28,11 @@ test_that("RyePromise uses private fields", {
   expect_true(is.call(expr))
 
   # Verify the promise is an R6 object with private fields
-  expect_s3_class(promise, "RyePromise")
+  expect_s3_class(promise, "Promise")
   expect_s3_class(promise, "R6")
 })
 
-test_that("RyePromise caching works correctly", {
+test_that("Promise caching works correctly", {
   engine <- make_engine()
 
   # Create a promise with side effect
@@ -119,8 +119,8 @@ test_that("default engine uses closure pattern", {
   # The closure pattern means state is truly hidden
   # We can verify this by checking that multiple calls return same instance
 
-  eng1 <- rye_default_engine()
-  eng2 <- rye_default_engine()
+  eng1 <- default_engine()
+  eng2 <- default_engine()
 
   expect_identical(eng1, eng2)
 
@@ -159,7 +159,7 @@ test_that("module registry entries are truly immutable", {
   expect_equal(entry$exports, "val")
 })
 
-test_that("RyeEnv fields are read-only via active bindings", {
+test_that("Env fields are read-only via active bindings", {
   engine <- make_engine()
 
   # Can read fields
@@ -185,7 +185,7 @@ test_that("RyeEnv fields are read-only via active bindings", {
   }, "Cannot reassign macro_registry field")
 })
 
-test_that("RyeEnv internal operations still work with private fields", {
+test_that("Env internal operations still work with private fields", {
   engine <- make_engine()
 
   # Test env stack operations

@@ -7,14 +7,14 @@
 # exact output, making tests resilient to optimization strategy changes while
 # still ensuring optimizations are applied.
 
-engine <- RyeEngine$new()
+engine <- Engine$new()
 
 # ==============================================================================
 # Constant Folding Verification
 # ==============================================================================
 
 test_that("VERIFY: constant folding produces literals", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # Simple arithmetic should fold to literal
   out <- engine$inspect_compilation("(+ 1 2)")
@@ -38,7 +38,7 @@ test_that("VERIFY: constant folding produces literals", {
 })
 
 test_that("VERIFY: constant folding does NOT fold non-constants", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # Variable expressions should NOT fold
   out <- engine$inspect_compilation("(+ x 1)")
@@ -55,7 +55,7 @@ test_that("VERIFY: constant folding does NOT fold non-constants", {
 # ==============================================================================
 
 test_that("VERIFY: truthiness optimization skips wrapper for known booleans", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # Literal TRUE should not have .rye_true_p wrapper
   out <- engine$inspect_compilation("(if #t 1 2)")
@@ -78,7 +78,7 @@ test_that("VERIFY: truthiness optimization skips wrapper for known booleans", {
 # ==============================================================================
 
 test_that("VERIFY: dead code elimination removes unreachable branches", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # (if #t a b) should be just a, not an if statement
   out <- engine$inspect_compilation("(if #t 1 2)")
@@ -105,7 +105,7 @@ test_that("VERIFY: dead code elimination removes unreachable branches", {
 # ==============================================================================
 
 test_that("VERIFY: begin simplification removes single-expression blocks", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # (begin x) should be just x, not a block
   out <- engine$inspect_compilation("(begin 1)")
@@ -127,7 +127,7 @@ test_that("VERIFY: begin simplification removes single-expression blocks", {
 # ==============================================================================
 
 test_that("VERIFY: identity elimination inlines identity lambdas", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # ((lambda (x) x) 42) should be just 42, not a function application
   out <- engine$inspect_compilation("((lambda (x) x) 42)")
@@ -167,7 +167,7 @@ test_that("VERIFY: identity elimination inlines identity lambdas", {
 # ==============================================================================
 
 test_that("VERIFY: optimizations compose correctly", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # Constant folding + dead code elimination
   out <- engine$inspect_compilation("(if (< 1 2) (+ 2 3) (+ 4 5))")
@@ -191,7 +191,7 @@ test_that("VERIFY: optimizations compose correctly", {
 # ==============================================================================
 
 test_that("VERIFY: and/or skip temps for simple values", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # Simple literals should NOT generate temporary variables
   out <- engine$inspect_compilation("(and 1 2 3)")
@@ -216,7 +216,7 @@ test_that("VERIFY: and/or skip temps for simple values", {
 })
 
 test_that("VERIFY: nested boolean chains flatten", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # Nested AND should flatten: (and (and a b) c) behaves like (and a b c)
   # We check by verifying similar structure/depth
@@ -247,7 +247,7 @@ test_that("VERIFY: nested boolean chains flatten", {
 # ==============================================================================
 
 test_that("VERIFY: quasiquote with no unquotes simplifies", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # Pure quoted template (no unquotes) should be simple
   out <- engine$inspect_compilation("`(a b c)")
@@ -267,7 +267,7 @@ test_that("VERIFY: quasiquote with no unquotes simplifies", {
 })
 
 test_that("VERIFY: quasiquote with unquotes preserves correctness", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # With unquotes, correctness is paramount
   # These tests verify behavior, not optimization
@@ -284,7 +284,7 @@ test_that("VERIFY: quasiquote with unquotes preserves correctness", {
 })
 
 test_that("VERIFY: quasiquote code complexity reduction", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # Measure complexity of compiled quasiquote
   simple_qq <- engine$inspect_compilation("`(a b c)")
@@ -305,7 +305,7 @@ test_that("VERIFY: quasiquote code complexity reduction", {
 # ==============================================================================
 
 test_that("VERIFY: multiplication by 2 reduces to addition", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # (* x 2) should become (+ x x)
   out <- engine$inspect_compilation("(* x 2)")
@@ -319,7 +319,7 @@ test_that("VERIFY: multiplication by 2 reduces to addition", {
 })
 
 test_that("VERIFY: power of 2 reduces to multiplication", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # (^ x 2) should become (* x x)
   out <- engine$inspect_compilation("(^ x 2)")
@@ -333,7 +333,7 @@ test_that("VERIFY: power of 2 reduces to multiplication", {
 })
 
 test_that("VERIFY: strength reduction preserves semantics", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # Test that optimized code produces same results
   engine$eval(engine$read("(define x 5)")[[1]])
@@ -348,7 +348,7 @@ test_that("VERIFY: strength reduction preserves semantics", {
 })
 
 test_that("VERIFY: strength reduction only applies to safe cases", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
 
   # (* x 3) should NOT reduce (not power of 2)
   out <- engine$inspect_compilation("(* x 3)")

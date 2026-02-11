@@ -90,12 +90,12 @@ If you nest quasiquotes, only the innermost unquote is evaluated:
 You can inspect expansions from R using `engine$macroexpand()`:
 
 ```{r eval=FALSE}
-engine <- RyeEngine$new()
+engine <- Engine$new()
 engine$eval(engine$read("(defmacro when (test . body) \"Evaluate body forms when test is truthy.\" `(if ,test (begin ,@body) #nil))")[[1]])
 engine$macroexpand(engine$read("(when #t 1)")[[1]])
 ```
 
-To see both the macro-expanded form and the compiled R code (e.g. for debugging), use `engine$inspect_compilation(text, env)`. It returns a list with `parsed`, `expanded`, `compiled`, and `compiled_deparsed` (the R source as a character vector). See `?RyeEngine` for details.
+To see both the macro-expanded form and the compiled R code (e.g. for debugging), use `engine$inspect_compilation(text, env)`. It returns a list with `parsed`, `expanded`, `compiled`, and `compiled_deparsed` (the R source as a character vector). See `?Engine` for details.
 
 To expand only one level, use `macroexpand-1` from Rye code:
 

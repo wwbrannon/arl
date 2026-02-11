@@ -27,7 +27,7 @@ devtools::install()
 
 ```{r eval=FALSE}
 library(rye)
-engine <- RyeEngine$new()
+engine <- Engine$new()
 engine$repl()
 ```
 
@@ -46,7 +46,7 @@ At the prompt, you can enter Rye expressions:
 Install the CLI wrapper once after installing the package:
 
 ```{r eval=FALSE}
-rye::rye_install_cli()
+rye::install_cli()
 ```
 
 Then you can evaluate code without opening R:
@@ -67,7 +67,7 @@ If you want to evaluate Rye inside an R script, you can parse and evaluate
 expressions directly:
 
 ```{r eval=FALSE}
-engine <- RyeEngine$new()
+engine <- Engine$new()
 exprs <- engine$read("(define x 10) (+ x 5)")
 engine$eval(exprs[[1]])
 engine$eval(exprs[[2]])
@@ -87,7 +87,7 @@ From the REPL, use `load` to run a file in the current environment so that its d
 From R, `engine$load_file(path)` runs the file in an *isolated* environment: definitions and imports in that file are not visible in the engine's main environment or to later code. Use this when you want to execute a script without affecting the session (e.g. run a script and then continue in the REPL with a clean scope). To run a file and have its definitions visible in the engine (e.g. for use in the REPL), call `engine$load_file_in_env(path, engine$env$env)` or evaluate `(load "script.rye")` from the REPL.
 
 ```{r eval=FALSE}
-engine <- RyeEngine$new()
+engine <- Engine$new()
 engine$load_file("script.rye")  # isolated; definitions not visible
 # Or, to make definitions visible in the engine:
 engine$load_file_in_env("script.rye", engine$env$env)

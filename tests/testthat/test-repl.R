@@ -11,60 +11,60 @@ make_repl_input <- function(lines) {
   }
 }
 
-test_that("RyeREPL detects incomplete parse errors", {
-  repl <- rye:::RyeREPL$new()
+test_that("REPL detects incomplete parse errors", {
+  repl <- rye:::REPL$new()
   expect_true(repl$is_incomplete_error(simpleError("Unexpected end of input")))
   expect_true(repl$is_incomplete_error(simpleError("Unclosed parenthesis at line 1, column 1")))
   expect_true(repl$is_incomplete_error(simpleError("Unterminated string at line 1, column 5")))
   expect_false(repl$is_incomplete_error(simpleError("Unexpected ')' at line 1, column 1")))
 })
 
-test_that("RyeREPL read_form collects multiline input", {
+test_that("REPL read_form collects multiline input", {
   input_fn <- make_repl_input(c("(+ 1", "2)"))
-  repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
+  repl <- rye:::REPL$new(engine = engine, input_fn = input_fn)
   form <- repl$read_form()
 
   expect_equal(form$text, "(+ 1\n2)")
   expect_length(form$exprs, 1)
 })
 
-test_that("RyeREPL read_form accepts multi-line first chunk (e.g. from paste)", {
+test_that("REPL read_form accepts multi-line first chunk (e.g. from paste)", {
   multi_line <- "(+ 1 2)\n(* 3 4)"
   input_fn <- make_repl_input(multi_line)
-  repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
+  repl <- rye:::REPL$new(engine = engine, input_fn = input_fn)
   form <- repl$read_form()
   expect_equal(form$text, multi_line)
   expect_length(form$exprs, 2)
 })
 
-test_that("RyeREPL read_form skips leading blank lines", {
+test_that("REPL read_form skips leading blank lines", {
   input_fn <- make_repl_input(c("", "(+ 1 2)"))
-  repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
+  repl <- rye:::REPL$new(engine = engine, input_fn = input_fn)
   form <- repl$read_form()
 
   expect_equal(form$text, "(+ 1 2)")
   expect_length(form$exprs, 1)
 })
 
-test_that("RyeREPL read_form surfaces non-incomplete parse errors", {
+test_that("REPL read_form surfaces non-incomplete parse errors", {
   input_fn <- make_repl_input(c(")"))
-  repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
+  repl <- rye:::REPL$new(engine = engine, input_fn = input_fn)
   expect_error(repl$read_form(), "Unexpected")
 })
 
-test_that("RyeREPL read_form continues on Unterminated string (incomplete input)", {
+test_that("REPL read_form continues on Unterminated string (incomplete input)", {
   input_fn <- make_repl_input(c('(define x "', 'hello")'))
-  repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
+  repl <- rye:::REPL$new(engine = engine, input_fn = input_fn)
   form <- repl$read_form()
   expect_equal(form$text, '(define x "\nhello")')
   expect_length(form$exprs, 1)
 })
 
-test_that("RyeREPL read_form supports override option", {
+test_that("REPL read_form supports override option", {
   withr::local_options(list(
     rye.repl_read_form_override = function(...) list(text = "override", exprs = list(quote(1)))
   ))
-  repl <- rye:::RyeREPL$new(engine = engine)
+  repl <- rye:::REPL$new(engine = engine)
   form <- repl$read_form()
   expect_equal(form$text, "override")
   expect_length(form$exprs, 1)
@@ -73,16 +73,16 @@ test_that("RyeREPL read_form supports override option", {
   expect_equal(repl$read_form(), "static")
 })
 
-test_that("RyeREPL read_form returns NULL on EOF", {
+test_that("REPL read_form returns NULL on EOF", {
   input_fn <- function(...) NULL
-  repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
+  repl <- rye:::REPL$new(engine = engine, input_fn = input_fn)
   expect_null(repl$read_form())
 })
 
 # Version and History Path Functions ----
 
-test_that("RyeREPL history_path_default returns home directory path", {
-  repl <- rye:::RyeREPL$new()
+test_that("REPL history_path_default returns home directory path", {
+  repl <- rye:::REPL$new()
   path <- repl$history_path_default()
   expect_match(path, "\\.rye_history$")
   expect_type(path, "character")
@@ -90,14 +90,14 @@ test_that("RyeREPL history_path_default returns home directory path", {
 
 # History Management Functions ----
 
-test_that("RyeREPL can_use_history reflects interactive and readline", {
-  repl <- rye:::RyeREPL$new()
+test_that("REPL can_use_history reflects interactive and readline", {
+  repl <- rye:::REPL$new()
   expected <- isTRUE(interactive()) && isTRUE(capabilities("readline"))
   expect_equal(repl$can_use_history(), expected)
 })
 
-test_that("RyeREPL can_use_history respects override option", {
-  repl <- rye:::RyeREPL$new()
+test_that("REPL can_use_history respects override option", {
+  repl <- rye:::REPL$new()
   withr::local_options(list(rye.repl_can_use_history_override = FALSE))
   can_use <- testthat::with_mocked_bindings(
     repl$can_use_history(),
@@ -117,8 +117,8 @@ test_that("RyeREPL can_use_history respects override option", {
   expect_true(can_use)
 })
 
-test_that("RyeREPL can_use_history is FALSE when rye.repl_use_history is FALSE", {
-  repl <- rye:::RyeREPL$new()
+test_that("REPL can_use_history is FALSE when rye.repl_use_history is FALSE", {
+  repl <- rye:::REPL$new()
   withr::local_options(list(rye.repl_use_history = FALSE))
   can_use <- testthat::with_mocked_bindings(
     repl$can_use_history(),
@@ -129,23 +129,23 @@ test_that("RyeREPL can_use_history is FALSE when rye.repl_use_history is FALSE",
   expect_false(can_use)
 })
 
-test_that("RyeREPL load_history handles non-interactive mode", {
+test_that("REPL load_history handles non-interactive mode", {
   state <- new.env(parent = emptyenv())
   state$enabled <- FALSE
   state$path <- NULL
   state$snapshot <- NULL
-  repl <- rye:::RyeREPL$new(engine = NULL, history_state = state, history_path = "dummy.txt")
+  repl <- rye:::REPL$new(engine = NULL, history_state = state, history_path = "dummy.txt")
   withr::local_options(list(rye.repl_can_use_history_override = FALSE))
   result <- repl$load_history("dummy.txt")
   expect_false(result)
 })
 
-test_that("RyeREPL load_history returns FALSE when savehistory fails", {
+test_that("REPL load_history returns FALSE when savehistory fails", {
   state <- new.env(parent = emptyenv())
   state$enabled <- FALSE
   state$path <- NULL
   state$snapshot <- NULL
-  repl <- rye:::RyeREPL$new(engine = NULL, history_state = state, history_path = "dummy.txt")
+  repl <- rye:::REPL$new(engine = NULL, history_state = state, history_path = "dummy.txt")
   withr::local_options(list(rye.repl_can_use_history_override = TRUE))
   result <- testthat::with_mocked_bindings(
     repl$load_history("dummy.txt"),
@@ -156,23 +156,23 @@ test_that("RyeREPL load_history returns FALSE when savehistory fails", {
   expect_false(isTRUE(state$enabled))
 })
 
-test_that("RyeREPL save_history handles disabled state", {
+test_that("REPL save_history handles disabled state", {
   state <- new.env(parent = emptyenv())
   state$enabled <- FALSE
   state$path <- NULL
   state$snapshot <- NULL
-  repl <- rye:::RyeREPL$new(engine = NULL, history_state = state)
+  repl <- rye:::REPL$new(engine = NULL, history_state = state)
   withr::local_options(list(rye.repl_can_use_history_override = FALSE))
   result <- repl$save_history()
   expect_null(result)
 })
 
-test_that("RyeREPL save_history resets state even on save errors", {
+test_that("REPL save_history resets state even on save errors", {
   state <- new.env(parent = emptyenv())
   state$enabled <- TRUE
   state$path <- "dummy.txt"
   state$snapshot <- "dummy_snapshot"
-  repl <- rye:::RyeREPL$new(engine = NULL, history_state = state)
+  repl <- rye:::REPL$new(engine = NULL, history_state = state)
 
   withr::local_options(list(rye.repl_can_use_history_override = TRUE))
   result <- testthat::with_mocked_bindings(
@@ -187,35 +187,35 @@ test_that("RyeREPL save_history resets state even on save errors", {
   expect_null(state$snapshot)
 })
 
-test_that("RyeREPL add_history handles non-interactive mode", {
+test_that("REPL add_history handles non-interactive mode", {
   state <- new.env(parent = emptyenv())
   state$enabled <- FALSE
   state$path <- NULL
   state$snapshot <- NULL
-  repl <- rye:::RyeREPL$new(engine = NULL, history_state = state)
+  repl <- rye:::REPL$new(engine = NULL, history_state = state)
   withr::local_options(list(rye.repl_can_use_history_override = FALSE))
   result <- repl$add_history("test input")
   expect_null(result)
 })
 
-test_that("RyeREPL add_history skips empty input", {
+test_that("REPL add_history skips empty input", {
   # Test that empty/whitespace-only input is not added
   state <- new.env(parent = emptyenv())
   state$enabled <- TRUE
   state$path <- "dummy.txt"
   state$snapshot <- "dummy_snapshot"
-  repl <- rye:::RyeREPL$new(engine = NULL, history_state = state)
+  repl <- rye:::REPL$new(engine = NULL, history_state = state)
   withr::local_options(list(rye.repl_can_use_history_override = TRUE))
   result <- repl$add_history("   ")
   expect_null(result)
 })
 
-test_that("RyeREPL add_history handles missing addHistory", {
+test_that("REPL add_history handles missing addHistory", {
   state <- new.env(parent = emptyenv())
   state$enabled <- TRUE
   state$path <- "dummy.txt"
   state$snapshot <- "dummy_snapshot"
-  repl <- rye:::RyeREPL$new(engine = NULL, history_state = state)
+  repl <- rye:::REPL$new(engine = NULL, history_state = state)
   withr::local_options(list(rye.repl_can_use_history_override = TRUE))
   result <- testthat::with_mocked_bindings(
     repl$add_history("(+ 1 2)"),
@@ -227,35 +227,35 @@ test_that("RyeREPL add_history handles missing addHistory", {
 
 # Print Value Function ----
 
-test_that("RyeREPL print_value handles NULL", {
+test_that("REPL print_value handles NULL", {
   env <- make_engine()
-  repl <- rye:::RyeREPL$new(engine = env)
+  repl <- rye:::REPL$new(engine = env)
   result <- capture.output(val <- repl$print_value(NULL))
   expect_length(result, 0)
   expect_null(val)
 })
 
-test_that("RyeREPL print_value handles calls with str", {
+test_that("REPL print_value handles calls with str", {
   env <- make_engine()
-  repl <- rye:::RyeREPL$new(engine = env)
+  repl <- rye:::REPL$new(engine = env)
   call_obj <- quote(f(a, b))
   output <- capture.output(val <- repl$print_value(call_obj))
   expect_true(length(output) > 0)
   expect_equal(val, call_obj)
 })
 
-test_that("RyeREPL print_value handles lists with str", {
+test_that("REPL print_value handles lists with str", {
   engine <- make_engine()
-  repl <- rye:::RyeREPL$new(engine = engine)
+  repl <- rye:::REPL$new(engine = engine)
   list_obj <- list(a = 1, b = 2)
   output <- capture.output(val <- repl$print_value(list_obj))
   expect_true(length(output) > 0)
   expect_equal(val, list_obj)
 })
 
-test_that("RyeREPL print_value handles vectors with print", {
+test_that("REPL print_value handles vectors with print", {
   engine <- make_engine()
-  repl <- rye:::RyeREPL$new(engine = engine)
+  repl <- rye:::REPL$new(engine = engine)
   output <- capture.output(val <- repl$print_value(c(1, 2, 3)))
   expect_true(any(grepl("1.*2.*3", output)))
   expect_equal(val, c(1, 2, 3))
@@ -410,17 +410,17 @@ test_that("engine$repl handles evaluation errors gracefully", {
 
 # Bracketed Paste Mode tests ----
 
-test_that("RyeREPL BPM option defaults to TRUE", {
+test_that("REPL BPM option defaults to TRUE", {
   withr::local_options(list(rye.repl_bracketed_paste = NULL))
   expect_true(isTRUE(getOption("rye.repl_bracketed_paste", TRUE)))
 })
 
-test_that("RyeREPL BPM can be disabled via option", {
+test_that("REPL BPM can be disabled via option", {
   withr::local_options(list(rye.repl_bracketed_paste = FALSE))
   expect_false(isTRUE(getOption("rye.repl_bracketed_paste", TRUE)))
 })
 
-test_that("RyeREPL BPM sequences are defined correctly", {
+test_that("REPL BPM sequences are defined correctly", {
   # Verify BPM escape sequences are correct (checked in input_line code)
   bpm_start <- "\033[200~"
   bpm_end <- "\033[201~"
@@ -431,18 +431,18 @@ test_that("RyeREPL BPM sequences are defined correctly", {
   expect_true(startsWith(bpm_end, "\033"))
 })
 
-test_that("RyeREPL read_form works with multi-line paste (BPM simulation)", {
+test_that("REPL read_form works with multi-line paste (BPM simulation)", {
   # Simulate what BPM would provide: multi-line input in first chunk
   multi_line <- "(define foo\n  (lambda (x)\n    (* x 2)))"
   input_fn <- make_repl_input(multi_line)
-  repl <- rye:::RyeREPL$new(engine = engine, input_fn = input_fn)
+  repl <- rye:::REPL$new(engine = engine, input_fn = input_fn)
 
   form <- repl$read_form()
   expect_equal(form$text, multi_line)
   expect_length(form$exprs, 1)
 })
 
-test_that("RyeREPL BPM enable sequence used when conditions met", {
+test_that("REPL BPM enable sequence used when conditions met", {
   # Test that BPM enable sequence would be emitted with correct options
   engine_test <- make_engine()
 
@@ -467,9 +467,9 @@ test_that("RyeREPL BPM enable sequence used when conditions met", {
 
 # Additional REPL feature tests ----
 
-test_that("RyeREPL uses custom prompt in read_form", {
+test_that("REPL uses custom prompt in read_form", {
   input_fn <- make_repl_input(c("(+ 1 2)"))
-  repl <- rye:::RyeREPL$new(
+  repl <- rye:::REPL$new(
     engine = engine,
     input_fn = input_fn,
     prompt = "custom> ",
@@ -483,15 +483,15 @@ test_that("RyeREPL uses custom prompt in read_form", {
   expect_equal(repl$cont_prompt, "...> ")
 })
 
-test_that("RyeREPL input_fn defaults to input_line", {
-  repl <- rye:::RyeREPL$new(engine = engine)
+test_that("REPL input_fn defaults to input_line", {
+  repl <- rye:::REPL$new(engine = engine)
 
   # When no input_fn provided, should use input_line method
   expect_true(is.function(repl$input_fn))
 })
 
-test_that("RyeREPL history_state is properly initialized", {
-  repl <- rye:::RyeREPL$new(engine = engine)
+test_that("REPL history_state is properly initialized", {
+  repl <- rye:::REPL$new(engine = engine)
 
   # History state should be an environment with required fields
   state <- repl$history_state

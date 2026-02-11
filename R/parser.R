@@ -197,7 +197,7 @@ Parser <- R6::R6Class(
           if (seen_dot && !is.null(dot_cdr) && length(dotted_heads) > 0) {
             result <- dot_cdr
             for (j in rev(seq_along(dotted_heads))) {
-              result <- RyeCons$new(dotted_heads[[j]], result)
+              result <- Cons$new(dotted_heads[[j]], result)
             }
             return(tracker$src_set(result, span))
           }
@@ -229,7 +229,7 @@ Parser <- R6::R6Class(
 
     # @description Convert a Rye expression back to its string representation.
     # Inverse of parse(): the output can be parsed back with read().
-    # @param expr A Rye expression (symbol, call, atomic, RyeCons, keyword, etc.).
+    # @param expr A Rye expression (symbol, call, atomic, Cons, keyword, etc.).
     # @return Character string.
     write = function(expr) {
       # Strip source tracking attribute so deparse() is clean
@@ -238,8 +238,8 @@ Parser <- R6::R6Class(
       # NULL -> #nil
       if (is.null(expr)) return("#nil")
 
-      # RyeCons (dotted pair) -> (a b . c)
-      if (r6_isinstance(expr, "RyeCons")) {
+      # Cons (dotted pair) -> (a b . c)
+      if (r6_isinstance(expr, "Cons")) {
         p <- expr$parts()
         elems <- vapply(p$prefix, function(e) self$write(e), character(1))
         tail_str <- self$write(p$tail)

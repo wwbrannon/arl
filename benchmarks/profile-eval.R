@@ -26,7 +26,7 @@ cat("=== Profiling Evaluator ===\n\n")
 
 # Profile 1: Fibonacci
 cat("Profile 1: Fibonacci\n")
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 
 engine1$eval_text('
 (define fib (lambda (n)
@@ -44,7 +44,7 @@ profile_component({
 
 # Profile 2: Many function arguments (tests arg list growing)
 cat("Profile 2: Many function arguments\n")
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 
 engine2$eval_text('
 (define sum-many (lambda (a b c d e f g h i j k l m n o p q r s t)
@@ -60,7 +60,7 @@ profile_component({
 
 # Profile 3: Higher-order functions (map over large list)
 cat("Profile 3: Higher-order functions (map)\n")
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 
 engine3$eval_text('
 (define inc (lambda (x) (+ x 1)))
@@ -76,7 +76,7 @@ profile_component({
 
 # Profile 4: Closure creation and invocation
 cat("Profile 4: Closures\n")
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 
 engine4$eval_text('
 (define make-adder (lambda (n)
@@ -96,7 +96,7 @@ cat("Profile 6: Real quicksort workload\n")
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0 && "quicksort" %in% names(real_workloads)) {
-  engine6 <- RyeEngine$new()
+  engine6 <- Engine$new()
 
   old_quiet <- Sys.getenv("RYE_QUIET", unset = NA)
   on.exit({
@@ -120,7 +120,7 @@ if (length(real_workloads) > 0 && "quicksort" %in% names(real_workloads)) {
 
 # Profile 7: CPS overhead with simple arithmetic
 cat("Profile 7: CPS overhead (simple arithmetic)\n")
-engine7 <- RyeEngine$new()
+engine7 <- Engine$new()
 
 profile_component({
   for (i in 1:5000) {

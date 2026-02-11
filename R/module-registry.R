@@ -7,11 +7,11 @@ ModuleRegistry <- R6::R6Class(
   "ModuleRegistry",
   public = list(
     rye_env = NULL,
-    # @description Create a module registry for the given RyeEnv.
-    # @param rye_env A RyeEnv instance.
+    # @description Create a module registry for the given Env.
+    # @param rye_env A Env instance.
     initialize = function(rye_env) {
-      if (!r6_isinstance(rye_env, "RyeEnv")) {
-        stop("ModuleRegistry requires a RyeEnv")
+      if (!r6_isinstance(rye_env, "Env")) {
+        stop("ModuleRegistry requires a Env")
       }
       self$rye_env <- rye_env
       self$rye_env$module_registry_env(create = TRUE)
@@ -82,14 +82,14 @@ ModuleRegistry <- R6::R6Class(
       entry_env$path <- old_entry$path
       lockEnvironment(entry_env, bindings = TRUE)
       registry <- self$rye_env$module_registry_env(create = TRUE)
-      rye_unlock_binding(name, registry)
+      unlock_binding(name, registry)
       assign(name, entry_env, envir = registry)
       lockBinding(name, registry)
       entry_env
     },
     # @description Register an alias: path (absolute) -> same entry as name.
     # Used so (import "path/to/file.rye") can find the module registered as (module X ...).
-    # @param path Absolute path string (use rye_normalize_path_absolute first).
+    # @param path Absolute path string (use normalize_path_absolute first).
     # @param name Module name (single string) already registered.
     # @return The registry entry (invisible). Idempotent if path already aliases same module.
     alias = function(path, name) {
@@ -120,12 +120,12 @@ ModuleRegistry <- R6::R6Class(
       }
       registry <- self$rye_env$module_registry_env(create = FALSE)
       if (!is.null(registry) && exists(name, envir = registry, inherits = FALSE)) {
-        rye_unlock_binding(name, registry)
+        unlock_binding(name, registry)
         rm(list = name, envir = registry)
       }
       invisible(NULL)
     },
-    # @description Attach a module's exports into the registry's RyeEnv.
+    # @description Attach a module's exports into the registry's Env.
     # @param name Module name (single string).
     attach = function(name) {
       entry <- self$get(name)
@@ -163,7 +163,7 @@ ModuleRegistry <- R6::R6Class(
       exports <- entry$exports
       module_env <- entry$env
 
-      # Inline macro registry lookup to avoid RyeEnv$new() allocation
+      # Inline macro registry lookup to avoid Env$new() allocation
       target_macro_registry <- get0(".rye_macros", envir = target_env, inherits = TRUE)
       if (is.null(target_macro_registry)) {
         target_macro_registry <- new.env(parent = emptyenv())

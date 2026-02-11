@@ -22,7 +22,7 @@ CLI_HELP_TEXT <- paste(
   sep = "\n"
 )
 
-# RyeCLI: Command-line interface for the rye script. Parses args (--file, --eval, --quiet,
+# CLI: Command-line interface for the rye script. Parses args (--file, --eval, --quiet,
 # positional files), creates an engine, and either runs the REPL or evaluates files/expressions.
 #
 # @field args Raw command-line args (character vector).
@@ -30,8 +30,8 @@ CLI_HELP_TEXT <- paste(
 #
 #' @keywords internal
 #' @noRd
-RyeCLI <- R6::R6Class(
-  "RyeCLI",
+CLI <- R6::R6Class(
+  "CLI",
   public = list(
     args = NULL,
     parsed = NULL,
@@ -239,21 +239,21 @@ RyeCLI <- R6::R6Class(
     # @description Start the Rye REPL (interactive loop).
     do_repl = function() {
       if (!self$cli_isatty()) {
-        engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
+        engine <- Engine$new(env = new.env(parent = .GlobalEnv))
         text <- paste(self$cli_read_stdin(), collapse = "\n")
         if (trimws(text) != "") {
           self$cli_eval_text(text, engine, source_name = "<stdin>")
         }
         return(invisible(NULL))
       }
-      engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
+      engine <- Engine$new(env = new.env(parent = .GlobalEnv))
       engine$repl()
       invisible(NULL)
     },
     # @description Evaluate files from parsed (--file and positional). Uses shared engine env.
     # @param parsed Result of parse().
     do_file = function(parsed) {
-      engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
+      engine <- Engine$new(env = new.env(parent = .GlobalEnv))
       for (path in parsed$files) {
         if (!file.exists(path)) {
           self$cli_exit_with_error(paste0("File not found: ", path), show_help = TRUE)
@@ -270,12 +270,12 @@ RyeCLI <- R6::R6Class(
     # @description Evaluate --eval expression(s) and exit.
     # @param parsed Result of parse().
     do_eval = function(parsed) {
-      engine <- RyeEngine$new(env = new.env(parent = .GlobalEnv))
+      engine <- Engine$new(env = new.env(parent = .GlobalEnv))
       self$cli_eval_text(parsed$expr, engine, source_name = "<cli>")
       invisible(NULL)
     },
     # @description Run fn(engine) with engine; on error, call cli_exit_with_error.
-    # @param engine RyeEngine instance.
+    # @param engine Engine instance.
     # @param fn Function(engine) to run.
     cli_eval_with_engine = function(engine, fn) {
       result_with_vis <- tryCatch(
@@ -294,7 +294,7 @@ RyeCLI <- R6::R6Class(
     },
     # @description Parse and evaluate text in engine; return result. Used by do_eval and tests.
     # @param text Character string of Rye code.
-    # @param engine RyeEngine instance.
+    # @param engine Engine instance.
     # @param source_name Source name for errors.
     # @return Result of evaluation.
     cli_eval_text = function(text, engine, source_name = "<cli>") {
@@ -383,8 +383,8 @@ RyeCLI <- R6::R6Class(
 #' @param args Command-line arguments to parse (defaults to \code{commandArgs(trailingOnly = TRUE)}).
 #' @return Invisibly returns \code{NULL}.
 #' @export
-rye_cli <- function(args = commandArgs(trailingOnly = TRUE)) {
-  RyeCLI$new(args)$run()
+cli <- function(args = commandArgs(trailingOnly = TRUE)) {
+  CLI$new(args)$run()
 }
 
 # Check if two file paths refer to the same file (handles symlinks and hardlinks)
@@ -428,7 +428,7 @@ same_file <- function(path1, path2) {
 #' @param overwrite Whether to overwrite an existing `rye` executable.
 #' @return The installed path, invisibly.
 #' @export
-rye_install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), overwrite = FALSE) {
+install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), overwrite = FALSE) {
   source <- system.file("exec", "rye", package = "rye")
   if (!nzchar(source)) {
     stop("CLI script not found. Is the rye package installed?")

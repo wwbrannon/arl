@@ -1,4 +1,4 @@
-# RyeREPL: Stateful read-eval-print loop. read_form() gets input; main loop parses, evaluates, prints.
+# REPL: Stateful read-eval-print loop. read_form() gets input; main loop parses, evaluates, prints.
 #
 # @section REPL options:
 # \describe{
@@ -9,14 +9,14 @@
 #   \item{\code{rye.repl_can_use_history_override}}{Override for \code{can_use_history()}: function or logical.}
 # }
 #
-# @field engine RyeEngine instance used for parsing/evaluation.
+# @field engine Engine instance used for parsing/evaluation.
 # @field prompt Primary prompt string.
 # @field cont_prompt Continuation prompt for multi-line input.
 # @field input_fn Function used to read a single line of input.
 # @field output_fn Function used to emit output messages.
 # @field history_state Environment tracking history state.
 # @field history_path Path to history file used for readline integration.
-# @param engine RyeEngine instance; required for evaluation.
+# @param engine Engine instance; required for evaluation.
 # @param prompt Prompt string shown for new forms.
 # @param cont_prompt Prompt string for continuation lines.
 # @param input_fn Optional function to read a line (defaults to input_line).
@@ -31,8 +31,8 @@
 #
 #' @keywords internal
 #' @noRd
-RyeREPL <- R6::R6Class(
-  "RyeREPL",
+REPL <- R6::R6Class(
+  "REPL",
   public = list(
     engine = NULL,
     prompt = "rye> ",
@@ -42,7 +42,7 @@ RyeREPL <- R6::R6Class(
     history_state = NULL,
     history_path = NULL,
     # @description Initialize the REPL state.
-    # @param engine RyeEngine instance (required for run()).
+    # @param engine Engine instance (required for run()).
     # @param prompt, cont_prompt Prompt strings.
     # @param input_fn, output_fn Input/output functions.
     # @param history_state, history_path History state env and file path.
@@ -337,7 +337,7 @@ RyeREPL <- R6::R6Class(
   private = list(
     require_engine = function() {
       if (is.null(self$engine)) {
-        stop("Must provide RyeEngine instance")
+        stop("Must provide Engine instance")
       }
     },
     ensure_history_state = function() {

@@ -1,4 +1,4 @@
-# Unit tests for RyeCoverageTracker (R/coverage.R)
+# Unit tests for CoverageTracker (R/coverage.R)
 #
 # NOTE: To clean up root directory, manually remove:
 #   cleanup_docs.sh, CLEANUP_NEEDED.md, validate_tests.R
@@ -33,7 +33,7 @@ make_rye_src <- function(file, start_line, end_line) {
 # ============================================================================
 
 test_that("initialize() creates default coverage tracker", {
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   expect_type(tracker$coverage, "environment")
   expect_true(tracker$enabled)
@@ -42,7 +42,7 @@ test_that("initialize() creates default coverage tracker", {
 })
 
 test_that("initialize() creates coverage environment with correct properties", {
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   # Check environment properties
   expect_false(environmentIsLocked(tracker$coverage))
@@ -50,14 +50,14 @@ test_that("initialize() creates coverage environment with correct properties", {
 })
 
 test_that("initialize() creates code_lines environment with correct properties", {
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   expect_false(environmentIsLocked(tracker$code_lines))
   expect_identical(parent.env(tracker$code_lines), emptyenv())
 })
 
 test_that("track() handles NULL rye_src", {
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   # Should not error
   expect_silent(tracker$track(NULL))
@@ -65,7 +65,7 @@ test_that("track() handles NULL rye_src", {
 })
 
 test_that("track() handles missing fields", {
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   # Missing file
   expect_silent(tracker$track(list(start_line = 1, end_line = 1)))
@@ -83,7 +83,7 @@ test_that("track() does nothing when enabled=FALSE", {
   tmp <- create_rye_file(c("(define x 1)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   tracker$set_enabled(FALSE)
 
   rye_src <- make_rye_src(tmp, start_line = 1, end_line = 1)
@@ -93,7 +93,7 @@ test_that("track() does nothing when enabled=FALSE", {
 })
 
 test_that("track() handles non-existent file gracefully", {
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   rye_src <- make_rye_src("/nonexistent/file.rye", start_line = 1, end_line = 1)
 
@@ -106,7 +106,7 @@ test_that("track() marks single line as executed", {
   tmp <- create_rye_file(c(";; comment", "(define x 1)", "(define y 2)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   rye_src <- make_rye_src(tmp, start_line = 2, end_line = 2)
 
   tracker$track(rye_src)
@@ -120,7 +120,7 @@ test_that("track() marks multi-line range", {
   tmp <- create_rye_file(c("(define x 1)", "(define y 2)", "(define z 3)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   rye_src <- make_rye_src(tmp, start_line = 1, end_line = 3)
 
   tracker$track(rye_src)
@@ -135,7 +135,7 @@ test_that("track() increments count on multiple executions", {
   tmp <- create_rye_file(c("(define x 1)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   rye_src <- make_rye_src(tmp, start_line = 1, end_line = 1)
 
   tracker$track(rye_src)
@@ -150,7 +150,7 @@ test_that("track() lazy-loads code_lines cache", {
   tmp <- create_rye_file(c(";; comment", "(define x 1)", "", "(define y 2)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   # code_lines should be empty initially
   expect_equal(length(ls(tracker$code_lines)), 0)
@@ -178,7 +178,7 @@ test_that("track() filters comment and blank lines", {
   ))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   # Track entire file
   rye_src <- make_rye_src(tmp, start_line = 1, end_line = 5)
@@ -203,7 +203,7 @@ test_that("track() respects custom code_line_pattern", {
   on.exit(unlink(tmp))
 
   # Use pattern that matches non-comment lines in Python-style
-  tracker <- RyeCoverageTracker$new(code_line_pattern = "^\\s*[^#\\s]")
+  tracker <- CoverageTracker$new(code_line_pattern = "^\\s*[^#\\s]")
 
   rye_src <- make_rye_src(tmp, start_line = 1, end_line = 4)
   tracker$track(rye_src)
@@ -221,7 +221,7 @@ test_that("track() respects custom code_line_pattern", {
 # ============================================================================
 
 test_that("discover_files() with NULL search_paths uses stdlib", {
-  tracker <- RyeCoverageTracker$new(search_paths = NULL)
+  tracker <- CoverageTracker$new(search_paths = NULL)
   tracker$discover_files()
 
   # Should find stdlib files
@@ -239,7 +239,7 @@ test_that("discover_files() with custom search_paths", {
   writeLines("(define x 1)", file.path(tmp_dir, "test1.rye"))
   writeLines("(define y 2)", file.path(tmp_dir, "test2.rye"))
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   expect_equal(length(tracker$all_files), 2)
@@ -255,7 +255,7 @@ test_that("discover_files() searches recursively", {
   writeLines("(define y 2)", file.path(tmp_dir, "subdir", "test2.rye"))
   writeLines("(define z 3)", file.path(tmp_dir, "subdir", "nested", "test3.rye"))
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   expect_equal(length(tracker$all_files), 3)
@@ -270,7 +270,7 @@ test_that("discover_files() excludes test directories by default", {
   writeLines("(define x 1)", file.path(tmp_dir, "src", "code.rye"))
   writeLines("(define test 1)", file.path(tmp_dir, "tests", "test.rye"))
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir, include_tests = FALSE)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir, include_tests = FALSE)
   tracker$discover_files()
 
   expect_equal(length(tracker$all_files), 1)
@@ -287,7 +287,7 @@ test_that("discover_files() includes test directories when include_tests=TRUE", 
   writeLines("(define x 1)", file.path(tmp_dir, "src", "code.rye"))
   writeLines("(define test 1)", file.path(tmp_dir, "tests", "test.rye"))
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir, include_tests = TRUE)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir, include_tests = TRUE)
   tracker$discover_files()
 
   expect_equal(length(tracker$all_files), 2)
@@ -295,7 +295,7 @@ test_that("discover_files() includes test directories when include_tests=TRUE", 
 })
 
 test_that("discover_files() handles non-existent directory", {
-  tracker <- RyeCoverageTracker$new(search_paths = "/nonexistent/directory")
+  tracker <- CoverageTracker$new(search_paths = "/nonexistent/directory")
 
   # Should not error, just return empty
   expect_silent(tracker$discover_files())
@@ -315,7 +315,7 @@ test_that("discover_files() handles multiple search_paths", {
   writeLines("(define x 1)", file.path(tmp_dir1, "test1.rye"))
   writeLines("(define y 2)", file.path(tmp_dir2, "test2.rye"))
 
-  tracker <- RyeCoverageTracker$new(search_paths = c(tmp_dir1, tmp_dir2))
+  tracker <- CoverageTracker$new(search_paths = c(tmp_dir1, tmp_dir2))
   tracker$discover_files()
 
   expect_equal(length(tracker$all_files), 2)
@@ -329,7 +329,7 @@ test_that("discover_files() deduplicates files", {
   writeLines("(define x 1)", file.path(tmp_dir, "test.rye"))
 
   # Pass same directory twice
-  tracker <- RyeCoverageTracker$new(search_paths = c(tmp_dir, tmp_dir))
+  tracker <- CoverageTracker$new(search_paths = c(tmp_dir, tmp_dir))
   tracker$discover_files()
 
   # Should only find the file once
@@ -344,7 +344,7 @@ test_that("discover_files() populates code_lines cache", {
   tmp_file <- file.path(tmp_dir, "test.rye")
   writeLines(c(";; comment", "(define x 1)", "", "(define y 2)"), tmp_file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # code_lines should be populated
@@ -361,14 +361,14 @@ test_that("discover_files() handles empty directory", {
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   expect_equal(length(tracker$all_files), 0)
 })
 
 test_that("get_summary() returns empty list for empty coverage", {
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   summary <- tracker$get_summary()
 
@@ -380,7 +380,7 @@ test_that("get_summary() returns single file/line structure", {
   tmp <- create_rye_file(c("(define x 1)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   rye_src <- make_rye_src(tmp, start_line = 1, end_line = 1)
   tracker$track(rye_src)
 
@@ -399,7 +399,7 @@ test_that("get_summary() returns multiple files/lines structure", {
     unlink(tmp2)
   })
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   tracker$track(make_rye_src(tmp1, 1, 2))
   tracker$track(make_rye_src(tmp2, 1, 1))
 
@@ -416,7 +416,7 @@ test_that("get_summary() handles malformed keys gracefully", {
   tmp <- create_rye_file(c("(define x 1)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   # Manually add a malformed key (no colon)
   assign("badkey", 5L, envir = tracker$coverage)
@@ -432,7 +432,7 @@ test_that("get_summary() creates nested list structure correctly", {
   tmp <- create_rye_file(c("(define x 1)", "(define y 2)", "(define z 3)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   tracker$track(make_rye_src(tmp, 1, 1))
   tracker$track(make_rye_src(tmp, 1, 1))  # Execute line 1 twice
   tracker$track(make_rye_src(tmp, 3, 3))  # Execute line 3 once
@@ -446,7 +446,7 @@ test_that("get_summary() creates nested list structure correctly", {
 })
 
 test_that("reset() clears empty coverage", {
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   tracker$reset()
 
@@ -457,7 +457,7 @@ test_that("reset() clears populated coverage", {
   tmp <- create_rye_file(c("(define x 1)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   tracker$track(make_rye_src(tmp, 1, 1))
 
   expect_equal(length(ls(tracker$coverage)), 1)
@@ -475,7 +475,7 @@ test_that("reset() preserves all_files and code_lines", {
   tmp_file <- file.path(tmp_dir, "test.rye")
   writeLines(c("(define x 1)"), tmp_file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   tracker$track(make_rye_src(tmp_file, 1, 1))
 
@@ -496,7 +496,7 @@ test_that("set_enabled() toggles tracking", {
   tmp <- create_rye_file(c("(define x 1)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   expect_true(tracker$enabled)
 
@@ -511,7 +511,7 @@ test_that("disabled tracker ignores track() calls", {
   tmp <- create_rye_file(c("(define x 1)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   tracker$set_enabled(FALSE)
 
   tracker$track(make_rye_src(tmp, 1, 1))
@@ -523,7 +523,7 @@ test_that("re-enabling resumes tracking", {
   tmp <- create_rye_file(c("(define x 1)", "(define y 2)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   # Track line 1
   tracker$track(make_rye_src(tmp, 1, 1))
@@ -545,7 +545,7 @@ test_that("re-enabling resumes tracking", {
 # ============================================================================
 
 test_that("report_console() shows message for empty coverage", {
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
 
   output <- capture.output(tracker$report_console())
 
@@ -561,7 +561,7 @@ test_that("report_console() discovers files if all_files empty", {
   tmp_file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", tmp_file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
 
   expect_equal(length(tracker$all_files), 0)
 
@@ -582,7 +582,7 @@ test_that("report_console() shows single file with partial coverage", {
   tmp_file <- file.path(tmp_dir, "test.rye")
   writeLines(c("(define x 1)", "(define y 2)", "(define z 3)"), tmp_file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Only track line 1
@@ -611,7 +611,7 @@ test_that("report_console() shows multiple files sorted alphabetically", {
   writeLines("(define y 2)", file_a)
   writeLines("(define z 3)", file_m)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Track at least one line in each file so they appear in output
@@ -646,7 +646,7 @@ test_that("report_console() calculates total lines correctly", {
   writeLines(c("(define x 1)", "(define y 2)"), file1)  # 2 lines
   writeLines(c("(define z 3)", "(define w 4)", "(define v 5)"), file2)  # 3 lines
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Track 1 line from file1, 2 lines from file2 = 3/5 total
@@ -672,7 +672,7 @@ test_that("report_console() writes to file when output_file specified", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   tracker$track(make_rye_src(file, 1, 1))
 
@@ -694,7 +694,7 @@ test_that("report_console() outputs to console when no output_file", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   tracker$track(make_rye_src(file, 1, 1))
 
@@ -716,7 +716,7 @@ test_that("report_html() uses default output path", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(
+  tracker <- CoverageTracker$new(
     search_paths = tmp_dir,
     output_prefix = "test_prefix"
   )
@@ -745,7 +745,7 @@ test_that("report_html() uses custom output path", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   suppressMessages(tracker$report_html(output_file = html_file))
 
@@ -762,7 +762,7 @@ test_that("report_html() auto-creates output directory", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   expect_false(dir.exists(output_dir))
@@ -785,7 +785,7 @@ test_that("report_html() auto-discovers files if needed", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
 
   # Don't call discover_files()
   expect_equal(length(tracker$all_files), 0)
@@ -809,7 +809,7 @@ test_that("report_html() generates valid HTML structure", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   suppressMessages(tracker$report_html(output_file = html_file))
 
@@ -832,7 +832,7 @@ test_that("report_html() uses custom report_title", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(
+  tracker <- CoverageTracker$new(
     search_paths = tmp_dir,
     report_title = "Custom Coverage Report"
   )
@@ -859,7 +859,7 @@ test_that("report_html() includes summary table", {
   writeLines(c("(define x 1)", "(define y 2)"), file1)
   writeLines("(define z 3)", file2)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   tracker$track(make_rye_src(file1, 1, 1))
   suppressMessages(tracker$report_html(output_file = html_file))
@@ -884,7 +884,7 @@ test_that("report_html() uses coverage percentage CSS classes", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines(c("(define a 1)", "(define b 2)", "(define c 3)", "(define d 4)"), file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Track 3 out of 4 lines = 75%
@@ -910,7 +910,7 @@ test_that("report_html() includes detailed file view sections", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines(c("(define x 1)", "(define y 2)"), file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   tracker$track(make_rye_src(file, 1, 1))
   suppressMessages(tracker$report_html(output_file = html_file))
@@ -936,7 +936,7 @@ test_that("report_html() shows line-by-line coverage with classes", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines(c("(define x 1)", "(define y 2)", "(define z 3)"), file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Track only line 1
@@ -963,7 +963,7 @@ test_that("report_html() displays hit counts", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Track line 3 times
@@ -996,7 +996,7 @@ test_that("report_html() properly escapes HTML special characters", {
   )
   writeLines(content, file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   suppressMessages(tracker$report_html(output_file = html_file))
 
@@ -1020,7 +1020,7 @@ test_that("report_html() generates valid HTML for empty coverage", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Don't track anything
@@ -1041,7 +1041,7 @@ test_that("report_json() uses default output path", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(
+  tracker <- CoverageTracker$new(
     search_paths = tmp_dir,
     output_prefix = "test_json"
   )
@@ -1069,7 +1069,7 @@ test_that("report_json() uses custom output path", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   suppressMessages(tracker$report_json(output_file = json_file))
 
@@ -1086,7 +1086,7 @@ test_that("report_json() auto-creates output directory", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   expect_false(dir.exists(output_dir))
@@ -1109,7 +1109,7 @@ test_that("report_json() auto-discovers files if needed", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
 
   expect_equal(length(tracker$all_files), 0)
 
@@ -1131,7 +1131,7 @@ test_that("report_json() generates codecov structure", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines("(define x 1)", file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   suppressMessages(tracker$report_json(output_file = json_file))
 
@@ -1154,7 +1154,7 @@ test_that("report_json() uses line coverage list format", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines(c("(define x 1)", "(define y 2)"), file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Track line 1 twice
@@ -1189,7 +1189,7 @@ test_that("report_json() uses null for non-code lines", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines(c(";; comment", "(define x 1)", "", "(define y 2)"), file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   tracker$track(make_rye_src(file, 2, 2))
 
@@ -1225,7 +1225,7 @@ test_that("report_json() shows 0 for uncovered code lines", {
   file <- file.path(tmp_dir, "test.rye")
   writeLines(c("(define x 1)", "(define y 2)"), file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Track only line 1
@@ -1249,14 +1249,14 @@ test_that("report_json() shows 0 for uncovered code lines", {
 # Phase 5: Integration Tests
 # ============================================================================
 
-test_that("RyeEngine accepts coverage_tracker parameter", {
-  tracker <- RyeCoverageTracker$new()
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+test_that("Engine accepts coverage_tracker parameter", {
+  tracker <- CoverageTracker$new()
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
-  expect_s3_class(engine, "RyeEngine")
+  expect_s3_class(engine, "Engine")
 })
 
-test_that("RyeEngine tracks coverage for executed code", {
+test_that("Engine tracks coverage for executed code", {
   tmp <- tempfile(fileext = ".rye")
   writeLines(c(
     "(define add (lambda (x y) (+ x y)))",
@@ -1264,8 +1264,8 @@ test_that("RyeEngine tracks coverage for executed code", {
   ), tmp)
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
   tracker$discover_files()
   engine$load_file(tmp)
@@ -1283,10 +1283,10 @@ test_that("disabled coverage tracker doesn't track", {
   writeLines(c("(define x 1)"), tmp)
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   tracker$set_enabled(FALSE)
 
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
   tracker$discover_files()
   engine$load_file(tmp)
@@ -1305,8 +1305,8 @@ test_that("coverage tracking persists across multiple evaluations", {
   ), tmp)
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
   tracker$discover_files()
 
@@ -1336,7 +1336,7 @@ test_that("handles empty files", {
   file <- file.path(tmp_dir, "empty.rye")
   writeLines(character(0), file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Should not error
@@ -1355,7 +1355,7 @@ test_that("handles files with only comments and blanks", {
   file <- file.path(tmp_dir, "comments.rye")
   writeLines(c(";; Comment 1", "", ";; Comment 2", ""), file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Should have 0 code lines
@@ -1374,7 +1374,7 @@ test_that("handles 100% coverage", {
   file <- file.path(tmp_dir, "full.rye")
   writeLines(c("(define x 1)", "(define y 2)"), file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
 
   # Track all lines
@@ -1391,7 +1391,7 @@ test_that("handles very large execution counts", {
   tmp <- create_rye_file(c("(define x 1)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   rye_src <- make_rye_src(tmp, 1, 1)
 
   # Execute 1000 times (reduced from 10000 for speed)
@@ -1425,7 +1425,7 @@ test_that("HTML escaping prevents XSS", {
   )
   writeLines(content, file)
 
-  tracker <- RyeCoverageTracker$new(search_paths = tmp_dir)
+  tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
   suppressMessages(tracker$report_html(output_file = html_file))
 
@@ -1455,8 +1455,8 @@ test_that("uncalled function body is NOT covered", {
   ), tmp)
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
   # Load file but do NOT call f
@@ -1483,8 +1483,8 @@ test_that("called function body IS covered", {
   ), tmp)
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file(tmp)
@@ -1518,8 +1518,8 @@ test_that("module loading does not mark entire file as covered", {
   ), tmp)
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
   # Load the module - defines f, g, h but doesn't call them
@@ -1551,8 +1551,8 @@ test_that("if expression only covers taken then-branch", {
   ), tmp)
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file(tmp)
@@ -1578,8 +1578,8 @@ test_that("if expression only covers taken else-branch", {
   ), tmp)
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file(tmp)
@@ -1606,8 +1606,8 @@ test_that("if expression covers both branches when both are taken", {
   ), tmp)
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file(tmp)

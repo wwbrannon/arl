@@ -39,8 +39,8 @@ Key source files:
 | `R/macro.R` | Macro expansion |
 | `R/compiler.R` | AST-to-R compilation, TCO, optimizations |
 | `R/runtime.R` | Runtime helpers and base stdlib |
-| `R/rye-engine.R` | `RyeEngine` R6 class (main entry point) |
-| `R/rye-env.R` | Environment management |
+| `R/engine.R` | `Engine` R6 class (main entry point) |
+| `R/env.R` | Environment management |
 | `inst/rye/*.rye` | Modular stdlib (Rye source) |
 
 ## Code style

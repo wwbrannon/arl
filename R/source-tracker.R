@@ -80,7 +80,7 @@ SourceTracker <- R6::R6Class(
         return(value)
       }
 
-      if (r6_isinstance(value, "RyeCons")) {
+      if (r6_isinstance(value, "Cons")) {
         value$car <- self$strip_src(value$car)
         value$cdr <- self$strip_src(value$cdr)
         return(value)

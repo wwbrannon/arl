@@ -10,7 +10,7 @@ cat("=== Parser Benchmarks ===\n\n")
 # Benchmark 1: Flat lists of varying sizes
 cat("Benchmark 1: Flat lists\n")
 
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 flat_10 <- paste0("(list ", paste(seq_len(10), collapse = " "), ")")
 flat_100 <- paste0("(list ", paste(seq_len(100), collapse = " "), ")")
 flat_1000 <- paste0("(list ", paste(seq_len(1000), collapse = " "), ")")
@@ -32,7 +32,7 @@ cat("\n")
 # Benchmark 2: Nested lists (depth)
 cat("Benchmark 2: Nested lists (depth)\n")
 
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 nested_depth_5 <- "(list (list (list (list (list 1)))))"
 nested_depth_10 <- paste(rep("(list ", 10), collapse = "")
 nested_depth_10 <- paste0(nested_depth_10, "1", paste(rep(")", 10), collapse = ""))
@@ -55,7 +55,7 @@ cat("\n")
 # Benchmark 3: Mixed structures with quote sugar
 cat("Benchmark 3: Quote sugar and keywords\n")
 
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 code_quote <- "(list 'x `(1 ,a ,@b) :key value)"
 code_complex <- paste(rep(code_quote, 10), collapse = " ")
 code_complex <- paste0("(begin ", code_complex, ")")
@@ -74,7 +74,7 @@ cat("\n")
 # Benchmark 4: Real example files (pre-tokenized)
 cat("Benchmark 4: Real example files (parsing only)\n")
 
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0) {
@@ -97,7 +97,7 @@ cat("\n")
 # Benchmark 5: Lists with NULL values
 cat("Benchmark 5: Lists with NULL values (#nil)\n")
 
-engine5 <- RyeEngine$new()
+engine5 <- Engine$new()
 code_nulls <- "(list 1 #nil 2 #nil 3 #nil)"
 code_many_nulls <- paste0("(list ", paste(rep("#nil", 100), collapse = " "), ")")
 

@@ -16,7 +16,7 @@ Standard R package layout:
   - `runtime.R` - Runtime helpers (truthiness, assignment, stdlib functions)
   - `macro.R` - Macro expansion system
   - `quasiquote.R` - Shared quasiquote walker
-  - `rye-engine.R` - RyeEngine R6 class (main entry point)
+  - `rye-engine.R` - Engine R6 class (main entry point)
   - `rye-env.R` - Rye environment management
   - `repl.R` - Interactive REPL
   - `cli.R` - Command-line interface

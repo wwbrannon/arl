@@ -1,4 +1,4 @@
-# RyeDocParser: Parses ;;' annotation blocks from .rye source files.
+# DocParser: Parses ;;' annotation blocks from .rye source files.
 # Extracts @description, @examples, @seealso, @note, @section, @signature
 # for use by the compiler (baking docs into compiled code) and the
 # vignette generator (tools/docs/generate-stdlib-docs.R).
@@ -6,8 +6,8 @@
 #' @importFrom R6 R6Class
 #' @keywords internal
 #' @noRd
-RyeDocParser <- R6::R6Class(
-  "RyeDocParser",
+DocParser <- R6::R6Class(
+  "DocParser",
   public = list(
     #' @description Parse ;;' annotations from a .rye source file.
     #' @param file Path to a .rye source file.

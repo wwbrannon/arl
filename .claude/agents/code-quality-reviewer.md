@@ -18,7 +18,7 @@ Rye is a Scheme-like Lisp implemented in R. Key files:
 - **Core implementation** (~3000 lines in `R/`):
   - `compiler.R` - Compiles Rye S-expressions to R code; includes self-TCO
   - `runtime.R` - `CompiledRuntime` class: eval_compiled, primitives, helpers
-  - `rye-engine.R` - `RyeEngine` main entry point; boundary callers
+  - `rye-engine.R` - `Engine` main entry point; boundary callers
   - `tokenizer.R` - Lexical analysis
   - `parser.R` - S-expression parsing
   - `macro.R` - Macro expansion system

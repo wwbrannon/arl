@@ -27,7 +27,7 @@ cat("=== Profiling Tokenizer ===\n\n")
 # Profile 1: Large string literal (tests string accumulation)
 cat("Profile 1: Large string literal (10K chars)\n")
 
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 large_string <- paste0('"', paste(rep("x", 10000), collapse = ""), '"')
 
 result <- profile_component({
@@ -42,7 +42,7 @@ if (!is.null(result)) {
 # Profile 2: Deep nesting (tests parenthesis handling)
 cat("Profile 2: Deep nesting (100 levels)\n")
 
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 nested_100 <- paste(rep("(", 100), collapse = "")
 nested_100 <- paste0(nested_100, "x", paste(rep(")", 100), collapse = ""))
 
@@ -56,7 +56,7 @@ profile_component({
 # Profile 3: Real example file (fibonacci.rye)
 cat("Profile 3: Real example file (fibonacci.rye)\n")
 
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0 && "fibonacci" %in% names(real_workloads)) {
@@ -73,7 +73,7 @@ if (length(real_workloads) > 0 && "fibonacci" %in% names(real_workloads)) {
 # Profile 4: Many escape sequences
 cat("Profile 4: Many escape sequences\n")
 
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 many_escapes <- paste0('"', paste(rep('\\n\\t\\r\\"\\\\', 200), collapse = ""), '"')
 
 profile_component({
@@ -86,7 +86,7 @@ profile_component({
 # Profile 5: Mixed content (comprehensive)
 cat("Profile 5: Mixed content\n")
 
-engine5 <- RyeEngine$new()
+engine5 <- Engine$new()
 mixed <- '(define x 42) (+ 1 2 3) (str "hello" "world") (lambda (x) (* x x))'
 mixed_large <- paste(rep(mixed, 100), collapse = " ")
 

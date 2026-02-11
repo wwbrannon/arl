@@ -9,7 +9,7 @@ devtools::load_all()
 library(bench)
 
 # Create engine
-engine <- RyeEngine$new()
+engine <- Engine$new()
 
 # Helper to compile and extract R code
 compile_expr <- function(code_str) {

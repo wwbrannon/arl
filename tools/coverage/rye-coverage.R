@@ -1,7 +1,7 @@
 # Rye Code Coverage Tool - CI Orchestration Script
 #
 # Runs native tests with execution coverage tracking and generates reports.
-# Uses the RyeCoverageTracker class from R/coverage.R.
+# Uses the CoverageTracker class from R/coverage.R.
 #
 # Usage:
 #   source("tools/coverage/rye-coverage.R")
@@ -16,7 +16,7 @@ if (file.exists("DESCRIPTION") && requireNamespace("devtools", quietly = TRUE)) 
 
 #' Run tests with execution coverage using testthat infrastructure
 #'
-#' @param engine RyeEngine instance with coverage enabled
+#' @param engine Engine instance with coverage enabled
 #' @return Invisible NULL
 run_tests_with_coverage <- function(engine) {
   message("Running tests with coverage...")
@@ -41,7 +41,7 @@ run_tests_with_coverage <- function(engine) {
 #' @param html_file Path to HTML output file
 #' @param json_file Path to JSON output file (codecov format)
 #' @param summary_file Path to text summary file (for CI)
-#' @return RyeCoverageTracker instance (invisibly)
+#' @return CoverageTracker instance (invisibly)
 #' @export
 rye_coverage_report <- function(
   output = c("console", "html", "json"),
@@ -51,12 +51,12 @@ rye_coverage_report <- function(
 ) {
   # Create coverage tracker FIRST
   message("Creating coverage tracker...")
-  tracker <- rye::RyeCoverageTracker$new()
+  tracker <- rye::CoverageTracker$new()
 
   # Create engine with coverage tracker
   # This ensures stdlib loading is tracked from the start
   message("Initializing Rye engine with coverage tracking...")
-  engine <- rye::RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- rye::Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
   # Discover files to track
   message("Discovering .rye files (stdlib only, not tests)...")

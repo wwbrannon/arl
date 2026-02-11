@@ -14,14 +14,14 @@
 #' @examples
 #' \dontrun{
 #' # Default usage: Track Rye stdlib
-#' engine <- rye::RyeEngine$new()
+#' engine <- rye::Engine$new()
 #' tracker <- engine$enable_coverage()
 #' engine$eval(engine$read("(+ 1 2)"))
 #' tracker$report_console()
 #' tracker$report_html()  # Outputs to coverage/rye/index.html
 #'
 #' # Track custom directories
-#' tracker <- RyeCoverageTracker$new(
+#' tracker <- CoverageTracker$new(
 #'   search_paths = c("src/rye", "lib/rye"),
 #'   output_prefix = "myproject",
 #'   report_title = "My Project Coverage"
@@ -30,26 +30,26 @@
 #' tracker$report_html()  # Outputs to coverage/myproject/index.html
 #'
 #' # Include test files in coverage
-#' tracker <- RyeCoverageTracker$new(
+#' tracker <- CoverageTracker$new(
 #'   search_paths = "src",
 #'   include_tests = TRUE
 #' )
 #'
 #' # Custom path display in reports
-#' tracker <- RyeCoverageTracker$new(
+#' tracker <- CoverageTracker$new(
 #'   search_paths = "/home/user/myproject/rye",
 #'   path_strip_patterns = c(".*/myproject/rye/", ".*/myproject/tests/")
 #' )
 #'
 #' # Custom comment syntax (e.g., # instead of ;)
-#' tracker <- RyeCoverageTracker$new(
+#' tracker <- CoverageTracker$new(
 #'   search_paths = "src",
 #'   code_line_pattern = "^\\s*[^[:space:]#]"
 #' )
 #' }
 #' @export
-RyeCoverageTracker <- R6::R6Class(
-  "RyeCoverageTracker",
+CoverageTracker <- R6::R6Class(
+  "CoverageTracker",
   public = list(
     coverage = NULL,    # environment: "file:line" -> count
     enabled = TRUE,     # flag to enable/disable tracking

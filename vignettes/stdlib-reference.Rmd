@@ -45,7 +45,7 @@ For the full, per-function reference, see the individual stdlib reference pages:
 From R, you can create an engine with the stdlib already loaded:
 
 ```r
-engine <- RyeEngine$new()
+engine <- Engine$new()
 ```
 
 ## Core list operations

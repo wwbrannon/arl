@@ -10,7 +10,7 @@ cat("=== Macro Benchmarks ===\n\n")
 
 # Benchmark 1: Simple macros (single unquote)
 cat("Benchmark 1: Simple macro expansion\n")
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 
 # Define simple macro
 engine1$eval_text('
@@ -30,7 +30,7 @@ cat("\n")
 
 # Benchmark 2: Complex quasiquote (multiple unquotes, splicing)
 cat("Benchmark 2: Complex quasiquote\n")
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 
 engine2$eval_text('
 (defmacro complex (x . rest)
@@ -49,7 +49,7 @@ cat("\n")
 
 # Benchmark 3: Nested macro expansion
 cat("Benchmark 3: Nested macro expansion\n")
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 
 engine3$eval_text('
 (defmacro outer (x)
@@ -71,7 +71,7 @@ cat("\n")
 
 # Benchmark 4: Hygiene overhead
 cat("Benchmark 4: Hygiene processing\n")
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 
 engine4$eval_text('
 (defmacro let-macro (bindings . body)
@@ -91,7 +91,7 @@ cat("\n")
 
 # Benchmark 5: Macro-heavy code
 cat("Benchmark 5: Macro-heavy code expansion\n")
-engine5 <- RyeEngine$new()
+engine5 <- Engine$new()
 
 # Load standard macros from modules
 tryCatch({
@@ -125,7 +125,7 @@ cat("Benchmark 6: Real macro examples\n")
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0 && "macro_examples" %in% names(real_workloads)) {
-  engine6 <- RyeEngine$new()
+  engine6 <- Engine$new()
 
   bench_real <- benchmark_component(
     "macro-examples.rye" = {

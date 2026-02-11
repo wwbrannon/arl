@@ -55,7 +55,7 @@ devtools::load_all()
 library(rye)
 
 # Start the REPL
-engine <- RyeEngine$new()
+engine <- Engine$new()
 engine$repl()
 ```
 
@@ -66,7 +66,7 @@ The engine loads the base stdlib automatically.
 Install the CLI wrapper once after installing the package:
 
 ``` r
-rye::rye_install_cli()
+rye::install_cli()
 ```
 
 ``` bash

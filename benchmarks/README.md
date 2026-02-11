@@ -139,7 +139,7 @@ summarize_benchmark(results)
 # Profile a specific component
 source("benchmarks/benchmark-helpers.R")
 profile_component({
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
   tokens <- engine$tokenize(paste(rep("x", 10000), collapse = ""))
 }, "large-string")
 ```

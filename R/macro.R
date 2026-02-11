@@ -99,7 +99,7 @@ MacroExpander <- R6::R6Class(
       target_env <- private$normalize_env(env)
       eval_fn <- function(inner, e) private$eval_compiled_in_env(inner, e)
       wrap_fn <- function(val) private$hygiene_wrap(val, "call_site")
-      rye_quasiquote_expand(expr, target_env, depth, eval_fn, wrap_fn,
+      quasiquote_expand(expr, target_env, depth, eval_fn, wrap_fn,
                             skip_quote = FALSE)
     }
   ),
@@ -129,7 +129,7 @@ MacroExpander <- R6::R6Class(
     self$context$compiled_runtime$eval_compiled(compiled, env)
   },
     normalize_env = function(env) {
-      rye_resolve_env(env, self$context$env$env)
+      resolve_env(env, self$context$env$env)
     },
     macro_registry = function(env, create = TRUE) {
       registry <- self$context$env$get_registry(".rye_macros", env, create = create)
@@ -170,7 +170,7 @@ MacroExpander <- R6::R6Class(
       if (is.null(expr)) {
         return(FALSE)
       }
-      if (r6_isinstance(expr, "RyeCons")) {
+      if (r6_isinstance(expr, "Cons")) {
         if (private$contains_macro_head(expr$car, macro_names)) {
           return(TRUE)
         }
@@ -711,7 +711,7 @@ MacroExpander <- R6::R6Class(
           # Simple required parameter: x
           name <- as.character(arg)
           param_names <- c(param_names, name)
-          param_defaults[[name]] <- rye_missing_default()
+          param_defaults[[name]] <- missing_default()
           param_specs[[length(param_specs) + 1]] <- list(
             type = "name",
             formal = name,
@@ -744,7 +744,7 @@ MacroExpander <- R6::R6Class(
             }
 
             pattern <- arg_list[[2]]
-            default_expr <- rye_missing_default()
+            default_expr <- missing_default()
 
             if (length(arg_list) == 3) {
               default_expr <- arg_list[[3]]
@@ -843,7 +843,7 @@ MacroExpander <- R6::R6Class(
             # Bind the value
             if (spec$type == "pattern") {
               # Destructure into macro_env
-              RyeEnv$new(macro_env)$destructure_bind(spec$pattern, value, mode = "define")
+              Env$new(macro_env)$destructure_bind(spec$pattern, value, mode = "define")
             } else {
               # Simple binding
               assign(param_name, value, envir = macro_env)
@@ -859,7 +859,7 @@ MacroExpander <- R6::R6Class(
 
           if (rest_param_spec$type == "pattern") {
             # Destructure rest args
-            RyeEnv$new(macro_env)$destructure_bind(rest_param_spec$pattern, rest_args, mode = "define")
+            Env$new(macro_env)$destructure_bind(rest_param_spec$pattern, rest_args, mode = "define")
           } else {
             # Simple rest binding
             assign(rest_param_spec$name, rest_args, envir = macro_env)
@@ -887,7 +887,7 @@ MacroExpander <- R6::R6Class(
             # Bind the value
             if (spec$type == "pattern") {
               # Destructure into macro_env
-              RyeEnv$new(macro_env)$destructure_bind(spec$pattern, value, mode = "define")
+              Env$new(macro_env)$destructure_bind(spec$pattern, value, mode = "define")
             } else {
               # Simple binding
               assign(param_name, value, envir = macro_env)
@@ -925,7 +925,7 @@ MacroExpander <- R6::R6Class(
       registry <- private$macro_registry(env, create = TRUE)
       name_str <- as.character(name)
       if (exists(name_str, envir = registry, inherits = FALSE)) {
-        rye_unlock_binding(name_str, registry)
+        unlock_binding(name_str, registry)
       }
       registry[[name_str]] <- macro_fn
       lockBinding(name_str, registry)

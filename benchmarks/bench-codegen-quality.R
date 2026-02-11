@@ -32,7 +32,7 @@ max_expression_depth <- function(expr, depth = 0) {
 
 # Benchmark 1: Constant Folding - Runtime Performance
 cat("Benchmark 1: Constant Folding - Runtime Performance\n")
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 
 # Compile the expressions once
 arithmetic_expr <- engine1$read("(+ 1 2)")[[1]]
@@ -56,7 +56,7 @@ cat("\n")
 
 # Benchmark 2: Constant Folding - Code Size
 cat("Benchmark 2: Constant Folding - Code Size\n")
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 
 size_arithmetic <- measure_code_size("(+ 1 2)", engine2)
 size_nested <- measure_code_size("(+ (* 2 3) (* 4 5))", engine2)
@@ -72,7 +72,7 @@ cat("\n")
 
 # Benchmark 3: Math Functions - Runtime Performance
 cat("Benchmark 3: Math Functions - Runtime Performance\n")
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 
 abs_expr <- engine3$read("(abs -5)")[[1]]
 compiled_abs <- engine3$compiler$compile(abs_expr, engine3$env$env, strict = TRUE)
@@ -91,7 +91,7 @@ cat("\n")
 
 # Benchmark 4: Baseline - Non-constant expressions (should not change)
 cat("Benchmark 4: Baseline - Variable expressions (should not change)\n")
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 env <- new.env(parent = baseenv())
 env$x <- 10
 env$y <- 5

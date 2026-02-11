@@ -10,7 +10,7 @@ cat("=== Evaluator Benchmarks ===\n\n")
 
 # Benchmark 1: Simple arithmetic
 cat("Benchmark 1: Simple arithmetic\n")
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 
 bench_arithmetic <- benchmark_component(
   "Single add" = engine1$eval(engine1$read("(+ 1 2)")[[1]]),
@@ -24,7 +24,7 @@ cat("\n")
 
 # Benchmark 2: Function calls with varying argument counts
 cat("Benchmark 2: Function call overhead\n")
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 
 engine2$eval_text('(define f1 (lambda (x) x))')
 engine2$eval_text('(define f5 (lambda (a b c d e) (+ (+ (+ (+ a b) c) d) e)))')
@@ -42,7 +42,7 @@ cat("\n")
 
 # Benchmark 3: Special forms
 cat("Benchmark 3: Special forms\n")
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 
 bench_special <- benchmark_component(
   "if" = engine3$eval(engine3$read("(if #t 1 2)")[[1]]),
@@ -57,7 +57,7 @@ cat("\n")
 
 # Benchmark 4: Recursive functions
 cat("Benchmark 4: Recursive functions\n")
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 
 # Fibonacci
 engine4$eval_text('
@@ -94,7 +94,7 @@ cat("Benchmark 5: Real workloads\n")
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0) {
-  engine5 <- RyeEngine$new()
+  engine5 <- Engine$new()
 
   bench_real <- benchmark_component(
     "fibonacci.rye" = engine5$eval_text(real_workloads$fibonacci),
@@ -110,7 +110,7 @@ cat("\n")
 
 # Benchmark 6: Closures and environments
 cat("Benchmark 6: Closures and environments\n")
-engine6 <- RyeEngine$new()
+engine6 <- Engine$new()
 engine6$eval_text('(import binding)')
 
 engine6$eval_text('

@@ -7,7 +7,7 @@ source("benchmarks/benchmark-helpers.R")
 
 cat("=== R Interop Benchmarks ===\n\n")
 
-engine <- RyeEngine$new()
+engine <- Engine$new()
 
 # Benchmark 1: Calling R functions (positional vs keywords)
 cat("Benchmark 1: R function calls\n")

@@ -157,7 +157,7 @@ The [data analysis example](examples.html#data-analysis) shows a small analysis 
 from Rye that uses `data.frame`, `mean`, and `lm`. You can run it with:
 
 ```{r eval=FALSE}
-engine <- RyeEngine$new()
+engine <- Engine$new()
 engine$load_file(system.file("examples", "data-analysis.rye", package = "rye"))
 ```
 

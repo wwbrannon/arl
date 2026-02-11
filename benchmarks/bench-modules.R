@@ -7,7 +7,7 @@ source("benchmarks/benchmark-helpers.R")
 
 cat("=== Module/Load/Run Benchmarks ===\n\n")
 
-engine <- RyeEngine$new()
+engine <- Engine$new()
 
 # Prepare a small Rye file in a temp dir
 script_lines <- c(
@@ -22,11 +22,11 @@ cat("Benchmark 1: Module import\n")
 
 bench_import <- benchmark_component(
   "import binding" = {
-    eng <- RyeEngine$new()
+    eng <- Engine$new()
     eng$eval_text("(import binding)")
   },
   "import control" = {
-    eng <- RyeEngine$new()
+    eng <- Engine$new()
     eng$eval_text("(import control)")
   },
   iterations = 200,
@@ -40,11 +40,11 @@ cat("Benchmark 2: load/run overhead\n")
 
 bench_load_run <- benchmark_component(
   "load" = {
-    eng <- RyeEngine$new()
+    eng <- Engine$new()
     eng$eval_text(paste0("(load \"", script_path, "\")"))
   },
   "run" = {
-    eng <- RyeEngine$new()
+    eng <- Engine$new()
     eng$eval_text(paste0("(run \"", script_path, "\")"))
   },
   iterations = 200,

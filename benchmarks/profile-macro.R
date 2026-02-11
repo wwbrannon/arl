@@ -26,7 +26,7 @@ cat("=== Profiling Macro Expansion ===\n\n")
 
 # Profile 1: Complex quasiquote with unquote-splicing
 cat("Profile 1: Complex quasiquote\n")
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 
 engine1$eval_text('
 (defmacro complex (x . rest)
@@ -44,7 +44,7 @@ profile_component({
 
 # Profile 2: Nested macro expansion
 cat("Profile 2: Nested macro expansion\n")
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 
 engine2$eval_text('
 (defmacro outer (x)
@@ -68,7 +68,7 @@ profile_component({
 
 # Profile 3: Hygiene processing overhead
 cat("Profile 3: Hygiene processing\n")
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 
 engine3$eval_text('
 (defmacro let-like (bindings . body)
@@ -90,7 +90,7 @@ cat("Profile 4: Real macro examples file\n")
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0 && "macro_examples" %in% names(real_workloads)) {
-  engine4 <- RyeEngine$new()
+  engine4 <- Engine$new()
 
   old_quiet <- Sys.getenv("RYE_QUIET", unset = NA)
   on.exit({
@@ -121,7 +121,7 @@ if (length(real_workloads) > 0 && "macro_examples" %in% names(real_workloads)) {
 
 # Profile 5: Multiple macro tree walks
 cat("Profile 5: Macro with large body (tests tree walking)\n")
-engine5 <- RyeEngine$new()
+engine5 <- Engine$new()
 
 engine5$eval_text('
 (defmacro when (test . body)

@@ -10,7 +10,7 @@ The Rye coverage system tracks **execution coverage** — which lines of `.rye` 
 
 ### Core Components
 
-1. **RyeCoverageTracker** (`R/coverage.R`)
+1. **CoverageTracker** (`R/coverage.R`)
    - R6 class that tracks line-level execution counts
    - Generates reports in multiple formats (console, HTML, JSON)
    - Exported for use by package users and CI tools
@@ -30,8 +30,8 @@ The Rye coverage system tracks **execution coverage** — which lines of `.rye` 
    - `enable_coverage()` / `disable_coverage()` / `get_coverage()` / `reset_coverage()`
 
 5. **Test Propagation** (`tests/testthat/helper-engine.R`)
-   - `make_engine()` checks `getOption("rye.coverage_tracker")` and passes the tracker through to `RyeEngine$new()`
-   - Test files use `make_engine()` instead of `RyeEngine$new()` so that coverage data is collected across all tests, not just stdlib loading
+   - `make_engine()` checks `getOption("rye.coverage_tracker")` and passes the tracker through to `Engine$new()`
+   - Test files use `make_engine()` instead of `Engine$new()` so that coverage data is collected across all tests, not just stdlib loading
 
 6. **CI Tool** (`tools/coverage/rye-coverage.R`)
    - Sets `options(rye.coverage_tracker = tracker)` before running the test suite
@@ -53,8 +53,8 @@ The tracker filters on both sides: injected calls only record hits for lines in 
 # Create tracker first, then engine with tracker
 # This ensures coverage is tracked from the start, including stdlib loading
 library(rye)
-tracker <- RyeCoverageTracker$new()
-engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+tracker <- CoverageTracker$new()
+engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
 # Run code
 engine$load_file("my-code.rye")
@@ -109,7 +109,7 @@ Codecov-compatible JSON format for CI integration:
    - Tracks R implementation in `R/` directory
 
 2. **Rye Code Coverage** (`make coverage-rye`)
-   - Uses `RyeCoverageTracker`
+   - Uses `CoverageTracker`
    - Tracks Rye language code in `inst/rye/stdlib/`
    - Runs the full testthat suite with coverage propagated to all test engines
 
@@ -125,8 +125,8 @@ Codecov-compatible JSON format for CI integration:
 
 1. **Tracker Creation**: Coverage tracker is created **before** engine initialization
    ```r
-   tracker <- RyeCoverageTracker$new()
-   engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+   tracker <- CoverageTracker$new()
+   engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
    ```
    `use_env_cache = FALSE` is required: cached modules lack source info for instrumentation, and instrumented code must not be written to cache.
 
@@ -144,10 +144,10 @@ The coverage tool needs to track execution across all test engines, not just the
 
 1. `tools/coverage/rye-coverage.R` sets `options(rye.coverage_tracker = tracker)` before running the test suite
 2. `tests/testthat/helper-engine.R` defines `make_engine()` which checks this option
-3. Test files use `make_engine()` instead of bare `RyeEngine$new()`
+3. Test files use `make_engine()` instead of bare `Engine$new()`
 4. When the option is set, `make_engine()` passes the tracker and forces `use_env_cache = FALSE`
 
-Some test files must use `RyeEngine$new()` directly because they inspect compiler internals that change under instrumentation:
+Some test files must use `Engine$new()` directly because they inspect compiler internals that change under instrumentation:
 - `test-coverage.R` — tests coverage itself with explicit tracker arguments
 - `test-cache-options.R` — tests caching with explicit `use_env_cache` arguments
 - `test-compiler-optimizations.R` — checks compiled AST structure (e.g., constant folding produces literals)

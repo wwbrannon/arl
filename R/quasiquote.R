@@ -12,7 +12,7 @@
 # @param skip_quote  If TRUE, `(quote ...)` forms pass through unchanged
 #                    (runtime behavior).
 # @return The expanded expression.
-rye_quasiquote_expand <- function(expr, env, depth, eval_fn, wrap_fn,
+quasiquote_expand <- function(expr, env, depth, eval_fn, wrap_fn,
                                   skip_quote) {
   if (!is.call(expr)) {
     return(expr)
@@ -37,7 +37,7 @@ rye_quasiquote_expand <- function(expr, env, depth, eval_fn, wrap_fn,
       }
       return(as.call(list(
         as.symbol("unquote"),
-        rye_quasiquote_expand(expr[[2]], env, depth - 1L, eval_fn, wrap_fn,
+        quasiquote_expand(expr[[2]], env, depth - 1L, eval_fn, wrap_fn,
                               skip_quote)
       )))
     }
@@ -54,7 +54,7 @@ rye_quasiquote_expand <- function(expr, env, depth, eval_fn, wrap_fn,
       }
       return(as.call(list(
         as.symbol("quasiquote"),
-        rye_quasiquote_expand(expr[[2]], env, depth + 1L, eval_fn, wrap_fn,
+        quasiquote_expand(expr[[2]], env, depth + 1L, eval_fn, wrap_fn,
                               skip_quote)
       )))
     }
@@ -93,14 +93,14 @@ rye_quasiquote_expand <- function(expr, env, depth, eval_fn, wrap_fn,
         if (k > length(result)) result <- c(result, vector("list", k))
         result[[k]] <- as.call(list(
           as.symbol("unquote-splicing"),
-          rye_quasiquote_expand(elem[[2]], env, depth - 1L, eval_fn, wrap_fn,
+          quasiquote_expand(elem[[2]], env, depth - 1L, eval_fn, wrap_fn,
                                 skip_quote)
         ))
       }
     } else {
       k <- k + 1L
       if (k > length(result)) result <- c(result, vector("list", k))
-      result[[k]] <- rye_quasiquote_expand(elem, env, depth, eval_fn, wrap_fn,
+      result[[k]] <- quasiquote_expand(elem, env, depth, eval_fn, wrap_fn,
                                            skip_quote)
     }
   }

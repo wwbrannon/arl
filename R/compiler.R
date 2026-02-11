@@ -716,7 +716,7 @@ Compiler <- R6::R6Class(
     lambda_params = function(args_expr) {
       arg_items <- if (is.null(args_expr)) {
         list()
-      } else if (r6_isinstance(args_expr, "RyeCons")) {
+      } else if (r6_isinstance(args_expr, "Cons")) {
         parts <- args_expr$parts()
         c(parts$prefix, list(as.symbol(".")), list(parts$tail))
       } else if (is.call(args_expr) && length(args_expr) > 0) {
@@ -929,7 +929,7 @@ Compiler <- R6::R6Class(
         return(private$fail("defmacro requires a symbol as the first argument"))
       }
       params_expr <- expr[[3]]
-      if (r6_isinstance(params_expr, "RyeCons")) {
+      if (r6_isinstance(params_expr, "Cons")) {
         parts <- params_expr$parts()
         params_expr <- as.call(c(parts$prefix, list(as.symbol(".")), list(parts$tail)))
       }
@@ -1776,7 +1776,7 @@ Compiler <- R6::R6Class(
     # test line since branches are tracked separately by wrap_branch_coverage.
     make_coverage_call_for_stmt = function(src_expr) {
       if (is.null(self$context$coverage_tracker)) return(NULL)
-      if (rye_should_narrow_coverage(src_expr)) {
+      if (should_narrow_coverage(src_expr)) {
         src <- private$src_get(src_expr)
         if (is.null(src) || is.null(src$file) || is.null(src$start_line)) return(NULL)
         self$context$coverage_tracker$register_coverable(src$file, src$start_line, src$start_line)

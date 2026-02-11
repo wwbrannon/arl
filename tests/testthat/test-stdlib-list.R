@@ -166,7 +166,7 @@ test_that("cons adds element to front", {
 test_that("cons with non-list cdr produces dotted pair (rye_cons)", {
   env <- stdlib_env(engine, new.env())
   result <- engine$eval_in_env(engine$read("(cons 'a 'b)")[[1]], env)
-  expect_true(r6_isinstance(result, "RyeCons"))
+  expect_true(r6_isinstance(result, "Cons"))
   expect_equal(as.character(result$car), "a")
   expect_equal(as.character(result$cdr), "b")
 })
@@ -178,17 +178,17 @@ test_that("car and cdr on dotted pair", {
   expect_equal(env$cdr(pair), 42)
 })
 
-test_that("list? is false but pair? is true for dotted pair (RyeCons)", {
+test_that("list? is false but pair? is true for dotted pair (Cons)", {
   env <- stdlib_env(engine, new.env())
   pair <- engine$eval_in_env(engine$read("(cons 1 2)")[[1]], env)
   expect_false(env$`list?`(pair))
-  expect_true(env$`pair?`(pair))  # pair? = dotted pair (RyeCons)
+  expect_true(env$`pair?`(pair))  # pair? = dotted pair (Cons)
 })
 
 test_that("__as-list on improper list returns proper prefix only", {
   env <- stdlib_env(engine, new.env())
   pl <- engine$read("'(a b . c)")[[1]][[2]]
-  expect_true(r6_isinstance(pl, "RyeCons"))
+  expect_true(r6_isinstance(pl, "Cons"))
   prefix <- env$`__as-list`(pl)
   expect_equal(length(prefix), 2)
   expect_equal(as.character(prefix[[1]]), "a")

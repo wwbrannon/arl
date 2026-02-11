@@ -4,7 +4,7 @@
 #' Evaluate Rye code from text using an engine
 #'
 #' @param text Rye code as string
-#' @param engine RyeEngine instance
+#' @param engine Engine instance
 #' @param env Environment to evaluate in (defaults to engine env)
 #' @return Result of last expression
 eval_text <- function(text, engine, env = NULL) {

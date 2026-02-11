@@ -10,7 +10,7 @@
 #' @field compiled_runtime Compiled runtime helper for executing compiled expressions.
 #' @field compiler Compiler for AST-to-R translation.
 #' @field help_system Help system for Rye topics.
-#' @field env RyeEnv backing the engine.
+#' @field env Env backing the engine.
 #' @field source_tracker Source tracker used for error context.
 #' @field module_cache Module cache for caching compiled modules.
 #' @field use_env_cache Logical. If TRUE, enables the env cache (full serialized
@@ -18,7 +18,7 @@
 #'   If FALSE (default), only the expr cache (compiled expressions) is used, which
 #'   is always safe. Can be set via engine initialization parameter or global
 #'   option `rye.use_env_cache`.
-#' @param env Optional environment or RyeEnv used as the engine base.
+#' @param env Optional environment or Env used as the engine base.
 #' @param parent Optional parent environment for the new environment.
 #' @param source Character string containing Rye source.
 #' @param source_name Optional source name for error reporting.
@@ -26,18 +26,18 @@
 #' @param expr Rye expression (symbol/call/atomic value).
 #' @param exprs List of Rye expressions to evaluate.
 #' @param text Character string of Rye code to read/eval.
-#' @param env Optional environment or RyeEnv to evaluate in (defaults to engine env).
+#' @param env Optional environment or Env to evaluate in (defaults to engine env).
 #' @param path File path to load.
 #' @param create_scope Logical; evaluate file in a child environment when TRUE.
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
 #' @param topic Help topic as a single string.
 #' @param compiled_only Logical; if TRUE, require compiled evaluation.
 #' @examples
-#' engine <- RyeEngine$new()
+#' engine <- Engine$new()
 #' engine$eval_text("(+ 1 2 3)")
 #' @export
-RyeEngine <- R6::R6Class(
-  "RyeEngine",
+Engine <- R6::R6Class(
+  "Engine",
   public = list(
     tokenizer = NULL,
     parser = NULL,
@@ -58,7 +58,7 @@ RyeEngine <- R6::R6Class(
     #' @param use_env_cache Optional logical. If TRUE, enables the env cache for 4x faster
     #'   module loading. Only safe when dependencies don't change. Defaults to NULL, which
     #'   inherits from global option `getOption("rye.use_env_cache", FALSE)`.
-    #' @param coverage_tracker Optional RyeCoverageTracker instance to enable coverage tracking
+    #' @param coverage_tracker Optional CoverageTracker instance to enable coverage tracking
     #'   from the start. If provided, coverage will be tracked during stdlib loading.
     initialize = function(env = NULL, parent = NULL, use_env_cache = NULL, coverage_tracker = NULL) {
       # Priority: explicit parameter > global option > default FALSE
@@ -78,7 +78,7 @@ RyeEngine <- R6::R6Class(
         options(rye.env_cache_warning_shown = TRUE)
       }
 
-      self$env <- RyeEnv$new(env = env, parent = parent)
+      self$env <- Env$new(env = env, parent = parent)
       self$source_tracker <- SourceTracker$new()
       self$tokenizer <- Tokenizer$new()
       self$parser <- Parser$new(self$source_tracker)
@@ -187,11 +187,11 @@ RyeEngine <- R6::R6Class(
       # Cons-cell primitives (bound in stdlib env so no globalenv/package lookup)
       #
 
-      env$`__cons` <- function(car, cdr) RyeCons$new(car, cdr)
-      env$`__cons-as-list` <- function(x) if (r6_isinstance(x, "RyeCons")) x$as_list() else list()
-      env$`__cons-parts` <- function(x) if (r6_isinstance(x, "RyeCons")) x$parts() else list(prefix = list(), tail = x)
+      env$`__cons` <- function(car, cdr) Cons$new(car, cdr)
+      env$`__cons-as-list` <- function(x) if (r6_isinstance(x, "Cons")) x$as_list() else list()
+      env$`__cons-parts` <- function(x) if (r6_isinstance(x, "Cons")) x$parts() else list(prefix = list(), tail = x)
 
-      env$`pair?` <- function(x) r6_isinstance(x, "RyeCons")
+      env$`pair?` <- function(x) r6_isinstance(x, "Cons")
 
       #
       # Macro builtins
@@ -257,17 +257,17 @@ RyeEngine <- R6::R6Class(
       # delay is a compiler special form, but these can be defined here
 
       env$`promise?` <- function(x) {
-        r6_isinstance(x, "RyePromise")
+        r6_isinstance(x, "Promise")
       }
       env$force <- function(x) {
-        if (!r6_isinstance(x, "RyePromise")) {
+        if (!r6_isinstance(x, "Promise")) {
           return(x)
         }
         x$value()
       }
 
       env$`promise-expr` <- function(p) {
-        if (!r6_isinstance(p, "RyePromise")) {
+        if (!r6_isinstance(p, "Promise")) {
           stop("promise-expr requires a promise (created with delay)")
         }
         p$get_expr()
@@ -440,10 +440,10 @@ RyeEngine <- R6::R6Class(
         deps <- FileDeps$new(dir = stdlib_dir)
         load_order <- deps$get_load_order()
       }
-      target_rye <- RyeEnv$new(resolved)
+      target_rye <- Env$new(resolved)
       for (name in load_order) {
         if (!target_rye$module_registry$exists(name)) {
-          path <- rye_resolve_stdlib_path(name)
+          path <- resolve_stdlib_path(name)
           if (is.null(path)) {
             stop("stdlib module not found: ", name)
           }
@@ -491,7 +491,7 @@ RyeEngine <- R6::R6Class(
         if (module_registry$exists(path)) {
           return(invisible(NULL))
         }
-        stdlib_path <- rye_resolve_stdlib_path(path)
+        stdlib_path <- resolve_stdlib_path(path)
         if (!is.null(stdlib_path)) {
           path <- stdlib_path
         }
@@ -522,7 +522,7 @@ RyeEngine <- R6::R6Class(
               module_registry$register(module_name, module_env, exports)
 
               # Also register by absolute path
-              absolute_path <- rye_normalize_path_absolute(path)
+              absolute_path <- normalize_path_absolute(path)
               module_registry$alias(absolute_path, module_name)
 
               return(invisible(NULL))
@@ -545,7 +545,7 @@ RyeEngine <- R6::R6Class(
               module_registry$register(module_name, module_env, exports)
 
               # Register by absolute path
-              absolute_path <- rye_normalize_path_absolute(path)
+              absolute_path <- normalize_path_absolute(path)
               module_registry$alias(absolute_path, module_name)
 
               # Install helpers and setup
@@ -645,7 +645,7 @@ RyeEngine <- R6::R6Class(
     #' @description
     #' Start the Rye REPL using this engine.
     repl = function() {
-      RyeREPL$new(engine = self)$run()
+      REPL$new(engine = self)$run()
     },
 
     #' @description
@@ -662,7 +662,7 @@ RyeEngine <- R6::R6Class(
 
       # Create tracker if needed
       if (is.null(self$compiled_runtime$context$coverage_tracker)) {
-        self$compiled_runtime$context$coverage_tracker <- RyeCoverageTracker$new()
+        self$compiled_runtime$context$coverage_tracker <- CoverageTracker$new()
       }
 
       self$compiled_runtime$context$coverage_tracker$set_enabled(TRUE)
@@ -698,7 +698,7 @@ RyeEngine <- R6::R6Class(
 
   private = list(
     resolve_env_arg = function(env) {
-      rye_resolve_env(env, self$env$env)
+      resolve_env(env, self$env$env)
     },
 
     load_builtin_docs = function(env) {
@@ -805,11 +805,11 @@ RyeEngine <- R6::R6Class(
 #' Get the default Rye engine
 #'
 #' @export
-rye_default_engine <- local({
+default_engine <- local({
   engine <- NULL
   function() {
     if (is.null(engine)) {
-      engine <<- RyeEngine$new()
+      engine <<- Engine$new()
     }
     engine
   }

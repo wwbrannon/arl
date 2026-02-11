@@ -1,4 +1,4 @@
-rye_missing_default <- function() {
+missing_default <- function() {
   structure(list(), class = "rye_missing_default")
 }
 
@@ -23,13 +23,13 @@ rye_missing_default <- function() {
   if (is.character(pattern) && length(pattern) == 1L) {
     pattern <- as.symbol(pattern)
   }
-  # Fast path: inline simple symbol case to avoid RyeEnv$new() allocation
+  # Fast path: inline simple symbol case to avoid Env$new() allocation
   if (is.symbol(pattern)) {
     name <- as.character(pattern)
     if (identical(mode, "define")) {
       base::assign(name, value, envir = env)
     } else {
-      # set! — walk parent chain (replicates RyeEnv$find_existing_env)
+      # set! — walk parent chain (replicates Env$find_existing_env)
       if (!exists(name, envir = env, inherits = TRUE)) {
         stop(sprintf("set!: variable '%s' is not defined", name), call. = FALSE)
       }
@@ -41,18 +41,18 @@ rye_missing_default <- function() {
     }
     return(invisible(NULL))
   }
-  # Slow path: destructuring (cons cells, lists, calls) — need full RyeEnv
+  # Slow path: destructuring (cons cells, lists, calls) — need full Env
   ctx <- if (identical(mode, "define")) "define" else "set!"
-  RyeEnv$new(env)$assign_pattern(pattern, value, mode = mode, context = ctx)
+  Env$new(env)$assign_pattern(pattern, value, mode = mode, context = ctx)
 }
 
-# EvalContext: Shared context for MacroExpander and CompiledRuntime. Holds env (RyeEnv)
+# EvalContext: Shared context for MacroExpander and CompiledRuntime. Holds env (Env)
 # and source_tracker. Created once per engine; macro_expander and compiler are set after.
 #
-# @field env RyeEnv for the engine.
+# @field env Env for the engine.
 # @field source_tracker SourceTracker for error locations.
-# @field macro_expander Set by RyeEngine after creation.
-# @field compiled_runtime Set by RyeEngine after creation.
+# @field macro_expander Set by Engine after creation.
+# @field compiled_runtime Set by Engine after creation.
 #
 #' @keywords internal
 #' @noRd
@@ -67,13 +67,13 @@ EvalContext <- R6::R6Class(
     use_env_cache = NULL,
     coverage_tracker = NULL,
     # @description Create context. macro_expander and compiler are assigned by the engine.
-    # @param env RyeEnv instance.
+    # @param env Env instance.
     # @param source_tracker SourceTracker instance.
     # @param use_env_cache Logical. If TRUE, enables the env cache.
-    # @param coverage_tracker Optional RyeCoverageTracker instance.
+    # @param coverage_tracker Optional CoverageTracker instance.
     initialize = function(env, source_tracker, use_env_cache = FALSE, coverage_tracker = NULL) {
-      if (!r6_isinstance(env, "RyeEnv")) {
-        stop("EvalContext requires a RyeEnv")
+      if (!r6_isinstance(env, "Env")) {
+        stop("EvalContext requires a Env")
       }
       self$env <- env
       self$source_tracker <- source_tracker
@@ -122,7 +122,7 @@ CompiledRuntime <- R6::R6Class(
         # (e.g. with use_env_cache = FALSE under coverage).
         if (!identical(get0(".rye_env", envir = env, inherits = FALSE), env)) {
           if (exists(".rye_env", envir = env, inherits = FALSE)) {
-            rye_unlock_binding(".rye_env", env)
+            unlock_binding(".rye_env", env)
           }
           assign(".rye_env", env, envir = env)
           lockBinding(".rye_env", env)
@@ -259,9 +259,9 @@ CompiledRuntime <- R6::R6Class(
         if (is.null(module_path)) {
           stop(sprintf("Module not found: %s", path_str))
         }
-        registry_key <- rye_normalize_path_absolute(module_path)
+        registry_key <- normalize_path_absolute(module_path)
       } else {
-        module_name <- RyeEnv$new(env)$symbol_or_string(arg_value, "import requires a module name symbol or string")
+        module_name <- Env$new(env)$symbol_or_string(arg_value, "import requires a module name symbol or string")
         registry_key <- module_name
       }
       shared_registry <- self$context$env$module_registry
@@ -321,11 +321,11 @@ CompiledRuntime <- R6::R6Class(
         }
         self$eval_compiled(compiled, e)
       }
-      rye_quasiquote_expand(expr, env, 1L, eval_fn, wrap_fn = identity,
+      quasiquote_expand(expr, env, 1L, eval_fn, wrap_fn = identity,
                             skip_quote = TRUE)
     },
     promise_new_compiled = function(compiled_expr, env) {
-      RyePromise$new(compiled_expr, env, self$eval_compiled)
+      Promise$new(compiled_expr, env, self$eval_compiled)
     },
     defmacro_compiled = function(name, params, body_arg, docstring, env) {
       body_list <- if (is.call(body_arg) && length(body_arg) >= 1 && identical(as.character(body_arg[[1]]), "begin")) {
@@ -344,7 +344,7 @@ CompiledRuntime <- R6::R6Class(
       has_file_path <- !is.null(src_file) && is.character(src_file) &&
         length(src_file) == 1L && nzchar(src_file) && grepl("[/\\\\]", src_file)
       if (has_file_path) {
-        absolute_path <- rye_normalize_path_absolute(src_file)
+        absolute_path <- normalize_path_absolute(src_file)
         self$context$env$module_registry$alias(absolute_path, module_name)
       }
       self$install_helpers(module_env)
@@ -352,11 +352,11 @@ CompiledRuntime <- R6::R6Class(
       # Parse ;;' annotations from source file (or raw text fallback)
       if (!is.null(src_file) && is.character(src_file) &&
           length(src_file) == 1L && nzchar(src_file) && file.exists(src_file)) {
-        doc_parser <- RyeDocParser$new()
+        doc_parser <- DocParser$new()
         parsed_annotations <- doc_parser$parse_file(src_file)
         self$context$compiler$annotations <- parsed_annotations$functions
       } else if (!is.null(self$context$compiler$source_text)) {
-        doc_parser <- RyeDocParser$new()
+        doc_parser <- DocParser$new()
         parsed_annotations <- doc_parser$parse_text(self$context$compiler$source_text)
         self$context$compiler$annotations <- parsed_annotations$functions
       }
@@ -390,7 +390,7 @@ CompiledRuntime <- R6::R6Class(
               # instrumented separately (if, define/defmacro wrapping lambda).
               # For everything else, use full source span.
               end_line <- rye_src$start_line
-              narrow <- rye_should_narrow_coverage(body_exprs[[i]])
+              narrow <- should_narrow_coverage(body_exprs[[i]])
               if (!narrow && !is.null(rye_src$end_line)) {
                 end_line <- rye_src$end_line
               }
@@ -500,7 +500,7 @@ CompiledRuntime <- R6::R6Class(
         }
         return(NULL)
       }
-      stdlib_path <- rye_resolve_stdlib_path(name)
+      stdlib_path <- resolve_stdlib_path(name)
       if (!is.null(stdlib_path)) {
         return(stdlib_path)
       }

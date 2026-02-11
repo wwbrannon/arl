@@ -170,7 +170,7 @@ test-native: clean-cache ## help: Run a single native test file (usage: make tes
 		echo "Error: FILE parameter required. Usage: make test-native FILE=test-equality-types"; \
 		exit 1; \
 	fi
-	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- RyeEngine\$$new(); env <- engine\$$env\$$env; run_native_test_file('tests/native/$(FILE).rye', engine, env)"
+	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- Engine\$$new(); env <- engine\$$env\$$env; run_native_test_file('tests/native/$(FILE).rye', engine, env)"
 
 .PHONY: bench
 bench: clean-cache ## help: Run all benchmarks
@@ -206,7 +206,7 @@ bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD
 
 .PHONY: stdlib-show-order
 stdlib-show-order: ## help: Print stdlib load order (topological sort)
-	R -q -e "devtools::load_all(); rye:::rye_stdlib_print_order()"
+	R -q -e "devtools::load_all(); rye:::stdlib_print_order()"
 
 #
 ## CRAN submission helper targets

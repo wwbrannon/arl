@@ -39,12 +39,12 @@ test_that("help shows usage for lambda without docstring", {
 })
 
 # Initialization tests
-test_that("HelpSystem initialization requires RyeEnv and MacroExpander", {
+test_that("HelpSystem initialization requires Env and MacroExpander", {
   env <- new.env()
-  rye_env <- rye:::RyeEnv$new(env)
+  rye_env <- rye:::Env$new(env)
 
   # Need both rye_env and macro_expander
-  expect_true(r6_isinstance(rye_env, "RyeEnv"))
+  expect_true(r6_isinstance(rye_env, "Env"))
 
   # Create full engine to get macro_expander
   engine <- make_engine()

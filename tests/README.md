@@ -26,7 +26,7 @@ Traditional R tests using the testthat framework. These tests:
 **Example:**
 ```r
 test_that("lambda creates functions", {
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
   env <- new.env()
   result <- engine$eval_in_env(
     engine$read("((lambda (x) (* x 2)) 5)")[[1]], env)
@@ -117,7 +117,7 @@ Use `skip()` to mark a test as skipped (only available in native tests):
 
 Native tests are run by `helper-native.R`:
 
-1. Creates a fresh `RyeEngine` with stdlib loaded
+1. Creates a fresh `Engine` with stdlib loaded
 2. Loads `helper-native.rye` to provide test utilities (like `skip`)
 3. Discovers all `.rye` files in `native/`
 4. Loads each file and finds all `test-*` functions
@@ -239,7 +239,7 @@ testthat::test_file("tests/testthat/test-file.R")
 
 For native tests, you can load and run them manually:
 ```r
-engine <- RyeEngine$new()
+engine <- Engine$new()
 env <- engine$env$env
 source("tests/testthat/helper-native.R")  # Loads skip() etc.
 engine$load_file("tests/native/test-something.rye", env)

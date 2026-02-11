@@ -1,10 +1,10 @@
-# RyeCoverageTracker Unit Tests
+# CoverageTracker Unit Tests
 
-This document describes the comprehensive unit test suite for the `RyeCoverageTracker` class.
+This document describes the comprehensive unit test suite for the `CoverageTracker` class.
 
 ## Overview
 
-The test suite provides complete coverage of the coverage tracking system with 87 test scenarios across all 8 public methods. Tests verify correct behavior for tracking execution, discovering files, generating reports, and integrating with RyeEngine.
+The test suite provides complete coverage of the coverage tracking system with 87 test scenarios across all 8 public methods. Tests verify correct behavior for tracking execution, discovering files, generating reports, and integrating with Engine.
 
 **Test File:** `tests/testthat/test-coverage.R` (1,700+ lines)
 
@@ -27,7 +27,7 @@ The test suite provides complete coverage of the coverage tracking system with 8
 - **report_json()** - Codecov format, null/0 handling
 
 ### Phase 5: Integration (6 tests)
-- RyeEngine integration, module loading, persistence
+- Engine integration, module loading, persistence
 
 ### Edge Cases (12 tests)
 - Long paths, empty files, large counts, XSS prevention
@@ -65,7 +65,7 @@ test_that("track() marks single line as executed", {
   tmp <- create_rye_file(c(";; comment", "(define x 1)", "(define y 2)"))
   on.exit(unlink(tmp))
 
-  tracker <- RyeCoverageTracker$new()
+  tracker <- CoverageTracker$new()
   rye_src <- make_rye_src(tmp, start_line = 2, end_line = 2)
   tracker$track(rye_src)
 
@@ -118,12 +118,12 @@ line_html <- gsub(">", "&gt;", line_html)
 
 ### Integration Testing
 
-Verifies real RyeEngine integration:
+Verifies real Engine integration:
 
 ```r
-test_that("RyeEngine tracks coverage for executed code", {
-  tracker <- RyeCoverageTracker$new(search_paths = dirname(tmp))
-  engine <- RyeEngine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+test_that("Engine tracks coverage for executed code", {
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
   tracker$discover_files()
   engine$load_file(tmp)
@@ -195,7 +195,7 @@ covr::report(cov)
 - ✓ All 8 public methods covered
 - ✓ >90% line coverage target
 - ✓ Security tests included (HTML escaping)
-- ✓ Integration tests with RyeEngine
+- ✓ Integration tests with Engine
 - ✓ Proper cleanup (no temp file leaks)
 - ✓ <30 second execution time
 
@@ -225,7 +225,7 @@ Found 84 test blocks:
 
 ### Why Extensive Testing?
 
-RyeCoverageTracker is critical infrastructure:
+CoverageTracker is critical infrastructure:
 1. **Security Impact** - Generates HTML that could be vulnerable to XSS
 2. **CI Integration** - Must produce reliable codecov-compatible output
 3. **File I/O** - Complex file system traversal and temp file handling
@@ -237,14 +237,14 @@ RyeCoverageTracker is critical infrastructure:
 1. **Security** - HTML escaping must work correctly (XSS prevention)
 2. **Core Tracking** - `track()` must accurately record execution
 3. **Reports** - HTML/JSON output must be valid and correct
-4. **Integration** - Must work with RyeEngine without side effects
+4. **Integration** - Must work with Engine without side effects
 5. **Edge Cases** - Must handle unusual inputs gracefully
 
 ### Mock vs. Real Objects
 
 - **Mock objects** (`make_rye_src`) for unit testing `track()`
 - **Real files** (tempfile) for file I/O and discovery tests
-- **Real engine** (RyeEngine) for integration tests
+- **Real engine** (Engine) for integration tests
 
 This balances speed (mocks are fast) with confidence (real objects test actual behavior).
 

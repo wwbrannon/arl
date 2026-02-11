@@ -121,7 +121,7 @@ options(rye.use_env_cache = TRUE)
 
 **Per-engine setting** (overrides global):
 ```r
-engine <- RyeEngine$new(use_env_cache = TRUE)
+engine <- Engine$new(use_env_cache = TRUE)
 ```
 
 **Warning**: When the env cache is enabled, a one-time warning is displayed:

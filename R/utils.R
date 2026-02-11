@@ -1,7 +1,7 @@
 #' Test if an object is an R6 instance of a given class
 #'
 #' @param obj Any object.
-#' @param cls Character class name (e.g. \code{"RyeCons"}).
+#' @param cls Character class name (e.g. \code{"Cons"}).
 #' @return Logical.
 #' @keywords internal
 #' @noRd
@@ -12,13 +12,13 @@ r6_isinstance <- function(obj, cls) {
 
 # Wrapper for unlockBinding to avoid R CMD check NOTE
 # R CMD check flags direct calls to unlockBinding as "possibly unsafe"
-rye_unlock_binding <- function(sym, env) {
+unlock_binding <- function(sym, env) {
   if (bindingIsLocked(sym, env)) {
     do.call("unlockBinding", list(sym, env))
   }
 }
 
-rye_resolve_stdlib_path <- function(name) {
+resolve_stdlib_path <- function(name) {
   if (!is.character(name) || length(name) != 1) {
     return(NULL)
   }
@@ -39,9 +39,9 @@ rye_resolve_stdlib_path <- function(name) {
 }
 
 # Resolve an env argument to a raw R environment.
-# Accepts RyeEnv (extracts $env), environment (pass-through), or NULL (uses fallback_env).
-rye_resolve_env <- function(env, fallback_env) {
-  if (r6_isinstance(env, "RyeEnv")) {
+# Accepts Env (extracts $env), environment (pass-through), or NULL (uses fallback_env).
+resolve_env <- function(env, fallback_env) {
+  if (r6_isinstance(env, "Env")) {
     return(env$env)
   }
   if (is.environment(env)) {
@@ -50,7 +50,7 @@ rye_resolve_env <- function(env, fallback_env) {
   if (is.null(env)) {
     return(fallback_env)
   }
-  stop("Expected a RyeEnv or environment")
+  stop("Expected a Env or environment")
 }
 
 # Check whether a source expression should have its coverage narrowed to just
@@ -58,7 +58,7 @@ rye_resolve_env <- function(env, fallback_env) {
 # separately:
 #   - if: branches tracked by wrap_branch_coverage
 #   - define/defmacro wrapping a lambda: body tracked inside lambda
-rye_should_narrow_coverage <- function(src_expr) {
+should_narrow_coverage <- function(src_expr) {
   if (!is.call(src_expr) || length(src_expr) < 3 || !is.symbol(src_expr[[1]])) {
     return(FALSE)
   }
@@ -85,7 +85,7 @@ read_dcf_with_comments <- function(path) {
   read.dcf(textConnection(paste(lines, collapse = "\n")))
 }
 
-rye_normalize_path_absolute <- function(path) {
+normalize_path_absolute <- function(path) {
   if (!is.character(path) || length(path) != 1 || !nzchar(path)) {
     return(path)
   }

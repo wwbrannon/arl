@@ -14,7 +14,7 @@
 #' @return Character vector of vertex names in topological order.
 #' @keywords internal
 #' @noRd
-rye_topsort <- function(vertices, edges) {
+topsort <- function(vertices, edges) {
   if (!is.character(vertices)) {
     stop("vertices must be a character vector")
   }

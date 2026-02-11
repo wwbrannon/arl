@@ -1,6 +1,6 @@
 test_that("env cache disabled by default", {
   # Create engine without parameters
-  engine <- RyeEngine$new()
+  engine <- Engine$new()
   expect_false(engine$use_env_cache)
 })
 
@@ -10,7 +10,7 @@ test_that("Global option enables env cache", {
 
   # Expect warning on first engine
   expect_message(
-    engine <- RyeEngine$new(),
+    engine <- Engine$new(),
     "Environment cache.*enabled"
   )
   expect_true(engine$use_env_cache)
@@ -22,7 +22,7 @@ test_that("Engine parameter overrides global option", {
   withr::local_options(rye.env_cache_warning_shown = NULL)
 
   expect_message(
-    engine1 <- RyeEngine$new(use_env_cache = TRUE),
+    engine1 <- Engine$new(use_env_cache = TRUE),
     "Environment cache.*enabled"
   )
   expect_true(engine1$use_env_cache)
@@ -31,7 +31,7 @@ test_that("Engine parameter overrides global option", {
   withr::local_options(rye.use_env_cache = TRUE)
   withr::local_options(rye.env_cache_warning_shown = TRUE)  # Suppress warning
 
-  engine2 <- RyeEngine$new(use_env_cache = FALSE)
+  engine2 <- Engine$new(use_env_cache = FALSE)
   expect_false(engine2$use_env_cache)
 })
 
@@ -47,7 +47,7 @@ test_that("env cache disabled prevents .env.rds writing", {
 
   # Create engine with use_env_cache = FALSE
   withr::local_options(rye.env_cache_warning_shown = TRUE)
-  engine <- RyeEngine$new(use_env_cache = FALSE)
+  engine <- Engine$new(use_env_cache = FALSE)
 
   # Load module (should be safe to cache)
   engine$load_file_in_env(module_file, engine$env$env, create_scope = FALSE)
@@ -76,7 +76,7 @@ test_that("env cache enabled writes .env.rds when safe", {
 
   # Create engine with use_env_cache = TRUE
   withr::local_options(rye.env_cache_warning_shown = TRUE)
-  engine <- RyeEngine$new(use_env_cache = TRUE)
+  engine <- Engine$new(use_env_cache = TRUE)
 
   # Load safe module
   engine$load_file_in_env(module_file, engine$env$env, create_scope = FALSE)
@@ -105,12 +105,12 @@ test_that("One-time warning shown per session", {
 
   # First engine with use_env_cache=TRUE shows warning
   expect_message(
-    RyeEngine$new(use_env_cache = TRUE),
+    Engine$new(use_env_cache = TRUE),
     "Environment cache.*enabled"
   )
 
   # Second engine does not repeat warning
-  expect_silent(RyeEngine$new(use_env_cache = TRUE))
+  expect_silent(Engine$new(use_env_cache = TRUE))
 })
 
 test_that("Dependency change causes stale data with env cache", {
@@ -136,7 +136,7 @@ test_that("expr cache is safe with file changes", {
 
   # Load with env cache disabled (safe mode)
   withr::local_options(rye.env_cache_warning_shown = TRUE)
-  engine1 <- RyeEngine$new(use_env_cache = FALSE)
+  engine1 <- Engine$new(use_env_cache = FALSE)
   engine1$eval_text(sprintf('(load "%s")', test_file))
 
   # Verify initial value
@@ -146,7 +146,7 @@ test_that("expr cache is safe with file changes", {
   writeLines("(define test-value 100)", test_file)
 
   # Reload in new engine (simulating fresh session)
-  engine2 <- RyeEngine$new(use_env_cache = FALSE)
+  engine2 <- Engine$new(use_env_cache = FALSE)
   engine2$eval_text(sprintf('(load "%s")', test_file))
 
   # Verify the change is picked up (cache was invalidated by content hash)
@@ -158,11 +158,11 @@ test_that("NULL use_env_cache inherits from global option", {
   withr::local_options(rye.use_env_cache = TRUE)
   withr::local_options(rye.env_cache_warning_shown = TRUE)
 
-  engine <- RyeEngine$new(use_env_cache = NULL)
+  engine <- Engine$new(use_env_cache = NULL)
   expect_true(engine$use_env_cache)
 
   withr::local_options(rye.use_env_cache = FALSE)
-  engine2 <- RyeEngine$new(use_env_cache = NULL)
+  engine2 <- Engine$new(use_env_cache = NULL)
   expect_false(engine2$use_env_cache)
 })
 
@@ -170,14 +170,14 @@ test_that("Warning message format is correct", {
   withr::local_options(rye.env_cache_warning_shown = NULL)
 
   expect_message(
-    RyeEngine$new(use_env_cache = TRUE),
+    Engine$new(use_env_cache = TRUE),
     "Note: Environment cache is enabled"
   )
 
   expect_message(
     {
       withr::local_options(rye.env_cache_warning_shown = NULL)
-      RyeEngine$new(use_env_cache = TRUE)
+      Engine$new(use_env_cache = TRUE)
     },
     "4x speedup"
   )
@@ -185,7 +185,7 @@ test_that("Warning message format is correct", {
   expect_message(
     {
       withr::local_options(rye.env_cache_warning_shown = NULL)
-      RyeEngine$new(use_env_cache = TRUE)
+      Engine$new(use_env_cache = TRUE)
     },
     "options\\(rye\\.use_env_cache = FALSE\\)"
   )

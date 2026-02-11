@@ -11,7 +11,7 @@ cat("=== Tokenizer Benchmarks ===\n\n")
 # Benchmark 1: String literals of varying sizes
 cat("Benchmark 1: String literals\n")
 
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 bench_strings <- benchmark_component(
   "10 chars" = engine1$tokenize('"0123456789"'),
   "100 chars" = engine1$tokenize(paste0('"', paste(rep("x", 100), collapse = ""), '"')),
@@ -25,7 +25,7 @@ cat("\n")
 # Benchmark 2: Nested parentheses
 cat("Benchmark 2: Nested parentheses\n")
 
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 nested_10 <- paste(rep("(", 10), collapse = "")
 nested_10 <- paste0(nested_10, "x", paste(rep(")", 10), collapse = ""))
 
@@ -47,7 +47,7 @@ cat("\n")
 # Benchmark 3: Mixed content (strings, numbers, symbols)
 cat("Benchmark 3: Mixed content\n")
 
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 mixed_small <- '(define x 42) (+ 1 2 3) (str "hello" "world")'
 mixed_medium <- paste(rep(mixed_small, 10), collapse = " ")
 mixed_large <- paste(rep(mixed_small, 100), collapse = " ")
@@ -64,7 +64,7 @@ cat("\n")
 # Benchmark 4: Real example files
 cat("Benchmark 4: Real example files\n")
 
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0) {
@@ -83,7 +83,7 @@ cat("\n")
 # Benchmark 5: Escape sequences
 cat("Benchmark 5: Escape sequences in strings\n")
 
-engine5 <- RyeEngine$new()
+engine5 <- Engine$new()
 bench_escapes <- benchmark_component(
   "No escapes" = engine5$tokenize('"simple string"'),
   "Few escapes" = engine5$tokenize('"hello\\nworld\\t!"'),

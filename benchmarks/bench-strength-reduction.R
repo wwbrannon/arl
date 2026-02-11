@@ -8,7 +8,7 @@ devtools::load_all()
 library(bench)
 
 # Create engine
-engine <- RyeEngine$new()
+engine <- Engine$new()
 
 # Set up test data
 engine$eval(engine$read("(define x 5)")[[1]])

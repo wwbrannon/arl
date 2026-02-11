@@ -1,4 +1,4 @@
-# RyeEnv: Wraps an R environment with Rye-specific registries (macros, modules) and
+# Env: Wraps an R environment with Rye-specific registries (macros, modules) and
 # helpers for define/set!/lookup, module attach, and format_value. Used by the engine
 # and compiled runtime.
 #
@@ -9,8 +9,8 @@
 #
 #' @keywords internal
 #' @noRd
-RyeEnv <- R6::R6Class(
-  "RyeEnv",
+Env <- R6::R6Class(
+  "Env",
   private = list(
     .env = NULL,
     .macro_registry = NULL,
@@ -44,7 +44,7 @@ RyeEnv <- R6::R6Class(
     }
   ),
   public = list(
-    # @description Create a RyeEnv from an existing environment or a new one with optional parent.
+    # @description Create a Env from an existing environment or a new one with optional parent.
     # @param env Optional existing environment. If NULL, a new environment is created.
     # @param parent Optional parent for the new environment when env is NULL. Cannot be used with env.
     initialize = function(env = NULL, parent = NULL) {
@@ -58,7 +58,7 @@ RyeEnv <- R6::R6Class(
         env <- new.env(parent = parent)
       }
       if (!is.environment(env)) {
-        stop("RyeEnv requires an environment")
+        stop("Env requires an environment")
       }
       private$.env <- env
       private$.macro_registry <- self$macro_registry_env(env, create = TRUE)
@@ -119,9 +119,9 @@ RyeEnv <- R6::R6Class(
     resolve_module = function(name) {
       self$module_registry$get(name)
     },
-    # @description Attach a module's exports into this RyeEnv's environment.
+    # @description Attach a module's exports into this Env's environment.
     # @param name Module name (single string).
-    # @description Attach a module's exports into this RyeEnv's environment.
+    # @description Attach a module's exports into this Env's environment.
     # @param name Module name (single string).
     attach_module = function(name) {
       self$module_registry$attach(name)
@@ -221,7 +221,7 @@ RyeEnv <- R6::R6Class(
         }
         return(invisible(NULL))
       }
-      if (r6_isinstance(pattern, "RyeCons")) {
+      if (r6_isinstance(pattern, "Cons")) {
         parts <- pattern$parts()
         pattern <- c(parts$prefix, list(as.symbol(".")), list(parts$tail))
         self$destructure_bind(pattern, value, mode = mode)
@@ -251,7 +251,7 @@ RyeEnv <- R6::R6Class(
         }
         invisible(NULL)
       }
-      if (r6_isinstance(pattern, "RyeCons")) {
+      if (r6_isinstance(pattern, "Cons")) {
         parts <- pattern$parts()
         pattern <- c(parts$prefix, list(as.symbol(".")), list(parts$tail))
       }

@@ -182,7 +182,7 @@ test_that("module_compiled() creates path alias when src_file provided", {
   )
 
   # Should be accessible by both name and path
-  abs_path <- rye:::rye_normalize_path_absolute(tmp_file)
+  abs_path <- rye:::normalize_path_absolute(tmp_file)
   expect_true(eng$env$module_registry$exists("test-mod"))
   expect_true(eng$env$module_registry$exists(abs_path))
 })
@@ -513,12 +513,12 @@ test_that("defmacro_compiled() preserves docstring", {
 })
 
 # Promise/delay tests
-test_that("promise_new_compiled() creates RyePromise", {
+test_that("promise_new_compiled() creates Promise", {
   eng <- make_engine()
 
   promise <- eng$compiled_runtime$promise_new_compiled(quote(1 + 1), eng$env$raw())
 
-  expect_true(rye:::r6_isinstance(promise, "RyePromise"))
+  expect_true(rye:::r6_isinstance(promise, "Promise"))
 })
 
 test_that("promise_new_compiled() delays evaluation", {

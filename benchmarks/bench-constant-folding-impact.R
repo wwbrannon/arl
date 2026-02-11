@@ -39,7 +39,7 @@ ast_depth <- function(expr) {
 cat("Benchmark 1: Code Complexity Analysis\n")
 cat("(Show which expressions get folded and complexity reduction)\n\n")
 
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 
 test_cases <- list(
   simple = "(+ 1 2)",
@@ -85,7 +85,7 @@ cat("\n")
 cat("Benchmark 2: Execution Performance by Complexity\n")
 cat("(Compare runtime of simple vs. complex constant expressions)\n\n")
 
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 
 # All of these should fold to constants, but vary in input complexity
 cases <- list(
@@ -121,7 +121,7 @@ cat("\n")
 cat("Benchmark 3: Constants in Functions\n")
 cat("(Test realistic code pattern: functions with constant subexpressions)\n\n")
 
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 
 # Function with several constant operations
 engine3$eval_text('
@@ -160,7 +160,7 @@ cat("\n")
 cat("Benchmark 4: Configuration-Heavy Code\n")
 cat("(Realistic pattern: computed configuration values)\n\n")
 
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 
 config_code <- '
 (define make-config (lambda ()
@@ -203,7 +203,7 @@ cat("\n")
 cat("Benchmark 5: Constant-Heavy vs. Variable-Heavy Code\n")
 cat("(Compare execution when most values are constants vs. variables)\n\n")
 
-engine5 <- RyeEngine$new()
+engine5 <- Engine$new()
 
 # Constant-heavy: most operations are on literals
 engine5$eval_text('

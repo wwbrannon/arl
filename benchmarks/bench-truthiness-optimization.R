@@ -18,7 +18,7 @@ cat("=== Truthiness Optimization Benchmark ===\n\n")
 cat("Benchmark 1: Generated Code Quality\n")
 cat("(Show how if tests are compiled with and without wrapper)\n\n")
 
-engine1 <- RyeEngine$new()
+engine1 <- Engine$new()
 
 test_cases <- list(
   "Literal TRUE" = "(if #t 1 2)",
@@ -55,7 +55,7 @@ cat("\n")
 cat("Benchmark 2: Execution Performance - If Statements\n")
 cat("(Compare execution speed of if with different test types)\n\n")
 
-engine2 <- RyeEngine$new()
+engine2 <- Engine$new()
 env <- new.env(parent = baseenv())
 env$x <- 10
 
@@ -96,7 +96,7 @@ cat("\n")
 cat("Benchmark 3: Realistic Pattern - Conditionals in Loop\n")
 cat("(Measure impact when if statements run many times)\n\n")
 
-engine3 <- RyeEngine$new()
+engine3 <- Engine$new()
 
 # Function with comparison-based if (optimized)
 engine3$eval_text('
@@ -150,7 +150,7 @@ count_ast_nodes <- function(expr) {
   1 + sum(sapply(children, count_ast_nodes, USE.NAMES = FALSE))
 }
 
-engine4 <- RyeEngine$new()
+engine4 <- Engine$new()
 
 comparison_if <- "(if (< x 5) (+ x 1) (- x 1))"
 out_comp <- engine4$inspect_compilation(comparison_if)

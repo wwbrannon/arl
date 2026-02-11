@@ -1,40 +1,40 @@
-# RyeCons: Minimal dotted-pair representation for Rye lists (car, cdr). Load order: this
-# file must be sourced before runtime/eval helpers that use RyePromise.
+# Cons: Minimal dotted-pair representation for Rye lists (car, cdr). Load order: this
+# file must be sourced before runtime/eval helpers that use Promise.
 #
 # @field car First element of the pair.
-# @field cdr Second element (rest of list or another RyeCons).
+# @field cdr Second element (rest of list or another Cons).
 #
 #' @keywords internal
 #' @noRd
-RyeCons <- R6::R6Class("RyeCons",
+Cons <- R6::R6Class("Cons",
   public = list(
     car = NULL,
     cdr = NULL,
     # @description Create a dotted pair.
     # @param car First element.
-    # @param cdr Second element (list, RyeCons, or other value).
+    # @param cdr Second element (list, Cons, or other value).
     initialize = function(car, cdr) {
       self$car <- car
       self$cdr <- cdr
     },
-    # @description Traverse cdr until non-RyeCons; return list of all car values.
+    # @description Traverse cdr until non-Cons; return list of all car values.
     # @return R list.
     as_list = function() {
       # Count length first, then fill pre-allocated vector
       n <- 0L
       x <- self
-      while (r6_isinstance(x, "RyeCons")) { n <- n + 1L; x <- x$cdr }
+      while (r6_isinstance(x, "Cons")) { n <- n + 1L; x <- x$cdr }
       out <- vector("list", n)
       x <- self
       for (i in seq_len(n)) { out[[i]] <- x$car; x <- x$cdr }
       out
     },
-    # @description Split into prefix (list of car values) and tail (first non-RyeCons cdr).
+    # @description Split into prefix (list of car values) and tail (first non-Cons cdr).
     # @return List with elements prefix (list) and tail.
     parts = function() {
       n <- 0L
       x <- self
-      while (r6_isinstance(x, "RyeCons")) { n <- n + 1L; x <- x$cdr }
+      while (r6_isinstance(x, "Cons")) { n <- n + 1L; x <- x$cdr }
       prefix <- vector("list", n)
       x <- self
       for (i in seq_len(n)) { prefix[[i]] <- x$car; x <- x$cdr }
@@ -43,11 +43,11 @@ RyeCons <- R6::R6Class("RyeCons",
   )
 )
 
-# RyePromise: Lazy value from (delay expr). Used by delay in compiled/runtime code.
+# Promise: Lazy value from (delay expr). Used by delay in compiled/runtime code.
 #
 # (No public fields; state in private .rye_promise_* bindings.)
 #
-RyePromise <- R6::R6Class("RyePromise",
+Promise <- R6::R6Class("Promise",
   private = list(
     expr = NULL,
     env = NULL,

@@ -1,5 +1,5 @@
 # FileDeps: static analysis of a directory of .rye files for module dependencies and load order.
-# Uses rye_topsort for topological sort. Generic over dir/pattern/exclude; no reference to engine or evaluator.
+# Uses topsort for topological sort. Generic over dir/pattern/exclude; no reference to engine or evaluator.
 
 #' @importFrom R6 R6Class
 #' @keywords internal
@@ -47,7 +47,7 @@ FileDeps <- R6::R6Class(
       self$modules <- modules
       g <- private$build_graph(modules)
       self$graph <- g
-      self$load_order <- rye_topsort(g$vertices, g$edges)
+      self$load_order <- topsort(g$vertices, g$edges)
       invisible(self)
     },
 
@@ -261,7 +261,7 @@ FileDeps <- R6::R6Class(
 #' @param stdlib_dir Optional path; defaults to installed package stdlib.
 #' @keywords internal
 #' @noRd
-rye_stdlib_print_order <- function(stdlib_dir = NULL) {
+stdlib_print_order <- function(stdlib_dir = NULL) {
   dir <- if (is.null(stdlib_dir)) system.file("rye", package = "rye") else stdlib_dir
   d <- FileDeps$new(dir = dir)
   cat("Load order (topological sort):\n")

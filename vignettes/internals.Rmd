@@ -73,7 +73,7 @@ R's scoping, garbage collection, and entire function library for free.
 Use `engine$inspect_compilation(text)` to see each stage:
 
 ```{r eval=FALSE}
-engine <- RyeEngine$new()
+engine <- Engine$new()
 info <- engine$inspect_compilation("(when #t (+ 1 2))")
 
 info$parsed           # Rye AST after parsing
@@ -181,7 +181,7 @@ and produce inaccurate coverage numbers.
 
 ## Coverage instrumentation
 
-When a `RyeCoverageTracker` is attached to the engine, the compiler
+When a `CoverageTracker` is attached to the engine, the compiler
 inserts tracking calls at three points:
 
 1. **Statement-level:** Before each statement in a lambda body, a
