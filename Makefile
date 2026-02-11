@@ -80,12 +80,16 @@ coverage-combined: ## help: Generate combined coverage summary
 
 .PHONY: coverage-report
 coverage-report: ## help: Open coverage reports in browser
-	@echo "Opening coverage reports..."
-	@if [ -f coverage/combined/index.html ]; then \
-		open coverage/combined/index.html; \
+	@OPENER=; \
+	if command -v open >/dev/null 2>&1; then OPENER=open; \
+	elif command -v xdg-open >/dev/null 2>&1; then OPENER=xdg-open; \
+	else echo "No 'open' or 'xdg-open' found"; exit 1; \
+	fi; \
+	if [ -f coverage/combined/index.html ]; then \
+		$$OPENER coverage/combined/index.html; \
 	elif [ -f coverage/r/index.html ]; then \
-		open coverage/r/index.html; \
-		[ -f coverage/rye/index.html ] && open coverage/rye/index.html; \
+		$$OPENER coverage/r/index.html; \
+		[ -f coverage/rye/index.html ] && $$OPENER coverage/rye/index.html; \
 	else \
 		echo "No coverage reports found. Run 'make coverage' first."; \
 		exit 1; \
