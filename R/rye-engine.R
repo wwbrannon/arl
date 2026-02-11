@@ -48,6 +48,7 @@ RyeEngine <- R6::R6Class(
     source_tracker = NULL,
     module_cache = NULL,
     use_env_cache = NULL,
+
     #' @description
     #' Initialize engine components and base environment.
     #' @param env Optional existing environment to use. If NULL, creates a new environment.
@@ -109,38 +110,45 @@ RyeEngine <- R6::R6Class(
 
       self$initialize_environment()
     },
+
     #' @description
     #' Tokenize and parse source into expressions.
     read = function(source, source_name = NULL) {
       tokens <- self$tokenizer$tokenize(source)
       self$parser$parse(tokens, source_name = source_name)
     },
+
     #' @description
     #' Tokenize source into Rye tokens.
     tokenize = function(source) {
       self$tokenizer$tokenize(source)
     },
+
     #' @description
     #' Parse tokens into expressions.
     parse = function(tokens, source_name = NULL) {
       self$parser$parse(tokens, source_name = source_name)
     },
+
     #' @description
     #' Evaluate a single expression via compiled evaluation.
     eval = function(expr) {
       private$eval_one_compiled(expr, self$env$env, compiled_only = TRUE)
     },
+
     #' @description
     #' Evaluate a single expression in an explicit environment.
     eval_in_env = function(expr, env) {
       target_env <- private$resolve_env_arg(env)
       private$eval_one_compiled(expr, target_env, compiled_only = TRUE)
     },
+
     #' @description
     #' Evaluate expressions in order via compiled evaluation.
     eval_seq = function(exprs, env = NULL) {
       self$eval_exprs(exprs, env = env, compiled_only = TRUE)
     },
+
     #' @description
     #' Evaluate expressions with source tracking.
     eval_exprs = function(exprs, env = NULL, compiled_only = TRUE) {
@@ -149,6 +157,7 @@ RyeEngine <- R6::R6Class(
         private$eval_seq_compiled(exprs, target_env, compiled_only = compiled_only)
       })
     },
+
     #' @description
     #' Read and evaluate text.
     eval_text = function(text, env = NULL, source_name = "<eval>", compiled_only = TRUE) {
@@ -158,6 +167,7 @@ RyeEngine <- R6::R6Class(
       on.exit(self$compiled_runtime$context$compiler$source_text <- NULL)
       self$eval_exprs(exprs, env = env, compiled_only = compiled_only)
     },
+
     #' @description
     #' Populate standard bindings
     initialize_environment = function() {
@@ -166,11 +176,22 @@ RyeEngine <- R6::R6Class(
       self$env$get_registry(".rye_module_registry", create = TRUE)
       self$env$get_registry(".rye_macros", create = TRUE)
 
+      #
       # Cons-cell primitives (bound in stdlib env so no globalenv/package lookup)
+      #
+
       env$`__cons` <- function(car, cdr) RyeCons$new(car, cdr)
-      env$`pair?` <- function(x) r6_isinstance(x, "RyeCons")
       env$`__cons-as-list` <- function(x) if (r6_isinstance(x, "RyeCons")) x$as_list() else list()
       env$`__cons-parts` <- function(x) if (r6_isinstance(x, "RyeCons")) x$parts() else list(prefix = list(), tail = x)
+
+      env$`pair?` <- function(x) r6_isinstance(x, "RyeCons")
+
+      #
+      # Macro builtins
+      #
+
+      # these depend on internal state and mostly just wrap the macro
+      # expander's functionality for users to call
 
       env$gensym <- function(prefix = "G") {
         self$macro_expander$gensym(prefix = prefix)
@@ -194,8 +215,20 @@ RyeEngine <- R6::R6Class(
 
       env$`macroexpand-all` <- env$macroexpand
 
+      #
+      # Evaluation and environments
+      #
+
+      # these need to either expose the compile functionality or close over the
+      # engine environment
+
       env$eval <- function(expr, env = parent.frame()) {
         self$eval_in_env(expr, env)
+      }
+
+      env$read <- function(source) {
+        exprs <- self$read(source)
+        if (length(exprs) > 0L) exprs[[1L]] else NULL
       }
 
       env$`stdlib-env` <- function() env
@@ -205,6 +238,12 @@ RyeEngine <- R6::R6Class(
         }
         self$env$current_env()
       }
+
+      #
+      # Promises: delay / force / promise-expr
+      #
+
+      # delay is a compiler special form, but these can be defined here
 
       env$`promise?` <- function(x) {
         r6_isinstance(x, "RyePromise")
@@ -223,10 +262,11 @@ RyeEngine <- R6::R6Class(
         p$get_expr()
       }
 
-      env$read <- function(source) {
-        exprs <- self$read(source)
-        if (length(exprs) > 0L) exprs[[1L]] else NULL
-      }
+      #
+      # Documentation helpers
+      #
+
+      # these are exposed as the doc! and doc macros/functions
 
       env$`__set_doc` <- function(fn, docstring) {
         # If fn is a primitive, wrap it in a regular function
@@ -243,7 +283,9 @@ RyeEngine <- R6::R6Class(
         if (is.null(doc_attr)) NULL else doc_attr$description
       }
 
-      env$`identical?` <- base::identical
+      #
+      # Evaluate in the R environment
+      #
 
       env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
@@ -299,6 +341,7 @@ RyeEngine <- R6::R6Class(
 
       env
     },
+
     #' @description
     #' Load all stdlib modules in dependency order into an environment. Each module
     #' is loaded and its exports attached into \code{env}. Used by
@@ -346,6 +389,7 @@ RyeEngine <- R6::R6Class(
       }
       invisible(NULL)
     },
+
     #' @description
     #' Load and evaluate a Rye source file in an isolated scope. The file runs in a
     #' child of the engine's environment, so definitions and imports in the file
@@ -355,6 +399,7 @@ RyeEngine <- R6::R6Class(
     load_file = function(path) {
       self$load_file_in_env(path, self$env$env, create_scope = TRUE)
     },
+
     #' @description
     #' Load and evaluate a Rye source file in an explicit environment. By default
     #' (\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
@@ -459,28 +504,33 @@ RyeEngine <- R6::R6Class(
         self$eval_seq(self$read(text, source_name = path), env = target_env)
       })
     },
+
     #' @description
     #' Expand macros recursively.
     macroexpand = function(expr, preserve_src = FALSE) {
       self$macro_expander$macroexpand(expr, env = self$env$env, preserve_src = preserve_src)
     },
+
     #' @description
     #' Expand macros recursively in an explicit environment.
     macroexpand_in_env = function(expr, env, preserve_src = FALSE) {
       target_env <- private$resolve_env_arg(env)
       self$macro_expander$macroexpand(expr, env = target_env, preserve_src = preserve_src)
     },
+
     #' @description
     #' Expand a single macro layer.
     macroexpand_1 = function(expr, preserve_src = FALSE) {
       self$macro_expander$macroexpand_1(expr, env = self$env$env, preserve_src = preserve_src)
     },
+
     #' @description
     #' Expand a single macro layer in an explicit environment.
     macroexpand_1_in_env = function(expr, env, preserve_src = FALSE) {
       target_env <- private$resolve_env_arg(env)
       self$macro_expander$macroexpand_1(expr, env = target_env, preserve_src = preserve_src)
     },
+
     #' @description
     #' Inspect expansion and compilation for debugging. Parse text, expand macros in env,
     #' then compile to R. Returns parsed AST, expanded form, compiled R expression, and
@@ -504,22 +554,26 @@ RyeEngine <- R6::R6Class(
       compiled_deparsed <- if (!is.null(compiled)) deparse(compiled) else NULL
       list(parsed = parsed, expanded = expanded, compiled = compiled, compiled_deparsed = compiled_deparsed)
     },
+
     #' @description
     #' Show help for a topic.
     help = function(topic) {
       self$help_system$help(topic)
     },
+
     #' @description
     #' Show help for a topic in an explicit environment.
     help_in_env = function(topic, env) {
       target_env <- private$resolve_env_arg(env)
       self$help_system$help_in_env(topic, target_env)
     },
+
     #' @description
     #' Start the Rye REPL using this engine.
     repl = function() {
       RyeREPL$new(engine = self)$run()
     },
+
     #' @description
     #' Enable coverage tracking.
     #'
@@ -540,6 +594,7 @@ RyeEngine <- R6::R6Class(
       self$compiled_runtime$context$coverage_tracker$set_enabled(TRUE)
       invisible(self$compiled_runtime$context$coverage_tracker)
     },
+
     #' @description
     #' Disable coverage tracking.
     disable_coverage = function() {
@@ -548,6 +603,7 @@ RyeEngine <- R6::R6Class(
       }
       invisible(self)
     },
+
     #' @description
     #' Get coverage data.
     #'
@@ -555,6 +611,7 @@ RyeEngine <- R6::R6Class(
     get_coverage = function() {
       self$compiled_runtime$context$coverage_tracker
     },
+
     #' @description
     #' Reset coverage data.
     reset_coverage = function() {
@@ -564,10 +621,12 @@ RyeEngine <- R6::R6Class(
       invisible(self)
     }
   ),
+
   private = list(
     resolve_env_arg = function(env) {
       rye_resolve_env(env, self$env$env)
     },
+
     load_builtin_docs = function(env) {
       dcf_path <- system.file("builtins-docs.dcf", package = "rye")
       if (!nzchar(dcf_path) || !file.exists(dcf_path)) return(invisible(NULL))
@@ -585,18 +644,13 @@ RyeEngine <- R6::R6Class(
           }
         }
         if (length(doc) > 0L) {
-          # identical? is a primitive — can't set attributes directly
-          if (is.primitive(obj)) {
-            wrapper <- obj
-            obj <- function(...) wrapper(...)
-            assign(name, obj, envir = env)
-          }
           attr(obj, "rye_doc") <- doc
           assign(name, obj, envir = env)
         }
       }
       invisible(NULL)
     },
+
     eval_one_compiled = function(expr, env, compiled_only = TRUE) {
       expanded <- self$macroexpand_in_env(expr, env, preserve_src = TRUE)
       compiled <- self$compiler$compile(expanded, env, strict = isTRUE(compiled_only))
@@ -617,6 +671,7 @@ RyeEngine <- R6::R6Class(
       }
       stop(msg, call. = FALSE)
     },
+
     eval_seq_compiled = function(exprs, target_env, compiled_only = TRUE) {
       if (length(exprs) == 0) {
         return(invisible(NULL))

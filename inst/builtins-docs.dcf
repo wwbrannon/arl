@@ -18,20 +18,6 @@ Examples:
   (pair? '())               ; => #f
 Seealso: list?, null?, atom?
 
-Name: identical?
-Vignette: stdlib-equality
-Section: Equality Predicates
-Description: R's native equality test. Structural comparison for value
-  types, pointer comparison for reference types.
-Signature: (identical? a b)
-Examples:
-  (identical? 1 1)          ; => #t
-  (identical? 1 1.0)        ; => #f (different types)
-  (identical? "a" "a")      ; => #t
-Seealso: equal?, eq?, eqv?
-Note: This is R's `identical()` with no modifications. Use `equal?`
-  for deep structural equality with type coercion.
-
 Name: eval
 Vignette: stdlib-macro-eval-interop
 Section: Evaluation

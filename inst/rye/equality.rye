@@ -1,7 +1,8 @@
 ;;; Rye Standard Library - Equality and S3 Dispatch
 
 (module equality
-  (export eq? eqv? equal?
+  (export identical?
+          eq? eqv? equal?
           equal?.default equal?.environment equal?.list
           env-equal? list-equal?
           s3-type check-s3-type-match use-method set-method!)
@@ -33,9 +34,17 @@
           #t
           (use-method "equal?" a (list a b strict))))))
 
-  ;;' @description Native R identity comparison. Tests if two objects are identical in memory/value.
-  ;;' @note Implemented natively in R (see R/rye-engine.R). Not redefined in this module.
-  ;;' @seealso equal?
+  ;;' @description R's native equality test. Structural comparison for value
+  ;;'   types, pointer comparison for reference types.
+  ;;' @examples
+  ;;' (identical? 1 1)          ; => #t
+  ;;' (identical? 1 1.0)        ; => #f (different types)
+  ;;' (identical? "a" "a")      ; => #t
+  ;;' @seealso equal?, eq?, eqv?
+  ;;' @note This is R's `identical()` with no modifications. Use `equal?`
+  ;;'   for deep structural equality with type coercion.
+  (define identical?
+    (lambda (a b) (identical a b)))
 
   ;;' @description **Not implemented in Rye.** Raises an error when called.
   ;;' @note True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
