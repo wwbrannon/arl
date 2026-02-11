@@ -300,3 +300,113 @@ test_that("RyeCLI parse errors on multiple --eval flags", {
   parsed <- rye:::RyeCLI$new(c("--eval", "(+ 1 2)", "--eval", "(+ 3 4)"))$parse()
   expect_true(length(parsed$errors) > 0)
 })
+
+# Short option missing-value edge cases ----
+
+test_that("RyeCLI parse errors on -e without expression", {
+  parsed <- rye:::RyeCLI$new(c("-e"))$parse()
+  expect_true(length(parsed$errors) > 0)
+})
+
+test_that("RyeCLI parse errors on -f without path", {
+  parsed <- rye:::RyeCLI$new(c("-f"))$parse()
+  expect_true(length(parsed$errors) > 0)
+})
+
+# Combined flag scenarios ----
+
+test_that("RyeCLI parse handles -q with -e", {
+  parsed <- rye:::RyeCLI$new(c("-q", "-e", "(+ 1 2)"))$parse()
+  expect_equal(parsed$action, "eval")
+  expect_equal(parsed$expr, "(+ 1 2)")
+  expect_length(parsed$errors, 0)
+})
+
+test_that("rye_cli -q -e evaluates quietly", {
+  withr::local_options(list(rye.repl_quiet = FALSE))
+  output <- capture.output(rye:::rye_cli(c("-q", "-e", "(+ 5 6)")))
+  expect_true(any(grepl("11", output)))
+  expect_true(isTRUE(getOption("rye.repl_quiet")))
+})
+
+test_that("RyeCLI parse handles -q with positional file", {
+  parsed <- rye:::RyeCLI$new(c("-q", "script.rye"))$parse()
+  expect_equal(parsed$action, "file")
+  expect_equal(parsed$files, "script.rye")
+  expect_length(parsed$errors, 0)
+})
+
+test_that("rye_cli -q with file evaluates quietly", {
+  f <- tempfile(fileext = ".rye")
+  writeLines("(+ 7 8)", f)
+  withr::local_options(list(rye.repl_quiet = FALSE))
+  output <- capture.output(rye:::rye_cli(c("-q", f)))
+  expect_true(any(grepl("15", output)))
+  expect_true(isTRUE(getOption("rye.repl_quiet")))
+  unlink(f)
+})
+
+# Flag ordering ----
+
+test_that("RyeCLI parse handles flags after positional args", {
+  parsed <- rye:::RyeCLI$new(c("script.rye", "-q"))$parse()
+  expect_equal(parsed$action, "file")
+  expect_true("script.rye" %in% parsed$files)
+  expect_length(parsed$errors, 0)
+})
+
+# Eval with spaces and special characters ----
+
+test_that("RyeCLI parse handles -e with spaces in expression", {
+  parsed <- rye:::RyeCLI$new(c("-e", "(define x 42)"))$parse()
+  expect_equal(parsed$action, "eval")
+  expect_equal(parsed$expr, "(define x 42)")
+  expect_length(parsed$errors, 0)
+})
+
+test_that("rye_cli -e with multi-word expression evaluates correctly", {
+  output <- capture.output(rye:::rye_cli(c("-e", "(+ 100 200)")))
+  expect_true(any(grepl("300", output)))
+})
+
+# Unknown flag error content ----
+
+test_that("RyeCLI parse reports unrecognized flag in error message", {
+  parsed <- rye:::RyeCLI$new(c("--bogus"))$parse()
+  expect_true(length(parsed$errors) > 0)
+  errors_text <- paste(parsed$errors, collapse = " ")
+  # Error should mention the unrecognized flag
+  expect_true(grepl("bogus", errors_text, ignore.case = TRUE))
+})
+
+# Error output paths ----
+
+test_that("cli_exit_with_error produces visible error message", {
+  error_msg <- NULL
+  withr::local_options(list(
+    rye.cli_exit_fn = function(message, show_help) {
+      error_msg <<- message
+    }
+  ))
+  cli_obj <- rye:::RyeCLI$new()
+  cli_obj$cli_exit_with_error("test error message", show_help = FALSE)
+  expect_equal(error_msg, "test error message")
+})
+
+test_that("run() displays parse errors to user", {
+  exit_messages <- character(0)
+  withr::local_options(list(
+    rye.cli_exit_fn = function(message, show_help) {
+      exit_messages <<- c(exit_messages, message)
+    }
+  ))
+  # Capture stdout to check that error text appears
+  output <- capture.output(
+    rye:::rye_cli(c("--unknown-flag")),
+    type = "message"
+  )
+  # Either the error goes through exit_fn or is printed — one of these should have content
+
+  has_output <- length(output) > 0 || length(exit_messages) > 0
+  expect_true(has_output)
+})
