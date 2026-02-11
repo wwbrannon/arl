@@ -9,7 +9,7 @@ Rye is a fully-functional Lisp dialect implemented in R with seamless R interope
 ## Project Structure
 
 Standard R package layout:
-- `R/` - Core implementation (~3000 lines)
+- `R/` - Core implementation (~8800 lines across 20 files)
   - `tokenizer.R` - Lexical analysis
   - `parser.R` - S-expression parsing to R calls
   - `compiler.R` - Compiles Rye AST to R code; handles all special forms
@@ -21,6 +21,7 @@ Standard R package layout:
   - `repl.R` - Interactive REPL
   - `cli.R` - Command-line interface
   - `help-system.R` - Help system
+  - `doc-parser.R` - Documentation string parser
   - `module-cache.R` - Module caching
   - `module-registry.R` - Module registry and dependency tracking
   - `file-deps.R` - File dependency resolution
@@ -30,11 +31,16 @@ Standard R package layout:
   - `source-tracker.R` - Source location tracking
   - `utils.R` - Utilities
 - `inst/` - Installed package files
-  - `rye/` - Modular stdlib (control.rye, functional.rye, binding.rye, looping.rye, threading.rye, error.rye, struct.rye, assert.rye, r-interop.rye, etc.); each module declares `(import ...)` and is loaded in dependency order by the engine (StdlibDeps + load_stdlib_into_env)
-  - `examples/` - Complete working programs (fibonacci, quicksort, data-analysis, macros, etc.)
-  - `cli/rye` - Command-line executable
-- `tests/testthat/` - Comprehensive test suite (16 test files)
-- `vignettes/` - User documentation (getting-started, macros, R interop, stdlib reference, etc.)
+  - `rye/` - Modular stdlib (~25 modules: core, control, functional, binding, looping, threading, error, struct, assert, r-interop, list, sequences, strings, math, logic, io, conversions, types, dict, display, equality, set, sort, _r); each module declares `(import ...)` and is loaded in dependency order by the engine (StdlibDeps + load_stdlib_into_env)
+  - `examples/` - Complete working programs (fibonacci, quicksort, data-analysis, macros, fizzbuzz, graph-paths, log-parser, pipeline-macros, sales-report, task-runner)
+  - `design-docs/` - Design documentation for internal subsystems
+- `exec/rye` - Command-line executable (shell script wrapper)
+- `tests/`
+  - `testthat/` - Comprehensive test suite (60+ test files plus helpers)
+  - `native/` - Native Rye test files (17 `.rye` tests run via `make test-native`)
+- `benchmarks/` - Performance benchmarking suite (component benchmarks, profiling scripts)
+- `tools/` - Build helpers (stdlib load-order generation, dependency analysis, CRAN submission tools, doc generators)
+- `vignettes/` - User documentation (18 vignettes: getting-started, macros, modules, R interop, stdlib reference, internals, troubleshooting, etc.)
 - `man/` - Roxygen2 documentation
 - `DESCRIPTION` - Package metadata
 - `NAMESPACE` - Package exports
@@ -42,36 +48,22 @@ Standard R package layout:
 
 ## Development Commands
 
-Common development tasks via Makefile:
+Use `make help` to see all available Makefile targets. Key targets include:
 
 ```bash
-# Show all available commands
-make help
-
-# Install package
-make install
-
-# Run tests
-make test
-
-# Run a single test file
-make test-file FILE=test-parser
-
-# Generate documentation (roxygen2, README, vignettes, pkgdown)
-make document
-
-# Build and check package
-make build
-make check
-
-# CRAN preparation
-make cran-prep
-make cran-check
-make cran-comments
-
-# Cleanup
-make clean
-make cran-clean
+make help              # Show all available targets
+make install           # Install the package
+make test              # Run testthat test suite
+make test-file FILE=test-parser  # Run a single test file
+make test-native       # Run native .rye tests
+make lint              # Run lintr checks
+make document          # Generate all documentation
+make build             # Build package tarball
+make check             # R CMD check
+make bench             # Run benchmarks
+make coverage          # Generate coverage reports
+make cran-prep         # Prepare for CRAN submission
+make clean             # Cleanup build artifacts
 ```
 
 ## Architecture
@@ -90,11 +82,11 @@ Rye leverages R's existing eval/quote/environment system rather than reimplement
 
 6. **Standard Library** (`runtime.R`, `inst/rye/*.rye`) - Core library in R (runtime helpers); modular extensions in Rye. **Module system**: `(import M)` attaches M's exports only in the scope where import was evaluated; each module is loaded once per engine (shared cache). `(load path)` runs a file in the current env; `(run path)` runs it in an isolated child env. From R, `load_file(path)` uses an isolated scope; use `load_file_in_env(path, env, create_scope = FALSE)` for source-like visibility.
 
-6. **R Bridge** - Direct access to all R functions; keywords (`:name`) become named arguments; R operators and data structures work naturally
+7. **R Bridge** - Direct access to all R functions; keywords (`:name`) become named arguments; R operators and data structures work naturally
 
-7. **REPL** (`repl.R`) - Interactive shell with error handling and history
+8. **REPL** (`repl.R`) - Interactive shell with error handling and history
 
-8. **CLI** (`cli.R`, `inst/cli/rye`) - Command-line tool supporting `--file`, `--eval`, positional script execution, and interactive mode
+9. **CLI** (`cli.R`, `exec/rye`) - Command-line tool supporting `--file`, `--eval`, positional script execution, and interactive mode
 
 ## Language Design
 
