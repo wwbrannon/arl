@@ -46,6 +46,8 @@ site: clean-cache stdlib-order ## help: Build pkgdown site
 	  --exclude '.git/' \
 	  ./ $$tmp/ && \
 	Rscript -e "pkgdown::build_site(pkg='$$tmp')" && \
+	rm -rf site && \
+	mv $$tmp/site site && \
 	rm -rf $$tmp
 
 .PHONY: document
