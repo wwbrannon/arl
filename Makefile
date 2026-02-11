@@ -22,23 +22,23 @@ build: clean-cache stdlib-order ## help: Build the package tarball
 #
 
 .PHONY: stdlib-docs
-stdlib-docs: ## help: Generate stdlib reference vignettes from .rye source
-	Rscript tools/docs/generate-stdlib-docs.R
+stdlib-docs: clean-cache stdlib-order ## help: Generate stdlib reference vignettes from .rye source
+	R -q -e "devtools::load_all(); source('tools/docs/generate-stdlib-docs.R')"
 
 .PHONY: devdoc
-devdoc: ## help: Generate roxygen documentation
+devdoc: clean-cache stdlib-order ## help: Generate roxygen documentation
 	R -q -e "devtools::document()"
 
 .PHONY: readme
-readme: ## help: Render README from README.Rmd
-	R -q -e "rmarkdown::render('README.Rmd')"
+readme: clean-cache stdlib-order ## help: Render README from README.Rmd
+	R -q -e "devtools::load_all(); rmarkdown::render('README.Rmd')"
 
 .PHONY: vignettes
-vignettes: ## help: Build vignettes
+vignettes: clean-cache stdlib-order ## help: Build vignettes
 	R -q -e "devtools::build_vignettes()"
 
 .PHONY: site
-site: ## help: Build pkgdown site
+site: clean-cache stdlib-order ## help: Build pkgdown site
 	@tmp=$$(mktemp -d) && \
 	rsync -a --delete \
 	  --exclude 'AGENTS.md' \
@@ -70,7 +70,7 @@ coverage: coverage-all ## help: Run complete coverage analysis (R + Rye)
 coverage-all: coverage-r coverage-rye coverage-combined ## help: Run all coverage and generate combined report
 
 .PHONY: coverage-r
-coverage-r: clean-cache ## help: Run R code coverage only
+coverage-r: clean-cache stdlib-order ## help: Run R code coverage only
 	@echo "Running R code coverage..."
 	@mkdir -p coverage/r
 	@R -q -e "\
@@ -92,7 +92,7 @@ coverage-r: clean-cache ## help: Run R code coverage only
 	"
 
 .PHONY: coverage-rye
-coverage-rye: clean-cache ## help: Run Rye code coverage only
+coverage-rye: clean-cache stdlib-order ## help: Run Rye code coverage only
 	@echo "Running Rye code coverage..."
 	@mkdir -p coverage/rye
 	@R -q -e "\
@@ -142,22 +142,16 @@ coverage-upload: ## help: Upload coverage to codecov (for CI)
 			-n "Rye Coverage" || true; \
 	fi
 
-.PHONY: coverage-clean
-coverage-clean: ## help: Remove coverage output files
-	@echo "Cleaning coverage outputs..."
-	@rm -rf coverage
-	@echo "Coverage outputs cleaned."
-
 .PHONY: lint
-lint: ## help: Run linter checks
-	R -q -e "lintr::lint_dir(path='.')"
+lint: clean-cache stdlib-order ## help: Run linter checks
+	R -q -e "devtools::load_all(); lintr::lint_dir(path='.')"
 
 .PHONY: test
-test: clean-cache ## help: Run tests
+test: clean-cache stdlib-order ## help: Run tests
 	R -q -e "testthat::set_max_fails(Inf); devtools::test()"
 
 .PHONY: test-file
-test-file: clean-cache ## help: Run a single test file (usage: make test-file FILE=test-parser)
+test-file: clean-cache stdlib-order ## help: Run a single test file (usage: make test-file FILE=test-parser)
 	@if [ -z "$(FILE)" ]; then \
 		echo "Error: FILE parameter required. Usage: make test-file FILE=test-parser"; \
 		exit 1; \
@@ -165,7 +159,7 @@ test-file: clean-cache ## help: Run a single test file (usage: make test-file FI
 	R -q -e "devtools::load_all(); testthat::set_max_fails(Inf); testthat::test_file('tests/testthat/$(FILE).R')"
 
 .PHONY: test-native
-test-native: clean-cache ## help: Run a single native test file (usage: make test-native FILE=test-equality-types)
+test-native: clean-cache stdlib-order ## help: Run a single native test file (usage: make test-native FILE=test-equality-types)
 	@if [ -z "$(FILE)" ]; then \
 		echo "Error: FILE parameter required. Usage: make test-native FILE=test-equality-types"; \
 		exit 1; \
@@ -173,11 +167,11 @@ test-native: clean-cache ## help: Run a single native test file (usage: make tes
 	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- Engine\$$new(); env <- engine\$$env\$$env; run_native_test_file('tests/native/$(FILE).rye', engine, env)"
 
 .PHONY: bench
-bench: clean-cache ## help: Run all benchmarks
+bench: clean-cache stdlib-order ## help: Run all benchmarks
 	R -q -e "devtools::load_all(); source('benchmarks/run-all-benchmarks.R')"
 
 .PHONY: bench-component
-bench-component: clean-cache ## help: Run single component benchmark (usage: make bench-component COMPONENT=tokenizer)
+bench-component: clean-cache stdlib-order ## help: Run single component benchmark (usage: make bench-component COMPONENT=tokenizer)
 	@if [ -z "$(COMPONENT)" ]; then \
 		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval, stdlib, e2e"; \
 		exit 1; \
@@ -185,11 +179,11 @@ bench-component: clean-cache ## help: Run single component benchmark (usage: mak
 	R -q -e "devtools::load_all(); source('benchmarks/bench-$(COMPONENT).R')"
 
 .PHONY: profile
-profile: clean-cache ## help: Generate profiling reports
+profile: clean-cache stdlib-order ## help: Generate profiling reports
 	R -q -e "devtools::load_all(); source('benchmarks/run-all-profiles.R')"
 
 .PHONY: profile-component
-profile-component: clean-cache ## help: Profile single component (usage: make profile-component COMPONENT=tokenizer)
+profile-component: clean-cache stdlib-order ## help: Profile single component (usage: make profile-component COMPONENT=tokenizer)
 	@if [ -z "$(COMPONENT)" ]; then \
 		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval"; \
 		exit 1; \
@@ -205,7 +199,7 @@ bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD
 	R -q -e "source('benchmarks/compare-results.R'); compare_benchmarks('$(OLD)', '$(NEW)')"
 
 .PHONY: stdlib-show-order
-stdlib-show-order: ## help: Print stdlib load order (topological sort)
+stdlib-show-order: clean-cache stdlib-order ## help: Print stdlib load order (topological sort)
 	R -q -e "devtools::load_all(); rye:::stdlib_print_order()"
 
 #
@@ -213,9 +207,7 @@ stdlib-show-order: ## help: Print stdlib load order (topological sort)
 #
 
 .PHONY: cran
-cran: ## help: Run full CRAN prep/check/comments
-	make cran-prep
-	make cran-comments
+cran: cran-prep cran-comments ## help: Run full CRAN prep/check/comments
 
 .PHONY: cran-prep
 cran-prep: stdlib-order ## help: Prepare docs and run CRAN check
@@ -238,12 +230,18 @@ cran-clean: ## help: Remove CRAN check artifacts
 ## Cleanup
 #
 
+.PHONY: clean-coverage
+clean-coverage: ## help: Remove coverage output files
+	@echo "Cleaning coverage outputs..."
+	@rm -rf coverage
+	@echo "Coverage outputs cleaned."
+
 .PHONY: clean-cache
 clean-cache: ## help: Remove .rye_cache directories (auto-runs before dev targets)
 	@find . -type d -name ".rye_cache" -exec rm -rf {} + 2>/dev/null || true
 
 .PHONY: clean
-clean: coverage-clean clean-cache ## help: Remove build artifacts and all make document output
+clean: clean-coverage clean-cache ## help: Remove build artifacts and all make document output
 	rm -f rye_*.tar.gz
 	rm -rf rye.Rcheck
 	rm -rf site/ doc/ Meta/
