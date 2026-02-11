@@ -255,16 +255,3 @@ FileDeps <- R6::R6Class(
     }
   )
 )
-
-#' Print stdlib load order (for script/Make use)
-#'
-#' @param stdlib_dir Optional path; defaults to installed package stdlib.
-#' @keywords internal
-#' @noRd
-stdlib_print_order <- function(stdlib_dir = NULL) {
-  dir <- if (is.null(stdlib_dir)) system.file("rye", package = "rye") else stdlib_dir
-  d <- FileDeps$new(dir = dir)
-  cat("Load order (topological sort):\n")
-  cat(paste(d$get_load_order(), collapse = " "), "\n")
-  invisible(d$get_load_order())
-}

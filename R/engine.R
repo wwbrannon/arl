@@ -427,10 +427,11 @@ Engine <- R6::R6Class(
       if (!dir.exists(stdlib_dir)) {
         stop("stdlib directory not found")
       }
-      cache_path <- system.file("rye", "load-order.rds", package = "rye")
+      cache_path <- system.file("rye", "load-order.txt", package = "rye")
       if (nzchar(cache_path) && file.exists(cache_path)) {
-        load_order <- readRDS(cache_path)
-        if (!is.character(load_order) || length(load_order) == 0L) {
+        load_order <- readLines(cache_path, warn = FALSE)
+        load_order <- load_order[nzchar(load_order)]
+        if (length(load_order) == 0L) {
           load_order <- NULL
         }
       } else {

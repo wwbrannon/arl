@@ -4,9 +4,9 @@ SHELL := /bin/bash
 ## Build/install targets
 #
 
-# Keep inst/rye/load-order.rds up to date (must run before build/install)
+# Keep inst/rye/load-order.txt up to date (must run before build/install)
 .PHONY: stdlib-order
-stdlib-order: ## help: Build stdlib load order cache
+stdlib-order: ## help: Build stdlib load order cache (inst/rye/load-order.txt)
 	Rscript tools/build-stdlib-order.R
 
 .PHONY: install
@@ -166,10 +166,6 @@ bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD
 		exit 1; \
 	fi
 	R -q -e "source('benchmarks/compare-results.R'); compare_benchmarks('$(OLD)', '$(NEW)')"
-
-.PHONY: stdlib-show-order
-stdlib-show-order: clean-cache stdlib-order ## help: Print stdlib load order (topological sort)
-	R -q -e "devtools::load_all(); rye:::stdlib_print_order()"
 
 #
 ## CRAN submission helper targets
