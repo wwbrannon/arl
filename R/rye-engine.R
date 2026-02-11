@@ -153,6 +153,9 @@ RyeEngine <- R6::R6Class(
     #' Read and evaluate text.
     eval_text = function(text, env = NULL, source_name = "<eval>", compiled_only = TRUE) {
       exprs <- self$read(text, source_name = source_name)
+      # Stash raw text so module_compiled can parse ;;' annotations from strings
+      self$compiled_runtime$context$compiler$source_text <- text
+      on.exit(self$compiled_runtime$context$compiler$source_text <- NULL)
       self$eval_exprs(exprs, env = env, compiled_only = compiled_only)
     },
     #' @description

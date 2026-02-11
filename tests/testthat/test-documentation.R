@@ -59,18 +59,21 @@ test_that("doc! updates existing docstrings", {
   expect_equal(result2, "Updated doc")
 })
 
-test_that("lambda docstrings are preserved (existing behavior)", {
+test_that("inline strings in lambda body are not stripped as docstrings", {
   engine <- make_engine()
   env <- engine$env$env
 
-  # Lambda with docstring as first expression
-  engine$eval_in_env(engine$read('(define documented-lambda (lambda (x) "This is a docstring" (* x 2)))')[[1]], env)
+  # Lambda with a string as first body expression — not treated as docstring
+  engine$eval_in_env(engine$read('(define test-fn (lambda (x) "This is just a string" (* x 2)))')[[1]], env)
 
-  fn <- engine$eval_in_env(engine$read('documented-lambda')[[1]], env)
+  fn <- engine$eval_in_env(engine$read('test-fn')[[1]], env)
   doc_attr <- attr(fn, "rye_doc", exact = TRUE)
 
-  expect_false(is.null(doc_attr))
-  expect_equal(doc_attr$description, "This is a docstring")
+  # No rye_doc attribute — strings are not treated as docstrings
+  expect_null(doc_attr)
+  # The function still works (string is evaluated and discarded)
+  result <- engine$eval_in_env(engine$read('(test-fn 3)')[[1]], env)
+  expect_equal(result, 6)
 })
 
 test_that("optimized math functions have docstrings", {

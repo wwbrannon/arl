@@ -7,6 +7,7 @@
 
 ;;' @section Struct Definition
 
+;;' @description Define a struct constructor, predicate, and accessors.
 ;;' @examples
 ;;' ;; Define a Point struct
 ;;' (defstruct Point (x y))
@@ -24,7 +25,6 @@
 ;;' @note `defstruct` generates a constructor (`make-Name`), a type predicate (`Name?`), and field accessors (`Name-field`) for each field. The struct is backed by an R named list with an S3 class.
 ;;' @seealso dict
 (defmacro defstruct (name fields)
-  "Define a struct constructor, predicate, and accessors."
   (define struct-name (as.character name))
   (define ctor-name (as.symbol (str "make-" struct-name)))
   (define pred-name (as.symbol (str struct-name "?")))

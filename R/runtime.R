@@ -185,6 +185,16 @@ CompiledRuntime <- R6::R6Class(
         self$quasiquote_compiled(expr, env)
       }, "Quasiquote template expander.")
 
+      assign_and_lock(".rye_attach_doc", function(val, doc_list) {
+        # Primitives don't support attributes; wrap in a regular function
+        if (is.primitive(val)) {
+          prim <- val
+          val <- function(...) prim(...)
+        }
+        attr(val, "rye_doc") <- doc_list
+        val
+      }, "Attach rye_doc annotation to a value, wrapping primitives.")
+
       assign_and_lock(".rye_delay", function(compiled_expr, env) {
         self$promise_new_compiled(compiled_expr, env)
       }, "Promise/delay constructor.")
@@ -350,6 +360,18 @@ CompiledRuntime <- R6::R6Class(
       }
       self$install_helpers(module_env)
 
+      # Parse ;;' annotations from source file (or raw text fallback)
+      if (!is.null(src_file) && is.character(src_file) &&
+          length(src_file) == 1L && nzchar(src_file) && file.exists(src_file)) {
+        doc_parser <- RyeDocParser$new()
+        parsed_annotations <- doc_parser$parse_file(src_file)
+        self$context$compiler$annotations <- parsed_annotations$functions
+      } else if (!is.null(self$context$compiler$source_text)) {
+        doc_parser <- RyeDocParser$new()
+        parsed_annotations <- doc_parser$parse_text(self$context$compiler$source_text)
+        self$context$compiler$annotations <- parsed_annotations$functions
+      }
+
       # Compile body expressions (for caching)
       should_cache <- !is.null(src_file) && is.character(src_file) &&
                       length(src_file) == 1L && nzchar(src_file) &&
@@ -433,6 +455,9 @@ CompiledRuntime <- R6::R6Class(
           }
         }
       }
+
+      # Clear annotations after module compilation
+      self$context$compiler$annotations <- NULL
 
       result
     }

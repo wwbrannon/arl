@@ -30,13 +30,12 @@ test_that("help shows Rye macro docs from stdlib files", {
   expect_true(any(grepl("\\(when test \\. body\\)", output)))
 })
 
-test_that("help reads lambda docstrings", {
+test_that("help shows usage for lambda without docstring", {
   engine <- make_engine()
   env <- engine$env$raw()
-  engine$eval_text("(define add (lambda (x y) \"Add x and y.\" (+ x y)))", env = env)
+  engine$eval_text("(define add (lambda (x y) (+ x y)))", env = env)
   output <- capture.output(engine$eval_text("(help add)", env = env))
   expect_true(any(grepl("Usage: \\(add x y\\)", output)))
-  expect_true(any(grepl("Add x and y\\.", output)))
 })
 
 # Initialization tests
@@ -79,16 +78,16 @@ test_that("help shows all special forms", {
   }
 })
 
-test_that("help shows macro documentation", {
+test_that("help shows macro usage", {
   engine <- make_engine()
   env <- engine$env$raw()
 
-  # Define a macro with docstring
-  engine$eval_text('(defmacro test-macro (x) "Test macro docstring" x)', env = env)
+  # Define a macro without inline docstring (inline docstrings no longer detected)
+  engine$eval_text("(defmacro test-macro (x y) (list x y))", env = env)
   output <- capture.output(engine$eval_text("(help test-macro)", env = env))
 
   expect_true(any(grepl("Topic: test-macro", output)))
-  expect_true(any(grepl("Test macro docstring", output)))
+  expect_true(any(grepl("\\(test-macro x y\\)", output)))
 })
 
 test_that("help shows R function signatures", {

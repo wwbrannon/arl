@@ -29,6 +29,7 @@
   ;;' special forms (not functions) with short-circuit evaluation, so they
   ;;' are not part of this module.
 
+  ;;' @description Logical negation with Rye truthiness.
   ;;' @examples
   ;;' (not #t)          ; => #f
   ;;' (not #f)          ; => #t
@@ -40,9 +41,9 @@
   ;;' @seealso xor, and, or (special forms)
   (define not
     (lambda (x)
-      "Logical negation with Rye truthiness."
       (if x #f #t)))
 
+  ;;' @description Logical exclusive OR with Rye truthiness.
   ;;' @examples
   ;;' (xor #t #f)       ; => #t
   ;;' (xor #f #t)       ; => #t
@@ -54,7 +55,6 @@
   ;;' @seealso not, and, or (special forms)
   (define xor
     (lambda (a b)
-      "Logical exclusive OR with Rye truthiness."
       (if a
         (if b #f #t)
         (if b #t #f))))

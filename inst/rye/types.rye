@@ -9,14 +9,10 @@
           type-of)
 
   (import _r)
-  (import core)  ; for doc!
-
-  ;; DESIGN NOTE: Simple one-argument pass-through functions use direct
-  ;; assignment to avoid unnecessary stack frames.
-  ;; Docstrings attached using doc!.
 
   ;;' @section List and Pair Predicates
 
+  ;;' @description Return #t if x is a proper list (R list or call), not a dotted pair.
   ;;' @examples
   ;;' (list? (list 1 2 3))  ; => #t
   ;;' (list? ())  ; => #t
@@ -24,19 +20,19 @@
   ;;' @seealso pair?, list-or-pair?, null?
   (define list?
     (lambda (x)
-      "Return #t if x is a proper list (R list or call), not a dotted pair."
       (if (pair? x) #f
         (if (is.list x) #t (if (is.call x) #t #f)))))
 
+  ;;' @description Return #t if x is a non-empty list or dotted pair (pairlist cell).
   ;;' @examples
   ;;' (list-or-pair? (list 1))  ; => #t
   ;;' @seealso list?, pair?, null?, atom?
   (define list-or-pair?
     (lambda (x)
-      "Return #t if x is a non-empty list or dotted pair (pairlist cell)."
       (if (pair? x) #t
         (if (list? x) (if (__r> (__rlength x) 0) #t #f) #f))))
 
+  ;;' @description Return #t for empty list or #nil.
   ;;' @examples
   ;;' (null? #nil)  ; => #t
   ;;' (null? ())  ; => #t
@@ -44,7 +40,6 @@
   ;;' @seealso nil?, pair?, list-or-pair?
   (define null?
     (lambda (x)
-      "Return #t for empty list or #nil."
       (if (is.null x)
         #t
         (if (is.list x)
@@ -53,12 +48,13 @@
             (if (__r== (__rlength x) 0) #t #f)
             #f)))))
 
+  ;;' @description Alias for null?.
   ;;' @seealso null?
   (define nil?
     (lambda (x)
-      "Alias for null?."
       (null? x)))
 
+  ;;' @description Return #t if x is not a non-empty list or dotted pair (i.e. not list-or-pair?).
   ;;' @examples
   ;;' (atom? 42)  ; => #t
   ;;' (atom? "hello")  ; => #t
@@ -67,9 +63,9 @@
   ;;' @seealso list-or-pair?
   (define atom?
     (lambda (x)
-      "Return #t if x is not a non-empty list or dotted pair (i.e. not list-or-pair?)."
       (not (list-or-pair? x))))
 
+  ;;' @description Return #t if x is empty (0-length). (Note the empty string "" has length 1 and is not "empty"!)
   ;;' @examples
   ;;' (empty? ())  ; => #t
   ;;' (empty? (list))  ; => #t
@@ -79,56 +75,56 @@
   ;;' @seealso null?, length= (in `sequences` module)
   (define empty?
     (lambda (x)
-     "Return #t if x is empty (0-length). (Note the empty string \"\" has length 1 and is not \"empty\"!)"
       (isTRUE (== (length x) 0))))
 
   ;;' @section Symbol Predicates
 
+  ;;' @description Return #t if x is a symbol.
   ;;' @signature (symbol? x)
   ;;' @examples
   ;;' (symbol? 'foo)  ; => #t
   ;;' (symbol? "foo")  ; => #f
   ;;' (symbol? 42)  ; => #f
   (define symbol? is.symbol)
-  (doc! symbol? "Return #t if x is a symbol.")
 
+  ;;' @description Return #t if x is a Rye keyword.
   ;;' @examples
   ;;' (keyword? :foo)  ; => #t
   ;;' (keyword? 'foo)  ; => #f
   (define keyword?
     (lambda (x)
-      "Return #t if x is a Rye keyword."
       (isTRUE (inherits x "rye_keyword"))))
 
   ;;' @section Basic Type Predicates
 
+  ;;' @description Return #t if x is a number (real or complex).
   ;;' @examples
   ;;' (number? 42)  ; => #t
   ;;' @note For numeric type hierarchy predicates (real?, complex?, etc.), see the `math` module documentation.
   ;;' @seealso stdlib-math vignette for real?, complex?, rational?, exact?, inexact?
   (define number?
     (lambda (x)
-      "Return #t if x is a number (real or complex)."
       (if (is.numeric x)
         #t
         (if (is.complex x) #t #f))))
 
+  ;;' @description Return #t if x is character.
   ;;' @signature (string? x)
   ;;' @examples
   ;;' (string? "hello")  ; => #t
   (define string? is.character)
-  (doc! string? "Return #t if x is character.")
 
+  ;;' @description Return #t if x is a non-list atomic vector.
   ;;' @examples
   ;;' (vector? [1 2 3])  ; => #t
   ;;' @note Tests whether x is a non-list atomic vector (numeric, character, logical, etc.). R lists are NOT vectors by this predicate.
   (define vector?
     (lambda (x)
-      "Return #t if x is a non-list atomic vector."
       (if (is.atomic x)
         (if (is.list x) #f #t)
         #f)))
 
+  ;;' @description Return #t if x is a single logical value.
   ;;' @examples
   ;;' (boolean? #t)  ; => #t
   ;;' (boolean? #f)  ; => #t
@@ -136,69 +132,68 @@
   ;;' (boolean? (c TRUE FALSE))  ; => #f
   (define boolean?
     (lambda (x)
-      "Return #t if x is a single logical value."
       (if (is.logical x)
         (isTRUE (== (length x) 1))
         #f)))
 
+  ;;' @description Return #t if x is TRUE.
   ;;' @examples
   ;;' (true? #t)  ; => #t
   (define true?
     (lambda (x)
-      "Return #t if x is TRUE."
       (isTRUE x)))
 
+  ;;' @description Return #t if x is #f.
   ;;' @examples
   ;;' (false? #f)  ; => #t
   (define false?
     (lambda (x)
-      "Return #t if x is #f."
       (identical x #f)))
 
   ;;' @section Function Predicates
 
+  ;;' @description Return #t if x is a function.
   ;;' @signature (fn? x)
   ;;' @examples
   ;;' (fn? car)  ; => #t
   ;;' @seealso callable?, procedure?
   (define fn? is.function)
-  (doc! fn? "Return #t if x is a function.")
 
+  ;;' @description Alias for fn?.
   ;;' @signature (callable? x)
   ;;' @seealso fn?
   (define callable? fn?)
-  (doc! callable? "Alias for fn?.")
 
+  ;;' @description Alias for fn? - return #t if x is a function.
   ;;' @seealso fn?, callable?
   (define procedure?
     (lambda (x)
-      "Alias for fn? - return #t if x is a function."
       (fn? x)))
 
   ;;' @section Environment Predicates
 
+  ;;' @description Test if x is an environment (including R6 objects).
   ;;' @examples
   ;;' (environment? (base-env))  ; => #t
   ;;' @note R6 objects, dicts, and sets are all environments in R, so this predicate returns #t for them.
   (define environment?
     (lambda (x)
-      "Test if x is an environment (including R6 objects)."
       (r/call "is.environment" (list x))))
 
+  ;;' @description Test if x is a Reference Class object.
   ;;' @examples
   ;;' (is-refclass? (base-env))  ; => #f
   (define is-refclass?
     (lambda (x)
-      "Test if x is a Reference Class object."
       (and (r/call "isS4" (list x))
            (r/call "is" (list x "refClass")))))
 
   ;;' @section Type Introspection
 
+  ;;' @description Return the type of value (alias for R's typeof).
   ;;' @signature (type-of x)
   ;;' @examples
   ;;' (type-of 42)  ; => "double"
   ;;' @seealso class, mode (R functions)
   (define type-of typeof)
-  (doc! type-of "Return the type of value (alias for R's typeof).")
 )

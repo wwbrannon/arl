@@ -32,6 +32,7 @@
 
 ;;' @section Error and Warning
 
+  ;;' @description Signal an error with message.
   ;;' @examples
   ;;' (error "something went wrong")   ; signals error
   ;;' (try (error "oops")
@@ -39,19 +40,19 @@
   ;;' @seealso warn, assert, try
   (define error
     (lambda (msg)
-      "Signal an error with message."
       (stop msg :call. #f)))
 
+  ;;' @description Emit warning with message.
   ;;' @examples
   ;;' (warn "check your input")       ; emits warning, returns #nil
   ;;' @seealso error, trace
   (define warn
     (lambda (msg)
-      "Emit warning with message."
       (warning msg :call. #f)))
 
 ;;' @section Identity and Values
 
+  ;;' @description Return argument.
   ;;' @examples
   ;;' (identity 42)             ; => 42
   ;;' (identity "hello")        ; => "hello"
@@ -59,28 +60,28 @@
   ;;' @seealso map
   (define identity
     (lambda (x)
-      "Return argument."
       x))
 
+  ;;' @description Return multiple values to a call-with-values consumer.
   ;;' @examples
   ;;' (values 1 2 3)            ; => multiple-values container
   ;;' @seealso values?, call-with-values
   (define values
     (lambda (. args)
-      "Return multiple values to a call-with-values consumer."
       (r/call "structure" (list args :class "rye_values"))))
 
+  ;;' @description Return #t if x is a multiple-values container.
   ;;' @examples
   ;;' (values? (values 1 2))    ; => #t
   ;;' (values? 42)              ; => #f
   ;;' @seealso values, call-with-values
   (define values?
     (lambda (x)
-      "Return #t if x is a multiple-values container."
       (if (is.list x)
         (isTRUE (inherits x "rye_values"))
         #f)))
 
+  ;;' @description Call producer and pass its values to consumer.
   ;;' @examples
   ;;' (call-with-values
   ;;'   (lambda () (values 1 2))
@@ -88,7 +89,6 @@
   ;;' @seealso values, values?
   (define call-with-values
     (lambda (producer consumer)
-      "Call producer and pass its values to consumer."
       (if (not (is.function producer))
         (stop "call-with-values expects a function as the producer"))
       (if (not (is.function consumer))
@@ -114,6 +114,7 @@
 
 ;;' @section Function Application
 
+  ;;' @description Apply a function with a provided list of arguments.
   ;;' @signature (funcall fn args)
   ;;' @examples
   ;;' (funcall + (list 1 2 3))  ; => 6
@@ -121,9 +122,9 @@
   ;;' @seealso apply, r/call
   (define funcall
     (lambda (fn args)
-      "Apply a function with a provided list of arguments."
       (do.call fn args :quote #t)))
 
+  ;;' @description Call an R function with optional environment. Searches from .GlobalEnv by default, finding base and loaded package functions.
   ;;' @examples
   ;;' (r/call "mean" (list (c 1 2 3)))   ; => 2
   ;;' (r/call "ls" (list))                ; list .GlobalEnv bindings
@@ -132,7 +133,6 @@
   ;;' @seealso funcall, r/eval
   (define r/call
     (lambda (fn (args (list)) (envir (globalenv)))
-      "Call an R function with optional environment. Searches from .GlobalEnv by default, finding base and loaded package functions."
       (define fn-name
         (if (is.symbol fn)
           (as.character fn)
@@ -142,6 +142,7 @@
       (define fn-obj (__rget fn-name :envir envir :inherits #t))
       (funcall fn-obj (as.list args))))  ; as.list handles environments
 
+  ;;' @description Get a binding by name, defaulting to .GlobalEnv.
   ;;' @signature (get name [envir] [inherits])
   ;;' @examples
   ;;' (get "mean")              ; => the `mean` function
@@ -149,7 +150,6 @@
   ;;' @seealso r/call
   (define get
     (lambda (name (envir (globalenv)) (inherits #t))
-      "Get a binding by name, defaulting to .GlobalEnv."
       (define name-str
         (if (is.symbol name)
           (as.character name)
@@ -158,11 +158,11 @@
 
 ;;' @section License
 
+  ;;' @description Display Rye and R license information.
   ;;' @examples
   ;;' (license)                 ; prints Rye and R license info
   (define license
     (lambda ()
-      "Display Rye and R license information."
       (begin
         (r/call "cat" (list "Rye is licensed under the MIT License:\n\n"))
         (define license-file (r/call "system.file" (list "LICENSE.md" :package "rye")))

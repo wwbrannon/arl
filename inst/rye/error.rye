@@ -9,6 +9,7 @@
 
 ;;' @section Error Handling
 
+  ;;' @description Macro wrapper around try* with catch/finally.
   ;;' @examples
   ;;' ;; Basic try with catch
   ;;' (try (/ 1 0)
@@ -28,7 +29,6 @@
   ;;' @note Macro wrapper around `try*` that provides familiar catch/finally syntax. The catch clause binds the error condition to the given variable. The finally clause runs regardless of success or failure.
   ;;' @seealso try* (in `control` module)
   (defmacro try (body . clauses)
-    "Macro wrapper around try* with catch/finally."
     (begin
       (define catch-clause #nil)
       (define finally-clause #nil)

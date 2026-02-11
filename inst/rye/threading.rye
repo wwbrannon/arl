@@ -9,6 +9,7 @@
 
 ;;' @section Threading Macros
 
+;;' @description Thread value through forms (first argument).
 ;;' @examples
 ;;' (-> 5 (+ 3) (* 2))       ; => 16  ; (5+3)*2
 ;;' (-> '(1 2 3) (cons 0))   ; => (0 1 2 3)
@@ -17,7 +18,6 @@
 ;;' @note Threads the value as the FIRST argument to each successive form. If a form is a bare symbol, it is called as a one-argument function.
 ;;' @seealso ->>
 (defmacro -> (value . forms)
-  "Thread value through forms (first argument)."
   (reduce
     (lambda (acc form)
       (if (list? form)
@@ -26,6 +26,7 @@
     forms
     :init value))
 
+;;' @description Thread value through forms (last argument).
 ;;' @examples
 ;;' (->> '(1 2 3) (map (lambda (x) (* x x))))  ; => (1 4 9)
 ;;' (->> 5 (- 10))           ; => 5  ; (- 10 5)
@@ -35,7 +36,6 @@
 ;;' @note Threads the value as the LAST argument to each successive form. Compare with `->` which threads as the first argument.
 ;;' @seealso ->
 (defmacro ->> (value . forms)
-  "Thread value through forms (last argument)."
   (reduce
     (lambda (acc form)
       (if (list? form)

@@ -196,6 +196,19 @@ HelpSystem <- R6::R6Class(
       if (!is.null(doc$description) && doc$description != "") {
         lines <- c(lines, paste0("Description: ", doc$description))
       }
+      if (!is.null(doc$examples) && nchar(doc$examples) > 0) {
+        lines <- c(lines, "", "Examples:")
+        example_lines <- strsplit(doc$examples, "\n")[[1]]
+        for (el in example_lines) {
+          lines <- c(lines, paste0("  ", el))
+        }
+      }
+      if (!is.null(doc$note) && nchar(doc$note) > 0) {
+        lines <- c(lines, "", paste0("Note: ", doc$note))
+      }
+      if (!is.null(doc$seealso) && nchar(doc$seealso) > 0) {
+        lines <- c(lines, "", paste0("See also: ", doc$seealso))
+      }
       cat(paste(lines, collapse = "\n"), "\n")
     },
     format_default = function(expr) {

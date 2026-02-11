@@ -22,6 +22,10 @@ Compiler <- R6::R6Class(
     enable_constant_folding = TRUE,
     # Last compilation error (message) when compile() returns NULL.
     last_error = NULL,
+    # Annotation map: name -> annotation data (set by module_compiled before compiling).
+    annotations = NULL,
+    # Raw source text for annotation parsing when no file is available (set by eval_text).
+    source_text = NULL,
     # @param context EvalContext (for source_tracker).
     initialize = function(context) {
       if (!r6_isinstance(context, "EvalContext")) {
@@ -486,6 +490,38 @@ Compiler <- R6::R6Class(
         tmp_sym,
         "define"
       ))
+      # Check if annotations exist for this name (from ;;' blocks)
+      ann <- NULL
+      name_str <- private$as_name_string(name)
+      if (!is.null(name_str) && !is.null(self$annotations)) {
+        ann <- self$annotations[[name_str]]
+      }
+      if (!is.null(ann)) {
+        doc_list <- list()
+        if (!is.null(ann$description) && nchar(ann$description) > 0) {
+          doc_list$description <- ann$description
+        }
+        if (!is.null(ann$examples) && nchar(ann$examples) > 0) {
+          doc_list$examples <- ann$examples
+        }
+        if (!is.null(ann$seealso) && nchar(ann$seealso) > 0) {
+          doc_list$seealso <- ann$seealso
+        }
+        if (!is.null(ann$note) && nchar(ann$note) > 0) {
+          doc_list$note <- ann$note
+        }
+        if (length(doc_list) > 0) {
+          # Use .rye_attach_doc helper (handles primitive wrapping)
+          return(as.call(list(
+            quote(`{`),
+            as.call(list(quote(`<-`), tmp_sym,
+              as.call(list(as.symbol(".rye_attach_doc"), val, doc_list))
+            )),
+            assign_call,
+            as.call(list(quote(invisible), tmp_sym))
+          )))
+        }
+      }
       # (define x v) returns invisible(v) like the interpreter; evaluate v once.
       as.call(list(quote(`{`), assign_tmp, assign_call, as.call(list(quote(invisible), tmp_sym))))
     },
@@ -524,14 +560,6 @@ Compiler <- R6::R6Class(
         as.list(expr)[-(1:2)]
       } else {
         list()
-      }
-      docstring <- NULL
-      if (length(body_exprs) > 0) {
-        first_body <- private$strip_src(body_exprs[[1]])
-        if (is.character(first_body) && length(first_body) == 1L) {
-          docstring <- first_body
-          body_exprs <- body_exprs[-1]
-        }
       }
       if (length(body_exprs) == 0) {
         body_exprs <- list(private$compiled_nil())
@@ -683,20 +711,7 @@ Compiler <- R6::R6Class(
         c(formals_list, list(body_call)),
         envir = as.symbol(self$env_var_name)
       ))
-      if (is.null(docstring)) {
-        return(fn_expr)
-      }
-      fn_sym <- as.symbol(".__rye_compiled_fn")
-      as.call(list(
-        quote(`{`),
-        as.call(list(quote(`<-`), fn_sym, fn_expr)),
-        as.call(list(
-          quote(`<-`),
-          as.call(list(quote(attr), fn_sym, "rye_doc")),
-          list(description = docstring)
-        )),
-        fn_sym
-      ))
+      fn_expr
     },
     lambda_params = function(args_expr) {
       arg_items <- if (is.null(args_expr)) {
@@ -962,11 +977,12 @@ Compiler <- R6::R6Class(
       }
       body_exprs <- as.list(expr)[-(1:3)]
       docstring <- NULL
-      if (length(body_exprs) > 0) {
-        first <- private$strip_src(body_exprs[[1]])
-        if (is.character(first) && length(first) == 1L) {
-          docstring <- first
-          body_exprs <- body_exprs[-1]
+      # Get docstring from ;;' annotations
+      if (is.null(docstring) && !is.null(self$annotations)) {
+        macro_name_str <- as.character(name)
+        ann <- self$annotations[[macro_name_str]]
+        if (!is.null(ann) && !is.null(ann$description) && nchar(ann$description) > 0) {
+          docstring <- ann$description
         }
       }
       body_quoted <- as.call(list(quote(quote), as.call(c(list(quote(begin)), body_exprs))))
@@ -1717,11 +1733,6 @@ Compiler <- R6::R6Class(
       }
 
       iife_body <- as.list(lambda_expr)[-(1:2)]
-      # Skip docstring
-      if (length(iife_body) > 0) {
-        first <- private$strip_src(iife_body[[1]])
-        if (is.character(first) && length(first) == 1L) iife_body <- iife_body[-1]
-      }
       if (length(iife_body) == 0) {
         return(as.call(list(quote(return), private$compiled_nil())))
       }

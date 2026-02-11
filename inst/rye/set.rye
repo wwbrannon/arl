@@ -14,21 +14,22 @@
 
 ;;; Internal helpers (defined early for use in constructors)
 
+;;' @description Create a new empty set environment.
 (define set-new
   (lambda ()
-    "Create a new empty set environment."
     (define set-obj (r/call "new.env" (list :hash #t :parent (r/call "emptyenv" (list)))))
     (r/call "class<-" (list set-obj (c (list "rye_set") (r/call "class" (list set-obj)))))
     set-obj))
 
+;;' @description Convert value to string key for set storage via serialization.
 (define set-key
   (lambda (value)
-    "Convert value to string key for set storage via serialization."
     (define raw (r/call "serialize" (list value #nil :ascii #t)))
     (r/call "paste" (list (r/call "as.integer" (list raw)) :collapse ","))))
 
 ;;; Set constructor
 
+;;' @description Create a hash-backed set of unique items.
 ;;' @examples
 ;;' (set 1 2 3)                ; => set of {1, 2, 3}
 ;;' (set 1 1 2)                ; => set of {1, 2} (duplicates removed)
@@ -36,7 +37,6 @@
 ;;' (set '(a b c))             ; => set from list
 (define set
   (lambda (. args)
-    "Create a hash-backed set of unique items."
     (define set-obj (set-new))
     (define items
       (if (and (= (length args) 1) (or (is.list (car args)) (is.call (car args))))
@@ -53,17 +53,18 @@
 
 ;;; Type predicate
 
+;;' @description Return #t if x is a set.
 ;;' @examples
 ;;' (set? (set 1 2))           ; => #t
 ;;' (set? (list 1 2))          ; => #f
 ;;' (set? 42)                  ; => #f
 (define set?
   (lambda (x)
-    "Return #t if x is a set."
     (and (r/call "is.environment" (list x)) (r/call "inherits" (list x "rye_set")))))
 
 ;;; Set operations
 
+;;' @description Add item to set and return set.
 ;;' @examples
 ;;' (define s (set 1 2))
 ;;' (set-add s 3)              ; => s (mutated, now {1, 2, 3})
@@ -71,7 +72,6 @@
 ;;' @seealso set-remove
 (define set-add
   (lambda (set item)
-    "Add item to set and return set."
     (if (not (set? set))
       (error "set-add requires a set")
       (begin
@@ -80,6 +80,7 @@
           (r/call "assign" (list key item :envir set)))
         set))))
 
+;;' @description Remove item from set and return set.
 ;;' @examples
 ;;' (define s (set 1 2 3))
 ;;' (set-remove s 2)           ; => s (mutated, now {1, 3})
@@ -87,7 +88,6 @@
 ;;' @seealso set-add
 (define set-remove
   (lambda (set item)
-    "Remove item from set and return set."
     (if (not (set? set))
       set
       (begin
@@ -96,19 +96,20 @@
           (r/call "rm" (list :list (c key) :envir set :inherits #f)))
         set))))
 
+;;' @description Return #t if set contains item.
 ;;' @examples
 ;;' (define s (set 1 2 3))
 ;;' (set-contains? s 2)        ; => #t
 ;;' (set-contains? s 99)       ; => #f
 (define set-contains?
   (lambda (set item)
-    "Return #t if set contains item."
     (if (not (set? set))
       #f
       (begin
         (define key (set-key item))
         (r/call "exists" (list key :envir set :inherits #f))))))
 
+;;' @description Return union of two sets.
 ;;' @examples
 ;;' (define a (set 1 2 3))
 ;;' (define b (set 3 4 5))
@@ -118,12 +119,12 @@
 ;;' @seealso set-intersection, set-difference
 (define set-union
   (lambda (a b)
-    "Return union of two sets."
     (define result (set-new))
     (set-copy-into result a)
     (set-copy-into result b)
     result))
 
+;;' @description Return intersection of two sets.
 ;;' @examples
 ;;' (define a (set 1 2 3))
 ;;' (define b (set 2 3 4))
@@ -133,7 +134,6 @@
 ;;' @seealso set-union, set-difference
 (define set-intersection
   (lambda (a b)
-    "Return intersection of two sets."
     (define result (set-new))
     (if (and (set? a) (set? b))
       (begin
@@ -148,6 +148,7 @@
         result))
     result))
 
+;;' @description Return items in a that are not in b.
 ;;' @examples
 ;;' (define a (set 1 2 3))
 ;;' (define b (set 2 3 4))
@@ -157,7 +158,6 @@
 ;;' @seealso set-union, set-intersection
 (define set-difference
   (lambda (a b)
-    "Return items in a that are not in b."
     (define result (set-new))
     (if (set? a)
       (begin
@@ -174,9 +174,9 @@
 
 ;;; Internal helper
 
+;;' @description Copy items from source into target (internal helper).
 (define set-copy-into
   (lambda (target source)
-    "Copy items from source into target (internal helper)."
     (if (and (set? target) (set? source))
       (begin
         (define keys (r/call "ls" (list :envir source :all.names #t :sorted #f)))

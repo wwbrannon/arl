@@ -22,9 +22,9 @@
   ;;' Lists in Rye are backed by R lists; `car`/`cdr` provide the fundamental
   ;;' decomposition and `cons` the fundamental construction.
 
+  ;;' @description Coerce calls and vectors to list; dotted pair to proper prefix.
   (define __as-list
     (lambda (x)
-      "Coerce calls and vectors to list; dotted pair to proper prefix."
       (if (pair? x)
         (__cons-as-list x)
         (if (is.call x)
@@ -35,28 +35,29 @@
               (list)
               (as.list x)))))))
 
+  ;;' @description Return last element of list.
   (define __list-last
     (lambda (lst)
-      "Return last element of list."
       (__r[[ lst (__rlength lst))))
 
+  ;;' @description Return list without last element.
   (define __list-head
     (lambda (lst)
-      "Return list without last element."
       (if (__r<= (__rlength lst) 1)
         (list)
         (r/call "[" (list lst (seq 1 (__r- (__rlength lst) 1)))))))
 
+  ;;' @description Convert a list to a callable form.
   ;;' @examples
   ;;' (call (list '+ 1 2))  ; => language: (+ 1 2)
   ;;' @seealso eval, apply
   (define call
     (lambda (lst)
-      "Convert a list to a callable form."
       (if (is.call lst)
         lst
         (as.call (__as-list lst)))))
 
+  ;;' @description Return first element or #nil.
   ;;' @examples
   ;;' (car (list 1 2 3))    ; => 1
   ;;' (car (list))           ; => #nil
@@ -64,7 +65,6 @@
   ;;' @seealso cdr, cons, first
   (define car
     (lambda (lst)
-      "Return first element or #nil."
       (if (pair? lst)
         (r/call "[[" (list lst "car"))
         (if (is.call lst)
@@ -73,6 +73,7 @@
             (if (__r> (__rlength lst) 0) (__r[[ lst 1) #nil)
             #nil)))))
 
+  ;;' @description Return list without first element (or cdr of dotted pair).
   ;;' @examples
   ;;' (cdr (list 1 2 3))    ; => (2 3)
   ;;' (cdr (list 1))        ; => ()
@@ -80,7 +81,6 @@
   ;;' @seealso car, cons, rest
   (define cdr
     (lambda (lst)
-      "Return list without first element (or cdr of dotted pair)."
       (if (pair? lst)
         (r/call "[[" (list lst "cdr"))
         (if (is.call lst)
@@ -95,24 +95,39 @@
 
   ;; Common composed list accessors
   ;; These intentionally compose the semantics of car/cdr (including #nil / empty list handling).
-  (define caar (lambda (x) "car of car." (car (car x))))
-  (define cadr (lambda (x) "car of cdr." (car (cdr x))))
-  (define cdar (lambda (x) "cdr of car." (cdr (car x))))
-  (define cddr (lambda (x) "cdr of cdr." (cdr (cdr x))))
+  ;;' @description car of car.
+  (define caar (lambda (x) (car (car x))))
+  ;;' @description car of cdr.
+  (define cadr (lambda (x) (car (cdr x))))
+  ;;' @description cdr of car.
+  (define cdar (lambda (x) (cdr (car x))))
+  ;;' @description cdr of cdr.
+  (define cddr (lambda (x) (cdr (cdr x))))
 
-  (define caaar (lambda (x) "car of car of car." (car (car (car x)))))
-  (define caadr (lambda (x) "car of car of cdr." (car (car (cdr x)))))
-  (define cadar (lambda (x) "car of cdr of car." (car (cdr (car x)))))
-  (define caddr (lambda (x) "car of cdr of cdr." (car (cdr (cdr x)))))
+  ;;' @description car of car of car.
+  (define caaar (lambda (x) (car (car (car x)))))
+  ;;' @description car of car of cdr.
+  (define caadr (lambda (x) (car (car (cdr x)))))
+  ;;' @description car of cdr of car.
+  (define cadar (lambda (x) (car (cdr (car x)))))
+  ;;' @description car of cdr of cdr.
+  (define caddr (lambda (x) (car (cdr (cdr x)))))
 
-  (define cdaar (lambda (x) "cdr of car of car." (cdr (car (car x)))))
-  (define cdadr (lambda (x) "cdr of car of cdr." (cdr (car (cdr x)))))
-  (define cddar (lambda (x) "cdr of cdr of car." (cdr (cdr (car x)))))
-  (define cdddr (lambda (x) "cdr of cdr of cdr." (cdr (cdr (cdr x)))))
+  ;;' @description cdr of car of car.
+  (define cdaar (lambda (x) (cdr (car (car x)))))
+  ;;' @description cdr of car of cdr.
+  (define cdadr (lambda (x) (cdr (car (cdr x)))))
+  ;;' @description cdr of cdr of car.
+  (define cddar (lambda (x) (cdr (cdr (car x)))))
+  ;;' @description cdr of cdr of cdr.
+  (define cdddr (lambda (x) (cdr (cdr (cdr x)))))
 
-  (define cadddr (lambda (x) "car of cdr of cdr of cdr." (car (cdr (cdr (cdr x))))))
-  (define cddddr (lambda (x) "cdr of cdr of cdr of cdr." (cdr (cdr (cdr (cdr x))))))
+  ;;' @description car of cdr of cdr of cdr.
+  (define cadddr (lambda (x) (car (cdr (cdr (cdr x))))))
+  ;;' @description cdr of cdr of cdr of cdr.
+  (define cddddr (lambda (x) (cdr (cdr (cdr (cdr x))))))
 
+  ;;' @description Prepend item to list or call; dotted pair when cdr is not a list.
   ;;' @examples
   ;;' (cons 1 (list 2 3))   ; => (1 2 3)
   ;;' (cons 'a (list 'b))   ; => (a b)
@@ -120,13 +135,13 @@
   ;;' @seealso car, cdr, append
   (define cons
     (lambda (item lst)
-      "Prepend item to list or call; dotted pair when cdr is not a list."
       (if (is.call lst)
         (as.call (c (list item) (as.list lst)))
         (if (is.list lst)
           (c (list item) lst)
           (__cons item lst)))))
 
+  ;;' @description Build list ending with last arg.
   ;;' @examples
   ;;' (list* 1 2 (list 3 4))  ; => (1 2 3 4)
   ;;' (list* 1 2 3)           ; => (1 2 3)
@@ -134,7 +149,6 @@
   ;;' @seealso list, cons, append
   (define list*
     (lambda (. args)
-      "Build list ending with last arg."
       (if (= (__rlength args) 0)
         (list)
         (if (= (__rlength args) 1)
@@ -148,6 +162,7 @@
                 (c head (__as-list last))
                 (c head (list last)))))))))
 
+  ;;' @description Concatenate multiple lists into one.
   ;;' @examples
   ;;' (append (list 1 2) (list 3 4))    ; => (1 2 3 4)
   ;;' (append (list 1) (list 2) (list 3)); => (1 2 3)
@@ -155,7 +170,6 @@
   ;;' @seealso cons, list*
   (define append
     (lambda (. lists)
-      "Concatenate multiple lists into one."
       (define result (list))
       (define remaining (__as-list lists))
       (while (__r> (__rlength remaining) 0)
@@ -163,41 +177,42 @@
         (set! remaining (cdr remaining)))
       result))
 
+  ;;' @description Reverse list.
   ;;' @examples
   ;;' (reverse (list 1 2 3))  ; => (3 2 1)
   ;;' (reverse (list))        ; => ()
   (define reverse
     (lambda (x)
-      "Reverse list."
       (rev (__as-list x))))
 
+  ;;' @description Alias for car.
   ;;' @seealso car, rest, last
   (define first
     (lambda (lst)
-      "Alias for car."
       (car lst)))
 
+  ;;' @description Return second element or #nil.
   (define second
     (lambda (lst)
-      "Return second element or #nil."
       (cadr lst)))
 
+  ;;' @description Return third element or #nil.
   (define third
     (lambda (lst)
-      "Return third element or #nil."
       (caddr lst)))
 
+  ;;' @description Return fourth element or #nil.
   (define fourth
     (lambda (lst)
-      "Return fourth element or #nil."
       (cadddr lst)))
 
+  ;;' @description Alias for cdr.
   ;;' @seealso cdr, first
   (define rest
     (lambda (lst)
-      "Alias for cdr."
       (cdr lst)))
 
+  ;;' @description Return last item or #nil.
   ;;' @examples
   ;;' (last (list 1 2 3))   ; => 3
   ;;' (last (list 42))      ; => 42
@@ -205,17 +220,16 @@
   ;;' @seealso first, nth
   (define last
     (lambda (lst)
-      "Return last item or #nil."
       (define items (__as-list lst))
       (if (= (__rlength items) 0) #nil (__list-last items))))
 
+  ;;' @description Return nth item (0-based).
   ;;' @examples
   ;;' (nth (list 'a 'b 'c) 0)  ; => a
   ;;' (nth (list 'a 'b 'c) 2)  ; => c
   ;;' @seealso first, last
   (define nth
     (lambda (lst n)
-      "Return nth item (0-based)."
       (define items (__as-list lst))
       (if (< n 0)
         (stop (sprintf "Index %d out of bounds for list of length %d" n (__rlength items)))
@@ -234,9 +248,9 @@
 
   ;; Internal: predicate (key-in-entry target-key) -> boolean; entry = alist element (list or dotted pair).
   ;; __r== can return a vector; treat as match only when scalar #t or all true.
+  ;;' @description Wrap R's == to handle vector results; returns #t only if all elements match.
   (define __r==-pred
     (lambda (a b)
-      "Wrap R's == to handle vector results; returns #t only if all elements match."
       (define comp-result (__r== a b))
       (if (r/call "is.logical" (list comp-result))
         (if (__r> (r/call "length" (list comp-result)) 1)
@@ -244,9 +258,9 @@
           (isTRUE comp-result))
         #f)))
 
+  ;;' @description Find first alist entry with matching key using given predicate.
   (define __assoc-by-pred
     (lambda (key alist pred)
-      "Find first alist entry with matching key using given predicate."
       (define result #nil)
       (define remaining (__as-list alist))
       (while (and (not (null? remaining)) (not result))
@@ -260,52 +274,52 @@
           (set! remaining (cdr remaining))))
       result))
 
+  ;;' @description Find first alist entry (list or dotted pair) with matching key (uses equal?).
   ;;' @examples
   ;;' (assoc 'b (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
   ;;' (assoc 'z (list (list 'a 1) (list 'b 2)))               ; => #nil
   ;;' @seealso rassoc, assoc-by-identical?, assoc-by-==
   (define assoc
     (lambda (key alist)
-      "Find first alist entry (list or dotted pair) with matching key (uses equal?)."
       (__assoc-by-pred key alist equal?)))
 
+  ;;' @description Alias for assoc: find first alist entry with key matching under equal?.
   ;;' @seealso assoc
   (define assoc-by-equal?
     (lambda (key alist)
-      "Alias for assoc: find first alist entry with key matching under equal?."
       (assoc key alist)))
 
+  ;;' @description Find first alist entry with matching key (uses R's identical?).
   ;;' @seealso assoc, assoc-by-==
   (define assoc-by-identical?
     (lambda (key alist)
-      "Find first alist entry with matching key (uses R's identical?)."
       (__assoc-by-pred key alist identical?)))
 
+  ;;' @description Find first alist entry with matching key (uses R's ==).
   ;;' @seealso assoc, assoc-by-identical?
   (define assoc-by-==
     (lambda (key alist)
-      "Find first alist entry with matching key (uses R's ==)."
       (__assoc-by-pred key alist __r==-pred)))
 
+  ;;' @description assq cannot be properly implemented in R (no eq?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
   ;;' @note assq cannot be properly implemented in R (no eq?). Use assoc, assoc-by-identical?, or assoc-by-== instead.
   (define assq
     (lambda (key alist)
-      "assq cannot be properly implemented in R (no eq?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead."
       (error "assq cannot be properly implemented in R. Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.")))
 
+  ;;' @description assv cannot be properly implemented in R (no eqv?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
   ;;' @note assv cannot be properly implemented in R (no eqv?). Use assoc, assoc-by-identical?, or assoc-by-== instead.
   (define assv
     (lambda (key alist)
-      "assv cannot be properly implemented in R (no eqv?). Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead."
       (error "assv cannot be properly implemented in R. Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.")))
 
+  ;;' @description Find first alist entry with matching value (searches cdr of entries; uses equal?).
   ;;' @examples
   ;;' (rassoc 2 (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
   ;;' (rassoc 9 (list (list 'a 1) (list 'b 2)))               ; => #nil
   ;;' @seealso assoc, rassoc-by-equal?
   (define rassoc
     (lambda (value alist)
-      "Find first alist entry with matching value (searches cdr of entries; uses equal?)."
       (define result #nil)
       (define remaining (__as-list alist))
       (while (and (not (null? remaining)) (not result))
@@ -319,15 +333,16 @@
           (set! remaining (cdr remaining))))
       result))
 
+  ;;' @description Alias for rassoc: find first alist entry with value matching under equal?.
   ;;' @seealso rassoc
   (define rassoc-by-equal?
     (lambda (value alist)
-      "Alias for rassoc: find first alist entry with value matching under equal?."
       (rassoc value alist)))
 
   ;;' @section List Generation
   ;;' Utilities for creating lists of numbers or repeated values.
 
+  ;;' @description Generate numeric range from start to end (exclusive) with optional step.
   ;;' @examples
   ;;' (range 0 5)       ; => (0 1 2 3 4)
   ;;' (range 0 10 2)    ; => (0 2 4 6 8)
@@ -335,7 +350,6 @@
   ;;' @seealso iota, make-list
   (define range
     (lambda (start end . step-args)
-      "Generate numeric range from start to end (exclusive) with optional step."
       (define step (if (> (__rlength step-args) 0) (car step-args) 1))
       (if (= step 0)
         (stop "range: step cannot be zero")
@@ -349,6 +363,7 @@
             (list)
             (as.list (seq start (+ end 1) step)))))))
 
+  ;;' @description Generate sequence of count numbers starting from start (default 0) with step (default 1).
   ;;' @examples
   ;;' (iota 5)          ; => (0 1 2 3 4)
   ;;' (iota 5 1)        ; => (1 2 3 4 5)
@@ -356,20 +371,19 @@
   ;;' @seealso range, make-list
   (define iota
     (lambda (count . args)
-      "Generate sequence of count numbers starting from start (default 0) with step (default 1)."
       (define start (if (> (__rlength args) 0) (car args) 0))
       (define step (if (> (__rlength args) 1) (cadr args) 1))
       (if (<= count 0)
         (list)
         (as.list (seq start (+ start (* (- count 1) step)) step)))))
 
+  ;;' @description Create list of n copies of value.
   ;;' @examples
   ;;' (make-list 3 'x)    ; => (x x x)
   ;;' (make-list 0 'x)    ; => ()
   ;;' @seealso iota, range
   (define make-list
     (lambda (n value)
-      "Create list of n copies of value."
       (if (<= n 0)
         (list)
         ;; Use explicit loop to avoid stack overflow and handle symbols
@@ -384,21 +398,21 @@
 
   ;;' @section Additional List Accessors
 
+  ;;' @description Scheme-style list accessor (alias for nth).
   ;;' @examples
   ;;' (list-ref (list 'a 'b 'c) 1)  ; => b
   ;;' @seealso nth
   (define list-ref
     (lambda (lst index)
-      "Scheme-style list accessor (alias for nth)."
       (nth lst index)))
 
+  ;;' @description Return list without first k elements.
   ;;' @examples
   ;;' (list-tail (list 'a 'b 'c 'd) 2)  ; => (c d)
   ;;' (list-tail (list 1 2 3) 0)         ; => (1 2 3)
   ;;' @seealso drop
   (define list-tail
     (lambda (lst k)
-      "Return list without first k elements."
       (define items (__as-list lst))
       (if (<= k 0)
         items

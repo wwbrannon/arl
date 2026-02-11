@@ -14,17 +14,17 @@
 
 ;;; Internal helpers (defined early for use in constructors)
 
+;;' @description Create a new empty dictionary environment.
 (define dict-new
   (lambda ()
-    "Create a new empty dictionary environment."
     (define dict-obj (r/call "new.env" (list :hash #t :parent (r/call "emptyenv" (list)))))
     (r/call "class<-" (list dict-obj (c (list "rye_dict") (r/call "class" (list dict-obj)))))
     (r/call "assign" (list ".rye_keys" (r/call "character" (list 0)) :envir dict-obj))
     dict-obj))
 
+;;' @description Convert key to string name for dict storage.
 (define dict-key-to-name
   (lambda (key)
-    "Convert key to string name for dict storage."
     (if (r/call "is.character" (list key))
       key
       (if (or (r/call "inherits" (list key "rye_keyword")) (r/call "is.symbol" (list key)))
@@ -33,6 +33,7 @@
 
 ;;; Dictionary constructor
 
+;;' @description Create a hash-backed dictionary from key/value pairs.
 ;;' @examples
 ;;' (dict :x 1 :y 2)           ; => dict with keys "x" and "y"
 ;;' (dict)                      ; => empty dict
@@ -41,7 +42,6 @@
 ;;' @seealso hash
 (define dict
   (lambda (. args)
-    "Create a hash-backed dictionary from key/value pairs."
     (define dict-obj (dict-new))
     (if (= (length args) 0)
       dict-obj
@@ -68,20 +68,20 @@
 
 ;;; Type predicate
 
+;;' @description Return #t if x is a dictionary.
 ;;' @examples
 ;;' (dict? (dict :x 1))        ; => #t
 ;;' (dict? (list 1 2))         ; => #f
 ;;' (dict? 42)                 ; => #f
 (define dict?
   (lambda (x)
-    "Return #t if x is a dictionary."
     (and (r/call "is.environment" (list x)) (r/call "inherits" (list x "rye_dict")))))
 
 ;;; Internal helper (defined early for forward references)
 
+;;' @description Return ordered keys vector (internal helper).
 (define dict-keys-ordered
   (lambda (dict)
-    "Return ordered keys vector (internal helper)."
     (if (not (dict? dict))
       (r/call "character" (list 0))
       (begin
@@ -92,6 +92,7 @@
 
 ;;; Dictionary operations
 
+;;' @description Get value for key or default if missing.
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-get d "x")           ; => 1
@@ -100,7 +101,6 @@
 ;;' @seealso dict-set, dict-has?
 (define dict-get
   (lambda (dict key . rest)
-    "Get value for key or default if missing."
     (define default (if (= (length rest) 0) #nil (car rest)))
     (define name (dict-key-to-name key))
     (if (or (is.null name) (not (dict? dict)))
@@ -109,6 +109,7 @@
         (r/call "get" (list name :envir dict :inherits #f))
         default))))
 
+;;' @description Set key to value in dict and return dict.
 ;;' @examples
 ;;' (define d (dict))
 ;;' (dict-set d "x" 42)        ; => d (mutated, x=42)
@@ -116,7 +117,6 @@
 ;;' @seealso dict-get, dict-remove
 (define dict-set
   (lambda (dict key value)
-    "Set key to value in dict and return dict."
     (define name (dict-key-to-name key))
     (if (is.null name)
       (error "dict-set requires a string, symbol, or keyword key")
@@ -129,6 +129,7 @@
           (r/call "assign" (list name value :envir dict))
           dict)))))
 
+;;' @description Remove key from dict and return dict.
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-remove d "x")        ; => d (mutated, x removed)
@@ -136,7 +137,6 @@
 ;;' @seealso dict-set
 (define dict-remove
   (lambda (dict key)
-    "Remove key from dict and return dict."
     (define name (dict-key-to-name key))
     (if (or (is.null name) (not (dict? dict)))
       dict
@@ -149,6 +149,7 @@
           dict)
         dict))))
 
+;;' @description Return a list of dict keys.
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-keys d)              ; => ("x" "y")
@@ -156,20 +157,19 @@
 ;;' @seealso dict-values
 (define dict-keys
   (lambda (dict)
-    "Return a list of dict keys."
     (if (not (dict? dict))
       (list)
       (begin
         (define keys (dict-keys-ordered dict))
         (__as-list keys)))))
 
+;;' @description Return a list of dict values.
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-values d)            ; => (1 2)
 ;;' @seealso dict-keys
 (define dict-values
   (lambda (dict)
-    "Return a list of dict values."
     (if (not (dict? dict))
       (list)
       (begin
@@ -180,6 +180,7 @@
             (define values (r/call "mget" (list keys :envir dict :inherits #f)))
             (__as-list (r/call "unname" (list values)))))))))
 
+;;' @description Return #t if dict contains key.
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-has? d "x")          ; => #t
@@ -187,12 +188,12 @@
 ;;' @seealso dict-get
 (define dict-has?
   (lambda (dict key)
-    "Return #t if dict contains key."
     (define name (dict-key-to-name key))
     (if (or (is.null name) (not (dict? dict)))
       #f
       (r/call "exists" (list name :envir dict :inherits #f)))))
 
+;;' @description Merge dicts, later values override earlier.
 ;;' @examples
 ;;' (define a (dict :x 1 :y 2))
 ;;' (define b (dict :y 99 :z 3))
@@ -202,7 +203,6 @@
 ;;' @seealso dict, dict-set
 (define dict-merge
   (lambda (. dicts)
-    "Merge dicts, later values override earlier."
     (define result (dict-new))
     (define result-keys (list))
     (define merge-dict

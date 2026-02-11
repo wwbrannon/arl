@@ -12,6 +12,7 @@
 ;;' These functions provide test-style assertions that signal errors on failure
 ;;' and return `#t` on success.
 
+  ;;' @description Assert condition or raise error.
   ;;' @examples
   ;;' (assert #t)               ; => #t
   ;;' (assert (> 3 2))          ; => #t
@@ -20,11 +21,11 @@
   ;;' @seealso error
   (define assert
     (lambda (cond (msg "Assertion failed"))
-      "Assert condition or raise error."
       (if cond
         #t
         (error msg))))
 
+  ;;' @description Assert expected and actual are equal?.
   ;;' @examples
   ;;' (assert-equal 3 (+ 1 2))  ; => #t
   ;;' (assert-equal "a" "a")    ; => #t
@@ -32,13 +33,13 @@
   ;;' @seealso assert-eq, assert-true
   (define assert-equal
     (lambda (expected actual)
-      "Assert expected and actual are equal?."
       (if (not (equal? expected actual))
         (begin
           (define error-msg (string-append "Expected: " (->string expected) ", Got: " (->string actual)))
           (error error-msg))
         #t)))
 
+  ;;' @description Assert value is truthy.
   ;;' @examples
   ;;' (assert-true #t)          ; => #t
   ;;' (assert-true 1)           ; => #t
@@ -46,13 +47,13 @@
   ;;' @seealso assert-false, assert
   (define assert-true
     (lambda (value)
-      "Assert value is truthy."
       (if (not value)
         (begin
           (define error-msg (string-append "Expected truthy value, got: " (->string value)))
           (error error-msg))
         #t)))
 
+  ;;' @description Assert value is falsy.
   ;;' @examples
   ;;' (assert-false #f)         ; => #t
   ;;' (assert-false #nil)       ; => #t
@@ -60,13 +61,13 @@
   ;;' @seealso assert-true, assert
   (define assert-false
     (lambda (value)
-      "Assert value is falsy."
       (if value
         (begin
           (define error-msg (string-append "Expected falsy value, got: " (->string value)))
           (error error-msg))
         #t)))
 
+  ;;' @description Assert expected and actual are identical?.
   ;;' @examples
   ;;' (define x '(1 2 3))
   ;;' (assert-eq x x)           ; => #t (same object)
@@ -75,13 +76,13 @@
   ;;' @seealso assert-equal, assert
   (define assert-eq
     (lambda (expected actual)
-      "Assert expected and actual are identical?."
       (if (not (identical? expected actual))
         (begin
           (define error-msg (string-append "Expected (identical?): " (->string expected) ", Got: " (->string actual)))
           (error error-msg))
         #t)))
 
+  ;;' @description Assert thunk throws an error.
   ;;' @examples
   ;;' (assert-error (lambda () (error "boom")))   ; => #t
   ;;' (assert-error (lambda () (/ 1 0)))           ; => #t
@@ -89,7 +90,6 @@
   ;;' @seealso assert, error
   (define assert-error
     (lambda (thunk)
-      "Assert thunk throws an error."
       ;; Use a unique sentinel value to detect if error was caught
       (define error-caught (gensym "error-caught"))
       (define thunk-expr (call (list thunk)))

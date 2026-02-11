@@ -18,7 +18,6 @@
           make-rectangular make-polar real-part imag-part magnitude angle)
 
   (import _r)
-  (import core)
   (import types)  ; for number? predicate
 
   ;;' @section Numeric Type Predicates
@@ -40,6 +39,7 @@
   ;;'
   ;;' **Note:** `number?` is provided by the `types` module, not `math`.
 
+  ;;' @description Return #t if x is a real number (includes ±Inf, excludes complex).
   ;;' @examples
   ;;' (real? 42)            ; => #t
   ;;' (real? 3.14)          ; => #t
@@ -48,20 +48,20 @@
   ;;' @seealso rational?, complex?, number? (in `types` module)
   (define real?
     (lambda (x)
-      "Return #t if x is a real number (includes ±Inf, excludes complex)."
       (if (is.numeric x)
         (if (is.complex x) #f #t)
         #f)))
 
+  ;;' @description Return #t if x is a complex number.
   ;;' @examples
   ;;' (complex? (make-rectangular 3 4))  ; => #t
   ;;' (complex? 42)         ; => #f
   ;;' @seealso real?, number? (in `types` module), make-rectangular
   (define complex?
     (lambda (x)
-      "Return #t if x is a complex number."
       (is.complex x)))
 
+  ;;' @description Return #t if x is a finite real number (rational in R are finite floats).
   ;;' @examples
   ;;' (rational? 42)        ; => #t
   ;;' (rational? 3.14)      ; => #t
@@ -71,11 +71,11 @@
   ;;' @seealso real?, integer?, number? (in `types` module)
   (define rational?
     (lambda (x)
-      "Return #t if x is a finite real number (rational in R are finite floats)."
       (if (real? x)
         (if (is.finite x) #t #f)
         #f)))
 
+  ;;' @description Return #t if x is an exact number (integer storage type in R).
   ;;' @examples
   ;;' (exact? 5L)           ; => #t (integer type)
   ;;' (exact? 5.0)          ; => #f (double type)
@@ -84,9 +84,9 @@
   ;;' @seealso inexact?, exact->inexact (in `conversions` module)
   (define exact?
     (lambda (x)
-      "Return #t if x is an exact number (integer storage type in R)."
       (is.integer x)))
 
+  ;;' @description Return #t if x is an inexact number (double or complex in R).
   ;;' @examples
   ;;' (inexact? 5.0)        ; => #t
   ;;' (inexact? (make-rectangular 3 4))  ; => #t
@@ -94,11 +94,11 @@
   ;;' @seealso exact?, inexact->exact (in `conversions` module)
   (define inexact?
     (lambda (x)
-      "Return #t if x is an inexact number (double or complex in R)."
       (if (number? x)
         (not (is.integer x))
         #f)))
 
+  ;;' @description Return #t if x is an integer-valued number.
   ;;' @examples
   ;;' (integer? 42)         ; => #t
   ;;' (integer? 42.0)       ; => #t (value is integer even if storage is double)
@@ -108,13 +108,13 @@
   ;;' @seealso natural?, exact?, rational?
   (define integer?
     (lambda (x)
-      "Return #t if x is an integer-valued number."
       (if (is.numeric x)
         (if (is.finite x)
           (isTRUE (== x (as.integer x)))
           #f)
         #f)))
 
+  ;;' @description Return #t if x is a natural number (integer >= 0).
   ;;' @examples
   ;;' (natural? 0)          ; => #t
   ;;' (natural? 42)         ; => #t
@@ -123,11 +123,11 @@
   ;;' @seealso integer?, positive?, non-negative?
   (define natural?
     (lambda (x)
-      "Return #t if x is a natural number (integer >= 0)."
       (if (integer? x)
         (isTRUE (>= x 0))
         #f)))
 
+  ;;' @description Return #t if x is finite.
   ;;' @examples
   ;;' (finite? 42)          ; => #t
   ;;' (finite? Inf)         ; => #f
@@ -136,9 +136,9 @@
   ;;' @seealso infinite?, nan?, rational?
   (define finite?
     (lambda (x)
-      "Return #t if x is finite."
       (isTRUE (is.finite x))))
 
+  ;;' @description Return #t if x is infinite.
   ;;' @examples
   ;;' (infinite? Inf)       ; => #t
   ;;' (infinite? -Inf)      ; => #t
@@ -147,9 +147,9 @@
   ;;' @seealso finite?, nan?
   (define infinite?
     (lambda (x)
-      "Return #t if x is infinite."
       (isTRUE (is.infinite x))))
 
+  ;;' @description Return #t if x is NaN.
   ;;' @examples
   ;;' (nan? NaN)            ; => #t
   ;;' (nan? (/ 0 0))        ; => #t (0/0 = NaN)
@@ -158,11 +158,11 @@
   ;;' @seealso finite?, infinite?
   (define nan?
     (lambda (x)
-      "Return #t if x is NaN."
       (isTRUE (is.nan x))))
 
   ;;' @section Value Predicates
 
+  ;;' @description Return #t if x is an even number.
   ;;' @examples
   ;;' (even? 4)             ; => #t
   ;;' (even? 3)             ; => #f
@@ -170,18 +170,18 @@
   ;;' @seealso odd?
   (define even?
     (lambda (x)
-      "Return #t if x is an even number."
       (isTRUE (== (%% x 2) 0))))
 
+  ;;' @description Return #t if x is an odd number.
   ;;' @examples
   ;;' (odd? 3)              ; => #t
   ;;' (odd? 4)              ; => #f
   ;;' @seealso even?
   (define odd?
     (lambda (x)
-      "Return #t if x is an odd number."
       (isTRUE (== (%% x 2) 1))))
 
+  ;;' @description Return #t if x is zero.
   ;;' @examples
   ;;' (zero? 0)             ; => #t
   ;;' (zero? 0.0)           ; => #t
@@ -189,9 +189,9 @@
   ;;' @seealso positive?, negative?
   (define zero?
     (lambda (x)
-      "Return #t if x is zero."
       (isTRUE (== x 0))))
 
+  ;;' @description Return #t if x is greater than zero.
   ;;' @examples
   ;;' (positive? 5)         ; => #t
   ;;' (positive? 0)         ; => #f
@@ -199,9 +199,9 @@
   ;;' @seealso negative?, non-negative?, zero?
   (define positive?
     (lambda (x)
-      "Return #t if x is greater than zero."
       (isTRUE (> x 0))))
 
+  ;;' @description Return #t if x is less than zero.
   ;;' @examples
   ;;' (negative? -5)        ; => #t
   ;;' (negative? 0)         ; => #f
@@ -209,9 +209,9 @@
   ;;' @seealso positive?, non-positive?, zero?
   (define negative?
     (lambda (x)
-      "Return #t if x is less than zero."
       (isTRUE (< x 0))))
 
+  ;;' @description Return #t if x is greater than or equal to zero.
   ;;' @examples
   ;;' (non-negative? 5)     ; => #t
   ;;' (non-negative? 0)     ; => #t
@@ -219,9 +219,9 @@
   ;;' @seealso positive?, natural?
   (define non-negative?
     (lambda (x)
-      "Return #t if x is greater than or equal to zero."
       (isTRUE (>= x 0))))
 
+  ;;' @description Return #t if x is less than or equal to zero.
   ;;' @examples
   ;;' (non-positive? -5)    ; => #t
   ;;' (non-positive? 0)     ; => #t
@@ -229,69 +229,69 @@
   ;;' @seealso negative?
   (define non-positive?
     (lambda (x)
-      "Return #t if x is less than or equal to zero."
       (isTRUE (<= x 0))))
 
   ;;' @section Complex Number Utilities
 
+  ;;' @description Construct a complex number from real and imaginary parts.
   ;;' @examples
   ;;' (make-rectangular 3 4)  ; => 3+4i
   ;;' @seealso make-polar, real-part, imag-part
   (define make-rectangular
     (lambda (real imag)
-      "Construct a complex number from real and imaginary parts."
       (complex :real real :imaginary imag)))
 
+  ;;' @description Construct a complex number from polar coordinates (magnitude and angle).
   ;;' @examples
   ;;' (make-polar 5 0)      ; => 5+0i
   ;;' @seealso make-rectangular, magnitude, angle
   (define make-polar
     (lambda (magnitude angle)
-      "Construct a complex number from polar coordinates (magnitude and angle)."
       (complex :modulus magnitude :argument angle)))
 
+  ;;' @description Extract the real part of a complex number.
   ;;' @examples
   ;;' (real-part (make-rectangular 3 4))  ; => 3.0
   ;;' @seealso imag-part, make-rectangular
   (define real-part
     (lambda (z)
-      "Extract the real part of a complex number."
       (Re z)))
 
+  ;;' @description Extract the imaginary part of a complex number.
   ;;' @examples
   ;;' (imag-part (make-rectangular 3 4))  ; => 4.0
   ;;' @seealso real-part, make-rectangular
   (define imag-part
     (lambda (z)
-      "Extract the imaginary part of a complex number."
       (Im z)))
 
+  ;;' @description Compute the magnitude (modulus) of a complex number.
   ;;' @examples
   ;;' (magnitude (make-rectangular 3 4))  ; => 5.0
   ;;' @seealso angle, make-polar
   (define magnitude
     (lambda (z)
-      "Compute the magnitude (modulus) of a complex number."
       (Mod z)))
 
+  ;;' @description Compute the angle (argument) of a complex number.
   ;;' @examples
   ;;' (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (π/4)
   ;;' @seealso magnitude, make-polar
   (define angle
     (lambda (z)
-      "Compute the angle (argument) of a complex number."
       (Arg z)))
 
   ;;' @section Arithmetic Helpers
 
+  ;;' @description Modulo helper using R %%.
   ;;' @examples
   ;;' (% 10 3)   ; => 1
   ;;' (% 17 5)   ; => 2
   (define %
     (lambda (x y)
-      "Modulo helper using R %%."
       (%% x y)))
 
+  ;;' @description Variadic less-than comparison. Checks all adjacent pairs.
   ;;' @signature (< a b ...)
   ;;' @examples
   ;;' (< 1 2)     ; => #t
@@ -299,7 +299,6 @@
   ;;' (< 1 3 2)   ; => #f
   (define <
     (lambda (. args)
-      "Variadic less-than comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
         #t
         (if (__r== (__rlength args) 2)
@@ -315,6 +314,7 @@
                 (set! remaining (cdr remaining))))
             result)))))
 
+  ;;' @description Variadic greater-than comparison. Checks all adjacent pairs.
   ;;' @signature (> a b ...)
   ;;' @examples
   ;;' (> 3 2)     ; => #t
@@ -322,7 +322,6 @@
   ;;' (> 3 1 2)   ; => #f
   (define >
     (lambda (. args)
-      "Variadic greater-than comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
         #t
         (if (__r== (__rlength args) 2)
@@ -338,6 +337,7 @@
                 (set! remaining (cdr remaining))))
             result)))))
 
+  ;;' @description Variadic less-than-or-equal comparison. Checks all adjacent pairs.
   ;;' @signature (<= a b ...)
   ;;' @examples
   ;;' (<= 1 2)    ; => #t
@@ -345,7 +345,6 @@
   ;;' (<= 2 1)    ; => #f
   (define <=
     (lambda (. args)
-      "Variadic less-than-or-equal comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
         #t
         (if (__r== (__rlength args) 2)
@@ -361,6 +360,7 @@
                 (set! remaining (cdr remaining))))
             result)))))
 
+  ;;' @description Variadic greater-than-or-equal comparison. Checks all adjacent pairs.
   ;;' @signature (>= a b ...)
   ;;' @examples
   ;;' (>= 3 2)    ; => #t
@@ -368,7 +368,6 @@
   ;;' (>= 1 2)    ; => #f
   (define >=
     (lambda (. args)
-      "Variadic greater-than-or-equal comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
         #t
         (if (__r== (__rlength args) 2)
@@ -396,6 +395,7 @@
           #f
           (__r== a b)))))
 
+  ;;' @description Variadic equality comparison. Checks all adjacent pairs.
   ;;' @signature (== a b ...)
   ;;' @examples
   ;;' (== 1 1)     ; => #t
@@ -403,7 +403,6 @@
   ;;' (== 1 2)     ; => #f
   (define ==
     (lambda (. args)
-      "Variadic equality comparison. Checks all adjacent pairs."
       (if (__r< (__rlength args) 2)
         #t
         (if (__r== (__rlength args) 2)
@@ -427,6 +426,7 @@
   ;; Alias = to == for convenience
   (define = ==)
 
+  ;;' @description Variadic addition.
   ;;' @signature (+ a ...)
   ;;' @examples
   ;;' (+ 1 2 3)    ; => 6
@@ -434,13 +434,13 @@
   ;;' (+ 5)         ; => 5
   (define +
     (lambda (. args)
-      "Variadic addition."
       (if (__r== (__rlength args) 0)
         0
         (if (__r== (__rlength args) 1)
           (__r[[ args 1)
           (Reduce __r+ args)))))
 
+  ;;' @description Variadic multiplication.
   ;;' @signature (* a ...)
   ;;' @examples
   ;;' (* 2 3 4)    ; => 24
@@ -448,13 +448,13 @@
   ;;' (* 5)         ; => 5
   (define *
     (lambda (. args)
-      "Variadic multiplication."
       (if (__r== (__rlength args) 0)
         1
         (if (__r== (__rlength args) 1)
           (__r[[ args 1)
           (Reduce __r* args)))))
 
+  ;;' @description Variadic subtraction.
   ;;' @signature (- a ...)
   ;;' @examples
   ;;' (- 10 3)     ; => 7
@@ -462,13 +462,13 @@
   ;;' (- 10 3 2)   ; => 5
   (define -
     (lambda (. args)
-      "Variadic subtraction."
       (if (__r== (__rlength args) 0)
         (stop "- requires at least one argument")
         (if (__r== (__rlength args) 1)
           (__r- 0 (__r[[ args 1))
           (Reduce __r- args)))))
 
+  ;;' @description Variadic division.
   ;;' @signature (/ a ...)
   ;;' @examples
   ;;' (/ 10 2)     ; => 5
@@ -476,51 +476,51 @@
   ;;' (/ 100 5 2)  ; => 10
   (define /
     (lambda (. args)
-      "Variadic division."
       (if (__r== (__rlength args) 0)
         (stop "/ requires at least one argument")
         (if (__r== (__rlength args) 1)
           (__r/ 1 (__r[[ args 1))
           (Reduce __r/ args)))))
 
+  ;;' @description Variadic min.
   ;;' @signature (min a ...)
   ;;' @examples
   ;;' (min 3 1 2)  ; => 1
   (define min
     (lambda (. args)
-      "Variadic min."
       (if (= (__rlength args) 0)
         (stop "min requires at least one argument")
         (do.call __rmin args))))
 
+  ;;' @description Variadic max.
   ;;' @signature (max a ...)
   ;;' @examples
   ;;' (max 3 1 2)  ; => 3
   (define max
     (lambda (. args)
-      "Variadic max."
       (if (= (__rlength args) 0)
         (stop "max requires at least one argument")
         (do.call __rmax args))))
 
+  ;;' @description Increment numeric value by n (default 1).
   ;;' @examples
   ;;' (inc 5)       ; => 6
   ;;' (inc 5 3)     ; => 8
   ;;' @seealso dec
   (define inc
     (lambda (x (n 1))
-      "Increment numeric value by n (default 1)."
       (+ x n)))
 
+  ;;' @description Decrement numeric value by n (default 1).
   ;;' @examples
   ;;' (dec 5)       ; => 4
   ;;' (dec 5 3)     ; => 2
   ;;' @seealso inc
   (define dec
     (lambda (x (n 1))
-      "Decrement numeric value by n (default 1)."
       (- x n)))
 
+  ;;' @description Clamp numeric value x to the inclusive range [lo, hi].
   ;;' @examples
   ;;' (clamp 5 0 10)   ; => 5
   ;;' (clamp -3 0 10)  ; => 0
@@ -528,11 +528,11 @@
   ;;' @seealso within?
   (define clamp
     (lambda (x lo hi)
-      "Clamp numeric value x to the inclusive range [lo, hi]."
       (if (< x lo)
         lo
         (if (> x hi) hi x))))
 
+  ;;' @description Return #t if x is within the inclusive range [lo, hi].
   ;;' @examples
   ;;' (within? 5 0 10)   ; => #t
   ;;' (within? -3 0 10)  ; => #f
@@ -540,7 +540,6 @@
   ;;' @seealso clamp
   (define within?
     (lambda (x lo hi)
-      "Return #t if x is within the inclusive range [lo, hi]."
       (if (< x lo)
         #f
         (if (> x hi) #f #t))))
@@ -549,78 +548,76 @@
 
   ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
   ;; (define func __rfunc) rather than lambda wrappers to avoid unnecessary stack frames.
-  ;; Docstrings are attached using (doc! func "...") after definition.
   ;; Functions with multiple arguments, optional parameters, or custom logic remain as lambdas.
 
-  (import core)  ; for doc!
-
+  ;;' @description Return absolute value of x.
   ;;' @examples
   ;;' (abs -5)      ; => 5
   ;;' (abs 5)       ; => 5
   ;;' @signature (abs x)
   (define abs __rabs)
-  (doc! abs "Return absolute value of x.")
 
+  ;;' @description Return floor (round down) of x.
   ;;' @examples
   ;;' (floor 3.7)   ; => 3
   ;;' (floor -3.2)  ; => -4
   ;;' @seealso ceiling, truncate, round
   ;;' @signature (floor x)
   (define floor __rfloor)
-  (doc! floor "Return floor (round down) of x.")
 
+  ;;' @description Return ceiling (round up) of x.
   ;;' @examples
   ;;' (ceiling 3.2)  ; => 4
   ;;' (ceiling -3.7) ; => -3
   ;;' @seealso floor, truncate, round
   ;;' @signature (ceiling x)
   (define ceiling __rceiling)
-  (doc! ceiling "Return ceiling (round up) of x.")
 
+  ;;' @description Return truncated (towards zero) value of x.
   ;;' @examples
   ;;' (truncate 3.7)  ; => 3
   ;;' (truncate -3.7) ; => -3
   ;;' @seealso floor, ceiling, round
   ;;' @signature (truncate x)
   (define truncate __rtrunc)
-  (doc! truncate "Return truncated (towards zero) value of x.")
 
+  ;;' @description Round x to given number of decimal places (default 0).
   ;;' @examples
   ;;' (round 3.567)    ; => 4
   ;;' (round 3.567 2)  ; => 3.57
   ;;' @seealso floor, ceiling, truncate
   (define round
     (lambda (x (digits 0))
-      "Round x to given number of decimal places (default 0)."
       (__rround x digits)))
 
+  ;;' @description Return sign of x: -1, 0, or 1.
   ;;' @examples
   ;;' (signum 42)    ; => 1
   ;;' (signum -5)    ; => -1
   ;;' (signum 0)     ; => 0
   ;;' @signature (signum x)
   (define signum __rsign)
-  (doc! signum "Return sign of x: -1, 0, or 1.")
 
   ;;' @section Power, Roots, and Logarithms
 
+  ;;' @description Return square root of x.
   ;;' @examples
   ;;' (sqrt 16)     ; => 4
   ;;' (sqrt 2)      ; => 1.414...
   ;;' @seealso expt
   ;;' @signature (sqrt x)
   (define sqrt __rsqrt)
-  (doc! sqrt "Return square root of x.")
 
+  ;;' @description Return base raised to power.
   ;;' @examples
   ;;' (expt 2 10)   ; => 1024
   ;;' (expt 3 3)    ; => 27
   ;;' @seealso sqrt
   (define expt
     (lambda (base power)
-      "Return base raised to power."
       (__r^ base power)))
 
+  ;;' @description Return logarithm of x. With one argument, returns natural log. With two, returns log to the given base.
   ;;' @examples
   ;;' (log 1)           ; => 0
   ;;' (log (exp 1))     ; => 1.0
@@ -628,110 +625,108 @@
   ;;' @seealso exp, log10, log2
   (define log
     (lambda (x (base #nil))
-      "Return logarithm of x. With one argument, returns natural log. With two, returns log to the given base."
       (if (is.null base)
         (__rlog x)
         (__rlog x base))))
 
+  ;;' @description Return e raised to power x.
   ;;' @examples
   ;;' (exp 0)       ; => 1
   ;;' (exp 1)       ; => 2.718...
   ;;' @seealso log
   ;;' @signature (exp x)
   (define exp __rexp)
-  (doc! exp "Return e raised to power x.")
 
+  ;;' @description Return base-10 logarithm of x.
   ;;' @examples
   ;;' (log10 100)   ; => 2
   ;;' (log10 1000)  ; => 3
   ;;' @seealso log, log2
   ;;' @signature (log10 x)
   (define log10 __rlog10)
-  (doc! log10 "Return base-10 logarithm of x.")
 
+  ;;' @description Return base-2 logarithm of x.
   ;;' @examples
   ;;' (log2 8)      ; => 3
   ;;' (log2 1024)   ; => 10
   ;;' @seealso log, log10
   ;;' @signature (log2 x)
   (define log2 __rlog2)
-  (doc! log2 "Return base-2 logarithm of x.")
 
   ;;' @section Trigonometric Functions
 
-  ;;' @description Standard trigonometric functions (argument in radians).
+  ;;' @description Return sine of x (in radians).
   ;;' @signature (sin x)
   ;;' @examples
   ;;' (sin 0)       ; => 0
   ;;' (cos 0)       ; => 1
   ;;' (tan 0)       ; => 0
   (define sin __rsin)
-  (doc! sin "Return sine of x (in radians).")
 
+  ;;' @description Return cosine of x (in radians).
   ;;' @signature (cos x)
   (define cos __rcos)
-  (doc! cos "Return cosine of x (in radians).")
 
+  ;;' @description Return tangent of x (in radians).
   ;;' @signature (tan x)
   (define tan __rtan)
-  (doc! tan "Return tangent of x (in radians).")
 
-  ;;' @description Inverse trigonometric functions (result in radians).
+  ;;' @description Return arcsine of x (in radians).
   ;;' @signature (asin x)
   ;;' @examples
   ;;' (asin 1)      ; => 1.5707... (pi/2)
   ;;' (acos 1)      ; => 0
   ;;' (atan 1)      ; => 0.7853... (pi/4)
   (define asin __rasin)
-  (doc! asin "Return arcsine of x (in radians).")
 
+  ;;' @description Return arccosine of x (in radians).
   ;;' @signature (acos x)
   (define acos __racos)
-  (doc! acos "Return arccosine of x (in radians).")
 
+  ;;' @description Return arctangent of x (in radians).
   ;;' @signature (atan x)
   (define atan __ratan)
-  (doc! atan "Return arctangent of x (in radians).")
 
+  ;;' @description Return arctangent of y/x (in radians), respecting quadrant.
   ;;' @examples
   ;;' (atan2 1 1)   ; => 0.7853... (pi/4)
   ;;' (atan2 -1 -1) ; => -2.356... (-3*pi/4)
   (define atan2
     (lambda (y x)
-      "Return arctangent of y/x (in radians), respecting quadrant."
       (__ratan2 y x)))
 
   ;;' @section Integer Division
 
+  ;;' @description Return integer quotient of x divided by y.
   ;;' @examples
   ;;' (quotient 10 3)   ; => 3
   ;;' (quotient -10 3)  ; => -3
   ;;' @seealso remainder, modulo
   (define quotient
     (lambda (x y)
-      "Return integer quotient of x divided by y."
       (__ras.integer (__rtrunc (__r/ x y)))))
 
+  ;;' @description Return remainder of x divided by y (same sign as x).
   ;;' @examples
   ;;' (remainder 10 3)   ; => 1
   ;;' (remainder -10 3)  ; => -1
   ;;' @seealso quotient, modulo
   (define remainder
     (lambda (x y)
-      "Return remainder of x divided by y (same sign as x)."
       (__r- x (__r* y (quotient x y)))))
 
+  ;;' @description Return modulo of x and y (same sign as y).
   ;;' @examples
   ;;' (modulo 10 3)    ; => 1
   ;;' (modulo -10 3)   ; => 2
   ;;' @seealso quotient, remainder, %
   (define modulo
     (lambda (x y)
-      "Return modulo of x and y (same sign as y)."
       (%% x y)))
 
   ;;' @section Number Theory
 
+  ;;' @description Return greatest common divisor of arguments.
   ;;' @signature (gcd a b ...)
   ;;' @examples
   ;;' (gcd 12 8)      ; => 4
@@ -739,20 +734,20 @@
   ;;' @seealso lcm
   (define gcd
     (lambda (. args)
-      "Return greatest common divisor of arguments."
       (if (__r== (__rlength args) 0)
         0
         (if (__r== (__rlength args) 1)
           (__rabs (__r[[ args 1))
           (begin
+            ;; GCD of two numbers using Euclidean algorithm.
             (define gcd-two
               (lambda (a b)
-                "GCD of two numbers using Euclidean algorithm."
                 (if (__r== b 0)
                   (__rabs a)
                   (gcd-two b (modulo a b)))))
             (Reduce gcd-two args))))))
 
+  ;;' @description Return least common multiple of arguments.
   ;;' @signature (lcm a b ...)
   ;;' @examples
   ;;' (lcm 4 6)       ; => 12
@@ -760,15 +755,14 @@
   ;;' @seealso gcd
   (define lcm
     (lambda (. args)
-      "Return least common multiple of arguments."
       (if (__r== (__rlength args) 0)
         1
         (if (__r== (__rlength args) 1)
           (__rabs (__r[[ args 1))
           (begin
+            ;; LCM of two numbers using a*b/gcd(a,b).
             (define lcm-two
               (lambda (a b)
-                "LCM of two numbers using a*b/gcd(a,b)."
                 (if (if (__r== a 0) #t (__r== b 0))
                   0
                   (__r/ (__rabs (__r* a b)) (gcd a b)))))

@@ -9,26 +9,27 @@
 
 ;;' @section Control Flow Macros
 
+;;' @description Evaluate body forms when test is truthy.
 ;;' @examples
 ;;' (when #t "yes")          ; => "yes"
 ;;' (when #f "yes")          ; => #nil
 ;;' (when (> 3 2) (+ 1 1))   ; => 2
 ;;' @seealso unless, if, cond
 (defmacro when (test . body)
-  "Evaluate body forms when test is truthy."
   `(if ,test (begin ,@body) #nil))
 
+;;' @description Evaluate body forms when test is falsy.
 ;;' @examples
 ;;' (unless #f "fallback")    ; => "fallback"
 ;;' (unless #t "fallback")    ; => #nil
 ;;' (unless (= 1 2) "nope")  ; => "nope"
 ;;' @seealso when, if
 (defmacro unless (test . body)
-  "Evaluate body forms when test is falsy."
   `(if ,test #nil (begin ,@body)))
 
 ;;' @section Conditional Macros
 
+;;' @description Multi-branch conditional.
 ;;' @examples
 ;;' (cond
 ;;'   ((= 1 2) "a")
@@ -40,7 +41,6 @@
 ;;'   (else "small"))        ; => "small"
 ;;' @seealso case, if, when
 (defmacro cond (clause . rest)
-  "Multi-branch conditional."
   (if (null? clause)
     (error "cond: Missing required parameter (else clause)")
     (begin
@@ -52,9 +52,9 @@
           `(if ,test (begin ,@body) #nil)
           `(if ,test (begin ,@body) (cond ,@rest)))))))
 
+;; Helper: generate case clause expansion using already-bound key symbol.
 (define __case-clauses
   (lambda (key-sym clause rest)
-    "Helper: generate case clause expansion using already-bound key symbol."
     (if (null? clause)
       (error "case: Missing required parameter (else clause)")
       (begin
@@ -73,6 +73,7 @@
               `(if ,test-expr (begin ,@body)
                    ,(__case-clauses key-sym (car rest) (cdr rest))))))))))
 
+;;' @description Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). Key expression is evaluated only once.
 ;;' @examples
 ;;' (case (+ 1 1)
 ;;'   ((1) "one")
@@ -87,12 +88,12 @@
 ;;' @note The key expression is evaluated only once. Each clause datum list can contain multiple values.
 ;;' @seealso cond, if
 (defmacro case (key clause . rest)
-  "Branch on key equality. Each clause: ((datum ...) body ...) or (else body ...). Key expression is evaluated only once."
   (define key-sym (gensym "case-key"))
   `((lambda (,key-sym) ,(__case-clauses key-sym clause rest)) ,key))
 
 ;;' @section Error Handling Helper
 
+;;' @description Evaluate thunk with error/finally handlers.
 ;;' @signature (try* thunk [error_handler] [finally_handler])
 ;;' @examples
 ;;' (try* (lambda () 42))                           ; => 42
@@ -104,7 +105,6 @@
 ;;' @seealso try (in `error` module), catch, finally
 (define try*
   (lambda (thunk (error_handler #f) (finally_handler #f))
-    "Evaluate thunk with error/finally handlers."
     (if (not (is.function thunk))
       (stop "try* expects a function as first argument"))
     (if (and error_handler (not (is.function error_handler)))

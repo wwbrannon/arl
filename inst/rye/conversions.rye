@@ -12,6 +12,7 @@
 
   ;;' @section Symbol Conversions
 
+  ;;' @description Convert symbol to string.
   ;;' @examples
   ;;' (symbol->string 'hello)  ; => "hello"
   ;;' (symbol->string 'x)      ; => "x"
@@ -19,11 +20,11 @@
   ;;' @seealso string->symbol, ->symbol
   (define symbol->string
     (lambda (sym)
-      "Convert symbol to string."
       (if (symbol? sym)
         (as.character sym)
         (stop "symbol->string: argument must be a symbol"))))
 
+  ;;' @description Convert string to symbol.
   ;;' @examples
   ;;' (string->symbol "hello")  ; => hello (a symbol)
   ;;' (string->symbol "x")      ; => x
@@ -31,11 +32,11 @@
   ;;' @seealso symbol->string, ->symbol
   (define string->symbol
     (lambda (str)
-      "Convert string to symbol."
       (if (string? str)
         (as.symbol str)
         (stop "string->symbol: argument must be a string"))))
 
+  ;;' @description Convert value to symbol.
   ;;' @examples
   ;;' (->symbol "hello")  ; => hello (a symbol)
   ;;' (->symbol 42)       ; => 42 (symbol named "42")
@@ -43,13 +44,13 @@
   ;;' @seealso symbol->string, string->symbol
   (define ->symbol
     (lambda (x)
-      "Convert value to symbol."
       (if (symbol? x)
         x
         (as.symbol (as.character x)))))
 
   ;;' @section Numeric Conversions
 
+  ;;' @description Convert value to number.
   ;;' @examples
   ;;' (->number "42")     ; => 42
   ;;' (->number "3.14")   ; => 3.14
@@ -58,7 +59,6 @@
   ;;' @seealso ->integer, ->double, ->complex
   (define ->number
     (lambda (x)
-      "Convert value to number."
       (if (number? x)
         x
         (if (string? x)
@@ -71,6 +71,7 @@
 
   ;;' @section Scheme-Style Exact/Inexact Conversions
 
+  ;;' @description Convert exact number to inexact (integer to double).
   ;;' @examples
   ;;' (exact->inexact 5L)     ; => 5.0 (integer to double)
   ;;' (exact->inexact 3.14)   ; => 3.14 (already double, returned as double)
@@ -79,11 +80,11 @@
   ;;' @seealso inexact->exact, exact? (in `math` module), inexact? (in `math` module)
   (define exact->inexact
     (lambda (x)
-      "Convert exact number to inexact (integer to double)."
       (if (number? x)
         (as.double x)
         (stop "exact->inexact: argument must be a number"))))
 
+  ;;' @description Convert inexact number to exact (double to integer, rounds to nearest).
   ;;' @examples
   ;;' (inexact->exact 3.7)    ; => 4L (rounds to nearest integer)
   ;;' (inexact->exact 3.2)    ; => 3L
@@ -93,7 +94,6 @@
   ;;' @seealso exact->inexact, exact? (in `math` module), inexact? (in `math` module)
   (define inexact->exact
     (lambda (x)
-      "Convert inexact number to exact (double to integer, rounds to nearest)."
       (if (number? x)
         (as.integer (round x))
         (stop "inexact->exact: argument must be a number"))))
@@ -101,6 +101,7 @@
   ;;' @section Numeric Conversions
   ;;' R-style type conversions providing explicit control over the target numeric type.
 
+  ;;' @description Convert value to integer.
   ;;' @examples
   ;;' (->integer 3.7)     ; => 3L (truncates toward zero)
   ;;' (->integer "42")    ; => 42L
@@ -109,7 +110,6 @@
   ;;' @seealso ->number, ->double, inexact->exact
   (define ->integer
     (lambda (x)
-      "Convert value to integer."
       (if (number? x)
         (as.integer x)
         (if (string? x)
@@ -120,6 +120,7 @@
               result))
           (stop "->integer: cannot convert to integer")))))
 
+  ;;' @description Convert value to double.
   ;;' @examples
   ;;' (->double 5L)       ; => 5.0
   ;;' (->double "3.14")   ; => 3.14
@@ -127,7 +128,6 @@
   ;;' @seealso ->number, ->integer, exact->inexact
   (define ->double
     (lambda (x)
-      "Convert value to double."
       (if (number? x)
         (as.double x)
         (if (string? x)
@@ -138,6 +138,7 @@
               result))
           (stop "->double: cannot convert to double")))))
 
+  ;;' @description Convert value to complex number (imaginary part = 0).
   ;;' @examples
   ;;' (->complex 5)       ; => 5+0i
   ;;' (->complex 3.14)    ; => 3.14+0i
@@ -145,7 +146,6 @@
   ;;' @seealso ->number, ->double, make-rectangular (in `math` module)
   (define ->complex
     (lambda (x)
-      "Convert value to complex number (imaginary part = 0)."
       (if (number? x)
         (as.complex x)
         (if (string? x)
@@ -158,17 +158,18 @@
 
   ;;' @section Collection Conversions
 
+  ;;' @description Convert value to list.
   ;;' @examples
   ;;' (->list (vector 1 2 3))  ; => (1 2 3)
   ;;' (->list '(1 2 3))        ; => (1 2 3) (already a list)
   ;;' @seealso ->vector
   (define ->list
     (lambda (x)
-      "Convert value to list."
       (if (list? x)
         x
         (as.list x))))
 
+  ;;' @description Convert value to vector.
   ;;' @examples
   ;;' (->vector '(1 2 3))   ; => [1] 1 2 3 (atomic vector)
   ;;' (->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)
@@ -176,7 +177,6 @@
   ;;' @seealso ->list
   (define ->vector
     (lambda (x)
-      "Convert value to vector."
       (if (vector? x)
         x
         (if (list? x)

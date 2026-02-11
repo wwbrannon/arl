@@ -15,6 +15,15 @@ if (!requireNamespace("yaml", quietly = TRUE)) {
   stop("Package 'yaml' is required. Install with: install.packages('yaml')")
 }
 
+# Load RyeDocParser (shared annotation parser)
+if (requireNamespace("rye", quietly = TRUE)) {
+  .doc_parser <- rye:::RyeDocParser$new()
+} else {
+  # Fallback: source directly when running outside installed package
+  source(file.path("R", "doc-parser.R"), local = TRUE)
+  .doc_parser <- RyeDocParser$new()
+}
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -134,17 +143,17 @@ linkify_seealso <- function(seealso, func_index, current_vignette) {
 }
 
 # ---------------------------------------------------------------------------
-# Annotation parser
+# Annotation parser — delegates to shared RyeDocParser (R/doc-parser.R)
 # ---------------------------------------------------------------------------
 
 #' Parse ;;' annotations from a .rye source file.
-#'
-#' Returns a list with two components:
-#'   $functions — named list keyed by function name, each with:
-#'     name, description, signature, examples, seealso, note, section, section_prose
-#'   $sections — list of section entries in order: list(name, prose)
-#'   $file — basename of the source file
+#' Delegates to the shared RyeDocParser class.
 parse_rye_annotations <- function(file) {
+  .doc_parser$parse_file(file)
+}
+
+#' Legacy inline parser (kept as unused reference; all calls go through RyeDocParser).
+.parse_rye_annotations_legacy <- function(file) {
   lines <- readLines(file, warn = FALSE)
   n <- length(lines)
 
@@ -885,13 +894,11 @@ generate_all <- function(
 
 #' Check for exported functions that don't have ;;' annotations.
 check_undocumented <- function(all_parsed, rye_dir, modules) {
-  # Use a simplified export extraction (similar to FileDeps)
   for (mod_name in modules) {
     rye_file <- file.path(rye_dir, paste0(mod_name, ".rye"))
     if (!file.exists(rye_file)) next
 
-    text <- paste(readLines(rye_file, warn = FALSE), collapse = "\n")
-    exports <- extract_exports(text)
+    exports <- .doc_parser$get_exports(rye_file)
     parsed <- all_parsed[[mod_name]]
     if (is.null(parsed)) next
 

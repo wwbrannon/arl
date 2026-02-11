@@ -9,9 +9,9 @@
   (import dict)
   (import set)
 
+  ;; Format atomic values to a single string.
   (define __format-atomic
     (lambda (x)
-      "Format atomic values to a single string."
       (define parts (as.character x))
       (if (= (length parts) 0)
         ""
@@ -19,17 +19,17 @@
           (as.character parts)
           (string-join parts " ")))))
 
+  ;; Format list/call contents with spaces.
   (define __format-seq
     (lambda (items)
-      "Format list/call contents with spaces."
       (define parts (lapply (__as-list items) format-value))
       (if (= (length parts) 0)
         ""
         (string-join parts " "))))
 
+  ;; Format functions/macros/closures.
   (define __format-function
     (lambda (x)
-      "Format functions/macros/closures."
       (if (r/call "inherits" (list x "rye_closure"))
         "<closure>"
         (if (r/call "is.function" (list x))
@@ -38,9 +38,9 @@
             "<macro>")
           #nil))))
 
+  ;; Format environments (excluding dict, set, promise).
   (define __format-environment
     (lambda (x)
-      "Format environments (excluding dict, set, promise)."
       (if (and (r/call "is.environment" (list x))
                (not (dict? x))
                (not (set? x))
@@ -53,9 +53,9 @@
           (string-join (list "<" class-str ">") ""))
         #nil)))
 
+  ;;' @description Format value for display.
   (define format-value
     (lambda (x)
-      "Format value for display."
       (define fn-tag (__format-function x))
       (if (not (is.null fn-tag))
         fn-tag
@@ -100,6 +100,7 @@
   ;;' @section Display and Output
   ;;' Functions for formatting and printing values.
 
+  ;;' @description Print value with newline.
   ;;' @examples
   ;;' (display 42)             ; prints "42" with newline
   ;;' (display "hello")        ; prints "hello" with newline
@@ -107,37 +108,36 @@
   ;;' @seealso println, trace
   (define display
     (lambda (x)
-      "Print value with newline."
       (define quiet (r/call "Sys.getenv" (list "RYE_QUIET" "")))
       (if (= quiet "")
         (r/call "cat" (list (format-value x) "\n"))
         #nil)))
 
+  ;;' @description Alias for display.
   ;;' @seealso display
   (define println
     (lambda (x)
-      "Alias for display."
       (display x)))
 
+  ;;' @description Concatenate formatted values into string.
   ;;' @examples
   ;;' (str "hello" " " "world")  ; => "hello world"
   ;;' (str 1 "+" 2)              ; => "1+2"
   ;;' @seealso string-join, format
   (define str
     (lambda (. args)
-      "Concatenate formatted values into string."
       (define parts (lapply (__as-list args) format-value))
       (if (= (length parts) 0)
         ""
         (string-join parts ""))))
 
+  ;;' @description Print value and return it.
   ;;' @examples
   ;;' (trace 42)               ; prints "42", returns 42
   ;;' (trace 42 "result")      ; prints "result: 42", returns 42
   ;;' @seealso warn, display
   (define trace
     (lambda (x . rest)
-      "Print value and return it."
       (define label (if (> (length rest) 0) (car rest) #nil))
       (define quiet (r/call "Sys.getenv" (list "RYE_QUIET" "")))
       (if (= quiet "")
