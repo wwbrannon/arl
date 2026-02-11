@@ -48,7 +48,9 @@ Standard R package layout:
 
 ## Development Commands
 
-Use `make help` to see all available Makefile targets. Key targets include:
+**Always use `make` targets** rather than running `Rscript`, `R -q -e`, or `devtools::*` commands directly. The Makefile targets handle prerequisite steps (clearing `.rye_cache`, rebuilding `load-order.rds`, calling `devtools::load_all()`) that are easy to forget when running commands by hand. Skipping these steps can lead to testing against stale code.
+
+Use `make help` to see all available targets. Key targets include:
 
 ```bash
 make help              # Show all available targets
