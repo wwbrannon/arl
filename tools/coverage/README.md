@@ -1,10 +1,6 @@
-# Rye Development Tools
+# Coverage Tools
 
-This directory contains development tools for the Rye language implementation.
-
-## Coverage Infrastructure
-
-Rye has comprehensive coverage tracking for both R implementation code and Rye language code. Coverage reports are generated in multiple formats (HTML, JSON, XML) and integrated with CI/CD.
+Coverage tracking for both R implementation code and Rye language code. Reports are generated in multiple formats (HTML, JSON, XML) and integrated with CI/CD.
 
 ## rye-coverage.R
 
@@ -27,7 +23,7 @@ make coverage
 Or directly from R:
 
 ```r
-source('tools/rye-coverage.R')
+source('tools/coverage/rye-coverage.R')
 
 # Console report only
 rye_coverage_report(output = "console")
@@ -122,7 +118,7 @@ make coverage
 Or directly from R:
 
 ```r
-source('tools/coverage-combine.R')
+source('tools/coverage/coverage-combine.R')
 generate_combined_report()
 ```
 

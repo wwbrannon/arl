@@ -1,10 +1,10 @@
 #!/usr/bin/env Rscript
 # generate-stdlib-docs.R — Auto-generate stdlib reference vignettes from .rye source files.
 #
-# Usage: Rscript tools/generate-stdlib-docs.R
+# Usage: Rscript tools/docs/generate-stdlib-docs.R
 #        make stdlib-docs
 #
-# Reads tools/stdlib-docs.yml for module-to-vignette mapping, parses ;;' annotations
+# Reads tools/docs/stdlib-docs.yml for module-to-vignette mapping, parses ;;' annotations
 # from inst/rye/*.rye, and writes vignettes/stdlib-*.Rmd files.
 
 # ---------------------------------------------------------------------------
@@ -20,7 +20,7 @@ if (requireNamespace("rye", quietly = TRUE)) {
   .doc_parser <- rye:::RyeDocParser$new()
 } else {
   # Fallback: source directly when running outside installed package
-  source(file.path("R", "doc-parser.R"), local = TRUE)
+  source(file.path("R", "doc-parser.R"))
   .doc_parser <- RyeDocParser$new()
 }
 
@@ -598,7 +598,7 @@ tokenize_params <- function(s) {
 #' Returns a list keyed by vignette name. Each entry has:
 #'   $functions — named list of function entries (same format as parse_rye_annotations output)
 #'   $sections  — list of section entries in order: list(name, prose)
-load_builtins_docs <- function(path = "tools/builtins-docs.yml") {
+load_builtins_docs <- function(path = "tools/docs/builtins-docs.yml") {
   if (!file.exists(path)) return(list())
 
   raw <- yaml::yaml.load_file(path)
@@ -820,7 +820,7 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
 #' @param rye_dir Path to inst/rye/ directory
 #' @param output_dir Path to vignettes/ directory
 generate_all <- function(
-  config_path = "tools/stdlib-docs.yml",
+  config_path = "tools/docs/stdlib-docs.yml",
   rye_dir = "inst/rye",
   output_dir = "vignettes"
 ) {

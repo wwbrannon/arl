@@ -4,7 +4,7 @@
 # Uses the RyeCoverageTracker class from R/coverage.R.
 #
 # Usage:
-#   source("tools/rye-coverage.R")
+#   source("tools/coverage/rye-coverage.R")
 #   rye_coverage_report()
 
 # Load package (use devtools in development mode)
@@ -109,7 +109,7 @@ if (!interactive()) {
   args <- commandArgs(trailingOnly = FALSE)
   is_file_arg <- grep("^--file=", args, value = TRUE)
   if (length(is_file_arg) > 0 && grepl("rye-coverage\\.R$", is_file_arg[1])) {
-    # Being run as Rscript tools/rye-coverage.R
+    # Being run as Rscript tools/coverage/rye-coverage.R
     rye_coverage_report()
   }
 }

@@ -7,7 +7,7 @@ platform <- paste(Sys.info()[c("sysname", "release", "machine")], collapse = " "
 local_r <- R.version$version.string
 
 status_line <- "Status: UNKNOWN (check not run)"
-summary_path <- file.path("tools", "cran_check_summary.txt")
+summary_path <- file.path("tools", "cran", "cran_check_summary.txt")
 if (file.exists(summary_path)) {
   summary_lines <- readLines(summary_path, warn = FALSE)
   status_hits <- grep("^Status:", summary_lines, value = TRUE)

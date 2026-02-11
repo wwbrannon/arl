@@ -138,6 +138,8 @@ Return #t if x is a cons cell (dotted pair).
 
 ### symbol? {#symbol}
 
+Return #t if x is a symbol.
+
 **Signature:** `(symbol? x)`
 
 **Examples:**
@@ -183,6 +185,8 @@ Return #t if x is a number (real or complex).
 ---
 
 ### string? {#string}
+
+Return #t if x is character.
 
 **Signature:** `(string? x)`
 
@@ -254,6 +258,8 @@ Return #t if x is #f.
 
 ### fn? {#fn}
 
+Return #t if x is a function.
+
 **Signature:** `(fn? x)`
 
 **Examples:**
@@ -266,6 +272,8 @@ Return #t if x is #f.
 ---
 
 ### callable? {#callable}
+
+Alias for fn?.
 
 **Signature:** `(callable? x)`
 

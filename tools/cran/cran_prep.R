@@ -9,4 +9,4 @@ devtools::document()
 rmarkdown::render("README.Rmd", quiet = TRUE)
 devtools::build_vignettes()
 
-source(file.path("tools", "cran_check.R"), local = TRUE)
+source(file.path("tools", "cran", "cran_check.R"), local = TRUE)

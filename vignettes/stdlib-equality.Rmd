@@ -27,6 +27,8 @@ provide the pointer-level semantics they require.
 
 ### equal? {#equal}
 
+Deep structural equality. Dispatches on class of first argument. Optional :strict #t uses identical? for atomics. Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
+
 **Signature:** `(equal? a b [strict #f])`
 
 **Examples:**
@@ -212,6 +214,8 @@ argument. Users can register additional methods with `set-method!`.
 
 ### equal?.default {#equal-default}
 
+Default equality: atomic/vector comparison. :strict #t => #f; else use == with type coercion.
+
 **Signature:** `(equal?.default a b [strict #f])`
 
 **Examples:**
@@ -226,6 +230,8 @@ argument. Users can register additional methods with `set-method!`.
 
 ### equal?.list {#equal-list}
 
+Compare lists recursively by structure and elements.
+
 **Signature:** `(equal?.list a b [strict #f])`
 
 **Examples:**
@@ -238,6 +244,8 @@ argument. Users can register additional methods with `set-method!`.
 ---
 
 ### equal?.environment {#equal-environment}
+
+Compare environments by bindings and values (dict, set, R6, refclass are env-based).
 
 **Signature:** `(equal?.environment a b [strict #f])`
 

@@ -33,7 +33,7 @@ if (file.exists(log_path)) {
   }
 }
 
-summary_path <- file.path("tools", "cran_check_summary.txt")
+summary_path <- file.path("tools", "cran", "cran_check_summary.txt")
 writeLines(c(paste("CheckDir:", check_dir), status_line), summary_path)
 
 cat("CRAN check completed.\n")

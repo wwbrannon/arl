@@ -30,6 +30,22 @@ Coerce calls and vectors to list; dotted pair to proper prefix.
 
 ---
 
+### __list-last {#__list-last}
+
+Return last element of list.
+
+**Signature:** `(__list-last lst)`
+
+---
+
+### __list-head {#__list-head}
+
+Return list without last element.
+
+**Signature:** `(__list-head lst)`
+
+---
+
 ### call {#call}
 
 Convert a list to a callable form.
@@ -76,6 +92,118 @@ Return list without first element (or cdr of dotted pair).
 ```
 
 **See also:** [car](#car), [cons](#cons), [rest](#rest)
+
+---
+
+### caar {#caar}
+
+car of car.
+
+**Signature:** `(caar x)`
+
+---
+
+### cadr {#cadr}
+
+car of cdr.
+
+**Signature:** `(cadr x)`
+
+---
+
+### cdar {#cdar}
+
+cdr of car.
+
+**Signature:** `(cdar x)`
+
+---
+
+### cddr {#cddr}
+
+cdr of cdr.
+
+**Signature:** `(cddr x)`
+
+---
+
+### caaar {#caaar}
+
+car of car of car.
+
+**Signature:** `(caaar x)`
+
+---
+
+### caadr {#caadr}
+
+car of car of cdr.
+
+**Signature:** `(caadr x)`
+
+---
+
+### cadar {#cadar}
+
+car of cdr of car.
+
+**Signature:** `(cadar x)`
+
+---
+
+### caddr {#caddr}
+
+car of cdr of cdr.
+
+**Signature:** `(caddr x)`
+
+---
+
+### cdaar {#cdaar}
+
+cdr of car of car.
+
+**Signature:** `(cdaar x)`
+
+---
+
+### cdadr {#cdadr}
+
+cdr of car of cdr.
+
+**Signature:** `(cdadr x)`
+
+---
+
+### cddar {#cddar}
+
+cdr of cdr of car.
+
+**Signature:** `(cddar x)`
+
+---
+
+### cdddr {#cdddr}
+
+cdr of cdr of cdr.
+
+**Signature:** `(cdddr x)`
+
+---
+
+### cadddr {#cadddr}
+
+car of cdr of cdr of cdr.
+
+**Signature:** `(cadddr x)`
+
+---
+
+### cddddr {#cddddr}
+
+cdr of cdr of cdr of cdr.
+
+**Signature:** `(cddddr x)`
 
 ---
 
@@ -154,6 +282,30 @@ Alias for car.
 
 ---
 
+### second {#second}
+
+Return second element or #nil.
+
+**Signature:** `(second lst)`
+
+---
+
+### third {#third}
+
+Return third element or #nil.
+
+**Signature:** `(third lst)`
+
+---
+
+### fourth {#fourth}
+
+Return fourth element or #nil.
+
+**Signature:** `(fourth lst)`
+
+---
+
 ### rest {#rest}
 
 Alias for cdr.
@@ -208,6 +360,14 @@ friends search by key; `rassoc` searches by value.
 Wrap R's == to handle vector results; returns #t only if all elements match.
 
 **Signature:** `(__r==-pred a b)`
+
+---
+
+### __assoc-by-pred {#__assoc-by-pred}
+
+Find first alist entry with matching key using given predicate.
+
+**Signature:** `(__assoc-by-pred key alist pred)`
 
 ---
 
@@ -464,6 +624,8 @@ Drop items while predicate is true.
 
 ### partition {#partition}
 
+Split list into chunks of size n.
+
 **Signature:** `(partition n lst [step n])`
 
 **Examples:**
@@ -537,6 +699,22 @@ Zip lists into list of tuples.
 ```
 
 **See also:** [map](stdlib-functional.html#map)
+
+---
+
+### member {#member}
+
+Return sublist of lst starting at first element equal to x, or #f if not found. Uses equal? by default; pass :use-identical #t for R's identical().
+
+**Signature:** `(member x lst [use-identical #f])`
+
+---
+
+### contains? {#contains}
+
+Return #t if lst contains element equal to x.
+
+**Signature:** `(contains? x lst)`
 
 ---
 

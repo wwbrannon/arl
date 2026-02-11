@@ -1,5 +1,5 @@
 # Module-to-vignette mapping for auto-generated stdlib documentation.
-# Used by tools/generate-stdlib-docs.R to produce vignettes/stdlib-*.Rmd files.
+# Used by tools/docs/generate-stdlib-docs.R to produce vignettes/stdlib-*.Rmd files.
 #
 # Each entry maps a vignette basename to:
 #   title:    Vignette title (used in YAML frontmatter and VignetteIndexEntry)

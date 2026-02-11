@@ -624,6 +624,8 @@ Variadic max.
 
 ### inc {#inc}
 
+Increment numeric value by n (default 1).
+
 **Signature:** `(inc x [n 1])`
 
 **Examples:**
@@ -637,6 +639,8 @@ Variadic max.
 ---
 
 ### dec {#dec}
+
+Decrement numeric value by n (default 1).
 
 **Signature:** `(dec x [n 1])`
 
@@ -750,6 +754,8 @@ Return truncated (towards zero) value of x.
 
 ### round {#round}
 
+Round x to given number of decimal places (default 0).
+
 **Signature:** `(round x [digits 0])`
 
 **Examples:**
@@ -812,6 +818,8 @@ Return base raised to power.
 ---
 
 ### log {#log}
+
+Return logarithm of x. With one argument, returns natural log. With two, returns log to the given base.
 
 **Signature:** `(log x [base #nil])`
 
@@ -878,7 +886,7 @@ Return base-2 logarithm of x.
 
 ### sin {#sin}
 
-Standard trigonometric functions (argument in radians).
+Return sine of x (in radians).
 
 **Signature:** `(sin x)`
 
@@ -909,7 +917,7 @@ Return tangent of x (in radians).
 
 ### asin {#asin}
 
-Inverse trigonometric functions (result in radians).
+Return arcsine of x (in radians).
 
 **Signature:** `(asin x)`
 

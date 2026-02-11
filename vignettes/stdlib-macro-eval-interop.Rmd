@@ -194,6 +194,8 @@ Apply a function with a provided list of arguments.
 
 ### r/call {#r-call}
 
+Call an R function with optional environment. Searches from .GlobalEnv by default, finding base and loaded package functions.
+
 **Signature:** `(r/call fn [args (list])`
 
 **Examples:**
@@ -210,6 +212,8 @@ Apply a function with a provided list of arguments.
 ---
 
 ### get {#get}
+
+Get a binding by name, defaulting to .GlobalEnv.
 
 **Signature:** `(get name [envir] [inherits])`
 
@@ -360,6 +364,14 @@ Create a new empty dictionary environment.
 
 ---
 
+### dict-key-to-name {#dict-key-to-name}
+
+Convert key to string name for dict storage.
+
+**Signature:** `(dict-key-to-name key)`
+
+---
+
 ### dict {#dict}
 
 Create a hash-backed dictionary from key/value pairs.
@@ -400,6 +412,14 @@ Return #t if x is a dictionary.
 (dict? (list 1 2))         ; => #f
 (dict? 42)                 ; => #f
 ```
+
+---
+
+### dict-keys-ordered {#dict-keys-ordered}
+
+Return ordered keys vector (internal helper).
+
+**Signature:** `(dict-keys-ordered dict)`
 
 ---
 
@@ -534,6 +554,14 @@ Any value can be a set element; uniqueness is determined by serialization.
 Create a new empty set environment.
 
 **Signature:** `(set-new)`
+
+---
+
+### set-key {#set-key}
+
+Convert value to string key for set storage via serialization.
+
+**Signature:** `(set-key value)`
 
 ---
 
@@ -674,6 +702,14 @@ Return items in a that are not in b.
 
 ---
 
+### set-copy-into {#set-copy-into}
+
+Copy items from source into target (internal helper).
+
+**Signature:** `(set-copy-into target source)`
+
+---
+
 ## Struct Definition
 
 ### defstruct {#defstruct}
@@ -711,6 +747,8 @@ These functions provide test-style assertions that signal errors on failure
 and return `#t` on success.
 
 ### assert {#assert}
+
+Assert condition or raise error.
 
 **Signature:** `(assert cond [msg "Assertion failed"])`
 

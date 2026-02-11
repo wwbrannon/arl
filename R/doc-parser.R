@@ -1,7 +1,7 @@
 # RyeDocParser: Parses ;;' annotation blocks from .rye source files.
 # Extracts @description, @examples, @seealso, @note, @section, @signature
 # for use by the compiler (baking docs into compiled code) and the
-# vignette generator (tools/generate-stdlib-docs.R).
+# vignette generator (tools/docs/generate-stdlib-docs.R).
 
 #' @importFrom R6 R6Class
 #' @keywords internal

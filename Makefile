@@ -29,7 +29,7 @@ build: stdlib-cache ## help: Build the package tarball
 
 .PHONY: stdlib-docs
 stdlib-docs: ## help: Generate stdlib reference vignettes from .rye source
-	Rscript tools/generate-stdlib-docs.R
+	Rscript tools/docs/generate-stdlib-docs.R
 
 .PHONY: devdoc
 devdoc: ## help: Generate roxygen documentation
@@ -102,7 +102,7 @@ coverage-rye: ## help: Run Rye code coverage only
 	@echo "Running Rye code coverage..."
 	@mkdir -p coverage/rye
 	@R -q -e "\
-	  source('tools/rye-coverage.R'); \
+	  source('tools/coverage/rye-coverage.R'); \
 	  tracker <- rye_coverage_report( \
 	    output = c('console', 'html', 'json'), \
 	    html_file = 'coverage/rye/index.html', \
@@ -114,7 +114,7 @@ coverage-rye: ## help: Run Rye code coverage only
 coverage-combined: ## help: Generate combined coverage summary
 	@echo "Generating combined coverage report..."
 	@mkdir -p coverage/combined
-	@R -q -e "source('tools/coverage-combine.R'); generate_combined_report()"
+	@R -q -e "source('tools/coverage/coverage-combine.R'); generate_combined_report()"
 
 .PHONY: coverage-report
 coverage-report: ## help: Open coverage reports in browser
@@ -225,20 +225,20 @@ cran: ## help: Run full CRAN prep/check/comments
 
 .PHONY: cran-prep
 cran-prep: stdlib-cache ## help: Prepare docs and run CRAN check
-	R -q -e "source('tools/cran_prep.R')"
+	R -q -e "source('tools/cran/cran_prep.R')"
 
 .PHONY: cran-check
 cran-check: ## help: Run CRAN check
-	R -q -e "source('tools/cran_check.R')"
+	R -q -e "source('tools/cran/cran_check.R')"
 
 .PHONY: cran-comments
 cran-comments: ## help: Generate cran-comments and CRAN-SUBMISSION
-	R -q -e "source('tools/cran_comments.R')"
+	R -q -e "source('tools/cran/cran_comments.R')"
 
 .PHONY: cran-clean
 cran-clean: ## help: Remove CRAN check artifacts
 	rm -rf rye.Rcheck
-	rm -f tools/cran_check_summary.txt
+	rm -f tools/cran/cran_check_summary.txt
 
 #
 ## Cleanup

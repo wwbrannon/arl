@@ -1,5 +1,5 @@
 # Coverage configuration for Rye package
-# Handles both R code (via covr) and Rye code (via tools/rye-coverage.R)
+# Handles both R code (via covr) and Rye code (via tools/coverage/rye-coverage.R)
 
 # Output directory structure
 output:
@@ -32,7 +32,7 @@ r_coverage:
     line: 80      # minimum line coverage percentage
     function: 75  # minimum function coverage percentage
 
-# Rye code coverage (via tools/rye-coverage.R)
+# Rye code coverage (via tools/coverage/rye-coverage.R)
 rye_coverage:
   enabled: true
 

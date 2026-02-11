@@ -20,7 +20,7 @@ make cran-comments
   then performs `R CMD check --as-cran`.
 - `cran-check`: runs `R CMD check --as-cran` only.
 - `cran-comments`: generates `cran-comments.md` and `CRAN-SUBMISSION`.
-- `cran-clean`: removes `rye.Rcheck` and `tools/cran_check_summary.txt`.
+- `cran-clean`: removes `rye.Rcheck` and `tools/cran/cran_check_summary.txt`.
 
 ## Review before submission
 

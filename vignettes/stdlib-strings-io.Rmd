@@ -24,6 +24,8 @@ default to fixed (literal) matching; pass `:fixed #f` for regex.
 
 ### string-join {#string-join}
 
+Join strings with separator.
+
 **Signature:** `(string-join x [sep ""])`
 
 **Examples:**
@@ -38,6 +40,8 @@ default to fixed (literal) matching; pass `:fixed #f` for regex.
 ---
 
 ### string-split {#string-split}
+
+Split string on separator.
 
 **Signature:** `(string-split x [sep ""])`
 
@@ -84,6 +88,8 @@ Format string with sprintf.
 
 ### string-contains? {#string-contains}
 
+Check pattern in string (fixed).
+
 **Signature:** `(string-contains? str pattern [fixed #t])`
 
 **Examples:**
@@ -98,6 +104,8 @@ Format string with sprintf.
 ---
 
 ### string-match? {#string-match}
+
+Check pattern in string (regex).
 
 **Signature:** `(string-match? str pattern [fixed #f])`
 
@@ -114,6 +122,8 @@ Format string with sprintf.
 
 ### string-find {#string-find}
 
+Find pattern index or #nil.
+
 **Signature:** `(string-find str pattern [fixed #t])`
 
 **Examples:**
@@ -129,6 +139,8 @@ Format string with sprintf.
 
 ### string-replace {#string-replace}
 
+Replace first match. Default is literal (fixed); pass :fixed #f for regex.
+
 **Signature:** `(string-replace str pattern replacement [fixed #t])`
 
 **Examples:**
@@ -142,6 +154,8 @@ Format string with sprintf.
 ---
 
 ### string-replace-all {#string-replace-all}
+
+Replace all matches. Default is literal (fixed); pass :fixed #f for regex.
 
 **Signature:** `(string-replace-all str pattern replacement [fixed #t])`
 
@@ -453,6 +467,8 @@ Functions for reading from standard input and writing to standard output.
 
 ### read-line {#read-line}
 
+Read single line from stdin.
+
 **Signature:** `(read-line [prompt ""])`
 
 **Examples:**
@@ -533,6 +549,8 @@ Functions for reading from and writing to files.
 
 ### read-file {#read-file}
 
+Read entire file as string.
+
 **Signature:** `(read-file path [encoding "UTF-8"])`
 
 **Examples:**
@@ -545,6 +563,8 @@ Functions for reading from and writing to files.
 
 ### read-lines {#read-lines}
 
+Read file into list of lines.
+
 **Signature:** `(read-lines path [encoding "UTF-8"])`
 
 **Examples:**
@@ -555,6 +575,8 @@ Functions for reading from and writing to files.
 ---
 
 ### write-file {#write-file}
+
+Write string or lines to file.
 
 **Signature:** `(write-file path content [sep "\n"])`
 
@@ -568,6 +590,8 @@ Functions for reading from and writing to files.
 
 ### write-lines {#write-lines}
 
+Write list of lines to file.
+
 **Signature:** `(write-lines path lines [encoding "UTF-8"])`
 
 **Examples:**
@@ -578,6 +602,8 @@ Functions for reading from and writing to files.
 ---
 
 ### append-file {#append-file}
+
+Append content to file.
 
 **Signature:** `(append-file path content [sep "\n"])`
 
@@ -661,6 +687,8 @@ Return #t if directory exists.
 
 ### directory-list {#directory-list}
 
+List directory contents as list of filenames.
+
 **Signature:** `(directory-list path [full.names #f])`
 
 **Examples:**
@@ -672,6 +700,8 @@ Return #t if directory exists.
 ---
 
 ### directory-delete {#directory-delete}
+
+Delete directory. Return #t on success.
 
 **Signature:** `(directory-delete path [recursive #t])`
 
@@ -750,7 +780,17 @@ Execute shell command and capture output as string.
 
 ### exit {#exit}
 
+Exit program with status code.
+
 **Signature:** `(exit status)`
+
+---
+
+### format-value {#format-value}
+
+Format value for display.
+
+**Signature:** `(format-value x)`
 
 ---
 
