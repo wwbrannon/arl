@@ -110,7 +110,7 @@
 (defmacro aif (test then alt)
   "Bind test result to it and select then/alt."
   `(let ((it ,test))
-     (if it ,(__capture 'it then) ,(__capture 'it alt))))
+     (if it ,(capture 'it then) ,(capture 'it alt))))
 
 (println "Anaphoric if example:")
 (aif (+ 2 3)

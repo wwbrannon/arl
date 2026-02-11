@@ -888,6 +888,26 @@ Evaluate an R expression directly via R's eval(), bypassing Rye's compiler.
 
 ## Macro Utilities
 
+### capture {#capture}
+
+Mark a symbol for intentional capture in a macro body, overriding hygiene.
+
+**Signature:** `(capture 'sym expr)`
+
+**Examples:**
+```lisp
+(defmacro aif (test then alt)
+  `(let ((it ,test))
+     (if it ,(capture 'it then) ,(capture 'it alt))))
+(aif (+ 2 3) it 0)          ; => 5
+```
+
+**Note:** Use capture when writing anaphoric macros or other macros that intentionally introduce a binding visible to the caller. Without capture, Rye's automatic hygiene renames macro-introduced symbols to prevent accidental capture.
+
+**See also:** [gensym](#gensym), [macroexpand](#macroexpand), defmacro
+
+---
+
 ### gensym {#gensym}
 
 Generate a unique uninterned symbol, useful for writing hygienic macros.

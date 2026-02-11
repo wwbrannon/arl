@@ -176,9 +176,12 @@ RyeEngine <- R6::R6Class(
         self$macro_expander$gensym(prefix = prefix)
       }
 
-      env$`__capture` <- function(symbol, expr) {
+      env$capture <- function(symbol, expr) {
         self$macro_expander$capture(symbol, expr)
       }
+      attr(env$capture, "rye_doc") <- list(
+        description = "Mark a symbol for intentional capture in a macro body, overriding hygiene."
+      )
 
       env$`macro?` <- function(x) {
         is.symbol(x) && self$macro_expander$is_macro(x, env = env)
@@ -238,12 +241,6 @@ RyeEngine <- R6::R6Class(
 
       env$rye_read <- function(source, source_name = NULL) {
         self$read(source, source_name = source_name)
-      }
-      env$rye_parse <- function(tokens, source_name = NULL) {
-        self$parse(tokens, source_name = source_name)
-      }
-      env$rye_tokenize <- function(source) {
-        self$tokenize(source)
       }
 
       env$`__set_doc` <- function(fn, docstring) {

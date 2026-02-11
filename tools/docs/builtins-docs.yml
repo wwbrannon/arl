@@ -39,6 +39,19 @@ builtins:
       (eval '(list 1 2 3))      ; => (1 2 3)
     seealso: "r/eval, macroexpand"
 
+  capture:
+    vignette: stdlib-macro-eval-interop
+    section: Macro Utilities
+    description: "Mark a symbol for intentional capture in a macro body, overriding hygiene."
+    signature: "(capture 'sym expr)"
+    examples: |
+      (defmacro aif (test then alt)
+        `(let ((it ,test))
+           (if it ,(capture 'it then) ,(capture 'it alt))))
+      (aif (+ 2 3) it 0)          ; => 5
+    seealso: "gensym, macroexpand, defmacro"
+    note: "Use capture when writing anaphoric macros or other macros that intentionally introduce a binding visible to the caller. Without capture, Rye's automatic hygiene renames macro-introduced symbols to prevent accidental capture."
+
   gensym:
     vignette: stdlib-macro-eval-interop
     section: Macro Utilities
