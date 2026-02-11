@@ -30,8 +30,6 @@ CLI_HELP_TEXT <- paste(
 #
 #' @keywords internal
 #' @noRd
-#' @importFrom optparse OptionParser make_option parse_args
-#' @importFrom cli cat_line cli_alert_danger
 RyeCLI <- R6::R6Class(
   "RyeCLI",
   public = list(
@@ -51,35 +49,39 @@ RyeCLI <- R6::R6Class(
         exit_fn(message, show_help)
         return(invisible(NULL))
       }
-      cli::cli_alert_danger(message)
+      message("Error: ", message)
       if (isTRUE(show_help)) {
-        cli::cat_line(CLI_HELP_TEXT)
+        cat(CLI_HELP_TEXT, "\n", sep = "")
       }
       quit(save = "no", status = 1)
     },
-    # @description Build optparse OptionParser for --eval, --quiet, etc.
-    # @return OptionParser instance.
-    cli_parser = function() {
-      option_list <- list(
-        optparse::make_option(
-          c("-e", "--eval"),
-          type = "character",
-          default = NULL,
-          metavar = "expr",
-          help = "Evaluate a single Rye expression."
-        ),
-        optparse::make_option(
-          c("-q", "--quiet"),
-          action = "store_true",
-          default = FALSE,
-          help = "Start REPL with minimal banner (no warranty text)."
-        )
-      )
-      optparse::OptionParser(
-        usage = "usage: rye [options] [files...]",
-        option_list = option_list,
-        description = "Rye: A Lisp dialect for R. Use --help for help, --version for version."
-      )
+    # @description Parse remaining args for --eval/-e, --quiet/-q, and positional args.
+    # @param args Character vector of arguments (after -f/--file extraction).
+    # @return List with elements options (list) and args (character).
+    parse_remaining = function(args) {
+      opt <- list(eval = NULL, quiet = FALSE)
+      positional <- character(0)
+      i <- 1L
+      while (i <= length(args)) {
+        a <- args[i]
+        if (a %in% c("-e", "--eval")) {
+          if (i < length(args)) {
+            opt$eval <- args[i + 1L]
+            i <- i + 2L
+          } else {
+            stop("--eval requires an expression.")
+          }
+        } else if (a %in% c("-q", "--quiet")) {
+          opt$quiet <- TRUE
+          i <- i + 1L
+        } else if (startsWith(a, "-")) {
+          stop("Unrecognized flag: ", a)
+        } else {
+          positional <- c(positional, a)
+          i <- i + 1L
+        }
+      }
+      list(options = opt, args = positional)
     },
     # @description Extract file paths from -f/--file and positional args; validate and return list(files, error).
     # @param args Character vector of arguments.
@@ -173,15 +175,8 @@ RyeCLI <- R6::R6Class(
         return(state)
       }
 
-      parser <- self$cli_parser()
       parsed <- tryCatch(
-        {
-          optparse::parse_args(
-            parser,
-            args = args_for_parse,
-            positional_arguments = TRUE
-          )
-        },
+        self$parse_remaining(args_for_parse),
         error = function(e) {
           state$errors <<- c(state$errors, conditionMessage(e))
           return(NULL)
@@ -229,7 +224,7 @@ RyeCLI <- R6::R6Class(
     },
     # @description Print CLI help text and exit.
     do_help = function() {
-      cli::cat_line(CLI_HELP_TEXT)
+      cat(CLI_HELP_TEXT, "\n", sep = "")
       invisible(NULL)
     },
     # @description Print package version and exit.
@@ -238,7 +233,7 @@ RyeCLI <- R6::R6Class(
         as.character(utils::packageVersion("rye")),
         error = function(...) "unknown"
       )
-      cli::cat_line("rye ", version)
+      cat("rye ", version, "\n", sep = "")
       invisible(NULL)
     },
     # @description Start the Rye REPL (interactive loop).
@@ -293,7 +288,7 @@ RyeCLI <- R6::R6Class(
       )
       result <- result_with_vis$value
       if (!is.null(result) && result_with_vis$visible) {
-        cli::cat_line(engine$env$format_value(result))
+        cat(engine$env$format_value(result), "\n", sep = "")
       }
       invisible(result)
     },
@@ -347,9 +342,9 @@ RyeCLI <- R6::R6Class(
       if (length(parsed$errors) > 0) {
         if (!isTRUE(getOption("rye.cli_quiet", FALSE))) {
           for (err in parsed$errors) {
-            cli::cli_alert_danger(err)
+            message("Error: ", err)
           }
-          cli::cat_line(CLI_HELP_TEXT)
+          cat(CLI_HELP_TEXT, "\n", sep = "")
         }
         exit_fn <- getOption("rye.cli_exit_fn", NULL)
         if (!is.null(exit_fn) && is.function(exit_fn)) {
