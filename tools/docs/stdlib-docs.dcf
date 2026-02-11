@@ -1,0 +1,49 @@
+# Module-to-vignette mapping for auto-generated stdlib documentation.
+# Used by tools/docs/generate-stdlib-docs.R to produce vignettes/stdlib-*.Rmd files.
+#
+# Format: Debian Control File (DCF), read by base R's read.dcf().
+# Fields:
+#   Name:     Vignette basename (e.g. stdlib-math)
+#   Title:    Vignette title (used in YAML frontmatter and VignetteIndexEntry)
+#   Modules:  Comma-separated list of .rye module names
+#   Preamble: Optional introductory text placed before the first section
+
+Name: stdlib-math
+Title: Standard Library: Math and Numeric Functions
+Modules: math
+Preamble: These functions are provided by the `math` module (`inst/rye/math.rye`).
+
+Name: stdlib-list-seq
+Title: Standard Library: Lists and Sequences
+Modules: list, sequences, sort
+
+Name: stdlib-functional
+Title: Standard Library: Higher-Order Functions
+Modules: functional, logic
+
+Name: stdlib-types
+Title: Standard Library: Type Predicates
+Modules: types
+Preamble: These functions are provided by the `types` module (`inst/rye/types.rye`).
+
+Name: stdlib-equality
+Title: Standard Library: Equality and S3 Dispatch
+Modules: equality
+Preamble: These functions are provided by the `equality` module (`inst/rye/equality.rye`).
+
+Name: stdlib-conversions
+Title: Standard Library: Type Conversions
+Modules: conversions
+Preamble: These functions are provided by the `conversions` module (`inst/rye/conversions.rye`).
+
+Name: stdlib-control
+Title: Standard Library: Control Flow and Macros
+Modules: control, binding, looping, threading, error
+
+Name: stdlib-strings-io
+Title: Standard Library: Strings, I/O, and Arithmetic
+Modules: strings, io, display
+
+Name: stdlib-macro-eval-interop
+Title: Standard Library: Macro, Eval, Interop, and Convenience
+Modules: core, r-interop, dict, set, struct, assert

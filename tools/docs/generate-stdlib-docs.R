@@ -4,16 +4,12 @@
 # Usage: Rscript tools/docs/generate-stdlib-docs.R
 #        make stdlib-docs
 #
-# Reads tools/docs/stdlib-docs.yml for module-to-vignette mapping, parses ;;' annotations
+# Reads tools/docs/stdlib-docs.dcf for module-to-vignette mapping, parses ;;' annotations
 # from inst/rye/*.rye, and writes vignettes/stdlib-*.Rmd files.
 
 # ---------------------------------------------------------------------------
 # Dependencies
 # ---------------------------------------------------------------------------
-
-if (!requireNamespace("yaml", quietly = TRUE)) {
-  stop("Package 'yaml' is required. Install with: install.packages('yaml')")
-}
 
 # Load DocParser (shared annotation parser)
 if (requireNamespace("rye", quietly = TRUE)) {
@@ -820,11 +816,11 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
 
 #' Generate all stdlib documentation vignettes.
 #'
-#' @param config_path Path to stdlib-docs.yml
+#' @param config_path Path to stdlib-docs.dcf
 #' @param rye_dir Path to inst/rye/ directory
 #' @param output_dir Path to vignettes/ directory
 generate_all <- function(
-  config_path = "tools/docs/stdlib-docs.yml",
+  config_path = "tools/docs/stdlib-docs.dcf",
   rye_dir = "inst/rye",
   output_dir = "vignettes"
 ) {
@@ -838,8 +834,23 @@ generate_all <- function(
     stop("Output directory not found: ", output_dir)
   }
 
-  config <- yaml::yaml.load_file(config_path)
-  vignettes <- config$vignettes
+  # Read DCF config (strip comment lines before parsing)
+  lines <- readLines(config_path, warn = FALSE)
+  lines <- lines[!grepl("^\\s*#", lines)]
+  m <- read.dcf(textConnection(paste(lines, collapse = "\n")))
+
+  vignettes <- list()
+  for (i in seq_len(nrow(m))) {
+    vname <- m[i, "Name"]
+    modules <- trimws(strsplit(m[i, "Modules"], ",")[[1]])
+    preamble_val <- m[i, "Preamble"]
+    preamble <- if (is.na(preamble_val) || !nzchar(preamble_val)) "" else preamble_val
+    vignettes[[vname]] <- list(
+      title   = m[i, "Title"],
+      modules = modules,
+      preamble = preamble
+    )
+  }
 
   # Collect all module names needed
   all_modules <- unique(unlist(lapply(vignettes, function(v) v$modules)))
