@@ -89,7 +89,10 @@ make document  # all of the above plus vignettes
 1. **Define** the function in the appropriate `inst/rye/*.rye` module
    (or create a new module if it's a new topic).
 2. **Export** it from the module's `(export ...)` list.
-3. **Add a docstring** as the first expression in the lambda body.
+3. **Document** it with `;;'` annotation comments immediately before the
+   `define`. Include `@description`, `@examples`, and `@seealso` at
+   minimum. See [Documenting functions](getting-started.html#documenting-functions)
+   for the full tag reference.
 4. **Add a vignette entry** in the corresponding `vignettes/stdlib-*.Rmd`
    file with signature, description, examples, and see-also.
 5. **Add to the overview** in `vignettes/stdlib-reference.Rmd`.

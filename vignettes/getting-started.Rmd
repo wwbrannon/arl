@@ -158,16 +158,107 @@ special form, macro, or function:
 (help "map")      ; stdlib function
 ```
 
-For macros and functions defined with docstrings, `help` shows the signature
-and description automatically. It also falls through to R's built-in help for
-R functions.
+For functions with documentation, `help` shows the signature, description,
+examples, and cross-references automatically. It also falls through to R's
+built-in help for R functions.
 
-You can also work with docstrings programmatically:
+## Documenting functions
+
+Rye has two ways to attach documentation to functions: `;;'` annotation
+comments (used at definition time) and the `doc!` builtin (used at
+runtime). Both produce the same `rye_doc` attribute on the function, which
+`help` and `doc` read.
+
+### Annotation comments (`;;'`)
+
+Annotation comments use the `;;'` prefix and support roxygen-like tags.
+Place them immediately before a `define`:
 
 ```lisp
-(doc map)              ; retrieve the docstring from a function
-(doc! my-fn "Does X") ; attach a docstring to an existing function
+;;' @description Compute the square of x.
+;;' @examples
+;;' (square 3)   ; => 9
+;;' (square -2)  ; => 4
+;;' @seealso cube, expt
+;;' @note Pure function; no side effects.
+(define square
+  (lambda (x) (* x x)))
 ```
+
+Supported tags:
+
+| Tag | Purpose |
+|-----|---------|
+| `@description` | One-line or multi-line description. If omitted, the parser falls back to an inline docstring or a `(doc! ...)` call. |
+| `@examples` | One or more example expressions (one per continuation line). |
+| `@seealso` | Comma-separated list of related function names. |
+| `@note` | Additional notes (caveats, performance, history). |
+| `@signature` | Override the auto-detected call signature. |
+| `@section` | Section heading for grouping functions in generated docs. |
+
+Multi-line content is written with continuation `;;'` lines:
+
+```lisp
+;;' @description Concatenate strings with a separator.
+;;'   Accepts any number of string arguments.
+;;' @examples
+;;' (string-join ", " '("a" "b" "c"))  ; => "a, b, c"
+;;' (string-join "" '("x" "y"))        ; => "xy"
+(define string-join ...)
+```
+
+The compiler reads `;;'` blocks at compile time and bakes the resulting
+documentation into the function's `rye_doc` attribute, so no runtime
+overhead is incurred. This is the recommended way to document stdlib
+functions and module exports.
+
+### Runtime documentation with `doc!`
+
+`doc!` attaches documentation fields to an already-defined function. It
+is useful for interactive work, dynamically generated functions, or adding
+fields incrementally:
+
+```lisp
+(define double (lambda (x) (* x 2)))
+
+; Set just the description (backward-compatible form)
+(doc! double "Double the input value.")
+
+; Set specific fields with keyword arguments
+(doc! double :examples "(double 3) ; => 6")
+(doc! double :note "Pure function.")
+
+; Set multiple fields at once
+(doc! double :description "Double x." :examples "(double 5) ; => 10")
+```
+
+`doc!` **merges** with existing documentation — setting `:examples` does
+not erase a previously set `:description`.
+
+### Retrieving documentation with `doc`
+
+`doc` reads fields from a function's documentation:
+
+```lisp
+(doc double)              ; => "Double x." (description, the default)
+(doc double "examples")   ; => "(double 5) ; => 10"
+(doc double "note")       ; => "Pure function."
+(doc double "all")        ; => named list of all fields
+```
+
+### Which mechanism to use
+
+| Situation | Use |
+|-----------|-----|
+| Defining a function in a `.rye` source file | `;;'` annotations |
+| Attaching docs interactively in the REPL | `doc!` or `;;'` |
+| Building docs dynamically from data | `doc!` with keyword args |
+| Reading docs programmatically | `doc` |
+| Looking up docs as a user | `help` |
+
+Both `;;'` and `doc!` produce the same `rye_doc` attribute, so `help`
+and `doc` work identically regardless of how the documentation was
+attached.
 
 ## Next steps
 
