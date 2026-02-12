@@ -427,7 +427,7 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
   out <- c(out, "")
   out <- c(out, "```{arl, eval=FALSE}")
   out <- c(out, "; Import focused modules")
-  out <- c(out, "(import control)   ; when/unless/and/or/cond/case")
+  out <- c(out, "(import control)   ; when/unless/cond/case/try*")
   out <- c(out, "(import binding)   ; let/let*/letrec")
   out <- c(out, "(import looping)   ; for/loop/recur/until")
   out <- c(out, "(import threading) ; -> and ->>")

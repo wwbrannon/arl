@@ -98,6 +98,7 @@ known special forms:
 - `begin` -- sequential evaluation (compiled to R `{ }` blocks)
 - `defmacro` -- macro definition (registers with the macro expander)
 - `while`, `and`, `or` -- control flow compiled to R equivalents
+- `delay` -- lazy promise creation
 - `quasiquote` -- template expansion with unquote/splicing
 - `load`, `run`, `import`, `module` -- file and module operations
 - `help` -- dispatches to the help system

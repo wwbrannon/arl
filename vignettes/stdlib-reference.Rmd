@@ -37,7 +37,7 @@ For the full, per-function reference, see the individual stdlib reference pages:
 
 ```{arl, eval=FALSE}
 ; Import focused modules
-(import control)   ; when/unless/and/or/cond/case
+(import control)   ; when/unless/cond/case/try*
 (import binding)   ; let/let*/letrec
 (import looping)   ; for/loop/recur/until
 (import threading) ; -> and ->>

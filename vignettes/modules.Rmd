@@ -296,13 +296,13 @@ Arl's standard library is organized into modules that you can load as needed:
 
 ```{arl, eval=FALSE}
 ; Control flow macros
-(import control)    ; when, unless, and, or, cond, case
+(import control)    ; when, unless, cond, case, try*
 
 ; Binding forms
 (import binding)    ; let, let*, letrec
 
 ; Looping constructs
-(import looping)    ; while, for, loop, recur
+(import looping)    ; until, for, loop, recur
 
 ; Threading macros
 (import threading)  ; ->, ->>

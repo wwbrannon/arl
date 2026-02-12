@@ -96,7 +96,7 @@ Arl leverages R's existing eval/quote/environment system rather than reimplement
 - **Truthiness**: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsey
 - **Lists**: Backed by R calls/lists; `car` returns head, `cdr` returns tail
 - **Keywords**: `:kw` tokens self-evaluate and become named arguments
-- **Special forms**: `quote`, `if`, `define`, `lambda`, `begin`, `defmacro`, `quasiquote`, `~`
+- **Special forms**: `quote`, `quasiquote`, `if`, `begin`, `define`, `set!`, `lambda`, `defmacro`, `and`, `or`, `while`, `delay`, `load`, `run`, `import`, `module`, `help`, `~`, `::`, `:::`
 - **Scoping**: Lexical scoping via R environments
 - **Macros**: Compile-time code transformation with quasiquote/unquote
 - **Tail call optimization**: Self-TCO is implemented by the compiler for `(define name (lambda ...))` patterns -- self-tail-calls through `if`/`begin`/`cond`/`let`/`let*`/`letrec` are rewritten as loops. `loop`/`recur` is still useful for mutual recursion.
