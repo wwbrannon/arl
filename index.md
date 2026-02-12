@@ -5,6 +5,10 @@
 
 **A Lisp dialect for R** — homoiconic syntax, powerful macros, and seamless access to every R function.
 
+TODO: a couple paragraphs here incl getting started and examples links
+<!-- - [**Getting Started**](articles/getting-started.html) — installation, REPL basics, core syntax
+- [**Examples**](articles/examples.html) — complete working programs from fibonacci to data analysis -->
+
 ## Quick Examples
 
 ### Basics
@@ -42,48 +46,40 @@
      (reduce +))               ; => 50
 ```
 
-## Key Features
+## Features & Guides
 
-- **Seamless R interop** — call any R function, use keywords for named arguments, work with R data structures directly.
-- **Powerful macro system** — `defmacro` with quasiquote, unquote, and splicing gives you compile-time code transformation.
+- **[Seamless R interop](articles/r-interop.html)** — call any R function, use keywords for named arguments, work with R data structures directly.
+- **[Powerful macro system](articles/macros.html)** — `defmacro` with quasiquote, unquote, and splicing gives you compile-time code transformation.
 - **Self-tail-call optimization** — the compiler rewrites self-recursive tail calls as loops, so deep recursion won't overflow the stack.
-- **Modular standard library** — `(import threading)`, `(import control)`, `(import error)` — load only the modules you need.
-- **Built-in help** — attach docstrings to functions and macros, then query them with `(help "name")`.
+- **[Modular standard library](articles/stdlib-reference.html)** — `(import threading)`, `(import control)`, `(import error)` — load only the modules you need.
+- **[Benchmarks](articles/benchmarks.html)** — performance characteristics, profiling, and optimization history.
 
 ## Install
 
 ### From R
 
 ```r
-devtools::install()
+> devtools::install()  # or install_github or install.packages
 
-library(arl)
-engine <- Engine$new()
-engine$repl()
+> library(arl)
+> engine <- Engine$new()
+> engine$repl()
 ```
 
 ### CLI
 
 ```bash
-arl::install_cli()   # one-time setup from R
-arl                  # start REPL
-arl --file script.arl
-arl --eval "(+ 1 2)"
+> arl::install_cli()     # one-time setup from R
+
+$ arl                    # start REPL
+$ arl --file script.arl  # or "-f"
+$ arl --eval "(+ 1 2)"   # of "-e"
 ```
-
-## Learn More
-
-- [**Getting Started**](articles/getting-started.html) — installation, REPL basics, core syntax
-- [**Examples**](articles/examples.html) — complete working programs from fibonacci to data analysis
-- [**Macros Guide**](articles/macros.html) — defmacro, quasiquote, and hygiene
-- [**R Interop**](articles/r-interop.html) — calling R from Arl and vice versa
-- [**Standard Library**](articles/stdlib-reference.html) — full function reference
-- [**Benchmarks**](articles/benchmarks.html) — performance characteristics and profiling
 
 ---
 
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![R-CMD-check](https://github.com/wwbrannon/arl/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/R-CMD-check.yaml)
+[![Check](https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/check.yaml)
 [![Codecov](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/arl)
 [![CRAN status](https://www.r-pkg.org/badges/version/arl)](https://CRAN.R-project.org/package=arl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
