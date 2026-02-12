@@ -174,13 +174,11 @@ cran-comments: check ## help: Generate cran-comments and CRAN-SUBMISSION
 
 .PHONY: clean-cache
 clean-cache: ## help: Remove .rye_cache directories (auto-runs before dev targets)
-	@find . -type d -name ".rye_cache" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d -name ".rye_cache" -exec rm -rf {} + 2>/dev/null || true
 
 .PHONY: clean-coverage
 clean-coverage: ## help: Remove coverage output files
-	@echo "Cleaning coverage outputs..."
-	@rm -rf coverage
-	@echo "Coverage outputs cleaned."
+	rm -rf coverage
 
 .PHONY: clean-bench-profile
 clean-bench-profile: ## help: Remove temporary benchmark / profile results objects

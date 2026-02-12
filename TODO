@@ -1,13 +1,11 @@
 o) rename package
+o) also remember to update gh-pages branch benchmark data
 
 o) update README
 
-o) enable actions
-o) rationalize CI configuration for coverage and everything else
-
-o) consider using the github-action-benchmark GH action to run benchmarks / commit them to a separate branch / visualize them
+o) figure out how to host the docs
+o) enable actions / get workflows running
 
 o) minor pkgdown warning about site url
-o) figure out where / how to host the docs
 
 o) run other cran submission steps
