@@ -197,6 +197,14 @@ a:hover {
   display: none;
 }
 
+/* ---------- Arl syntax highlighting (Pandoc span classes) ---------- */
+/* Bootstrap defaults are too subtle for keywords; override the classes  */
+/* that matter most for reading Lisp code.                               */
+code span.kw { color: #8839ef; font-weight: bold; } /* special forms    */
+code span.cn { color: #d20f39; }                     /* constants        */
+code span.do { color: #e64553; font-style: italic; } /* doc comments ;;' */
+code span.ot { color: #1e66f5; }                     /* :keywords        */
+
 /* ---------- Dark mode adjustments ---------- */
 [data-bs-theme="dark"] {
   --arl-accent: #3fc1b0;
@@ -220,3 +228,8 @@ a:hover {
 [data-bs-theme="dark"] code {
   color: var(--arl-accent);
 }
+
+[data-bs-theme="dark"] code span.kw { color: #c6a0f6; }
+[data-bs-theme="dark"] code span.cn { color: #ed8796; }
+[data-bs-theme="dark"] code span.do { color: #f5a97f; }
+[data-bs-theme="dark"] code span.ot { color: #8aadf4; }
