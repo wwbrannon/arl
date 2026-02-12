@@ -509,14 +509,6 @@ Variadic greater-than-or-equal comparison. Checks all adjacent pairs.
 
 ---
 
-### __null_safe_eq {#__null_safe_eq}
-
-NULL-safe equality comparison following Scheme semantics.
-
-**Signature:** `(__null_safe_eq a b)`
-
----
-
 ### == {#num-eq-eq}
 
 Variadic equality comparison. Checks all adjacent pairs.

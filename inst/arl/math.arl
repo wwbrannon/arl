@@ -386,6 +386,7 @@
   ;; NULL-safe equality: R's == returns logical(0) for NULL arguments,
   ;; which is not usable in a boolean context. We follow Scheme semantics
   ;; instead: (= NULL NULL) => #t, (= NULL x) => #f.
+  ;;' @internal
   ;;' @description NULL-safe equality comparison following Scheme semantics.
   (define __null_safe_eq
     (lambda (a b)
