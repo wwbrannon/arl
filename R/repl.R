@@ -2,11 +2,11 @@
 #
 # @section REPL options:
 # \describe{
-#   \item{\code{rye.repl_quiet}}{If TRUE, show minimal startup banner (e.g. set by CLI \code{-q}/\code{--quiet}).}
-#   \item{\code{rye.repl_use_history}}{If FALSE, do not load, save, or add to readline history.}
-#   \item{\code{rye.repl_bracketed_paste}}{If TRUE (default), enable bracketed paste mode.}
-#   \item{\code{rye.repl_read_form_override}}{Override \code{read_form()}: function(input_fn, prompt, cont_prompt) -> list(text, exprs, error?) or NULL.}
-#   \item{\code{rye.repl_can_use_history_override}}{Override for \code{can_use_history()}: function or logical.}
+#   \item{\code{arl.repl_quiet}}{If TRUE, show minimal startup banner (e.g. set by CLI \code{-q}/\code{--quiet}).}
+#   \item{\code{arl.repl_use_history}}{If FALSE, do not load, save, or add to readline history.}
+#   \item{\code{arl.repl_bracketed_paste}}{If TRUE (default), enable bracketed paste mode.}
+#   \item{\code{arl.repl_read_form_override}}{Override \code{read_form()}: function(input_fn, prompt, cont_prompt) -> list(text, exprs, error?) or NULL.}
+#   \item{\code{arl.repl_can_use_history_override}}{Override for \code{can_use_history()}: function or logical.}
 # }
 #
 # @field engine Engine instance used for parsing/evaluation.
@@ -22,9 +22,9 @@
 # @param input_fn Optional function to read a line (defaults to input_line).
 # @param output_fn Output function for REPL banners/messages.
 # @param history_state Environment storing history state.
-# @param history_path Optional history file path; default ~/.rye_history.
+# @param history_path Optional history file path; default ~/.arl_history.
 # @param e Condition object to inspect for incomplete input.
-# @param exprs List of Rye expressions to evaluate.
+# @param exprs List of Arl expressions to evaluate.
 # @param value Value to print using the engine formatter.
 # @param path History file path to load.
 # @param text Line of input to add to readline history.
@@ -35,7 +35,7 @@ REPL <- R6::R6Class(
   "REPL",
   public = list(
     engine = NULL,
-    prompt = "rye> ",
+    prompt = "arl> ",
     cont_prompt = "...> ",
     input_fn = NULL,
     output_fn = NULL,
@@ -48,7 +48,7 @@ REPL <- R6::R6Class(
     # @param history_state, history_path History state env and file path.
     initialize = function(
       engine = NULL,
-      prompt = "rye> ",
+      prompt = "arl> ",
       cont_prompt = "...> ",
       input_fn = NULL,
       output_fn = cat,
@@ -131,7 +131,7 @@ REPL <- R6::R6Class(
       msg <- conditionMessage(e)
       grepl("Unexpected end of input|Unclosed parenthesis|Unterminated string", msg)
     },
-    # @description Read a complete Rye form from the input stream.
+    # @description Read a complete Arl form from the input stream.
     read_form = function() {
       private$require_engine()
       override <- .pkg_option("repl_read_form_override")
@@ -206,7 +206,7 @@ REPL <- R6::R6Class(
       if (!self$can_use_history()) {
         return(invisible(FALSE))
       }
-      snapshot <- tempfile("rye_rhistory_")
+      snapshot <- tempfile("arl_rhistory_")
       saved <- tryCatch({
         utils::savehistory(snapshot)
         TRUE
@@ -270,11 +270,11 @@ REPL <- R6::R6Class(
     run = function() {
       private$require_engine()
 
-      rye_version <- as.character(utils::packageVersion(.pkg_name))
+      arl_version <- as.character(utils::packageVersion(.pkg_name))
 
       quiet <- isTRUE(.pkg_option("repl_quiet", FALSE))
       if (! quiet) {
-        self$output_fn(paste0("Rye REPL ", rye_version), "\n", sep = "")
+        self$output_fn(paste0("Arl REPL ", arl_version), "\n", sep = "")
         self$output_fn("Type '(license)' w/o quotes for legal information.\n")
         self$output_fn("Type '(quit)' w/o quotes or press Ctrl+C to exit.\n")
         self$output_fn(

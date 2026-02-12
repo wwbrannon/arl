@@ -1,5 +1,5 @@
 test_that("DocParser parses @description annotations", {
-  tmp <- tempfile(fileext = ".rye")
+  tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
     "(module test-mod",
@@ -25,7 +25,7 @@ test_that("DocParser parses @description annotations", {
 })
 
 test_that("DocParser parses @section annotations", {
-  tmp <- tempfile(fileext = ".rye")
+  tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
     "(module test-mod",
@@ -51,7 +51,7 @@ test_that("DocParser parses @section annotations", {
 })
 
 test_that("DocParser parses @note and @signature", {
-  tmp <- tempfile(fileext = ".rye")
+  tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
     "(module test-mod",
@@ -73,7 +73,7 @@ test_that("DocParser parses @note and @signature", {
 })
 
 test_that("DocParser get_exports extracts module exports", {
-  tmp <- tempfile(fileext = ".rye")
+  tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
     "(module test-mod",
@@ -93,7 +93,7 @@ test_that("DocParser get_exports extracts module exports", {
 })
 
 test_that("DocParser handles defmacro definitions", {
-  tmp <- tempfile(fileext = ".rye")
+  tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
     "(module test-mod",
@@ -116,7 +116,7 @@ test_that("DocParser handles defmacro definitions", {
 })
 
 test_that("DocParser skips standalone sections without definitions", {
-  tmp <- tempfile(fileext = ".rye")
+  tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
     "(module test-mod",
@@ -175,14 +175,14 @@ test_that("string-input modules get annotation-based docs via eval_text", {
   engine$eval_text("(import str-ann-mod)", env = env)
 
   fn <- engine$eval_text("greet", env = env)
-  doc <- attr(fn, "rye_doc", exact = TRUE)
+  doc <- attr(fn, "arl_doc", exact = TRUE)
   expect_false(is.null(doc))
   expect_equal(doc$description, "Create a greeting message.")
   expect_match(doc$examples, "greet")
 })
 
 test_that("annotation-based docs are available via compiler", {
-  tmp <- tempfile(fileext = ".rye")
+  tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
     "(module test-ann-mod",
@@ -204,9 +204,9 @@ test_that("annotation-based docs are available via compiler", {
   engine$eval_in_env(engine$read(sprintf('(load "%s")', tmp))[[1]], env)
   engine$eval_in_env(engine$read("(import test-ann-mod)")[[1]], env)
 
-  # The function should have annotation-based rye_doc
+  # The function should have annotation-based arl_doc
   fn <- engine$eval_in_env(engine$read("add")[[1]], env)
-  doc <- attr(fn, "rye_doc", exact = TRUE)
+  doc <- attr(fn, "arl_doc", exact = TRUE)
   expect_false(is.null(doc))
   expect_equal(doc$description, "Add two numbers together.")
   expect_match(doc$examples, "add 1 2")

@@ -37,14 +37,14 @@ The test suite provides complete coverage of the coverage tracking system with 8
 Helper functions support isolated, repeatable testing:
 
 ```r
-# Create temporary .rye files
-create_rye_file(content, dir = NULL)
+# Create temporary .arl files
+create_arl_file(content, dir = NULL)
 
 # Generate test content with code/comments/blanks
 make_test_content(code_lines = 5, comment_lines = 2, blank_lines = 1)
 
 # Create mock source objects for track()
-make_rye_src(file, start_line, end_line)
+make_arl_src(file, start_line, end_line)
 
 # Validate report structure
 verify_html_structure(html_file)
@@ -62,12 +62,12 @@ Every test uses temporary files with cleanup:
 
 ```r
 test_that("track() marks single line as executed", {
-  tmp <- create_rye_file(c(";; comment", "(define x 1)", "(define y 2)"))
+  tmp <- create_arl_file(c(";; comment", "(define x 1)", "(define y 2)"))
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new()
-  rye_src <- make_rye_src(tmp, start_line = 2, end_line = 2)
-  tracker$track(rye_src)
+  arl_src <- make_arl_src(tmp, start_line = 2, end_line = 2)
+  tracker$track(arl_src)
 
   key <- paste0(tmp, ":2")
   expect_equal(tracker$coverage[[key]], 1L)
@@ -242,7 +242,7 @@ CoverageTracker is critical infrastructure:
 
 ### Mock vs. Real Objects
 
-- **Mock objects** (`make_rye_src`) for unit testing `track()`
+- **Mock objects** (`make_arl_src`) for unit testing `track()`
 - **Real files** (tempfile) for file I/O and discovery tests
 - **Real engine** (Engine) for integration tests
 

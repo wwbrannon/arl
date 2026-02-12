@@ -1,28 +1,28 @@
 CLI_HELP_TEXT <- paste(
-  "Rye: A Lisp dialect for R.",
+  "Arl: A Lisp dialect for R.",
   "",
   "Usage:",
-  "  rye [--file <path>...] [--eval <expr>] [--quiet] [<files>...]",
-  "  rye --version",
-  "  rye --help",
+  "  arl [--file <path>...] [--eval <expr>] [--quiet] [<files>...]",
+  "  arl --version",
+  "  arl --help",
   "",
   "Options:",
-  "  -f, --file <path>    Evaluate a Rye source file (repeatable).",
-  "  -e, --eval <expr>    Evaluate a single Rye expression.",
+  "  -f, --file <path>    Evaluate an Arl source file (repeatable).",
+  "  -e, --eval <expr>    Evaluate a single Arl expression.",
   "  -q, --quiet          Start REPL without banner.",
   "  -v, --version        Print version and exit.",
   "  -h, --help           Show this help message.",
   "",
   "Examples:",
-  "  rye",
-  "  rye -q",
-  "  rye --file script.rye",
-  "  rye script.rye",
-  "  rye --eval \"(+ 1 2)\"",
+  "  arl",
+  "  arl -q",
+  "  arl --file script.arl",
+  "  arl script.arl",
+  "  arl --eval \"(+ 1 2)\"",
   sep = "\n"
 )
 
-# CLI: Command-line interface for the rye script. Parses args (--file, --eval, --quiet,
+# CLI: Command-line interface for the arl script. Parses args (--file, --eval, --quiet,
 # positional files), creates an engine, and either runs the REPL or evaluates files/expressions.
 #
 # @field args Raw command-line args (character vector).
@@ -40,7 +40,7 @@ CLI <- R6::R6Class(
     initialize = function(args = commandArgs(trailingOnly = TRUE)) {
       self$args <- args
     },
-    # @description Print error and optionally help text; exit via rye.cli_exit_fn or quit().
+    # @description Print error and optionally help text; exit via arl.cli_exit_fn or quit().
     # @param message Error message string.
     # @param show_help If TRUE, print CLI help after the message.
     cli_exit_with_error = function(message, show_help = TRUE) {
@@ -236,7 +236,7 @@ CLI <- R6::R6Class(
       cat(.pkg_name, " ", version, "\n", sep = "")
       invisible(NULL)
     },
-    # @description Start the Rye REPL (interactive loop).
+    # @description Start the Arl REPL (interactive loop).
     do_repl = function() {
       if (!self$cli_isatty()) {
         engine <- Engine$new(env = new.env(parent = .GlobalEnv))
@@ -293,7 +293,7 @@ CLI <- R6::R6Class(
       invisible(result)
     },
     # @description Parse and evaluate text in engine; return result. Used by do_eval and tests.
-    # @param text Character string of Rye code.
+    # @param text Character string of Arl code.
     # @param engine Engine instance.
     # @param source_name Source name for errors.
     # @return Result of evaluation.
@@ -319,7 +319,7 @@ CLI <- R6::R6Class(
       }
       isTRUE(tty)
     },
-    # @description Read all lines from stdin (for piping script into rye).
+    # @description Read all lines from stdin (for piping script into arl).
     # @return Character vector of lines.
     cli_read_stdin = function() {
       override <- .pkg_option("cli_read_stdin_override")
@@ -375,9 +375,9 @@ CLI <- R6::R6Class(
   )
 )
 
-#' Run the Rye CLI
+#' Run the Arl CLI
 #'
-#' Entry point for the Rye command-line interface. Parses arguments and runs
+#' Entry point for the Arl command-line interface. Parses arguments and runs
 #' the requested action (REPL, file evaluation, or expression evaluation).
 #'
 #' @param args Command-line arguments to parse (defaults to \code{commandArgs(trailingOnly = TRUE)}).
@@ -418,17 +418,17 @@ same_file <- function(path1, path2) {
   FALSE
 }
 
-#' Install the Rye CLI wrapper
+#' Install the Arl CLI wrapper
 #'
 #' Copies the packaged CLI wrapper into a writable bin directory and makes it
 #' executable so it can be run from the shell.
 #'
-#' @param target_dir Directory for the `rye` executable. Defaults to the
-#'   \code{RYE_BIN_DIR} environment variable, then \code{~/.local/bin}, then \code{~/bin}.
-#' @param overwrite Whether to overwrite an existing `rye` executable.
+#' @param target_dir Directory for the `arl` executable. Defaults to the
+#'   \code{ARL_BIN_DIR} environment variable, then \code{~/.local/bin}, then \code{~/bin}.
+#' @param overwrite Whether to overwrite an existing `arl` executable.
 #' @return The installed path, invisibly.
 #' @export
-install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), overwrite = FALSE) {
+install_cli <- function(target_dir = Sys.getenv("ARL_BIN_DIR", unset = ""), overwrite = FALSE) {
   source <- system.file("exec", .pkg_name, package = .pkg_name)
   if (!nzchar(source)) {
     stop(paste0("CLI script not found. Is the ", .pkg_name, " package installed?"))
@@ -454,7 +454,7 @@ install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), over
 
   if (is.null(chosen)) {
     stop(
-      "No writable bin directory found. Set RYE_BIN_DIR or create one of: ",
+      "No writable bin directory found. Set ARL_BIN_DIR or create one of: ",
       paste(candidates, collapse = ", ")
     )
   }
@@ -491,7 +491,7 @@ install_cli <- function(target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""), over
   normalized_entries <- normalizePath(path_entries, winslash = "/", mustWork = FALSE)
   normalized_target <- normalizePath(chosen, winslash = "/", mustWork = FALSE)
   if (!any(normalized_entries == normalized_target)) {
-    message("Add ", chosen, " to your PATH to run `rye` from the shell.")
+    message("Add ", chosen, " to your PATH to run `arl` from the shell.")
   }
 
   invisible(target)

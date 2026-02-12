@@ -1,4 +1,4 @@
-# Rye Performance Improvement Plan
+# Arl Performance Improvement Plan
 
 Based on benchmark and profiling analysis conducted on 2026-01-27.
 
@@ -21,7 +21,7 @@ The component breakdown shows the evaluator consuming **virtually 100% of execut
 
 ---
 
-### 2. **Repeated `rye_strip_src` Calls** (HIGH IMPACT, LOW RISK)
+### 2. **Repeated `arl_strip_src` Calls** (HIGH IMPACT, LOW RISK)
 **Location**: `R/utils.R:88-110` (called throughout eval.R)
 
 **Impact**: 10-20% overall speedup
@@ -34,7 +34,7 @@ This function walks the entire expression tree to remove source metadata and is 
 
 **Status**: ✅ COMPLETED (2026-01-27)
 
-**Implementation**: Improved fast paths in `rye_strip_src`:
+**Implementation**: Improved fast paths in `arl_strip_src`:
 - Added early returns for NULL and symbols
 - Fast path for empty structures
 - Optimized attribute checking to avoid redundant work
@@ -99,7 +99,7 @@ Multiple type checks and `as.call()` overhead for each quote sugar form (`'`, ``
 
 ## Recommended Implementation Order
 
-1. **Start with `rye_strip_src` memoization** (LOW RISK, 10-20% gain)
+1. **Start with `arl_strip_src` memoization** (LOW RISK, 10-20% gain)
    - Quick win to validate the benchmarking infrastructure
    - Easy to implement and test
    - Low regression risk
@@ -166,8 +166,8 @@ From baseline run (2026-01-27-215041):
 - Profiling infrastructure ready
 - Three O(n²) issues already fixed (string accumulation, list growing, arg list growing)
 
-### 2026-01-27: rye_strip_src Optimization Complete
-- Implemented improved fast paths for `rye_strip_src` in `R/utils.R:88-140`
+### 2026-01-27: arl_strip_src Optimization Complete
+- Implemented improved fast paths for `arl_strip_src` in `R/utils.R:88-140`
 - Key improvements:
   - Early returns for NULL and symbol values
   - Fast path for non-recursive types (atomic vectors, classed lists)

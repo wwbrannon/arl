@@ -2,14 +2,14 @@
 
 # Cache path generation tests
 test_that("get_paths() returns NULL for non-existent file", {
-  cache <- rye:::ModuleCache$new()
-  paths <- cache$get_paths("/nonexistent/file.rye")
+  cache <- arl:::ModuleCache$new()
+  paths <- cache$get_paths("/nonexistent/file.arl")
   expect_null(paths)
 })
 
 test_that("get_paths() returns expected structure", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit(unlink(tmp_file))
 
@@ -17,7 +17,7 @@ test_that("get_paths() returns expected structure", {
 
   expect_type(paths, "list")
   expect_true(all(c("cache_dir", "env_cache", "code_cache", "code_r", "file_hash") %in% names(paths)))
-  expect_true(grepl("\\.rye_cache$", paths$cache_dir))
+  expect_true(grepl("\\.arl_cache$", paths$cache_dir))
   expect_true(grepl("\\.env\\.rds$", paths$env_cache))
   expect_true(grepl("\\.code\\.rds$", paths$code_cache))
   expect_true(grepl("\\.code\\.R$", paths$code_r))
@@ -25,8 +25,8 @@ test_that("get_paths() returns expected structure", {
 })
 
 test_that("get_paths() hash changes when file content changes", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit(unlink(tmp_file))
 
@@ -43,7 +43,7 @@ test_that("get_paths() hash changes when file content changes", {
 
 # Safety checks tests
 test_that("is_safe_to_cache() returns safe for clean environment", {
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
   test_env$foo <- 42
@@ -62,7 +62,7 @@ test_that("is_safe_to_cache() returns safe for clean environment", {
 test_that("is_safe_to_cache() detects external pointers", {
   skip_if_not_installed("xptr")
 
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
 
@@ -77,7 +77,7 @@ test_that("is_safe_to_cache() detects external pointers", {
 })
 
 test_that("is_safe_to_cache() detects connections", {
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
 
@@ -97,7 +97,7 @@ test_that("is_safe_to_cache() detects connections", {
 })
 
 test_that("is_safe_to_cache() allows functions with module environment", {
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
 
@@ -111,7 +111,7 @@ test_that("is_safe_to_cache() allows functions with module environment", {
 })
 
 test_that("is_safe_to_cache() allows functions with base/empty/namespace envs", {
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
 
@@ -127,7 +127,7 @@ test_that("is_safe_to_cache() allows functions with base/empty/namespace envs", 
 })
 
 test_that("is_safe_to_cache() detects captured functions", {
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
   other_env <- new.env()
@@ -145,12 +145,12 @@ test_that("is_safe_to_cache() detects captured functions", {
   expect_true(any(grepl("Captured function", result$issues)))
 })
 
-test_that("is_safe_to_cache() allows Rye module functions", {
-  cache <- rye:::ModuleCache$new()
+test_that("is_safe_to_cache() allows Arl module functions", {
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
 
-  # Create a function from another Rye module
+  # Create a function from another Arl module
   # The implementation checks isTRUE(get0(".__module", ...)), so needs TRUE value
   other_module <- new.env()
   other_module$.__module <- TRUE  # Must be TRUE, not just a string
@@ -163,7 +163,7 @@ test_that("is_safe_to_cache() allows Rye module functions", {
 })
 
 test_that("is_safe_to_cache() detects sub-environments with non-module parent", {
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
   other_env <- new.env()
@@ -178,7 +178,7 @@ test_that("is_safe_to_cache() detects sub-environments with non-module parent", 
 })
 
 test_that("is_safe_to_cache() allows sub-environments with module/base/empty parent", {
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
 
@@ -192,7 +192,7 @@ test_that("is_safe_to_cache() allows sub-environments with module/base/empty par
 })
 
 test_that("is_safe_to_cache() skips special internal names", {
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
 
@@ -200,7 +200,7 @@ test_that("is_safe_to_cache() skips special internal names", {
   test_env$.__module <- "test"
   test_env$.__exports <- c("foo")
   assign(".__define_value__1", 42, envir = test_env)
-  assign("__rye_helper", function() {}, envir = test_env)
+  assign("__r_interop_helper", function() {}, envir = test_env)
   test_env$.__internal <- 123
   test_env$quasiquote <- function() {}
 
@@ -210,7 +210,7 @@ test_that("is_safe_to_cache() skips special internal names", {
 })
 
 test_that("is_safe_to_cache() reports multiple issues", {
-  cache <- rye:::ModuleCache$new()
+  cache <- arl:::ModuleCache$new()
   test_env <- new.env()
   engine_env <- new.env()
   other_env <- new.env()
@@ -240,8 +240,8 @@ test_that("is_safe_to_cache() reports multiple issues", {
 
 # env cache tests
 test_that("write_env() creates cache files", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit({
     unlink(tmp_file)
@@ -259,8 +259,8 @@ test_that("write_env() creates cache files", {
 })
 
 test_that("write_env() severs and restores parent environment", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit({
     unlink(tmp_file)
@@ -282,8 +282,8 @@ test_that("write_env() severs and restores parent environment", {
 })
 
 test_that("write_env() includes version and metadata", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit({
     unlink(tmp_file)
@@ -297,15 +297,15 @@ test_that("write_env() includes version and metadata", {
   cache$write_env("test", module_env, c("foo"), tmp_file, paths$file_hash)
 
   cache_data <- readRDS(paths$env_cache)
-  expect_equal(cache_data$version, as.character(utils::packageVersion("rye")))
+  expect_equal(cache_data$version, as.character(utils::packageVersion("arl")))
   expect_equal(cache_data$file_hash, paths$file_hash)
   expect_equal(cache_data$module_name, "test")
   expect_equal(cache_data$exports, c("foo"))
 })
 
 test_that("load_env() returns NULL for non-existent cache", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit(unlink(tmp_file))
 
@@ -316,8 +316,8 @@ test_that("load_env() returns NULL for non-existent cache", {
 })
 
 test_that("load_env() loads cache and relinks parent", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit({
     unlink(tmp_file)
@@ -343,11 +343,11 @@ test_that("load_env() loads cache and relinks parent", {
 })
 
 test_that("load_env() returns NULL for version mismatch", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
 
-  cache_dir <- file.path(dirname(tmp_file), ".rye_cache")
+  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
   on.exit({
     unlink(tmp_file)
     unlink(cache_dir, recursive = TRUE)
@@ -372,11 +372,11 @@ test_that("load_env() returns NULL for version mismatch", {
 })
 
 test_that("load_env() returns NULL for hash mismatch", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
 
-  cache_dir <- file.path(dirname(tmp_file), ".rye_cache")
+  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
   on.exit({
     unlink(tmp_file)
     unlink(cache_dir, recursive = TRUE)
@@ -402,8 +402,8 @@ test_that("load_env() returns NULL for hash mismatch", {
 
 # expr cache tests
 test_that("write_code() creates cache files", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit({
     unlink(tmp_file)
@@ -421,8 +421,8 @@ test_that("write_code() creates cache files", {
 })
 
 test_that("write_code() creates human-readable .code.R file", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit({
     unlink(tmp_file)
@@ -441,8 +441,8 @@ test_that("write_code() creates human-readable .code.R file", {
 })
 
 test_that("write_code() includes metadata", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit({
     unlink(tmp_file)
@@ -455,7 +455,7 @@ test_that("write_code() includes metadata", {
   cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths$file_hash)
 
   cache_data <- readRDS(paths$code_cache)
-  expect_equal(cache_data$version, as.character(utils::packageVersion("rye")))
+  expect_equal(cache_data$version, as.character(utils::packageVersion("arl")))
   expect_equal(cache_data$file_hash, paths$file_hash)
   expect_equal(cache_data$module_name, "test")
   expect_equal(cache_data$exports, c("foo"))
@@ -464,8 +464,8 @@ test_that("write_code() includes metadata", {
 })
 
 test_that("load_code() returns NULL for non-existent cache", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit(unlink(tmp_file))
 
@@ -475,8 +475,8 @@ test_that("load_code() returns NULL for non-existent cache", {
 })
 
 test_that("load_code() loads cache data", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit({
     unlink(tmp_file)
@@ -498,11 +498,11 @@ test_that("load_code() loads cache data", {
 })
 
 test_that("load_code() returns NULL for version mismatch", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
 
-  cache_dir <- file.path(dirname(tmp_file), ".rye_cache")
+  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
   on.exit({
     unlink(tmp_file)
     unlink(cache_dir, recursive = TRUE)
@@ -525,11 +525,11 @@ test_that("load_code() returns NULL for version mismatch", {
 })
 
 test_that("load_code() returns NULL for hash mismatch", {
-  cache <- rye:::ModuleCache$new()
-  tmp_file <- tempfile(fileext = ".rye")
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
 
-  cache_dir <- file.path(dirname(tmp_file), ".rye_cache")
+  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
   on.exit({
     unlink(tmp_file)
     unlink(cache_dir, recursive = TRUE)

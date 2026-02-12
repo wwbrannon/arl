@@ -13,8 +13,8 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-Rye can call any R function directly. Function names, operators, and data
-structures are shared between Rye and R.
+Arl can call any R function directly. Function names, operators, and data
+structures are shared between Arl and R.
 
 ## Calling R functions
 
@@ -27,7 +27,7 @@ Keywords (`:from`, `:to`) map to named arguments in R.
 
 ### Keyword syntax
 
-Keywords starting with `:` serve a dual purpose in Rye:
+Keywords starting with `:` serve a dual purpose in Arl:
 
 1. **As named argument syntax**: Bare keywords in function calls become named arguments
    ```lisp
@@ -85,13 +85,13 @@ functions like `tryCatch` that need to control when evaluation happens.
 
 **Key points:**
 
-1. Use Rye's `call` function to build unevaluated call expressions
+1. Use Arl's `call` function to build unevaluated call expressions
 2. Use a quoted symbol (`'tryCatch`) not a string (`"tryCatch"`)
 3. Use `r/eval` (not `r/call`) to evaluate the constructed expression
 4. Pass `(current-env)` as the evaluation environment
 
-This pattern is used throughout the stdlib - see `try*` in `control.rye` and
-`assert-error` in `assert.rye` for working examples.
+This pattern is used throughout the stdlib - see `try*` in `control.arl` and
+`assert-error` in `assert.arl` for working examples.
 
 #### Detecting errors with a sentinel value
 
@@ -142,7 +142,7 @@ R base operators are also available directly:
 
 ### Numeric edge cases
 
-Because Rye delegates to R for numeric operations, edge cases follow R
+Because Arl delegates to R for numeric operations, edge cases follow R
 semantics (not Scheme's). For example, division by zero yields `Inf`, and
 `NaN` comparisons propagate `NA`:
 
@@ -154,11 +154,11 @@ semantics (not Scheme's). For example, division by zero yields `Inf`, and
 ## Example workflow
 
 The [data analysis example](examples.html#data-analysis) shows a small analysis pipeline
-from Rye that uses `data.frame`, `mean`, and `lm`. You can run it with:
+from Arl that uses `data.frame`, `mean`, and `lm`. You can run it with:
 
 ```{r eval=FALSE}
 engine <- Engine$new()
-engine$load_file(system.file("examples", "data-analysis.rye", package = "rye"))
+engine$load_file(system.file("examples", "data-analysis.arl", package = "arl"))
 ```
 
 ## Standard library helpers

@@ -1,19 +1,19 @@
 #!/usr/bin/env Rscript
-# generate-stdlib-docs.R — Auto-generate stdlib reference vignettes from .rye source files.
+# generate-stdlib-docs.R — Auto-generate stdlib reference vignettes from .arl source files.
 #
 # Usage: Rscript tools/docs/generate-stdlib-docs.R
 #        make stdlib-docs
 #
 # Reads tools/docs/stdlib-docs.dcf for module-to-vignette mapping, parses ;;' annotations
-# from inst/rye/*.rye, and writes vignettes/stdlib-*.Rmd files.
+# from inst/arl/*.arl, and writes vignettes/stdlib-*.Rmd files.
 
 # ---------------------------------------------------------------------------
 # Dependencies
 # ---------------------------------------------------------------------------
 
 # Load DocParser (shared annotation parser)
-if (requireNamespace("rye", quietly = TRUE)) {
-  .doc_parser <- rye:::DocParser$new()
+if (requireNamespace("arl", quietly = TRUE)) {
+  .doc_parser <- arl:::DocParser$new()
 } else {
   # Fallback: source directly when running outside installed package
   source(file.path("R", "doc-parser.R"))
@@ -25,7 +25,7 @@ if (requireNamespace("rye", quietly = TRUE)) {
 # ---------------------------------------------------------------------------
 
 AUTOGEN_HEADER <- paste0(
-  "<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->\n",
+  "<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->\n",
   "<!-- Regenerate with: make stdlib-docs -->\n"
 )
 
@@ -142,14 +142,14 @@ linkify_seealso <- function(seealso, func_index, current_vignette) {
 # Annotation parser — delegates to shared DocParser (R/doc-parser.R)
 # ---------------------------------------------------------------------------
 
-#' Parse ;;' annotations from a .rye source file.
+#' Parse ;;' annotations from a .arl source file.
 #' Delegates to the shared DocParser class.
-parse_rye_annotations <- function(file) {
+parse_arl_annotations <- function(file) {
   .doc_parser$parse_file(file)
 }
 
 #' Legacy inline parser (kept as unused reference; all calls go through DocParser).
-.parse_rye_annotations_legacy <- function(file) {
+.parse_arl_annotations_legacy <- function(file) {
   lines <- readLines(file, warn = FALSE)
   n <- length(lines)
 
@@ -592,7 +592,7 @@ tokenize_params <- function(s) {
 #' Load documentation for R-defined builtins from builtins-docs.dcf.
 #'
 #' Returns a list keyed by vignette name. Each entry has:
-#'   $functions — named list of function entries (same format as parse_rye_annotations output)
+#'   $functions — named list of function entries (same format as parse_arl_annotations output)
 #'   $sections  — list of section entries in order: list(name, prose)
 load_builtins_docs <- function(path = "inst/builtins-docs.dcf") {
   if (!file.exists(path)) return(list())
@@ -655,7 +655,7 @@ load_builtins_docs <- function(path = "inst/builtins-docs.dcf") {
 #'
 #' @param vignette_name Basename of the vignette (e.g., "stdlib-math")
 #' @param config Config entry with title, modules, preamble
-#' @param all_parsed List of parse results from parse_rye_annotations(), keyed by module name
+#' @param all_parsed List of parse results from parse_arl_annotations(), keyed by module name
 #' @return Character string with the full Rmd content
 generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
                          builtin_funcs = NULL) {
@@ -817,18 +817,18 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
 #' Generate all stdlib documentation vignettes.
 #'
 #' @param config_path Path to stdlib-docs.dcf
-#' @param rye_dir Path to inst/rye/ directory
+#' @param arl_dir Path to inst/arl/ directory
 #' @param output_dir Path to vignettes/ directory
 generate_all <- function(
   config_path = "tools/docs/stdlib-docs.dcf",
-  rye_dir = "inst/rye",
+  arl_dir = "inst/arl",
   output_dir = "vignettes"
 ) {
   if (!file.exists(config_path)) {
     stop("Config file not found: ", config_path)
   }
-  if (!dir.exists(rye_dir)) {
-    stop("Rye source directory not found: ", rye_dir)
+  if (!dir.exists(arl_dir)) {
+    stop("Arl source directory not found: ", arl_dir)
   }
   if (!dir.exists(output_dir)) {
     stop("Output directory not found: ", output_dir)
@@ -856,20 +856,20 @@ generate_all <- function(
   all_modules <- unique(unlist(lapply(vignettes, function(v) v$modules)))
   message("Modules to process: ", paste(all_modules, collapse = ", "))
 
-  # Parse all needed .rye files
+  # Parse all needed .arl files
   all_parsed <- list()
   for (mod_name in all_modules) {
-    rye_file <- file.path(rye_dir, paste0(mod_name, ".rye"))
-    if (!file.exists(rye_file)) {
-      message("Warning: Module file not found: ", rye_file)
+    arl_file <- file.path(arl_dir, paste0(mod_name, ".arl"))
+    if (!file.exists(arl_file)) {
+      message("Warning: Module file not found: ", arl_file)
       next
     }
-    message("Parsing: ", rye_file)
-    all_parsed[[mod_name]] <- parse_rye_annotations(rye_file)
+    message("Parsing: ", arl_file)
+    all_parsed[[mod_name]] <- parse_arl_annotations(arl_file)
   }
 
   # Check for undocumented exports
-  check_undocumented(all_parsed, rye_dir, all_modules)
+  check_undocumented(all_parsed, arl_dir, all_modules)
 
   # Load R-defined builtin documentation
   builtins_path <- file.path("inst", "builtins-docs.dcf")
@@ -908,12 +908,12 @@ generate_all <- function(
 }
 
 #' Check for exported functions that don't have ;;' annotations.
-check_undocumented <- function(all_parsed, rye_dir, modules) {
+check_undocumented <- function(all_parsed, arl_dir, modules) {
   for (mod_name in modules) {
-    rye_file <- file.path(rye_dir, paste0(mod_name, ".rye"))
-    if (!file.exists(rye_file)) next
+    arl_file <- file.path(arl_dir, paste0(mod_name, ".arl"))
+    if (!file.exists(arl_file)) next
 
-    exports <- .doc_parser$get_exports(rye_file)
+    exports <- .doc_parser$get_exports(arl_file)
     parsed <- all_parsed[[mod_name]]
     if (is.null(parsed)) next
 

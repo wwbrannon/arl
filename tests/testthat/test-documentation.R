@@ -60,9 +60,9 @@ test_that("inline strings in lambda body are not stripped as docstrings", {
   engine$eval_in_env(engine$read('(define test-fn (lambda (x) "This is just a string" (* x 2)))')[[1]], env)
 
   fn <- engine$eval_in_env(engine$read('test-fn')[[1]], env)
-  doc_attr <- attr(fn, "rye_doc", exact = TRUE)
+  doc_attr <- attr(fn, "arl_doc", exact = TRUE)
 
-  # No rye_doc attribute — strings are not treated as docstrings
+  # No arl_doc attribute — strings are not treated as docstrings
   expect_null(doc_attr)
   # The function still works (string is evaluated and discarded)
   result <- engine$eval_in_env(engine$read('(test-fn 3)')[[1]], env)

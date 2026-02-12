@@ -2,10 +2,10 @@
 % Please edit documentation in R/engine.R
 \name{default_engine}
 \alias{default_engine}
-\title{Get the default Rye engine}
+\title{Get the default Arl engine}
 \usage{
 default_engine()
 }
 \description{
-Get the default Rye engine
+Get the default Arl engine
 }

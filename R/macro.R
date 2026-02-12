@@ -1,4 +1,4 @@
-# MacroExpander: Defines and expands Rye macros. Handles defmacro, macroexpand,
+# MacroExpander: Defines and expands Arl macros. Handles defmacro, macroexpand,
 # macroexpand_1, quasiquote/unquote, gensym, hygiene. Shares EvalContext with compiled runtime.
 #
 # @field context EvalContext (env, source_tracker).
@@ -29,7 +29,7 @@ MacroExpander <- R6::R6Class(
       invisible(NULL)
     },
     # @description Recursively expand macros in expr.
-    # @param expr Rye expression.
+    # @param expr Arl expression.
     # @param env Environment for macro lookup or NULL.
     # @param preserve_src Whether to keep source attributes.
     # @return Expanded expression.
@@ -47,7 +47,7 @@ MacroExpander <- R6::R6Class(
       private$macroexpand_impl(expr, target_env, preserve_src, max_depth = Inf, walk = TRUE)
     },
     # @description Expand one layer of macros only.
-    # @param expr Rye expression.
+    # @param expr Arl expression.
     # @param env Environment or NULL.
     # @param preserve_src Whether to keep source attributes.
     # @return Expanded expression.
@@ -226,10 +226,10 @@ MacroExpander <- R6::R6Class(
       as.symbol(paste0(prefix, "__h", private$hygiene_counter))
     },
     hygiene_wrap = function(expr, origin) {
-      structure(list(expr = expr, origin = origin), class = "rye_syntax")
+      structure(list(expr = expr, origin = origin), class = "arl_syntax")
     },
     hygiene_is = function(x) {
-      inherits(x, "rye_syntax")
+      inherits(x, "arl_syntax")
     },
     hygiene_origin = function(x) {
       if (private$hygiene_is(x)) {
@@ -833,7 +833,7 @@ MacroExpander <- R6::R6Class(
             } else {
               # Check for default
               default_expr <- param_defaults[[param_name]]
-              if (inherits(default_expr, "rye_missing_default")) {
+              if (inherits(default_expr, "arl_missing_default")) {
                 stop(sprintf("Missing required parameter (position %d)", i))
               }
               # Evaluate default
@@ -877,7 +877,7 @@ MacroExpander <- R6::R6Class(
             } else {
               # Check for default
               default_expr <- param_defaults[[param_name]]
-              if (inherits(default_expr, "rye_missing_default")) {
+              if (inherits(default_expr, "arl_missing_default")) {
                 stop(sprintf("Missing required parameter (position %d)", i))
               }
               # Evaluate default
@@ -898,7 +898,7 @@ MacroExpander <- R6::R6Class(
           if (length(args) > length(param_specs)) {
             # Count required vs provided
             required_count <- sum(vapply(param_specs, function(spec) {
-              inherits(param_defaults[[spec$formal]], "rye_missing_default")
+              inherits(param_defaults[[spec$formal]], "arl_missing_default")
             }, logical(1)))
             stop(sprintf("Macro %s expects %d-%d arguments, got %d",
                          as.character(name), required_count, length(param_specs), length(args)))
@@ -913,13 +913,13 @@ MacroExpander <- R6::R6Class(
       }
 
       rest_name <- if (!is.null(rest_param_spec) && !is.null(rest_param_spec$name)) rest_param_spec$name else NULL
-      attr(macro_fn, "rye_macro") <- list(
+      attr(macro_fn, "arl_macro") <- list(
         params = param_names,
         param_defaults = param_defaults,
         rest_param = rest_name
       )
       if (!is.null(docstring)) {
-        attr(macro_fn, "rye_doc") <- list(description = docstring)
+        attr(macro_fn, "arl_doc") <- list(description = docstring)
       }
 
       registry <- private$macro_registry(env, create = TRUE)

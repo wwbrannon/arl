@@ -1,0 +1,255 @@
+;;; Arl Standard Library - Functional Helpers
+
+(module functional
+  (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial
+          curry juxt constantly iterate iterate-until memoize)
+
+  (import list)
+  (import logic)
+
+  ;;' @section Core Higher-Order Functions
+  ;;' The fundamental building blocks for functional programming in Arl.
+  ;;' These functions operate on lists and follow the convention of taking
+  ;;' the function argument first, then the data argument.
+
+  ;;' @description Apply function to each element.
+  ;;' @examples
+  ;;' (map (lambda (x) (* x 2)) (list 1 2 3))  ; => (2 4 6)
+  ;;' (map (lambda (x) (* x x)) (list 1 2 3 4)) ; => (1 4 9 16)
+  ;;' (map string-length (list "hi" "hello"))     ; => (2 5)
+  ;;' @seealso filter, mapcat, reduce
+  (define map
+    (lambda (fn lst)
+      (lapply (__as-list lst) fn)))
+
+  ;;' @description Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
+  ;;' @examples
+  ;;' (mapcat (lambda (x) (list x (* x 10))) (list 1 2 3))  ; => (1 10 2 20 3 30)
+  ;;' (mapcat (lambda (x) (list x x)) (list 1 2 3))          ; => (1 1 2 2 3 3)
+  ;;' @seealso map, flatten
+  (define mapcat
+    (lambda (fn lst)
+      (define results (map fn lst))
+      (if (null? results)
+        (list)
+        (do.call c (lapply results (lambda (x) (__as-list x)))))))
+
+  ;;' @description Filter items by predicate.
+  ;;' @examples
+  ;;' (filter (lambda (x) (> x 2)) (list 1 2 3 4 5))  ; => (3 4 5)
+  ;;' (filter even? (list 1 2 3 4 5 6))                 ; => (2 4 6)
+  ;;' (filter string? (list 1 "a" 2 "b"))               ; => ("a" "b")
+  ;;' @seealso remove, take-while, drop-while
+  (define filter
+    (lambda (pred lst)
+      (Filter pred (__as-list lst))))
+
+  ;;' @description Remove items where predicate is true.
+  ;;' @examples
+  ;;' (remove even? (list 1 2 3 4 5 6))                 ; => (1 3 5)
+  ;;' (remove (lambda (x) (> x 3)) (list 1 2 3 4 5))   ; => (1 2 3)
+  ;;' @seealso filter
+  (define remove
+    (lambda (pred lst)
+      (Filter (lambda (x) (not (isTRUE (pred x)))) (__as-list lst))))
+
+  ;;' @description Reduce list with function.
+  ;;' @examples
+  ;;' (reduce + (list 1 2 3 4))       ; => 10
+  ;;' (reduce * (list 1 2 3 4))       ; => 24
+  ;;' (reduce + (list 1 2 3) 100)     ; => 106 (with initial value)
+  ;;' (reduce string-append (list "a" "b" "c"))  ; => "abc"
+  ;;' @seealso foldl, foldr, map
+  (define reduce
+    (lambda (fn lst . rest)
+      (if (= (length rest) 0)
+        (Reduce fn (__as-list lst))
+        (Reduce fn (__as-list lst) :init (car rest)))))
+
+  ;;' @description Left fold alias for reduce.
+  ;;' @examples
+  ;;' (foldl + (list 1 2 3 4))        ; => 10
+  ;;' (foldl - (list 1 2 3) 10)       ; => 4 (10 - 1 - 2 - 3)
+  ;;' (foldl cons (list 1 2 3) (list)) ; => (3 2 1) (reverses)
+  ;;' @seealso foldr, reduce
+  (define foldl
+    (lambda (fn lst . rest)
+      (if (= (length rest) 0)
+        (Reduce fn (__as-list lst))
+        (Reduce fn (__as-list lst) :init (car rest)))))
+
+  ;;' @description Right fold.
+  ;;' @examples
+  ;;' (foldr + (list 1 2 3 4))        ; => 10
+  ;;' (foldr - (list 1 2 3) 10)       ; => -8 (1 - (2 - (3 - 10)))
+  ;;' (foldr cons (list 1 2 3) (list)) ; => (1 2 3) (preserves order)
+  ;;' @seealso foldl, reduce
+  (define foldr
+    (lambda (fn lst . rest)
+      (if (= (length rest) 0)
+        (Reduce fn (__as-list lst) :right #t)
+        (Reduce fn (__as-list lst) :init (car rest) :right #t))))
+
+  ;;' @description Return #t if predicate true for all items.
+  ;;' @examples
+  ;;' (every? positive? (list 1 2 3))       ; => #t
+  ;;' (every? even? (list 2 4 6))           ; => #t
+  ;;' (every? even? (list 2 3 6))           ; => #f
+  ;;' (every? string? (list "a" "b" "c"))   ; => #t
+  ;;' @seealso any?, filter
+  (define every?
+    (lambda (pred lst)
+      (all (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
+
+  ;;' @description Return #t if predicate true for any item.
+  ;;' @examples
+  ;;' (any? even? (list 1 3 4 5))           ; => #t
+  ;;' (any? negative? (list 1 2 3))         ; => #f
+  ;;' (any? string? (list 1 "a" 2))         ; => #t
+  ;;' @seealso every?, filter
+  (define any?
+    (lambda (pred lst)
+      (any (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
+
+  ;;' @description Negate predicate.
+  ;;' @examples
+  ;;' (define not-even? (complement even?))
+  ;;' (not-even? 3)                          ; => #t
+  ;;' (not-even? 4)                          ; => #f
+  ;;' (filter (complement null?) (list 1 #nil 2 #nil 3))  ; => (1 2 3)
+  ;;' @seealso not, filter
+  (define complement
+    (lambda (pred)
+      (lambda (. args)
+        (not (do.call pred args)))))
+
+  ;;' @description Compose two functions.
+  ;;' @examples
+  ;;' (define add1-then-double (compose (lambda (x) (* x 2)) (lambda (x) (+ x 1))))
+  ;;' (add1-then-double 3)                   ; => 8  ((3+1)*2)
+  ;;' (define abs-sum (compose abs +))
+  ;;' (abs-sum -3 -4)                        ; => 7
+  ;;' @seealso partial
+  (define compose
+    (lambda (f g)
+      (lambda (. args)
+        (f (do.call g args)))))
+
+  ;;' @description Partially apply function.
+  ;;' @examples
+  ;;' (define add5 (partial + 5))
+  ;;' (add5 3)                               ; => 8
+  ;;' (define greet (partial string-append "Hello, "))
+  ;;' (greet "world")                        ; => "Hello, world"
+  ;;' @seealso compose
+  (define partial
+    (lambda (fn . captured)
+      (lambda (. more)
+        (do.call fn (append captured more)))))
+
+  ;; ============================================================================
+  ;; Advanced Functional Programming
+  ;; ============================================================================
+
+  ;;' @section Advanced Functional Programming
+  ;;' Higher-order combinators for advanced functional patterns including
+  ;;' currying, juxtaposition, memoization, and iteration.
+
+  ;;' @description Curry a function - enables partial application
+  ;;' with optional initial arguments.
+  ;;' @examples
+  ;;' (define add (curry (lambda (a b) (+ a b))))
+  ;;' (define add5 (add 5))
+  ;;' (add5 3)                               ; => 8
+  ;;' (define multiply (curry (lambda (a b) (* a b))))
+  ;;' ((multiply 3) 4)                       ; => 12
+  ;;' @seealso partial
+  (define curry
+    (lambda (fn . initial-args)
+      (define arity (length (formals fn)))
+      (define curry-helper
+        (lambda (collected-args)
+          (lambda (. new-args)
+            (define all-args (append collected-args new-args))
+            (if (>= (length all-args) arity)
+              (do.call fn all-args)
+              (curry-helper all-args)))))
+      (curry-helper initial-args)))
+
+  ;;' @description Juxtaposition - apply multiple functions to same args, return list of results.
+  ;;' @examples
+  ;;' (define stats (juxt min max mean))
+  ;;' (stats (c 1 2 3 4 5))                  ; => (1 5 3)
+  ;;' (define first-and-last (juxt car last))
+  ;;' (first-and-last (list 1 2 3))          ; => (1 3)
+  ;;' @seealso map, compose
+  (define juxt
+    (lambda (. fns)
+      (lambda (. args)
+        (map (lambda (f) (do.call f args)) fns))))
+
+  ;;' @description Return a function that always returns the given value.
+  ;;' @examples
+  ;;' (define always-42 (constantly 42))
+  ;;' (always-42)                             ; => 42
+  ;;' (always-42 "ignored" "args")            ; => 42
+  ;;' (map (constantly 0) (list 1 2 3))       ; => (0 0 0)
+  (define constantly
+    (lambda (value)
+      (lambda (. args)
+        value)))
+
+  ;;' @description Apply function n times to initial value.
+  ;;' @examples
+  ;;' (iterate (lambda (x) (* x 2)) 5 1)     ; => 32  (1 -> 2 -> 4 -> 8 -> 16 -> 32)
+  ;;' (iterate inc 3 0)                       ; => 3   (0 -> 1 -> 2 -> 3)
+  ;;' (iterate (lambda (x) (* x x)) 2 2)     ; => 65536  (2 -> 4 -> 16 -> 65536... wait: 2^2=4, 4^2=16)
+  ;;' @seealso iterate-until, reduce
+  (define iterate
+    (lambda (fn n init)
+      (if (<= n 0)
+        init
+        (iterate fn (- n 1) (fn init)))))
+
+  ;;' @description Apply function starting from init, collecting
+  ;;' values until predicate becomes true. Includes all values where
+  ;;' predicate is false, stops when next value would satisfy predicate.
+  ;;' @examples
+  ;;' (iterate-until (lambda (x) (* x 2)) 1 (lambda (x) (> x 100)))
+  ;;'   ; => (1 2 4 8 16 32 64)  (stops before 128 which exceeds 100)
+  ;;' (iterate-until inc 0 (lambda (x) (>= x 5)))
+  ;;'   ; => (0 1 2 3 4)
+  ;;' @seealso iterate, take-while
+  (define iterate-until
+    (lambda (fn init pred)
+      (define current init)
+      (define acc (list))
+      (define done #f)
+      (while (not done)
+        (begin
+          (set! acc (c acc current))
+          (define next (fn current))
+          (if (pred next)
+            (set! done #t)
+            (set! current next))))
+      acc))
+
+  ;;' @description Memoize function - cache results for previously seen arguments.
+  ;;' @examples
+  ;;' (define slow-fib (lambda (n) (if (< n 2) n (+ (slow-fib (- n 1)) (slow-fib (- n 2))))))
+  ;;' (define fast-fib (memoize slow-fib))
+  ;;' (fast-fib 10)                          ; => 55
+  ;;' (fast-fib 10)                          ; => 55 (cached, instant)
+  (define memoize
+    (lambda (fn)
+      (define cache (r/call "new.env" (list)))
+      (lambda (. args)
+        (define key (r/call "paste" (list args :collapse "|")))
+        (if (r/call "exists" (list key :envir cache))
+          (r/call "get" (list key :envir cache))
+          (begin
+            (define result (do.call fn args))
+            (r/call "assign" (list key result :envir cache))
+            result)))))
+
+)

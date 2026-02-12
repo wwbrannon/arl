@@ -81,7 +81,7 @@ test_that("set-method! registers and overwrites methods", {
   expect_false(env$`equal?`(my_a, my_c))
 
   # Overwrite: second registration for same generic.class wins.
-  # Run entirely in Rye so equal? and set-method! use the same env (no R->Rye closure env subtlety).
+  # Run entirely in Arl so equal? and set-method! use the same env (no R->Arl closure env subtlety).
   eng$eval_in_env(eng$read('(set-method! (quote equal?) (quote overwrite_test) (lambda (a b strict) #t))')[[1]], env)
   eng$eval_in_env(eng$read("(define o1 (r/call \"structure\" (list (list 1) :class \"overwrite_test\")))")[[1]], env)
   eng$eval_in_env(eng$read("(define o2 (r/call \"structure\" (list (list 1) :class \"overwrite_test\")))")[[1]], env)

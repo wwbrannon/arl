@@ -1,0 +1,204 @@
+;;; Arl Standard Library - Type Conversions
+
+(module conversions
+  (export symbol->string string->symbol
+          ->symbol ->number ->list ->vector
+          ->integer ->double ->complex
+          exact->inexact inexact->exact)
+
+  (import _r)
+  (import core)
+  (import types)  ; for symbol?, number?, string?, list?, vector?
+
+  ;;' @section Symbol Conversions
+
+  ;;' @description Convert symbol to string.
+  ;;' @examples
+  ;;' (symbol->string 'hello)  ; => "hello"
+  ;;' (symbol->string 'x)      ; => "x"
+  ;;' @note Signals an error if the argument is not a symbol.
+  ;;' @seealso string->symbol, ->symbol
+  (define symbol->string
+    (lambda (sym)
+      (if (symbol? sym)
+        (as.character sym)
+        (stop "symbol->string: argument must be a symbol"))))
+
+  ;;' @description Convert string to symbol.
+  ;;' @examples
+  ;;' (string->symbol "hello")  ; => hello (a symbol)
+  ;;' (string->symbol "x")      ; => x
+  ;;' @note Signals an error if the argument is not a string.
+  ;;' @seealso symbol->string, ->symbol
+  (define string->symbol
+    (lambda (str)
+      (if (string? str)
+        (as.symbol str)
+        (stop "string->symbol: argument must be a string"))))
+
+  ;;' @description Convert value to symbol.
+  ;;' @examples
+  ;;' (->symbol "hello")  ; => hello (a symbol)
+  ;;' (->symbol 42)       ; => 42 (symbol named "42")
+  ;;' (->symbol 'x)       ; => x (already a symbol, returned as-is)
+  ;;' @seealso symbol->string, string->symbol
+  (define ->symbol
+    (lambda (x)
+      (if (symbol? x)
+        x
+        (as.symbol (as.character x)))))
+
+  ;;' @section Numeric Conversions
+
+  ;;' @description Convert value to number.
+  ;;' @examples
+  ;;' (->number "42")     ; => 42
+  ;;' (->number "3.14")   ; => 3.14
+  ;;' (->number 5)        ; => 5 (already a number)
+  ;;' @note Signals an error for non-numeric strings (e.g. `(->number "abc")`).
+  ;;' @seealso ->integer, ->double, ->complex
+  (define ->number
+    (lambda (x)
+      (if (number? x)
+        x
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.numeric x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to number" x))
+              result))
+          (stop "->number: cannot convert to number")))))
+
+  ;;' @section Scheme-Style Exact/Inexact Conversions
+
+  ;;' @description Convert exact number to inexact (integer to double).
+  ;;' @examples
+  ;;' (exact->inexact 5L)     ; => 5.0 (integer to double)
+  ;;' (exact->inexact 3.14)   ; => 3.14 (already double, returned as double)
+  ;;' @note Signals an error if the argument is not a number.
+  ;;' @note In Scheme, exactness is a property of any number. In R (and Arl), exact means integer storage type and inexact means double or complex. See also `exact?` and `inexact?` in the `math` module.
+  ;;' @seealso inexact->exact, exact? (in `math` module), inexact? (in `math` module)
+  (define exact->inexact
+    (lambda (x)
+      (if (number? x)
+        (as.double x)
+        (stop "exact->inexact: argument must be a number"))))
+
+  ;;' @description Convert inexact number to exact (double to integer, rounds to nearest).
+  ;;' @examples
+  ;;' (inexact->exact 3.7)    ; => 4L (rounds to nearest integer)
+  ;;' (inexact->exact 3.2)    ; => 3L
+  ;;' (inexact->exact 5L)     ; => 5L (already integer)
+  ;;' @note Signals an error if the argument is not a number.
+  ;;' @note **Warning:** Converting double to integer rounds to the nearest integer, which may lose precision. For example, `(inexact->exact 3.7)` returns `4L`, not `3L`.
+  ;;' @seealso exact->inexact, exact? (in `math` module), inexact? (in `math` module)
+  (define inexact->exact
+    (lambda (x)
+      (if (number? x)
+        (as.integer (round x))
+        (stop "inexact->exact: argument must be a number"))))
+
+  ;;' @section Numeric Conversions
+  ;;' R-style type conversions providing explicit control over the target numeric type.
+
+  ;;' @description Convert value to integer.
+  ;;' @examples
+  ;;' (->integer 3.7)     ; => 3L (truncates toward zero)
+  ;;' (->integer "42")    ; => 42L
+  ;;' (->integer 5L)      ; => 5L (already integer)
+  ;;' @note Signals an error for non-numeric strings. Note that `->integer` truncates toward zero (like R's `as.integer`), whereas `inexact->exact` rounds to nearest.
+  ;;' @seealso ->number, ->double, inexact->exact
+  (define ->integer
+    (lambda (x)
+      (if (number? x)
+        (as.integer x)
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.integer x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to integer" x))
+              result))
+          (stop "->integer: cannot convert to integer")))))
+
+  ;;' @description Convert value to double.
+  ;;' @examples
+  ;;' (->double 5L)       ; => 5.0
+  ;;' (->double "3.14")   ; => 3.14
+  ;;' (->double 2.5)      ; => 2.5 (already double)
+  ;;' @seealso ->number, ->integer, exact->inexact
+  (define ->double
+    (lambda (x)
+      (if (number? x)
+        (as.double x)
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.double x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to double" x))
+              result))
+          (stop "->double: cannot convert to double")))))
+
+  ;;' @description Convert value to complex number (imaginary part = 0).
+  ;;' @examples
+  ;;' (->complex 5)       ; => 5+0i
+  ;;' (->complex 3.14)    ; => 3.14+0i
+  ;;' (->complex "2+3i")  ; => 2+3i
+  ;;' @seealso ->number, ->double, make-rectangular (in `math` module)
+  (define ->complex
+    (lambda (x)
+      (if (number? x)
+        (as.complex x)
+        (if (string? x)
+          (begin
+            (define result (suppressWarnings (as.complex x)))
+            (if (is.na result)
+              (stop (sprintf "Cannot convert '%s' to complex" x))
+              result))
+          (stop "->complex: cannot convert to complex")))))
+
+  ;;' @section Collection Conversions
+
+  ;;' @description Convert value to list.
+  ;;' @examples
+  ;;' (->list (vector 1 2 3))  ; => (1 2 3)
+  ;;' (->list '(1 2 3))        ; => (1 2 3) (already a list)
+  ;;' @seealso ->vector
+  (define ->list
+    (lambda (x)
+      (if (list? x)
+        x
+        (as.list x))))
+
+  ;;' @description Convert value to vector.
+  ;;' @examples
+  ;;' (->vector '(1 2 3))   ; => [1] 1 2 3 (atomic vector)
+  ;;' (->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)
+  ;;' @note When given a list, `->vector` flattens it into an atomic vector using `unlist`. Nested lists will be recursively flattened.
+  ;;' @seealso ->list
+  (define ->vector
+    (lambda (x)
+      (if (vector? x)
+        x
+        (if (list? x)
+          (unlist x)
+          (if (is.atomic x)
+            x
+            (stop "->vector: cannot convert to vector"))))))
+
+  ;;' @section Migration from predicates Module
+  ;;' Type conversion functions have always been in the `conversions` module.
+  ;;' However, the related numeric type predicates (`exact?`, `inexact?`, `integer?`, etc.)
+  ;;' were previously in the `predicates` module and are now in the `math` module:
+  ;;'
+  ;;' ```lisp
+  ;;' ; Old (before reorganization)
+  ;;' (import predicates)
+  ;;'
+  ;;' ; New (after reorganization)
+  ;;' (import conversions)  ; for ->number, ->integer, exact->inexact, etc.
+  ;;' (import math)         ; for exact?, inexact?, integer?, real?, etc.
+  ;;' (import types)        ; for number?, string?, symbol?, etc.
+  ;;' ```
+  ;;'
+  ;;' The function signatures and behavior remain unchanged.
+)

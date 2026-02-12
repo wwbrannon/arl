@@ -1,6 +1,6 @@
-# Rye Test Suite
+# Arl Test Suite
 
-This directory contains the test suite for the Rye language implementation. Tests are organized into two main categories: **R tests** and **native tests**.
+This directory contains the test suite for the Arl language implementation. Tests are organized into two main categories: **R tests** and **native tests**.
 
 ## Test Organization
 
@@ -9,16 +9,16 @@ tests/
 ├── testthat/              # R-based tests using testthat framework
 │   ├── test-*.R           # R test files
 │   ├── helper-*.R         # R test helpers
-│   └── helper-native.rye  # Rye helpers for native tests (skip, etc.)
-├── native/                # Native Rye tests (.rye files)
-│   └── test-*.rye         # Native test files
-└── skip-examples.rye      # Example usage of skip() (not a test)
+│   └── helper-native.arl  # Arl helpers for native tests (skip, etc.)
+├── native/                # Native Arl tests (.arl files)
+│   └── test-*.arl         # Native test files
+└── skip-examples.arl      # Example usage of skip() (not a test)
 ```
 
 ## R Tests (testthat/)
 
 Traditional R tests using the testthat framework. These tests:
-- Test the R implementation of the Rye engine
+- Test the R implementation of the Arl engine
 - Test R interop and integration
 - Test stdlib functions from the R side
 - Use standard testthat assertions (`expect_equal`, `expect_error`, etc.)
@@ -36,24 +36,24 @@ test_that("lambda creates functions", {
 
 ## Native Tests (native/)
 
-Native Rye tests written in Rye itself. These tests:
-- Test Rye language features and semantics from within Rye
-- Test stdlib functionality using Rye assertions
-- Provide examples of idiomatic Rye code
-- Run faster than R tests for pure Rye logic
+Native Arl tests written in Arl itself. These tests:
+- Test Arl language features and semantics from within Arl
+- Test stdlib functionality using Arl assertions
+- Provide examples of idiomatic Arl code
+- Run faster than R tests for pure Arl logic
 
 ### How Native Tests Work
 
-1. **Test files** are `.rye` files in `tests/native/` directory
+1. **Test files** are `.arl` files in `tests/native/` directory
 2. **Test functions** are defined with names starting with `test-`
 3. **Test runner** (`helper-native.R`) automatically discovers and runs all `test-*` functions
 4. **Assertions** use functions from the `assert` module (`assert-equal`, `assert-true`, etc.)
 
 ### Writing a Native Test
 
-Create a file `tests/native/test-feature.rye`:
+Create a file `tests/native/test-feature.arl`:
 
-```rye
+```arl
 ;;; Tests for my feature
 
 (define test-basic-functionality (lambda ()
@@ -91,7 +91,7 @@ From the `assert` module (automatically available):
 
 Use `skip()` to mark a test as skipped (only available in native tests):
 
-```rye
+```arl
 (define test-future-feature (lambda ()
   (skip "Not yet implemented")
   ;; Code after skip is never reached
@@ -111,15 +111,15 @@ Use `skip()` to mark a test as skipped (only available in native tests):
     (assert-equal 1 1))))
 ```
 
-**Note:** `skip()` is defined in `testthat/helper-native.rye` and calls `testthat::skip()`, so it integrates with the R test framework. Skipped tests appear in test output but don't fail the suite.
+**Note:** `skip()` is defined in `testthat/helper-native.arl` and calls `testthat::skip()`, so it integrates with the R test framework. Skipped tests appear in test output but don't fail the suite.
 
 ### Test Infrastructure
 
 Native tests are run by `helper-native.R`:
 
 1. Creates a fresh `Engine` with stdlib loaded
-2. Loads `helper-native.rye` to provide test utilities (like `skip`)
-3. Discovers all `.rye` files in `native/`
+2. Loads `helper-native.arl` to provide test utilities (like `skip`)
+3. Discovers all `.arl` files in `native/`
 4. Loads each file and finds all `test-*` functions
 5. Runs each test inside a `test_that()` block
 6. Catches errors and reports failures/skips
@@ -151,10 +151,10 @@ testthat::test_file("tests/testthat/test-engine.R")
 - Need to test R-specific edge cases
 
 **Use native tests when:**
-- Testing Rye language semantics
+- Testing Arl language semantics
 - Testing stdlib functions from user perspective
-- Demonstrating idiomatic Rye patterns
-- Testing pure Rye logic without R concerns
+- Demonstrating idiomatic Arl patterns
+- Testing pure Arl logic without R concerns
 
 ### General Guidelines
 
@@ -171,14 +171,14 @@ The test suite includes both R tests (`tests/testthat/`) and native tests (`test
 
 ### Native Tests Should
 
-- **Demonstrate idiomatic Rye usage patterns** - Show how features are meant to be used
+- **Demonstrate idiomatic Arl usage patterns** - Show how features are meant to be used
 - **Test language semantics** - Focus on binding, scoping, closures, control flow, quoting
 - **Show 1-3 simple examples per stdlib function** - Demonstrate happy path usage
 - **Serve as executable documentation** - Be readable and exemplary
 - **Be concise and clear** - Each test should illustrate a specific pattern
 
 **Example of a good native test:**
-```rye
+```arl
 (define test-string-upcase (lambda ()
   (assert-equal (string-upcase "hello") "HELLO")))
 ```
@@ -242,7 +242,7 @@ For native tests, you can load and run them manually:
 engine <- Engine$new()
 env <- engine$env$env
 source("tests/testthat/helper-native.R")  # Loads skip() etc.
-engine$load_file("tests/native/test-something.rye", env)
+engine$load_file("tests/native/test-something.arl", env)
 # Now you can call test functions directly:
 env$`test-my-function`()
 ```

@@ -8,7 +8,7 @@ build:
   vignettes: false
 
 home:
-  title: Rye
+  title: Arl
   description: A Lisp dialect implemented in and with access to R.
 
 navbar:
@@ -32,8 +32,8 @@ navbar:
           href: articles/internals.html
         - text: Troubleshooting
           href: articles/troubleshooting.html
-        - text: Rye vs Scheme
-          href: articles/rye-vs-scheme.html
+        - text: Arl vs Scheme
+          href: articles/arl-vs-scheme.html
     stdlib:
       text: Standard Library
       menu:
@@ -94,7 +94,7 @@ reference:
 
 articles:
   - title: Guides
-    desc: Step-by-step guides for learning Rye.
+    desc: Step-by-step guides for learning Arl.
     contents:
       - getting-started
       - macros
@@ -103,13 +103,13 @@ articles:
       - stdlib-reference
       - internals
       - troubleshooting
-      - rye-vs-scheme
+      - arl-vs-scheme
   - title: Examples
-    desc: Complete working programs demonstrating Rye features.
+    desc: Complete working programs demonstrating Arl features.
     contents:
       - examples
   - title: Standard Library Reference
-    desc: Per-function reference for Rye's standard library.
+    desc: Per-function reference for Arl's standard library.
     contents:
       - stdlib-list-seq
       - stdlib-functional

@@ -296,7 +296,7 @@ test_that("directory-delete errors on non-existent directory", {
 # Parsing Operations
 # ============================================================================
 
-test_that("read parses Rye expressions from strings", {
+test_that("read parses Arl expressions from strings", {
   env <- new.env(parent = baseenv())
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
@@ -343,15 +343,15 @@ test_that("setenv and getenv work with environment variables", {
 
   # Set variable
   engine$eval_in_env(
-    engine$read('(setenv "RYE_TEST_VAR" "test_value")')[[1]], env)
+    engine$read('(setenv "ARL_TEST_VAR" "test_value")')[[1]], env)
 
   # Get it back
   result <- engine$eval_in_env(
-    engine$read('(getenv "RYE_TEST_VAR")')[[1]], env)
+    engine$read('(getenv "ARL_TEST_VAR")')[[1]], env)
   expect_equal(result, "test_value")
 
   # Clean up
-  Sys.unsetenv("RYE_TEST_VAR")
+  Sys.unsetenv("ARL_TEST_VAR")
 })
 
 test_that("getenv returns #nil for unset variable", {
@@ -359,10 +359,10 @@ test_that("getenv returns #nil for unset variable", {
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
-  Sys.unsetenv("RYE_NONEXISTENT_VAR")
+  Sys.unsetenv("ARL_NONEXISTENT_VAR")
 
   result <- engine$eval_in_env(
-    engine$read('(getenv "RYE_NONEXISTENT_VAR")')[[1]], env)
+    engine$read('(getenv "ARL_NONEXISTENT_VAR")')[[1]], env)
   expect_null(result)
 })
 

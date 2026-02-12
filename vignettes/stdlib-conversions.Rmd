@@ -9,14 +9,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
 <!-- Regenerate with: make stdlib-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-These functions are provided by the `conversions` module (`inst/rye/conversions.rye`).
+These functions are provided by the `conversions` module (`inst/arl/conversions.arl`).
 
 ## Symbol Conversions
 
@@ -110,7 +110,7 @@ Convert exact number to inexact (integer to double).
 (exact->inexact 3.14)   ; => 3.14 (already double, returned as double)
 ```
 
-**Note:** In Scheme, exactness is a property of any number. In R (and Rye), exact means integer storage type and inexact means double or complex. See also `exact?` and `inexact?` in the `math` module.
+**Note:** In Scheme, exactness is a property of any number. In R (and Arl), exact means integer storage type and inexact means double or complex. See also `exact?` and `inexact?` in the `math` module.
 
 **See also:** [inexact->exact](#inexact-to-exact), [exact?](stdlib-math.html#exact) (in `math` module), [inexact?](stdlib-math.html#inexact) (in `math` module)
 

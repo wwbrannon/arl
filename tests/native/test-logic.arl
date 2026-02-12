@@ -1,0 +1,28 @@
+;;; Tests for logic operations (not, xor)
+
+(import assert)
+(import logic)
+
+(define test-logic-not-truthy (lambda ()
+  ;; Test not with various truthy/falsy values
+  (assert-true (not #f))
+  (assert-false (not #t))
+  (assert-false (not 1))
+  (assert-false (not "string"))
+  (assert-true (not #nil))
+  (assert-false (not '(1 2 3)))))
+
+(define test-logic-xor-basic (lambda ()
+  ;; Test xor truth table
+  (assert-false (xor #f #f))
+  (assert-true (xor #f #t))
+  (assert-true (xor #t #f))
+  (assert-false (xor #t #t))))
+
+(define test-logic-xor-truthy (lambda ()
+  ;; Test xor with truthy values
+  (assert-true (xor #f 1))
+  (assert-false (xor 0 #f))  ; 0 is falsy in Arl
+  (assert-false (xor 1 2))
+  (assert-true (xor #nil "string"))
+  (assert-false (xor "a" "b"))))

@@ -13,13 +13,13 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-This vignette explains how Rye code is compiled and executed. It is intended
+This vignette explains how Arl code is compiled and executed. It is intended
 for contributors and curious users who want to understand what happens between
 typing an expression and seeing its result.
 
 ## Pipeline overview
 
-Every Rye expression passes through five stages:
+Every Arl expression passes through five stages:
 
 ```
 Source text -> Tokenizer -> Parser -> Macro Expander -> Compiler -> R eval()
@@ -30,7 +30,7 @@ Source text -> Tokenizer -> Parser -> Macro Expander -> Compiler -> R eval()
    STRING, KEYWORD, etc.).
 
 2. **Parser** (`R/parser.R`) -- Converts the token stream into R call
-   objects representing Rye S-expressions. Reader macros (`'`, `` ` ``,
+   objects representing Arl S-expressions. Reader macros (`'`, `` ` ``,
    `,`, `,@`) are expanded into explicit `quote`, `quasiquote`, `unquote`,
    and `unquote-splicing` forms during parsing.
 
@@ -39,19 +39,19 @@ Source text -> Tokenizer -> Parser -> Macro Expander -> Compiler -> R eval()
    `macroexpand-1` (single level). Quasiquote templates are processed by
    a shared walker (`R/quasiquote.R`).
 
-4. **Compiler** (`R/compiler.R`) -- Translates the macro-expanded Rye AST
+4. **Compiler** (`R/compiler.R`) -- Translates the macro-expanded Arl AST
    into R language objects. Handles all special forms, applies
    optimizations (constant folding, dead code elimination, self-TCO),
    and optionally inserts coverage instrumentation.
 
 5. **R eval()** -- The compiled R expression is evaluated with R's native
-   `eval()`. Because Rye compiles to R code, all R functions and data
+   `eval()`. Because Arl compiles to R code, all R functions and data
    structures are directly accessible.
 
 ## What "compilation" means
 
-Rye does not produce bytecode or machine code. Instead, the compiler
-translates Rye AST nodes into R `language` objects -- the same objects
+Arl does not produce bytecode or machine code. Instead, the compiler
+translates Arl AST nodes into R `language` objects -- the same objects
 you get from `quote()` in R. For example:
 
 ```lisp
@@ -65,7 +65,7 @@ assign("x", 1 + 2, envir = .__env)
 ```
 
 The result is a single R expression that can be passed to `eval()`. This
-approach piggybacks on R's own evaluation machinery, giving Rye access to
+approach piggybacks on R's own evaluation machinery, giving Arl access to
 R's scoping, garbage collection, and entire function library for free.
 
 ## Inspecting the compilation pipeline
@@ -76,7 +76,7 @@ Use `engine$inspect_compilation(text)` to see each stage:
 engine <- Engine$new()
 info <- engine$inspect_compilation("(when #t (+ 1 2))")
 
-info$parsed           # Rye AST after parsing
+info$parsed           # Arl AST after parsing
 info$expanded         # After macro expansion
 info$compiled         # Compiled R expression
 info$compiled_deparsed # R source as a character vector
@@ -203,14 +203,14 @@ unrecognized forms or constructs that require interpreter features). In
 this case, the engine falls back to the interpreted evaluation path. The
 `last_error` field on the compiler records why compilation failed.
 
-In practice, the compiler handles all standard Rye code. The fallback
+In practice, the compiler handles all standard Arl code. The fallback
 exists as a safety net for edge cases.
 
 ## Reserved internal names
 
 If you inspect compiled output (via `inspect_compilation`) or peek inside
-Rye environments, you will see names that start with `.__` (dot,
-underscore, underscore). These are **reserved for Rye's internal
+Arl environments, you will see names that start with `.__` (dot,
+underscore, underscore). These are **reserved for Arl's internal
 machinery** and should not be used in user code.
 
 The convention serves two purposes:
@@ -222,7 +222,7 @@ Examples you might encounter:
 
 | Name | Purpose |
 |------|---------|
-| `.__env` | Reference to the enclosing Rye environment |
+| `.__env` | Reference to the enclosing Arl environment |
 | `.__true_p` | Truthiness predicate for `if` tests |
 | `.__assign_pattern` | Destructuring assignment helper |
 | `.__tmp__N` | Compiler-generated temporaries |

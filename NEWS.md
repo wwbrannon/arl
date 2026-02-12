@@ -1,4 +1,4 @@
-# rye 0.0.1
+# arl 0.0.1
 
 Initial CRAN release.
 
@@ -9,7 +9,7 @@ Initial CRAN release.
   them as `while` loops, avoiding stack overflow. Works through `if`, `begin`,
   `cond`, `let`, `let*`, and `letrec`, and supports destructuring params,
   keyword args, and rest params.
-* **Rye code coverage:** New `CoverageTracker` class instruments Rye stdlib
+* **Arl code coverage:** New `CoverageTracker` class instruments Arl stdlib
   and user code, tracking line-level and branch-level (`if`) coverage. Reports
   in console, HTML, and JSON formats; integrates with Codecov via flags.
 * **Sorting module:** `sort`, `sort-by`, `merge`, and `stable-sort` functions.

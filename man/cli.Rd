@@ -2,7 +2,7 @@
 % Please edit documentation in R/cli.R
 \name{cli}
 \alias{cli}
-\title{Run the Rye CLI}
+\title{Run the Arl CLI}
 \usage{
 cli(args = commandArgs(trailingOnly = TRUE))
 }
@@ -13,6 +13,6 @@ cli(args = commandArgs(trailingOnly = TRUE))
 Invisibly returns \code{NULL}.
 }
 \description{
-Entry point for the Rye command-line interface. Parses arguments and runs
+Entry point for the Arl command-line interface. Parses arguments and runs
 the requested action (REPL, file evaluation, or expression evaluation).
 }

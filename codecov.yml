@@ -1,5 +1,5 @@
-# Codecov configuration for Rye package
-# Handles separate R code and Rye code coverage
+# Codecov configuration for Arl package
+# Handles separate R code and Arl code coverage
 
 # Overall project settings
 coverage:
@@ -21,7 +21,7 @@ coverage:
         target: 80%
         threshold: 5%
 
-# Flag-specific settings for R vs Rye code
+# Flag-specific settings for R vs Arl code
 flag_management:
   default_rules:
     carryforward: true
@@ -40,10 +40,10 @@ flags:
     carryforward: true
     after_n_builds: 1
 
-  # Rye language code coverage
-  rye-code:
+  # Arl language code coverage
+  arl-code:
     paths:
-      - inst/rye/
+      - inst/arl/
       - tests/native/
     carryforward: true
     after_n_builds: 1
@@ -62,8 +62,8 @@ component_management:
       name: "Runtime"
       paths:
         - R/runtime.R
-        - R/rye-engine.R
-        - R/rye-env.R
+        - R/engine.R
+        - R/env.R
 
     - component_id: parser
       name: "Parser/Tokenizer"
@@ -77,26 +77,26 @@ component_management:
         - R/module-*.R
         - R/file-deps.R
 
-    # Rye stdlib components
+    # Arl stdlib components
     - component_id: stdlib-core
       name: "Stdlib Core"
       paths:
-        - inst/rye/core.rye
-        - inst/rye/types.rye
-        - inst/rye/logic.rye
+        - inst/arl/core.arl
+        - inst/arl/types.arl
+        - inst/arl/logic.arl
 
     - component_id: stdlib-collections
       name: "Stdlib Collections"
       paths:
-        - inst/rye/list.rye
-        - inst/rye/dict.rye
-        - inst/rye/set.rye
+        - inst/arl/list.arl
+        - inst/arl/dict.arl
+        - inst/arl/set.arl
 
     - component_id: stdlib-functional
       name: "Stdlib Functional"
       paths:
-        - inst/rye/functional.rye
-        - inst/rye/looping.rye
+        - inst/arl/functional.arl
+        - inst/arl/looping.arl
 
 # Comment settings for PRs
 comment:

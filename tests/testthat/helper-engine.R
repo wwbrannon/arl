@@ -1,5 +1,5 @@
 make_engine <- function(...) {
-  tracker <- getOption("rye.coverage_tracker")
+  tracker <- getOption("arl.coverage_tracker")
   if (!is.null(tracker)) {
     Engine$new(..., use_env_cache = FALSE, coverage_tracker = tracker)
   } else {

@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
 <!-- Regenerate with: make stdlib-docs -->
 
 ```{r setup, include = FALSE}
@@ -18,7 +18,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Core Higher-Order Functions
 
-The fundamental building blocks for functional programming in Rye.
+The fundamental building blocks for functional programming in Arl.
 These functions operate on lists and follow the convention of taking
 the function argument first, then the data argument.
 
@@ -343,13 +343,13 @@ Memoize function - cache results for previously seen arguments.
 
 ## Logical Operations
 
-Core logical operations for Rye. Note that `and` and `or` are compiler
+Core logical operations for Arl. Note that `and` and `or` are compiler
 special forms (not functions) with short-circuit evaluation, so they
 are not part of this module.
 
 ### not {#not}
 
-Logical negation with Rye truthiness.
+Logical negation with Arl truthiness.
 
 **Signature:** `(not x)`
 
@@ -363,7 +363,7 @@ Logical negation with Rye truthiness.
 (not "hello")     ; => #f (non-empty values are truthy)
 ```
 
-**Note:** Rye follows Scheme-like truthiness: #f/FALSE, #nil/NULL, and 0 are falsy. Everything else is truthy. This differs from R where only FALSE and NULL are falsy.
+**Note:** Arl follows Scheme-like truthiness: #f/FALSE, #nil/NULL, and 0 are falsy. Everything else is truthy. This differs from R where only FALSE and NULL are falsy.
 
 **See also:** [xor](#xor), and, or (special forms)
 
@@ -371,7 +371,7 @@ Logical negation with Rye truthiness.
 
 ### xor {#xor}
 
-Logical exclusive OR with Rye truthiness.
+Logical exclusive OR with Arl truthiness.
 
 **Signature:** `(xor a b)`
 

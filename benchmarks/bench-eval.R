@@ -1,7 +1,7 @@
 # Evaluator Benchmarks
 # Benchmarks for the evaluator component
 
-library(rye)
+library(arl)
 
 source("benchmarks/benchmark-helpers.R")
 source("benchmarks/workloads.R")
@@ -97,8 +97,8 @@ if (length(real_workloads) > 0) {
   engine5 <- Engine$new()
 
   bench_real <- benchmark_component(
-    "fibonacci.rye" = engine5$eval_text(real_workloads$fibonacci),
-    "quicksort.rye" = engine5$eval_text(real_workloads$quicksort),
+    "fibonacci.arl" = engine5$eval_text(real_workloads$fibonacci),
+    "quicksort.arl" = engine5$eval_text(real_workloads$quicksort),
     iterations = 10,
     check = FALSE
   )

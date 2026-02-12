@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+set -e
+
+if [ -z "$R_HOME" ]; then
+  R_HOME="$(R RHOME)"
+fi
+
+# Why the temporary profile approach?
+# ===================================
+# We need R to run in interactive mode so that interactive() returns TRUE and
+# capabilities("cledit") reports readline/libedit support. This enables:
+#   - Line editing with arrow keys
+#   - Command history (Ctrl-R search, up/down arrows)
+#   - Bracketed paste mode
+#
+# The problem: when you run R with -e "code" or Rscript, R runs in batch mode
+# and these features are disabled, even if stdin is a tty.
+#
+# The solution: start plain R (no -e or --file) with R_PROFILE_USER set to a
+# temporary profile that runs our CLI. R detects it's interactive (stdin is a tty),
+# enables readline, then sources the profile which launches our REPL.
+
+TEMP_PROFILE=$(mktemp)
+trap 'rm -f "$TEMP_PROFILE"' EXIT
+
+cat > "$TEMP_PROFILE" <<'RPROFILE'
+# Arl CLI launcher - auto-generated temporary profile
+local({
+  # Ensure we exit R even if interrupted (Ctrl-C) or on error
+  on.exit(q(save = "no", status = 0), add = TRUE)
+
+  # Load user's real profile if it exists and ARL_SKIP_USER_PROFILE is not set
+  # Note: path.expand("~/.Rprofile") works cross-platform (Windows, macOS, Linux)
+  if (!nzchar(Sys.getenv("ARL_SKIP_USER_PROFILE"))) {
+    user_profile <- path.expand("~/.Rprofile")
+    if (file.exists(user_profile)) {
+      tryCatch(source(user_profile), error = function(e) {
+        warning("Error loading ~/.Rprofile: ", conditionMessage(e))
+      })
+    }
+  }
+
+  # Load arl package and run CLI
+  suppressPackageStartupMessages(library(arl))
+  cli(args = commandArgs(trailingOnly = TRUE))
+})
+RPROFILE
+
+# Use R_PROFILE_USER to inject our launcher
+# This makes R start interactively (if stdin is a tty) and then run our code
+export R_PROFILE_USER="$TEMP_PROFILE"
+exec "${R_HOME}/bin/R" --quiet --no-save --no-restore --args "$@"

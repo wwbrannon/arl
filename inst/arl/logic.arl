@@ -1,0 +1,61 @@
+;;; Arl Standard Library - Logical Operations
+;;;
+
+(module logic
+  (export not xor)
+
+;;; Note: `and` and `or` are implemented as compiler special forms for
+;;; efficiency (short-circuit evaluation with optimizations for simple values
+;;; and flattening of nested chains). These are the old macro implementations.
+;;; (optimization: eliminate temps for simple values, flatten nested chains)
+ ; (defmacro and (first . rest)
+ ;   "Short-circuit boolean AND."
+ ;   (if (null? rest)
+ ;     first
+ ;     `((lambda (tmp)
+ ;         (if tmp (and ,@rest) tmp))
+ ;       ,first)))
+
+ ; (defmacro or (first . rest)
+ ;   "Short-circuit boolean OR."
+ ;   (if (null? rest)
+ ;     first
+ ;     `((lambda (tmp)
+ ;         (if tmp tmp (or ,@rest)))
+ ;       ,first)))
+
+  ;;' @section Logical Operations
+  ;;' Core logical operations for Arl. Note that `and` and `or` are compiler
+  ;;' special forms (not functions) with short-circuit evaluation, so they
+  ;;' are not part of this module.
+
+  ;;' @description Logical negation with Arl truthiness.
+  ;;' @examples
+  ;;' (not #t)          ; => #f
+  ;;' (not #f)          ; => #t
+  ;;' (not 0)           ; => #t (0 is falsy)
+  ;;' (not 1)           ; => #f (non-zero is truthy)
+  ;;' (not #nil)        ; => #t (NULL is falsy)
+  ;;' (not "hello")     ; => #f (non-empty values are truthy)
+  ;;' @note Arl follows Scheme-like truthiness: #f/FALSE, #nil/NULL, and 0 are falsy. Everything else is truthy. This differs from R where only FALSE and NULL are falsy.
+  ;;' @seealso xor, and, or (special forms)
+  (define not
+    (lambda (x)
+      (if x #f #t)))
+
+  ;;' @description Logical exclusive OR with Arl truthiness.
+  ;;' @examples
+  ;;' (xor #t #f)       ; => #t
+  ;;' (xor #f #t)       ; => #t
+  ;;' (xor #t #t)       ; => #f
+  ;;' (xor #f #f)       ; => #f
+  ;;' (xor 1 0)         ; => #t (1 is truthy, 0 is falsy)
+  ;;' (xor 1 2)         ; => #f (both truthy)
+  ;;' @note Exclusive OR: returns #t when exactly one argument is truthy, #f when both are truthy or both are falsy.
+  ;;' @seealso not, and, or (special forms)
+  (define xor
+    (lambda (a b)
+      (if a
+        (if b #f #t)
+        (if b #t #f))))
+)

@@ -7,7 +7,7 @@ platform <- paste(Sys.info()[c("sysname", "release", "machine")], collapse = " "
 local_r <- R.version$version.string
 
 # Read status from check log (expects `make check` to have run)
-log_path <- file.path("rye.Rcheck", "00check.log")
+log_path <- file.path("arl.Rcheck", "00check.log")
 if (!file.exists(log_path)) {
   stop("Check log not found: ", log_path, "\nRun 'make check' first.")
 }

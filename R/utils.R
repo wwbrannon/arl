@@ -1,16 +1,16 @@
 # Package identity -- change this single value when renaming the package.
-# Used to derive option names (e.g. "rye.use_env_cache") and filesystem
-# paths (e.g. ".rye_cache", "~/.rye_history").
-.pkg_name <- "rye"
+# Used to derive option names (e.g. "arl.use_env_cache") and filesystem
+# paths (e.g. ".arl_cache", "~/.arl_history").
+.pkg_name <- "arl"
 
 # Get a package-namespaced option: .pkg_option("use_env_cache", FALSE)
-# is equivalent to getOption("rye.use_env_cache", FALSE).
+# is equivalent to getOption("arl.use_env_cache", FALSE).
 .pkg_option <- function(name, default = NULL) {
   getOption(paste0(.pkg_name, ".", name), default)
 }
 
 # Set a package-namespaced option: .set_pkg_option("repl_quiet", TRUE)
-# is equivalent to options(rye.repl_quiet = TRUE).
+# is equivalent to options(arl.repl_quiet = TRUE).
 .set_pkg_option <- function(name, value) {
   opt <- list(value)
   names(opt) <- paste0(.pkg_name, ".", name)
@@ -47,7 +47,7 @@ resolve_stdlib_path <- function(name) {
   }
   candidates <- c(
     file.path(dir_path, name),
-    file.path(dir_path, paste0(name, ".rye"))
+    file.path(dir_path, paste0(name, ".arl"))
   )
   for (path in candidates) {
     if (file.exists(path)) {

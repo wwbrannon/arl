@@ -1,7 +1,7 @@
 # Standard Library Benchmarks
 # Benchmarks for stdlib functions (list ops, higher-order functions, etc.)
 
-library(rye)
+library(arl)
 
 source("benchmarks/benchmark-helpers.R")
 source("benchmarks/workloads.R")

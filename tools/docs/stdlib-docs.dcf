@@ -5,13 +5,13 @@
 # Fields:
 #   Name:     Vignette basename (e.g. stdlib-math)
 #   Title:    Vignette title (used in YAML frontmatter and VignetteIndexEntry)
-#   Modules:  Comma-separated list of .rye module names
+#   Modules:  Comma-separated list of .arl module names
 #   Preamble: Optional introductory text placed before the first section
 
 Name: stdlib-math
 Title: Standard Library: Math and Numeric Functions
 Modules: math
-Preamble: These functions are provided by the `math` module (`inst/rye/math.rye`).
+Preamble: These functions are provided by the `math` module (`inst/arl/math.arl`).
 
 Name: stdlib-list-seq
 Title: Standard Library: Lists and Sequences
@@ -24,17 +24,17 @@ Modules: functional, logic
 Name: stdlib-types
 Title: Standard Library: Type Predicates
 Modules: types
-Preamble: These functions are provided by the `types` module (`inst/rye/types.rye`).
+Preamble: These functions are provided by the `types` module (`inst/arl/types.arl`).
 
 Name: stdlib-equality
 Title: Standard Library: Equality and S3 Dispatch
 Modules: equality
-Preamble: These functions are provided by the `equality` module (`inst/rye/equality.rye`).
+Preamble: These functions are provided by the `equality` module (`inst/arl/equality.arl`).
 
 Name: stdlib-conversions
 Title: Standard Library: Type Conversions
 Modules: conversions
-Preamble: These functions are provided by the `conversions` module (`inst/rye/conversions.rye`).
+Preamble: These functions are provided by the `conversions` module (`inst/arl/conversions.arl`).
 
 Name: stdlib-control
 Title: Standard Library: Control Flow and Macros

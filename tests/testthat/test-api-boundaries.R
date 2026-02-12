@@ -1,7 +1,7 @@
 test_that("global engine state is not accessible", {
-  # The old .rye_engine_state global should not exist
-  expect_false(exists(".rye_engine_state", envir = .GlobalEnv))
-  expect_false(exists(".rye_engine_state", envir = asNamespace("rye")))
+  # The old .arl_engine_state global should not exist
+  expect_false(exists(".arl_engine_state", envir = .GlobalEnv))
+  expect_false(exists(".arl_engine_state", envir = asNamespace("arl")))
 
   # Users cannot directly access or mutate the default engine's state
   engine1 <- default_engine()
@@ -111,8 +111,8 @@ test_that(".__env is documented as internal", {
 
   # Users CAN access it if they try hard enough (same R process)
   # But it's documented as internal and may change
-  rye_env_val <- get(".__env", envir = env)
-  expect_true(is.environment(rye_env_val))
+  arl_env_val <- get(".__env", envir = env)
+  expect_true(is.environment(arl_env_val))
 })
 
 test_that("default engine uses closure pattern", {
@@ -125,8 +125,8 @@ test_that("default engine uses closure pattern", {
   expect_identical(eng1, eng2)
 
   # And we can't find any global variable holding it
-  expect_false(exists(".rye_engine_state", where = .GlobalEnv))
-  expect_false(exists(".rye_engine_state", where = asNamespace("rye")))
+  expect_false(exists(".arl_engine_state", where = .GlobalEnv))
+  expect_false(exists(".arl_engine_state", where = asNamespace("arl")))
 })
 
 test_that("module registry entries are truly immutable", {

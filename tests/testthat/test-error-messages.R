@@ -65,7 +65,7 @@ test_that("type error in arithmetic", {
 
 test_that("malformed quasiquote", {
   engine <- make_engine()
-  # Unquote outside quasiquote - Rye may handle this differently
+  # Unquote outside quasiquote - Arl may handle this differently
   # Just test that it doesn't crash
   tryCatch(
     engine$eval_text(",x"),
@@ -106,4 +106,4 @@ test_that("import non-existent module", {
   )
 })
 
-# Macro expansion error test removed - Rye handles macro errors differently
+# Macro expansion error test removed - Arl handles macro errors differently

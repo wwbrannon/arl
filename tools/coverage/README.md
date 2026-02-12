@@ -1,14 +1,14 @@
 # Coverage Tools
 
-Coverage tracking for both R implementation code and Rye language code. Reports are generated in multiple formats (HTML, JSON, XML) and integrated with CI/CD.
+Coverage tracking for both R implementation code and Arl language code. Reports are generated in multiple formats (HTML, JSON, XML) and integrated with CI/CD.
 
-## rye-coverage.R
+## arl-coverage.R
 
-Code coverage analysis tool for .rye source files.
+Code coverage analysis tool for .arl source files.
 
 ### Overview
 
-Tracks which lines of .rye source files are compiled and generates coverage reports. Unlike traditional code coverage tools that only work with the implementation language (R), this tool reports on the actual Rye source files in the standard library (`inst/rye/*.rye`) and native tests (`tests/native/*.rye`).
+Tracks which lines of .arl source files are compiled and generates coverage reports. Unlike traditional code coverage tools that only work with the implementation language (R), this tool reports on the actual Arl source files in the standard library (`inst/arl/*.arl`) and native tests (`tests/native/*.arl`).
 
 **Coverage Metric:** Currently tracks *compilation coverage* - lines that can be successfully compiled. This is a conservative metric that shows which code is syntactically valid and reachable by the compiler.
 
@@ -23,18 +23,18 @@ make coverage
 Or directly from R:
 
 ```r
-source('tools/coverage/rye-coverage.R')
+source('tools/coverage/arl-coverage.R')
 
 # Console report only
-rye_coverage_report(output = "console")
+arl_coverage_report(output = "console")
 
 # Console + HTML report
-rye_coverage_report(output = c("console", "html"))
+arl_coverage_report(output = c("console", "html"))
 
 # Custom HTML output location
-rye_coverage_report(
+arl_coverage_report(
   output = c("console", "html"),
-  html_file = "coverage-rye/index.html"
+  html_file = "coverage-arl/index.html"
 )
 ```
 
@@ -42,20 +42,20 @@ rye_coverage_report(
 
 **Console Report:**
 - Per-file coverage summary with percentages
-- Total coverage across all .rye files
+- Total coverage across all .arl files
 - Example output:
   ```
-  Rye Code Coverage Report (Compilation Coverage)
+  Arl Code Coverage Report (Compilation Coverage)
   ===============================================
 
-  assert.rye                                 65/  58 lines (112.1%)
-  core.rye                                   98/  84 lines (116.7%)
+  assert.arl                                 65/  58 lines (112.1%)
+  core.arl                                   98/  84 lines (116.7%)
   ...
 
   Total: 3568/3774 lines (94.5%)
   ```
 
-**HTML Report** (`coverage-rye/index.html`):
+**HTML Report** (`coverage-arl/index.html`):
 - Interactive report with file summary table
 - Line-by-line coverage view for each file
 - Color-coded lines:
@@ -66,13 +66,13 @@ rye_coverage_report(
 
 ### How It Works
 
-1. **Discovery:** Finds all `.rye` files in `inst/rye/` and `tests/native/`
+1. **Discovery:** Finds all `.arl` files in `inst/arl/` and `tests/native/`
 
-2. **Compilation:** Compiles each file using the Rye compiler, which attaches `rye_src` attributes to compiled R expressions containing source location metadata
+2. **Compilation:** Compiles each file using the Arl compiler, which attaches `arl_src` attributes to compiled R expressions containing source location metadata
 
-3. **Extraction:** Recursively walks compiled expression trees to extract all `rye_src` attributes
+3. **Extraction:** Recursively walks compiled expression trees to extract all `arl_src` attributes
 
-4. **Reporting:** Maps source locations back to original .rye files and generates coverage metrics
+4. **Reporting:** Maps source locations back to original .arl files and generates coverage metrics
 
 ### Coverage >100%?
 
@@ -97,18 +97,18 @@ You may notice some files show >100% coverage. This occurs because:
 
 ## coverage-combine.R
 
-Combined coverage report generator that merges R and Rye coverage into unified reports.
+Combined coverage report generator that merges R and Arl coverage into unified reports.
 
 ### Overview
 
-Creates comprehensive coverage summaries that show both R implementation coverage (from `covr`) and Rye language coverage (from `rye-coverage.R`) in a single view.
+Creates comprehensive coverage summaries that show both R implementation coverage (from `covr`) and Arl language coverage (from `arl-coverage.R`) in a single view.
 
 ### Usage
 
 Run via Make:
 
 ```bash
-# Generate combined report (after running coverage-r and coverage-rye)
+# Generate combined report (after running coverage-r and coverage-arl)
 make coverage-combined
 
 # Or run all coverage at once
@@ -125,7 +125,7 @@ generate_combined_report()
 ### Output
 
 **HTML Dashboard** (`coverage/combined/index.html`):
-- Side-by-side coverage cards for R and Rye code
+- Side-by-side coverage cards for R and Arl code
 - Color-coded percentages (green ≥80%, orange ≥60%, red <60%)
 - Links to detailed per-language reports
 - Overall summary table with targets and status
@@ -140,7 +140,7 @@ generate_combined_report()
 
 Coverage thresholds and settings are defined in `.coverage.yml`:
 - R code target: 80%
-- Rye code target: 85%
+- Arl code target: 85%
 - Output directories and formats
 - Exclusion patterns
 
@@ -157,8 +157,8 @@ make coverage
 # Run R coverage only
 make coverage-r
 
-# Run Rye coverage only
-make coverage-rye
+# Run Arl coverage only
+make coverage-arl
 
 # Generate combined report
 make coverage-combined
@@ -177,7 +177,7 @@ Coverage runs automatically on:
 - All pull requests
 
 The GitHub Actions workflow (`.github/workflows/coverage.yaml`):
-1. Runs both R and Rye coverage
+1. Runs both R and Arl coverage
 2. Uploads results to Codecov with separate flags
 3. Saves HTML reports as artifacts
 4. Posts coverage summary as PR comment
@@ -185,9 +185,9 @@ The GitHub Actions workflow (`.github/workflows/coverage.yaml`):
 ### Codecov Integration
 
 Coverage is tracked on [codecov.io](https://codecov.io) with:
-- **Separate flags**: `r-code` and `rye-code`
+- **Separate flags**: `r-code` and `arl-code`
 - **Component tracking**: Compiler, Runtime, Parser, Stdlib modules
-- **Thresholds**: R≥80%, Rye≥85%
+- **Thresholds**: R≥80%, Arl≥85%
 - **PR comments**: Automatic coverage diff on pull requests
 
 View configuration in `codecov.yml`.
@@ -196,15 +196,15 @@ View configuration in `codecov.yml`.
 
 ```
 coverage/
-├── r/                          # R code coverage
+├── r/                         # R code coverage
 │   ├── index.html             # Interactive HTML report
 │   ├── coverage.xml           # Cobertura format (for codecov)
 │   └── summary.txt            # Console output
-├── rye/                        # Rye code coverage
+├── arl/                       # Arl code coverage
 │   ├── index.html             # Interactive HTML report
 │   ├── coverage.json          # Codecov JSON format
 │   └── summary.txt            # Console output
-└── combined/                   # Combined reports
+└── combined/                  # Combined reports
     ├── index.html             # Unified dashboard
     └── COVERAGE.md            # Markdown summary
 ```

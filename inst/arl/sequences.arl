@@ -1,0 +1,207 @@
+;;; Arl Standard Library - Sequence Helpers
+
+(module sequences
+  (export take drop take-while drop-while
+          partition flatten repeatedly repeat zip
+          member contains?
+          length= length> length<)
+
+  (import list)
+  (import types)
+
+  ;;' @section Sequence Helpers
+  ;;' Higher-level operations for slicing, chunking, and transforming
+  ;;' sequences. These complement the core list operations in the `list`
+  ;;' module with lazy-style idioms common in functional programming.
+
+  ;;' @description Take first n items.
+  ;;' @examples
+  ;;' (take 3 (list 1 2 3 4 5))  ; => (1 2 3)
+  ;;' (take 0 (list 1 2 3))      ; => ()
+  ;;' (take 10 (list 1 2))       ; => (1 2)
+  ;;' @seealso drop, take-while
+  (define take
+    (lambda (n lst)
+      (define items (__as-list lst))
+      (if (<= n 0)
+        (list)
+        (r/call "[" (list items (seq_len (min n (length items))))))))
+
+  ;;' @description Drop first n items.
+  ;;' @examples
+  ;;' (drop 2 (list 1 2 3 4 5))  ; => (3 4 5)
+  ;;' (drop 0 (list 1 2 3))      ; => (1 2 3)
+  ;;' (drop 10 (list 1 2))       ; => ()
+  ;;' @seealso take, drop-while
+  (define drop
+    (lambda (n lst)
+      (define items (__as-list lst))
+      (if (<= n 0)
+        items
+        (if (>= n (length items))
+          (list)
+          (r/call "[" (list items (seq (+ n 1) (length items))))))))
+
+  ;;' @description Take items while predicate is true.
+  ;;' @examples
+  ;;' (take-while odd? (list 1 3 5 2 4))   ; => (1 3 5)
+  ;;' (take-while even? (list 1 2 3))       ; => ()
+  ;;' @seealso take, drop-while, filter
+  (define take-while
+    (lambda (pred lst)
+      (define items (__as-list lst))
+      (define acc (list))
+      (define remaining items)
+      (while (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
+        (begin
+          (set! acc (c acc (list (car remaining))))
+          (set! remaining (cdr remaining))))
+      acc))
+
+  ;;' @description Drop items while predicate is true.
+  ;;' @examples
+  ;;' (drop-while odd? (list 1 3 5 2 4))   ; => (2 4)
+  ;;' (drop-while even? (list 1 2 3))       ; => (1 2 3)
+  ;;' @seealso drop, take-while, filter
+  (define drop-while
+    (lambda (pred lst)
+      (define items (__as-list lst))
+      (define remaining items)
+      (while (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
+        (set! remaining (cdr remaining)))
+      remaining))
+
+  ;;' @description Split list into chunks of size n.
+  ;;' @examples
+  ;;' (partition 2 (list 1 2 3 4 5 6))       ; => ((1 2) (3 4) (5 6))
+  ;;' (partition 3 (list 1 2 3 4 5 6) 2)     ; => ((1 2 3) (3 4 5))
+  ;;' (partition 2 (list 1 2 3 4 5))          ; => ((1 2) (3 4))
+  ;;' @seealso take, drop
+  (define partition
+    (lambda (n lst (step n))
+      (define items (__as-list lst))
+      (if (<= n 0)
+        (stop "partition requires positive n and step")
+        (if (<= step 0)
+          (stop "partition requires positive n and step")
+          (if (= (length items) 0)
+            (list)
+            (begin
+              (define acc (list))
+              (define idx 1)
+              (define n-items (length items))
+              (while (<= idx n-items)
+                (define end (+ idx (- n 1)))
+                (if (<= end n-items)
+                  (set! acc (c acc (list (r/call "[" (list items (seq idx end)))))))
+                (set! idx (+ idx step)))
+              acc))))))
+
+  ;;' @description Flatten nested lists.
+  ;;' @examples
+  ;;' (flatten (list 1 (list 2 3) (list 4 (list 5))))  ; => (1 2 3 4 5)
+  ;;' (flatten (list 1 2 3))                            ; => (1 2 3)
+  ;;' @seealso mapcat, append
+  (define flatten
+    (lambda (lst)
+      (define items (__as-list lst))
+      (define acc (list))
+      (define remaining items)
+      (while (> (length remaining) 0)
+        (define item (car remaining))
+        (if (list? item)
+          (set! acc (c acc (flatten item)))
+          (set! acc (c acc (list item))))
+        (set! remaining (cdr remaining)))
+      acc))
+
+  ;;' @description Call fn n times collecting results.
+  ;;' @examples
+  ;;' (repeatedly 3 (lambda () 42))  ; => (42 42 42)
+  ;;' @seealso repeat, map
+  (define repeatedly
+    (lambda (n fn)
+      (lapply (seq_len n) (lambda (i) (fn)))))
+
+  ;;' @description Repeat value n times.
+  ;;' @examples
+  ;;' (repeat 4 'x)   ; => (x x x x)
+  ;;' (repeat 3 0)     ; => (0 0 0)
+  ;;' @seealso repeatedly
+  (define repeat
+    (lambda (n value)
+      (replicate n value :simplify #f)))
+
+  ;;' @description Zip lists into list of tuples.
+  ;;' @examples
+  ;;' (zip (list 1 2 3) (list 'a 'b 'c))          ; => ((1 a) (2 b) (3 c))
+  ;;' (zip (list 1 2) (list 'a 'b) (list 'x 'y))  ; => ((1 a x) (2 b y))
+  ;;' @seealso map
+  (define zip
+    (lambda (. lists)
+      (if (= (length lists) 0)
+        (list)
+        (begin
+          (define items (lapply lists __as-list))
+          (define min-len (min (vapply items length (integer 1))))
+          (if (= min-len 0)
+            (list)
+            (begin
+              ;; Collect ith elements from lists.
+              (define zip-at
+                (lambda (i)
+                  (lapply items (lambda (lst) (r/call "[[" (list lst i))))))
+              (lapply (seq_len min-len) zip-at)))))))
+
+  ;;' @description Return sublist of lst starting at first element
+  ;;' equal to x, or #f if not found. Uses equal? by default;
+  ;;' pass :use-identical #t for R's identical().
+  (define member
+    (lambda (x lst (use-identical #f))
+      (define items (__as-list lst))
+      (define result #f)
+      (define remaining items)
+      (while (and (> (length remaining) 0) (not result))
+        (begin
+          (when (if use-identical
+                  (identical (car remaining) x)
+                  (equal? (car remaining) x))
+            (set! result remaining))
+          (set! remaining (cdr remaining))))
+      result))
+
+  ;;' @description Return #t if lst contains element equal to x.
+  (define contains?
+    (lambda (x lst)
+      (if (member x lst) #t #f)))
+
+  ;;' @section Length Predicates
+  ;;' Efficient length comparisons that short-circuit when possible.
+
+  ;;' @description Return #t if length of x equals n.
+  ;;' @examples
+  ;;' (length= (list 1 2 3) 3)  ; => #t
+  ;;' (length= (list 1 2) 3)    ; => #f
+  ;;' @seealso length>, length<, empty?
+  (define length=
+    (lambda (x n)
+      (isTRUE (== (length x) n))))
+
+  ;;' @description Return #t if length of x is greater than n.
+  ;;' @examples
+  ;;' (length> (list 1 2 3) 2)  ; => #t
+  ;;' (length> (list 1 2) 3)    ; => #f
+  ;;' @seealso length=, length<
+  (define length>
+    (lambda (x n)
+      (isTRUE (> (length x) n))))
+
+  ;;' @description Return #t if length of x is less than n.
+  ;;' @examples
+  ;;' (length< (list 1 2) 3)    ; => #t
+  ;;' (length< (list 1 2 3) 2)  ; => #f
+  ;;' @seealso length=, length>
+  (define length<
+    (lambda (x n)
+      (isTRUE (< (length x) n))))
+)

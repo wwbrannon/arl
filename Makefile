@@ -4,9 +4,9 @@ SHELL := /bin/bash
 ## Build/install targets
 #
 
-# Keep inst/rye/load-order.txt up to date (must run before build/install)
+# Keep inst/arl/load-order.txt up to date (must run before build/install)
 .PHONY: stdlib-order
-stdlib-order: ## help: Build stdlib load order cache (inst/rye/load-order.txt)
+stdlib-order: ## help: Build stdlib load order cache (inst/arl/load-order.txt)
 	Rscript tools/build-stdlib-order.R
 
 .PHONY: install
@@ -22,7 +22,7 @@ build: clean-cache stdlib-order ## help: Build the package tarball
 #
 
 .PHONY: stdlib-docs
-stdlib-docs: clean-cache stdlib-order ## help: Generate stdlib reference vignettes from .rye source
+stdlib-docs: clean-cache stdlib-order ## help: Generate stdlib reference vignettes from .arl source
 	R -q -e "devtools::load_all(); source('tools/docs/generate-stdlib-docs.R')"
 
 .PHONY: devdoc
@@ -83,22 +83,22 @@ test-native: clean-cache stdlib-order ## help: Run a single native test file (us
 		echo "Error: FILE parameter required. Usage: make test-native FILE=test-equality-types"; \
 		exit 1; \
 	fi
-	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- Engine\$$new(); env <- engine\$$env\$$env; run_native_test_file('tests/native/$(FILE).rye', engine, env)"
+	R -q -e "devtools::load_all(); source('tests/testthat/helper-native.R'); engine <- Engine\$$new(); env <- engine\$$env\$$env; run_native_test_file('tests/native/$(FILE).arl', engine, env)"
 
 #
 ## Coverage targets
 #
 
 .PHONY: coverage
-coverage: coverage-r coverage-rye coverage-combined ## help: Run complete coverage analysis (R + Rye)
+coverage: coverage-r coverage-arl coverage-combined ## help: Run complete coverage analysis (R + Arl)
 
 .PHONY: coverage-r
 coverage-r: clean-cache stdlib-order ## help: Run R code coverage only
 	Rscript tools/coverage/r-coverage.R
 
-.PHONY: coverage-rye
-coverage-rye: clean-cache stdlib-order ## help: Run Rye code coverage only
-	Rscript tools/coverage/rye-coverage.R
+.PHONY: coverage-arl
+coverage-arl: clean-cache stdlib-order ## help: Run Arl code coverage only
+	Rscript tools/coverage/arl-coverage.R
 
 .PHONY: coverage-combined
 coverage-combined: ## help: Generate combined coverage summary
@@ -115,7 +115,7 @@ coverage-report: ## help: Open coverage reports in browser
 		$$OPENER coverage/combined/index.html; \
 	elif [ -f coverage/r/index.html ]; then \
 		$$OPENER coverage/r/index.html; \
-		[ -f coverage/rye/index.html ] && $$OPENER coverage/rye/index.html; \
+		[ -f coverage/arl/index.html ] && $$OPENER coverage/arl/index.html; \
 	else \
 		echo "No coverage reports found. Run 'make coverage' first."; \
 		exit 1; \
@@ -173,8 +173,8 @@ cran-comments: check ## help: Generate cran-comments and CRAN-SUBMISSION
 #
 
 .PHONY: clean-cache
-clean-cache: ## help: Remove .rye_cache directories (auto-runs before dev targets)
-	find . -type d -name ".rye_cache" -exec rm -rf {} + 2>/dev/null || true
+clean-cache: ## help: Remove .arl_cache directories (auto-runs before dev targets)
+	find . -type d -name ".arl_cache" -exec rm -rf {} + 2>/dev/null || true
 
 .PHONY: clean-coverage
 clean-coverage: ## help: Remove coverage output files
@@ -187,11 +187,11 @@ clean-bench-profile: ## help: Remove temporary benchmark / profile results objec
 
 .PHONY: clean-cran
 clean-cran: ## help: Remove CRAN check artifacts
-	rm -rf rye.Rcheck
+	rm -rf arl.Rcheck
 
 .PHONY: clean
 clean: clean-cache clean-coverage clean-bench-profile clean-cran ## help: Remove build artifacts and all make document output
-	rm -f rye_*.tar.gz
+	rm -f arl_*.tar.gz
 	rm -rf site/ doc/ Meta/
 	rm -f README.knit.md
 	rm -f vignettes/*.html vignettes/*.R vignettes/*.knit.md
@@ -205,6 +205,6 @@ clean: clean-cache clean-coverage clean-bench-profile clean-cran ## help: Remove
 
 .PHONY: help
 help: ## help: Show this help message
-	@echo "Rye Development Commands"
+	@echo "Arl Development Commands"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## help: .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## help: "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'

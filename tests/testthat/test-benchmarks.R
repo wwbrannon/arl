@@ -6,7 +6,7 @@ engine <- make_engine()
 # Helper to find benchmark directory
 find_bench_dir <- function() {
   # Try installed package first
-  bench_dir <- system.file("benchmarks", package = "rye")
+  bench_dir <- system.file("benchmarks", package = "arl")
   if (bench_dir != "") return(bench_dir)
 
   # Try source directory paths
@@ -40,7 +40,7 @@ test_that("benchmark infrastructure can be loaded", {
   expect_no_error(source(workloads_path, local = TRUE))
 })
 
-test_that("workload generation produces valid Rye code", {
+test_that("workload generation produces valid arl code", {
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -400,7 +400,7 @@ test_that("real workloads can be loaded", {
       expect_type(real[[workload_name]], "character")
       expect_gt(nchar(real[[workload_name]]), 0)
 
-      # Should be valid Rye code
+      # Should be valid Arl code
       expect_no_error(engine$read(real[[workload_name]]))
     }
   }

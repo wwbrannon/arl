@@ -214,15 +214,15 @@ test_that("round-trip property holds for various inputs", {
 })
 
 # =============================================================================
-# Rye-level builtin
+# Arl-level builtin
 # =============================================================================
 
-test_that("write is accessible as a Rye builtin", {
+test_that("write is accessible as a Arl builtin", {
   result <- engine$eval_text("(write '(+ 1 2))")
   expect_equal(result, "(+ 1 2)")
 })
 
-test_that("write works with atoms from Rye", {
+test_that("write works with atoms from Arl", {
   expect_equal(engine$eval_text('(write 42)'), "42")
   expect_equal(engine$eval_text('(write "hello")'), '"hello"')
   expect_equal(engine$eval_text('(write #t)'), "#t")

@@ -26,8 +26,8 @@ test_that("tokenizer handles escape sequences", {
 })
 
 test_that("tokenizer preserves unknown escapes", {
-  tokens <- engine$tokenize('"C:\\\\Users\\\\runner\\\\file.rye"')
-  expect_equal(tokens[[1]]$value, "C:\\Users\\runner\\file.rye")
+  tokens <- engine$tokenize('"C:\\\\Users\\\\runner\\\\file.arl"')
+  expect_equal(tokens[[1]]$value, "C:\\Users\\runner\\file.arl")
 })
 
 test_that("tokenizer handles booleans and nil", {

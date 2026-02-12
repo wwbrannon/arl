@@ -1,4 +1,4 @@
-# DocParser: Parses ;;' annotation blocks from .rye source files.
+# DocParser: Parses ;;' annotation blocks from .arl source files.
 # Extracts @description, @examples, @seealso, @note, @section, @signature
 # for use by the compiler (baking docs into compiled code) and the
 # vignette generator (tools/docs/generate-stdlib-docs.R).
@@ -9,8 +9,8 @@
 DocParser <- R6::R6Class(
   "DocParser",
   public = list(
-    #' @description Parse ;;' annotations from a .rye source file.
-    #' @param file Path to a .rye source file.
+    #' @description Parse ;;' annotations from a .arl source file.
+    #' @param file Path to a .arl source file.
     #' @return List with $functions (named list), $sections (list), $file (basename).
     parse_file = function(file) {
       lines <- readLines(file, warn = FALSE)
@@ -20,7 +20,7 @@ DocParser <- R6::R6Class(
     },
 
     #' @description Parse ;;' annotations from source text (string).
-    #' @param text Character string of Rye source code.
+    #' @param text Character string of Arl source code.
     #' @return List with $functions (named list), $sections (list), $file (NULL).
     parse_text = function(text) {
       lines <- strsplit(text, "\n", fixed = TRUE)[[1]]
@@ -30,7 +30,7 @@ DocParser <- R6::R6Class(
     },
 
     #' @description Extract exported symbol names from module source text.
-    #' @param file Path to a .rye source file.
+    #' @param file Path to a .arl source file.
     #' @return Character vector of exported symbol names.
     get_exports = function(file) {
       text <- paste(readLines(file, warn = FALSE), collapse = "\n")

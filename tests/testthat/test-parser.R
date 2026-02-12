@@ -107,7 +107,7 @@ test_that("parser handles NA values", {
 # Dotted-pair (improper list) parser tests
 # =============================================================================
 
-test_that("single dotted pair parses to rye_cons", {
+test_that("single dotted pair parses to arl_cons", {
   exprs <- engine$read("'(a . b)")
   expect_equal(length(exprs), 1)
   pair <- exprs[[1]][[2]]
@@ -116,7 +116,7 @@ test_that("single dotted pair parses to rye_cons", {
   expect_equal(as.character(pair$cdr), "b")
 })
 
-test_that("improper list parses to rye_cons chain", {
+test_that("improper list parses to arl_cons chain", {
   exprs <- engine$read("'(a b . c)")
   expect_equal(length(exprs), 1)
   improper <- exprs[[1]][[2]]

@@ -1,7 +1,7 @@
 # Code Generation Quality Benchmarks
 # Measures the runtime performance and code size of generated expressions
 
-library(rye)
+library(arl)
 
 source("benchmarks/benchmark-helpers.R")
 

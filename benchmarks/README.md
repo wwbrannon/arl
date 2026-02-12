@@ -1,6 +1,6 @@
-# Rye Performance Benchmarks
+# Arl Performance Benchmarks
 
-This directory contains the performance profiling and benchmarking infrastructure for Rye.
+This directory contains the performance profiling and benchmarking infrastructure for Arl.
 
 ## Quick Start
 
@@ -23,7 +23,7 @@ source("benchmarks/bench-tokenizer.R")  # Individual components
 
 # Profiling (requires interactive session)
 # Note: profvis doesn't work from sourced scripts - run interactively
-library(rye)
+library(arl)
 source("benchmarks/profile-tokenizer.R")
 source("benchmarks/profile-parser.R")
 source("benchmarks/profile-macro.R")
@@ -66,7 +66,7 @@ source("benchmarks/profile-eval.R")
 
 ## Benchmark Components
 
-Each benchmark script measures different aspects of Rye performance:
+Each benchmark script measures different aspects of Arl performance:
 
 ### Tokenizer (`bench-tokenizer.R`)
 - String literals (10, 100, 1K, 10K characters)
@@ -153,7 +153,7 @@ Pre-defined workloads are available in `workloads.R`:
 - **WORKLOAD_MEDIUM**: 100-line quicksort with data
 - **WORKLOAD_LARGE**: 500-line macro expansion examples
 - **WORKLOAD_XL**: 2000-element synthetic nested lists
-- **Real workloads**: fibonacci.rye, quicksort.rye, macro-examples.rye, etc.
+- **Real workloads**: fibonacci.arl, quicksort.arl, macro-examples.arl, etc.
 
 ## Performance Issues Identified
 

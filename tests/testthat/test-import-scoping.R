@@ -14,19 +14,19 @@ test_that("imports are not visible in a different file (two load_file calls)", {
   }, add = TRUE)
 
   module_name <- paste0("mymod", sample.int(100000, 1))
-  module_file <- file.path(tmp_dir, paste0(module_name, ".rye"))
+  module_file <- file.path(tmp_dir, paste0(module_name, ".arl"))
   writeLines(c(
     sprintf("(module %s", module_name),
     "  (export myfn)",
     "  (define myfn (lambda (x) (* x 2))))"
   ), module_file)
 
-  file_a <- file.path(tmp_dir, "file_a.rye")
+  file_a <- file.path(tmp_dir, "file_a.arl")
   writeLines(c(
     sprintf("(import %s)", module_name),
     "(myfn 5)"
   ), file_a)
-  file_b <- file.path(tmp_dir, "file_b.rye")
+  file_b <- file.path(tmp_dir, "file_b.arl")
   writeLines("(myfn 5)", file_b)
 
   engine$load_file(file_a)
@@ -45,7 +45,7 @@ test_that("imports are visible in the same file", {
   }, add = TRUE)
 
   # Use stdlib 'list' so we don't need a temp module
-  path <- file.path(tmp_dir, "single.rye")
+  path <- file.path(tmp_dir, "single.arl")
   writeLines(c("(import list)", "(cadr (list 1 2 3))"), path)
   result <- engine$load_file(path)
   expect_equal(result, 2)
@@ -63,7 +63,7 @@ test_that("(load path) runs in caller env - definitions visible", {
     unlink(tmp_dir, recursive = TRUE)
   }, add = TRUE)
 
-  defs_path <- file.path(tmp_dir, "defs.rye")
+  defs_path <- file.path(tmp_dir, "defs.arl")
   writeLines("(define shared 99)", defs_path)
   main_code <- sprintf('(begin (load "%s") shared)', normalizePath(defs_path, winslash = "/"))
   exprs <- engine$read(main_code)
@@ -83,7 +83,7 @@ test_that("(load path) runs in caller env - imports visible to caller", {
     unlink(tmp_dir, recursive = TRUE)
   }, add = TRUE)
 
-  with_import_path <- file.path(tmp_dir, "with_import.rye")
+  with_import_path <- file.path(tmp_dir, "with_import.arl")
   writeLines(c("(import list)", "(define x (cadr (list 1 2 3)))"), with_import_path)
   main_code <- sprintf('(begin (load "%s") x)', normalizePath(with_import_path, winslash = "/"))
   exprs <- engine$read(main_code)
@@ -103,7 +103,7 @@ test_that("(run path) runs in child env - definitions not visible in caller", {
     unlink(tmp_dir, recursive = TRUE)
   }, add = TRUE)
 
-  defs_path <- file.path(tmp_dir, "secret.rye")
+  defs_path <- file.path(tmp_dir, "secret.arl")
   writeLines("(define secret 42)", defs_path)
   main_code <- sprintf('(begin (run "%s") secret)', normalizePath(defs_path, winslash = "/"))
   exprs <- engine$read(main_code)
@@ -124,13 +124,13 @@ test_that("(run path) runs in child env - imports not visible in caller", {
   }, add = TRUE)
 
   mod_name <- paste0("runmod", sample.int(100000, 1))
-  mod_file <- file.path(tmp_dir, paste0(mod_name, ".rye"))
+  mod_file <- file.path(tmp_dir, paste0(mod_name, ".arl"))
   writeLines(c(
     sprintf("(module %s", mod_name),
     "  (export uniquefn)",
     "  (define uniquefn (lambda (x) (+ x 1))))"
   ), mod_file)
-  run_import_path <- file.path(tmp_dir, "run_import.rye")
+  run_import_path <- file.path(tmp_dir, "run_import.arl")
   writeLines(sprintf("(import %s)", mod_name), run_import_path)
   main_code <- sprintf('(begin (run "%s") (uniquefn 1))', normalizePath(run_import_path, winslash = "/"))
   exprs <- engine$read(main_code)
@@ -151,7 +151,7 @@ test_that("global module cache: same module loaded once per engine, shared acros
   }, add = TRUE)
 
   mod_name <- paste0("cached", sample.int(100000, 1))
-  mod_file <- file.path(tmp_dir, paste0(mod_name, ".rye"))
+  mod_file <- file.path(tmp_dir, paste0(mod_name, ".arl"))
   writeLines(c(
     sprintf("(module %s", mod_name),
     "  (export tick)",
@@ -159,9 +159,9 @@ test_that("global module cache: same module loaded once per engine, shared acros
     "  (define tick (lambda () (begin (set! counter (+ counter 1)) counter))))"
   ), mod_file)
 
-  file_a <- file.path(tmp_dir, "file_a.rye")
+  file_a <- file.path(tmp_dir, "file_a.arl")
   writeLines(c(sprintf("(import %s)", mod_name), "(tick)"), file_a)
-  file_b <- file.path(tmp_dir, "file_b.rye")
+  file_b <- file.path(tmp_dir, "file_b.arl")
   writeLines(c(sprintf("(import %s)", mod_name), "(tick)"), file_b)
 
   expect_equal(engine$load_file(file_a), 1)

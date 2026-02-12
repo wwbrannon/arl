@@ -2,30 +2,30 @@
 % Please edit documentation in R/coverage.R
 \name{CoverageTracker}
 \alias{CoverageTracker}
-\title{R6 class for tracking and reporting Rye code execution coverage}
+\title{R6 class for tracking and reporting Arl code execution coverage}
 \description{
-R6 class for tracking and reporting Rye code execution coverage
+R6 class for tracking and reporting Arl code execution coverage
 
-R6 class for tracking and reporting Rye code execution coverage
+R6 class for tracking and reporting Arl code execution coverage
 }
 \details{
-Tracks which lines of .rye source files actually execute during runtime.
+Tracks which lines of .arl source files actually execute during runtime.
 Maintains execution counts per file/line and generates reports.
 Supports flexible configuration for tracking custom directories,
 test files, and custom comment syntax.
 }
 \examples{
 \dontrun{
-# Default usage: Track Rye stdlib
-engine <- rye::Engine$new()
+# Default usage: Track Arl stdlib
+engine <- arl::Engine$new()
 tracker <- engine$enable_coverage()
 engine$eval(engine$read("(+ 1 2)"))
 tracker$report_console()
-tracker$report_html()  # Outputs to coverage/rye/index.html
+tracker$report_html()  # Outputs to coverage/arl/index.html
 
 # Track custom directories
 tracker <- CoverageTracker$new(
-  search_paths = c("src/rye", "lib/rye"),
+  search_paths = c("src/arl", "lib/arl"),
   output_prefix = "myproject",
   report_title = "My Project Coverage"
 )
@@ -40,8 +40,8 @@ tracker <- CoverageTracker$new(
 
 # Custom path display in reports
 tracker <- CoverageTracker$new(
-  search_paths = "/home/user/myproject/rye",
-  path_strip_patterns = c(".*/myproject/rye/", ".*/myproject/tests/")
+  search_paths = "/home/user/myproject/arl",
+  path_strip_patterns = c(".*/myproject/arl/", ".*/myproject/tests/")
 )
 
 # Custom comment syntax (e.g., # instead of ;)
@@ -58,7 +58,7 @@ tracker <- CoverageTracker$new(
 
 \item{\code{enabled}}{Logical flag to enable/disable tracking}
 
-\item{\code{all_files}}{Character vector of all .rye files being tracked}
+\item{\code{all_files}}{Character vector of all .arl files being tracked}
 
 \item{\code{code_lines}}{Environment mapping file paths to integer vectors of code line numbers}
 
@@ -92,8 +92,8 @@ Initialize the coverage tracker
   search_paths = NULL,
   include_tests = FALSE,
   path_strip_patterns = NULL,
-  output_prefix = "rye",
-  report_title = "Rye Code Coverage",
+  output_prefix = "arl",
+  report_title = "Arl Code Coverage",
   code_line_pattern = "^\\\\s*[^[:space:];]"
 )}\if{html}{\out{</div>}}
 }
@@ -101,15 +101,15 @@ Initialize the coverage tracker
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{search_paths}}{Character vector of directories to search for .rye files (NULL = use stdlib)}
+\item{\code{search_paths}}{Character vector of directories to search for .arl files (NULL = use stdlib)}
 
 \item{\code{include_tests}}{Whether to include test files in coverage tracking (default: FALSE)}
 
 \item{\code{path_strip_patterns}}{Custom regex patterns for stripping paths in reports (NULL = use defaults)}
 
-\item{\code{output_prefix}}{Subdirectory name for report outputs (default: "rye")}
+\item{\code{output_prefix}}{Subdirectory name for report outputs (default: "arl")}
 
-\item{\code{report_title}}{Title to use in coverage reports (default: "Rye Code Coverage")}
+\item{\code{report_title}}{Title to use in coverage reports (default: "Arl Code Coverage")}
 
 \item{\code{code_line_pattern}}{Regex pattern to identify code lines vs comments/blanks}
 }
@@ -122,13 +122,13 @@ Initialize the coverage tracker
 \subsection{Method \code{track()}}{
 Track execution of an expression with source info
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CoverageTracker$track(rye_src)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CoverageTracker$track(arl_src)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{rye_src}}{Source information object with file, start_line, end_line}
+\item{\code{arl_src}}{Source information object with file, start_line, end_line}
 }
 \if{html}{\out{</div>}}
 }
@@ -168,9 +168,9 @@ Get coverage summary as list: file -> line -> count
 \if{html}{\out{<a id="method-CoverageTracker-discover_files"></a>}}
 \if{latex}{\out{\hypertarget{method-CoverageTracker-discover_files}{}}}
 \subsection{Method \code{discover_files()}}{
-Discover all .rye files to track
+Discover all .arl files to track
 
-Searches for .rye files in configured search paths or stdlib by default.
+Searches for .arl files in configured search paths or stdlib by default.
 By default excludes test files unless include_tests = TRUE.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{CoverageTracker$discover_files()}\if{html}{\out{</div>}}

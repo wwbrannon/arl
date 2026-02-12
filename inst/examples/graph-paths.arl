@@ -1,0 +1,128 @@
+;; Graph Paths Example
+;; Demonstrates BFS traversal and Dijkstra shortest paths
+
+(import binding)
+(import control)
+(import functional)
+(import looping)
+(import threading)
+
+;; Output directory for reports (set via ARL_OUTPUT_DIR env var)
+(define *output-dir*
+  (let ((dir (r/call "Sys.getenv" (list "ARL_OUTPUT_DIR" ""))))
+    (if (= dir "")
+        (r/call "tempdir" ())
+        dir)))
+
+(define contains?
+  (lambda (lst value)
+    (any? (lambda (x) (= x value)) lst)))
+
+(define remove-value
+  (lambda (lst value)
+    (filter (lambda (x) (not (= x value))) lst)))
+
+(define bfs
+  (lambda (graph start)
+    (define queue (list start))
+    (define visited (list start))
+    (define order (list start))
+    (while (not (null? queue))
+      (define node (car queue))
+      (set! queue (cdr queue))
+      (define edges (r/call "get" (list node graph)))
+      (for (edge edges)
+        (define neighbor (car edge))
+        (if (not (contains? visited neighbor))
+            (begin
+              (set! visited (append visited (list neighbor)))
+              (set! order (append order (list neighbor)))
+              (set! queue (append queue (list neighbor)))))))
+    order))
+
+(define min-distance
+  (lambda (nodes dist-env)
+    (reduce (lambda (best node)
+              (if (< (r/call "get" (list node dist-env))
+                     (r/call "get" (list best dist-env)))
+                  node
+                  best))
+            nodes)))
+
+(define dijkstra
+  (lambda (graph nodes start)
+    (define dist (r/call "new.env" ()))
+    (define prev (r/call "new.env" ()))
+    (for (n nodes)
+      (r/call "assign" (list n 9999 dist))
+      (r/call "assign" (list n #nil prev)))
+    (r/call "assign" (list start 0 dist))
+    (define unvisited nodes)
+    (while (not (null? unvisited))
+      (define current (min-distance unvisited dist))
+      (set! unvisited (remove-value unvisited current))
+      (define edges (r/call "get" (list current graph)))
+      (for (edge edges)
+        (define neighbor (car edge))
+        (define weight (car (cdr edge)))
+        (define alt (+ (r/call "get" (list current dist)) weight))
+        (if (< alt (r/call "get" (list neighbor dist)))
+            (begin
+              (r/call "assign" (list neighbor alt dist))
+              (r/call "assign" (list neighbor current prev))))))
+    (dict :dist dist :prev prev)))
+
+(define reconstruct-path
+  (lambda (prev-env start goal)
+    (define current goal)
+    (define path (list current))
+    (while (not (= current start))
+      (define parent (r/call "get" (list current prev-env)))
+      (if (null? parent)
+          (begin
+            (set! path (list))
+            (set! current start))
+          (begin
+            (set! path (cons parent path))
+            (set! current parent))))
+    path))
+
+(define graph
+  (dict
+   :A (list (list "B" 1) (list "C" 2))
+   :B (list (list "C" 1) (list "D" 4) (list "E" 6))
+   :C (list (list "D" 5) (list "E" 7))
+   :D (list (list "E" 2))
+   :E (list)))
+
+(define nodes (list "A" "B" "C" "D" "E"))
+
+(println "=== Graph Traversal ===")
+(define bfs-order (bfs graph "A"))
+(println (str "BFS order from A: " bfs-order))
+
+(println "\n=== Shortest Paths ===")
+(define dijkstra-result (dijkstra graph nodes "A"))
+(define dist-env (r/call "get" (list "dist" dijkstra-result)))
+(define prev-env (r/call "get" (list "prev" dijkstra-result)))
+(define shortest-path (reconstruct-path prev-env "A" "E"))
+(define shortest-cost (r/call "get" (list "E" dist-env)))
+
+(println (str "Shortest path A -> E: " shortest-path))
+(println (str "Total cost: " shortest-cost))
+
+(define example-result
+  (dict
+   :bfs_order bfs-order
+   :shortest_path shortest-path
+   :shortest_cost shortest-cost))
+
+(define report-path (r/call "file.path" (list *output-dir* "graph-report.txt")))
+(r/call "writeLines"
+        (list
+         (r/call "c" (list (str "bfs_order=" bfs-order)
+                           (str "shortest_path=" shortest-path)
+                           (str "shortest_cost=" shortest-cost)))
+         report-path))
+
+(println "\nExample complete!")

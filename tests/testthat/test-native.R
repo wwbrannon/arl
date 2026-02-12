@@ -1,4 +1,4 @@
-# Entry point for running native .rye test files
+# Entry point for running native .arl test files
 
 test_that("native tests run successfully", {
   # Find the native tests directory relative to this test file

@@ -2,7 +2,7 @@
 # Execute all component profiling and generate HTML reports
 
 cat("========================================\n")
-cat("Rye Performance Profiling Suite\n")
+cat("Arl Performance Profiling Suite\n")
 cat("========================================\n\n")
 
 # Check for profvis
@@ -97,7 +97,7 @@ if (length(html_files) > 0) {
   cat("NOTE: profvis requires an interactive R session to work properly.\n")
   cat("To generate profiles, run individual profile scripts interactively:\n\n")
   cat("  # In R console:\n")
-  cat("  library(rye)\n")
+  cat("  library(arl)\n")
   cat("  source('benchmarks/profile-tokenizer.R')\n")
   cat("  source('benchmarks/profile-parser.R')\n")
   cat("  source('benchmarks/profile-macro.R')\n")

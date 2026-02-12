@@ -2,7 +2,7 @@
 # Execute all component benchmarks and generate summary report
 
 cat("========================================\n")
-cat("Rye Performance Benchmark Suite\n")
+cat("Arl Performance Benchmark Suite\n")
 cat("========================================\n\n")
 
 # Check for bench

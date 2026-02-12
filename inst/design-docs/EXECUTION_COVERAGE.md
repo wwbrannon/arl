@@ -1,10 +1,10 @@
-# Rye Execution Coverage
+# Arl Execution Coverage
 
-This document describes the execution coverage system implemented for Rye code.
+This document describes the execution coverage system implemented for Arl code.
 
 ## Overview
 
-The Rye coverage system tracks **execution coverage** — which lines of `.rye` source files actually execute during runtime. The compiler injects `.__coverage_track()` calls into compiled code; these fire at runtime and record which source lines were reached.
+The Arl coverage system tracks **execution coverage** — which lines of `.arl` source files actually execute during runtime. The compiler injects `.__coverage_track()` calls into compiled code; these fire at runtime and record which source lines were reached.
 
 ## Architecture
 
@@ -19,27 +19,27 @@ The Rye coverage system tracks **execution coverage** — which lines of `.rye` 
    - When a `coverage_tracker` is present in the compilation context, the compiler injects `.__coverage_track(file, start_line, end_line)` calls into:
      - **Lambda bodies**: Before each statement via `interleave_coverage()`
      - **If-expression branches**: Around each branch via `wrap_branch_coverage()`
-   - Source location comes from `rye_src` attributes on the AST
+   - Source location comes from `arl_src` attributes on the AST
    - Zero overhead when coverage is disabled (no calls injected)
 
 3. **Runtime Hook** (`R/runtime.R`)
    - `install_helpers()` installs `.__coverage_track` as a closure over the tracker when coverage is enabled
    - The function is not installed at all when coverage is disabled
 
-4. **Engine Integration** (`R/rye-engine.R`)
+4. **Engine Integration** (`R/engine.R`)
    - `enable_coverage()` / `disable_coverage()` / `get_coverage()` / `reset_coverage()`
 
 5. **Test Propagation** (`tests/testthat/helper-engine.R`)
-   - `make_engine()` checks `getOption("rye.coverage_tracker")` and passes the tracker through to `Engine$new()`
+   - `make_engine()` checks `getOption("arl.coverage_tracker")` and passes the tracker through to `Engine$new()`
    - Test files use `make_engine()` instead of `Engine$new()` so that coverage data is collected across all tests, not just stdlib loading
 
-6. **CI Tool** (`tools/coverage/rye-coverage.R`)
-   - Sets `options(rye.coverage_tracker = tracker)` before running the test suite
+6. **CI Tool** (`tools/coverage/arl-coverage.R`)
+   - Sets `options(arl.coverage_tracker = tracker)` before running the test suite
    - Test engines created by `make_engine()` pick up the tracker automatically
 
 ## What Gets Counted
 
-**Denominator** (total lines): Non-blank, non-comment lines in each `.rye` file. A line is considered code if it matches `^\s*[^[:space:];]` — i.e., it has non-whitespace content and doesn't start with `;`.
+**Denominator** (total lines): Non-blank, non-comment lines in each `.arl` file. A line is considered code if it matches `^\s*[^[:space:];]` — i.e., it has non-whitespace content and doesn't start with `;`.
 
 **Numerator** (covered lines): Code lines where a `.__coverage_track()` call fired with a source range covering that line. Each hit increments a per-line execution count.
 
@@ -52,12 +52,12 @@ The tracker filters on both sides: injected calls only record hits for lines in 
 ```r
 # Create tracker first, then engine with tracker
 # This ensures coverage is tracked from the start, including stdlib loading
-library(rye)
+library(arl)
 tracker <- CoverageTracker$new()
 engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
 # Run code
-engine$load_file("my-code.rye")
+engine$load_file("my-code.arl")
 
 # Generate reports
 tracker$report_console()
@@ -69,10 +69,10 @@ tracker$report_json("coverage.json")
 
 ```bash
 # Run coverage and generate all reports
-Rscript tools/coverage/rye-coverage.R
+Rscript tools/coverage/arl-coverage.R
 
 # Or use make target
-make coverage-rye
+make coverage-arl
 ```
 
 ## Reports
@@ -92,7 +92,7 @@ Codecov-compatible JSON format for CI integration:
 ```json
 {
   "coverage": {
-    "path/to/file.rye": [
+    "path/to/file.arl": [
       null,  // line 1: not code
       0,     // line 2: code, not executed
       5,     // line 3: code, executed 5 times
@@ -108,13 +108,13 @@ Codecov-compatible JSON format for CI integration:
    - Uses `covr::package_coverage()`
    - Tracks R implementation in `R/` directory
 
-2. **Rye Code Coverage** (`make coverage-rye`)
+2. **Arl Code Coverage** (`make coverage-arl`)
    - Uses `CoverageTracker`
-   - Tracks Rye language code in `inst/rye/stdlib/`
+   - Tracks Arl language code in `inst/arl/stdlib/`
    - Runs the full testthat suite with coverage propagated to all test engines
 
 3. **Combined Coverage** (`make coverage-combined`)
-   - Merges R and Rye coverage (reads JSON from both sources)
+   - Merges R and Arl coverage (reads JSON from both sources)
 
 4. **GitHub Actions** (`.github/workflows/coverage.yaml`)
    - Runs all coverage steps, uploads to codecov
@@ -136,13 +136,13 @@ Codecov-compatible JSON format for CI integration:
 
 3. **Runtime Execution**: `.__coverage_track()` is a closure installed by `install_helpers()` that calls `tracker$track()`. The tracker records a hit for each code line in the `start_line:end_line` range.
 
-4. **Reporting**: Tracker compares executed lines against all code lines in discovered `.rye` files.
+4. **Reporting**: Tracker compares executed lines against all code lines in discovered `.arl` files.
 
 ### Test Propagation
 
 The coverage tool needs to track execution across all test engines, not just the initial engine that loads stdlib. This is accomplished via a global R option:
 
-1. `tools/coverage/rye-coverage.R` sets `options(rye.coverage_tracker = tracker)` before running the test suite
+1. `tools/coverage/arl-coverage.R` sets `options(arl.coverage_tracker = tracker)` before running the test suite
 2. `tests/testthat/helper-engine.R` defines `make_engine()` which checks this option
 3. Test files use `make_engine()` instead of bare `Engine$new()`
 4. When the option is set, `make_engine()` passes the tracker and forces `use_env_cache = FALSE`

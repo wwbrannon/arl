@@ -1,4 +1,4 @@
-# FileDeps: static analysis of a directory of .rye files for module dependencies and load order.
+# FileDeps: static analysis of a directory of .arl files for module dependencies and load order.
 # Uses topsort for topological sort. Generic over dir/pattern/exclude; no reference to engine or evaluator.
 
 #' @importFrom R6 R6Class
@@ -7,7 +7,7 @@
 FileDeps <- R6::R6Class(
   "FileDeps",
   public = list(
-    #' @field dir Path to directory containing .rye module files.
+    #' @field dir Path to directory containing .arl module files.
     dir = NULL,
     #' @field modules List of module info (name, exports, imports, file) keyed by name.
     modules = NULL,
@@ -18,9 +18,9 @@ FileDeps <- R6::R6Class(
 
     #' @description Create a FileDeps instance by scanning a directory.
     #' @param dir Path to directory containing files matching \code{pattern}.
-    #' @param pattern Regex for file names (default \code{"\\.rye$"}).
+    #' @param pattern Regex for file names (default \code{"\\.arl$"}).
     #' @param exclude Character vector of basenames to skip (default none).
-    initialize = function(dir, pattern = "\\.rye$", exclude = character()) {
+    initialize = function(dir, pattern = "\\.arl$", exclude = character()) {
       if (!dir.exists(dir)) {
         stop("Directory not found: ", dir)
       }

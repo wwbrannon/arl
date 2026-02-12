@@ -32,7 +32,7 @@ test_that("same file imported with different path strings uses one module (absol
     unlink(tmp_dir, recursive = TRUE)
   }, add = TRUE)
 
-  module_file <- file.path(tmp_dir, "aliasm.rye")
+  module_file <- file.path(tmp_dir, "aliasm.arl")
   writeLines(c(
     "(module aliasm",
     "  (export getn)",
@@ -42,7 +42,7 @@ test_that("same file imported with different path strings uses one module (absol
   ), module_file)
 
   path_abs <- normalizePath(module_file, winslash = "/", mustWork = TRUE)
-  path_rel <- "aliasm.rye"
+  path_rel <- "aliasm.arl"
 
   engine$eval_in_env(engine$read(sprintf('(import "%s")', path_abs))[[1]], env)
   n_after_first <- engine$eval_in_env(engine$read("(getn)")[[1]], env)
@@ -57,7 +57,7 @@ test_that("same file imported with different path strings uses one module (absol
 test_that("module is cached after first load", {
   # Create a temporary module file
   temp_dir <- tempdir()
-  module_path <- file.path(temp_dir, "test_cache_module.rye")
+  module_path <- file.path(temp_dir, "test_cache_module.arl")
   writeLines('(define cached-var 42)', module_path)
 
   engine <- make_engine()
@@ -82,7 +82,7 @@ test_that("module is cached after first load", {
 test_that("load returns last value from module", {
   # Create a temporary module
   temp_dir <- tempdir()
-  module_path <- file.path(temp_dir, "test_return_module.rye")
+  module_path <- file.path(temp_dir, "test_return_module.arl")
   writeLines(c(
     '(define x 10)',
     '(define y 20)',
@@ -102,7 +102,7 @@ test_that("load returns last value from module", {
 test_that("load with syntax error in module", {
   # Create a module with syntax error
   temp_dir <- tempdir()
-  module_path <- file.path(temp_dir, "test_syntax_error.rye")
+  module_path <- file.path(temp_dir, "test_syntax_error.arl")
   writeLines(c(
     '(define x 10',  # Unclosed paren
     '(+ x 5)'
@@ -122,7 +122,7 @@ test_that("load with syntax error in module", {
 test_that("load with runtime error in module", {
   # Create a module that errors at runtime
   temp_dir <- tempdir()
-  module_path <- file.path(temp_dir, "test_runtime_error.rye")
+  module_path <- file.path(temp_dir, "test_runtime_error.arl")
   writeLines(c(
     '(define x 10)',
     '(stop "deliberate runtime error")'
@@ -142,7 +142,7 @@ test_that("load with runtime error in module", {
 test_that("multiple loads of same module", {
   # Create a simple module
   temp_dir <- tempdir()
-  module_path <- file.path(temp_dir, "test_multiple_load.rye")
+  module_path <- file.path(temp_dir, "test_multiple_load.arl")
   writeLines('(define multi-load-var 123)', module_path)
 
   engine <- make_engine()
@@ -162,7 +162,7 @@ test_that("multiple loads of same module", {
 test_that("load can access previously defined symbols", {
   # Create a module that uses predefined symbols
   temp_dir <- tempdir()
-  module_path <- file.path(temp_dir, "test_access_symbols.rye")
+  module_path <- file.path(temp_dir, "test_access_symbols.arl")
   writeLines('(+ existing-x 10)', module_path)
 
   engine <- make_engine()
@@ -183,11 +183,11 @@ test_that("nested module loads", {
   temp_dir <- tempdir()
 
   # Create module B
-  module_b_path <- file.path(temp_dir, "test_module_b.rye")
+  module_b_path <- file.path(temp_dir, "test_module_b.arl")
   writeLines('(define b-var 20)', module_b_path)
 
   # Create module A that loads B
-  module_a_path <- file.path(temp_dir, "test_module_a.rye")
+  module_a_path <- file.path(temp_dir, "test_module_a.arl")
   writeLines(c(
     sprintf('(load "%s")', module_b_path),
     '(define a-var (+ b-var 10))'
@@ -218,8 +218,8 @@ test_that("circular module dependency detection", {
   temp_dir <- tempdir()
 
   # Create module A that loads B
-  module_a_path <- file.path(temp_dir, "test_circular_a.rye")
-  module_b_path <- file.path(temp_dir, "test_circular_b.rye")
+  module_a_path <- file.path(temp_dir, "test_circular_a.arl")
+  module_b_path <- file.path(temp_dir, "test_circular_b.arl")
 
   writeLines(sprintf('(load "%s")', module_b_path), module_a_path)
   writeLines(sprintf('(load "%s")', module_a_path), module_b_path)
@@ -244,7 +244,7 @@ test_that("load with relative path", {
   old_wd <- getwd()
   setwd(temp_dir)
 
-  module_path <- "test_relative.rye"
+  module_path <- "test_relative.arl"
   writeLines('(define relative-var 777)', module_path)
 
   engine <- make_engine()
@@ -261,7 +261,7 @@ test_that("load with relative path", {
 
 test_that("load empty module", {
   temp_dir <- tempdir()
-  module_path <- file.path(temp_dir, "test_empty.rye")
+  module_path <- file.path(temp_dir, "test_empty.arl")
   writeLines('', module_path)
 
   engine <- make_engine()
@@ -277,7 +277,7 @@ test_that("load empty module", {
 
 test_that("load module with only comments", {
   temp_dir <- tempdir()
-  module_path <- file.path(temp_dir, "test_comments_only.rye")
+  module_path <- file.path(temp_dir, "test_comments_only.arl")
   writeLines(c(
     '; This is a comment',
     '; Another comment',
@@ -296,7 +296,7 @@ test_that("load module with only comments", {
 
 test_that("module defines macro", {
   temp_dir <- tempdir()
-  module_path <- file.path(temp_dir, "test_macro_module.rye")
+  module_path <- file.path(temp_dir, "test_macro_module.arl")
   writeLines(c(
     '(defmacro triple (x) `(* 3 ,x))'
   ), module_path)

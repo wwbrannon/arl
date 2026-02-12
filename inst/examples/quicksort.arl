@@ -1,0 +1,137 @@
+;; Quicksort Implementation
+;; Demonstrates list operations, filtering, and recursive algorithms
+
+(import binding)
+(import control)
+(import looping)
+(import threading)
+
+;; Output directory for reports (set via ARL_OUTPUT_DIR env var)
+(define *output-dir*
+  (let ((dir (r/call "Sys.getenv" (list "ARL_OUTPUT_DIR" ""))))
+    (if (= dir "")
+        (r/call "tempdir" ())
+        dir)))
+
+;; ============================================================================
+;; Classic Quicksort
+;; ============================================================================
+
+(define quicksort
+  (lambda (lst)
+    (if (null? lst)
+        (list)
+        (let* ((pivot (car lst))
+               (rest-lst (cdr lst))
+               (smaller (filter (lambda (x) (< x pivot)) rest-lst))
+               (greater (filter (lambda (x) (>= x pivot)) rest-lst)))
+          (append (append (quicksort smaller)
+                         (list pivot))
+                  (quicksort greater))))))
+
+(println "Quicksort Examples:")
+(println (str "Sort [3 1 4 1 5 9 2 6]: " (quicksort (list 3 1 4 1 5 9 2 6))))
+(println (str "Sort [5 4 3 2 1]: " (quicksort (list 5 4 3 2 1))))
+(println (str "Sort [1]: " (quicksort (list 1))))
+(println (str "Sort []: " (quicksort (list))))
+
+;; ============================================================================
+;; Three-way Partition Quicksort (handles duplicates better)
+;; ============================================================================
+
+(define quicksort-3way
+  (lambda (lst)
+    (if (null? lst)
+        (list)
+        (let* ((pivot (car lst))
+               (rest-lst (cdr lst))
+               (smaller (filter (lambda (x) (< x pivot)) rest-lst))
+               (equal (filter (lambda (x) (= x pivot)) rest-lst))
+               (greater (filter (lambda (x) (> x pivot)) rest-lst)))
+          (append (append (quicksort-3way smaller)
+                          (cons pivot equal))
+                  (quicksort-3way greater))))))
+
+(println "\nThree-way Quicksort:")
+(println (str "Sort [3 1 4 1 5 9 2 6 5 3]: "
+              (quicksort-3way (list 3 1 4 1 5 9 2 6 5 3))))
+
+;; ============================================================================
+;; Using partition to split list
+;; ============================================================================
+
+(define partition-by-pivot
+  (lambda (pivot lst)
+    (let ((smaller (filter (lambda (x) (< x pivot)) lst))
+          (greater (filter (lambda (x) (>= x pivot)) lst)))
+      (list smaller greater))))
+
+(println "\nPartition Example:")
+(let ((result (partition-by-pivot 5 (list 3 7 2 9 1 5 8 4))))
+  (println (str "Partition by 5: smaller=" (car result)
+                " greater=" (car (cdr result)))))
+
+;; ============================================================================
+;; Demonstrating list operations
+;; ============================================================================
+
+(println "\nList Operations Demo:")
+
+;; take and drop
+(define data (list 10 20 30 40 50))
+(println (str "Original: " data))
+(println (str "Take 3: " (take 3 data)))
+(println (str "Drop 3: " (drop 3 data)))
+
+;; reverse
+(println (str "Reversed: " (reverse data)))
+
+;; map to transform
+(println (str "Double all: " (map (lambda (x) (* x 2)) data)))
+
+;; reduce to aggregate
+(println (str "Sum: " (reduce + data)))
+(println (str "Product: " (reduce * data)))
+
+;; ============================================================================
+;; Merge Sort for comparison
+;; ============================================================================
+
+(define merge
+  (lambda (left right)
+    (cond
+      ((null? left) right)
+      ((null? right) left)
+      ((< (car left) (car right))
+       (cons (car left) (merge (cdr left) right)))
+      (else
+       (cons (car right) (merge left (cdr right)))))))
+
+(define mergesort
+  (lambda (lst)
+    (if (<= (length lst) 1)
+        lst
+        (let* ((mid (/ (length lst) 2))
+               (left (take mid lst))
+               (right (drop mid lst)))
+          (merge (mergesort left) (mergesort right))))))
+
+(println "\nMergesort Example:")
+(println (str "Sort [3 1 4 1 5 9 2 6]: " (mergesort (list 3 1 4 1 5 9 2 6))))
+
+(define sorted-small (quicksort (list 3 1 4)))
+(define merge-sorted (mergesort (list 3 1 4 1 5 9 2 6)))
+
+(define example-result
+  (dict
+   :sorted_small sorted-small
+   :merge_sort merge-sorted))
+
+(define report-path (r/call "file.path" (list *output-dir* "quicksort-report.txt")))
+(r/call "writeLines"
+        (list
+         (r/call "c" (list (str "sorted_small=" sorted-small)
+                           (str "merge_sort=" merge-sorted)))
+         report-path))
+
+(println "\nExample complete!")

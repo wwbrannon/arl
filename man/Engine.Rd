@@ -2,11 +2,11 @@
 % Please edit documentation in R/engine.R
 \name{Engine}
 \alias{Engine}
-\title{Core Rye engine}
+\title{Core Arl engine}
 \description{
-Core Rye engine
+Core Arl engine
 
-Core Rye engine
+Core Arl engine
 }
 \details{
 Provides class-based organization for tokenization, parsing, macro expansion,
@@ -23,13 +23,13 @@ engine$eval_text("(+ 1 2 3)")
 
 \item{\code{parser}}{Parser instance used to read expressions.}
 
-\item{\code{macro_expander}}{Macro expander for Rye macros.}
+\item{\code{macro_expander}}{Macro expander for Arl macros.}
 
 \item{\code{compiled_runtime}}{Compiled runtime helper for executing compiled expressions.}
 
 \item{\code{compiler}}{Compiler for AST-to-R translation.}
 
-\item{\code{help_system}}{Help system for Rye topics.}
+\item{\code{help_system}}{Help system for Arl topics.}
 
 \item{\code{env}}{Env backing the engine.}
 
@@ -41,7 +41,7 @@ engine$eval_text("(+ 1 2 3)")
 environment) which is faster but only safe when dependencies don't change.
 If FALSE (default), only the expr cache (compiled expressions) is used, which
 is always safe. Can be set via engine initialization parameter or global
-option \code{rye.use_env_cache}.}
+option \code{arl.use_env_cache}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -101,7 +101,7 @@ Defaults to baseenv(). Cannot be specified together with env.}
 
 \item{\code{use_env_cache}}{Optional logical. If TRUE, enables the env cache for 4x faster
 module loading. Only safe when dependencies don't change. Defaults to NULL, which
-inherits from global option \code{getOption("rye.use_env_cache", FALSE)}.}
+inherits from global option \code{getOption("arl.use_env_cache", FALSE)}.}
 
 \item{\code{coverage_tracker}}{Optional CoverageTracker instance to enable coverage tracking
 from the start. If provided, coverage will be tracked during stdlib loading.}
@@ -121,7 +121,7 @@ Tokenize and parse source into expressions.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{source}}{Character string containing Rye source.}
+\item{\code{source}}{Character string containing Arl source.}
 
 \item{\code{source_name}}{Optional source name for error reporting.}
 }
@@ -132,7 +132,7 @@ Tokenize and parse source into expressions.
 \if{html}{\out{<a id="method-Engine-write"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-write}{}}}
 \subsection{Method \code{write()}}{
-Convert a Rye expression to its string representation. Inverse of read().
+Convert an Arl expression to its string representation. Inverse of read().
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$write(expr)}\if{html}{\out{</div>}}
 }
@@ -140,7 +140,7 @@ Convert a Rye expression to its string representation. Inverse of read().
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 }
 \if{html}{\out{</div>}}
 }
@@ -149,7 +149,7 @@ Convert a Rye expression to its string representation. Inverse of read().
 \if{html}{\out{<a id="method-Engine-tokenize"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-tokenize}{}}}
 \subsection{Method \code{tokenize()}}{
-Tokenize source into Rye tokens.
+Tokenize source into Arl tokens.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$tokenize(source)}\if{html}{\out{</div>}}
 }
@@ -157,7 +157,7 @@ Tokenize source into Rye tokens.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{source}}{Character string containing Rye source.}
+\item{\code{source}}{Character string containing Arl source.}
 }
 \if{html}{\out{</div>}}
 }
@@ -193,7 +193,7 @@ Evaluate a single expression via compiled evaluation.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 }
 \if{html}{\out{</div>}}
 }
@@ -210,7 +210,7 @@ Evaluate a single expression in an explicit environment.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
@@ -231,7 +231,7 @@ Evaluate expressions in order via compiled evaluation.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{exprs}}{List of Rye expressions to evaluate.}
+\item{\code{exprs}}{List of Arl expressions to evaluate.}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
@@ -252,7 +252,7 @@ Evaluate expressions with source tracking.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{exprs}}{List of Rye expressions to evaluate.}
+\item{\code{exprs}}{List of Arl expressions to evaluate.}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
@@ -280,7 +280,7 @@ Read and evaluate text.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{text}}{Character string of Rye code to read/eval.}
+\item{\code{text}}{Character string of Arl code to read/eval.}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
@@ -326,7 +326,7 @@ is loaded and its exports attached into \code{env}. Used by
 \if{html}{\out{<a id="method-Engine-load_file"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-load_file}{}}}
 \subsection{Method \code{load_file()}}{
-Load and evaluate a Rye source file in an isolated scope. The file runs in a
+Load and evaluate an Arl source file in an isolated scope. The file runs in a
 child of the engine's environment, so definitions and imports in the file
 are not visible in the engine's main environment or to subsequent code. For
 source-like behavior (definitions visible in the engine), use
@@ -347,7 +347,7 @@ source-like behavior (definitions visible in the engine), use
 \if{html}{\out{<a id="method-Engine-load_file_in_env"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-load_file_in_env}{}}}
 \subsection{Method \code{load_file_in_env()}}{
-Load and evaluate a Rye source file in an explicit environment. By default
+Load and evaluate an Arl source file in an explicit environment. By default
 (\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
 and imports in the file are visible in that environment. With
 \code{create_scope = TRUE}, the file runs in a child of \code{env} and its
@@ -382,7 +382,7 @@ Expand macros recursively.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 
 \item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
 }
@@ -401,7 +401,7 @@ Expand macros recursively in an explicit environment.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
@@ -424,7 +424,7 @@ Expand a single macro layer.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 
 \item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
 }
@@ -443,7 +443,7 @@ Expand a single macro layer in an explicit environment.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{expr}}{Rye expression (symbol/call/atomic value).}
+\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
@@ -460,7 +460,7 @@ Expand a single macro layer in an explicit environment.
 \subsection{Method \code{inspect_compilation()}}{
 Inspect expansion and compilation for debugging. Parse text, expand macros in env,
 then compile to R. Returns parsed AST, expanded form, compiled R expression, and
-deparsed R code so you can see exactly what a Rye program becomes.
+deparsed R code so you can see exactly what an Arl program becomes.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$inspect_compilation(text, env = NULL, source_name = "<inspect>")}\if{html}{\out{</div>}}
 }
@@ -468,7 +468,7 @@ deparsed R code so you can see exactly what a Rye program becomes.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{text}}{Character; Rye source (single expression or multiple).}
+\item{\code{text}}{Character; Arl source (single expression or multiple).}
 
 \item{\code{env}}{Environment or NULL (use engine env). Must have macros/stdlib if needed.}
 
@@ -522,7 +522,7 @@ Show help for a topic in an explicit environment.
 \if{html}{\out{<a id="method-Engine-repl"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-repl}{}}}
 \subsection{Method \code{repl()}}{
-Start the Rye REPL using this engine.
+Start the Arl REPL using this engine.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$repl()}\if{html}{\out{</div>}}
 }

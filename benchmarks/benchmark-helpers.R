@@ -1,9 +1,9 @@
 # Benchmark Infrastructure Helpers
-# Helper functions for running benchmarks and profiling Rye components
+# Helper functions for running benchmarks and profiling Arl components
 
-#' Evaluate Rye code from text using an engine
+#' Evaluate Arl code from text using an engine
 #'
-#' @param text Rye code as string
+#' @param text Arl code as string
 #' @param engine Engine instance
 #' @param env Environment to evaluate in (defaults to engine env)
 #' @return Result of last expression
@@ -89,11 +89,11 @@ profile_component <- function(expr, name, output_dir = "benchmarks/profiles", sa
   invisible(result)
 }
 
-#' Create synthetic Rye code workload
+#' Create synthetic Arl code workload
 #'
 #' @param type Type of workload: "micro", "small", "medium", "large", "xl"
 #' @param kind Kind of code: "arithmetic", "nested_lists", "strings", "mixed"
-#' @return Character string of Rye code
+#' @return Character string of Arl code
 create_workload <- function(type = "small", kind = "arithmetic") {
   size <- switch(type,
     micro = 1,
@@ -135,10 +135,10 @@ create_workload <- function(type = "small", kind = "arithmetic") {
 
 #' Load an example file as a workload
 #'
-#' @param filename Name of example file (e.g., "fibonacci.rye")
-#' @return Character string of Rye code
+#' @param filename Name of example file (e.g., "fibonacci.arl")
+#' @return Character string of Arl code
 load_example_workload <- function(filename) {
-  example_path <- system.file("examples", filename, package = "rye")
+  example_path <- system.file("examples", filename, package = "arl")
   if (example_path == "") {
     stop("Example file not found: ", filename)
   }

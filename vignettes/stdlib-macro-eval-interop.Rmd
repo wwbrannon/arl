@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
 <!-- Regenerate with: make stdlib-docs -->
 
 ```{r setup, include = FALSE}
@@ -172,7 +172,7 @@ package functions.
 (r/call "Sys.time" (list))          ; current time
 ```
 
-**Note:** R functions are directly available in Rye without `r/call`. Use `r/call` when you need to look up a function by string name or specify the search environment.
+**Note:** R functions are directly available in Arl without `r/call`. Use `r/call` when you need to look up a function by string name or specify the search environment.
 
 **See also:** [funcall](#funcall), [r/eval](#r-eval)
 
@@ -198,22 +198,22 @@ Get a binding by name, defaulting to .GlobalEnv.
 
 ### license {#license}
 
-Display Rye and R license information.
+Display Arl and R license information.
 
 **Signature:** `(license)`
 
 **Examples:**
 ```lisp
-(license)                 ; prints Rye and R license info
+(license)                 ; prints Arl and R license info
 ```
 
 ---
 
 ## R Nonstandard Evaluation Wrappers
 
-These macros provide Rye-friendly interfaces to R functions that use
+These macros provide Arl-friendly interfaces to R functions that use
 nonstandard evaluation (NSE). They automatically quote expressions so
-you can write natural Rye code without manual quoting.
+you can write natural Arl code without manual quoting.
 
 ### suppressWarnings {#suppresswarnings}
 
@@ -312,7 +312,7 @@ Perform substitution in an expression, or error if called with 1 arg.
 
 **Signature:** `(substitute args...)`
 
-**Note:** Single-argument `substitute` does not work in Rye due to eager evaluation. Use macros or explicit quoting instead. Two-argument form works normally.
+**Note:** Single-argument `substitute` does not work in Arl due to eager evaluation. Use macros or explicit quoting instead. Two-argument form works normally.
 
 **See also:** defmacro
 
@@ -822,7 +822,7 @@ Assert thunk throws an error.
 
 ### eval {#eval}
 
-Evaluate a Rye expression in the current environment.
+Evaluate a Arl expression in the current environment.
 
 **Signature:** `(eval expr)`
 
@@ -838,7 +838,7 @@ Evaluate a Rye expression in the current environment.
 
 ### read {#read}
 
-Parse a string into a Rye expression without evaluating it.
+Parse a string into a Arl expression without evaluating it.
 
 **Signature:** `(read source)`
 
@@ -850,7 +850,7 @@ Parse a string into a Rye expression without evaluating it.
 ```
 
 **Note:** Returns the first expression from the source string, or #nil if
-the string contains no expressions. Like R's parse(), but returns Rye
+the string contains no expressions. Like R's parse(), but returns Arl
 S-expressions.
 
 **See also:** [eval](#eval), [read-from-string](stdlib-strings-io.html#read-from-string)
@@ -859,7 +859,7 @@ S-expressions.
 
 ### write {#write}
 
-Convert a Rye expression to its string representation.
+Convert a Arl expression to its string representation.
 The inverse of read.
 
 **Signature:** `(write expr)`
@@ -883,7 +883,7 @@ produced by read.
 ### r/eval {#r-eval}
 
 Evaluate an R expression directly via R's eval(), bypassing
-Rye's compiler.
+Arl's compiler.
 
 **Signature:** `(r/eval expr)`
 
@@ -893,7 +893,7 @@ Rye's compiler.
 ```
 
 **Note:** Useful for evaluating raw R calls that use R control flow (for,
-while) or other constructs that Rye normally overrides.
+while) or other constructs that Arl normally overrides.
 
 **See also:** [eval](#eval), [r/call](#r-call)
 
@@ -918,7 +918,7 @@ overriding hygiene.
 
 **Note:** Use capture when writing anaphoric macros or other macros that
 intentionally introduce a binding visible to the caller. Without
-capture, Rye's automatic hygiene renames macro-introduced symbols to
+capture, Arl's automatic hygiene renames macro-introduced symbols to
 prevent accidental capture.
 
 **See also:** [gensym](#gensym), [macroexpand](#macroexpand), defmacro
@@ -1072,7 +1072,7 @@ standard library bindings live).
 
 ### current-env {#current-env}
 
-Return the current Rye evaluation environment.
+Return the current Arl evaluation environment.
 
 **Signature:** `(current-env)`
 

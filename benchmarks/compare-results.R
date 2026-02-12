@@ -8,7 +8,7 @@ if (file.exists("benchmarks/benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {
   # Try installed package
-  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "rye")
+  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "arl")
   if (helpers_path != "") {
     source(helpers_path)
   }

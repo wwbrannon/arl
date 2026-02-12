@@ -48,16 +48,16 @@ test_that("install_helpers() skips already locked bindings", {
   expect_true(test_env$.__module)
 })
 
-test_that("install_helpers() sets rye_doc attributes", {
+test_that("install_helpers() sets arl_doc attributes", {
   eng <- make_engine()
   test_env <- new.env()
   eng$compiled_runtime$install_helpers(test_env)
 
-  # Check a non-primitive function has rye_doc
+  # Check a non-primitive function has arl_doc
   fn <- test_env$.__true_p
-  expect_false(is.null(attr(fn, "rye_doc")))
-  expect_true("description" %in% names(attr(fn, "rye_doc")))
-  expect_true(grepl("INTERNAL:", attr(fn, "rye_doc")$description))
+  expect_false(is.null(attr(fn, "arl_doc")))
+  expect_true("description" %in% names(attr(fn, "arl_doc")))
+  expect_true(grepl("INTERNAL:", attr(fn, "arl_doc")$description))
 })
 
 test_that(".__true_p helper handles truthiness correctly", {
@@ -168,7 +168,7 @@ test_that("module_compiled() marks module environment", {
 
 test_that("module_compiled() creates path alias when src_file provided", {
   eng <- make_engine()
-  tmp_file <- tempfile(fileext = ".rye")
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo) (define foo 42))", tmp_file)
   on.exit(unlink(tmp_file))
 
@@ -182,7 +182,7 @@ test_that("module_compiled() creates path alias when src_file provided", {
   )
 
   # Should be accessible by both name and path
-  abs_path <- rye:::normalize_path_absolute(tmp_file)
+  abs_path <- arl:::normalize_path_absolute(tmp_file)
   expect_true(eng$env$module_registry$exists("test-mod"))
   expect_true(eng$env$module_registry$exists(abs_path))
 })
@@ -264,8 +264,8 @@ test_that("import_compiled() loads module only once", {
 test_that("import_compiled() by path loads and attaches exports", {
   eng <- make_engine()
 
-  # Create a temporary .rye file with a simple module
-  tmp_file <- tempfile(fileext = ".rye")
+  # Create a temporary .arl file with a simple module
+  tmp_file <- tempfile(fileext = ".arl")
   writeLines(c(
     "(module test-import",
     "  (export test-value)",
@@ -507,7 +507,7 @@ test_that("defmacro_compiled() preserves docstring", {
   macro_registry <- eng$env$macro_registry_env(test_env, create = FALSE)
   macro_fn <- macro_registry$`documented-macro`
 
-  doc <- attr(macro_fn, "rye_doc")
+  doc <- attr(macro_fn, "arl_doc")
   expect_false(is.null(doc))
   expect_equal(doc$description, "This is a documented macro")
 })
@@ -518,7 +518,7 @@ test_that("promise_new_compiled() creates Promise", {
 
   promise <- eng$compiled_runtime$promise_new_compiled(quote(1 + 1), eng$env$raw())
 
-  expect_true(rye:::r6_isinstance(promise, "Promise"))
+  expect_true(arl:::r6_isinstance(promise, "Promise"))
 })
 
 test_that("promise_new_compiled() delays evaluation", {

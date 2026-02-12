@@ -1,4 +1,4 @@
-# Compiler: Compiles macro-expanded Rye AST to R expressions for single eval().
+# Compiler: Compiles macro-expanded Arl AST to R expressions for single eval().
 # Used for the optional compiled evaluation path; falls back to interpreter on failure.
 #
 # Reserved name: .__env is used for the current environment in compiled code.
@@ -34,7 +34,7 @@ Compiler <- R6::R6Class(
       self$context <- context
     },
     # @description Compile one expression. Returns R expression or NULL (cannot compile).
-    # @param expr Macro-expanded Rye expression.
+    # @param expr Macro-expanded Arl expression.
     # @return R expression (language object) or NULL.
     compile = function(expr, env = NULL, strict = NULL) {
       if (!is.null(env)) {
@@ -55,7 +55,7 @@ Compiler <- R6::R6Class(
       })
     },
     # @description Compile a sequence of expressions to a single R expression (block).
-    # @param exprs List of Rye expressions.
+    # @param exprs List of Arl expressions.
     # @return R expression or NULL.
     compile_seq = function(exprs, env = NULL, strict = NULL) {
       if (length(exprs) == 0) {
@@ -200,7 +200,7 @@ Compiler <- R6::R6Class(
       if (!is.call(expr) && !is.symbol(expr)) {
         return(private$strip_src(expr))
       }
-      if (inherits(expr, "rye_keyword")) {
+      if (inherits(expr, "arl_keyword")) {
         return(expr)
       }
       # Symbol: .__nil is the parser sentinel for #nil; compile to NULL
@@ -411,7 +411,7 @@ Compiler <- R6::R6Class(
         return(private$fail("if then-branch could not be compiled"))
       }
       then_expr <- private$wrap_branch_coverage(then_expr, expr[[3]])
-      # Rye: only #f and #nil are false
+      # Arl: only #f and #nil are false
       # Skip .__true_p wrapper if test is known to return proper R logical
       test_pred <- if (private$returns_r_logical(test)) {
         test
@@ -639,7 +639,7 @@ Compiler <- R6::R6Class(
           compiled_body <- c(list(rest_pattern_stmt), compiled_body)
         }
         # Wrap compiled body in while(TRUE) { ... }
-        # Use while(TRUE) instead of repeat because Rye stdlib defines a `repeat` function
+        # Use while(TRUE) instead of repeat because Arl stdlib defines a `repeat` function
         # that shadows R's repeat keyword in the engine environment.
         loop_body <- private$src_inherit(
           as.call(c(list(quote(`{`)), compiled_body)),
@@ -1102,7 +1102,7 @@ Compiler <- R6::R6Class(
         i <- 2
         while (i <= length(expr)) {
           arg_expr <- expr[[i]]
-          if (inherits(arg_expr, "rye_keyword")) {
+          if (inherits(arg_expr, "arl_keyword")) {
             if (i + 1 > length(expr)) {
               return(private$fail(sprintf("Keyword :%s requires a value", arg_expr)))
             }
@@ -1313,17 +1313,17 @@ Compiler <- R6::R6Class(
     },
 
     # Evaluate a test expression if it's a compile-time constant
-    # Returns NULL if not constant, TRUE if truthy, FALSE if falsy (according to Rye semantics)
+    # Returns NULL if not constant, TRUE if truthy, FALSE if falsy (according to Arl semantics)
     eval_constant_test = function(test) {
       # Literal TRUE/FALSE
       if (is.logical(test) && length(test) == 1 && !is.na(test)) {
         return(test)  # TRUE or FALSE
       }
 
-      # Literal NULL (compiled as quote(NULL)) - falsy in Rye
+      # Literal NULL (compiled as quote(NULL)) - falsy in Arl
       if (is.call(test) && length(test) == 2) {
         if (identical(test[[1]], quote(quote)) && is.null(test[[2]])) {
-          return(FALSE)  # NULL is falsy in Rye
+          return(FALSE)  # NULL is falsy in Arl
         }
       }
 
@@ -1332,7 +1332,7 @@ Compiler <- R6::R6Class(
         test_str <- as.character(test)
         if (test_str == "TRUE") return(TRUE)
         if (test_str == "FALSE") return(FALSE)
-        if (test_str == "NULL") return(FALSE)  # NULL is falsy in Rye
+        if (test_str == "NULL") return(FALSE)  # NULL is falsy in Arl
       }
 
       # Not a compile-time constant
@@ -1431,14 +1431,14 @@ Compiler <- R6::R6Class(
       compiled_args[[param_index]]
     },
 
-    # Self-tail-call optimization: check if body has self-tail-calls (Rye AST level)
+    # Self-tail-call optimization: check if body has self-tail-calls (Arl AST level)
     has_self_tail_calls = function(body_exprs, self_name) {
       if (length(body_exprs) == 0) return(FALSE)
       # Only the last body expression is in tail position
       private$expr_has_self_tail_call(body_exprs[[length(body_exprs)]], self_name)
     },
 
-    # Recursive walk of tail positions in Rye AST to find self-calls
+    # Recursive walk of tail positions in Arl AST to find self-calls
     expr_has_self_tail_call = function(expr, self_name) {
       if (!is.call(expr) || length(expr) == 0) return(FALSE)
       op <- expr[[1]]
@@ -1515,7 +1515,7 @@ Compiler <- R6::R6Class(
       i <- 2L
       while (i <= length(expr)) {
         arg_expr <- expr[[i]]
-        if (inherits(arg_expr, "rye_keyword")) {
+        if (inherits(arg_expr, "arl_keyword")) {
           if (i + 1L > length(expr)) return(bail())
           kw_name <- as.character(arg_expr)
           if (!(kw_name %in% param_names)) return(bail())  # Unknown keyword
@@ -1724,7 +1724,7 @@ Compiler <- R6::R6Class(
       iife_args <- list()
       i <- 2L
       while (i <= length(expr)) {
-        if (inherits(expr[[i]], "rye_keyword")) return(NULL)
+        if (inherits(expr[[i]], "arl_keyword")) return(NULL)
         iife_args <- c(iife_args, list(expr[[i]]))
         i <- i + 1L
       }
@@ -1814,7 +1814,7 @@ Compiler <- R6::R6Class(
     },
 
     # Interleave coverage calls before each compiled body statement.
-    # body_exprs: original Rye AST expressions (for source info)
+    # body_exprs: original Arl AST expressions (for source info)
     # compiled_body: compiled R expressions (same length as body_exprs)
     # Returns new list with coverage calls interleaved.
     interleave_coverage = function(body_exprs, compiled_body) {

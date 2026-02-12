@@ -2,7 +2,7 @@
 
 ## Overview
 
-Rye implements a dual-cache system for module loading with content-based invalidation:
+Arl implements a dual-cache system for module loading with content-based invalidation:
 - **env cache**: Full environment cache (`.env.rds`) - fast, ~50ms per module
 - **expr cache**: Compiled expressions cache (`.code.rds`) - safe fallback, ~200ms per module
 - **Inspection**: Human-readable code (`.code.R`) - for debugging
@@ -16,7 +16,7 @@ This document describes the cache invalidation strategy.
 <filename>.<content_hash>.<type>
 ```
 
-Example: `list.rye.a651f6218b6e130f.code.rds`
+Example: `list.arl.a651f6218b6e130f.code.rds`
 
 ### Hash Algorithm
 - **Primary**: xxhash64 (via `digest` package)
@@ -44,11 +44,11 @@ get_cache_paths <- function(src_file) {
 
 When loading a cache file, two checks are performed:
 
-### 1. Rye Version Match
+### 1. Arl Version Match
 ```r
-cache_data$version == packageVersion("rye")
+cache_data$version == packageVersion("arl")
 ```
-- Ensures cache is from same Rye version
+- Ensures cache is from same Arl version
 - Prevents incompatibilities from compiler changes
 - Version changes invalidate all caches
 
@@ -90,7 +90,7 @@ Hash is mtime-independent
 
 ### Default Behavior: Env Cache Disabled
 
-**As of Rye 0.1.0, the env cache is disabled by default** to ensure correctness during active development.
+**As of Arl 0.1.0, the env cache is disabled by default** to ensure correctness during active development.
 
 **Why disabled by default:**
 - The env cache saves evaluated environment state including imported bindings
@@ -116,7 +116,7 @@ The env cache is **unsafe** when:
 **Global setting** (affects all new engines):
 ```r
 # In .Rprofile or at session start
-options(rye.use_env_cache = TRUE)
+options(arl.use_env_cache = TRUE)
 ```
 
 **Per-engine setting** (overrides global):
@@ -128,7 +128,7 @@ engine <- Engine$new(use_env_cache = TRUE)
 ```
 Note: Environment cache is enabled. This provides 4x speedup but is
 only safe when dependencies don't change. Disable with
-options(rye.use_env_cache = FALSE) if working with changing code.
+options(arl.use_env_cache = FALSE) if working with changing code.
 ```
 
 ### Performance Tradeoff
@@ -215,7 +215,7 @@ is_safe_to_cache <- function(module_env, engine_env) {
 ### Storage
 - Multiple versions stored simultaneously
 - No cleanup needed (old hashes pruned by filesystem)
-- `.gitignore` should include `.rye_cache/`
+- `.gitignore` should include `.arl_cache/`
 
 ## Test Results
 
@@ -247,7 +247,7 @@ Benchmark improvement:    ~20x for module-heavy workloads
 ## Edge Cases Handled
 
 ### Version Upgrade
-- User upgrades Rye -> All caches invalidated
+- User upgrades Arl -> All caches invalidated
 - Fresh compilation with new compiler
 - Automatic on first run after upgrade
 
@@ -284,7 +284,7 @@ Benchmark improvement:    ~20x for module-heavy workloads
 - Requires parsing all imports
 - Transitive dependencies explode complexity
 - Cache invalidation cascades
-- Dynamic lookups make it unnecessary for Rye
+- Dynamic lookups make it unnecessary for Arl
 
 ### Content Hash (Chosen)
 - Robust to filesystem operations
@@ -298,17 +298,17 @@ Benchmark improvement:    ~20x for module-heavy workloads
 
 - `R/module-cache.R` - Cache operations and validation
 - `R/runtime.R` - Cache writing in `module_compiled()`
-- `R/rye-engine.R` - Cache reading in `load_file_in_env()`
+- `R/engine.R` - Cache reading in `load_file_in_env()`
 
 ## Related Documentation
 
 - See `R/module-cache.R` for detailed implementation
 - See `tests/` for cache invalidation tests
-- See `.rye_cache/*.code.R` for human-readable compiled output
+- See `.arl_cache/*.code.R` for human-readable compiled output
 
 ## Conclusion
 
-**The content hash strategy is optimal for Rye because:**
+**The content hash strategy is optimal for Arl because:**
 
 1. **Simple and robust** - No complex dependency tracking required
 2. **Very fast** - Hash computation is ~0.075ms per file

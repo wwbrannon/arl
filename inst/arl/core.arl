@@ -1,0 +1,154 @@
+;;; Arl Standard Library - Core Functions
+
+(module core
+  (export license
+          error warn
+          identity values values?
+          call-with-values call/cc call-with-current-continuation
+          funcall r/call get)
+
+  (import _r)
+
+;;' @section Error and Warning
+
+  ;;' @description Signal an error with message.
+  ;;' @examples
+  ;;' (error "something went wrong")   ; signals error
+  ;;' (try (error "oops")
+  ;;'   (catch e "caught"))            ; => "caught"
+  ;;' @seealso warn, assert, try
+  (define error
+    (lambda (msg)
+      (stop msg :call. #f)))
+
+  ;;' @description Emit warning with message.
+  ;;' @examples
+  ;;' (warn "check your input")       ; emits warning, returns #nil
+  ;;' @seealso error, trace
+  (define warn
+    (lambda (msg)
+      (warning msg :call. #f)))
+
+;;' @section Identity and Values
+
+  ;;' @description Return argument.
+  ;;' @examples
+  ;;' (identity 42)             ; => 42
+  ;;' (identity "hello")        ; => "hello"
+  ;;' (map identity '(1 2 3))   ; => (1 2 3)
+  ;;' @seealso map
+  (define identity
+    (lambda (x)
+      x))
+
+  ;;' @description Return multiple values to a call-with-values consumer.
+  ;;' @examples
+  ;;' (values 1 2 3)            ; => multiple-values container
+  ;;' @seealso values?, call-with-values
+  (define values
+    (lambda (. args)
+      (r/call "structure" (list args :class "arl_values"))))
+
+  ;;' @description Return #t if x is a multiple-values container.
+  ;;' @examples
+  ;;' (values? (values 1 2))    ; => #t
+  ;;' (values? 42)              ; => #f
+  ;;' @seealso values, call-with-values
+  (define values?
+    (lambda (x)
+      (if (is.list x)
+        (isTRUE (inherits x "arl_values"))
+        #f)))
+
+  ;;' @description Call producer and pass its values to consumer.
+  ;;' @examples
+  ;;' (call-with-values
+  ;;'   (lambda () (values 1 2))
+  ;;'   (lambda (a b) (+ a b)))  ; => 3
+  ;;' @seealso values, values?
+  (define call-with-values
+    (lambda (producer consumer)
+      (if (not (is.function producer))
+        (stop "call-with-values expects a function as the producer"))
+      (if (not (is.function consumer))
+        (stop "call-with-values expects a function as the consumer"))
+      (define produced (producer))
+      (define args
+        (if (values? produced)
+          (r/call "unclass" (list produced))
+          (list produced)))
+      (funcall consumer args)))
+
+;;' @section Continuations
+
+  ;;' @signature (call/cc receiver)
+  ;;' @note Alias for R's `callCC`. The receiver is passed the current continuation.
+  ;;' @seealso call-with-current-continuation
+  (define call/cc callCC)
+
+  ;;' @signature (call-with-current-continuation receiver)
+  ;;' @note Full name alias for `call/cc`.
+  ;;' @seealso call/cc
+  (define call-with-current-continuation callCC)
+
+;;' @section Function Application
+
+  ;;' @description Apply a function with a provided list of arguments.
+  ;;' @signature (funcall fn args)
+  ;;' @examples
+  ;;' (funcall + (list 1 2 3))  ; => 6
+  ;;' (funcall c (list 1 2 3))  ; => c(1, 2, 3)
+  ;;' @seealso apply, r/call
+  (define funcall
+    (lambda (fn args)
+      (do.call fn args :quote #t)))
+
+  ;;' @description Call an R function with optional environment.
+  ;;' Searches from .GlobalEnv by default, finding base and loaded
+  ;;' package functions.
+  ;;' @examples
+  ;;' (r/call "mean" (list (c 1 2 3)))   ; => 2
+  ;;' (r/call "ls" (list))                ; list .GlobalEnv bindings
+  ;;' (r/call "Sys.time" (list))          ; current time
+  ;;' @note R functions are directly available in Arl without `r/call`. Use `r/call` when you need to look up a function by string name or specify the search environment.
+  ;;' @seealso funcall, r/eval
+  (define r/call
+    (lambda (fn (args (list)) (envir (globalenv)))
+      (define fn-name
+        (if (is.symbol fn)
+          (as.character fn)
+          (if (is.character fn)
+            fn
+            (error "r/call requires a symbol or string function name"))))
+      (define fn-obj (__rget fn-name :envir envir :inherits #t))
+      (funcall fn-obj (as.list args))))  ; as.list handles environments
+
+  ;;' @description Get a binding by name, defaulting to .GlobalEnv.
+  ;;' @signature (get name [envir] [inherits])
+  ;;' @examples
+  ;;' (get "mean")              ; => the `mean` function
+  ;;' (get "pi" (baseenv))      ; => 3.141593
+  ;;' @seealso r/call
+  (define get
+    (lambda (name (envir (globalenv)) (inherits #t))
+      (define name-str
+        (if (is.symbol name)
+          (as.character name)
+          name))
+      (r/call "get" (list name-str :envir envir :inherits inherits))))
+
+;;' @section License
+
+  ;;' @description Display Arl and R license information.
+  ;;' @examples
+  ;;' (license)                 ; prints Arl and R license info
+  (define license
+    (lambda ()
+      (begin
+        (r/call "cat" (list "Arl is licensed under the MIT License:\n\n"))
+        (define license-file (r/call "system.file" (list "LICENSE.md" :package "arl")))
+        (define license-lines (r/call "readLines" (list license-file)))
+        (r/call "cat" (list license-lines :sep "\n"))
+        (r/call "cat" (list "\n\nArl is built on R. R's license:\n\n"))
+        (r/call "license" (list)))))
+)

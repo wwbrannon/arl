@@ -1,0 +1,30 @@
+;; Native tests for dotted pairs (cons, car, cdr, arl_cons)
+;; Requires list and predicates modules (loaded by native test runner)
+
+(define test-cons-dotted-pair (lambda ()
+  (define pair (cons (quote a) (quote b)))
+  (assert-equal (quote a) (car pair))
+  (assert-equal (quote b) (cdr pair))))
+
+(define test-cons-dotted-pair-values (lambda ()
+  (define pair (cons 1 42))
+  (assert-equal 1 (car pair))
+  (assert-equal 42 (cdr pair))))
+
+(define test-cons-quoted-dotted-pair (lambda ()
+  ;; '(a . b) parses to arl_cons; car and cdr work
+  (define pair (quote (a . b)))
+  (assert-equal (quote a) (car pair))
+  (assert-equal (quote b) (cdr pair))))
+
+(define test-cons-list-pair-predicates (lambda ()
+  (define pair (cons 1 2))
+  (assert-false (list? pair))
+  (assert-true (pair? pair))))
+
+(define test-cons-improper-list (lambda ()
+  ;; (a b . c) parses to chain of cons cells
+  (define improper (quote (a b . c)))
+  (assert-equal (quote a) (car improper))
+  (assert-equal (quote b) (car (cdr improper)))
+  (assert-equal (quote c) (cdr (cdr improper)))))

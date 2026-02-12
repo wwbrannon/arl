@@ -7,7 +7,7 @@ cov <- covr::package_coverage(type = "all", quiet = FALSE)
 pct <- covr::percent_coverage(cov)
 
 writeLines(c(
-  paste0("rye Coverage: ", sprintf("%.2f%%", pct)),
+  paste0("arl Coverage: ", sprintf("%.2f%%", pct)),
   "",
   capture.output(print(cov), type = "message")
 ), "coverage/r/summary.txt")

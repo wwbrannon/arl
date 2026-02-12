@@ -5,8 +5,8 @@ test_that("env cache disabled by default", {
 })
 
 test_that("Global option enables env cache", {
-  withr::local_options(rye.use_env_cache = TRUE)
-  withr::local_options(rye.env_cache_warning_shown = NULL)
+  withr::local_options(arl.use_env_cache = TRUE)
+  withr::local_options(arl.env_cache_warning_shown = NULL)
 
   # Expect warning on first engine
   expect_message(
@@ -18,8 +18,8 @@ test_that("Global option enables env cache", {
 
 test_that("Engine parameter overrides global option", {
   # Explicit TRUE overrides global FALSE
-  withr::local_options(rye.use_env_cache = FALSE)
-  withr::local_options(rye.env_cache_warning_shown = NULL)
+  withr::local_options(arl.use_env_cache = FALSE)
+  withr::local_options(arl.env_cache_warning_shown = NULL)
 
   expect_message(
     engine1 <- Engine$new(use_env_cache = TRUE),
@@ -28,8 +28,8 @@ test_that("Engine parameter overrides global option", {
   expect_true(engine1$use_env_cache)
 
   # Explicit FALSE overrides global TRUE
-  withr::local_options(rye.use_env_cache = TRUE)
-  withr::local_options(rye.env_cache_warning_shown = TRUE)  # Suppress warning
+  withr::local_options(arl.use_env_cache = TRUE)
+  withr::local_options(arl.env_cache_warning_shown = TRUE)  # Suppress warning
 
   engine2 <- Engine$new(use_env_cache = FALSE)
   expect_false(engine2$use_env_cache)
@@ -38,7 +38,7 @@ test_that("Engine parameter overrides global option", {
 test_that("env cache disabled prevents .env.rds writing", {
   # Setup: temporary module file
   temp_dir <- withr::local_tempdir()
-  module_file <- file.path(temp_dir, "test-module.rye")
+  module_file <- file.path(temp_dir, "test-module.arl")
   writeLines(c(
     "(module test-module",
     "  (export x)",
@@ -46,14 +46,14 @@ test_that("env cache disabled prevents .env.rds writing", {
   ), module_file)
 
   # Create engine with use_env_cache = FALSE
-  withr::local_options(rye.env_cache_warning_shown = TRUE)
+  withr::local_options(arl.env_cache_warning_shown = TRUE)
   engine <- Engine$new(use_env_cache = FALSE)
 
   # Load module (should be safe to cache)
   engine$load_file_in_env(module_file, engine$env$env, create_scope = FALSE)
 
   # Verify: .code.rds written, .env.rds NOT written
-  cache_dir <- file.path(temp_dir, ".rye_cache")
+  cache_dir <- file.path(temp_dir, ".arl_cache")
   expect_true(dir.exists(cache_dir))
 
   cache_files <- list.files(cache_dir, pattern = "\\.rds$", full.names = FALSE)
@@ -67,7 +67,7 @@ test_that("env cache disabled prevents .env.rds writing", {
 test_that("env cache enabled writes .env.rds when safe", {
   # Setup: temporary module file
   temp_dir <- withr::local_tempdir()
-  module_file <- file.path(temp_dir, "test-module.rye")
+  module_file <- file.path(temp_dir, "test-module.arl")
   writeLines(c(
     "(module test-module",
     "  (export x)",
@@ -75,14 +75,14 @@ test_that("env cache enabled writes .env.rds when safe", {
   ), module_file)
 
   # Create engine with use_env_cache = TRUE
-  withr::local_options(rye.env_cache_warning_shown = TRUE)
+  withr::local_options(arl.env_cache_warning_shown = TRUE)
   engine <- Engine$new(use_env_cache = TRUE)
 
   # Load safe module
   engine$load_file_in_env(module_file, engine$env$env, create_scope = FALSE)
 
   # Verify: both .code.rds AND .env.rds written
-  cache_dir <- file.path(temp_dir, ".rye_cache")
+  cache_dir <- file.path(temp_dir, ".arl_cache")
   expect_true(dir.exists(cache_dir))
 
   cache_files <- list.files(cache_dir, pattern = "\\.rds$", full.names = FALSE)
@@ -101,7 +101,7 @@ test_that("env cache disabled uses expr cache even when .env.rds exists", {
 })
 
 test_that("One-time warning shown per session", {
-  withr::local_options(rye.env_cache_warning_shown = NULL)
+  withr::local_options(arl.env_cache_warning_shown = NULL)
 
   # First engine with use_env_cache=TRUE shows warning
   expect_message(
@@ -117,10 +117,10 @@ test_that("Dependency change causes stale data with env cache", {
   skip("This is a known limitation documented in inst/design-docs/CACHE_INVALIDATION.md")
   # This test documents WHY the env cache is off by default
   # Implementation would require:
-  # 1. Create module-a.rye with (define x 1)
-  # 2. Create module-b.rye that imports a and uses x
+  # 1. Create module-a.arl with (define x 1)
+  # 2. Create module-b.arl that imports a and uses x
   # 3. Load both with env cache enabled
-  # 4. Change module-a.rye to (define x 100)
+  # 4. Change module-a.arl to (define x 100)
   # 5. Reload: module-a fresh, module-b from cache
   # 6. Verify module-b has stale x=1 (demonstrating the issue)
 })
@@ -131,11 +131,11 @@ test_that("expr cache is safe with file changes", {
   temp_dir <- withr::local_tempdir()
 
   # Create a simple file (not a module, to avoid import complexity)
-  test_file <- file.path(temp_dir, "changing-file.rye")
+  test_file <- file.path(temp_dir, "changing-file.arl")
   writeLines("(define test-value 42)", test_file)
 
   # Load with env cache disabled (safe mode)
-  withr::local_options(rye.env_cache_warning_shown = TRUE)
+  withr::local_options(arl.env_cache_warning_shown = TRUE)
   engine1 <- Engine$new(use_env_cache = FALSE)
   engine1$eval_text(sprintf('(load "%s")', test_file))
 
@@ -155,19 +155,19 @@ test_that("expr cache is safe with file changes", {
 
 test_that("NULL use_env_cache inherits from global option", {
   # Test explicit NULL (default behavior)
-  withr::local_options(rye.use_env_cache = TRUE)
-  withr::local_options(rye.env_cache_warning_shown = TRUE)
+  withr::local_options(arl.use_env_cache = TRUE)
+  withr::local_options(arl.env_cache_warning_shown = TRUE)
 
   engine <- Engine$new(use_env_cache = NULL)
   expect_true(engine$use_env_cache)
 
-  withr::local_options(rye.use_env_cache = FALSE)
+  withr::local_options(arl.use_env_cache = FALSE)
   engine2 <- Engine$new(use_env_cache = NULL)
   expect_false(engine2$use_env_cache)
 })
 
 test_that("Warning message format is correct", {
-  withr::local_options(rye.env_cache_warning_shown = NULL)
+  withr::local_options(arl.env_cache_warning_shown = NULL)
 
   expect_message(
     Engine$new(use_env_cache = TRUE),
@@ -176,7 +176,7 @@ test_that("Warning message format is correct", {
 
   expect_message(
     {
-      withr::local_options(rye.env_cache_warning_shown = NULL)
+      withr::local_options(arl.env_cache_warning_shown = NULL)
       Engine$new(use_env_cache = TRUE)
     },
     "4x speedup"
@@ -184,9 +184,9 @@ test_that("Warning message format is correct", {
 
   expect_message(
     {
-      withr::local_options(rye.env_cache_warning_shown = NULL)
+      withr::local_options(arl.env_cache_warning_shown = NULL)
       Engine$new(use_env_cache = TRUE)
     },
-    "options\\(rye\\.use_env_cache = FALSE\\)"
+    "options\\(arl\\.use_env_cache = FALSE\\)"
   )
 })

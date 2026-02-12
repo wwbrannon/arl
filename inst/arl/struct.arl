@@ -1,0 +1,57 @@
+;;; Arl Standard Library - Struct Macros
+
+(module struct
+  (export defstruct)
+
+  (import functional)
+
+;;' @section Struct Definition
+
+;;' @description Define a struct constructor, predicate, and accessors.
+;;' @examples
+;;' ;; Define a Point struct
+;;' (defstruct Point (x y))
+;;'
+;;' ;; Constructor: make-Point
+;;' (define p (make-Point 3 4))
+;;'
+;;' ;; Predicate: Point?
+;;' (Point? p)                  ; => #t
+;;' (Point? 42)                 ; => #f
+;;'
+;;' ;; Accessors: Point-x, Point-y
+;;' (Point-x p)                 ; => 3
+;;' (Point-y p)                 ; => 4
+;;' @note `defstruct` generates a constructor (`make-Name`), a type predicate (`Name?`), and field accessors (`Name-field`) for each field. The struct is backed by an R named list with an S3 class.
+;;' @seealso dict
+(defmacro defstruct (name fields)
+  (define struct-name (as.character name))
+  (define ctor-name (as.symbol (str "make-" struct-name)))
+  (define pred-name (as.symbol (str struct-name "?")))
+  (define field-pairs
+    (mapcat
+      (lambda (field)
+        (list (structure (as.character field) :class "arl_keyword") field))
+      fields))
+  (define accessors
+    (map
+      (lambda (field)
+        (define accessor-name (as.symbol (str struct-name "-" (as.character field))))
+        `(define ,accessor-name
+           (lambda (obj)
+             "Return a struct field by name."
+             (r/call "[["
+               (list obj ,(as.character field)))
+           )))
+      fields))
+  `(begin
+     (define ,ctor-name
+       (lambda (,@fields)
+        "Construct a struct from field values."
+         (structure (list ,@field-pairs) :class ,struct-name)))
+    (define ,pred-name
+      (lambda (obj)
+        "Return #t if object is this struct type."
+        (inherits obj ,struct-name)))
+     ,@accessors))
+)

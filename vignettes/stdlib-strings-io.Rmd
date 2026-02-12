@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
 <!-- Regenerate with: make stdlib-docs -->
 
 ```{r setup, include = FALSE}
@@ -489,7 +489,7 @@ Read single line from stdin.
 
 ### print {#print}
 
-Print value in Rye representation.
+Print value in Arl representation.
 
 **Signature:** `(print x)`
 

@@ -1,4 +1,4 @@
-# Env: Wraps an R environment with Rye-specific registries (macros, modules) and
+# Env: Wraps an R environment with Arl-specific registries (macros, modules) and
 # helpers for define/set!/lookup, module attach, and format_value. Used by the engine
 # and compiled runtime.
 #

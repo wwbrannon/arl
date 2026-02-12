@@ -67,7 +67,7 @@ test_that("define/set! reject reserved .__* names", {
 
 test_that("compiled eval validates load arguments and missing files", {
   expect_error(engine$eval(engine$read("(load 1)")[[1]]), "load requires a single file path string")
-  expect_error(engine$eval(engine$read('(load "missing-file.rye")')[[1]]), "File not found")
+  expect_error(engine$eval(engine$read('(load "missing-file.arl")')[[1]]), "File not found")
 })
 
 test_that("compiled eval builds formulas without evaluating arguments", {
@@ -104,13 +104,13 @@ test_that("compiled eval validates lambda argument lists", {
 test_that("eval text errors include source and stack context", {
   env <- new.env(parent = baseenv())
   err <- tryCatch(
-    engine$eval_text("(+ 1 nope)", env = env, source_name = "test.rye"),
+    engine$eval_text("(+ 1 nope)", env = env, source_name = "test.arl"),
     error = function(e) e
   )
-  expect_s3_class(err, "rye_error")
+  expect_s3_class(err, "arl_error")
 
   formatted <- engine$source_tracker$format_error(err)
-  expect_match(formatted, "test\\.rye:1:1-1:10")
+  expect_match(formatted, "test\\.arl:1:1-1:10")
   expect_match(formatted, "R stack:")
   expect_match(formatted, "eval_text")
 })
@@ -226,7 +226,7 @@ test_that("compiler conformance for core constructs", {
       name = "load",
       expr = "(begin (load load_path) loaded_value)",
       init = function(env) {
-        module_path <- tempfile("rye-load-", fileext = ".rye")
+        module_path <- tempfile("arl-load-", fileext = ".arl")
         writeLines(
           c("(define loaded_value 42)"),
           module_path
@@ -271,7 +271,7 @@ test_that("compiler output is pure R code (no evaluator references)", {
     text <- paste(deparse(compiled), collapse = " ")
     expect_false(grepl("Evaluator", text, fixed = TRUE))
     expect_false(grepl("evaluator", text, fixed = TRUE))
-    expect_false(grepl("\\.rye_eval", text))
+    expect_false(grepl("\\.arl_eval", text))
   }
 })
 
@@ -414,7 +414,7 @@ test_that("compiler handles constant folding edge cases", {
   # Division by zero produces Inf (R behavior)
   expect_equal(engine$eval(engine$read("(/ 1 0)")[[1]]), Inf)
 
-  # NA/NaN propagation (NULL in Rye is NULL in R, not NA)
+  # NA/NaN propagation (NULL in Arl is NULL in R, not NA)
   result <- engine$eval(engine$read("(+ 1 2)")[[1]])
   expect_false(is.na(result))
 
@@ -453,10 +453,10 @@ test_that("compiler optimizes truthiness checks for logical operators", {
   expect_equal(engine$eval(engine$read("(if (! #f) 1 2)")[[1]]), 1)
 })
 
-test_that("compiler preserves Rye truthiness semantics", {
+test_that("compiler preserves Arl truthiness semantics", {
   engine <- make_engine()
 
-  # #f, #nil, and 0 are false in Rye (0 follows R semantics)
+  # #f, #nil, and 0 are false in Arl (0 follows R semantics)
   # Strings, empty lists, etc. are truthy
   expect_equal(engine$eval(engine$read("(if 0 1 2)")[[1]]), 2)  # 0 is falsy
   expect_equal(engine$eval(engine$read('(if "" 1 2)')[[1]]), 1)  # empty string is truthy
@@ -500,7 +500,7 @@ test_that("compiler eliminates dead branches for constant false test", {
 test_that("compiler eliminates dead branches for null test", {
   engine <- make_engine()
 
-  # NULL is falsy in Rye, so else-branch is taken
+  # NULL is falsy in Arl, so else-branch is taken
   expect_equal(engine$eval(engine$read("(if #nil 42 99)")[[1]]), 99)
 })
 

@@ -13,8 +13,8 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-Rye is a Lisp dialect implemented in and with access to R. This vignette
-walks through installing Rye, running the REPL, and evaluating a few
+Arl is a Lisp dialect implemented in and with access to R. This vignette
+walks through installing Arl, running the REPL, and evaluating a few
 expressions.
 
 ## Installation
@@ -26,14 +26,14 @@ devtools::install()
 ## Start the REPL
 
 ```{r eval=FALSE}
-library(rye)
+library(arl)
 engine <- Engine$new()
 engine$repl()
 ```
 
 The engine loads the base stdlib automatically.
 
-At the prompt, you can enter Rye expressions:
+At the prompt, you can enter Arl expressions:
 
 ```lisp
 (+ 1 2)
@@ -46,24 +46,24 @@ At the prompt, you can enter Rye expressions:
 Install the CLI wrapper once after installing the package:
 
 ```{r eval=FALSE}
-rye::install_cli()
+arl::install_cli()
 ```
 
 Then you can evaluate code without opening R:
 
 ```bash
-rye --eval "(+ 1 2)"
-rye --file script.rye
-rye -q
+arl --eval "(+ 1 2)"
+arl --file script.arl
+arl -q
 ```
 
 You can also pass multiple files; they run in order. Use `-q` or `--quiet` to start the REPL with a minimal banner.
 
-**REPL options (when running from R):** You can control the REPL with options before calling `engine$repl()`: `rye.repl_quiet` (minimal banner), `rye.repl_use_history` (set to `FALSE` to avoid touching R's readline history), and `rye.repl_bracketed_paste` (enable/disable bracketed paste mode for cleaner multiline pastes).
+**REPL options (when running from R):** You can control the REPL with options before calling `engine$repl()`: `arl.repl_quiet` (minimal banner), `arl.repl_use_history` (set to `FALSE` to avoid touching R's readline history), and `arl.repl_bracketed_paste` (enable/disable bracketed paste mode for cleaner multiline pastes).
 
-## Evaluate Rye from R
+## Evaluate Arl from R
 
-If you want to evaluate Rye inside an R script, you can parse and evaluate
+If you want to evaluate Arl inside an R script, you can parse and evaluate
 expressions directly:
 
 ```{r eval=FALSE}
@@ -76,21 +76,21 @@ engine$eval(exprs[[2]])
 If you have multiple expressions, `engine$eval_exprs()` will evaluate them
 sequentially and return the last value.
 
-## Run Rye files
+## Run Arl files
 
 From the REPL, use `load` to run a file in the current environment so that its definitions are visible:
 
 ```lisp
-(load "script.rye")
+(load "script.arl")
 ```
 
-From R, `engine$load_file(path)` runs the file in an *isolated* environment: definitions and imports in that file are not visible in the engine's main environment or to later code. Use this when you want to execute a script without affecting the session (e.g. run a script and then continue in the REPL with a clean scope). To run a file and have its definitions visible in the engine (e.g. for use in the REPL), call `engine$load_file_in_env(path, engine$env$env)` or evaluate `(load "script.rye")` from the REPL.
+From R, `engine$load_file(path)` runs the file in an *isolated* environment: definitions and imports in that file are not visible in the engine's main environment or to later code. Use this when you want to execute a script without affecting the session (e.g. run a script and then continue in the REPL with a clean scope). To run a file and have its definitions visible in the engine (e.g. for use in the REPL), call `engine$load_file_in_env(path, engine$env$env)` or evaluate `(load "script.arl")` from the REPL.
 
 ```{r eval=FALSE}
 engine <- Engine$new()
-engine$load_file("script.rye")  # isolated; definitions not visible
+engine$load_file("script.arl")  # isolated; definitions not visible
 # Or, to make definitions visible in the engine:
-engine$load_file_in_env("script.rye", engine$env$env)
+engine$load_file_in_env("script.arl", engine$env$env)
 ```
 
 ## Loading stdlib modules
@@ -149,7 +149,7 @@ this package.
 
 ## Getting help
 
-Rye has a built-in help system. Use `help` with a string to look up any
+Arl has a built-in help system. Use `help` with a string to look up any
 special form, macro, or function:
 
 ```lisp
@@ -164,9 +164,9 @@ built-in help for R functions.
 
 ## Documenting functions
 
-Rye has two ways to attach documentation to functions: `;;'` annotation
+Arl has two ways to attach documentation to functions: `;;'` annotation
 comments (used at definition time) and the `doc!` builtin (used at
-runtime). Both produce the same `rye_doc` attribute on the function, which
+runtime). Both produce the same `arl_doc` attribute on the function, which
 `help` and `doc` read.
 
 ### Annotation comments (`;;'`)
@@ -208,7 +208,7 @@ Multi-line content is written with continuation `;;'` lines:
 ```
 
 The compiler reads `;;'` blocks at compile time and bakes the resulting
-documentation into the function's `rye_doc` attribute, so no runtime
+documentation into the function's `arl_doc` attribute, so no runtime
 overhead is incurred. This is the recommended way to document stdlib
 functions and module exports.
 
@@ -250,13 +250,13 @@ not erase a previously set `:description`.
 
 | Situation | Use |
 |-----------|-----|
-| Defining a function in a `.rye` source file | `;;'` annotations |
+| Defining a function in a `.arl` source file | `;;'` annotations |
 | Attaching docs interactively in the REPL | `doc!` or `;;'` |
 | Building docs dynamically from data | `doc!` with keyword args |
 | Reading docs programmatically | `doc` |
 | Looking up docs as a user | `help` |
 
-Both `;;'` and `doc!` produce the same `rye_doc` attribute, so `help`
+Both `;;'` and `doc!` produce the same `arl_doc` attribute, so `help`
 and `doc` work identically regardless of how the documentation was
 attached.
 

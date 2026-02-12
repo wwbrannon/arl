@@ -1,4 +1,4 @@
-# Parser: Converts token lists from Tokenizer into Rye S-expressions (R calls). Expands
+# Parser: Converts token lists from Tokenizer into Arl S-expressions (R calls). Expands
 # quote/quasiquote sugar into explicit forms. Uses source_tracker for source locations.
 #
 # @field source_tracker SourceTracker for attaching source info to expressions.
@@ -14,7 +14,7 @@ Parser <- R6::R6Class(
     initialize = function(source_tracker = NULL) {
       self$source_tracker <- source_tracker
     },
-    # @description Parse a list of tokens into a list of Rye expressions (R calls/symbols/atoms).
+    # @description Parse a list of tokens into a list of Arl expressions (R calls/symbols/atoms).
     # @param tokens List of tokens from Tokenizer$tokenize().
     # @param source_name Optional name for error reporting and source attachment.
     # @return List of expressions.
@@ -119,7 +119,7 @@ Parser <- R6::R6Class(
           pos <<- pos + 1
           # Store keywords as a special structure
           # We'll use this in the compiler/runtime to convert to named arguments
-          keyword <- structure(token$value, class = "rye_keyword")
+          keyword <- structure(token$value, class = "arl_keyword")
           return(tracker$src_set(keyword, make_src(token)))
         }
 
@@ -227,13 +227,13 @@ Parser <- R6::R6Class(
       expressions
     },
 
-    # @description Convert a Rye expression back to its string representation.
+    # @description Convert an Arl expression back to its string representation.
     # Inverse of parse(): the output can be parsed back with read().
-    # @param expr A Rye expression (symbol, call, atomic, Cons, keyword, etc.).
+    # @param expr A Arl expression (symbol, call, atomic, Cons, keyword, etc.).
     # @return Character string.
     write = function(expr) {
       # Strip source tracking attribute so deparse() is clean
-      attr(expr, "rye_src") <- NULL
+      attr(expr, "arl_src") <- NULL
 
       # NULL -> #nil
       if (is.null(expr)) return("#nil")
@@ -247,7 +247,7 @@ Parser <- R6::R6Class(
       }
 
       # Keyword -> :foo
-      if (inherits(expr, "rye_keyword")) {
+      if (inherits(expr, "arl_keyword")) {
         return(paste0(":", as.character(expr)))
       }
 

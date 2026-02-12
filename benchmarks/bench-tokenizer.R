@@ -1,7 +1,7 @@
 # Tokenizer Benchmarks
 # Benchmarks for the lexical analysis component
 
-library(rye)
+library(arl)
 
 source("benchmarks/benchmark-helpers.R")
 source("benchmarks/workloads.R")
@@ -69,9 +69,9 @@ real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0) {
   bench_real <- benchmark_component(
-    "fibonacci.rye" = engine4$tokenize(real_workloads$fibonacci),
-    "quicksort.rye" = engine4$tokenize(real_workloads$quicksort),
-    "macro-examples.rye" = engine4$tokenize(real_workloads$macro_examples),
+    "fibonacci.arl" = engine4$tokenize(real_workloads$fibonacci),
+    "quicksort.arl" = engine4$tokenize(real_workloads$quicksort),
+    "macro-examples.arl" = engine4$tokenize(real_workloads$macro_examples),
     check = FALSE
   )
   print(bench_real[, c("expression", "median", "mem_alloc")])

@@ -84,7 +84,7 @@ test_that("define creates variables", {
   expect_equal(env$x, 42)
 
   engine$eval_in_env(engine$read("(define y (+ 1 2))")[[1]], env)
-  expect_equal(env$y, 3, ignore_attr = "rye_src")
+  expect_equal(env$y, 3, ignore_attr = "arl_src")
 })
 
 test_that("lambda creates functions", {

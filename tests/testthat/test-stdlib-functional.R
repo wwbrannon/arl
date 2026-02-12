@@ -14,14 +14,14 @@ test_that("map applies function to list", {
   expect_equal(result[[3]], 6)
 })
 
-test_that("map works from Rye code", {
+test_that("map works from Arl code", {
   env <- new.env()
   stdlib_env(engine, env)
 
-  # Define a doubling function in Rye
+  # Define a doubling function in Arl
   engine$eval_in_env(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env)
 
-  # Use map with the Rye function
+  # Use map with the Arl function
   result <- engine$eval_in_env(engine$read("(map double (list 1 2 3))")[[1]], env)
 
   expect_equal(result[[1]], 2)
@@ -42,11 +42,11 @@ test_that("filter selects matching elements", {
   expect_equal(result[[3]], 6)
 })
 
-test_that("filter works from Rye code", {
+test_that("filter works from Arl code", {
   env <- new.env()
   stdlib_env(engine, env)
 
-  # Define a predicate in Rye
+  # Define a predicate in Arl
   engine$eval_in_env(engine$read("(define even? (lambda (x) (= (% x 2) 0)))")[[1]], env)
 
   # Use filter
@@ -332,7 +332,7 @@ test_that("iterate-until collects values until predicate is true", {
 })
 
 # ============================================================================
-# Coverage: mapcat with empty result, foldl/foldr no-init in Rye, curry 3-arg
+# Coverage: mapcat with empty result, foldl/foldr no-init in Arl, curry 3-arg
 # ============================================================================
 
 test_that("mapcat with empty results returns empty list", {
@@ -345,12 +345,12 @@ test_that("mapcat with empty results returns empty list", {
   expect_equal(result, list())
 })
 
-test_that("foldl and foldr with no init value from Rye code", {
+test_that("foldl and foldr with no init value from Arl code", {
   env <- new.env()
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("functional"), env)
 
-  # foldl with no init (uses Rye's + which is variadic)
+  # foldl with no init (uses Arl's + which is variadic)
   result <- engine$eval_in_env(
     engine$read("(foldl + (list 1 2 3))")[[1]], env)
   expect_equal(result, 6)

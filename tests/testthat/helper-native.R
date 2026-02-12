@@ -1,12 +1,12 @@
-# Native test infrastructure for running .rye test files
-# Tests are functions named `test-*` in .rye files
+# Native test infrastructure for running .arl test files
+# Tests are functions named `test-*` in .arl files
 
 #' Run a single native test file
 #'
-#' Loads a .rye file and executes all functions named test-*
+#' Loads a .arl file and executes all functions named test-*
 #'
-#' @param path Path to the .rye test file
-#' @param engine A Rye engine instance
+#' @param path Path to the .arl test file
+#' @param engine A Arl engine instance
 #' @param env Environment to run tests in
 #' @return List of test results
 run_native_test_file <- function(path, engine, env) {
@@ -61,21 +61,21 @@ run_native_test_file <- function(path, engine, env) {
 
 #' Discover and run all native tests in a directory
 #'
-#' Finds all .rye files in the given directory and runs their tests
+#' Finds all .arl files in the given directory and runs their tests
 #'
-#' @param dir Directory to search for .rye test files (default: tests/native)
+#' @param dir Directory to search for .arl test files (default: tests/native)
 #' @return NULL (invisibly)
 run_native_tests <- function(dir = "tests/native") {
-  # Find all .rye files
+  # Find all .arl files
   if (!dir.exists(dir)) {
     warning(sprintf("Native test directory %s does not exist", dir))
     return(invisible(NULL))
   }
 
-  test_files <- list.files(dir, pattern = "\\.rye$", full.names = TRUE, recursive = TRUE)
+  test_files <- list.files(dir, pattern = "\\.arl$", full.names = TRUE, recursive = TRUE)
 
   if (length(test_files) == 0) {
-    message(sprintf("No .rye test files found in %s", dir))
+    message(sprintf("No .arl test files found in %s", dir))
     return(invisible(NULL))
   }
 
@@ -87,10 +87,10 @@ run_native_tests <- function(dir = "tests/native") {
     env <- engine$env$env
 
     # Load test-specific helpers (like skip function)
-    native_helper <- system.file("tests", "testthat", "helper-native.rye", package = "rye")
+    native_helper <- system.file("tests", "testthat", "helper-native.arl", package = "arl")
     if (native_helper == "") {
       # During development, file is not installed - use relative path
-      native_helper <- file.path("tests", "testthat", "helper-native.rye")
+      native_helper <- file.path("tests", "testthat", "helper-native.arl")
     }
     if (file.exists(native_helper)) {
       exprs <- engine$read(sprintf('(load "%s")', native_helper))

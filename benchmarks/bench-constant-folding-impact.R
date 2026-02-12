@@ -8,7 +8,7 @@
 if (file.exists("DESCRIPTION")) {
   devtools::load_all()
 } else {
-  library(rye)
+  library(arl)
 }
 
 source("benchmarks/benchmark-helpers.R")

@@ -9,18 +9,18 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
 <!-- Regenerate with: make stdlib-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-These functions are provided by the `math` module (`inst/rye/math.rye`).
+These functions are provided by the `math` module (`inst/arl/math.arl`).
 
 ## Numeric Type Predicates
 
-Rye implements a numeric tower adapted for R's type system:
+Arl implements a numeric tower adapted for R's type system:
 
 ```
 number?    (is.numeric OR is.complex)
@@ -105,7 +105,7 @@ Return #t if x is an exact number (integer storage type in R).
 (exact? (->integer 5)); => #t
 ```
 
-**Note:** In Scheme, exactness is a property of the number. In R (and Rye), exactness corresponds to integer storage type. All integers are exact; all doubles and complex numbers are inexact.
+**Note:** In Scheme, exactness is a property of the number. In R (and Arl), exactness corresponds to integer storage type. All integers are exact; all doubles and complex numbers are inexact.
 
 **See also:** [inexact?](#inexact), [exact->inexact](stdlib-conversions.html#exact-to-inexact) (in `conversions` module)
 

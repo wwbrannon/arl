@@ -1,5 +1,5 @@
-# Documentation for R-defined builtins (injected by RyeEngine$initialize_environment).
-# These functions are defined in R code (R/rye-engine.R) rather than .rye source files,
+# Documentation for R-defined builtins (injected by ArlEngine$initialize_environment).
+# These functions are defined in R code (R/engine.R) rather than .arl source files,
 # so they need a separate documentation source for the stdlib vignette generator and
 # the runtime help system.
 #
@@ -21,7 +21,7 @@ Seealso: list?, null?, atom?
 Name: eval
 Vignette: stdlib-macro-eval-interop
 Section: Evaluation
-Description: Evaluate a Rye expression in the current environment.
+Description: Evaluate a Arl expression in the current environment.
 Signature: (eval expr)
 Examples:
   (eval '(+ 1 2))           ; => 3
@@ -31,7 +31,7 @@ Seealso: r/eval, read, macroexpand
 Name: read
 Vignette: stdlib-macro-eval-interop
 Section: Evaluation
-Description: Parse a string into a Rye expression without evaluating it.
+Description: Parse a string into a Arl expression without evaluating it.
 Signature: (read source)
 Examples:
   (read "(+ 1 2)")          ; => (+ 1 2) (unevaluated)
@@ -39,13 +39,13 @@ Examples:
   (read "foo")              ; => foo (symbol)
 Seealso: eval, read-from-string
 Note: Returns the first expression from the source string, or #nil if
-  the string contains no expressions. Like R's parse(), but returns Rye
+  the string contains no expressions. Like R's parse(), but returns Arl
   S-expressions.
 
 Name: write
 Vignette: stdlib-macro-eval-interop
 Section: Evaluation
-Description: Convert a Rye expression to its string representation.
+Description: Convert a Arl expression to its string representation.
   The inverse of read.
 Signature: (write expr)
 Examples:
@@ -72,7 +72,7 @@ Examples:
 Seealso: gensym, macroexpand, defmacro
 Note: Use capture when writing anaphoric macros or other macros that
   intentionally introduce a binding visible to the caller. Without
-  capture, Rye's automatic hygiene renames macro-introduced symbols to
+  capture, Arl's automatic hygiene renames macro-introduced symbols to
   prevent accidental capture.
 
 Name: gensym
@@ -160,13 +160,13 @@ Name: r/eval
 Vignette: stdlib-macro-eval-interop
 Section: Evaluation
 Description: Evaluate an R expression directly via R's eval(), bypassing
-  Rye's compiler.
+  Arl's compiler.
 Signature: (r/eval expr)
 Examples:
   (r/eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
 Seealso: eval, r/call
 Note: Useful for evaluating raw R calls that use R control flow (for,
-  while) or other constructs that Rye normally overrides.
+  while) or other constructs that Arl normally overrides.
 
 Name: stdlib-env
 Vignette: stdlib-macro-eval-interop
@@ -181,7 +181,7 @@ Seealso: current-env
 Name: current-env
 Vignette: stdlib-macro-eval-interop
 Section: Environment Introspection
-Description: Return the current Rye evaluation environment.
+Description: Return the current Arl evaluation environment.
 Signature: (current-env)
 Examples:
   (environment? (current-env))  ; => #t

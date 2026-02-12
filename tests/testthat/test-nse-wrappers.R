@@ -45,7 +45,7 @@ test_that("with evaluates expression in data context", {
   test_list <- list(x = c(1, 2, 3), y = c(4, 5, 6))
   assign("test_list", test_list, envir = .GlobalEnv)
 
-  # Note: The expression inside 'with' uses R syntax, not Rye syntax
+  # Note: The expression inside 'with' uses R syntax, not Arl syntax
   # R will evaluate '+ x y' which in R means we need proper R syntax
   # But this is being quoted by our macro, so let's test carefully
   result <- engine$eval_text("(with (get \"test_list\") (+ x y))", env = env)
@@ -61,7 +61,7 @@ test_that("within modifies and returns data", {
   assign("test_df", test_df, envir = .GlobalEnv)
 
   # within uses R syntax for assignment, which is <- or =
-  # Note: Rye's 'define' won't work in R context, need R's assignment
+  # Note: Arl's 'define' won't work in R context, need R's assignment
   result <- engine$eval_text("(within (get \"test_df\") (<- z (+ x y)))", env = env)
 
   expect_true("z" %in% names(result))
@@ -112,9 +112,9 @@ test_that("NSE wrappers work with R's base functions correctly", {
 
   # with should work exactly like R's with
   r_result <- with(test_df, a * 2)
-  rye_result <- engine$eval_text("(with (get \"test_df6\") (* a 2))", env = env)
+  arl_result <- engine$eval_text("(with (get \"test_df6\") (* a 2))", env = env)
 
-  expect_equal(as.numeric(rye_result), r_result)
+  expect_equal(as.numeric(arl_result), r_result)
 })
 
 test_that("NSE wrappers handle nested expressions", {
@@ -161,7 +161,7 @@ test_that("substitute with 1 arg gives helpful error", {
 
   expect_error(
     engine$eval_text("(substitute 'x)", env = env),
-    "doesn't work in Rye functions"
+    "doesn't work in Arl functions"
   )
 })
 

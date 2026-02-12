@@ -1,3 +1,5 @@
+o) do we need codecov.yml and .coverage.yml
+
 o) rename package
 o) also remember to update gh-pages branch benchmark data
 

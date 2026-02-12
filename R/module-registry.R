@@ -1,4 +1,4 @@
-# Module registry for Rye modules. Tracks loaded modules (name -> list(env, exports, path))
+# Module registry for Arl modules. Tracks loaded modules (name -> list(env, exports, path))
 # and supports attach into a target environment. Used by compiled runtime for (import ...).
 #
 #' @keywords internal
@@ -6,15 +6,15 @@
 ModuleRegistry <- R6::R6Class(
   "ModuleRegistry",
   public = list(
-    rye_env = NULL,
+    arl_env = NULL,
     # @description Create a module registry for the given Env.
-    # @param rye_env A Env instance.
-    initialize = function(rye_env) {
-      if (!r6_isinstance(rye_env, "Env")) {
+    # @param arl_env A Env instance.
+    initialize = function(arl_env) {
+      if (!r6_isinstance(arl_env, "Env")) {
         stop("ModuleRegistry requires a Env")
       }
-      self$rye_env <- rye_env
-      self$rye_env$module_registry_env(create = TRUE)
+      self$arl_env <- arl_env
+      self$arl_env$module_registry_env(create = TRUE)
     },
     # @description Check whether a module is registered.
     # @param name Module name (single string).
@@ -23,7 +23,7 @@ ModuleRegistry <- R6::R6Class(
       if (!is.character(name) || length(name) != 1) {
         return(FALSE)
       }
-      registry <- self$rye_env$module_registry_env(create = FALSE)
+      registry <- self$arl_env$module_registry_env(create = FALSE)
       !is.null(registry) && exists(name, envir = registry, inherits = FALSE)
     },
     # @description Get a module's registry entry (env, exports, path) or NULL.
@@ -33,7 +33,7 @@ ModuleRegistry <- R6::R6Class(
       if (!self$exists(name)) {
         return(NULL)
       }
-      registry <- self$rye_env$module_registry_env(create = FALSE)
+      registry <- self$arl_env$module_registry_env(create = FALSE)
       get(name, envir = registry, inherits = FALSE)
     },
     # @description Register a loaded module.
@@ -46,7 +46,7 @@ ModuleRegistry <- R6::R6Class(
       if (!is.character(name) || length(name) != 1) {
         stop("module name must be a single string")
       }
-      registry <- self$rye_env$module_registry_env(create = TRUE)
+      registry <- self$arl_env$module_registry_env(create = TRUE)
       if (self$exists(name)) {
         stop(sprintf("module '%s' is already defined", name))
       }
@@ -81,14 +81,14 @@ ModuleRegistry <- R6::R6Class(
       entry_env$exports <- exports
       entry_env$path <- old_entry$path
       lockEnvironment(entry_env, bindings = TRUE)
-      registry <- self$rye_env$module_registry_env(create = TRUE)
+      registry <- self$arl_env$module_registry_env(create = TRUE)
       unlock_binding(name, registry)
       assign(name, entry_env, envir = registry)
       lockBinding(name, registry)
       entry_env
     },
     # @description Register an alias: path (absolute) -> same entry as name.
-    # Used so (import "path/to/file.rye") can find the module registered as (module X ...).
+    # Used so (import "path/to/file.arl") can find the module registered as (module X ...).
     # @param path Absolute path string (use normalize_path_absolute first).
     # @param name Module name (single string) already registered.
     # @return The registry entry (invisible). Idempotent if path already aliases same module.
@@ -96,7 +96,7 @@ ModuleRegistry <- R6::R6Class(
       if (!is.character(path) || length(path) != 1 || !is.character(name) || length(name) != 1) {
         stop("alias requires path and name as single strings")
       }
-      registry <- self$rye_env$module_registry_env(create = TRUE)
+      registry <- self$arl_env$module_registry_env(create = TRUE)
       entry <- self$get(name)
       if (is.null(entry)) {
         stop(sprintf("module '%s' is not loaded", name))
@@ -118,7 +118,7 @@ ModuleRegistry <- R6::R6Class(
       if (!is.character(name) || length(name) != 1) {
         stop("module name must be a single string")
       }
-      registry <- self$rye_env$module_registry_env(create = FALSE)
+      registry <- self$arl_env$module_registry_env(create = FALSE)
       if (!is.null(registry) && exists(name, envir = registry, inherits = FALSE)) {
         unlock_binding(name, registry)
         rm(list = name, envir = registry)
@@ -134,9 +134,9 @@ ModuleRegistry <- R6::R6Class(
       }
       exports <- entry$exports
       module_env <- entry$env
-      target_env <- self$rye_env$env
-      target_macro_registry <- self$rye_env$macro_registry_env(create = TRUE)
-      module_macro_registry <- self$rye_env$macro_registry_env(module_env, create = FALSE)
+      target_env <- self$arl_env$env
+      target_macro_registry <- self$arl_env$macro_registry_env(create = TRUE)
+      module_macro_registry <- self$arl_env$macro_registry_env(module_env, create = FALSE)
 
       for (export_name in exports) {
         if (!exists(export_name, envir = module_env, inherits = FALSE)) {
@@ -170,7 +170,7 @@ ModuleRegistry <- R6::R6Class(
         base::assign(".__macros", target_macro_registry, envir = target_env)
         lockBinding(".__macros", target_env)
       }
-      module_macro_registry <- self$rye_env$macro_registry_env(module_env, create = FALSE)
+      module_macro_registry <- self$arl_env$macro_registry_env(module_env, create = FALSE)
 
       # Partition into regular vs macro-only exports
       regular <- character(0)

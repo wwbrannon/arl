@@ -1,7 +1,7 @@
 # Macro Benchmarks
 # Benchmarks for the macro expansion system
 
-library(rye)
+library(arl)
 
 source("benchmarks/benchmark-helpers.R")
 source("benchmarks/workloads.R")
@@ -128,7 +128,7 @@ if (length(real_workloads) > 0 && "macro_examples" %in% names(real_workloads)) {
   engine6 <- Engine$new()
 
   bench_real <- benchmark_component(
-    "macro-examples.rye" = {
+    "macro-examples.arl" = {
       exprs <- engine6$read(real_workloads$macro_examples)
       for (expr in exprs) {
         engine6$eval(expr)

@@ -9,18 +9,18 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
 <!-- Regenerate with: make stdlib-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-These functions are provided by the `equality` module (`inst/rye/equality.rye`).
+These functions are provided by the `equality` module (`inst/arl/equality.arl`).
 
 ## Equality Predicates
 
-Rye provides `equal?` for deep structural equality with S3-style dispatch,
+Arl provides `equal?` for deep structural equality with S3-style dispatch,
 and `identical?` for R's native identity comparison. The Scheme predicates
 `eq?` and `eqv?` are intentionally not implemented because R does not
 provide the pointer-level semantics they require.
@@ -69,7 +69,7 @@ R's native equality test. Structural comparison for value
 
 ### eq? {#eq}
 
-**Not implemented in Rye.** Raises an error when called.
+**Not implemented in Arl.** Raises an error when called.
 
 **Signature:** `(eq? a b)`
 
@@ -81,7 +81,7 @@ R's native equality test. Structural comparison for value
 
 ### eqv? {#eqv}
 
-**Not implemented in Rye.** Raises an error when called.
+**Not implemented in Arl.** Raises an error when called.
 
 **Signature:** `(eqv? a b)`
 
@@ -138,7 +138,7 @@ Recursively compare list elements.
 
 ## S3 Dispatch System
 
-Rye implements a simplified S3-style dispatch system for generic functions
+Arl implements a simplified S3-style dispatch system for generic functions
 like `equal?`. Types are identified by their first S3 class, and methods
 are registered as `generic.class` bindings in the stdlib environment.
 

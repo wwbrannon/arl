@@ -1,7 +1,7 @@
 # R Interop Benchmarks
-# Benchmarks for calling R functions and building R objects from Rye
+# Benchmarks for calling R functions and building R objects from Arl
 
-library(rye)
+library(arl)
 
 source("benchmarks/benchmark-helpers.R")
 

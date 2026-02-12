@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
 <!-- Regenerate with: make stdlib-docs -->
 
 ```{r setup, include = FALSE}
@@ -19,7 +19,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ## List Operations
 
 Core list constructors and accessors, following Scheme conventions.
-Lists in Rye are backed by R lists; `car`/`cdr` provide the fundamental
+Lists in Arl are backed by R lists; `car`/`cdr` provide the fundamental
 decomposition and `cons` the fundamental construction.
 
 ### __as-list {#__as-list}

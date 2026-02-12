@@ -1,4 +1,4 @@
-#' Core Rye engine
+#' Core Arl engine
 #'
 #' Provides class-based organization for tokenization, parsing, macro expansion,
 #' compiled evaluation, and environment management.
@@ -6,10 +6,10 @@
 #' @importFrom R6 R6Class
 #' @field tokenizer Tokenizer instance used to lex source text.
 #' @field parser Parser instance used to read expressions.
-#' @field macro_expander Macro expander for Rye macros.
+#' @field macro_expander Macro expander for Arl macros.
 #' @field compiled_runtime Compiled runtime helper for executing compiled expressions.
 #' @field compiler Compiler for AST-to-R translation.
-#' @field help_system Help system for Rye topics.
+#' @field help_system Help system for Arl topics.
 #' @field env Env backing the engine.
 #' @field source_tracker Source tracker used for error context.
 #' @field module_cache Module cache for caching compiled modules.
@@ -17,15 +17,15 @@
 #'   environment) which is faster but only safe when dependencies don't change.
 #'   If FALSE (default), only the expr cache (compiled expressions) is used, which
 #'   is always safe. Can be set via engine initialization parameter or global
-#'   option `rye.use_env_cache`.
+#'   option `arl.use_env_cache`.
 #' @param env Optional environment or Env used as the engine base.
 #' @param parent Optional parent environment for the new environment.
-#' @param source Character string containing Rye source.
+#' @param source Character string containing Arl source.
 #' @param source_name Optional source name for error reporting.
 #' @param tokens Token list produced by the tokenizer.
-#' @param expr Rye expression (symbol/call/atomic value).
-#' @param exprs List of Rye expressions to evaluate.
-#' @param text Character string of Rye code to read/eval.
+#' @param expr Arl expression (symbol/call/atomic value).
+#' @param exprs List of Arl expressions to evaluate.
+#' @param text Character string of Arl code to read/eval.
 #' @param env Optional environment or Env to evaluate in (defaults to engine env).
 #' @param path File path to load.
 #' @param create_scope Logical; evaluate file in a child environment when TRUE.
@@ -57,7 +57,7 @@ Engine <- R6::R6Class(
     #'   Defaults to baseenv(). Cannot be specified together with env.
     #' @param use_env_cache Optional logical. If TRUE, enables the env cache for 4x faster
     #'   module loading. Only safe when dependencies don't change. Defaults to NULL, which
-    #'   inherits from global option `getOption("rye.use_env_cache", FALSE)`.
+    #'   inherits from global option `getOption("arl.use_env_cache", FALSE)`.
     #' @param coverage_tracker Optional CoverageTracker instance to enable coverage tracking
     #'   from the start. If provided, coverage will be tracked during stdlib loading.
     initialize = function(env = NULL, parent = NULL, use_env_cache = NULL, coverage_tracker = NULL) {
@@ -94,7 +94,7 @@ Engine <- R6::R6Class(
 
       self$compiler <- Compiler$new(context)
       # Disable constant folding when coverage is active — folding evaluates
-      # via base:: and bypasses Rye function bodies, defeating instrumentation.
+      # via base:: and bypasses Arl function bodies, defeating instrumentation.
       if (!is.null(coverage_tracker)) {
         self$compiler$enable_constant_folding <- FALSE
       }
@@ -120,13 +120,13 @@ Engine <- R6::R6Class(
     },
 
     #' @description
-    #' Convert a Rye expression to its string representation. Inverse of read().
+    #' Convert an Arl expression to its string representation. Inverse of read().
     write = function(expr) {
       self$parser$write(expr)
     },
 
     #' @description
-    #' Tokenize source into Rye tokens.
+    #' Tokenize source into Arl tokens.
     tokenize = function(source) {
       self$tokenizer$tokenize(source)
     },
@@ -282,9 +282,9 @@ Engine <- R6::R6Class(
       # Keyword args set specific fields and merge with existing documentation.
       # Positional string sets the description (backward compatible).
       env$`doc!` <- function(sym, ...) {
-        rye_env <- parent.frame()
+        arl_env <- parent.frame()
         name <- as.character(substitute(sym))
-        fn <- get(name, envir = rye_env, inherits = TRUE)
+        fn <- get(name, envir = arl_env, inherits = TRUE)
 
         args <- list(...)
 
@@ -294,7 +294,7 @@ Engine <- R6::R6Class(
           fn <- function(...) prim(...)
         }
 
-        doc <- attr(fn, "rye_doc", exact = TRUE)
+        doc <- attr(fn, "arl_doc", exact = TRUE)
         if (is.null(doc)) doc <- list()
 
         # Dispatch: positional "string" = description, named = keyword fields
@@ -309,10 +309,10 @@ Engine <- R6::R6Class(
           }
         }
 
-        attr(fn, "rye_doc") <- doc
+        attr(fn, "arl_doc") <- doc
 
         # Assign back into the environment where the binding lives
-        target <- rye_env
+        target <- arl_env
         while (!exists(name, envir = target, inherits = FALSE)) {
           target <- parent.env(target)
         }
@@ -325,7 +325,7 @@ Engine <- R6::R6Class(
       # Pass a field name string to get a specific field, or "all" for the
       # full documentation list.
       env$doc <- function(fn, field = "description") {
-        doc_attr <- attr(fn, "rye_doc", exact = TRUE)
+        doc_attr <- attr(fn, "arl_doc", exact = TRUE)
         if (is.null(doc_attr)) return(NULL)
         if (identical(field, "all")) return(doc_attr)
         doc_attr[[field]]
@@ -335,35 +335,35 @@ Engine <- R6::R6Class(
       # r/eval
       #
 
-      # Execute an R expression via R's own eval(), bypassing Rye's compiler
-      # entirely. This is the escape hatch for R constructs that Rye can't
+      # Execute an R expression via R's own eval(), bypassing Arl's compiler
+      # entirely. This is the escape hatch for R constructs that Arl can't
       # compile.
       #
-      # Why it exists: Rye overrides R's while, for, and other control-flow
+      # Why it exists: Arl overrides R's while, for, and other control-flow
       # keywords with its own implementations in the stdlib environment. But
       # sometimes you need R's actual while/for -- for example, the try/catch
-      # macro in control.rye builds tryCatch calls that R needs to evaluate
-      # natively, and r-interop.rye uses it for suppressWarnings,
+      # macro in control.arl builds tryCatch calls that R needs to evaluate
+      # natively, and r-interop.arl uses it for suppressWarnings,
       # suppressMessages, withCallingHandlers, etc. These are R special forms
-      # that can't be expressed through Rye's compiler.
+      # that can't be expressed through Arl's compiler.
       #
       # The complexity, piece by piece:
       #
       # 1. substitute/value dance: Tries to get the unevaluated expression.
-      #    Since Rye's compiler may have already evaluated the argument, it
+      #    Since Arl's compiler may have already evaluated the argument, it
       #    checks whether the result is a call/symbol (use as-is) or something
       #    else (use the substituted form).
       #
-      # 2. hygiene_unwrap: Strips Rye's macro hygiene wrappers so R sees clean
+      # 2. hygiene_unwrap: Strips Arl's macro hygiene wrappers so R sees clean
       #    R code.
       #
       # 3. quote unwrapping: If you write (r/eval (quote (seq_len 5))), the
       #    compiler passes a quote(seq_len(5)) call. R's eval(quote(x), env)
       #    would just look up x, so this unwraps one layer.
       #
-      # 4. R reserved word unshadowing: Rye defines while and for as regular
+      # 4. R reserved word unshadowing: Arl defines while and for as regular
       #    functions in the environment, shadowing R's keywords. Before calling
-      #    R's eval(), we temporarily remove any Rye shadows of R reserved
+      #    R's eval(), we temporarily remove any Arl shadows of R reserved
       #    words so R's native control flow works, then restore them afterward.
       #
       # Where it's used: try/catch/finally, suppressWarnings,
@@ -383,8 +383,8 @@ Engine <- R6::R6Class(
         if (is.call(expr) && length(expr) == 2L && identical(expr[[1L]], quote(quote))) {
           expr <- expr[[2L]]
         }
-        # Temporarily remove any Rye shadows of R reserved words so that
-        # R's eval() sees the built-in syntax rather than Rye's overrides.
+        # Temporarily remove any Arl shadows of R reserved words so that
+        # R's eval() sees the built-in syntax rather than Arl's overrides.
         r_reserved <- c("if", "else", "repeat", "while", "function",
                         "for", "in", "next", "break", "return")
         saved <- list()
@@ -407,7 +407,7 @@ Engine <- R6::R6Class(
           eval(expr, envir = env)
         }
       }
-      # Load rye_doc attributes from builtins-docs.dcf (single source of truth
+      # Load arl_doc attributes from builtins-docs.dcf (single source of truth
       # shared with the vignette generator)
       private$load_builtin_docs(env)
 
@@ -423,11 +423,11 @@ Engine <- R6::R6Class(
     #' @param env Environment to load stdlib into (e.g. \code{self$env$env} or a test env).
     load_stdlib_into_env = function(env) {
       resolved <- private$resolve_env_arg(env)
-      stdlib_dir <- system.file("rye", package = "rye")
+      stdlib_dir <- system.file("arl", package = "arl")
       if (!dir.exists(stdlib_dir)) {
         stop("stdlib directory not found")
       }
-      cache_path <- system.file("rye", "load-order.txt", package = "rye")
+      cache_path <- system.file("arl", "load-order.txt", package = "arl")
       if (nzchar(cache_path) && file.exists(cache_path)) {
         load_order <- readLines(cache_path, warn = FALSE)
         load_order <- load_order[nzchar(load_order)]
@@ -441,9 +441,9 @@ Engine <- R6::R6Class(
         deps <- FileDeps$new(dir = stdlib_dir)
         load_order <- deps$get_load_order()
       }
-      target_rye <- Env$new(resolved)
+      target_arl <- Env$new(resolved)
       for (name in load_order) {
-        if (!target_rye$module_registry$exists(name)) {
+        if (!target_arl$module_registry$exists(name)) {
           path <- resolve_stdlib_path(name)
           if (is.null(path)) {
             stop("stdlib module not found: ", name)
@@ -456,7 +456,7 @@ Engine <- R6::R6Class(
           )
         }
         tryCatch(
-          target_rye$module_registry$attach_into(name, resolved),
+          target_arl$module_registry$attach_into(name, resolved),
           error = function(e) {
             stop(sprintf("Failed to attach stdlib module '%s': %s", name, conditionMessage(e)), call. = FALSE)
           }
@@ -466,7 +466,7 @@ Engine <- R6::R6Class(
     },
 
     #' @description
-    #' Load and evaluate a Rye source file in an isolated scope. The file runs in a
+    #' Load and evaluate an Arl source file in an isolated scope. The file runs in a
     #' child of the engine's environment, so definitions and imports in the file
     #' are not visible in the engine's main environment or to subsequent code. For
     #' source-like behavior (definitions visible in the engine), use
@@ -476,7 +476,7 @@ Engine <- R6::R6Class(
     },
 
     #' @description
-    #' Load and evaluate a Rye source file in an explicit environment. By default
+    #' Load and evaluate an Arl source file in an explicit environment. By default
     #' (\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
     #' and imports in the file are visible in that environment. With
     #' \code{create_scope = TRUE}, the file runs in a child of \code{env} and its
@@ -609,8 +609,8 @@ Engine <- R6::R6Class(
     #' @description
     #' Inspect expansion and compilation for debugging. Parse text, expand macros in env,
     #' then compile to R. Returns parsed AST, expanded form, compiled R expression, and
-    #' deparsed R code so you can see exactly what a Rye program becomes.
-    #' @param text Character; Rye source (single expression or multiple).
+    #' deparsed R code so you can see exactly what an Arl program becomes.
+    #' @param text Character; Arl source (single expression or multiple).
     #' @param env Environment or NULL (use engine env). Must have macros/stdlib if needed.
     #' @param source_name Name for parse errors.
     #' @return List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr or NULL), \code{compiled_deparsed} (character, or NULL).
@@ -644,7 +644,7 @@ Engine <- R6::R6Class(
     },
 
     #' @description
-    #' Start the Rye REPL using this engine.
+    #' Start the Arl REPL using this engine.
     repl = function() {
       REPL$new(engine = self)$run()
     },
@@ -703,7 +703,7 @@ Engine <- R6::R6Class(
     },
 
     load_builtin_docs = function(env) {
-      dcf_path <- system.file("builtins-docs.dcf", package = "rye")
+      dcf_path <- system.file("builtins-docs.dcf", package = "arl")
       if (!nzchar(dcf_path) || !file.exists(dcf_path)) return(invisible(NULL))
       m <- read_dcf_with_comments(dcf_path)
       doc_fields <- c("Description", "Signature", "Examples", "Seealso", "Note")
@@ -719,7 +719,7 @@ Engine <- R6::R6Class(
           }
         }
         if (length(doc) > 0L) {
-          attr(obj, "rye_doc") <- doc
+          attr(obj, "arl_doc") <- doc
           assign(name, obj, envir = env)
         }
       }
@@ -803,7 +803,7 @@ Engine <- R6::R6Class(
   )
 )
 
-#' Get the default Rye engine
+#' Get the default Arl engine
 #'
 #' @export
 default_engine <- local({

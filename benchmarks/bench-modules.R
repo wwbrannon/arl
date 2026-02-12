@@ -1,7 +1,7 @@
 # Module and Load/Run Benchmarks
 # Benchmarks for import/load/run overhead
 
-library(rye)
+library(arl)
 
 source("benchmarks/benchmark-helpers.R")
 
@@ -9,12 +9,12 @@ cat("=== Module/Load/Run Benchmarks ===\n\n")
 
 engine <- Engine$new()
 
-# Prepare a small Rye file in a temp dir
+# Prepare a small Arl file in a temp dir
 script_lines <- c(
   "(define add2 (lambda (x) (+ x 2)))",
   "(add2 40)"
 )
-script_path <- file.path(tempdir(), "rye-bench-module.rye")
+script_path <- file.path(tempdir(), "arl-bench-module.arl")
 writeLines(script_lines, script_path)
 
 # Benchmark 1: Module import overhead

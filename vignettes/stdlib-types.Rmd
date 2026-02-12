@@ -9,14 +9,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-<!-- AUTO-GENERATED from inst/rye/ source files. Do not edit manually. -->
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
 <!-- Regenerate with: make stdlib-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-These functions are provided by the `types` module (`inst/rye/types.rye`).
+These functions are provided by the `types` module (`inst/arl/types.arl`).
 
 ## List and Pair Predicates
 
@@ -138,7 +138,7 @@ Return #t if x is a symbol.
 
 ### keyword? {#keyword}
 
-Return #t if x is a Rye keyword.
+Return #t if x is an Arl keyword.
 
 **Signature:** `(keyword? x)`
 

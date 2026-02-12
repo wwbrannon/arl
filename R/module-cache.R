@@ -1,4 +1,4 @@
-# Module caching system for Rye
+# Module caching system for Arl
 # Implements dual-cache strategy:
 # - env cache (.env.rds): Full module environment (fast, requires safety check)
 # - expr cache (.code.rds): Compiled expressions (safe fallback)
@@ -16,7 +16,7 @@ ModuleCache <- R6::R6Class(
     },
 
     #' @description Get cache file paths for a source file
-    #' @param src_file Path to source .rye file
+    #' @param src_file Path to source .arl file
     #' @return List with cache_dir, env_cache, code_cache, code_r, file_hash
     get_paths = function(src_file) {
       if (!file.exists(src_file)) {
@@ -55,7 +55,7 @@ ModuleCache <- R6::R6Class(
         # Skip R interop wrappers (safe - they're from other modules)
         if (grepl("^__r", name)) next
 
-        # Skip Rye helper functions installed by runtime (safe)
+        # Skip Arl helper functions installed by runtime (safe)
         if (grepl("^\\.__", name)) next
 
         # Skip macro helpers (safe)
@@ -128,7 +128,7 @@ ModuleCache <- R6::R6Class(
 
       tryCatch({
         cache_data <- list(
-          version = as.character(utils::packageVersion("rye")),
+          version = as.character(utils::packageVersion("arl")),
           file_hash = file_hash,
           module_name = module_name,
           module_env = module_env,
@@ -166,7 +166,7 @@ ModuleCache <- R6::R6Class(
 
       tryCatch({
         cache_data <- list(
-          version = as.character(utils::packageVersion("rye")),
+          version = as.character(utils::packageVersion("arl")),
           file_hash = file_hash,
           module_name = module_name,
           exports = exports,
@@ -182,7 +182,7 @@ ModuleCache <- R6::R6Class(
             paste0("# Compiled code for module: ", module_name),
             paste0("# Source: ", basename(src_file)),
             paste0("# Hash: ", file_hash),
-            paste0("# Rye version: ", utils::packageVersion("rye")),
+            paste0("# Arl version: ", utils::packageVersion("arl")),
             paste0("# Exports: ", paste(exports, collapse = ", ")),
             paste0("# Export all: ", export_all),
             "",
@@ -301,7 +301,7 @@ ModuleCache <- R6::R6Class(
       if (!is.list(cache_data)) return(FALSE)
 
       # Check version
-      current_version <- as.character(utils::packageVersion("rye"))
+      current_version <- as.character(utils::packageVersion("arl"))
       if (is.null(cache_data$version) || cache_data$version != current_version) {
         return(FALSE)
       }

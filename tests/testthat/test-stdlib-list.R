@@ -163,7 +163,7 @@ test_that("cons adds element to front", {
   expect_equal(result[[3]], 3)
 })
 
-test_that("cons with non-list cdr produces dotted pair (rye_cons)", {
+test_that("cons with non-list cdr produces dotted pair (arl_cons)", {
   env <- stdlib_env(engine, new.env())
   result <- engine$eval_in_env(engine$read("(cons 'a 'b)")[[1]], env)
   expect_true(r6_isinstance(result, "Cons"))

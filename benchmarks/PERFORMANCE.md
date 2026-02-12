@@ -1,4 +1,4 @@
-# Rye Performance Analysis and Optimization Guide
+# Arl Performance Analysis and Optimization Guide
 
 ## Table of Contents
 
@@ -11,7 +11,7 @@
 
 ## Architecture Overview
 
-Rye uses a pipeline architecture with four main components:
+Arl uses a pipeline architecture with four main components:
 
 ```
 Source Code
@@ -196,16 +196,16 @@ Nearly linear scaling (small overhead from chunking).
 
 #### Issue 3: Evaluator Argument List Growing (O(n²)) - FIXED ✅
 
-**Location**: `R/eval.R:699-739` (rye_eval_args_cps function)
+**Location**: `R/eval.R:699-739` (arl_eval_args_cps function)
 
 **Original Code Pattern**:
 ```r
-rye_eval_args_cps <- function(expr, env, k) {
+arl_eval_args_cps <- function(expr, env, k) {
   args <- list()
   arg_names <- character(0)
   step <- function(i) {
     # ...
-    rye_eval_cps(arg_expr, env, function(value) {
+    arl_eval_cps(arg_expr, env, function(value) {
       args <<- c(args, list(value))      # O(n) copy
       arg_names <<- c(arg_names, "")     # O(n) copy
       step(i + 1)
@@ -225,7 +225,7 @@ rye_eval_args_cps <- function(expr, env, k) {
 
 **Fix Applied**:
 ```r
-rye_eval_args_cps <- function(expr, env, k) {
+arl_eval_args_cps <- function(expr, env, k) {
   # Pre-allocate to max size
   max_args <- max(0, length(expr) - 1)
   args <- vector("list", max_args)
@@ -237,14 +237,14 @@ rye_eval_args_cps <- function(expr, env, k) {
       # Trim to actual size
       actual_size <- arg_idx - 1
       if (actual_size == 0) {
-        return(rye_call_k(k, list(args = list(), arg_names = character(0))))
+        return(arl_call_k(k, list(args = list(), arg_names = character(0))))
       }
       args <- args[1:actual_size]
       arg_names <- arg_names[1:actual_size]
-      return(rye_call_k(k, list(args = args, arg_names = arg_names)))
+      return(arl_call_k(k, list(args = args, arg_names = arg_names)))
     }
     # ...
-    rye_eval_cps(arg_expr, env, function(value) {
+    arl_eval_cps(arg_expr, env, function(value) {
       args[[arg_idx]] <<- value         # O(1) assignment
       arg_names[[arg_idx]] <<- ""       # O(1) assignment
       arg_idx <<- arg_idx + 1
@@ -295,7 +295,7 @@ These issues remain in the codebase and represent potential performance improvem
 
 **Code Example**:
 ```r
-rye_hygienize <- function(expr) {
+arl_hygienize <- function(expr) {
   # First pass: collect symbols
   symbols <- collect_symbols(expr)
 
@@ -326,7 +326,7 @@ rye_hygienize <- function(expr) {
 **Potential Fix**:
 ```r
 # Single-pass tree walk combining all operations
-rye_hygienize_single_pass <- function(expr, symbols = NULL, depth = 0) {
+arl_hygienize_single_pass <- function(expr, symbols = NULL, depth = 0) {
   if (depth == 0) symbols <- collect_symbols(expr)
 
   # Process node: hygiene + unquote + capture check in one pass
@@ -335,7 +335,7 @@ rye_hygienize_single_pass <- function(expr, symbols = NULL, depth = 0) {
   } else if (is.call(expr)) {
     # Process children recursively
     result <- lapply(as.list(expr), function(e) {
-      rye_hygienize_single_pass(e, symbols, depth + 1)
+      arl_hygienize_single_pass(e, symbols, depth + 1)
     })
     return(as.call(result))
   } else {
@@ -356,25 +356,25 @@ source("benchmarks/profile-macro.R")
 
 ---
 
-#### Issue 6: Repeated rye_strip_src Calls
+#### Issue 6: Repeated arl_strip_src Calls
 
 **Location**: `R/utils.R:88-110` (called >30 times throughout eval.R)
 
-**Pattern**: `rye_strip_src()` walks the entire expression tree to remove source location metadata, and is called repeatedly without memoization.
+**Pattern**: `arl_strip_src()` walks the entire expression tree to remove source location metadata, and is called repeatedly without memoization.
 
 **Code Example**:
 ```r
 # Called in many places in eval.R
-rye_strip_src <- function(expr) {
+arl_strip_src <- function(expr) {
   if (is.null(expr)) return(NULL)
 
   # Recursive tree walk
   if (is.call(expr) || is.list(expr)) {
-    expr <- lapply(as.list(expr), rye_strip_src)
+    expr <- lapply(as.list(expr), arl_strip_src)
     if (is.call(original_expr)) expr <- as.call(expr)
   }
 
-  attr(expr, "rye_src") <- NULL
+  attr(expr, "arl_src") <- NULL
   expr
 }
 ```
@@ -395,14 +395,14 @@ rye_strip_src <- function(expr) {
 # Option 1: Memoization
 .strip_src_cache <- new.env(hash = TRUE)
 
-rye_strip_src_cached <- function(expr) {
+arl_strip_src_cached <- function(expr) {
   key <- digest::digest(expr)  # Or use object address
 
   if (exists(key, .strip_src_cache)) {
     return(get(key, .strip_src_cache))
   }
 
-  result <- rye_strip_src(expr)
+  result <- arl_strip_src(expr)
   assign(key, result, .strip_src_cache)
   result
 }
@@ -418,7 +418,7 @@ rye_strip_src_cached <- function(expr) {
 # Profile evaluator
 source("benchmarks/profile-eval.R")
 
-# Look for time in rye_strip_src
+# Look for time in arl_strip_src
 ```
 
 ---
@@ -523,9 +523,9 @@ All 871 tests pass. Performance improvements verified:
 
 | Workload | Before | After | Speedup |
 |----------|--------|-------|---------|
-| fibonacci.rye | ~12ms | ~11ms | 1.1x |
-| quicksort.rye | ~14ms | ~12ms | 1.2x |
-| macro-examples.rye | ~22ms | ~18ms | 1.2x |
+| fibonacci.arl | ~12ms | ~11ms | 1.1x |
+| quicksort.arl | ~14ms | ~12ms | 1.2x |
+| macro-examples.arl | ~22ms | ~18ms | 1.2x |
 
 **Note**: Modest improvements on real workloads because they don't stress the pathological cases (very long strings, very large lists). The fixes prevent worst-case behavior.
 
@@ -547,7 +547,7 @@ All 871 tests pass. Performance improvements verified:
 
 ### Medium Priority
 
-3. **Repeated rye_strip_src** (Issue 6)
+3. **Repeated arl_strip_src** (Issue 6)
    - **Impact**: 10-20% overall speedup
    - **Effort**: Low (add memoization)
    - **Risk**: Low (pure function, easy to cache)
@@ -627,7 +627,7 @@ The benchmark suite provides comprehensive coverage:
 
 - **Component isolation**: Tokenizer, parser, macro, eval, stdlib tested independently
 - **Workload variety**: Micro, small, medium, large, XL synthetic workloads
-- **Real examples**: fibonacci.rye, quicksort.rye, macro-examples.rye
+- **Real examples**: fibonacci.arl, quicksort.arl, macro-examples.arl
 - **Pathological cases**: Large strings, deep nesting, many arguments
 - **End-to-end**: Full pipeline with component breakdown
 
@@ -648,7 +648,7 @@ The benchmark suite provides comprehensive coverage:
    - Initial baseline captured
 
 3. **Address high-impact, low-risk items**
-   - **Next**: rye_strip_src memoization (10-20% gain, low risk)
+   - **Next**: arl_strip_src memoization (10-20% gain, low risk)
    - **Then**: Macro tree walk consolidation (30-50% for macros, low risk)
 
 4. **Consider CPS optimization carefully**
@@ -681,9 +681,9 @@ Based on current baseline (2026-01-27):
 
 | Workload | Current | Target | Required Speedup |
 |----------|---------|--------|------------------|
-| fibonacci.rye | 11ms | 5ms | 2.2x |
-| quicksort.rye | 12ms | 6ms | 2.0x |
-| macro-examples.rye | 18ms | 9ms | 2.0x |
+| fibonacci.arl | 11ms | 5ms | 2.2x |
+| quicksort.arl | 12ms | 6ms | 2.0x |
+| macro-examples.arl | 18ms | 9ms | 2.0x |
 
 **Primary target**: 2x overall speedup for real workloads
 
@@ -758,7 +758,7 @@ quick_compare()  # Auto-selects latest files
 
 ## Summary
 
-Rye's performance has already been significantly improved through fixing three O(n²) issues in the tokenizer, parser, and evaluator. The profiling infrastructure is now in place to guide further optimizations.
+Arl's performance has already been significantly improved through fixing three O(n²) issues in the tokenizer, parser, and evaluator. The profiling infrastructure is now in place to guide further optimizations.
 
 **Key Takeaways**:
 
@@ -771,7 +771,7 @@ Rye's performance has already been significantly improved through fixing three O
 **Next Steps**:
 
 1. Run baseline benchmarks and profiling
-2. Implement low-risk, high-impact optimizations (rye_strip_src memoization)
+2. Implement low-risk, high-impact optimizations (arl_strip_src memoization)
 3. Profile macro expansion and consolidate tree walks
 4. Prototype CPS optimization on a branch
 5. Measure everything - don't optimize blindly!

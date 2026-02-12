@@ -1,11 +1,11 @@
-# Coverage configuration for Rye package
-# Handles both R code (via covr) and Rye code (via tools/coverage/rye-coverage.R)
+# Coverage configuration for Arl package
+# Handles both R code (via covr) and Arl code (via tools/coverage/arl-coverage.R)
 
 # Output directory structure
 output:
   base_dir: "coverage"
   r_dir: "coverage/r"
-  rye_dir: "coverage/rye"
+  arl_dir: "coverage/arl"
   combined_dir: "coverage/combined"
 
 # R code coverage (via covr)
@@ -32,24 +32,24 @@ r_coverage:
     line: 80      # minimum line coverage percentage
     function: 75  # minimum function coverage percentage
 
-# Rye code coverage (via tools/coverage/rye-coverage.R)
-rye_coverage:
+# Arl code coverage (via tools/coverage/arl-coverage.R)
+arl_coverage:
   enabled: true
 
-  # Directories to scan for .rye files
+  # Directories to scan for .arl files
   scan_dirs:
-    - "inst/rye"
+    - "inst/arl"
     - "tests/native"
 
   # Output formats
   formats:
-    - html       # coverage/rye/index.html
-    - json       # coverage/rye/coverage.json (codecov format)
+    - html       # coverage/arl/index.html
+    - json       # coverage/arl/coverage.json (codecov format)
     - console    # terminal output
 
   # File exclusions (glob patterns)
   exclusions:
-    - "inst/rye/.rye_cache/*"
+    - "inst/arl/.arl_cache/*"
 
   # Coverage thresholds
   thresholds:
@@ -74,19 +74,19 @@ codecov:
   # Upload settings
   upload:
     r_coverage: true
-    rye_coverage: true
+    arl_coverage: true
 
   # Flags for separating coverage types
   flags:
     r: "r-code"
-    rye: "rye-code"
+    arl: "arl-code"
 
   # Project-level settings (for codecov.yml)
   projects:
     r:
       target: 80%
       threshold: 2%
-    rye:
+    arl:
       target: 85%
       threshold: 2%
 

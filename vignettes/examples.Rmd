@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-These examples are complete Rye programs from `inst/examples`. Each section
+These examples are complete Arl programs from `inst/examples`. Each section
 pulls in the full source from the corresponding file at build time, with
 syntax highlighting, plus a link back to the repository version.
 
@@ -17,11 +17,11 @@ syntax highlighting, plus a link back to the repository version.
 
 Recursive, iterative, and sequence-based Fibonacci implementations.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/fibonacci.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/fibonacci.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "fibonacci.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "fibonacci.rye")
+path <- system.file("examples", "fibonacci.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "fibonacci.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
@@ -32,11 +32,11 @@ cat("\n```\n")
 
 Quicksort and mergesort, with list operations and helpers.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/quicksort.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/quicksort.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "quicksort.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "quicksort.rye")
+path <- system.file("examples", "quicksort.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "quicksort.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
@@ -47,11 +47,11 @@ cat("\n```\n")
 
 Multiple FizzBuzz variations showing control flow and list processing.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/fizzbuzz.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/fizzbuzz.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "fizzbuzz.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "fizzbuzz.rye")
+path <- system.file("examples", "fizzbuzz.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "fizzbuzz.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
@@ -62,11 +62,11 @@ cat("\n```\n")
 
 Macro definitions, quasiquote, expansion, and DSL-style helpers.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/macro-examples.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/macro-examples.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "macro-examples.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "macro-examples.rye")
+path <- system.file("examples", "macro-examples.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "macro-examples.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
@@ -77,11 +77,11 @@ cat("\n```\n")
 
 Threading a value through a custom pipeline macro.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/pipeline-macros.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/pipeline-macros.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "pipeline-macros.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "pipeline-macros.rye")
+path <- system.file("examples", "pipeline-macros.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "pipeline-macros.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
@@ -92,11 +92,11 @@ cat("\n```\n")
 
 R interoperability and data transformations.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/data-analysis.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/data-analysis.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "data-analysis.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "data-analysis.rye")
+path <- system.file("examples", "data-analysis.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "data-analysis.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
@@ -107,11 +107,11 @@ cat("\n```\n")
 
 BFS traversal and Dijkstra shortest paths.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/graph-paths.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/graph-paths.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "graph-paths.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "graph-paths.rye")
+path <- system.file("examples", "graph-paths.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "graph-paths.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
@@ -122,11 +122,11 @@ cat("\n```\n")
 
 Parsing logs, aggregating status counts, and computing averages.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/log-parser.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/log-parser.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "log-parser.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "log-parser.rye")
+path <- system.file("examples", "log-parser.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "log-parser.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
@@ -137,11 +137,11 @@ cat("\n```\n")
 
 Data wrangling and CSV output using R interop.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/sales-report.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/sales-report.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "sales-report.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "sales-report.rye")
+path <- system.file("examples", "sales-report.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "sales-report.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
@@ -152,11 +152,11 @@ cat("\n```\n")
 
 Dependency ordering and execution sequencing.
 
-Source: <https://github.com/wwbrannon/rye/blob/main/inst/examples/task-runner.rye>
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/task-runner.arl>
 
 ```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "task-runner.rye", package = "rye")
-if (path == "") path <- file.path("..", "inst", "examples", "task-runner.rye")
+path <- system.file("examples", "task-runner.arl", package = "arl")
+if (path == "") path <- file.path("..", "inst", "examples", "task-runner.arl")
 cat("```lisp\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")

@@ -1,4 +1,4 @@
-# Type predicates and boolean tests from types.rye, math.rye, logic.rye
+# Type predicates and boolean tests from types.arl, math.arl, logic.arl
 
 engine <- make_engine()
 
@@ -224,7 +224,7 @@ test_that("predicates and interop helpers work", {
 
   expect_true(env$`list-or-pair?`(list(1)))
   expect_false(env$`list-or-pair?`(list()))
-  expect_true(env$`keyword?`(structure("from", class = "rye_keyword")))
+  expect_true(env$`keyword?`(structure("from", class = "arl_keyword")))
   expect_true(env$`vector?`(c(1, 2, 3)))
   expect_true(env$`true?`(TRUE))
   expect_true(env$`false?`(FALSE))

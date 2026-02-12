@@ -1,6 +1,6 @@
-# Contributing to Rye
+# Contributing to Arl
 
-Thanks for your interest in Rye. This project is experimental and welcomes
+Thanks for your interest in Arl. This project is experimental and welcomes
 issues, examples, and documentation improvements.
 
 ## Getting started
@@ -20,7 +20,7 @@ make test
 
 ## Architecture overview
 
-Rye is a Lisp dialect that compiles to R code and evaluates it with R's
+Arl is a Lisp dialect that compiles to R code and evaluates it with R's
 native `eval()`. The pipeline is:
 
 ```
@@ -41,7 +41,7 @@ Key source files:
 | `R/runtime.R` | Runtime helpers and base stdlib |
 | `R/engine.R` | `Engine` R6 class (main entry point) |
 | `R/env.R` | Environment management |
-| `inst/rye/*.rye` | Modular stdlib (Rye source) |
+| `inst/arl/*.arl` | Modular stdlib (Arl source) |
 
 ## Code style
 
@@ -52,12 +52,12 @@ Key source files:
 
 ## Tests
 
-Rye has two test suites:
+Arl has two test suites:
 
 - **R tests** (`tests/testthat/test-*.R`) -- test engine internals, R interop,
   and comprehensive edge cases using testthat.
-- **Native tests** (`tests/native/test-*.rye`) -- test Rye language semantics
-  and stdlib from the user perspective, using Rye's own `assert` module.
+- **Native tests** (`tests/native/test-*.arl`) -- test Arl language semantics
+  and stdlib from the user perspective, using Arl's own `assert` module.
 
 See [tests/README.md](tests/README.md) for the full test guide, including
 when to write R tests vs native tests and how to avoid duplication.
@@ -86,7 +86,7 @@ make document  # all of the above plus vignettes
 
 ## Adding a stdlib function
 
-1. **Define** the function in the appropriate `inst/rye/*.rye` module
+1. **Define** the function in the appropriate `inst/arl/*.arl` module
    (or create a new module if it's a new topic).
 2. **Export** it from the module's `(export ...)` list.
 3. **Document** it with `;;'` annotation comments immediately before the
@@ -112,7 +112,7 @@ Run `make help` to see all available commands. Key ones:
 make install       # install the package
 make test          # run all tests
 make check         # R CMD check --as-cran
-make coverage      # run R + Rye coverage analysis
+make coverage      # run R + Arl coverage analysis
 make bench         # run benchmarks
 make document      # generate all documentation
 make stdlib-order  # print stdlib load order

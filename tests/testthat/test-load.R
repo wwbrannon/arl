@@ -2,7 +2,7 @@ test_that("engine$load_file evaluates source into environment", {
   engine <- make_engine()
   env <- engine$env$env
 
-  path <- tempfile(fileext = ".rye")
+  path <- tempfile(fileext = ".arl")
   writeLines(c("(define foo 42)", "(define bar (+ foo 1))"), path)
   on.exit(unlink(path), add = TRUE)
 
@@ -16,12 +16,12 @@ test_that("(load ...) evaluates file in current environment", {
   engine <- make_engine()
   env <- engine$env$env
 
-  path <- tempfile(fileext = ".rye")
+  path <- tempfile(fileext = ".arl")
   writeLines("(define foo 7)", path)
   on.exit(unlink(path), add = TRUE)
 
-  path_for_rye <- normalizePath(path, winslash = "/", mustWork = FALSE)
-  exprs <- engine$read(paste0("(load \"", path_for_rye, "\")"))
+  path_for_arl <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  exprs <- engine$read(paste0("(load \"", path_for_arl, "\")"))
   engine$eval_in_env(exprs[[1]], env)
 
   expect_equal(get("foo", envir = env), 7)
@@ -64,7 +64,7 @@ test_that("(import ...) loads module exports into environment", {
     unlink(tmp_dir, recursive = TRUE)
   }, add = TRUE)
 
-  module_file <- file.path(tmp_dir, paste0(module_name, ".rye"))
+  module_file <- file.path(tmp_dir, paste0(module_name, ".arl"))
   writeLines(c(
     sprintf("(module %s", module_name),
     "  (export square inc)",
@@ -93,7 +93,7 @@ test_that("(import ...) does not re-evaluate loaded modules", {
     unlink(tmp_dir, recursive = TRUE)
   }, add = TRUE)
 
-  module_file <- file.path(tmp_dir, paste0(module_name, ".rye"))
+  module_file <- file.path(tmp_dir, paste0(module_name, ".arl"))
   writeLines(c(
     sprintf("(module %s", module_name),
     "  (export tick)",
@@ -131,7 +131,7 @@ test_that("(import ...) errors on missing modules and exports", {
     unlink(tmp_dir, recursive = TRUE)
   }, add = TRUE)
 
-  module_file <- file.path(tmp_dir, paste0(module_name, ".rye"))
+  module_file <- file.path(tmp_dir, paste0(module_name, ".arl"))
   writeLines(c(
     sprintf("(module %s", module_name),
     "  (export missing-value))"
@@ -154,7 +154,7 @@ test_that("(import \"path\") loads module by path and attaches exports", {
     unlink(tmp_dir, recursive = TRUE)
   }, add = TRUE)
 
-  module_file <- file.path(tmp_dir, "pathmod.rye")
+  module_file <- file.path(tmp_dir, "pathmod.arl")
   writeLines(c(
     "(module pathmod",
     "  (export double)",
@@ -181,7 +181,7 @@ test_that("second (import \"path\") does not reload module", {
     unlink(tmp_dir, recursive = TRUE)
   }, add = TRUE)
 
-  module_file <- file.path(tmp_dir, "countmod.rye")
+  module_file <- file.path(tmp_dir, "countmod.arl")
   writeLines(c(
     "(module countmod",
     "  (export getn)",
@@ -204,7 +204,7 @@ test_that("(import symbol) is module name, (import \"string\") is path", {
   expect_silent(engine$eval_in_env(engine$read("(import control)")[[1]], env))
   expect_true(engine$macro_expander$is_macro(as.symbol("when"), env = env))
 
-  missing_path <- tempfile(fileext = ".rye")
+  missing_path <- tempfile(fileext = ".arl")
   expect_false(file.exists(missing_path))
   expect_error(
     engine$eval_in_env(engine$read(sprintf('(import "%s")', missing_path))[[1]], env),

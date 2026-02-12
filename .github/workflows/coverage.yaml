@@ -50,13 +50,13 @@ jobs:
           name: R Coverage
           fail_ci_if_error: false
 
-      - name: Upload Rye coverage to Codecov
+      - name: Upload Arl coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/rye/coverage.json
-          flags: rye-code
-          name: Rye Coverage
+          files: coverage/arl/coverage.json
+          flags: arl-code
+          name: Arl Coverage
           fail_ci_if_error: false
 
       - name: Upload coverage artifacts
@@ -66,7 +66,7 @@ jobs:
           name: coverage-reports
           path: |
             coverage/r/index.html
-            coverage/rye/index.html
+            coverage/arl/index.html
             coverage/combined/index.html
             coverage/combined/COVERAGE.md
           retention-days: 30

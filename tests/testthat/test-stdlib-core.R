@@ -148,7 +148,7 @@ test_that("call function converts lists to calls", {
   )
 })
 
-test_that("eval function evaluates Rye expressions", {
+test_that("eval function evaluates Arl expressions", {
   env <- new.env()
   stdlib_env(engine, env)
 

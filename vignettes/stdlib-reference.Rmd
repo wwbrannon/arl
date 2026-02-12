@@ -13,9 +13,9 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-Rye ships with a small standard library implemented in R, plus additional Rye
-source modules. The engine loads the base R stdlib and the Rye modules from
-`inst/rye/` by default. Stdlib modules are loaded in dependency order (each
+Arl ships with a small standard library implemented in R, plus additional Arl
+source modules. The engine loads the base R stdlib and the Arl modules from
+`inst/arl/` by default. Stdlib modules are loaded in dependency order (each
 module declares its dependencies with `(import ...)` and is loaded after the
 modules it imports).
 
@@ -119,34 +119,34 @@ engine <- Engine$new()
 
 ## Source mapping
 
-The base R parts of the stdlib implementation live in `R/runtime.R`. The rye
-parts are organized by topic in `inst/rye/` (each file defines a module). The
+The base R parts of the stdlib implementation live in `R/runtime.R`. The arl
+parts are organized by topic in `inst/arl/` (each file defines a module). The
 engine loads these modules in dependency order when initializing.
 
-- `_r.rye` (R operator/function aliases, internal)
-- `core.rye`
-- `list.rye`
-- `types.rye` (type predicates)
-- `logic.rye` (logical operations)
-- `conversions.rye` (type conversions)
-- `equality.rye` (equality and S3 dispatch)
-- `control.rye`
-- `functional.rye`
-- `sequences.rye`
-- `sort.rye`
-- `struct.rye`
-- `error.rye`
-- `threading.rye`
-- `binding.rye`
-- `looping.rye`
-- `dict.rye`
-- `math.rye` (includes numeric type predicates)
-- `set.rye`
-- `strings.rye`
-- `display.rye`
-- `io.rye`
-- `assert.rye`
-- `r-interop.rye`
+- `_r.arl` (R operator/function aliases, internal)
+- `core.arl`
+- `list.arl`
+- `types.arl` (type predicates)
+- `logic.arl` (logical operations)
+- `conversions.arl` (type conversions)
+- `equality.arl` (equality and S3 dispatch)
+- `control.arl`
+- `functional.arl`
+- `sequences.arl`
+- `sort.arl`
+- `struct.arl`
+- `error.arl`
+- `threading.arl`
+- `binding.arl`
+- `looping.arl`
+- `dict.arl`
+- `math.arl` (includes numeric type predicates)
+- `set.arl`
+- `strings.arl`
+- `display.arl`
+- `io.arl`
+- `assert.arl`
+- `r-interop.arl`
 
 If you’re looking for implementation details, these files are the source of
 truth for the stdlib definitions.

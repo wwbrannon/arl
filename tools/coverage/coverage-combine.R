@@ -1,5 +1,5 @@
 # Combined Coverage Report Generator
-# Merges R and Rye coverage data into unified reports
+# Merges R and Arl coverage data into unified reports
 
 #' Parse R coverage summary
 parse_r_coverage <- function(summary_file = "coverage/r/summary.txt") {
@@ -30,10 +30,10 @@ parse_r_coverage <- function(summary_file = "coverage/r/summary.txt") {
   )
 }
 
-#' Parse Rye coverage summary
-parse_rye_coverage <- function(summary_file = "coverage/rye/summary.txt") {
+#' Parse Arl coverage summary
+parse_arl_coverage <- function(summary_file = "coverage/arl/summary.txt") {
   if (!file.exists(summary_file)) {
-    warning("Rye coverage summary not found")
+    warning("Arl coverage summary not found")
     return(NULL)
   }
 
@@ -48,28 +48,28 @@ parse_rye_coverage <- function(summary_file = "coverage/rye/summary.txt") {
     pct <- NA
   }
 
-  # Count Rye files
-  rye_files <- c(
-    list.files("inst/rye", pattern = "\\.rye$", full.names = FALSE),
-    list.files("tests/native", pattern = "\\.rye$", full.names = FALSE, recursive = TRUE)
+  # Count Arl files
+  arl_files <- c(
+    list.files("inst/arl", pattern = "\\.arl$", full.names = FALSE),
+    list.files("tests/native", pattern = "\\.arl$", full.names = FALSE, recursive = TRUE)
   )
 
   list(
-    type = "Rye",
+    type = "Arl",
     percentage = pct,
-    file_count = length(rye_files),
+    file_count = length(arl_files),
     summary_file = summary_file
   )
 }
 
 #' Generate combined HTML report
-generate_combined_html <- function(r_cov, rye_cov, output_file = "coverage/combined/index.html") {
+generate_combined_html <- function(r_cov, arl_cov, output_file = "coverage/combined/index.html") {
   html <- c(
     "<!DOCTYPE html>",
     "<html>",
     "<head>",
     "<meta charset='utf-8'>",
-    "<title>Rye Combined Coverage Report</title>",
+    "<title>Arl Combined Coverage Report</title>",
     "<style>",
     "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 1200px; margin: 40px auto; padding: 20px; background: #f8f9fa; }",
     "h1 { color: #212529; border-bottom: 3px solid #007bff; padding-bottom: 15px; }",
@@ -94,11 +94,11 @@ generate_combined_html <- function(r_cov, rye_cov, output_file = "coverage/combi
     "</style>",
     "</head>",
     "<body>",
-    "<h1>Rye Combined Coverage Report</h1>",
+    "<h1>Arl Combined Coverage Report</h1>",
     sprintf("<p class='timestamp'>Generated: %s</p>", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")),
     "<div class='note'>",
-    "<strong>Note:</strong> This report combines coverage for both R implementation code and Rye language code. ",
-    "R coverage tracks the interpreter implementation, while Rye coverage tracks the standard library and tests.",
+    "<strong>Note:</strong> This report combines coverage for both R implementation code and Arl language code. ",
+    "R coverage tracks the interpreter implementation, while Arl coverage tracks the standard library and tests.",
     "</div>",
     ""
   )
@@ -129,23 +129,23 @@ generate_combined_html <- function(r_cov, rye_cov, output_file = "coverage/combi
     )
   }
 
-  # Rye coverage card
-  if (!is.null(rye_cov) && !is.na(rye_cov$percentage)) {
-    pct_class <- if (rye_cov$percentage >= 85) "good"
-                 else if (rye_cov$percentage >= 70) "warning"
+  # Arl coverage card
+  if (!is.null(arl_cov) && !is.na(arl_cov$percentage)) {
+    pct_class <- if (arl_cov$percentage >= 85) "good"
+                 else if (arl_cov$percentage >= 70) "warning"
                  else "bad"
     html <- c(html,
       "<div class='card'>",
-      "<h3>Rye Code Coverage</h3>",
-      sprintf("<div class='percentage %s'>%.1f%%</div>", pct_class, rye_cov$percentage),
-      sprintf("<p class='meta'>%d .rye files</p>", rye_cov$file_count),
-      "<div class='links'><a href='../rye/index.html'>View Rye Coverage Report →</a></div>",
+      "<h3>Arl Code Coverage</h3>",
+      sprintf("<div class='percentage %s'>%.1f%%</div>", pct_class, arl_cov$percentage),
+      sprintf("<p class='meta'>%d .arl files</p>", arl_cov$file_count),
+      "<div class='links'><a href='../arl/index.html'>View Arl Coverage Report →</a></div>",
       "</div>"
     )
   } else {
     html <- c(html,
       "<div class='card'>",
-      "<h3>Rye Code Coverage</h3>",
+      "<h3>Arl Code Coverage</h3>",
       "<div class='percentage bad'>N/A</div>",
       "<p class='meta'>Coverage data not available</p>",
       "</div>"
@@ -156,7 +156,7 @@ generate_combined_html <- function(r_cov, rye_cov, output_file = "coverage/combi
 
   # Overall summary table
   if ((!is.null(r_cov) && !is.na(r_cov$percentage)) ||
-      (!is.null(rye_cov) && !is.na(rye_cov$percentage))) {
+      (!is.null(arl_cov) && !is.na(arl_cov$percentage))) {
     html <- c(html,
       "<h2>Coverage Details</h2>",
       "<table>",
@@ -172,20 +172,20 @@ generate_combined_html <- function(r_cov, rye_cov, output_file = "coverage/combi
       )
     }
 
-    if (!is.null(rye_cov) && !is.na(rye_cov$percentage)) {
-      status_icon <- ifelse(rye_cov$percentage >= 85, "✅", "⚠️")
-      status_text <- ifelse(rye_cov$percentage >= 85, "Meets target", "Below target")
+    if (!is.null(arl_cov) && !is.na(arl_cov$percentage)) {
+      status_icon <- ifelse(arl_cov$percentage >= 85, "✅", "⚠️")
+      status_text <- ifelse(arl_cov$percentage >= 85, "Meets target", "Below target")
       html <- c(html,
-        sprintf("<tr><td><strong>Rye Language</strong></td><td>%.1f%%</td><td>%d</td><td>85%%</td><td>%s %s</td></tr>",
-                rye_cov$percentage, rye_cov$file_count, status_icon, status_text)
+        sprintf("<tr><td><strong>Arl Language</strong></td><td>%.1f%%</td><td>%d</td><td>85%%</td><td>%s %s</td></tr>",
+                arl_cov$percentage, arl_cov$file_count, status_icon, status_text)
       )
     }
 
     # Calculate average if both available
     if (!is.null(r_cov) && !is.na(r_cov$percentage) &&
-        !is.null(rye_cov) && !is.na(rye_cov$percentage)) {
-      overall_pct <- mean(c(r_cov$percentage, rye_cov$percentage))
-      total_files <- r_cov$file_count + rye_cov$file_count
+        !is.null(arl_cov) && !is.na(arl_cov$percentage)) {
+      overall_pct <- mean(c(r_cov$percentage, arl_cov$percentage))
+      total_files <- r_cov$file_count + arl_cov$file_count
       html <- c(html,
         sprintf("<tr style='background: #f8f9fa; font-weight: bold;'><td>Overall Average</td><td>%.1f%%</td><td>%d</td><td>—</td><td></td></tr>",
                 overall_pct, total_files)
@@ -205,7 +205,7 @@ generate_combined_html <- function(r_cov, rye_cov, output_file = "coverage/combi
 }
 
 #' Generate combined markdown summary
-generate_combined_markdown <- function(r_cov, rye_cov, output_file = "coverage/combined/COVERAGE.md") {
+generate_combined_markdown <- function(r_cov, arl_cov, output_file = "coverage/combined/COVERAGE.md") {
   md <- c(
     "# Coverage Summary",
     "",
@@ -228,28 +228,28 @@ generate_combined_markdown <- function(r_cov, rye_cov, output_file = "coverage/c
     )
   }
 
-  if (!is.null(rye_cov) && !is.na(rye_cov$percentage)) {
+  if (!is.null(arl_cov) && !is.na(arl_cov$percentage)) {
     has_data <- TRUE
-    status <- ifelse(rye_cov$percentage >= 85, "✅", "⚠️")
+    status <- ifelse(arl_cov$percentage >= 85, "✅", "⚠️")
     md <- c(md,
-      sprintf("## Rye Code Coverage: %s %.1f%%", status, rye_cov$percentage),
+      sprintf("## Arl Code Coverage: %s %.1f%%", status, arl_cov$percentage),
       "",
-      sprintf("- **Files:** %d", rye_cov$file_count),
+      sprintf("- **Files:** %d", arl_cov$file_count),
       sprintf("- **Target:** 85%%"),
-      sprintf("- **Status:** %s", ifelse(rye_cov$percentage >= 85, "Meets target", "Below target")),
+      sprintf("- **Status:** %s", ifelse(arl_cov$percentage >= 85, "Meets target", "Below target")),
       ""
     )
   }
 
   if (has_data &&
       !is.null(r_cov) && !is.na(r_cov$percentage) &&
-      !is.null(rye_cov) && !is.na(rye_cov$percentage)) {
-    overall <- mean(c(r_cov$percentage, rye_cov$percentage))
+      !is.null(arl_cov) && !is.na(arl_cov$percentage)) {
+    overall <- mean(c(r_cov$percentage, arl_cov$percentage))
     md <- c(md,
       "## Overall",
       "",
       sprintf("**Average Coverage:** %.1f%%", overall),
-      sprintf("**Total Files:** %d", r_cov$file_count + rye_cov$file_count),
+      sprintf("**Total Files:** %d", r_cov$file_count + arl_cov$file_count),
       ""
     )
   }
@@ -282,22 +282,22 @@ generate_combined_report <- function() {
 
   # Parse coverage data
   r_cov <- parse_r_coverage()
-  rye_cov <- parse_rye_coverage()
+  arl_cov <- parse_arl_coverage()
 
   if ((is.null(r_cov) || is.na(r_cov$percentage)) &&
-      (is.null(rye_cov) || is.na(rye_cov$percentage))) {
-    stop("No coverage data found. Run 'make coverage-r' and 'make coverage-rye' first.")
+      (is.null(arl_cov) || is.na(arl_cov$percentage))) {
+    stop("No coverage data found. Run 'make coverage-r' and 'make coverage-arl' first.")
   }
 
   # Generate reports
-  generate_combined_html(r_cov, rye_cov)
-  generate_combined_markdown(r_cov, rye_cov)
+  generate_combined_html(r_cov, arl_cov)
+  generate_combined_markdown(r_cov, arl_cov)
 
   message("\n✅ Combined coverage report generated successfully!")
   message("   HTML: coverage/combined/index.html")
   message("   Markdown: coverage/combined/COVERAGE.md")
 
-  invisible(list(r = r_cov, rye = rye_cov))
+  invisible(list(r = r_cov, arl = arl_cov))
 }
 
 # Self-execute when run as a script

@@ -24,7 +24,7 @@
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^LICENSE\.md$
-(^|/)\.rye_cache($|/)
+(^|/)\.arl_cache($|/)
 ^coverage$
 ^\.coverage\.yml$
 ^codecov\.yml$

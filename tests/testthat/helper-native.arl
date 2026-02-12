@@ -1,0 +1,12 @@
+;;; Test helpers for native tests (tests/native/*.arl)
+;;; This file is loaded into the test environment and provides test-specific
+;;; utilities that should not be part of the stdlib (e.g., testthat integration)
+
+(define skip
+  (lambda ((reason ""))
+    "Skip the current test with an optional reason.
+    Only available in test contexts where testthat is loaded."
+    ;; Get skip function from testthat namespace and call it
+    (define skip-fn
+      (r/call "get" (list "skip" :envir (r/call "getNamespace" (list "testthat")) :inherits #f)))
+    (skip-fn reason)))

@@ -1,4 +1,4 @@
-# Cons: Minimal dotted-pair representation for Rye lists (car, cdr). Load order: this
+# Cons: Minimal dotted-pair representation for Arl lists (car, cdr). Load order: this
 # file must be sourced before runtime/eval helpers that use Promise.
 #
 # @field car First element of the pair.
@@ -75,7 +75,7 @@ Promise <- R6::R6Class("Promise",
       private$cached_value
     },
     # @description Return the unevaluated expression stored in the promise.
-    # @return Rye expression.
+    # @return Arl expression.
     get_expr = function() {
       private$expr
     }

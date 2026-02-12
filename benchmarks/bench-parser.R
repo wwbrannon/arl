@@ -1,7 +1,7 @@
 # Parser Benchmarks
 # Benchmarks for the S-expression parsing component
 
-library(rye)
+library(arl)
 source("benchmarks/benchmark-helpers.R")
 source("benchmarks/workloads.R")
 
@@ -83,9 +83,9 @@ if (length(real_workloads) > 0) {
   tokens_macro <- engine4$tokenize(real_workloads$macro_examples)
 
   bench_real <- benchmark_component(
-    "fibonacci.rye" = engine4$parse(tokens_fib),
-    "quicksort.rye" = engine4$parse(tokens_qs),
-    "macro-examples.rye" = engine4$parse(tokens_macro),
+    "fibonacci.arl" = engine4$parse(tokens_fib),
+    "quicksort.arl" = engine4$parse(tokens_qs),
+    "macro-examples.arl" = engine4$parse(tokens_macro),
     check = FALSE
   )
   print(bench_real[, c("expression", "median", "mem_alloc")])

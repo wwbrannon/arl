@@ -1,7 +1,7 @@
 # Tokenizer Profiling
 # Generate profvis flame graphs for tokenizer performance
 
-library(rye)
+library(arl)
 
 # Source helpers (works from different working directories)
 if (file.exists("benchmarks/benchmark-helpers.R")) {
@@ -9,7 +9,7 @@ if (file.exists("benchmarks/benchmark-helpers.R")) {
 } else if (file.exists("benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {
-  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "rye")
+  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "arl")
   if (helpers_path != "") source(helpers_path)
 }
 
@@ -18,7 +18,7 @@ if (file.exists("benchmarks/workloads.R")) {
 } else if (file.exists("workloads.R")) {
   source("workloads.R")
 } else {
-  workloads_path <- system.file("benchmarks/workloads.R", package = "rye")
+  workloads_path <- system.file("benchmarks/workloads.R", package = "arl")
   if (workloads_path != "") source(workloads_path)
 }
 
@@ -53,8 +53,8 @@ profile_component({
 }, "tokenizer-deep-nesting")
 
 
-# Profile 3: Real example file (fibonacci.rye)
-cat("Profile 3: Real example file (fibonacci.rye)\n")
+# Profile 3: Real example file (fibonacci.arl)
+cat("Profile 3: Real example file (fibonacci.arl)\n")
 
 engine3 <- Engine$new()
 real_workloads <- get_real_workloads()
@@ -67,7 +67,7 @@ if (length(real_workloads) > 0 && "fibonacci" %in% names(real_workloads)) {
   }, "tokenizer-fibonacci")
 
 } else {
-  cat("(Skipped - fibonacci.rye not available)\n\n")
+  cat("(Skipped - fibonacci.arl not available)\n\n")
 }
 
 # Profile 4: Many escape sequences

@@ -1,7 +1,7 @@
 # Shared quasiquote expansion walker
 #
 # Parameterized recursive walker used by both CompiledRuntime and
-# RyeMacroExpander to expand quasiquoted expressions.
+# ArlMacroExpander to expand quasiquoted expressions.
 #
 # @param expr   The expression to expand.
 # @param env    The environment for evaluating unquoted sub-expressions.

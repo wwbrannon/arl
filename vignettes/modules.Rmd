@@ -13,11 +13,11 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-Rye provides a module system for organizing code into reusable, encapsulated units. This guide covers how to create modules, import them, and understand how the module system resolves paths.
+Arl provides a module system for organizing code into reusable, encapsulated units. This guide covers how to create modules, import them, and understand how the module system resolves paths.
 
 ## Overview
 
-Rye has three mechanisms for loading code:
+Arl has three mechanisms for loading code:
 
 - **`load`**: Evaluates a file in the current environment (source-like; definitions and imports from the file are visible in the caller)
 - **`run`**: Evaluates a file in an isolated child environment (definitions and imports in the file are not visible in the caller)
@@ -37,29 +37,29 @@ Rye has three mechanisms for loading code:
 
 ```lisp
 ; Load a file from the current directory
-(load "utils.rye")
+(load "utils.arl")
 
 ; Load a stdlib module by name
 (load "control")
 
 ; Load with an absolute path
-(load "/path/to/my/script.rye")
+(load "/path/to/my/script.arl")
 
 ; Load with a relative path
-(load "lib/helpers.rye")
+(load "lib/helpers.arl")
 ```
 
 ### Path Resolution
 
-When you call `(load "name")`, Rye resolves the path in this order:
+When you call `(load "name")`, Arl resolves the path in this order:
 
 1. **Path separator check**: If the name contains `/` or `\`, it's treated as a file path and checked directly
-2. **Stdlib lookup**: If no path separator, checks the stdlib directory (`inst/rye/`) for:
+2. **Stdlib lookup**: If no path separator, checks the stdlib directory (`inst/arl/`) for:
    - `<name>` (exact match)
-   - `<name>.rye` (with extension)
+   - `<name>.arl` (with extension)
 3. **Current directory lookup**: If not in stdlib, checks the current working directory for:
    - `<name>` (exact match)
-   - `<name>.rye` (with extension)
+   - `<name>.arl` (with extension)
 
 ### Caching Behavior
 
@@ -81,7 +81,7 @@ When you call `(load "name")`, Rye resolves the path in this order:
 
 ```lisp
 ; Run a script in isolation; its definitions are not visible here
-(run "scripts/one-off.rye")
+(run "scripts/one-off.arl")
 
 ; Run a stdlib module by name (same path resolution as load)
 (run "control")
@@ -109,7 +109,7 @@ The `module` special form defines a named module with explicit exports.
 ### Examples
 
 ```lisp
-; File: math-utils.rye
+; File: math-utils.arl
 (module math-utils
   (export square cube)
 
@@ -156,7 +156,7 @@ The `import` special form loads a module and makes its exports available in the 
 ```
 
 - **Symbol** (e.g. `control`): treated as a **module name**. Resolution looks in the stdlib, then the current working directory (same as `load` by name).
-- **String** (e.g. `"lib/utils.rye"`): treated as a **file path**. Only path-based resolution is used (no stdlib lookup). The path is normalized to absolute so that the same file imported with different path strings (e.g. `"inst/rye/control.rye"` and `"./inst/rye/control.rye"`) reuses the same loaded module.
+- **String** (e.g. `"lib/utils.arl"`): treated as a **file path**. Only path-based resolution is used (no stdlib lookup). The path is normalized to absolute so that the same file imported with different path strings (e.g. `"inst/arl/control.arl"` and `"./inst/arl/control.arl"`) reuses the same loaded module.
 
 ### Examples
 
@@ -168,20 +168,20 @@ The `import` special form loads a module and makes its exports available in the 
 (when #t (println "hello"))
 
 ; Import by path (string): path-only resolution, no stdlib
-(import "lib/my-module.rye")
-(import "/absolute/path/to/module.rye")
+(import "lib/my-module.arl")
+(import "/absolute/path/to/module.arl")
 ```
 
 ### Path Resolution
 
-- **`(import name)`** (symbol): resolve by **module name** — stdlib (`inst/rye/`), then current directory. The file must register itself with `(module name ...)`.
-- **`(import "path")`** (string): resolve by **path only** — the string is a file path (existing file or `path.rye`). No stdlib lookup. The path is normalized to absolute for caching, so re-importing the same file with a different path string does not reload it.
+- **`(import name)`** (symbol): resolve by **module name** — stdlib (`inst/arl/`), then current directory. The file must register itself with `(module name ...)`.
+- **`(import "path")`** (string): resolve by **path only** — the string is a file path (existing file or `path.arl`). No stdlib lookup. The path is normalized to absolute for caching, so re-importing the same file with a different path string does not reload it.
 
 ### Module Registration and Scoping
 
 When you `import` a module:
 
-1. If the module isn't already registered for this engine, Rye loads the file containing the module (into the engine's shared module cache)
+1. If the module isn't already registered for this engine, Arl loads the file containing the module (into the engine's shared module cache)
 2. The file must contain a `(module ...)` form that registers itself
 3. `import` attaches the module's exports into the *current* environment (the scope where you wrote `(import ...)`)
 4. Subsequent `(import M)` in any scope reuses the same module instance and attaches its exports into that scope
@@ -196,12 +196,12 @@ When you `import` a module:
 ; Error: Module not found: non-existent-module
 
 ; Module file doesn't register itself
-; File: bad.rye containing just (define x 10)
+; File: bad.arl containing just (define x 10)
 (import bad)
 ; Error: Module 'bad' did not register itself
 
 ; Accessing unexported symbol
-; File: restricted.rye
+; File: restricted.arl
 (module restricted
   (export public-fn)
   (define public-fn (lambda () "visible"))
@@ -216,7 +216,7 @@ private-fn  ; Error: object 'private-fn' not found
 
 ### Basic Module Structure
 
-Create a file `mymodule.rye`:
+Create a file `mymodule.arl`:
 
 ```lisp
 (module mymodule
@@ -242,7 +242,7 @@ Then import it:
 ### Module with Private Helpers
 
 ```lisp
-; File: calculator.rye
+; File: calculator.arl
 (module calculator
   (export add subtract)
 
@@ -270,13 +270,13 @@ Then import it:
 Modules can load other modules:
 
 ```lisp
-; File: string-helpers.rye
+; File: string-helpers.arl
 (module string-helpers
   (export upcase downcase)
   (define upcase (lambda (s) (toupper s)))
   (define downcase (lambda (s) (tolower s))))
 
-; File: text-utils.rye
+; File: text-utils.arl
 (module text-utils
   (export format-name)
 
@@ -293,7 +293,7 @@ Modules can load other modules:
 
 ## Standard Library Modules
 
-Rye's standard library is organized into modules that you can load as needed:
+Arl's standard library is organized into modules that you can load as needed:
 
 ```lisp
 ; Control flow macros
@@ -377,13 +377,13 @@ Use docstrings to document your modules:
 Circular module imports will cause infinite recursion errors:
 
 ```lisp
-; File: a.rye
+; File: a.arl
 (module a
   (export fn-a)
   (import b)  ; Depends on b
   ...)
 
-; File: b.rye
+; File: b.arl
 (module b
   (export fn-b)
   (import a)  ; Depends on a - circular!
@@ -397,15 +397,15 @@ Organize modules in a predictable directory structure:
 ```
 project/
   lib/
-    utils.rye
-    validators.rye
-  app.rye
+    utils.arl
+    validators.arl
+  app.arl
 ```
 
 Then load with relative paths:
 
 ```lisp
-; In app.rye
+; In app.arl
 (import "lib/utils")
 (import "lib/validators")
 ```
@@ -414,13 +414,13 @@ Then load with relative paths:
 
 ### vs. Common Lisp
 
-- Rye doesn't have package namespaces - imports bring symbols into the current environment
+- Arl doesn't have package namespaces - imports bring symbols into the current environment
 - No `use-package` or package-qualified symbols like `package::symbol`
 - Simpler, file-based module system
 
 ### vs. Scheme
 
-- Rye's `module` is similar to R6RS libraries but simpler
+- Arl's `module` is similar to R6RS libraries but simpler
 - No renaming or prefix imports
 - Path resolution is more straightforward
 

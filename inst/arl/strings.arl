@@ -1,0 +1,386 @@
+;;; Arl Standard Library - String Helpers
+
+(module strings
+  (export string-join string-split trim format string-contains? string-match?
+          string-find string-replace string-replace-all string-append ->string
+          char-at string-ref
+          substring string-length
+          string-upcase string-downcase string-titlecase
+          string<? string>? string=? string<=? string>=?
+          string->list list->string
+          number->string string->number)
+
+  (import list)
+  (import math)
+
+  ;;' @section String Operations
+  ;;' Core string manipulation functions: joining, splitting, searching,
+  ;;' replacing, and accessing characters. Most search/replace functions
+  ;;' default to fixed (literal) matching; pass `:fixed #f` for regex.
+
+  ;;' @description Join strings with separator.
+  ;;' @examples
+  ;;' (string-join (list "a" "b" "c") "-")  ; => "a-b-c"
+  ;;' (string-join (list "x" "y" "z"))      ; => "xyz"
+  ;;' (string-join (list "hello" "world") " ")  ; => "hello world"
+  ;;' @seealso string-split, str
+  (define string-join
+    (lambda (x (sep ""))
+      (paste (unlist (__as-list x)) :collapse sep)))
+
+  ;;' @description Split string on separator.
+  ;;' @examples
+  ;;' (string-split "a-b-c" "-")  ; => ("a" "b" "c")
+  ;;' (string-split "hello" "")   ; => ("h" "e" "l" "l" "o")
+  ;;' @seealso string-join
+  (define string-split
+    (lambda (x (sep ""))
+      (unname (r/call "[[" (list (strsplit x :split sep :fixed #t) 1)))))
+
+  ;; DESIGN NOTE: Simple one-argument pass-through functions use direct
+  ;; assignment to avoid unnecessary stack frames.
+
+  ;;' @description Trim leading and trailing whitespace.
+  ;;' @signature (trim str)
+  ;;' @examples
+  ;;' (trim "  hello  ")  ; => "hello"
+  ;;' (trim "no spaces")  ; => "no spaces"
+  (define trim trimws)
+
+  ;;' @description Format string with sprintf.
+  ;;' @examples
+  ;;' (format "Hello, %s!" "world")   ; => "Hello, world!"
+  ;;' (format "%d + %d = %d" 1 2 3)   ; => "1 + 2 = 3"
+  ;;' (format "%.2f" 3.14159)          ; => "3.14"
+  ;;' @seealso str
+  (define format
+    (lambda (fmt . args)
+      (r/call "sprintf" (cons fmt args))))
+
+  ;;' @description Check pattern in string (fixed).
+  ;;' @examples
+  ;;' (string-contains? "hello world" "world")       ; => #t
+  ;;' (string-contains? "hello world" "xyz")          ; => #f
+  ;;' (string-contains? "hello world" "o.*d" :fixed #f)  ; => #t
+  ;;' @seealso string-match?, string-find
+  (define string-contains?
+    (lambda (str pattern (fixed #t))
+      (isTRUE (grepl pattern str :fixed fixed))))
+
+  ;;' @description Check pattern in string (regex).
+  ;;' @examples
+  ;;' (string-match? "hello" "^h.*o$" :fixed #f)  ; => #t
+  ;;' (string-match? "hello" "xyz" :fixed #f)      ; => #f
+  ;;' (string-match? "hello" "hello" :fixed #t)     ; => #t
+  ;;' @seealso string-contains?, string-find
+  (define string-match?
+    (lambda (str pattern (fixed #f))
+      (isTRUE (grepl pattern str :fixed fixed))))
+
+  ;;' @description Find pattern index or #nil.
+  ;;' @examples
+  ;;' (string-find "hello world" "world")  ; => 6
+  ;;' (string-find "hello world" "xyz")    ; => #nil
+  ;;' (string-find "hello" "l")            ; => 2
+  ;;' @seealso string-contains?, string-match?
+  (define string-find
+    (lambda (str pattern (fixed #t))
+      (define match (regexpr pattern str :fixed fixed))
+      (define pos (r/call "[[" (list match 1)))
+      (if (< pos 0) #nil (- pos 1))))
+
+  ;;' @description Replace first match. Default is literal (fixed); pass :fixed #f for regex.
+  ;;' @examples
+  ;;' (string-replace "hello world" "world" "there")    ; => "hello there"
+  ;;' (string-replace "aaa" "a" "b")                     ; => "baa"
+  ;;' @seealso string-replace-all
+  (define string-replace
+    (lambda (str pattern replacement (fixed #t))
+      (sub pattern replacement str :fixed fixed)))
+
+  ;;' @description Replace all matches. Default is literal (fixed); pass :fixed #f for regex.
+  ;;' @examples
+  ;;' (string-replace-all "aaa" "a" "b")   ; => "bbb"
+  ;;' (string-replace-all "hello world world" "world" "there")  ; => "hello there there"
+  ;;' @seealso string-replace
+  (define string-replace-all
+    (lambda (str pattern replacement (fixed #t))
+      (gsub pattern replacement str :fixed fixed)))
+
+  ;;' @description Concatenate strings together.
+  ;;' @examples
+  ;;' (string-append "hello" " " "world")  ; => "hello world"
+  ;;' (string-append "a" "b" "c")          ; => "abc"
+  ;;' (string-append)                       ; => ""
+  ;;' @seealso str, string-join
+  (define string-append
+    (lambda (. args)
+      (if (r/call "==" (list (length args) 0))
+        ""
+        (r/call "paste0" args))))
+
+  ;;' @description Convert value to string representation.
+  ;;' @signature (->string x)
+  ;;' @examples
+  ;;' (->string 42)     ; => "42"
+  ;;' (->string #t)     ; => "TRUE"
+  ;;' (->string 3.14)   ; => "3.14"
+  (define ->string as.character)
+
+  ;; ==========================================================================
+  ;; Phase 3: Extended String Operations
+  ;; ==========================================================================
+
+  ;; Character access
+  ;;' @description Get character at index (0-based).
+  ;;' @examples
+  ;;' (char-at "hello" 0)  ; => "h"
+  ;;' (char-at "hello" 4)  ; => "o"
+  ;;' @seealso string-ref, substring
+  (define char-at
+    (lambda (str index)
+      (if (< index 0)
+        (stop (sprintf "Index %d out of bounds" index))
+        (if (>= index (nchar str))
+          (stop (sprintf "Index %d out of bounds for string of length %d" index (nchar str)))
+          (substr str (+ index 1) (+ index 1))))))
+
+  ;;' @description Scheme-style character accessor (alias for char-at).
+  ;;' @seealso char-at
+  (define string-ref
+    (lambda (str index)
+      (char-at str index)))
+
+  ;; Substring
+  ;;' @description Extract substring from start (inclusive) to end (exclusive), 0-based.
+  ;;' @examples
+  ;;' (substring "hello" 1 4)  ; => "ell"
+  ;;' (substring "hello" 0 5)  ; => "hello"
+  ;;' (substring "hello" 2 2)  ; => ""
+  ;;' @seealso char-at
+  (define substring
+    (lambda (str start end)
+      (if (< start 0)
+        (stop "substring: start index cannot be negative")
+        (if (> end (nchar str))
+          (stop (sprintf "substring: end index %d exceeds string length %d" end (nchar str)))
+          (if (> start end)
+            (stop "substring: start index must be <= end index")
+            (if (== start end)
+              ""
+              (substr str (+ start 1) end)))))))
+
+  ;; String length
+  ;;' @description Return length of string.
+  ;;' @examples
+  ;;' (string-length "hello")  ; => 5
+  ;;' (string-length "")       ; => 0
+  (define string-length
+    (lambda (str)
+      (nchar str)))
+
+  ;;' @section String Case
+  ;;' Functions for converting string case.
+
+  ;;' @description Convert string to uppercase.
+  ;;' @examples
+  ;;' (string-upcase "hello")  ; => "HELLO"
+  ;;' (string-upcase "Hello World")  ; => "HELLO WORLD"
+  ;;' @seealso string-downcase, string-titlecase
+  (define string-upcase
+    (lambda (str)
+      (toupper str)))
+
+  ;;' @description Convert string to lowercase.
+  ;;' @examples
+  ;;' (string-downcase "HELLO")  ; => "hello"
+  ;;' (string-downcase "Hello World")  ; => "hello world"
+  ;;' @seealso string-upcase, string-titlecase
+  (define string-downcase
+    (lambda (str)
+      (tolower str)))
+
+  ;;' @description Convert string to title case (capitalize first letter of each word).
+  ;;' @examples
+  ;;' (string-titlecase "hello world")  ; => "Hello World"
+  ;;' (string-titlecase "HELLO WORLD")  ; => "Hello World"
+  ;;' @seealso string-upcase, string-downcase
+  (define string-titlecase
+    (lambda (str)
+      ;; Simple implementation: split on spaces, capitalize each word
+      (begin
+        (define words (r/call "[[" (list (strsplit str " ") 1)))
+        (define capitalize-word
+          (lambda (word)
+            (if (== (nchar word) 0)
+              word
+              (paste0 (toupper (substr word 1 1))
+                     (tolower (substr word 2 (nchar word)))))))
+        (paste (vapply words capitalize-word (character 1)) :collapse " "))))
+
+  ;;' @section String Comparison
+  ;;' Lexicographic comparison functions for strings.
+
+  ;;' @description Lexicographic less-than comparison.
+  ;;' @examples
+  ;;' (string<? "abc" "def")  ; => #t
+  ;;' (string<? "def" "abc")  ; => #f
+  ;;' (string<? "abc" "abc")  ; => #f
+  (define string<?
+    (lambda (a b)
+      (isTRUE (< a b))))
+
+  ;;' @description Lexicographic greater-than comparison.
+  ;;' @examples
+  ;;' (string>? "def" "abc")  ; => #t
+  ;;' (string>? "abc" "def")  ; => #f
+  ;;' (string>? "abc" "abc")  ; => #f
+  (define string>?
+    (lambda (a b)
+      (isTRUE (> a b))))
+
+  ;;' @description String equality comparison.
+  ;;' @examples
+  ;;' (string=? "hello" "hello")  ; => #t
+  ;;' (string=? "hello" "world")  ; => #f
+  (define string=?
+    (lambda (a b)
+      (isTRUE (== a b))))
+
+  ;;' @description Lexicographic less-than-or-equal comparison.
+  ;;' @examples
+  ;;' (string<=? "abc" "abc")  ; => #t
+  ;;' (string<=? "abc" "def")  ; => #t
+  ;;' (string<=? "def" "abc")  ; => #f
+  (define string<=?
+    (lambda (a b)
+      (isTRUE (<= a b))))
+
+  ;;' @description Lexicographic greater-than-or-equal comparison.
+  ;;' @examples
+  ;;' (string>=? "abc" "abc")  ; => #t
+  ;;' (string>=? "def" "abc")  ; => #t
+  ;;' (string>=? "abc" "def")  ; => #f
+  (define string>=?
+    (lambda (a b)
+      (isTRUE (>= a b))))
+
+  ;;' @section String/List Conversion
+  ;;' Functions for converting between strings, lists, and numbers.
+
+  ;;' @description Convert string to list of characters.
+  ;;' @examples
+  ;;' (string->list "hello")  ; => ("h" "e" "l" "l" "o")
+  ;;' (string->list "")       ; => ()
+  ;;' @seealso list->string
+  (define string->list
+    (lambda (str)
+      (if (== (nchar str) 0)
+        (list)
+        (as.list (r/call "[[" (list (strsplit str "") 1))))))
+
+  ;;' @description Convert list of characters to string.
+  ;;' @examples
+  ;;' (list->string (list "h" "e" "l" "l" "o"))  ; => "hello"
+  ;;' (list->string (list))                        ; => ""
+  ;;' @seealso string->list
+  (define list->string
+    (lambda (lst)
+      (paste (unlist (__as-list lst)) :collapse "")))
+
+  ;; Number/String conversions
+  ;;' @description Convert number to string with optional base (2-36).
+  ;;' @examples
+  ;;' (number->string 42)       ; => "42"
+  ;;' (number->string 255 16)   ; => "ff"
+  ;;' (number->string 10 2)     ; => "1010"
+  ;;' (number->string 8 8)      ; => "10"
+  ;;' @seealso string->number
+  (define number->string
+    (lambda (num . base-args)
+      (if (> (length base-args) 0)
+        (begin
+          (define base (car base-args))
+          (if (if (< base 2) #t (> base 36))
+            (stop "number->string: base must be between 2 and 36")
+            (if (== base 10)
+              (as.character num)
+              (if (== base 16)
+                (tolower (r/call "as.hexmode" (list (as.integer num))))
+                (if (== base 8)
+                  (as.character (r/call "as.octmode" (list (as.integer num))))
+                  (if (== base 2)
+                    ;; Binary conversion
+                    (begin
+                      (define n (as.integer num))
+                      (if (== n 0)
+                        "0"
+                        (begin
+                          (define binary-digits (list))
+                          (define temp n)
+                          (define make-binary
+                            (lambda (x)
+                              (if (> x 0)
+                                (begin
+                                  (set! binary-digits (cons (as.character (%% x 2)) binary-digits))
+                                  (make-binary (quotient x 2)))
+                                #nil)))
+                          (make-binary temp)
+                          (paste (unlist binary-digits) :collapse ""))))
+                    ;; Other bases - use R's built-in
+                    (stop (sprintf "number->string: base %d not yet implemented" base))))))))
+        (as.character num))))
+
+  ;;' @description Parse string to number with optional base (2-36).
+  ;;' @examples
+  ;;' (string->number "42")       ; => 42
+  ;;' (string->number "3.14")     ; => 3.14
+  ;;' (string->number "ff" 16)    ; => 255
+  ;;' (string->number "1010" 2)   ; => 10
+  ;;' (string->number "bad")      ; => #f
+  ;;' @seealso number->string
+  (define string->number
+    (lambda (str . base-args)
+      (if (> (length base-args) 0)
+        (begin
+          (define base (car base-args))
+          (if (if (< base 2) #t (> base 36))
+            (stop "string->number: base must be between 2 and 36")
+            (begin
+              ;; Handle different bases
+              (if (== base 10)
+                (begin
+                  (define result (suppressWarnings (as.numeric str)))
+                  (if (is.na result) #f result))
+                (if (== base 16)
+                  (begin
+                    (define result (suppressWarnings (as.integer (paste0 "0x" str))))
+                    (if (is.na result) #f result))
+                  (if (== base 8)
+                    (begin
+                      (define result (suppressWarnings (as.integer (paste0 "0" str))))
+                      (if (is.na result) #f result))
+                    (if (== base 2)
+                      ;; Binary parsing
+                      (begin
+                        (define chars (r/call "[[" (list (strsplit str "") 1)))
+                        (define parse-binary
+                          (lambda (digits acc)
+                            (if (== (length digits) 0)
+                              acc
+                              (begin
+                                (define d (r/call "[[" (list digits 1)))
+                                (define rest (if (> (length digits) 1)
+                                              (r/call "[" (list digits (seq 2 (length digits))))
+                                              (list)))
+                                (if (if (== d "0") #t (== d "1"))
+                                  (parse-binary rest (+ (* acc 2) (as.integer d)))
+                                  #f)))))
+                        (parse-binary chars 0))
+                      ;; Other bases not implemented
+                      (stop (sprintf "string->number: base %d not yet implemented" base)))))))))
+        (begin
+          (define result (suppressWarnings (as.numeric str)))
+          (if (is.na result) #f result)))))
+
+)

@@ -515,12 +515,12 @@ test_that("TCO: error in base case includes source location", {
           (+ 1 nope)
           (tco-err-base (- n 1)))))
       (tco-err-base 3)
-    ", source_name = "tco-base.rye"),
+    ", source_name = "tco-base.arl"),
     error = function(e) e
   )
-  expect_s3_class(err, "rye_error")
+  expect_s3_class(err, "arl_error")
   formatted <- engine$source_tracker$format_error(err)
-  expect_match(formatted, "tco-base\\.rye")
+  expect_match(formatted, "tco-base\\.arl")
 })
 
 test_that("TCO: error in tail-call argument includes source location", {
@@ -531,12 +531,12 @@ test_that("TCO: error in tail-call argument includes source location", {
           acc
           (tco-err-arg (- n 1) (+ acc nope)))))
       (tco-err-arg 3 0)
-    ", source_name = "tco-arg.rye"),
+    ", source_name = "tco-arg.arl"),
     error = function(e) e
   )
-  expect_s3_class(err, "rye_error")
+  expect_s3_class(err, "arl_error")
   formatted <- engine$source_tracker$format_error(err)
-  expect_match(formatted, "tco-arg\\.rye")
+  expect_match(formatted, "tco-arg\\.arl")
 })
 
 test_that("TCO: error inside let body includes source location", {
@@ -548,10 +548,10 @@ test_that("TCO: error inside let body includes source location", {
             (+ 1 nope)
             (tco-err-let m)))))
       (tco-err-let 3)
-    ", source_name = "tco-let.rye"),
+    ", source_name = "tco-let.arl"),
     error = function(e) e
   )
-  expect_s3_class(err, "rye_error")
+  expect_s3_class(err, "arl_error")
   formatted <- engine$source_tracker$format_error(err)
-  expect_match(formatted, "tco-let\\.rye")
+  expect_match(formatted, "tco-let\\.arl")
 })

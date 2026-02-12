@@ -50,7 +50,7 @@ HelpSystem <- R6::R6Class(
       macro_symbol <- as.symbol(topic)
       if (self$macro_expander$is_macro(macro_symbol, env = target_env)) {
         macro_fn <- self$macro_expander$get_macro(macro_symbol, env = target_env)
-        macro_doc <- attr(macro_fn, "rye_doc", exact = TRUE)
+        macro_doc <- attr(macro_fn, "arl_doc", exact = TRUE)
         usage <- private$usage_from_macro(macro_fn, topic)
         if (!is.null(macro_doc)) {
           if (is.character(macro_doc)) {
@@ -70,9 +70,9 @@ HelpSystem <- R6::R6Class(
 
       if (exists(topic, envir = target_env, inherits = TRUE)) {
         obj <- get(topic, envir = target_env, inherits = TRUE)
-        obj_doc <- attr(obj, "rye_doc", exact = TRUE)
+        obj_doc <- attr(obj, "arl_doc", exact = TRUE)
         usage <- NULL
-        if (inherits(obj, "rye_closure")) {
+        if (inherits(obj, "arl_closure")) {
           usage <- private$usage_from_closure(obj, topic)
         } else if (is.function(obj)) {
           usage <- private$usage_from_formals(obj, topic)
@@ -147,11 +147,11 @@ HelpSystem <- R6::R6Class(
         ),
         load = list(
           usage = "(load \"path\")",
-          description = "Load and evaluate a Rye source file in the current environment (source-like). Definitions and imports in the file are visible in the caller."
+          description = "Load and evaluate an Arl source file in the current environment (source-like). Definitions and imports in the file are visible in the caller."
         ),
         run = list(
           usage = "(run \"path\")",
-          description = "Run a Rye source file in an isolated child environment. Definitions and imports in the file are not visible in the caller."
+          description = "Run an Arl source file in an isolated child environment. Definitions and imports in the file are not visible in the caller."
         ),
         defmacro = list(
           usage = "(defmacro name (params...) body...)",
@@ -215,13 +215,13 @@ HelpSystem <- R6::R6Class(
       if (identical(expr, quote(expr = ))) {
         return(NULL)
       }
-      if (inherits(expr, "rye_missing_default")) {
+      if (inherits(expr, "arl_missing_default")) {
         return(NULL)
       }
       paste(deparse(expr, width.cutoff = 500), collapse = " ")
     },
     usage_from_closure = function(fn, topic) {
-      info <- attr(fn, "rye_closure", exact = TRUE)
+      info <- attr(fn, "arl_closure", exact = TRUE)
       if (is.null(info)) {
         return(NULL)
       }
@@ -275,7 +275,7 @@ HelpSystem <- R6::R6Class(
       paste0("(", topic, if (nzchar(args_text)) paste0(" ", args_text) else "", ")")
     },
     usage_from_macro = function(fn, topic) {
-      info <- attr(fn, "rye_macro", exact = TRUE)
+      info <- attr(fn, "arl_macro", exact = TRUE)
       if (is.null(info) || is.null(info$params)) {
         return(paste0("(", topic, ")"))
       }

@@ -15,19 +15,19 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Rye
+# Arl
 
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![R-CMD-check](https://github.com/wwbrannon/rye/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/rye/actions/workflows/R-CMD-check.yaml)
-[![Codecov](https://codecov.io/gh/wwbrannon/rye/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/rye)
-[![R Coverage](https://codecov.io/gh/wwbrannon/rye/branch/main/graph/badge.svg?flag=r-code)](https://codecov.io/gh/wwbrannon/rye?flags%5B0%5D=r-code)
-[![Rye Coverage](https://codecov.io/gh/wwbrannon/rye/branch/main/graph/badge.svg?flag=rye-code)](https://codecov.io/gh/wwbrannon/rye?flags%5B0%5D=rye-code)
-[![CRAN status](https://www.r-pkg.org/badges/version/rye)](https://CRAN.R-project.org/package=rye)
+[![R-CMD-check](https://github.com/wwbrannon/arl/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/R-CMD-check.yaml)
+[![Codecov](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/arl)
+[![R Coverage](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?flag=r-code)](https://codecov.io/gh/wwbrannon/arl?flags%5B0%5D=r-code)
+[![Arl Coverage](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?flag=arl-code)](https://codecov.io/gh/wwbrannon/arl?flags%5B0%5D=arl-code)
+[![CRAN status](https://www.r-pkg.org/badges/version/arl)](https://CRAN.R-project.org/package=arl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!--
-[![CRAN downloads](https://cranlogs.r-pkg.org/badges/rye)](https://CRAN.R-project.org/package=rye)
-[![R-universe](https://wwbrannon.r-universe.dev/badges/rye)](https://wwbrannon.r-universe.dev/rye)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/arl)](https://CRAN.R-project.org/package=arl)
+[![R-universe](https://wwbrannon.r-universe.dev/badges/arl)](https://wwbrannon.r-universe.dev/arl)
 [![pkgdown](https://img.shields.io/badge/pkgdown-site-blue.svg)][pkgdown-site]
 -->
 <!-- badges: end -->
@@ -36,7 +36,7 @@ A Lisp dialect implemented in and with access to R, leveraging R's Scheme herita
 
 ## Overview
 
-Rye is a Lisp dialect that seamlessly integrates with R. It provides:
+Arl is a Lisp dialect that seamlessly integrates with R. It provides:
 
 - **Homoiconic syntax**: Code as data, data as code
 - **Powerful macros**: Transform code at compile-time with `defmacro` and quasiquote
@@ -58,7 +58,7 @@ devtools::load_all()
 ## Quick Start
 
 ```{r eval=FALSE}
-library(rye)
+library(arl)
 
 # Start the REPL
 engine <- Engine$new()
@@ -72,31 +72,31 @@ The engine loads the base stdlib automatically.
 Install the CLI wrapper once after installing the package:
 
 ```{r eval=FALSE}
-rye::install_cli()
+arl::install_cli()
 ```
 
 ```bash
 # Start REPL
-rye
+arl
 
 # Run a file
-rye --file script.rye
+arl --file script.arl
 
 # Eval a single expression
-rye --eval "(+ 1 2)"
+arl --eval "(+ 1 2)"
 
 # Positional files are executed in order
-rye script.rye other.rye
+arl script.arl other.arl
 ```
 
 If the install path is not on your `PATH`, add it:
 
 ```{r eval=FALSE}
-dirname(system.file("exec", "rye", package = "rye"))
+dirname(system.file("exec", "arl", package = "arl"))
 ```
 
 ```bash
-export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye")))'):$PATH"
+export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "arl", package = "arl")))'):$PATH"
 ```
 
 ### Examples
@@ -161,15 +161,15 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "rye", package = "rye
 
 ### Continuations
 
-Rye provides downward-only continuations via R's native `callCC` function,
+Arl provides downward-only continuations via R's native `callCC` function,
 exposed as `call/cc` and `call-with-current-continuation`. Unlike full
 Scheme continuations, R's `callCC` supports one-shot, downward-only escapes
-(early returns). Continuations capture Rye-level control flow; side effects
+(early returns). Continuations capture Arl-level control flow; side effects
 are not rewound.
 
 ### Tail Call Optimization
 
-Rye's compiler implements **self-tail-call optimization** (self-TCO). When
+Arl's compiler implements **self-tail-call optimization** (self-TCO). When
 you define a function with `(define name (lambda ...))` and the body contains
 self-calls in tail position, the compiler automatically rewrites them as
 `while` loops -- avoiding stack growth. This works through `if`, `begin`,
@@ -256,7 +256,7 @@ access to all base R functions.
 
 For detailed documentation of all functions, see the [**Standard Library Reference**](docs/stdlib-reference.md).
 
-Additional Rye stdlib modules live in `inst/rye` so you can import just what you need:
+Additional Arl stdlib modules live in `inst/arl` so you can import just what you need:
 
 ```lisp
 (import control)   ; when/unless/and/or/cond/case
@@ -266,7 +266,7 @@ Additional Rye stdlib modules live in `inst/rye` so you can import just what you
 (import error)     ; try/catch/finally
 ```
 
-**Modules and loading:** `load` runs a file in the current environment (definitions visible). `run` runs a file in an isolated child (definitions not visible). `import` loads a module and attaches its exports into the current scope only; each module is loaded once per engine. From R, `engine$load_file(path)` runs a file in an isolated scope; to have definitions visible in the engine, use `engine$load_file_in_env(path, engine$env$env)` or evaluate `(load "script.rye")` from the REPL. You can define your own modules with `module` and `import`—see the [Modules and Imports](articles/modules.html) guide.
+**Modules and loading:** `load` runs a file in the current environment (definitions visible). `run` runs a file in an isolated child (definitions not visible). `import` loads a module and attaches its exports into the current scope only; each module is loaded once per engine. From R, `engine$load_file(path)` runs a file in an isolated scope; to have definitions visible in the engine, use `engine$load_file_in_env(path, engine$env$env)` or evaluate `(load "script.arl")` from the REPL. You can define your own modules with `module` and `import`—see the [Modules and Imports](articles/modules.html) guide.
 
 ### Examples
 
@@ -274,31 +274,31 @@ Check out the [examples](articles/examples.html) page for complete working
 programs with syntax highlighting. They range from
 small algorithms to macro techniques, data pipelines, and report outputs:
 
-- **[fibonacci.rye](articles/examples.html#fibonacci)** -
+- **[fibonacci.arl](articles/examples.html#fibonacci)** -
   Multiple Fibonacci implementations (recursive, iterative, sequence generation)
-- **[quicksort.rye](articles/examples.html#quicksort)** -
+- **[quicksort.arl](articles/examples.html#quicksort)** -
   Quicksort and mergesort demonstrating list operations
-- **[fizzbuzz.rye](articles/examples.html#fizzbuzz)** -
+- **[fizzbuzz.arl](articles/examples.html#fizzbuzz)** -
   Various FizzBuzz implementations showcasing control flow
-- **[macro-examples.rye](articles/examples.html#macro-examples)** -
+- **[macro-examples.arl](articles/examples.html#macro-examples)** -
   Comprehensive macro system demonstrations
-- **[pipeline-macros.rye](articles/examples.html#pipeline-macros)** -
+- **[pipeline-macros.arl](articles/examples.html#pipeline-macros)** -
   Macro-driven pipeline expansion and data flow
-- **[data-analysis.rye](articles/examples.html#data-analysis)** -
+- **[data-analysis.arl](articles/examples.html#data-analysis)** -
   R interop for data processing and statistics
-- **[graph-paths.rye](articles/examples.html#graph-paths)** -
+- **[graph-paths.arl](articles/examples.html#graph-paths)** -
   BFS traversal and Dijkstra shortest paths with report output
-- **[log-parser.rye](articles/examples.html#log-parser)** -
+- **[log-parser.arl](articles/examples.html#log-parser)** -
   Text parsing and summary stats from log lines
-- **[sales-report.rye](articles/examples.html#sales-report)** -
+- **[sales-report.arl](articles/examples.html#sales-report)** -
   R interop for data wrangling and CSV report generation
-- **[task-runner.rye](articles/examples.html#task-runner)** -
+- **[task-runner.arl](articles/examples.html#task-runner)** -
   Dependency resolution and execution ordering
 
 ### Semantics
 
 - **Truthiness**: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsey; everything else is truthy.
-- **Lists**: Rye lists are backed by R lists or calls; `car` returns the head and `cdr` returns the tail as a list.
+- **Lists**: Arl lists are backed by R lists or calls; `car` returns the head and `cdr` returns the tail as a list.
 - **Keywords**: `:kw` tokens are self-evaluating and become named arguments in function calls.
 
 ### R Integration
@@ -333,23 +333,23 @@ make check
 make document
 ```
 
-## Citing Rye
+## Citing Arl
 
-If you use Rye in academic work, please cite it. The package includes a
+If you use Arl in academic work, please cite it. The package includes a
 `CITATION` file, so you can use:
 
 ```{r eval=FALSE}
-citation("rye")
+citation("arl")
 ```
 
 ## Architecture
 
-Rye leverages R's existing eval/quote/environment system:
+Arl leverages R's existing eval/quote/environment system:
 
-1. **Tokenizer**: Lexical analysis of Rye source
+1. **Tokenizer**: Lexical analysis of Arl source
 2. **Parser**: Converts S-expressions to R calls
 3. **Macro expander**: Processes `defmacro` definitions
-4. **Compiler**: Compiles Rye AST to R code, handling all special forms and self-TCO
+4. **Compiler**: Compiles Arl AST to R code, handling all special forms and self-TCO
 5. **R bridge**: Compiled code is evaluated via R's `eval()`, with seamless access to all R functions
 
 ## License

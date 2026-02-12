@@ -2,18 +2,18 @@
 % Please edit documentation in R/cli.R
 \name{install_cli}
 \alias{install_cli}
-\title{Install the Rye CLI wrapper}
+\title{Install the Arl CLI wrapper}
 \usage{
 install_cli(
-  target_dir = Sys.getenv("RYE_BIN_DIR", unset = ""),
+  target_dir = Sys.getenv("ARL_BIN_DIR", unset = ""),
   overwrite = FALSE
 )
 }
 \arguments{
-\item{target_dir}{Directory for the \code{rye} executable. Defaults to the
-\code{RYE_BIN_DIR} environment variable, then \code{~/.local/bin}, then \code{~/bin}.}
+\item{target_dir}{Directory for the \code{arl} executable. Defaults to the
+\code{ARL_BIN_DIR} environment variable, then \code{~/.local/bin}, then \code{~/bin}.}
 
-\item{overwrite}{Whether to overwrite an existing \code{rye} executable.}
+\item{overwrite}{Whether to overwrite an existing \code{arl} executable.}
 }
 \value{
 The installed path, invisibly.

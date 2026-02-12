@@ -1,4 +1,4 @@
-# Remaining edge case tests for Rye standard library
+# Remaining edge case tests for Arl standard library
 # List operation edge cases moved to test-stdlib-edge-list.R
 # Higher-order function edge cases moved to test-stdlib-edge-functions.R
 # Sequence operation edge cases moved to test-stdlib-edge-sequences.R
@@ -287,7 +287,7 @@ test_that("char-at errors on negative index", {
 # Coverage: functional foldl/foldr with init value, repeatedly
 # ============================================================================
 
-test_that("foldl and foldr with init value from Rye", {
+test_that("foldl and foldr with init value from Arl", {
   env <- new.env()
   stdlib_env(engine, env)
   import_stdlib_modules(engine, c("functional"), env)
@@ -301,7 +301,7 @@ test_that("foldl and foldr with init value from Rye", {
   expect_equal(result, 16)
 })
 
-test_that("repeatedly from Rye code (sequences version, n fn order)", {
+test_that("repeatedly from Arl code (sequences version, n fn order)", {
   env <- new.env()
   stdlib_env(engine, env)
 
@@ -318,10 +318,10 @@ test_that("repeatedly from Rye code (sequences version, n fn order)", {
 test_that("display outputs formatted value", {
   env <- setup_env()
 
-  # Make sure RYE_QUIET is not set
-  old <- Sys.getenv("RYE_QUIET")
-  Sys.unsetenv("RYE_QUIET")
-  on.exit(if (nzchar(old)) Sys.setenv(RYE_QUIET = old) else Sys.unsetenv("RYE_QUIET"))
+  # Make sure ARL_QUIET is not set
+  old <- Sys.getenv("ARL_QUIET")
+  Sys.unsetenv("ARL_QUIET")
+  on.exit(if (nzchar(old)) Sys.setenv(ARL_QUIET = old) else Sys.unsetenv("ARL_QUIET"))
 
   output <- capture.output(
     engine$eval_in_env(engine$read("(display 42)")[[1]], env))
@@ -331,9 +331,9 @@ test_that("display outputs formatted value", {
 test_that("println outputs formatted value", {
   env <- setup_env()
 
-  old <- Sys.getenv("RYE_QUIET")
-  Sys.unsetenv("RYE_QUIET")
-  on.exit(if (nzchar(old)) Sys.setenv(RYE_QUIET = old) else Sys.unsetenv("RYE_QUIET"))
+  old <- Sys.getenv("ARL_QUIET")
+  Sys.unsetenv("ARL_QUIET")
+  on.exit(if (nzchar(old)) Sys.setenv(ARL_QUIET = old) else Sys.unsetenv("ARL_QUIET"))
 
   output <- capture.output(
     engine$eval_in_env(engine$read("(println 42)")[[1]], env))

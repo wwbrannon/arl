@@ -1,4 +1,4 @@
-# Tokenizer: Lexes Rye source code into tokens (LPAREN, RPAREN, SYMBOL, NUMBER, STRING,
+# Tokenizer: Lexes Arl source code into tokens (LPAREN, RPAREN, SYMBOL, NUMBER, STRING,
 # QUOTE, QUASIQUOTE, etc.) with line/col. Delimiters control what counts as a token boundary.
 #
 # @field delimiters Character vector of single-character delimiters.
@@ -129,7 +129,7 @@ Tokenizer <- R6::R6Class(
       self$delimiters <- delimiters
     },
     # @description Lex source string into a list of tokens (each list(type, value, line, col)).
-    # @param source Character string of Rye source code.
+    # @param source Character string of Arl source code.
     # @return List of token lists.
     tokenize = function(source) {
       if (nchar(source) == 0L) return(list())

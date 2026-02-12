@@ -1,7 +1,7 @@
 # End-to-End Benchmarks
 # Full pipeline benchmarks (tokenize → parse → eval) with component breakdown
 
-library(rye)
+library(arl)
 
 source("benchmarks/benchmark-helpers.R")
 source("benchmarks/workloads.R")
@@ -77,15 +77,15 @@ real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0) {
   bench_real <- benchmark_component(
-    "fibonacci.rye" = {
+    "fibonacci.arl" = {
       engine <- Engine$new()
       engine$eval_text(real_workloads$fibonacci)
     },
-    "quicksort.rye" = {
+    "quicksort.arl" = {
       engine <- Engine$new()
       engine$eval_text(real_workloads$quicksort)
     },
-    "macro-examples.rye" = {
+    "macro-examples.arl" = {
       engine <- Engine$new()
       load_modules(engine, c("control", "binding"))
       engine$eval_text(real_workloads$macro_examples)

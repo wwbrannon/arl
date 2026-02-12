@@ -2,25 +2,25 @@
 
 test_that("ModuleRegistry requires a Env", {
   expect_error(
-    rye:::ModuleRegistry$new(NULL),
+    arl:::ModuleRegistry$new(NULL),
     "ModuleRegistry requires a Env"
   )
   expect_error(
-    rye:::ModuleRegistry$new("not an env"),
+    arl:::ModuleRegistry$new("not an env"),
     "ModuleRegistry requires a Env"
   )
 })
 
 test_that("ModuleRegistry initializes with Env", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_true(r6_isinstance(registry, "ModuleRegistry"))
-  expect_identical(registry$rye_env, rye_env)
+  expect_identical(registry$arl_env, arl_env)
 
   # Should create the registry environment
-  reg_env <- rye_env$module_registry_env(create = FALSE)
+  reg_env <- arl_env$module_registry_env(create = FALSE)
   expect_true(!is.null(reg_env))
   expect_true(is.environment(reg_env))
 })
@@ -28,8 +28,8 @@ test_that("ModuleRegistry initializes with Env", {
 # Module registration tests
 test_that("register() requires valid name", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   expect_error(
@@ -48,23 +48,23 @@ test_that("register() requires valid name", {
 
 test_that("register() creates module entry", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
   mod_env$foo <- 42
 
-  entry <- registry$register("test-mod", mod_env, c("foo"), path = "/path/to/test.rye")
+  entry <- registry$register("test-mod", mod_env, c("foo"), path = "/path/to/test.arl")
 
   expect_true(is.environment(entry))
   expect_identical(entry$env, mod_env)
   expect_equal(entry$exports, c("foo"))
-  expect_equal(entry$path, "/path/to/test.rye")
+  expect_equal(entry$path, "/path/to/test.arl")
 })
 
 test_that("register() locks the entry environment", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   entry <- registry$register("test-mod", mod_env, c("foo"))
@@ -78,8 +78,8 @@ test_that("register() locks the entry environment", {
 
 test_that("register() prevents duplicate registration", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
@@ -92,20 +92,20 @@ test_that("register() prevents duplicate registration", {
 
 test_that("register() locks binding in registry", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
 
-  reg_env <- rye_env$module_registry_env(create = FALSE)
+  reg_env <- arl_env$module_registry_env(create = FALSE)
   expect_true(bindingIsLocked("test-mod", reg_env))
 })
 
 test_that("register() handles empty exports", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   entry <- registry$register("test-mod", mod_env, character())
@@ -115,8 +115,8 @@ test_that("register() handles empty exports", {
 
 test_that("register() handles NULL path", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   entry <- registry$register("test-mod", mod_env, c("foo"))
@@ -127,16 +127,16 @@ test_that("register() handles NULL path", {
 # Module retrieval tests
 test_that("exists() returns FALSE for missing modules", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_false(registry$exists("nonexistent"))
 })
 
 test_that("exists() returns TRUE for registered modules", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
@@ -146,8 +146,8 @@ test_that("exists() returns TRUE for registered modules", {
 
 test_that("exists() handles invalid input gracefully", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_false(registry$exists(NULL))
   expect_false(registry$exists(123))
@@ -156,33 +156,33 @@ test_that("exists() handles invalid input gracefully", {
 
 test_that("get() returns NULL for missing modules", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_null(registry$get("nonexistent"))
 })
 
 test_that("get() returns entry for registered modules", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
   mod_env$foo <- 42
 
-  registry$register("test-mod", mod_env, c("foo"), path = "/test.rye")
+  registry$register("test-mod", mod_env, c("foo"), path = "/test.arl")
   entry <- registry$get("test-mod")
 
   expect_true(is.environment(entry))
   expect_identical(entry$env, mod_env)
   expect_equal(entry$exports, c("foo"))
-  expect_equal(entry$path, "/test.rye")
+  expect_equal(entry$path, "/test.arl")
 })
 
 # Export management tests
 test_that("update_exports() requires valid name", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_error(
     registry$update_exports(123, c("bar")),
@@ -192,8 +192,8 @@ test_that("update_exports() requires valid name", {
 
 test_that("update_exports() fails for non-existent module", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_error(
     registry$update_exports("nonexistent", c("bar")),
@@ -203,8 +203,8 @@ test_that("update_exports() fails for non-existent module", {
 
 test_that("update_exports() updates exports list", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
@@ -215,36 +215,36 @@ test_that("update_exports() updates exports list", {
 
 test_that("update_exports() preserves environment and path", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
-  registry$register("test-mod", mod_env, c("foo"), path = "/test.rye")
+  registry$register("test-mod", mod_env, c("foo"), path = "/test.arl")
   entry <- registry$update_exports("test-mod", c("bar"))
 
   expect_identical(entry$env, mod_env)
-  expect_equal(entry$path, "/test.rye")
+  expect_equal(entry$path, "/test.arl")
 })
 
 test_that("update_exports() maintains locking", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
   entry <- registry$update_exports("test-mod", c("bar"))
 
   expect_true(environmentIsLocked(entry))
-  reg_env <- rye_env$module_registry_env(create = FALSE)
+  reg_env <- arl_env$module_registry_env(create = FALSE)
   expect_true(bindingIsLocked("test-mod", reg_env))
 })
 
 # Path aliasing tests
 test_that("alias() requires valid path and name", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_error(
     registry$alias(123, "test"),
@@ -262,26 +262,26 @@ test_that("alias() requires valid path and name", {
 
 test_that("alias() fails for non-existent module", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_error(
-    registry$alias("/path/to/test.rye", "nonexistent"),
+    registry$alias("/path/to/test.arl", "nonexistent"),
     "module 'nonexistent' is not loaded"
   )
 })
 
 test_that("alias() creates path lookup", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
-  registry$alias("/path/to/test.rye", "test-mod")
+  registry$alias("/path/to/test.arl", "test-mod")
 
   # Can retrieve by path
-  entry_by_path <- registry$get("/path/to/test.rye")
+  entry_by_path <- registry$get("/path/to/test.arl")
   entry_by_name <- registry$get("test-mod")
 
   expect_identical(entry_by_path, entry_by_name)
@@ -289,64 +289,64 @@ test_that("alias() creates path lookup", {
 
 test_that("alias() is idempotent for same module", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
-  registry$alias("/path/to/test.rye", "test-mod")
+  registry$alias("/path/to/test.arl", "test-mod")
 
   # Second alias call should succeed
-  expect_silent(registry$alias("/path/to/test.rye", "test-mod"))
+  expect_silent(registry$alias("/path/to/test.arl", "test-mod"))
 })
 
 test_that("alias() prevents conflicting paths", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env1 <- new.env()
   mod_env2 <- new.env()
 
   registry$register("mod1", mod_env1, c("foo"))
   registry$register("mod2", mod_env2, c("bar"))
-  registry$alias("/path/test.rye", "mod1")
+  registry$alias("/path/test.arl", "mod1")
 
   expect_error(
-    registry$alias("/path/test.rye", "mod2"),
-    "path '/path/test.rye' is already bound to a different module"
+    registry$alias("/path/test.arl", "mod2"),
+    "path '/path/test.arl' is already bound to a different module"
   )
 })
 
 test_that("alias() locks the path binding", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
-  registry$alias("/path/to/test.rye", "test-mod")
+  registry$alias("/path/to/test.arl", "test-mod")
 
-  reg_env <- rye_env$module_registry_env(create = FALSE)
-  expect_true(bindingIsLocked("/path/to/test.rye", reg_env))
+  reg_env <- arl_env$module_registry_env(create = FALSE)
+  expect_true(bindingIsLocked("/path/to/test.arl", reg_env))
 })
 
 test_that("exists() works with aliased paths", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
-  registry$alias("/path/to/test.rye", "test-mod")
+  registry$alias("/path/to/test.arl", "test-mod")
 
-  expect_true(registry$exists("/path/to/test.rye"))
+  expect_true(registry$exists("/path/to/test.arl"))
 })
 
 # Module attachment tests
 test_that("attach() fails for missing module", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_error(
     registry$attach("nonexistent"),
@@ -356,8 +356,8 @@ test_that("attach() fails for missing module", {
 
 test_that("attach() copies exports to Env", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
   mod_env$foo <- 42
   mod_env$bar <- "test"
@@ -365,33 +365,33 @@ test_that("attach() copies exports to Env", {
   registry$register("test-mod", mod_env, c("foo", "bar"))
   registry$attach("test-mod")
 
-  expect_equal(rye_env$env$foo, 42)
-  expect_equal(rye_env$env$bar, "test")
+  expect_equal(arl_env$env$foo, 42)
+  expect_equal(arl_env$env$bar, "test")
 })
 
 test_that("attach() handles macro exports", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   # Create a macro in the module's macro registry
-  mod_macro_registry <- rye_env$macro_registry_env(mod_env, create = TRUE)
+  mod_macro_registry <- arl_env$macro_registry_env(mod_env, create = TRUE)
   mod_macro_registry$my_macro <- function(x) x
 
   registry$register("test-mod", mod_env, c("my_macro"))
   registry$attach("test-mod")
 
   # Macro should be in target macro registry
-  target_macro_registry <- rye_env$macro_registry_env(create = FALSE)
+  target_macro_registry <- arl_env$macro_registry_env(create = FALSE)
   expect_true(exists("my_macro", envir = target_macro_registry, inherits = FALSE))
   expect_true(bindingIsLocked("my_macro", target_macro_registry))
 })
 
 test_that("attach() errors on missing export", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
   mod_env$foo <- 42
 
@@ -405,8 +405,8 @@ test_that("attach() errors on missing export", {
 
 test_that("attach_into() fails for missing module", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   target <- new.env()
 
   expect_error(
@@ -417,8 +417,8 @@ test_that("attach_into() fails for missing module", {
 
 test_that("attach_into() copies exports to target environment", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
   mod_env$foo <- 42
   mod_env$bar <- "test"
@@ -433,28 +433,28 @@ test_that("attach_into() copies exports to target environment", {
 
 test_that("attach_into() handles macros to target's macro registry", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
   target <- new.env()
 
   # Create a macro in the module's macro registry
-  mod_macro_registry <- rye_env$macro_registry_env(mod_env, create = TRUE)
+  mod_macro_registry <- arl_env$macro_registry_env(mod_env, create = TRUE)
   mod_macro_registry$my_macro <- function(x) x
 
   registry$register("test-mod", mod_env, c("my_macro"))
   registry$attach_into("test-mod", target)
 
   # Macro should be in target's macro registry
-  target_rye <- rye:::Env$new(target)
-  target_macro_registry <- target_rye$macro_registry_env(create = FALSE)
+  target_arl <- arl:::Env$new(target)
+  target_macro_registry <- target_arl$macro_registry_env(create = FALSE)
   expect_true(exists("my_macro", envir = target_macro_registry, inherits = FALSE))
 })
 
 test_that("attach_into() errors on missing export", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
   mod_env$foo <- 42
   target <- new.env()
@@ -470,8 +470,8 @@ test_that("attach_into() errors on missing export", {
 # Cleanup tests
 test_that("unregister() requires valid name", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   expect_error(
     registry$unregister(123),
@@ -481,8 +481,8 @@ test_that("unregister() requires valid name", {
 
 test_that("unregister() removes module from registry", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
 
   registry$register("test-mod", mod_env, c("foo"))
@@ -494,8 +494,8 @@ test_that("unregister() removes module from registry", {
 
 test_that("unregister() is safe for non-existent modules", {
   test_env <- new.env()
-  rye_env <- rye:::Env$new(test_env)
-  registry <- rye:::ModuleRegistry$new(rye_env)
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
 
   # Should not error
   expect_silent(registry$unregister("nonexistent"))

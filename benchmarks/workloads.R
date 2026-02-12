@@ -1,5 +1,5 @@
 # Pre-defined Workloads for Benchmarking
-# Standard workloads for testing Rye performance
+# Standard workloads for testing Arl performance
 
 # Source benchmark helpers (works from different working directories)
 if (file.exists("benchmarks/benchmark-helpers.R")) {
@@ -8,7 +8,7 @@ if (file.exists("benchmarks/benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {
   # Try installed package
-  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "rye")
+  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "arl")
   if (helpers_path != "") {
     source(helpers_path)
   }
@@ -103,12 +103,12 @@ WORKLOAD_XL <- function() {
 # Real workloads from example files
 get_real_workload <- function(name) {
   examples <- c(
-    "fibonacci" = "fibonacci.rye",
-    "quicksort" = "quicksort.rye",
-    "graph-paths" = "graph-paths.rye",
-    "macro-examples" = "macro-examples.rye",
-    "data-analysis" = "data-analysis.rye",
-    "oop-simple" = "oop-simple.rye"
+    "fibonacci" = "fibonacci.arl",
+    "quicksort" = "quicksort.arl",
+    "graph-paths" = "graph-paths.arl",
+    "macro-examples" = "macro-examples.arl",
+    "data-analysis" = "data-analysis.arl",
+    "oop-simple" = "oop-simple.arl"
   )
 
   if (!(name %in% names(examples))) {

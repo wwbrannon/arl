@@ -1,4 +1,4 @@
 library(testthat)
-library(rye)
+library(arl)
 
-test_check("rye")
+test_check("arl")

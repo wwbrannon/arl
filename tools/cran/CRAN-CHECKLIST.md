@@ -12,10 +12,10 @@ Runs `devdoc`, `readme`, `vignettes`, and `cran-comments`. All prerequisite
 targets (cache clearing, stdlib load-order rebuild, `devtools::load_all()`) are
 handled automatically. The `cran-comments` target depends on `check` (builds
 tarball + `R CMD check --as-cran`), reads the status from
-`rye.Rcheck/00check.log`, and generates `cran-comments.md` and
+`arl.Rcheck/00check.log`, and generates `cran-comments.md` and
 `CRAN-SUBMISSION`.
 
-To remove the `rye.Rcheck` directory when no longer needed, run `make
+To remove the `arl.Rcheck` directory when no longer needed, run `make
 cran-clean` or `make clean`.
 
 ## Review before submission

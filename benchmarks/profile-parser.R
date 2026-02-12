@@ -1,7 +1,7 @@
 # Parser Profiling
 # Generate profvis flame graphs for parser performance
 
-library(rye)
+library(arl)
 
 # Source helpers (works from different working directories)
 if (file.exists("benchmarks/benchmark-helpers.R")) {
@@ -9,7 +9,7 @@ if (file.exists("benchmarks/benchmark-helpers.R")) {
 } else if (file.exists("benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {
-  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "rye")
+  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "arl")
   if (helpers_path != "") source(helpers_path)
 }
 
@@ -18,7 +18,7 @@ if (file.exists("benchmarks/workloads.R")) {
 } else if (file.exists("workloads.R")) {
   source("workloads.R")
 } else {
-  workloads_path <- system.file("benchmarks/workloads.R", package = "rye")
+  workloads_path <- system.file("benchmarks/workloads.R", package = "arl")
   if (workloads_path != "") source(workloads_path)
 }
 
@@ -53,8 +53,8 @@ profile_component({
 }, "parser-deep-nesting")
 
 
-# Profile 3: Real example file (quicksort.rye)
-cat("Profile 3: Real example file (quicksort.rye)\n")
+# Profile 3: Real example file (quicksort.arl)
+cat("Profile 3: Real example file (quicksort.arl)\n")
 
 engine3 <- Engine$new()
 real_workloads <- get_real_workloads()
@@ -69,7 +69,7 @@ if (length(real_workloads) > 0 && "quicksort" %in% names(real_workloads)) {
   }, "parser-quicksort")
 
 } else {
-  cat("(Skipped - quicksort.rye not available)\n\n")
+  cat("(Skipped - quicksort.arl not available)\n\n")
 }
 
 # Profile 4: Quote sugar expansion

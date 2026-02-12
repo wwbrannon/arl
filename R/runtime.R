@@ -1,9 +1,9 @@
 missing_default <- function() {
-  structure(list(), class = "rye_missing_default")
+  structure(list(), class = "arl_missing_default")
 }
 
 # Compiled-mode helpers: installed in env before eval(compiled, env).
-# Rye truthiness: #f (FALSE), #nil (NULL), and 0 are false.
+# Arl truthiness: #f (FALSE), #nil (NULL), and 0 are false.
 .__true_p <- function(x) {
   if (is.null(x)) {
     return(FALSE)
@@ -144,11 +144,11 @@ CompiledRuntime <- R6::R6Class(
         }
 
         assign(name, value, envir = env)
-        # Only set rye_doc on non-primitive functions (primitives can't have attributes)
+        # Only set arl_doc on non-primitive functions (primitives can't have attributes)
         if (is.function(value) && !is.primitive(value)) {
           obj <- get(name, envir = env)
-          attr(obj, "rye_doc") <- list(
-            description = paste0("INTERNAL: ", description, " This is part of Rye's compiled code implementation. Direct use is unsupported and may break in future versions.")
+          attr(obj, "arl_doc") <- list(
+            description = paste0("INTERNAL: ", description, " This is part of Arl's compiled code implementation. Direct use is unsupported and may break in future versions.")
           )
           assign(name, obj, envir = env)
         }
@@ -195,9 +195,9 @@ CompiledRuntime <- R6::R6Class(
           prim <- val
           val <- function(...) prim(...)
         }
-        attr(val, "rye_doc") <- doc_list
+        attr(val, "arl_doc") <- doc_list
         val
-      }, "Attach rye_doc annotation to a value, wrapping primitives.")
+      }, "Attach arl_doc annotation to a value, wrapping primitives.")
 
       assign_and_lock(".__delay", function(compiled_expr, env) {
         self$promise_new_compiled(compiled_expr, env)
@@ -247,9 +247,9 @@ CompiledRuntime <- R6::R6Class(
       }
       # Cache context chain to avoid repeated R6 field lookups
       ctx <- self$context
-      rye_env <- ctx$env
-      rye_env$push_env(env)
-      on.exit(rye_env$pop_env(), add = TRUE)
+      arl_env <- ctx$env
+      arl_env$push_env(env)
+      on.exit(arl_env$pop_env(), add = TRUE)
       self$install_helpers(env)
 
       eval(compiled_expr, envir = env)
@@ -388,21 +388,21 @@ CompiledRuntime <- R6::R6Class(
         idx <- 1L
         for (i in seq_along(eval_body)) {
           if (!is.null(source_tracker) && i <= length(body_exprs)) {
-            rye_src <- source_tracker$src_get(body_exprs[[i]])
-            if (!is.null(rye_src) && !is.null(rye_src$file) && !is.null(rye_src$start_line)) {
+            arl_src <- source_tracker$src_get(body_exprs[[i]])
+            if (!is.null(arl_src) && !is.null(arl_src$file) && !is.null(arl_src$start_line)) {
               # Narrow to start_line for forms whose sub-expressions are
               # instrumented separately (if, define/defmacro wrapping lambda).
               # For everything else, use full source span.
-              end_line <- rye_src$start_line
+              end_line <- arl_src$start_line
               narrow <- should_narrow_coverage(body_exprs[[i]])
-              if (!narrow && !is.null(rye_src$end_line)) {
-                end_line <- rye_src$end_line
+              if (!narrow && !is.null(arl_src$end_line)) {
+                end_line <- arl_src$end_line
               }
-              coverage_tracker$register_coverable(rye_src$file, rye_src$start_line, end_line)
+              coverage_tracker$register_coverable(arl_src$file, arl_src$start_line, end_line)
               instrumented[[idx]] <- as.call(list(
                 as.symbol(".__coverage_track"),
-                rye_src$file,
-                rye_src$start_line,
+                arl_src$file,
+                arl_src$start_line,
                 end_line
               ))
               idx <- idx + 1L
@@ -478,12 +478,12 @@ CompiledRuntime <- R6::R6Class(
       for (expr in exprs) {
         # Track top-level expression start line only (don't paint body ranges)
         if (!is.null(coverage_tracker) && coverage_tracker$enabled && !is.null(source_tracker)) {
-          rye_src <- source_tracker$src_get(expr)
-          if (!is.null(rye_src) && !is.null(rye_src$file) && !is.null(rye_src$start_line)) {
+          arl_src <- source_tracker$src_get(expr)
+          if (!is.null(arl_src) && !is.null(arl_src$file) && !is.null(arl_src$start_line)) {
             coverage_tracker$track(list(
-              file = rye_src$file,
-              start_line = rye_src$start_line,
-              end_line = rye_src$start_line
+              file = arl_src$file,
+              start_line = arl_src$start_line,
+              end_line = arl_src$start_line
             ))
           }
         }
@@ -508,7 +508,7 @@ CompiledRuntime <- R6::R6Class(
       if (!is.null(stdlib_path)) {
         return(stdlib_path)
       }
-      candidates <- c(name, paste0(name, ".rye"))
+      candidates <- c(name, paste0(name, ".arl"))
       for (candidate in candidates) {
         if (file.exists(candidate)) {
           return(candidate)
@@ -516,7 +516,7 @@ CompiledRuntime <- R6::R6Class(
       }
       NULL
     },
-    # Path-only resolution: find file at path or path.rye (no stdlib lookup).
+    # Path-only resolution: find file at path or path.arl (no stdlib lookup).
     # Used when import argument is a string (path). Returns NULL if not found.
     resolve_path_only = function(path) {
       if (!is.character(path) || length(path) != 1) {
@@ -525,7 +525,7 @@ CompiledRuntime <- R6::R6Class(
       if (file.exists(path)) {
         return(path)
       }
-      with_ext <- paste0(path, ".rye")
+      with_ext <- paste0(path, ".arl")
       if (file.exists(with_ext)) {
         return(with_ext)
       }

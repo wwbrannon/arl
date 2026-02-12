@@ -37,7 +37,7 @@ test_that("format-value handles environments correctly", {
   }
 })
 
-test_that("format-value for dotted pair (rye_cons) shows dotted form", {
+test_that("format-value for dotted pair (arl_cons) shows dotted form", {
   env <- new.env()
   stdlib_env(engine, env)
   pair <- engine$read("'(a . b)")[[1]][[2]]

@@ -5,7 +5,7 @@
 if (file.exists("DESCRIPTION")) {
   devtools::load_all()
 } else {
-  library(rye)
+  library(arl)
 }
 
 source("benchmarks/benchmark-helpers.R")
@@ -180,7 +180,7 @@ cat("   - Measurable impact in tight loops with many conditionals\n")
 cat("   - No overhead for variable tests (still use wrapper)\n\n")
 
 cat("3. CORRECTNESS:\n")
-cat("   - Preserves Rye truthiness semantics\n")
+cat("   - Preserves Arl truthiness semantics\n")
 cat("   - Variables still wrapped (only #f and #nil are false)\n")
 cat("   - Safe optimization (only skips wrapper for known-boolean returns)\n\n")
 

@@ -1,7 +1,7 @@
 # Macro Profiling
 # Generate profvis flame graphs for macro expansion performance
 
-library(rye)
+library(arl)
 
 # Source helpers (works from different working directories)
 if (file.exists("benchmarks/benchmark-helpers.R")) {
@@ -9,7 +9,7 @@ if (file.exists("benchmarks/benchmark-helpers.R")) {
 } else if (file.exists("benchmark-helpers.R")) {
   source("benchmark-helpers.R")
 } else {
-  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "rye")
+  helpers_path <- system.file("benchmarks/benchmark-helpers.R", package = "arl")
   if (helpers_path != "") source(helpers_path)
 }
 
@@ -18,7 +18,7 @@ if (file.exists("benchmarks/workloads.R")) {
 } else if (file.exists("workloads.R")) {
   source("workloads.R")
 } else {
-  workloads_path <- system.file("benchmarks/workloads.R", package = "rye")
+  workloads_path <- system.file("benchmarks/workloads.R", package = "arl")
   if (workloads_path != "") source(workloads_path)
 }
 
@@ -92,15 +92,15 @@ real_workloads <- get_real_workloads()
 if (length(real_workloads) > 0 && "macro_examples" %in% names(real_workloads)) {
   engine4 <- Engine$new()
 
-  old_quiet <- Sys.getenv("RYE_QUIET", unset = NA)
+  old_quiet <- Sys.getenv("ARL_QUIET", unset = NA)
   on.exit({
     if (is.na(old_quiet)) {
-      Sys.unsetenv("RYE_QUIET")
+      Sys.unsetenv("ARL_QUIET")
     } else {
-      Sys.setenv(RYE_QUIET = old_quiet)
+      Sys.setenv(ARL_QUIET = old_quiet)
     }
   }, add = TRUE)
-  Sys.setenv(RYE_QUIET = "1")
+  Sys.setenv(ARL_QUIET = "1")
 
   profile_component({
     for (i in 1:20) {
@@ -116,7 +116,7 @@ if (length(real_workloads) > 0 && "macro_examples" %in% names(real_workloads)) {
   }, "macro-examples")
 
 } else {
-  cat("(Skipped - macro-examples.rye not available)\n\n")
+  cat("(Skipped - macro-examples.arl not available)\n\n")
 }
 
 # Profile 5: Multiple macro tree walks

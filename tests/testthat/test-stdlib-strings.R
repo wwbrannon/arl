@@ -167,7 +167,7 @@ test_that("string and io helpers work", {
   expect_equal(env$format("x=%s", "y"), "x=y")
 
   con <- textConnection("hello")
-  old_opts <- options(rye.stdin = con)
+  old_opts <- options(arl.stdin = con)
   on.exit({
     options(old_opts)
     close(con)

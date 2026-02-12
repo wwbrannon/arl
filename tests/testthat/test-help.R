@@ -5,7 +5,7 @@ test_that("help accepts symbol and string topics", {
   expect_error(capture.output(engine$eval_text("(help \"mean\")", env = env)), NA)
 })
 
-test_that("help shows Rye special-form docs", {
+test_that("help shows Arl special-form docs", {
   engine <- make_engine()
   env <- engine$env$raw()
   output <- capture.output(engine$eval_text("(help if)", env = env))
@@ -14,14 +14,14 @@ test_that("help shows Rye special-form docs", {
 
 })
 
-test_that("help shows Rye stdlib docs via attributes", {
+test_that("help shows Arl stdlib docs via attributes", {
   engine <- make_engine()
   env <- engine$env$raw()
   output <- capture.output(engine$eval_text("(help funcall)", env = env))
   expect_true(any(grepl("\\(funcall fn args\\)", output)))
 })
 
-test_that("help shows Rye macro docs from stdlib files", {
+test_that("help shows Arl macro docs from stdlib files", {
   engine <- make_engine()
   env <- engine$env$raw()
   import_stdlib_modules(engine, c("control"))
@@ -41,10 +41,10 @@ test_that("help shows usage for lambda without docstring", {
 # Initialization tests
 test_that("HelpSystem initialization requires Env and MacroExpander", {
   env <- new.env()
-  rye_env <- rye:::Env$new(env)
+  arl_env <- arl:::Env$new(env)
 
-  # Need both rye_env and macro_expander
-  expect_true(r6_isinstance(rye_env, "Env"))
+  # Need both arl_env and macro_expander
+  expect_true(r6_isinstance(arl_env, "Env"))
 
   # Create full engine to get macro_expander
   engine <- make_engine()
@@ -114,13 +114,13 @@ test_that("help handles functions without formals", {
   expect_true(any(grepl("Topic: primitive_fn", output)))
 })
 
-test_that("help shows rye_doc attribute on functions", {
+test_that("help shows arl_doc attribute on functions", {
   engine <- make_engine()
   env <- engine$env$raw()
 
-  # Function with rye_doc
+  # Function with arl_doc
   env$documented <- function(x) x * 2
-  attr(env$documented, "rye_doc") <- list(
+  attr(env$documented, "arl_doc") <- list(
     description = "Double the input value.",
     usage = "(documented value)"
   )
@@ -151,18 +151,18 @@ test_that("help prioritizes specials over macros", {
   expect_true(any(grepl("Return expr without evaluation", output)))
 })
 
-test_that("help handles rye_closure with param_specs", {
+test_that("help handles arl_closure with param_specs", {
   engine <- make_engine()
   env <- engine$env$raw()
 
-  # Lambda creates rye_closure
+  # Lambda creates arl_closure
   engine$eval_text("(define adder (lambda (x y) (+ x y)))", env = env)
   output <- capture.output(engine$eval_text("(help adder)", env = env))
 
   expect_true(any(grepl("\\(adder x y\\)", output)))
 })
 
-test_that("help handles rye_closure with defaults", {
+test_that("help handles arl_closure with defaults", {
   engine <- make_engine()
   env <- engine$env$raw()
 
@@ -174,7 +174,7 @@ test_that("help handles rye_closure with defaults", {
   expect_true(any(grepl("greet", output)))
 })
 
-test_that("help handles rye_closure with rest params", {
+test_that("help handles arl_closure with rest params", {
   engine <- make_engine()
   env <- engine$env$raw()
 
