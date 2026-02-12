@@ -28,3 +28,4 @@
 ^coverage$
 ^\.coverage\.yml$
 ^codecov\.yml$
+^.*\.log$
