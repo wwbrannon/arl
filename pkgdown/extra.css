@@ -181,12 +181,14 @@ a:hover {
   color: var(--arl-accent);
 }
 
-/* ---------- Quick-start box ---------- */
-.template-home .section:last-of-type {
-  background: var(--arl-subtle-bg);
-  border-radius: 8px;
-  padding: 1.5rem;
-  border: 1px solid #dee2e6;
+/* ---------- Status badges (bottom of homepage) ---------- */
+.template-home .section:has(> #status) {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.template-home .section:has(> #status) > h2 {
+  display: none;
 }
 
 /* ---------- Dark mode adjustments ---------- */

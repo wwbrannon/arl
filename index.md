@@ -59,7 +59,7 @@ TODO: a couple paragraphs here incl getting started and examples links
 ### From R
 
 ```r
-> devtools::install()  # or install_github or install.packages
+> devtools::install()  # or another method
 
 > library(arl)
 > engine <- Engine$new()
@@ -76,7 +76,7 @@ $ arl --file script.arl  # or "-f"
 $ arl --eval "(+ 1 2)"   # of "-e"
 ```
 
----
+## Status {.unlisted .unnumbered}
 
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Check](https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/check.yaml)
