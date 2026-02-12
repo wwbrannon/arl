@@ -1,6 +1,8 @@
 ---
 title: "Standard Library: Lists and Sequences"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Standard Library: Lists and Sequences}
   %\VignetteEngine{knitr::rmarkdown}

@@ -1,6 +1,8 @@
 ---
 title: "Standard Library: Equality and S3 Dispatch"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Standard Library: Equality and S3 Dispatch}
   %\VignetteEngine{knitr::rmarkdown}

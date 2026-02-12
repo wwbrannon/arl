@@ -1,6 +1,8 @@
 ---
 title: "Macros and Quasiquote"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Macros and Quasiquote}
   %\VignetteEngine{knitr::rmarkdown}

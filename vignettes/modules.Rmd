@@ -1,6 +1,8 @@
 ---
 title: "Modules and Imports"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Modules and Imports}
   %\VignetteEngine{knitr::rmarkdown}

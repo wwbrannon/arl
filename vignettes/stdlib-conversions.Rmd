@@ -1,6 +1,8 @@
 ---
 title: "Standard Library: Type Conversions"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Standard Library: Type Conversions}
   %\VignetteEngine{knitr::rmarkdown}

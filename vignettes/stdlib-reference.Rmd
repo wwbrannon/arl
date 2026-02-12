@@ -1,6 +1,8 @@
 ---
 title: "Standard Library Overview"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Standard Library Overview}
   %\VignetteEngine{knitr::rmarkdown}

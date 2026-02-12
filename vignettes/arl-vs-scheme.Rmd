@@ -1,6 +1,8 @@
 ---
 title: "Arl Compared to Scheme"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Arl Compared to Scheme}
   %\VignetteEngine{knitr::rmarkdown}

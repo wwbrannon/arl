@@ -1,6 +1,8 @@
 ---
 title: "Compiler and Internals"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Compiler and Internals}
   %\VignetteEngine{knitr::rmarkdown}

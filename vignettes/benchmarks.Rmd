@@ -1,6 +1,8 @@
 ---
 title: "Benchmarks"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Benchmarks}
   %\VignetteEngine{knitr::rmarkdown}

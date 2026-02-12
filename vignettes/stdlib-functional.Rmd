@@ -1,6 +1,8 @@
 ---
 title: "Standard Library: Higher-Order Functions"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Standard Library: Higher-Order Functions}
   %\VignetteEngine{knitr::rmarkdown}

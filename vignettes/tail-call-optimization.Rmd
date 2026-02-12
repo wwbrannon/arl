@@ -1,6 +1,8 @@
 ---
 title: "Tail Call Optimization"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Tail Call Optimization}
   %\VignetteEngine{knitr::rmarkdown}

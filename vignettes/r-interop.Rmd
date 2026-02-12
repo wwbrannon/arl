@@ -1,6 +1,8 @@
 ---
 title: "R Interop and Data Workflows"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{R Interop and Data Workflows}
   %\VignetteEngine{knitr::rmarkdown}

@@ -1,6 +1,8 @@
 ---
 title: "Standard Library: Strings, I/O, and Arithmetic"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Standard Library: Strings, I/O, and Arithmetic}
   %\VignetteEngine{knitr::rmarkdown}

@@ -1,6 +1,8 @@
 ---
 title: "Standard Library: Math and Numeric Functions"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Standard Library: Math and Numeric Functions}
   %\VignetteEngine{knitr::rmarkdown}

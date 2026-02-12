@@ -1,6 +1,8 @@
 ---
 title: "Standard Library: Control Flow and Macros"
 output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
 vignette: >
   %\VignetteIndexEntry{Standard Library: Control Flow and Macros}
   %\VignetteEngine{knitr::rmarkdown}
