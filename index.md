@@ -80,3 +80,11 @@ arl --eval "(+ 1 2)"
 - [**R Interop**](articles/r-interop.html) — calling R from Arl and vice versa
 - [**Standard Library**](articles/stdlib-reference.html) — full function reference
 - [**Benchmarks**](articles/benchmarks.html) — performance characteristics and profiling
+
+---
+
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check](https://github.com/wwbrannon/arl/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/R-CMD-check.yaml)
+[![Codecov](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/arl)
+[![CRAN status](https://www.r-pkg.org/badges/version/arl)](https://CRAN.R-project.org/package=arl)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

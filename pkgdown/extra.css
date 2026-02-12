@@ -99,22 +99,21 @@ code {
   margin-bottom: 2.5rem;
 }
 
+/* ---------- Full-width homepage (no sidebar) ---------- */
+.template-home .row > main {
+  max-width: 100%;
+  flex: 0 0 100%;
+}
+
+.template-home .row > aside {
+  display: none;
+}
+
 /* ---------- Footer ---------- */
 footer {
   border-top: 2px solid var(--arl-accent);
   margin-top: 3rem;
   padding-top: 1.5rem;
-}
-
-/* ---------- Sidebar cleanup (homepage badges) ---------- */
-.template-home .sidebar .badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.template-home .sidebar .badges a {
-  display: inline-block;
 }
 
 /* ---------- Links ---------- */

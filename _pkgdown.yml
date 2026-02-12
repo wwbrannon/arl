@@ -10,6 +10,7 @@ build:
 home:
   title: Arl
   description: A Lisp dialect implemented in and with access to R.
+  sidebar: FALSE
 
 navbar:
   components:
