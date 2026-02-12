@@ -94,6 +94,45 @@ code {
   color: var(--arl-accent-dark);
 }
 
+/* ---------- Grid sections (Quick Examples 2x2, Install 1x2) ---------- */
+/* pkgdown puts the id on the h2, so we target the parent div via :has() */
+.template-home .section:has(> #quick-examples),
+.template-home .section:has(> #install) {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.template-home .section:has(> #quick-examples) > h2,
+.template-home .section:has(> #install) > h2 {
+  grid-column: 1 / -1;
+}
+
+.template-home .section:has(> #quick-examples) > .section,
+.template-home .section:has(> #install) > .section {
+  background: var(--arl-subtle-bg);
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+}
+
+.template-home .section:has(> #quick-examples) > .section > h3,
+.template-home .section:has(> #install) > .section > h3 {
+  margin-top: 0;
+}
+
+.template-home .section:has(> #quick-examples) > .section pre,
+.template-home .section:has(> #install) > .section pre {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .template-home .section:has(> #quick-examples),
+  .template-home .section:has(> #install) {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Section spacing ---------- */
 .template-home .section {
   margin-bottom: 2.5rem;
@@ -146,7 +185,9 @@ a:hover {
   background-color: var(--arl-code-bg);
 }
 
-[data-bs-theme="dark"] .template-home .section ul li {
+[data-bs-theme="dark"] .template-home .section ul li,
+[data-bs-theme="dark"] .template-home .section:has(> #quick-examples) > .section,
+[data-bs-theme="dark"] .template-home .section:has(> #install) > .section {
   background: var(--arl-subtle-bg);
   border-color: #495057;
 }

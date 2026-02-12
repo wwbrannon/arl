@@ -54,8 +54,9 @@
 
 ## Install
 
+### From R
+
 ```r
-# Install from source
 devtools::install()
 
 library(arl)
@@ -63,7 +64,7 @@ engine <- Engine$new()
 engine$repl()
 ```
 
-Or use the CLI:
+### CLI
 
 ```bash
 arl::install_cli()   # one-time setup from R
