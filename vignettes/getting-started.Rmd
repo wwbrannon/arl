@@ -154,7 +154,7 @@ special form, macro, or function:
 
 ```lisp
 (help "define")   ; special form
-(help "when")     ; macro -- shows docstring and usage
+(help "when")     ; macro -- shows docs and usage
 (help "map")      ; stdlib function
 ```
 
@@ -189,7 +189,7 @@ Supported tags:
 
 | Tag | Purpose |
 |-----|---------|
-| `@description` | One-line or multi-line description. If omitted, the parser falls back to an inline docstring or a `(doc! ...)` call. |
+| `@description` | One-line or multi-line description. If omitted, the parser falls back to a `(doc! ...)` call. |
 | `@examples` | One or more example expressions (one per continuation line). |
 | `@seealso` | Comma-separated list of related function names. |
 | `@note` | Additional notes (caveats, performance, history). |

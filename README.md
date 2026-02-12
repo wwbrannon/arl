@@ -123,13 +123,13 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "arl", package = "arl
 (seq :from 1 :to 10 :by 2)  ; => 1 3 5 7 9
 
 ; Macros
+;;' @description Evaluate body when test is truthy.
 (defmacro when (test . body)
-  "Evaluate body when test is truthy."
   `(if ,test (begin ,@body) #nil))
 
 (when (> 5 3) (print "yes"))  ; => "yes"
 
-; Macro docstrings are a leading string literal
+; Documentation via ;;' annotation comments
 (help "when")
 
 ; Higher-order functions

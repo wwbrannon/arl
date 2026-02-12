@@ -363,11 +363,11 @@ Group related functions into logical modules:
 
 ### 3. Document Module Purpose
 
-Use docstrings to document your modules:
+Use `;;'` annotation comments to document your modules:
 
 ```lisp
+;;' @description String manipulation utilities for text processing.
 (module string-utils
-  "String manipulation utilities for text processing."
   (export trim upcase downcase)
   ...)
 ```

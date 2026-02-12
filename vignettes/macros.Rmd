@@ -19,8 +19,8 @@ Macros let you transform code before evaluation. Arl supports `defmacro`,
 ## Defining a macro
 
 ```lisp
+;;' @description Evaluate body forms when test is truthy.
 (defmacro when (test . body)
-  "Evaluate body forms when test is truthy."
   `(if ,test (begin ,@body) #nil))
 ```
 
@@ -33,7 +33,8 @@ With that macro defined, you can write:
 Macros receive their arguments *unevaluated*, so they can rewrite code before
 evaluation happens.
 
-You can attach a docstring by adding a leading string literal in the macro body:
+You can attach documentation with `;;'` annotation comments above the macro
+definition (see [Getting Started — Documenting functions](getting-started.html#documenting-functions)):
 
 ```lisp
 (help "when")
@@ -44,8 +45,8 @@ You can attach a docstring by adding a leading string literal in the macro body:
 Macros can take any number of parameters:
 
 ```lisp
+;;' @description Evaluate body forms when test is falsy.
 (defmacro unless (test . body)
-  "Evaluate body forms when test is falsy."
   `(if ,test #nil (begin ,@body)))
 ```
 
@@ -54,8 +55,8 @@ Macros can take any number of parameters:
 Use `gensym` to create unique symbols when you need a temporary binding:
 
 ```lisp
+;;' @description Bind value to a fresh temporary symbol.
 (defmacro with-temp (value body)
-  "Bind value to a fresh temporary symbol."
   (let ((tmp (gensym "tmp")))
     `(let ((,tmp ,value))
        ,body)))
@@ -91,7 +92,7 @@ You can inspect expansions from R using `engine$macroexpand()`:
 
 ```{r eval=FALSE}
 engine <- Engine$new()
-engine$eval(engine$read("(defmacro when (test . body) \"Evaluate body forms when test is truthy.\" `(if ,test (begin ,@body) #nil))")[[1]])
+engine$eval(engine$read("(defmacro when (test . body) `(if ,test (begin ,@body) #nil))")[[1]])
 engine$macroexpand(engine$read("(when #t 1)")[[1]])
 ```
 

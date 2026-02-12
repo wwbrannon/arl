@@ -20,16 +20,16 @@
 (println "=== Simple Macros ===\n")
 
 ;; A macro that doubles its argument
+;;' @description Multiply x by 2 at macro expansion time.
 (defmacro double (x)
-  "Multiply x by 2 at macro expansion time."
   `(* 2 ,x))
 
 (println (str "(double 5) = " (double 5)))
 (println (str "(double (+ 1 2)) = " (double (+ 1 2))))
 
 ;; A macro that creates a variable with a default value
+;;' @description Define a variable with a value.
 (defmacro defvar (name value)
-  "Define a variable with a value."
   `(define ,name ,value))
 
 (defvar x 42)
@@ -42,8 +42,8 @@
 (println "\n=== Macros with Multiple Expressions ===\n")
 
 ;; A macro that executes multiple forms and returns the last
+;;' @description Evaluate forms in order and return the last.
 (defmacro progn (first . rest)
-  "Evaluate forms in order and return the last."
   `(begin ,first ,@rest))
 
 (println "Using progn:")
@@ -59,8 +59,8 @@
 (println "\n=== Control Flow Macros ===\n")
 
 ;; Custom when-not macro
+;;' @description Evaluate body when test is falsy.
 (defmacro when-not (test . body)
-  "Evaluate body when test is falsy."
   `(if (not ,test)
        (begin ,@body)
        #nil))
@@ -72,8 +72,8 @@
   (println "This should not print"))
 
 ;; A do-times macro
+;;' @description Repeat body n times.
 (defmacro do-times (n . body)
-  "Repeat body n times."
   (let ((counter (gensym "counter")))
     `(let ((,counter 0))
        (while (< ,counter ,n)
@@ -107,8 +107,8 @@
 (println "\n=== Anaphoric Macros ===\n")
 
 ;; An anaphoric if that binds result to 'it'
+;;' @description Bind test result to it and select then/alt.
 (defmacro aif (test then alt)
-  "Bind test result to it and select then/alt."
   `(let ((it ,test))
      (if it ,(capture 'it then) ,(capture 'it alt))))
 
@@ -124,8 +124,8 @@
 (println "\n=== Simple DSL Example ===\n")
 
 ;; A macro for defining test cases
+;;' @description Define and run a simple test case.
 (defmacro deftest (name . body)
-  "Define and run a simple test case."
   `(begin
      (println (str "Running test: " (quote ,name)))
      ,@body
@@ -146,8 +146,8 @@
 (println "\n=== Hygiene and Capture ===\n")
 
 ;; Automatic hygiene (no gensym needed)
+;;' @description Swap two bindings using a temporary.
 (defmacro swap (a b)
-  "Swap two bindings using a temporary."
   `(let ((temp ,a))
      (set! ,a ,b)
      (set! ,b temp)))
@@ -183,8 +183,8 @@
 (println "\n=== Recursive Macro Example ===\n")
 
 ;; A macro that chains function calls
+;;' @description Thread value through forms (first argument).
 (defmacro -> (value . forms)
-  "Thread value through forms (first argument)."
   (if (null? forms)
       value
       (let ((first-form (car forms))
@@ -206,8 +206,8 @@
 (println "\n=== Compile-Time Computation ===\n")
 
 ;; A macro that computes at macro expansion time
+;;' @description Compute the product of a and b at expand time.
 (defmacro const-multiply (a b)
-  "Compute the product of a and b at expand time."
   (let ((result (* a b)))
     `(quote ,result)))
 

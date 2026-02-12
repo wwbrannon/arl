@@ -14,8 +14,8 @@
         dir)))
 
 ;; Pipeline macro: threads a value through a sequence of steps
+;;' @description Thread value through steps (last argument).
 (defmacro pipeline (value . steps)
-  "Thread value through steps (last argument)."
   (if (null? steps)
       value
       (let ((step (car steps))
