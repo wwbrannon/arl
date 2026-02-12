@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = {
   "lastUpdate": 1770857533724.33,
-  "repoUrl": "https://github.com/wwbrannon/rye",
+  "repoUrl": "https://github.com/wwbrannon/arl",
   "entries": {
     "Benchmark": [
       {
@@ -10,7 +10,7 @@ window.BENCHMARK_DATA = {
           "id": "d973525",
           "message": "first benchmark baseline",
           "timestamp": "2026-02-06T23:37:09Z",
-          "url": "https://github.com/wwbrannon/rye/commit/d973525"
+          "url": "https://github.com/wwbrannon/arl/commit/d973525"
         },
         "date": 1738888554000,
         "tool": "customSmallerIsBetter",
@@ -28,9 +28,9 @@ window.BENCHMARK_DATA = {
             {"name": "tokenizer/escapes/No escapes", "unit": "ms", "value": 0.04108204},
             {"name": "tokenizer/escapes/Few escapes", "unit": "ms", "value": 0.04395214},
             {"name": "tokenizer/escapes/Many escapes", "unit": "ms", "value": 1.392873},
-            {"name": "tokenizer/real/fibonacci.rye", "unit": "ms", "value": 22.59879},
-            {"name": "tokenizer/real/quicksort.rye", "unit": "ms", "value": 26.95916},
-            {"name": "tokenizer/real/macro-examples.rye", "unit": "ms", "value": 34.72926},
+            {"name": "tokenizer/real/fibonacci.arl", "unit": "ms", "value": 22.59879},
+            {"name": "tokenizer/real/quicksort.arl", "unit": "ms", "value": 26.95916},
+            {"name": "tokenizer/real/macro-examples.arl", "unit": "ms", "value": 34.72926},
             {"name": "parser/flat/10 elements", "unit": "ms", "value": 0.136981},
             {"name": "parser/flat/100 elements", "unit": "ms", "value": 1.057636},
             {"name": "parser/flat/1000 elements", "unit": "ms", "value": 10.72324},
@@ -41,15 +41,15 @@ window.BENCHMARK_DATA = {
             {"name": "parser/sugar/10 quote exprs", "unit": "ms", "value": 1.896742},
             {"name": "parser/nulls/Few NULLs", "unit": "ms", "value": 0.09844103},
             {"name": "parser/nulls/100 NULLs", "unit": "ms", "value": 1.159644},
-            {"name": "parser/real/fibonacci.rye", "unit": "ms", "value": 6.966843},
-            {"name": "parser/real/quicksort.rye", "unit": "ms", "value": 8.305944},
-            {"name": "parser/real/macro-examples.rye", "unit": "ms", "value": 10.07099},
+            {"name": "parser/real/fibonacci.arl", "unit": "ms", "value": 6.966843},
+            {"name": "parser/real/quicksort.arl", "unit": "ms", "value": 8.305944},
+            {"name": "parser/real/macro-examples.arl", "unit": "ms", "value": 10.07099},
             {"name": "macro/simple/Simple macro", "unit": "ms", "value": 0.404465},
             {"name": "macro/complex/Complex macro", "unit": "ms", "value": 0.830824},
             {"name": "macro/nested/Nested macros", "unit": "ms", "value": 1.584671},
             {"name": "macro/hygiene/With hygiene", "unit": "ms", "value": 1.764046},
             {"name": "macro/heavy/Macro-heavy", "unit": "ms", "value": 11.65944},
-            {"name": "macro/real/macro-examples.rye", "unit": "ms", "value": 506.294},
+            {"name": "macro/real/macro-examples.arl", "unit": "ms", "value": 506.294},
             {"name": "eval/arithmetic/Single add", "unit": "ms", "value": 0.3671141},
             {"name": "eval/arithmetic/Nested adds", "unit": "ms", "value": 0.785683},
             {"name": "eval/arithmetic/Many adds", "unit": "ms", "value": 2.073288},
@@ -66,8 +66,8 @@ window.BENCHMARK_DATA = {
             {"name": "eval/recursive/factorial(500)", "unit": "ms", "value": 12.82296},
             {"name": "eval/closures/Create closure", "unit": "ms", "value": 0.3451791},
             {"name": "eval/closures/Call closure", "unit": "ms", "value": 0.476625},
-            {"name": "eval/real/fibonacci.rye", "unit": "ms", "value": 419.5007},
-            {"name": "eval/real/quicksort.rye", "unit": "ms", "value": 496.0655},
+            {"name": "eval/real/fibonacci.arl", "unit": "ms", "value": 419.5007},
+            {"name": "eval/real/quicksort.arl", "unit": "ms", "value": 496.0655},
             {"name": "stdlib/list_ops/car (10)", "unit": "ms", "value": 0.2890499},
             {"name": "stdlib/list_ops/cdr (10)", "unit": "ms", "value": 0.5854389},
             {"name": "stdlib/list_ops/length (10)", "unit": "ms", "value": 0.2807269},
@@ -121,9 +121,9 @@ window.BENCHMARK_DATA = {
             {"name": "e2e/args/50 args", "unit": "ms", "value": 1280.531},
             {"name": "e2e/args/100 args", "unit": "ms", "value": 1289.522},
             {"name": "e2e/repl/REPL session", "unit": "ms", "value": 1271.755},
-            {"name": "e2e/real/fibonacci.rye", "unit": "ms", "value": 1634.033},
-            {"name": "e2e/real/quicksort.rye", "unit": "ms", "value": 1714.057},
-            {"name": "e2e/real/macro-examples.rye", "unit": "ms", "value": 1726.341}
+            {"name": "e2e/real/fibonacci.arl", "unit": "ms", "value": 1634.033},
+            {"name": "e2e/real/quicksort.arl", "unit": "ms", "value": 1714.057},
+            {"name": "e2e/real/macro-examples.arl", "unit": "ms", "value": 1726.341}
         ]
       },
       {
@@ -133,7 +133,7 @@ window.BENCHMARK_DATA = {
           "id": "effbe9f",
           "message": "second benchmark baseline",
           "timestamp": "2026-02-10T07:53:35Z",
-          "url": "https://github.com/wwbrannon/rye/commit/effbe9f"
+          "url": "https://github.com/wwbrannon/arl/commit/effbe9f"
         },
         "date": 1739177613000,
         "tool": "customSmallerIsBetter",
@@ -151,9 +151,9 @@ window.BENCHMARK_DATA = {
             {"name": "tokenizer/escapes/No escapes", "unit": "ms", "value": 0.03534206},
             {"name": "tokenizer/escapes/Few escapes", "unit": "ms", "value": 0.03591622},
             {"name": "tokenizer/escapes/Many escapes", "unit": "ms", "value": 0.09680097},
-            {"name": "tokenizer/real/fibonacci.rye", "unit": "ms", "value": 14.68608},
-            {"name": "tokenizer/real/quicksort.rye", "unit": "ms", "value": 18.43549},
-            {"name": "tokenizer/real/macro-examples.rye", "unit": "ms", "value": 18.91785},
+            {"name": "tokenizer/real/fibonacci.arl", "unit": "ms", "value": 14.68608},
+            {"name": "tokenizer/real/quicksort.arl", "unit": "ms", "value": 18.43549},
+            {"name": "tokenizer/real/macro-examples.arl", "unit": "ms", "value": 18.91785},
             {"name": "parser/flat/10 elements", "unit": "ms", "value": 0.1327579},
             {"name": "parser/flat/100 elements", "unit": "ms", "value": 1.041216},
             {"name": "parser/flat/1000 elements", "unit": "ms", "value": 10.39742},
@@ -164,15 +164,15 @@ window.BENCHMARK_DATA = {
             {"name": "parser/sugar/10 quote exprs", "unit": "ms", "value": 1.734915},
             {"name": "parser/nulls/Few NULLs", "unit": "ms", "value": 0.09319303},
             {"name": "parser/nulls/100 NULLs", "unit": "ms", "value": 1.071248},
-            {"name": "parser/real/fibonacci.rye", "unit": "ms", "value": 6.443724},
-            {"name": "parser/real/quicksort.rye", "unit": "ms", "value": 7.864723},
-            {"name": "parser/real/macro-examples.rye", "unit": "ms", "value": 9.225041},
+            {"name": "parser/real/fibonacci.arl", "unit": "ms", "value": 6.443724},
+            {"name": "parser/real/quicksort.arl", "unit": "ms", "value": 7.864723},
+            {"name": "parser/real/macro-examples.arl", "unit": "ms", "value": 9.225041},
             {"name": "macro/simple/Simple macro", "unit": "ms", "value": 0.4510002},
             {"name": "macro/complex/Complex macro", "unit": "ms", "value": 0.7974706},
             {"name": "macro/nested/Nested macros", "unit": "ms", "value": 1.638278},
             {"name": "macro/hygiene/With hygiene", "unit": "ms", "value": 1.17752},
             {"name": "macro/heavy/Macro-heavy", "unit": "ms", "value": 6.454302},
-            {"name": "macro/real/macro-examples.rye", "unit": "ms", "value": 163.9165},
+            {"name": "macro/real/macro-examples.arl", "unit": "ms", "value": 163.9165},
             {"name": "eval/arithmetic/Single add", "unit": "ms", "value": 0.3590985},
             {"name": "eval/arithmetic/Nested adds", "unit": "ms", "value": 0.7460361},
             {"name": "eval/arithmetic/Many adds", "unit": "ms", "value": 1.906459},
@@ -189,8 +189,8 @@ window.BENCHMARK_DATA = {
             {"name": "eval/recursive/factorial(500)", "unit": "ms", "value": 12.92367},
             {"name": "eval/closures/Create closure", "unit": "ms", "value": 0.216234},
             {"name": "eval/closures/Call closure", "unit": "ms", "value": 0.235914},
-            {"name": "eval/real/fibonacci.rye", "unit": "ms", "value": 122.5692},
-            {"name": "eval/real/quicksort.rye", "unit": "ms", "value": 155.4289},
+            {"name": "eval/real/fibonacci.arl", "unit": "ms", "value": 122.5692},
+            {"name": "eval/real/quicksort.arl", "unit": "ms", "value": 155.4289},
             {"name": "stdlib/list_ops/car (10)", "unit": "ms", "value": 0.2788615},
             {"name": "stdlib/list_ops/cdr (10)", "unit": "ms", "value": 0.33661},
             {"name": "stdlib/list_ops/length (10)", "unit": "ms", "value": 0.2752126},
@@ -244,9 +244,9 @@ window.BENCHMARK_DATA = {
             {"name": "e2e/args/50 args", "unit": "ms", "value": 79.37612},
             {"name": "e2e/args/100 args", "unit": "ms", "value": 88.10787},
             {"name": "e2e/repl/REPL session", "unit": "ms", "value": 79.95223},
-            {"name": "e2e/real/fibonacci.rye", "unit": "ms", "value": 204.1272},
-            {"name": "e2e/real/quicksort.rye", "unit": "ms", "value": 254.4768},
-            {"name": "e2e/real/macro-examples.rye", "unit": "ms", "value": 228.1942}
+            {"name": "e2e/real/fibonacci.arl", "unit": "ms", "value": 204.1272},
+            {"name": "e2e/real/quicksort.arl", "unit": "ms", "value": 254.4768},
+            {"name": "e2e/real/macro-examples.arl", "unit": "ms", "value": 228.1942}
         ]
       }
     ]
