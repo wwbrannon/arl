@@ -113,7 +113,6 @@ reference:
   - title: Core engine
     contents:
       - Engine
-      - default_engine
   - title: Coverage
     contents:
       - CoverageTracker

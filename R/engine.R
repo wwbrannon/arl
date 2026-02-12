@@ -817,16 +817,3 @@ Engine <- R6::R6Class(
     }
   )
 )
-
-#' Get the default Arl engine
-#'
-#' @export
-default_engine <- local({
-  engine <- NULL
-  function() {
-    if (is.null(engine)) {
-      engine <<- Engine$new()
-    }
-    engine
-  }
-})

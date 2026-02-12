@@ -1,16 +1,3 @@
-test_that("global engine state is not accessible", {
-  # The old .arl_engine_state global should not exist
-  expect_false(exists(".arl_engine_state", envir = .GlobalEnv))
-  expect_false(exists(".arl_engine_state", envir = asNamespace("arl")))
-
-  # Users cannot directly access or mutate the default engine's state
-  engine1 <- default_engine()
-  engine2 <- default_engine()
-
-  # Should return the same engine instance
-  expect_true(identical(engine1, engine2))
-})
-
 test_that("Promise uses private fields", {
   engine <- make_engine()
 
@@ -113,20 +100,6 @@ test_that(".__env is documented as internal", {
   # But it's documented as internal and may change
   arl_env_val <- get(".__env", envir = env)
   expect_true(is.environment(arl_env_val))
-})
-
-test_that("default engine uses closure pattern", {
-  # The closure pattern means state is truly hidden
-  # We can verify this by checking that multiple calls return same instance
-
-  eng1 <- default_engine()
-  eng2 <- default_engine()
-
-  expect_identical(eng1, eng2)
-
-  # And we can't find any global variable holding it
-  expect_false(exists(".arl_engine_state", where = .GlobalEnv))
-  expect_false(exists(".arl_engine_state", where = asNamespace("arl")))
 })
 
 test_that("module registry entries are truly immutable", {

@@ -39,7 +39,7 @@ The project currently has:
 ### User-facing docs
 - `README.Rmd` / `README.md` -- package overview and quick start
 - `vignettes/*.Rmd` -- longer tutorial and narrative documentation, and stdlib reference
-- `man/*.Rd` -- roxygen2 API docs (Engine, cli, default_engine, install_cli, CoverageTracker)
+- `man/*.Rd` -- roxygen2 API docs (Engine, cli, install_cli, CoverageTracker)
 - `inst/examples/` -- complete working programs
 
 ### Contributor/maintainer docs
