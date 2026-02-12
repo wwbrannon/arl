@@ -108,10 +108,11 @@
   ;;' @seealso println, trace
   (define display
     (lambda (x)
-      (define quiet (r/call "Sys.getenv" (list "ARL_QUIET" "")))
-      (if (= quiet "")
-        (r/call "cat" (list (format-value x) "\n"))
-        #nil)))
+      (define quiet-env (r/call "Sys.getenv" (list "ARL_QUIET" "")))
+      (define quiet-opt (r/call "getOption" (list "arl.quiet" #f)))
+      (if (or (!= quiet-env "") (= quiet-opt #t))
+        #nil
+        (r/call "cat" (list (format-value x) "\n")))))
 
   ;;' @description Alias for display.
   ;;' @seealso display
@@ -139,13 +140,14 @@
   (define trace
     (lambda (x . rest)
       (define label (if (> (length rest) 0) (car rest) #nil))
-      (define quiet (r/call "Sys.getenv" (list "ARL_QUIET" "")))
-      (if (= quiet "")
+      (define quiet-env (r/call "Sys.getenv" (list "ARL_QUIET" "")))
+      (define quiet-opt (r/call "getOption" (list "arl.quiet" #f)))
+      (if (or (!= quiet-env "") (= quiet-opt #t))
+        x
         (begin
           (if (is.null label)
             #nil
             (r/call "cat" (list (format-value label) ": ")))
           (r/call "cat" (list (format-value x) "\n"))
-          x)
-        x)))
+          x))))
 )

@@ -4,14 +4,12 @@
 \alias{install_cli}
 \title{Install the Arl CLI wrapper}
 \usage{
-install_cli(
-  target_dir = Sys.getenv("ARL_BIN_DIR", unset = ""),
-  overwrite = FALSE
-)
+install_cli(target_dir = .pkg_option("bin_dir", ""), overwrite = FALSE)
 }
 \arguments{
 \item{target_dir}{Directory for the \code{arl} executable. Defaults to the
-\code{ARL_BIN_DIR} environment variable, then \code{~/.local/bin}, then \code{~/bin}.}
+\code{arl.bin_dir} option or \code{ARL_BIN_DIR} environment variable,
+then \code{~/.local/bin}, then \code{~/bin}.}
 
 \item{overwrite}{Whether to overwrite an existing \code{arl} executable.}
 }

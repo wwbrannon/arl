@@ -448,11 +448,12 @@ install_cli_path_warning <- function(dir_path) {
 #' executable so it can be run from the shell.
 #'
 #' @param target_dir Directory for the `arl` executable. Defaults to the
-#'   \code{ARL_BIN_DIR} environment variable, then \code{~/.local/bin}, then \code{~/bin}.
+#'   \code{arl.bin_dir} option or \code{ARL_BIN_DIR} environment variable,
+#'   then \code{~/.local/bin}, then \code{~/bin}.
 #' @param overwrite Whether to overwrite an existing `arl` executable.
 #' @return The installed path, invisibly.
 #' @export
-install_cli <- function(target_dir = Sys.getenv("ARL_BIN_DIR", unset = ""), overwrite = FALSE) {
+install_cli <- function(target_dir = .pkg_option("bin_dir", ""), overwrite = FALSE) {
   source <- system.file("exec", .pkg_name, package = .pkg_name)
   if (!nzchar(source)) {
     stop(paste0("CLI script not found. Is the ", .pkg_name, " package installed?"))
@@ -478,7 +479,8 @@ install_cli <- function(target_dir = Sys.getenv("ARL_BIN_DIR", unset = ""), over
 
   if (is.null(chosen)) {
     stop(
-      "No writable bin directory found. Set ARL_BIN_DIR or create one of: ",
+      "No writable bin directory found. Set the arl.bin_dir option or ",
+      "ARL_BIN_DIR env var, or create one of: ",
       paste(candidates, collapse = ", ")
     )
   }

@@ -3,10 +3,37 @@
 # paths (e.g. ".arl_cache", "~/.arl_history").
 .pkg_name <- "arl"
 
-# Get a package-namespaced option: .pkg_option("use_env_cache", FALSE)
-# is equivalent to getOption("arl.use_env_cache", FALSE).
+# Convert an option name to its env var form: "use_env_cache" -> "ARL_USE_ENV_CACHE"
+.option_to_envvar <- function(name) {
+  toupper(paste0(.pkg_name, "_", name))
+}
+
+# Coerce a string env var value to match the type of `default`.
+.coerce_env_value <- function(val, default) {
+  if (is.logical(default)) {
+    return(tolower(val) %in% c("1", "true", "yes"))
+  }
+  val
+}
+
+# Get a package-namespaced option with env var fallback.
+# Precedence: R option > env var > default.
+# Env var fallback is only checked when `default` is non-NULL, which
+# naturally excludes test hooks (they use NULL default).
 .pkg_option <- function(name, default = NULL) {
-  getOption(paste0(.pkg_name, ".", name), default)
+  opt_name <- paste0(.pkg_name, ".", name)
+  opt_val <- getOption(opt_name)
+  if (!is.null(opt_val)) return(opt_val)
+
+  if (!is.null(default)) {
+    env_name <- .option_to_envvar(name)
+    env_val <- Sys.getenv(env_name, unset = NA)
+    if (!is.na(env_val) && nzchar(env_val)) {
+      return(.coerce_env_value(env_val, default))
+    }
+  }
+
+  default
 }
 
 # Set a package-namespaced option: .set_pkg_option("repl_quiet", TRUE)

@@ -137,6 +137,7 @@ articles:
       - tail-call-optimization
       - internals
       - troubleshooting
+      - configuration
       - arl-vs-scheme
   - title: Performance
     desc: Performance characteristics and benchmarks.
