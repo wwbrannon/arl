@@ -69,7 +69,7 @@ navbar:
       text: Examples
       href: articles/examples.html
     reference:
-      text: Reference
+      text: R API Reference
       href: reference/index.html
     changelog:
       text: Changelog
