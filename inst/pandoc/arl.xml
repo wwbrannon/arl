@@ -115,6 +115,6 @@
     <comments>
       <comment name="singleLine" start=";" />
     </comments>
-    <keywords casesensitive="1" />
+    <keywords casesensitive="1" weakDeliminator="._-!?" />
   </general>
 </language>
