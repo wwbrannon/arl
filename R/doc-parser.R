@@ -480,7 +480,7 @@ DocParser <- R6::R6Class(
           syms <- c(syms, substr(rest, 2, attr(m, "match.length") - 1))
           rest <- substr(rest, attr(m, "match.length") + 1, nchar(rest))
         } else {
-          m <- regexpr("^[a-zA-Z0-9_.?/<>!=*+-]+", rest)
+          m <- regexpr("^[a-zA-Z0-9_.?/<>!=*+%@~^&|-]+", rest)
           if (m == -1) break
           syms <- c(syms, substr(rest, 1, attr(m, "match.length")))
           rest <- substr(rest, attr(m, "match.length") + 1, nchar(rest))

@@ -9,6 +9,9 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -31,7 +34,7 @@ For the full, per-function reference, see the individual stdlib reference pages:
 - [Standard Library: Strings, I/O, and Arithmetic](stdlib-strings-io.html)
 - [Standard Library: Macro, Eval, Interop, and Convenience](stdlib-macro-eval-interop.html)
 
-## Loading
+## Importing modules
 
 ```lisp
 ; Import focused modules
@@ -48,105 +51,139 @@ From R, you can create an engine with the stdlib already loaded:
 engine <- Engine$new()
 ```
 
-## Core list operations
+## [Lists and Sequences](stdlib-list-seq.html)
 
-`car`, `cdr`, `cons`, `call`, `list*`, `append`, `reverse`, `apply`,
-`first`, `rest`, `last`, `nth`
+List construction, accessors, association lists, sequence helpers, and sorting.
 
-## Higher-order functions
+`call`, `car`, `cdr`, `caar`, `cadr`, `cdar`, `cddr`, `caaar`, `caadr`,
+`cadar`, `caddr`, `cdaar`, `cdadr`, `cddar`, `cdddr`, `cadddr`, `cddddr`,
+`cons`, `list*`, `append`, `reverse`, `first`, `second`, `third`, `fourth`,
+`rest`, `last`, `nth`, `assoc`, `assoc-by-equal?`, `assoc-by-identical?`,
+`assoc-by-==`, `assq`, `assv`, `rassoc`, `rassoc-by-equal?`, `range`, `iota`,
+`make-list`, `list-ref`, `list-tail`, `take`, `drop`, `take-while`,
+`drop-while`, `partition`, `flatten`, `repeatedly`, `repeat`, `zip`, `member`,
+`contains?`, `length=`, `length>`, `length<`, `sort`, `sort-by`, `merge`,
+`stable-sort`
 
-`map`, `mapcat`, `filter`, `remove`, `reduce`, `foldl`, `foldr`,
-`every?`, `any?`, `complement`, `compose`, `partial`
+## [Higher-Order Functions](stdlib-functional.html)
 
-## Sequence helpers
+Mapping, filtering, folding, function composition, and logical combinators.
 
-`take`, `drop`, `take-while`, `drop-while`, `partition`, `flatten`, `zip`,
-`repeatedly`, `repeat`
+`map`, `mapcat`, `filter`, `remove`, `reduce`, `foldl`, `foldr`, `every?`,
+`any?`, `complement`, `compose`, `partial`, `curry`, `juxt`, `constantly`,
+`iterate`, `iterate-until`, `memoize`, `not`, `xor`
 
-## Predicates
+## [Type Predicates](stdlib-types.html)
 
-`null?`, `nil?`, `list?`, `pair?`, `list-or-pair?`, `symbol?`, `keyword?`,
-`number?`, `string?`, `vector?`, `true?`, `false?`, `fn?`, `callable?`
+Predicates for testing the type of a value.
 
-## Control flow macros
+`list?`, `list-or-pair?`, `null?`, `nil?`, `symbol?`, `keyword?`, `number?`,
+`string?`, `vector?`, `true?`, `false?`, `boolean?`, `fn?`, `callable?`,
+`procedure?`, `environment?`, `is-refclass?`, `atom?`, `empty?`, `type-of`,
+`pair?`
 
-`when`, `unless`, `and`, `or`, `cond`, `case`
+## [Equality and S3 Dispatch](stdlib-equality.html)
 
-## Binding and looping
+Structural and identity equality, plus an S3-style method dispatch system.
 
-`let`, `let*`, `letrec`, `defstruct`, `while`, `for`, `loop`, `recur`
+`identical?`, `eq?`, `eqv?`, `equal?`, `equal?.default`, `equal?.environment`,
+`equal?.list`, `env-equal?`, `list-equal?`, `s3-type`, `check-s3-type-match`,
+`use-method`, `set-method!`
 
-## Threading macros
+## [Type Conversions](stdlib-conversions.html)
 
-`->`, `->>`
+Convert between symbols, strings, numbers, lists, and vectors.
 
-## Error handling
+`symbol->string`, `string->symbol`, `->symbol`, `->number`, `->list`,
+`->vector`, `->integer`, `->double`, `->complex`, `exact->inexact`,
+`inexact->exact`
 
-`try`, `catch`, `finally`, `error`, `warn`, `assert`, `trace`, `try*`
+## [Math and Numeric Functions](stdlib-math.html)
 
-## String and I/O
+Arithmetic, comparison, rounding, trigonometry, number theory, and numeric predicates.
 
-`str`, `string-join`, `string-split`, `trim`, `format`,
-`string-contains?`, `string-match?`, `string-find`,
-`string-replace`, `string-replace-all`,
-`read-line`, `read-file`, `read-lines`,
-`write-file`, `write-lines`, `append-file`,
-`file-exists?`, `display`, `println`
+`%`, `+`, `*`, `-`, `/`, `min`, `max`, `<`, `>`, `<=`, `>=`, `==`, `=`, `inc`,
+`dec`, `clamp`, `within?`, `even?`, `odd?`, `zero?`, `positive?`, `negative?`,
+`non-negative?`, `non-positive?`, `integer?`, `natural?`, `real?`, `complex?`,
+`rational?`, `exact?`, `inexact?`, `finite?`, `infinite?`, `nan?`, `abs`,
+`floor`, `ceiling`, `truncate`, `round`, `signum`, `sqrt`, `expt`, `log`,
+`exp`, `log10`, `log2`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`,
+`quotient`, `remainder`, `modulo`, `gcd`, `lcm`, `make-rectangular`,
+`make-polar`, `real-part`, `imag-part`, `magnitude`, `angle`
 
-## Macro system
+## [Control Flow and Macros](stdlib-control.html)
 
-`gensym`, `macro?`, `eval`, `macroexpand`, `macroexpand-1`
+Conditionals, binding forms, looping, threading macros, and error handling.
 
-## Sorting
+`when`, `unless`, `cond`, `case`, `try*`, `pattern-symbols`,
+`destructuring-bind`, `let`, `let*`, `letrec`, `when-let`, `if-let`, `until`,
+`for`, `loop`, `recur`, `->`, `->>`, `try`
 
-`sort`, `sort-by`, `merge`, `stable-sort`
+## [Strings, I/O, and Arithmetic](stdlib-strings-io.html)
 
-## Help and documentation
+String manipulation, file and console I/O, environment access, and display formatting.
 
-`help`, `doc`, `doc!`
+`string-join`, `string-split`, `trim`, `format`, `string-contains?`,
+`string-match?`, `string-find`, `string-replace`, `string-replace-all`,
+`string-append`, `->string`, `char-at`, `string-ref`, `substring`,
+`string-length`, `string-upcase`, `string-downcase`, `string-titlecase`,
+`string<?`, `string>?`, `string=?`, `string<=?`, `string>=?`, `string->list`,
+`list->string`, `number->string`, `string->number`, `read-line`, `read-file`,
+`read-lines`, `write-file`, `write-lines`, `append-file`, `file-exists?`,
+`print`, `newline`, `read-from-string`, `write-string`, `file-size`,
+`file-modified-time`, `file-delete`, `directory-exists?`, `directory-list`,
+`directory-delete`, `getenv`, `setenv`, `system`, `system-output`, `exit`,
+`format-value`, `display`, `println`, `str`, `trace`
 
-## Interop helpers
+## [Macro, Eval, Interop, and Convenience](stdlib-macro-eval-interop.html)
 
-`dict`, `hash`, `dict?`, `dict-get`, `dict-set`, `dict-remove`,
-`dict-keys`, `dict-values`, `dict-has?`, `dict-merge`,
-`set`, `set?`, `set-add`, `set-remove`, `set-contains?`,
-`set-union`, `set-intersection`, `set-difference`,
-`r/call`, `identity`
+Evaluation, macro utilities, dictionaries, sets, structs, assertions, and R interop helpers.
 
-## Arithmetic and comparison
+`license`, `error`, `warn`, `identity`, `values`, `values?`,
+`call-with-values`, `call/cc`, `call-with-current-continuation`, `funcall`,
+`r/call`, `get`, `suppressWarnings`, `suppressMessages`, `with`, `within`,
+`subset`, `transform`, `substitute`, `dict`, `hash`, `dict?`, `dict-get`,
+`dict-set`, `dict-remove`, `dict-keys`, `dict-values`, `dict-has?`,
+`dict-merge`, `set`, `set?`, `set-add`, `set-remove`, `set-contains?`,
+`set-union`, `set-intersection`, `set-difference`, `defstruct`, `assert`,
+`assert-equal`, `assert-true`, `assert-false`, `assert-eq`, `assert-error`,
+`eval`, `read`, `write`, `capture`, `gensym`, `macro?`, `macroexpand`,
+`macroexpand-1`, `promise?`, `force`, `promise-expr`, `r/eval`, `stdlib-env`,
+`current-env`
 
-`+`, `-`, `*`, `/`, `%`, `=`, `<`, `>`, `<=`, `>=`, `not`
+## Source files
 
-## Source mapping
+The base R parts of the stdlib implementation live in
+[`R/runtime.R`](https://github.com/wwbrannon/arl/blob/main/R/runtime.R). The
+Arl parts are organized by topic in
+[`inst/arl/`](https://github.com/wwbrannon/arl/tree/main/inst/arl) (each file
+defines a module). The engine loads these modules in dependency order when
+initializing.
 
-The base R parts of the stdlib implementation live in `R/runtime.R`. The arl
-parts are organized by topic in `inst/arl/` (each file defines a module). The
-engine loads these modules in dependency order when initializing.
+- [`_r.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/_r.arl) (R operator/function aliases, internal)
+- [`core.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/core.arl)
+- [`list.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/list.arl)
+- [`types.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/types.arl) (type predicates)
+- [`logic.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/logic.arl) (logical operations)
+- [`conversions.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/conversions.arl) (type conversions)
+- [`equality.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/equality.arl) (equality and S3 dispatch)
+- [`control.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/control.arl)
+- [`functional.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/functional.arl)
+- [`sequences.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/sequences.arl)
+- [`sort.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/sort.arl)
+- [`struct.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/struct.arl)
+- [`error.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/error.arl)
+- [`threading.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/threading.arl)
+- [`binding.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/binding.arl)
+- [`looping.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/looping.arl)
+- [`dict.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/dict.arl)
+- [`math.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/math.arl) (includes numeric type predicates)
+- [`set.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/set.arl)
+- [`strings.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/strings.arl)
+- [`display.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/display.arl)
+- [`io.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/io.arl)
+- [`assert.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/assert.arl)
+- [`r-interop.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/r-interop.arl)
 
-- `_r.arl` (R operator/function aliases, internal)
-- `core.arl`
-- `list.arl`
-- `types.arl` (type predicates)
-- `logic.arl` (logical operations)
-- `conversions.arl` (type conversions)
-- `equality.arl` (equality and S3 dispatch)
-- `control.arl`
-- `functional.arl`
-- `sequences.arl`
-- `sort.arl`
-- `struct.arl`
-- `error.arl`
-- `threading.arl`
-- `binding.arl`
-- `looping.arl`
-- `dict.arl`
-- `math.arl` (includes numeric type predicates)
-- `set.arl`
-- `strings.arl`
-- `display.arl`
-- `io.arl`
-- `assert.arl`
-- `r-interop.arl`
-
-If you’re looking for implementation details, these files are the source of
+If you're looking for implementation details, these files are the source of
 truth for the stdlib definitions.

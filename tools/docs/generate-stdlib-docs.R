@@ -148,443 +148,6 @@ parse_arl_annotations <- function(file) {
   .doc_parser$parse_file(file)
 }
 
-#' Legacy inline parser (kept as unused reference; all calls go through DocParser).
-.parse_arl_annotations_legacy <- function(file) {
-  lines <- readLines(file, warn = FALSE)
-  n <- length(lines)
-
-  # Track results
-  functions <- list()
-  sections <- list()
-  current_section <- NULL
-  current_section_prose <- NULL
-
-  i <- 1L
-  while (i <= n) {
-    # Look for start of a ;;' block
-    if (!grepl("^\\s*;;'", lines[i])) {
-      i <- i + 1L
-      next
-    }
-
-    # Collect the ;;' block
-    block_start <- i
-    block_lines <- character()
-    while (i <= n && grepl("^\\s*;;'", lines[i])) {
-      # Strip the ;;' prefix and one optional space
-      line <- sub("^\\s*;;'\\s?", "", lines[i])
-      block_lines <- c(block_lines, line)
-      i <- i + 1L
-    }
-
-    # Parse tags from block
-    tags <- parse_annotation_tags(block_lines)
-
-    # Check if this block is a standalone @section (not followed by a definition)
-    if (!is.null(tags$section) && !is_followed_by_definition(lines, i, n)) {
-      current_section <- tags$section
-      current_section_prose <- tags$section_prose
-      sections[[length(sections) + 1L]] <- list(
-        name = tags$section,
-        prose = tags$section_prose
-      )
-      next
-    }
-
-    # If block contains @section before a definition, update current section
-    if (!is.null(tags$section)) {
-      current_section <- tags$section
-      current_section_prose <- tags$section_prose
-      sections[[length(sections) + 1L]] <- list(
-        name = tags$section,
-        prose = tags$section_prose
-      )
-    }
-
-    # Look for a following definition
-    def <- find_following_definition(lines, i, n)
-    if (is.null(def)) next
-
-    func_name <- def$name
-    def_line <- def$line
-    i <- def_line  # advance past definition
-
-    # Extract description from inline docstring or doc! call, unless @description overrides
-    description <- tags$description
-    if (is.null(description) || description == "") {
-      # For direct assignments (define f __rfunc), try doc! first
-      # For lambda definitions, try inline docstring first
-      line1 <- trimws(lines[def_line])
-      is_direct <- !grepl("\\(lambda", line1) && grepl("^\\(define\\s+\\S+\\s+\\S+\\)$", line1)
-      if (is_direct) {
-        description <- find_doc_bang(lines, def_line, n, func_name)
-      } else {
-        description <- extract_docstring(lines, def_line, n)
-        if (is.null(description) || description == "") {
-          description <- find_doc_bang(lines, def_line, n, func_name)
-        }
-      }
-    }
-
-    # Extract signature from lambda params
-    signature <- tags$signature
-    if (is.null(signature) || signature == "") {
-      signature <- extract_signature(lines, def_line, n, func_name, def$type)
-    }
-
-    functions[[func_name]] <- list(
-      name = func_name,
-      description = if (is.null(description)) "" else description,
-      signature = if (is.null(signature)) "" else signature,
-      examples = tags$examples,
-      seealso = tags$seealso,
-      note = tags$note,
-      section = current_section,
-      section_prose = current_section_prose,
-      source_line = block_start
-    )
-
-    i <- i + 1L
-  }
-
-  list(functions = functions, sections = sections, file = basename(file))
-}
-
-#' Parse @tag content from a block of annotation lines (already stripped of ;;' prefix).
-parse_annotation_tags <- function(block_lines) {
-  tags <- list(
-    description = NULL,
-    examples = NULL,
-    seealso = NULL,
-    note = NULL,
-    section = NULL,
-    section_prose = NULL,
-    signature = NULL
-  )
-
-  current_tag <- NULL
-  current_content <- character()
-  section_prose_lines <- character()
-
-  flush_tag <- function() {
-    if (is.null(current_tag)) return()
-    content <- paste(current_content, collapse = "\n")
-    content <- trimws(content)
-    if (current_tag == "examples") {
-      tags$examples <<- content
-    } else if (current_tag == "seealso") {
-      tags$seealso <<- content
-    } else if (current_tag == "note") {
-      tags$note <<- content
-    } else if (current_tag == "description") {
-      tags$description <<- content
-    } else if (current_tag == "signature") {
-      tags$signature <<- content
-    }
-  }
-
-  for (line in block_lines) {
-    # Check for @tag at start of line
-    if (grepl("^@section\\s+", line)) {
-      flush_tag()
-      current_tag <- NULL
-      current_content <- character()
-      tags$section <- trimws(sub("^@section\\s+", "", line))
-      # Remaining lines (until next @tag) are section prose
-      section_prose_lines <- character()
-      current_tag <- "__section_prose"
-      next
-    }
-    if (grepl("^@examples\\s*$", line) || grepl("^@examples\\s", line)) {
-      flush_tag()
-      current_tag <- "examples"
-      rest <- trimws(sub("^@examples\\s*", "", line))
-      current_content <- if (nchar(rest) > 0) rest else character()
-      next
-    }
-    if (grepl("^@seealso\\s", line)) {
-      flush_tag()
-      current_tag <- "seealso"
-      current_content <- trimws(sub("^@seealso\\s+", "", line))
-      next
-    }
-    if (grepl("^@note\\s", line) || grepl("^@note$", line)) {
-      flush_tag()
-      current_tag <- "note"
-      rest <- trimws(sub("^@note\\s*", "", line))
-      current_content <- if (nchar(rest) > 0) rest else character()
-      next
-    }
-    if (grepl("^@description\\s", line) || grepl("^@description$", line)) {
-      flush_tag()
-      current_tag <- "description"
-      rest <- trimws(sub("^@description\\s*", "", line))
-      current_content <- if (nchar(rest) > 0) rest else character()
-      next
-    }
-    if (grepl("^@signature\\s", line)) {
-      flush_tag()
-      current_tag <- "signature"
-      current_content <- trimws(sub("^@signature\\s+", "", line))
-      next
-    }
-    if (grepl("^@", line)) {
-      # Unknown tag — flush and ignore
-      flush_tag()
-      current_tag <- NULL
-      current_content <- character()
-      next
-    }
-
-    # Continuation line for current tag
-    if (!is.null(current_tag)) {
-      if (current_tag == "__section_prose") {
-        section_prose_lines <- c(section_prose_lines, line)
-      } else {
-        current_content <- c(current_content, line)
-      }
-    }
-  }
-  flush_tag()
-
-  if (length(section_prose_lines) > 0) {
-    tags$section_prose <- paste(section_prose_lines, collapse = "\n")
-  }
-
-  tags
-}
-
-#' Check if the lines following position i contain a (define ...) or (defmacro ...) form,
-#' allowing blank lines and ;; comments between.
-is_followed_by_definition <- function(lines, i, n) {
-  j <- i
-  while (j <= n) {
-    line <- trimws(lines[j])
-    if (line == "" || grepl("^;;[^']", line) || grepl("^;$", line) || line == ";;") {
-      j <- j + 1L
-      next
-    }
-    return(grepl("^\\(define\\s", line) || grepl("^\\(defmacro\\s", line))
-  }
-  FALSE
-}
-
-#' Find the definition (define/defmacro) following position i.
-#' Returns list(name, line, type) or NULL.
-find_following_definition <- function(lines, i, n) {
-  j <- i
-  while (j <= n) {
-    line <- trimws(lines[j])
-    if (line == "" || grepl("^;;[^']", line) || grepl("^;$", line) || line == ";;") {
-      j <- j + 1L
-      next
-    }
-    m <- regmatches(line, regexpr("^\\(define\\s+([a-zA-Z0-9_.?/<>!=*+%@~^&|-]+)", line, perl = TRUE))
-    if (length(m) == 1 && nchar(m) > 0) {
-      name <- sub("^\\(define\\s+", "", m)
-      return(list(name = name, line = j, type = "define"))
-    }
-    # Also match quoted define names like (define "string<?" ...)
-    m2 <- regmatches(line, regexpr('^\\(define\\s+"([^"]+)"', line, perl = TRUE))
-    if (length(m2) == 1 && nchar(m2) > 0) {
-      name <- sub('^\\(define\\s+"', "", m2)
-      name <- sub('"$', "", name)
-      return(list(name = name, line = j, type = "define"))
-    }
-    m3 <- regmatches(line, regexpr("^\\(defmacro\\s+([a-zA-Z0-9_.?/<>!=*+%@~^&|-]+)", line, perl = TRUE))
-    if (length(m3) == 1 && nchar(m3) > 0) {
-      name <- sub("^\\(defmacro\\s+", "", m3)
-      return(list(name = name, line = j, type = "defmacro"))
-    }
-    return(NULL)
-  }
-  NULL
-}
-
-#' Extract inline docstring from a lambda/defmacro body starting at line def_line.
-#' Looks for the first string literal inside the lambda or defmacro.
-#' Stops scanning at the next ;;' annotation block to avoid cross-contamination.
-extract_docstring <- function(lines, def_line, n) {
-  # Collect lines until next ;;' block or up to 10 lines, whichever is less
-  end_line <- min(def_line + 15, n)
-  for (k in (def_line + 1):end_line) {
-    if (grepl("^\\s*;;'", lines[k])) {
-      end_line <- k - 1L
-      break
-    }
-  }
-  if (end_line < def_line) return(NULL)
-
-  chunk <- paste(lines[def_line:end_line], collapse = "\n")
-
-  # Helper: extract first string literal (handling escaped quotes) after a pattern
-  extract_string_after <- function(text, prefix_re) {
-    m <- regmatches(text, regexpr(
-      paste0(prefix_re, '\\s*\n?\\s*"((?:[^"\\\\]|\\\\.)*)"'),
-      text, perl = TRUE
-    ))
-    if (length(m) == 1 && nchar(m) > 0) {
-      inner <- sub(paste0('.*', prefix_re, '\\s*\n?\\s*"'), "", m, perl = TRUE)
-      inner <- sub('"$', "", inner)
-      # Unescape backslash-escaped quotes
-      inner <- gsub('\\\\"', '"', inner)
-      return(inner)
-    }
-    NULL
-  }
-
-  # Pattern: (defmacro name (params) "docstring" ...)
-  result <- extract_string_after(chunk, '\\(defmacro\\s+\\S+\\s+\\([^)]*\\)')
-  if (!is.null(result)) return(result)
-
-  # Pattern: (define name (lambda (...) "docstring" ...))
-  result <- extract_string_after(chunk, '\\(lambda\\s+\\([^)]*\\)')
-  if (!is.null(result)) return(result)
-
-  # Pattern for variadic: (lambda (. args) "docstring")
-  result <- extract_string_after(chunk, '\\(lambda\\s+\\(\\. [^)]+\\)')
-  if (!is.null(result)) return(result)
-
-  NULL
-}
-
-#' Find a (doc! name "docstring") call after a definition.
-find_doc_bang <- function(lines, def_line, n, func_name) {
-  # Check next few lines for doc!
-  for (j in (def_line + 1):min(def_line + 5, n)) {
-    line <- trimws(lines[j])
-    # Match (doc! name "docstring") - name may or may not be quoted
-    escaped_name <- gsub("([.?*+^${}()|\\[\\]\\\\])", "\\\\\\1", func_name)
-    pattern <- paste0('^\\(doc!\\s+("?', escaped_name, '"?)\\s+"((?:[^"\\\\]|\\\\.)*)"\\)')
-    m <- regmatches(line, regexpr(pattern, line, perl = TRUE))
-    if (length(m) == 1 && nchar(m) > 0) {
-      # Extract the docstring
-      inner <- sub(paste0('^\\(doc!\\s+"?', escaped_name, '"?\\s+"'), "", m)
-      inner <- sub('"\\)$', "", inner)
-      inner <- gsub('\\\\"', '"', inner)
-      return(inner)
-    }
-  }
-  NULL
-}
-
-#' Extract function signature from lambda parameter list.
-extract_signature <- function(lines, def_line, n, func_name, def_type = "define") {
-  chunk <- paste(lines[def_line:min(def_line + 10, n)], collapse = "\n")
-
-  if (def_type == "defmacro") {
-    # (defmacro name (params...) ...)
-    m <- regmatches(chunk, regexpr(
-      paste0("\\(defmacro\\s+", gsub("([.?*+^${}()|\\[\\]\\\\])", "\\\\\\1", func_name),
-             "\\s+\\(([^)]*)\\)"),
-      chunk, perl = TRUE
-    ))
-    if (length(m) == 1 && nchar(m) > 0) {
-      params_str <- sub(".*\\(defmacro\\s+\\S+\\s+\\(", "", m)
-      params_str <- sub("\\)$", "", params_str)
-      params <- format_params(params_str)
-      return(paste0("(", func_name, if (nchar(params) > 0) paste0(" ", params) else "", ")"))
-    }
-    return(NULL)
-  }
-
-  # Check for direct assignment: (define name __rfunc) or (define name other-name)
-  line1 <- trimws(lines[def_line])
-  if (grepl("^\\(define\\s+\\S+\\s+__r", line1) ||
-      (grepl("^\\(define\\s+\\S+\\s+\\S+\\)$", line1) &&
-       !grepl("\\(lambda", line1))) {
-    # Direct assignment — no signature extractable from source
-    return(NULL)
-  }
-
-  # (define name (lambda (params...) ...))
-  m <- regmatches(chunk, regexpr(
-    "\\(lambda\\s+\\(([^)]*)\\)",
-    chunk, perl = TRUE
-  ))
-  if (length(m) == 1 && nchar(m) > 0) {
-    params_str <- sub("^\\(lambda\\s+\\(", "", m)
-    params_str <- sub("\\)$", "", params_str)
-    params <- format_params(params_str)
-    return(paste0("(", func_name, if (nchar(params) > 0) paste0(" ", params) else "", ")"))
-  }
-
-  NULL
-}
-
-#' Format parameter string from lambda params.
-#' Handles: plain args, (arg default), and (. rest).
-format_params <- function(params_str) {
-  params_str <- trimws(params_str)
-  if (nchar(params_str) == 0) return("")
-
-  # Tokenize respecting nested parens
-  tokens <- tokenize_params(params_str)
-  parts <- character()
-  for (tok in tokens) {
-    if (grepl("^\\.", tok)) {
-      # Rest parameter: . args -> "value..."
-      rest_name <- trimws(sub("^\\.", "", tok))
-      if (nchar(rest_name) == 0) rest_name <- "args"
-      parts <- c(parts, paste0(rest_name, "..."))
-    } else if (grepl("^\\(", tok)) {
-      # Optional parameter: (name default) -> [name default]
-      inner <- sub("^\\(", "", tok)
-      inner <- sub("\\)$", "", inner)
-      parts <- c(parts, paste0("[", inner, "]"))
-    } else {
-      parts <- c(parts, tok)
-    }
-  }
-  paste(parts, collapse = " ")
-}
-
-#' Tokenize parameter string into individual params.
-#' Groups parenthesized params like (x default) as single tokens.
-tokenize_params <- function(s) {
-  s <- trimws(s)
-  tokens <- character()
-  i <- 1L
-  n <- nchar(s)
-  while (i <= n) {
-    ch <- substr(s, i, i)
-    if (ch == " " || ch == "\t" || ch == "\n") {
-      i <- i + 1L
-      next
-    }
-    if (ch == "(") {
-      # Find matching close paren
-      depth <- 1L
-      j <- i + 1L
-      while (j <= n && depth > 0L) {
-        c2 <- substr(s, j, j)
-        if (c2 == "(") depth <- depth + 1L
-        else if (c2 == ")") depth <- depth - 1L
-        j <- j + 1L
-      }
-      tokens <- c(tokens, substr(s, i, j - 1L))
-      i <- j
-    } else if (ch == ".") {
-      # Rest parameter: . name
-      j <- i + 1L
-      # Skip whitespace
-      while (j <= n && substr(s, j, j) %in% c(" ", "\t")) j <- j + 1L
-      # Read name
-      k <- j
-      while (k <= n && !substr(s, k, k) %in% c(" ", "\t", ")", "\n")) k <- k + 1L
-      tokens <- c(tokens, paste0(".", substr(s, j, k - 1L)))
-      i <- k
-    } else {
-      # Regular token
-      j <- i
-      while (j <= n && !substr(s, j, j) %in% c(" ", "\t", "(", ")", "\n")) j <- j + 1L
-      tokens <- c(tokens, substr(s, i, j - 1L))
-      i <- j
-    }
-  }
-  tokens
-}
-
 # ---------------------------------------------------------------------------
 # Builtins loader
 # ---------------------------------------------------------------------------
@@ -823,6 +386,186 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
 }
 
 # ---------------------------------------------------------------------------
+# Overview page generator (stdlib-reference.Rmd)
+# ---------------------------------------------------------------------------
+
+GITHUB_BASE <- "https://github.com/wwbrannon/arl/blob/main"
+
+#' List of .arl module source files in load order, with optional descriptions.
+MODULE_SOURCE_FILES <- list(
+  list(file = "_r.arl",          desc = "R operator/function aliases, internal"),
+  list(file = "core.arl",        desc = NULL),
+  list(file = "list.arl",        desc = NULL),
+  list(file = "types.arl",       desc = "type predicates"),
+  list(file = "logic.arl",       desc = "logical operations"),
+  list(file = "conversions.arl", desc = "type conversions"),
+  list(file = "equality.arl",    desc = "equality and S3 dispatch"),
+  list(file = "control.arl",     desc = NULL),
+  list(file = "functional.arl",  desc = NULL),
+  list(file = "sequences.arl",   desc = NULL),
+  list(file = "sort.arl",        desc = NULL),
+  list(file = "struct.arl",      desc = NULL),
+  list(file = "error.arl",       desc = NULL),
+  list(file = "threading.arl",   desc = NULL),
+  list(file = "binding.arl",     desc = NULL),
+  list(file = "looping.arl",     desc = NULL),
+  list(file = "dict.arl",        desc = NULL),
+  list(file = "math.arl",        desc = "includes numeric type predicates"),
+  list(file = "set.arl",         desc = NULL),
+  list(file = "strings.arl",     desc = NULL),
+  list(file = "display.arl",     desc = NULL),
+  list(file = "io.arl",          desc = NULL),
+  list(file = "assert.arl",      desc = NULL),
+  list(file = "r-interop.arl",   desc = NULL)
+)
+
+#' Collect all exported function names for a vignette, combining .arl exports
+#' and R-defined builtins.  Returns a character vector (preserving export order,
+#' with internal names starting with __ filtered out).
+collect_vignette_exports <- function(vconfig, arl_dir, builtins_functions) {
+  exports <- character()
+  for (mod_name in vconfig$modules) {
+    arl_file <- file.path(arl_dir, paste0(mod_name, ".arl"))
+    if (file.exists(arl_file)) {
+      mod_exports <- .doc_parser$get_exports(arl_file)
+      mod_exports <- mod_exports[!grepl("^__", mod_exports)]
+      exports <- c(exports, mod_exports)
+    }
+  }
+  # Append R-defined builtins for this vignette
+  if (!is.null(builtins_functions) && length(builtins_functions$functions) > 0) {
+    exports <- c(exports, names(builtins_functions$functions))
+  }
+  unique(exports)
+}
+
+#' Format a character vector of function names as backtick-wrapped,
+#' comma-separated inline code, wrapping at ~80 characters.
+format_func_list <- function(func_names) {
+  items <- paste0("`", func_names, "`")
+  lines <- character()
+  current <- ""
+  for (item in items) {
+    candidate <- if (nchar(current) == 0) item else paste0(current, ", ", item)
+    if (nchar(candidate) > 78 && nchar(current) > 0) {
+      lines <- c(lines, paste0(current, ","))
+      current <- item
+    } else {
+      current <- candidate
+    }
+  }
+  if (nchar(current) > 0) lines <- c(lines, current)
+  paste(lines, collapse = "\n")
+}
+
+#' Generate the stdlib-reference.Rmd overview page.
+generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
+  out <- character()
+
+  # YAML frontmatter
+  out <- c(out, "---")
+  out <- c(out, 'title: "Standard Library Overview"')
+  out <- c(out, "output:")
+  out <- c(out, "  rmarkdown::html_vignette:")
+  out <- c(out, "    highlight: null")
+  out <- c(out, "vignette: >")
+  out <- c(out, "  %\\VignetteIndexEntry{Standard Library Overview}")
+  out <- c(out, "  %\\VignetteEngine{knitr::rmarkdown}")
+  out <- c(out, "  %\\VignetteEncoding{UTF-8}")
+  out <- c(out, "---")
+  out <- c(out, "")
+  out <- c(out, AUTOGEN_HEADER)
+  out <- c(out, "```{r setup, include = FALSE}")
+  out <- c(out, 'knitr::opts_chunk$set(collapse = TRUE, comment = "#>")')
+  out <- c(out, "```")
+  out <- c(out, "")
+
+  # Intro paragraph
+  out <- c(out, "Arl ships with a small standard library implemented in R, plus additional Arl")
+  out <- c(out, "source modules. The engine loads the base R stdlib and the Arl modules from")
+  out <- c(out, "`inst/arl/` by default. Stdlib modules are loaded in dependency order (each")
+  out <- c(out, "module declares its dependencies with `(import ...)` and is loaded after the")
+  out <- c(out, "modules it imports).")
+  out <- c(out, "")
+
+  # Links to detailed pages
+  out <- c(out, "For the full, per-function reference, see the individual stdlib reference pages:")
+  out <- c(out, "")
+  for (vname in names(vignettes)) {
+    vconfig <- vignettes[[vname]]
+    out <- c(out, paste0("- [", vconfig$title, "](", vname, ".html)"))
+  }
+  out <- c(out, "")
+
+  # Importing modules section
+  out <- c(out, "## Importing modules")
+  out <- c(out, "")
+  out <- c(out, "```lisp")
+  out <- c(out, "; Import focused modules")
+  out <- c(out, "(import control)   ; when/unless/and/or/cond/case")
+  out <- c(out, "(import binding)   ; let/let*/letrec")
+  out <- c(out, "(import looping)   ; for/loop/recur/until")
+  out <- c(out, "(import threading) ; -> and ->>")
+  out <- c(out, "(import error)     ; try/catch/finally")
+  out <- c(out, "```")
+  out <- c(out, "")
+  out <- c(out, "From R, you can create an engine with the stdlib already loaded:")
+  out <- c(out, "")
+  out <- c(out, "```r")
+  out <- c(out, "engine <- Engine$new()")
+  out <- c(out, "```")
+  out <- c(out, "")
+
+  # Per-vignette sections with auto-generated function lists
+  for (vname in names(vignettes)) {
+    vconfig <- vignettes[[vname]]
+    # Strip "Standard Library: " prefix for section heading
+    heading <- sub("^Standard Library:\\s*", "", vconfig$title)
+    out <- c(out, paste0("## [", heading, "](", vname, ".html)"))
+    out <- c(out, "")
+    if (nchar(vconfig$summary) > 0) {
+      out <- c(out, vconfig$summary)
+      out <- c(out, "")
+    }
+    exports <- collect_vignette_exports(
+      vconfig, arl_dir, builtins_by_vignette[[vname]]
+    )
+    if (length(exports) > 0) {
+      out <- c(out, format_func_list(exports))
+      out <- c(out, "")
+    }
+  }
+
+  # Source files section
+  out <- c(out, "## Source files")
+  out <- c(out, "")
+  out <- c(out, "The base R parts of the stdlib implementation live in")
+  out <- c(out, paste0(
+    "[`R/runtime.R`](", GITHUB_BASE, "/R/runtime.R). The"
+  ))
+  out <- c(out, "Arl parts are organized by topic in")
+  out <- c(out, paste0(
+    "[`inst/arl/`](", gsub("/blob/", "/tree/", GITHUB_BASE), "/inst/arl) (each file"
+  ))
+  out <- c(out, "defines a module). The engine loads these modules in dependency order when")
+  out <- c(out, "initializing.")
+  out <- c(out, "")
+  for (entry in MODULE_SOURCE_FILES) {
+    link <- paste0("[`", entry$file, "`](", GITHUB_BASE, "/inst/arl/", entry$file, ")")
+    if (!is.null(entry$desc)) {
+      out <- c(out, paste0("- ", link, " (", entry$desc, ")"))
+    } else {
+      out <- c(out, paste0("- ", link))
+    }
+  }
+  out <- c(out, "")
+  out <- c(out, "If you're looking for implementation details, these files are the source of")
+  out <- c(out, "truth for the stdlib definitions.")
+
+  paste(out, collapse = "\n")
+}
+
+# ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
 
@@ -857,10 +600,13 @@ generate_all <- function(
     modules <- trimws(strsplit(m[i, "Modules"], ",")[[1]])
     preamble_val <- m[i, "Preamble"]
     preamble <- if (is.na(preamble_val) || !nzchar(preamble_val)) "" else preamble_val
+    summary_val <- m[i, "Summary"]
+    summary <- if (is.na(summary_val) || !nzchar(summary_val)) "" else summary_val
     vignettes[[vname]] <- list(
       title   = m[i, "Title"],
       modules = modules,
-      preamble = preamble
+      preamble = preamble,
+      summary = summary
     )
   }
 
@@ -915,7 +661,14 @@ generate_all <- function(
     message("  Wrote: ", output_file)
   }
 
-  message("Done. Generated ", length(vignettes), " vignettes.")
+  # Generate the overview page (stdlib-reference.Rmd)
+  message("Generating: stdlib-reference.Rmd")
+  ref_rmd <- generate_reference_rmd(vignettes, arl_dir, builtins_by_vignette)
+  ref_file <- file.path(output_dir, "stdlib-reference.Rmd")
+  writeLines(ref_rmd, ref_file, useBytes = TRUE)
+  message("  Wrote: ", ref_file)
+
+  message("Done. Generated ", length(vignettes) + 1L, " vignettes.")
   invisible(NULL)
 }
 
@@ -937,82 +690,6 @@ check_undocumented <- function(all_parsed, arl_dir, modules) {
               paste(undocumented, collapse = ", "))
     }
   }
-}
-
-#' Extract exported symbol names from module source text.
-extract_exports <- function(text) {
-  # Strip comments (respecting strings)
-  lines <- strsplit(text, "\n")[[1]]
-  clean_lines <- character()
-  for (line in lines) {
-    in_str <- FALSE
-    quote_char <- ""
-    ii <- 1L
-    nn <- nchar(line)
-    while (ii <= nn) {
-      ch <- substr(line, ii, ii)
-      if (in_str) {
-        if (ch == quote_char && (ii == 1L || substr(line, ii - 1L, ii - 1L) != "\\"))
-          in_str <- FALSE
-        ii <- ii + 1L
-        next
-      }
-      if (ch %in% c('"', "'")) {
-        in_str <- TRUE
-        quote_char <- ch
-        ii <- ii + 1L
-        next
-      }
-      if (ch == ";") {
-        line <- substr(line, 1L, ii - 1L)
-        break
-      }
-      ii <- ii + 1L
-    }
-    clean_lines <- c(clean_lines, line)
-  }
-  clean_text <- paste(clean_lines, collapse = "\n")
-
-  # Find (export ...) form
-  exp_match <- regexpr("\\(export\\s+", clean_text, perl = TRUE)
-  if (exp_match == -1L) return(character())
-
-  start <- exp_match + attr(exp_match, "match.length")
-  # Find matching paren
-  depth <- 1L
-  i <- as.integer(exp_match)
-  # Skip past "(export "
-  i <- as.integer(start)
-  n <- nchar(clean_text)
-  while (i <= n && depth > 0L) {
-    ch <- substr(clean_text, i, i)
-    if (ch == "(") depth <- depth + 1L
-    else if (ch == ")") depth <- depth - 1L
-    i <- i + 1L
-  }
-  if (depth != 0L) return(character())
-
-  exp_body <- substr(clean_text, start, i - 2L)
-  exp_body <- gsub("\\s+", " ", exp_body)
-
-  # Extract symbols
-  syms <- character()
-  rest <- trimws(exp_body)
-  while (nchar(rest) > 0) {
-    rest <- trimws(rest)
-    if (substr(rest, 1, 1) == '"') {
-      m <- regexpr('"[^"]*"', rest)
-      if (m == -1) break
-      syms <- c(syms, substr(rest, 2, attr(m, "match.length") - 1))
-      rest <- substr(rest, attr(m, "match.length") + 1, nchar(rest))
-    } else {
-      m <- regexpr("^[a-zA-Z0-9_.?/<>!=*+-]+", rest)
-      if (m == -1) break
-      syms <- c(syms, substr(rest, 1, attr(m, "match.length")))
-      rest <- substr(rest, attr(m, "match.length") + 1, nchar(rest))
-    }
-  }
-  syms
 }
 
 # ---------------------------------------------------------------------------

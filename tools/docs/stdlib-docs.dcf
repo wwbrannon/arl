@@ -8,42 +8,51 @@
 #   Modules:  Comma-separated list of .arl module names
 #   Preamble: Optional introductory text placed before the first section
 
-Name: stdlib-math
-Title: Standard Library: Math and Numeric Functions
-Modules: math
-Preamble: These functions are provided by the `math` module (`inst/arl/math.arl`).
-
 Name: stdlib-list-seq
 Title: Standard Library: Lists and Sequences
 Modules: list, sequences, sort
+Summary: List construction, accessors, association lists, sequence helpers, and sorting.
 
 Name: stdlib-functional
 Title: Standard Library: Higher-Order Functions
 Modules: functional, logic
+Summary: Mapping, filtering, folding, function composition, and logical combinators.
 
 Name: stdlib-types
 Title: Standard Library: Type Predicates
 Modules: types
 Preamble: These functions are provided by the `types` module (`inst/arl/types.arl`).
+Summary: Predicates for testing the type of a value.
 
 Name: stdlib-equality
 Title: Standard Library: Equality and S3 Dispatch
 Modules: equality
 Preamble: These functions are provided by the `equality` module (`inst/arl/equality.arl`).
+Summary: Structural and identity equality, plus an S3-style method dispatch system.
 
 Name: stdlib-conversions
 Title: Standard Library: Type Conversions
 Modules: conversions
 Preamble: These functions are provided by the `conversions` module (`inst/arl/conversions.arl`).
+Summary: Convert between symbols, strings, numbers, lists, and vectors.
+
+Name: stdlib-math
+Title: Standard Library: Math and Numeric Functions
+Modules: math
+Preamble: These functions are provided by the `math` module (`inst/arl/math.arl`).
+Summary: Arithmetic, comparison, rounding, trigonometry, number theory, and numeric predicates.
 
 Name: stdlib-control
 Title: Standard Library: Control Flow and Macros
 Modules: control, binding, looping, threading, error
+Summary: Conditionals, binding forms, looping, threading macros, and error handling.
 
 Name: stdlib-strings-io
 Title: Standard Library: Strings, I/O, and Arithmetic
 Modules: strings, io, display
+Summary: String manipulation, file and console I/O, environment access, and display formatting.
 
 Name: stdlib-macro-eval-interop
 Title: Standard Library: Macro, Eval, Interop, and Convenience
 Modules: core, r-interop, dict, set, struct, assert
+Summary: Evaluation, macro utilities, dictionaries, sets, structs, assertions, and R interop helpers.
