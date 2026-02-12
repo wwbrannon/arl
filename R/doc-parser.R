@@ -35,6 +35,93 @@ DocParser <- R6::R6Class(
     get_exports = function(file) {
       text <- paste(readLines(file, warn = FALSE), collapse = "\n")
       private$extract_exports(text)
+    },
+
+    #' @description Convert an Arl function name to a stable HTML anchor slug.
+    #' Special characters are mapped to readable alternatives so that
+    #' names like `string<?` and `string>?` produce distinct slugs.
+    #' @param name Character string — an Arl function name.
+    #' @return A lowercase, hyphen-separated slug safe for use as an HTML id.
+    slugify = function(name) {
+      # Pure operator names
+      op_map <- list(
+        "+"  = "plus",  "-"  = "minus", "*"  = "star", "/" = "div",
+        "%"  = "percent", "="  = "num-eq", "==" = "num-eq-eq",
+        "<"  = "lt",    ">"  = "gt",    "<=" = "lte",  ">=" = "gte"
+      )
+      if (name %in% names(op_map)) return(op_map[[name]])
+
+      # Threading macro names
+      if (name == "->>") return("thread-last")
+      if (name == "->")  return("thread-first")
+
+      s <- name
+
+      # Arrow conversions (must come before single-char replacements)
+      s <- gsub("->", "-to-", s, fixed = TRUE)
+
+      # Comparison operators in names (longer patterns first)
+      s <- gsub("<=", "-lte", s, fixed = TRUE)
+      s <- gsub(">=", "-gte", s, fixed = TRUE)
+      s <- gsub("==", "-eq-eq", s, fixed = TRUE)
+      s <- gsub("<",  "-lt",  s, fixed = TRUE)
+      s <- gsub(">",  "-gt",  s, fixed = TRUE)
+      s <- gsub("=",  "-eq",  s, fixed = TRUE)
+
+      # Other special chars
+      s <- gsub("!",  "-bang", s, fixed = TRUE)
+      s <- gsub("?",  "-p",    s, fixed = TRUE)
+      s <- gsub("*",  "-star", s, fixed = TRUE)
+      s <- gsub("/",  "-",     s, fixed = TRUE)
+      s <- gsub(".",  "-",     s, fixed = TRUE)
+
+      # Clean up runs of hyphens and leading/trailing hyphens
+      s <- gsub("-+", "-", s)
+      s <- gsub("^-|-$", "", s)
+      tolower(s)
+    },
+
+    #' @description Load documentation for R-defined builtins from a DCF file.
+    #' @param path Path to builtins-docs.dcf.
+    #' @return A named list of function doc entries. Each entry has name,
+    #'   description, signature, examples, seealso, note, section,
+    #'   section_prose, and vignette fields.
+    load_builtins = function(path = "inst/builtins-docs.dcf") {
+      if (!file.exists(path)) return(list())
+
+      lines <- readLines(path, warn = FALSE)
+      lines <- lines[!grepl("^\\s*#", lines)]
+      m <- read.dcf(textConnection(paste(lines, collapse = "\n")))
+      entries <- list()
+
+      for (i in seq_len(nrow(m))) {
+        func_name <- m[i, "Name"]
+
+        dcf_field <- function(field) {
+          val <- m[i, field]
+          if (is.na(val) || !nzchar(val)) NULL else val
+        }
+
+        examples <- dcf_field("Examples")
+        if (!is.null(examples)) examples <- sub("\\s+$", "", examples)
+
+        vname <- dcf_field("Vignette")
+        sec_name <- dcf_field("Section")
+
+        entries[[func_name]] <- list(
+          name         = func_name,
+          description  = if (is.null(dcf_field("Description"))) "" else dcf_field("Description"),
+          signature    = if (is.null(dcf_field("Signature"))) "" else dcf_field("Signature"),
+          examples     = examples,
+          seealso      = dcf_field("Seealso"),
+          note         = dcf_field("Note"),
+          section      = sec_name,
+          section_prose = NULL,
+          vignette     = vname
+        )
+      }
+
+      entries
     }
   ),
   private = list(

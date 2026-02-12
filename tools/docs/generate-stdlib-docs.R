@@ -30,50 +30,8 @@ AUTOGEN_HEADER <- paste0(
 )
 
 # ---------------------------------------------------------------------------
-# Anchor / slug helpers
+# Cross-referencing helpers
 # ---------------------------------------------------------------------------
-
-#' Convert a function name to a stable HTML anchor ID.
-#' Special characters are mapped to readable alternatives so that
-#' headings like `string<?` and `string>?` get distinct anchors.
-slugify_func_name <- function(name) {
-  # Pure operator names
-  op_map <- list(
-    "+"  = "plus",  "-"  = "minus", "*"  = "star", "/" = "div",
-    "%"  = "percent", "="  = "num-eq", "==" = "num-eq-eq",
-    "<"  = "lt",    ">"  = "gt",    "<=" = "lte",  ">=" = "gte"
-  )
-  if (name %in% names(op_map)) return(op_map[[name]])
-
-  # Threading macro names
-  if (name == "->>") return("thread-last")
-  if (name == "->")  return("thread-first")
-
-  s <- name
-
-  # Arrow conversions (must come before single-char replacements)
-  s <- gsub("->", "-to-", s, fixed = TRUE)
-
-  # Comparison operators in names (longer patterns first)
-  s <- gsub("<=", "-lte", s, fixed = TRUE)
-  s <- gsub(">=", "-gte", s, fixed = TRUE)
-  s <- gsub("==", "-eq-eq", s, fixed = TRUE)
-  s <- gsub("<",  "-lt",  s, fixed = TRUE)
-  s <- gsub(">",  "-gt",  s, fixed = TRUE)
-  s <- gsub("=",  "-eq",  s, fixed = TRUE)
-
-  # Other special chars
-  s <- gsub("!",  "-bang", s, fixed = TRUE)
-  s <- gsub("?",  "-p",    s, fixed = TRUE)
-  s <- gsub("*",  "-star", s, fixed = TRUE)
-  s <- gsub("/",  "-",     s, fixed = TRUE)
-  s <- gsub(".",  "-",     s, fixed = TRUE)
-
-  # Clean up runs of hyphens and leading/trailing hyphens
-  s <- gsub("-+", "-", s)
-  s <- gsub("^-|-$", "", s)
-  tolower(s)
-}
 
 #' Build a global lookup: func_name -> list(vignette, slug).
 #' Used to resolve cross-vignette "See also" links.
@@ -87,7 +45,7 @@ build_func_index <- function(vignettes_config, all_parsed) {
       for (fn in parsed$functions) {
         index[[fn$name]] <- list(
           vignette = vname,
-          slug     = slugify_func_name(fn$name)
+          slug     = .doc_parser$slugify(fn$name)
         )
       }
     }
@@ -139,74 +97,38 @@ linkify_seealso <- function(seealso, func_index, current_vignette) {
 }
 
 # ---------------------------------------------------------------------------
-# Annotation parser — delegates to shared DocParser (R/doc-parser.R)
+# Builtins grouping
 # ---------------------------------------------------------------------------
 
-#' Parse ;;' annotations from a .arl source file.
-#' Delegates to the shared DocParser class.
-parse_arl_annotations <- function(file) {
-  .doc_parser$parse_file(file)
-}
-
-# ---------------------------------------------------------------------------
-# Builtins loader
-# ---------------------------------------------------------------------------
-
-#' Load documentation for R-defined builtins from builtins-docs.dcf.
+#' Group flat builtin entries (from DocParser$load_builtins) by vignette.
 #'
-#' Returns a list keyed by vignette name. Each entry has:
-#'   $functions — named list of function entries (same format as parse_arl_annotations output)
-#'   $sections  — list of section entries in order: list(name, prose)
-load_builtins_docs <- function(path = "inst/builtins-docs.dcf") {
-  if (!file.exists(path)) return(list())
-
-  lines <- readLines(path, warn = FALSE)
-  lines <- lines[!grepl("^\\s*#", lines)]
-  m <- read.dcf(textConnection(paste(lines, collapse = "\n")))
+#' Returns a list keyed by vignette name.  Each entry has:
+#'   $functions — named list of function doc entries
+#'   $sections  — list of unique section entries in order: list(name, prose)
+group_builtins_by_vignette <- function(builtins) {
   by_vignette <- list()
-
-  for (i in seq_len(nrow(m))) {
-    func_name <- m[i, "Name"]
-    vname <- m[i, "Vignette"]
-    if (is.na(vname)) next
+  for (fn in builtins) {
+    vname <- fn$vignette
+    if (is.null(vname)) next
 
     if (is.null(by_vignette[[vname]])) {
       by_vignette[[vname]] <- list(functions = list(), sections = list())
     }
 
-    sec_name <- if (is.na(m[i, "Section"])) NULL else m[i, "Section"]
-    if (!is.null(sec_name)) {
+    if (!is.null(fn$section)) {
       existing_secs <- vapply(
         by_vignette[[vname]]$sections,
         function(s) s$name, character(1)
       )
-      if (length(existing_secs) == 0 || !sec_name %in% existing_secs) {
+      if (length(existing_secs) == 0 || !fn$section %in% existing_secs) {
         by_vignette[[vname]]$sections[[length(by_vignette[[vname]]$sections) + 1L]] <- list(
-          name = sec_name, prose = NULL
+          name = fn$section, prose = NULL
         )
       }
     }
 
-    dcf_field <- function(field) {
-      val <- m[i, field]
-      if (is.na(val) || !nzchar(val)) NULL else val
-    }
-
-    examples <- dcf_field("Examples")
-    if (!is.null(examples)) examples <- sub("\\s+$", "", examples)
-
-    by_vignette[[vname]]$functions[[func_name]] <- list(
-      name         = func_name,
-      description  = if (is.null(dcf_field("Description"))) "" else dcf_field("Description"),
-      signature    = if (is.null(dcf_field("Signature"))) "" else dcf_field("Signature"),
-      examples     = examples,
-      seealso      = dcf_field("Seealso"),
-      note         = dcf_field("Note"),
-      section      = sec_name,
-      section_prose = NULL
-    )
+    by_vignette[[vname]]$functions[[fn$name]] <- fn
   }
-
   by_vignette
 }
 
@@ -327,7 +249,7 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
     }
 
     # Emit function entry with explicit anchor
-    slug <- slugify_func_name(fn$name)
+    slug <- .doc_parser$slugify(fn$name)
     out <- c(out, paste0("### ", fn$name, " {#", slug, "}"))
     out <- c(out, "")
 
@@ -623,7 +545,7 @@ generate_all <- function(
       next
     }
     message("Parsing: ", arl_file)
-    all_parsed[[mod_name]] <- parse_arl_annotations(arl_file)
+    all_parsed[[mod_name]] <- .doc_parser$parse_file(arl_file)
   }
 
   # Check for undocumented exports
@@ -631,22 +553,20 @@ generate_all <- function(
 
   # Load R-defined builtin documentation
   builtins_path <- file.path("inst", "builtins-docs.dcf")
-  builtins_by_vignette <- load_builtins_docs(builtins_path)
-  n_builtins <- sum(vapply(builtins_by_vignette, function(v) length(v$functions), integer(1)))
-  if (n_builtins > 0) {
-    message("Loaded ", n_builtins, " R-defined builtin entries from ", builtins_path)
+  all_builtins <- .doc_parser$load_builtins(builtins_path)
+  if (length(all_builtins) > 0) {
+    message("Loaded ", length(all_builtins), " R-defined builtin entries from ", builtins_path)
   }
+  builtins_by_vignette <- group_builtins_by_vignette(all_builtins)
 
   # Build global function index for cross-vignette links
   func_index <- build_func_index(vignettes, all_parsed)
   # Add builtins to the func index
-  for (vname in names(builtins_by_vignette)) {
-    for (fn in builtins_by_vignette[[vname]]$functions) {
-      func_index[[fn$name]] <- list(
-        vignette = vname,
-        slug     = slugify_func_name(fn$name)
-      )
-    }
+  for (fn in all_builtins) {
+    func_index[[fn$name]] <- list(
+      vignette = fn$vignette,
+      slug     = .doc_parser$slugify(fn$name)
+    )
   }
   message("Indexed ", length(func_index), " functions for cross-linking")
 
