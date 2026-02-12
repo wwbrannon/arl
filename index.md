@@ -5,6 +5,13 @@
 
 **A Lisp dialect for R** — homoiconic syntax, powerful macros, and seamless access to every R function.
 
+"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
+nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+culpa qui officia deserunt mollit anim id est laborum."
+
 TODO: a couple paragraphs here incl getting started and examples links
 <!-- - [**Getting Started**](articles/getting-started.html) — installation, REPL basics, core syntax
 - [**Examples**](articles/examples.html) — complete working programs from fibonacci to data analysis -->
@@ -50,7 +57,7 @@ TODO: a couple paragraphs here incl getting started and examples links
 
 - **[Seamless R interop](articles/r-interop.html)** — call any R function, use keywords for named arguments, work with R data structures directly.
 - **[Powerful macro system](articles/macros.html)** — `defmacro` with quasiquote, unquote, and splicing gives you compile-time code transformation.
-- **Self-tail-call optimization** — the compiler rewrites self-recursive tail calls as loops, so deep recursion won't overflow the stack.
+- **[Self-tail-call optimization](articles/tail-call-optimization.html)** — the compiler rewrites self-recursive tail calls as loops, so deep recursion won't overflow the stack.
 - **[Modular standard library](articles/stdlib-reference.html)** — `(import threading)`, `(import control)`, `(import error)` — load only the modules you need.
 - **[Benchmarks](articles/benchmarks.html)** — performance characteristics, profiling, and optimization history.
 

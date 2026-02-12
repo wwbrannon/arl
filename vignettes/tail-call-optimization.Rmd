@@ -1,0 +1,150 @@
+---
+title: "Tail Call Optimization"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Tail Call Optimization}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+R does not optimize tail calls. A recursive function that works fine in
+Scheme or Clojure will overflow R's call stack after a few thousand
+iterations. Arl's compiler fixes this for the most common case:
+**self-recursion**.
+
+## How It Works
+
+When the compiler sees the pattern `(define name (lambda ...))` and the
+lambda body contains calls to `name` in tail position, it rewrites the
+entire function as a `while(TRUE)` loop. Each self-call becomes a set of
+parameter reassignments followed by `next`, so no new stack frames are
+allocated.
+
+```lisp
+;; The compiler optimizes this automatically
+(define factorial
+  (lambda (n acc)
+    (if (< n 2)
+      acc
+      (factorial (- n 1) (* acc n)))))
+
+(factorial 100000 1)   ; no stack overflow
+```
+
+The compiled R code looks roughly like:
+
+```r
+function(n, acc) {
+  while (TRUE) {
+    if (n < 2) {
+      return(acc)
+    } else {
+      .tco_n <- n - 1
+      .tco_acc <- acc * n
+      n <- .tco_n
+      acc <- .tco_acc
+      next
+    }
+  }
+}
+```
+
+Temporary variables (`.tco_n`, `.tco_acc`) ensure all new argument values
+are computed before any parameter is reassigned — just like a
+simultaneous `let`.
+
+## What Counts as Tail Position
+
+The compiler recognizes self-calls in tail position through these forms:
+
+- **`if`** — both the consequent and alternative branches
+- **`begin`** — the last expression
+- **`cond`** — the last expression in each clause
+- **`let` / `let*` / `letrec`** — the body
+
+```lisp
+;; All three self-calls below are in tail position
+(define sum-positive
+  (lambda (lst acc)
+    (if (null? lst)
+      acc
+      (let ((x (car lst)))
+        (if (> x 0)
+          (sum-positive (cdr lst) (+ acc x))   ; tail: let -> if -> consequent
+          (sum-positive (cdr lst) acc))))))     ; tail: let -> if -> alternative
+```
+
+A call that is **not** in tail position — for example, wrapped in another
+function call — will not be optimized:
+
+```lisp
+;; NOT tail-recursive: the + wraps the recursive call
+(define bad-sum
+  (lambda (n)
+    (if (< n 1)
+      0
+      (+ n (bad-sum (- n 1))))))   ; not in tail position
+```
+
+## Advanced Features
+
+Self-TCO works with all of Arl's parameter features:
+
+- **Destructuring parameters** — pattern bindings are re-evaluated each
+  iteration inside the loop
+- **Rest parameters** — `(lambda (x . rest) ...)` works correctly
+- **Keyword arguments** — named arguments in the self-call are matched
+  to the right parameters
+
+## Debugging Note
+
+Since self-calls become loop iterations, recursive call frames do **not**
+appear in stack traces on error. Only the outermost call is visible. If
+you need to debug a recursive function, you can temporarily rename the
+self-call to force normal recursion:
+
+```lisp
+;; Temporarily break TCO for debugging
+(define my-func-debug
+  (lambda (n acc)
+    (if (< n 2)
+      acc
+      (my-func-debug-RENAMED (- n 1) (* acc n)))))  ; won't match, no TCO
+```
+
+## loop/recur
+
+For mutual recursion or explicit looping patterns where self-TCO does
+not apply, the `looping` module provides Clojure-style `loop`/`recur`:
+
+```lisp
+(import looping)
+
+(define factorial
+  (lambda (n)
+    (loop ((i n) (acc 1))
+      (if (< i 2)
+        acc
+        (recur (- i 1) (* acc i))))))
+```
+
+`loop` establishes named bindings and `recur` jumps back to the top of
+the loop with new values. This is implemented as a macro that expands to
+a `while` loop, so it has the same performance characteristics as
+self-TCO.
+
+## Summary
+
+| Feature | Self-TCO | loop/recur |
+|---------|----------|------------|
+| Activation | Automatic | Explicit `(import looping)` |
+| Pattern | `(define name (lambda ...))` | `(loop ((var init) ...) body)` |
+| Scope | Self-recursion only | Any loop pattern |
+| Stack growth | None | None |
+| Stack traces | Outermost frame only | Outermost frame only |

@@ -27,6 +27,8 @@ navbar:
           href: articles/modules.html
         - text: R Interop
           href: articles/r-interop.html
+        - text: Tail Call Optimization
+          href: articles/tail-call-optimization.html
         - text: "---------"
         - text: "Deep Dives"
         - text: Internals
@@ -106,6 +108,7 @@ articles:
       - modules
       - r-interop
       - stdlib-reference
+      - tail-call-optimization
       - internals
       - troubleshooting
       - arl-vs-scheme
