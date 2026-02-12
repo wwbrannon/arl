@@ -22,6 +22,7 @@
   ;;' Lists in Arl are backed by R lists; `car`/`cdr` provide the fundamental
   ;;' decomposition and `cons` the fundamental construction.
 
+  ;;' @internal
   ;;' @description Coerce calls and vectors to list; dotted pair to proper prefix.
   (define __as-list
     (lambda (x)
@@ -35,11 +36,13 @@
               (list)
               (as.list x)))))))
 
+  ;;' @internal
   ;;' @description Return last element of list.
   (define __list-last
     (lambda (lst)
       (__r[[ lst (__rlength lst))))
 
+  ;;' @internal
   ;;' @description Return list without last element.
   (define __list-head
     (lambda (lst)
@@ -248,6 +251,7 @@
 
   ;; Internal: predicate (key-in-entry target-key) -> boolean; entry = alist element (list or dotted pair).
   ;; __r== can return a vector; treat as match only when scalar #t or all true.
+  ;;' @internal
   ;;' @description Wrap R's == to handle vector results; returns #t only if all elements match.
   (define __r==-pred
     (lambda (a b)
@@ -258,6 +262,7 @@
           (isTRUE comp-result))
         #f)))
 
+  ;;' @internal
   ;;' @description Find first alist entry with matching key using given predicate.
   (define __assoc-by-pred
     (lambda (key alist pred)

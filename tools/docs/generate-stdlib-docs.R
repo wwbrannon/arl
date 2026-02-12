@@ -187,6 +187,7 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
       all_sections[[length(all_sections) + 1L]] <- sec
     }
     for (fn in parsed$functions) {
+      if (isTRUE(fn$internal)) next
       all_funcs[[length(all_funcs) + 1L]] <- fn
     }
   }

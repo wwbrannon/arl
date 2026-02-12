@@ -202,6 +202,7 @@ DocParser <- R6::R6Class(
           examples = tags$examples,
           seealso = tags$seealso,
           note = tags$note,
+          internal = tags$internal,
           section = current_section,
           section_prose = current_section_prose,
           source_line = block_start
@@ -220,7 +221,8 @@ DocParser <- R6::R6Class(
         note = NULL,
         section = NULL,
         section_prose = NULL,
-        signature = NULL
+        signature = NULL,
+        internal = FALSE
       )
 
       current_tag <- NULL
@@ -285,6 +287,10 @@ DocParser <- R6::R6Class(
           flush_tag()
           current_tag <- "signature"
           current_content <- trimws(sub("^@signature\\s+", "", line))
+          next
+        }
+        if (grepl("^@internal\\s*$", line) || grepl("^@internal\\s", line)) {
+          tags$internal <- TRUE
           next
         }
         if (grepl("^@", line)) {

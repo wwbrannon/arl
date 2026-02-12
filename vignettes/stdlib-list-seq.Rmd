@@ -22,30 +22,6 @@ Core list constructors and accessors, following Scheme conventions.
 Lists in Arl are backed by R lists; `car`/`cdr` provide the fundamental
 decomposition and `cons` the fundamental construction.
 
-### __as-list {#__as-list}
-
-Coerce calls and vectors to list; dotted pair to proper prefix.
-
-**Signature:** `(__as-list x)`
-
----
-
-### __list-last {#__list-last}
-
-Return last element of list.
-
-**Signature:** `(__list-last lst)`
-
----
-
-### __list-head {#__list-head}
-
-Return list without last element.
-
-**Signature:** `(__list-head lst)`
-
----
-
 ### call {#call}
 
 Convert a list to a callable form.
@@ -354,22 +330,6 @@ Return nth item (0-based).
 Association lists (alists) map keys to values. Each entry is a list
 whose `car` is the key and whose `cadr` is the value. `assoc` and
 friends search by key; `rassoc` searches by value.
-
-### __r==-pred {#__r-eq-eq-pred}
-
-Wrap R's == to handle vector results; returns #t only if all elements match.
-
-**Signature:** `(__r==-pred a b)`
-
----
-
-### __assoc-by-pred {#__assoc-by-pred}
-
-Find first alist entry with matching key using given predicate.
-
-**Signature:** `(__assoc-by-pred key alist pred)`
-
----
 
 ### assoc {#assoc}
 
