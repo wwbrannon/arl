@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<!--
+  Kate syntax definition for Arl (a Lisp for R).
+  Used by Pandoc via - -syntax-definition for {arl} code block highlighting.
+-->
+<language name="Arl" section="Scripts" extensions="*.arl"
+          mimetype="text/x-arl" version="1" kateversion="5.0"
+          author="Arl contributors" license="MIT">
+  <highlighting>
+    <list name="special-forms">
+      <item>define</item>
+      <item>lambda</item>
+      <item>if</item>
+      <item>begin</item>
+      <item>set!</item>
+      <item>quote</item>
+      <item>quasiquote</item>
+      <item>defmacro</item>
+      <item>module</item>
+      <item>export</item>
+      <item>export-all</item>
+      <item>import</item>
+      <item>load</item>
+      <item>run</item>
+      <item>while</item>
+      <item>do</item>
+      <item>and</item>
+      <item>or</item>
+      <item>delay</item>
+      <item>help</item>
+    </list>
+
+    <list name="constants">
+      <item>#t</item>
+      <item>#f</item>
+      <item>TRUE</item>
+      <item>FALSE</item>
+      <item>#nil</item>
+      <item>NULL</item>
+      <item>Inf</item>
+      <item>-Inf</item>
+      <item>NaN</item>
+      <item>NA</item>
+      <item>NA_real_</item>
+      <item>NA_integer_</item>
+      <item>NA_character_</item>
+      <item>NA_complex_</item>
+    </list>
+
+    <contexts>
+      <context name="Normal" attribute="Normal" lineEndContext="#stay">
+        <!-- Doc comments: ;;' ... -->
+        <RegExpr attribute="Documentation" context="#stay"
+                 String=";;'.*$" />
+        <!-- Line comments: ; ... -->
+        <RegExpr attribute="Comment" context="#stay"
+                 String=";.*$" />
+        <!-- Strings -->
+        <DetectChar attribute="String" context="String" char="&quot;" />
+        <!-- Quote sugar -->
+        <StringDetect attribute="Operator" context="#stay" String=",@" />
+        <DetectChar attribute="Operator" context="#stay" char="'" />
+        <DetectChar attribute="Operator" context="#stay" char="`" />
+        <DetectChar attribute="Operator" context="#stay" char="," />
+        <!-- Parens -->
+        <DetectChar attribute="Normal" context="#stay" char="(" />
+        <DetectChar attribute="Normal" context="#stay" char=")" />
+        <!-- Keywords (colon-prefixed) -->
+        <RegExpr attribute="Others" context="#stay"
+                 String=":[^ \t\n\r()'`,;&quot;:]+" />
+        <!-- Numbers: complex, float, integer-L, plain integer -->
+        <RegExpr attribute="Float" context="#stay"
+                 String="-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?[+-][0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?i\b" />
+        <RegExpr attribute="Float" context="#stay"
+                 String="-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?i\b" />
+        <RegExpr attribute="Float" context="#stay"
+                 String="-?[0-9]+\.[0-9]+([eE][+-]?[0-9]+)?\b" />
+        <RegExpr attribute="Float" context="#stay"
+                 String="-?[0-9]+[eE][+-]?[0-9]+\b" />
+        <RegExpr attribute="DecVal" context="#stay"
+                 String="-?[0-9]+L\b" />
+        <RegExpr attribute="DecVal" context="#stay"
+                 String="-?[0-9]+\b" />
+        <!-- Booleans / nil / special values -->
+        <keyword attribute="Constant" context="#stay" String="constants" />
+        <!-- Special forms -->
+        <keyword attribute="Keyword" context="#stay" String="special-forms" />
+      </context>
+
+      <context name="String" attribute="String" lineEndContext="#stay">
+        <!-- Escape sequences -->
+        <RegExpr attribute="SpecialChar" context="#stay"
+                 String="\\[nrt\\&quot;]" />
+        <DetectChar attribute="String" context="#pop" char="&quot;" />
+      </context>
+    </contexts>
+
+    <itemDatas>
+      <itemData name="Normal"        defStyleNum="dsNormal" />
+      <itemData name="Keyword"       defStyleNum="dsKeyword" />
+      <itemData name="Constant"      defStyleNum="dsConstant" />
+      <itemData name="DecVal"        defStyleNum="dsDecVal" />
+      <itemData name="Float"         defStyleNum="dsFloat" />
+      <itemData name="String"        defStyleNum="dsString" />
+      <itemData name="SpecialChar"   defStyleNum="dsSpecialChar" />
+      <itemData name="Comment"       defStyleNum="dsComment" />
+      <itemData name="Documentation" defStyleNum="dsDocumentation" />
+      <itemData name="Operator"      defStyleNum="dsOperator" />
+      <itemData name="Others"        defStyleNum="dsOthers" />
+    </itemDatas>
+  </highlighting>
+
+  <general>
+    <comments>
+      <comment name="singleLine" start=";" />
+    </comments>
+    <keywords casesensitive="1" />
+  </general>
+</language>
