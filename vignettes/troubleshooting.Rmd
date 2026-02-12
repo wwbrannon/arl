@@ -1,8 +1,6 @@
 ---
 title: "Troubleshooting"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Troubleshooting}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 Common pitfalls and how to resolve them.
@@ -21,7 +20,7 @@ Unlike many Lisps, Arl treats `0` as falsy (along with `#f`/`FALSE`,
 `#nil`/`NULL`). This matches R's convention where `0` is equivalent to
 `FALSE`.
 
-```lisp
+```{arl}
 (if 0 "truthy" "falsy")   ; => "falsy"
 (if 1 "truthy" "falsy")   ; => "truthy"
 (when 0 (print "nope"))   ; => #nil
@@ -29,7 +28,7 @@ Unlike many Lisps, Arl treats `0` as falsy (along with `#f`/`FALSE`,
 
 If you need to distinguish zero from false, test explicitly:
 
-```lisp
+```{arl, eval=FALSE}
 (if (not (nil? x)) ...)   ; check for nil/NULL
 (if (number? x) ...)      ; check for any number
 ```
@@ -40,7 +39,7 @@ In R, `T` and `F` are ordinary variables (not reserved words) that happen
 to be bound to `TRUE` and `FALSE` by default. In Arl, use the literal
 boolean syntax instead:
 
-```lisp
+```{arl}
 ;; Correct
 (if #t "yes" "no")
 (define flag #f)
@@ -75,7 +74,7 @@ If you get "symbol not found" after loading a file, you may have used
 The compiler's self-tail-call optimization requires the specific pattern
 `(define name (lambda ...))`. Other definition styles are not optimized:
 
-```lisp
+```{arl, eval=FALSE}
 ;; TCO works here
 (define factorial
   (lambda (n acc)
@@ -92,7 +91,7 @@ The compiler's self-tail-call optimization requires the specific pattern
 For mutual recursion or cases where self-TCO does not apply, use
 `loop`/`recur` from the `looping` module:
 
-```lisp
+```{arl, eval=FALSE}
 (loop ((i n) (acc 1))
   (if (< i 2) acc
     (recur (- i 1) (* acc i))))
@@ -103,7 +102,7 @@ For mutual recursion or cases where self-TCO does not apply, use
 Macros that introduce temporary bindings should use `gensym` to avoid
 name collisions with user code:
 
-```lisp
+```{arl, eval=FALSE}
 ;; BAD -- 'tmp' could shadow a user variable
 (defmacro my-swap (a b)
   `(let ((tmp ,a))

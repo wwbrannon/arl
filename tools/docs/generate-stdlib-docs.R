@@ -154,9 +154,7 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
   # YAML frontmatter (--- must be on line 1 for Rmd title rendering)
   out <- c(out, "---")
   out <- c(out, paste0('title: "', title, '"'))
-  out <- c(out, "output:")
-  out <- c(out, "  rmarkdown::html_vignette:")
-  out <- c(out, "    highlight: null")
+  out <- c(out, "output: arl::arl_html_vignette")
   out <- c(out, "vignette: >")
   out <- c(out, paste0("  %\\VignetteIndexEntry{", title, "}"))
   out <- c(out, "  %\\VignetteEngine{knitr::rmarkdown}")
@@ -166,6 +164,7 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
   out <- c(out, AUTOGEN_HEADER)
   out <- c(out, "```{r setup, include = FALSE}")
   out <- c(out, 'knitr::opts_chunk$set(collapse = TRUE, comment = "#>")')
+  out <- c(out, "arl::register_knitr_engine()")
   out <- c(out, "```")
   out <- c(out, "")
 
@@ -266,7 +265,11 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
 
     if (!is.null(fn$examples) && nchar(fn$examples) > 0) {
       out <- c(out, "**Examples:**")
-      out <- c(out, "```lisp")
+      if (isTRUE(fn$noeval)) {
+        out <- c(out, "```{arl, eval=FALSE}")
+      } else {
+        out <- c(out, "```{arl}")
+      }
       out <- c(out, fn$examples)
       out <- c(out, "```")
       out <- c(out, "")
@@ -388,9 +391,7 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
   # YAML frontmatter
   out <- c(out, "---")
   out <- c(out, 'title: "Standard Library Overview"')
-  out <- c(out, "output:")
-  out <- c(out, "  rmarkdown::html_vignette:")
-  out <- c(out, "    highlight: null")
+  out <- c(out, "output: arl::arl_html_vignette")
   out <- c(out, "vignette: >")
   out <- c(out, "  %\\VignetteIndexEntry{Standard Library Overview}")
   out <- c(out, "  %\\VignetteEngine{knitr::rmarkdown}")
@@ -400,6 +401,7 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
   out <- c(out, AUTOGEN_HEADER)
   out <- c(out, "```{r setup, include = FALSE}")
   out <- c(out, 'knitr::opts_chunk$set(collapse = TRUE, comment = "#>")')
+  out <- c(out, "arl::register_knitr_engine()")
   out <- c(out, "```")
   out <- c(out, "")
 
@@ -423,7 +425,7 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
   # Importing modules section
   out <- c(out, "## Importing modules")
   out <- c(out, "")
-  out <- c(out, "```lisp")
+  out <- c(out, "```{arl, eval=FALSE}")
   out <- c(out, "; Import focused modules")
   out <- c(out, "(import control)   ; when/unless/and/or/cond/case")
   out <- c(out, "(import binding)   ; let/let*/letrec")

@@ -1,8 +1,6 @@
 ---
 title: "Benchmarks"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Benchmarks}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 This page summarises Arl's performance characteristics.

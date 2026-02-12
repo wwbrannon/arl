@@ -1,8 +1,6 @@
 ---
 title: "R Interop and Data Workflows"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{R Interop and Data Workflows}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 Arl can call any R function directly. Function names, operators, and data
@@ -18,7 +17,7 @@ structures are shared between Arl and R.
 
 ## Calling R functions
 
-```lisp
+```{arl}
 (mean (c 1 2 3 4 5))
 (seq :from 1 :to 10 :by 2)
 ```
@@ -30,19 +29,19 @@ Keywords (`:from`, `:to`) map to named arguments in R.
 Keywords starting with `:` serve a dual purpose in Arl:
 
 1. **As named argument syntax**: Bare keywords in function calls become named arguments
-   ```lisp
+   ```{arl}
    (seq :from 1 :to 10)  ; R: seq(from = 1, to = 10)
    ```
 
 2. **As self-evaluating values**: Keywords are first-class values that can be bound to variables
-   ```lisp
+   ```{arl}
    :keyword          ; evaluates to a keyword object
    (define k :foo)   ; bind a keyword to a variable
    ```
 
 To pass a keyword as a *value* (rather than as named argument syntax), quote it:
 
-```lisp
+```{arl, eval=FALSE}
 (= ':foo ':bar)     ; compares two keywords as values → FALSE
 (= ':foo ':foo)     ; → TRUE
 
@@ -55,7 +54,7 @@ remaining first-class values when needed.
 You can also call functions via `r/call` if you need to pass a name
 programmatically:
 
-```lisp
+```{arl}
 (r/call "sum" (list 1 2 3))
 ```
 
@@ -71,7 +70,7 @@ functions like `tryCatch` that need to control when evaluation happens.
 
 **The solution**: Build an unevaluated call expression and evaluate it with `r/eval`:
 
-```lisp
+```{arl, eval=FALSE}
 ;; WRONG - thunk is evaluated before tryCatch can catch errors
 (r/call "tryCatch"
   (list :expr (thunk) :error (lambda (e) #t)))
@@ -99,7 +98,7 @@ When wrapping error-prone code, you need to distinguish "the error handler ran"
 from "the code succeeded and happened to return the same value". Use `gensym`
 to create a unique sentinel:
 
-```lisp
+```{arl, eval=FALSE}
 (define error-caught (gensym "error-caught"))  ; unique symbol
 (define result
   (r/eval (call (list 'tryCatch thunk-expr
@@ -113,7 +112,7 @@ to create a unique sentinel:
 
 ## Working with formulas
 
-```lisp
+```{arl, eval=FALSE}
 (lm (~ y x) :data df)
 ```
 
@@ -121,21 +120,21 @@ The `~` special form builds an R formula without evaluating its arguments.
 
 ## Accessing R objects
 
-```lisp
+```{arl, eval=FALSE}
 ($ mylist field)
 ([ vector 1)
 ```
 
 Use `::` and `:::` to access R packages:
 
-```lisp
+```{arl}
 (:: stats median)
 (::: stats .lm.fit)
 ```
 
 R base operators are also available directly:
 
-```lisp
+```{arl}
 (+ 1 2 3)
 (< 3 5)
 ```
@@ -146,7 +145,7 @@ Because Arl delegates to R for numeric operations, edge cases follow R
 semantics (not Scheme's). For example, division by zero yields `Inf`, and
 `NaN` comparisons propagate `NA`:
 
-```lisp
+```{arl}
 (/ 1 0)         ; => Inf
 (== NaN NaN)    ; => NA
 ```

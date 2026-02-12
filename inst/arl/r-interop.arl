@@ -47,7 +47,7 @@
   ;;' @description Evaluate expr within data, returning modified data.
   ;;' @examples
   ;;' (define df (data.frame :x (c 1 2 3)))
-  ;;' (within df (define z (* x 2)))   ; returns df with new column z
+  ;;' (within df (<- z (* x 2)))   ; returns df with new column z
   ;;' @seealso with
   (defmacro within (data expr)
     (begin

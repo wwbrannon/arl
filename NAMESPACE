@@ -2,8 +2,10 @@
 
 export(CoverageTracker)
 export(Engine)
+export(arl_html_vignette)
 export(cli)
 export(default_engine)
 export(install_cli)
+export(register_knitr_engine)
 importFrom(R6,R6Class)
 importFrom(R6,is.R6)

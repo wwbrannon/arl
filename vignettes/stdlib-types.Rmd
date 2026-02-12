@@ -1,8 +1,6 @@
 ---
 title: "Standard Library: Type Predicates"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Standard Library: Type Predicates}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +12,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 These functions are provided by the `types` module (`inst/arl/types.arl`).
@@ -27,7 +26,7 @@ Return #t if x is a proper list (R list or call), not a dotted pair.
 **Signature:** `(list? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (list? (list 1 2 3))  ; => #t
 (list? ())  ; => #t
 (list? "hello")  ; => #f
@@ -44,7 +43,7 @@ Return #t if x is a non-empty list or dotted pair (pairlist cell).
 **Signature:** `(list-or-pair? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (list-or-pair? (list 1))  ; => #t
 ```
 
@@ -59,7 +58,7 @@ Return #t for empty list or #nil.
 **Signature:** `(null? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (null? #nil)  ; => #t
 (null? ())  ; => #t
 (null? (list 1))  ; => #f
@@ -87,7 +86,7 @@ dotted pair (i.e. not list-or-pair?).
 **Signature:** `(atom? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (atom? 42)  ; => #t
 (atom? "hello")  ; => #t
 (atom? (list 1 2))  ; => #f
@@ -106,10 +105,9 @@ Return #t if x is empty (0-length).
 **Signature:** `(empty? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (empty? ())  ; => #t
 (empty? (list))  ; => #t
-(empty? [])  ; => #t
 (empty? (list 1))  ; => #f
 ```
 
@@ -128,7 +126,7 @@ Return #t if x is a symbol.
 **Signature:** `(symbol? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (symbol? 'foo)  ; => #t
 (symbol? "foo")  ; => #f
 (symbol? 42)  ; => #f
@@ -143,9 +141,9 @@ Return #t if x is an Arl keyword.
 **Signature:** `(keyword? x)`
 
 **Examples:**
-```lisp
-(keyword? :foo)  ; => #t
-(keyword? 'foo)  ; => #f
+```{arl}
+(keyword? ':foo)  ; => #t
+(keyword? 'foo)   ; => #f
 ```
 
 ---
@@ -159,7 +157,7 @@ Return #t if x is a number (real or complex).
 **Signature:** `(number? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (number? 42)  ; => #t
 ```
 
@@ -176,7 +174,7 @@ Return #t if x is character.
 **Signature:** `(string? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (string? "hello")  ; => #t
 ```
 
@@ -189,8 +187,8 @@ Return #t if x is a non-list atomic vector.
 **Signature:** `(vector? x)`
 
 **Examples:**
-```lisp
-(vector? [1 2 3])  ; => #t
+```{arl}
+(vector? (c 1 2 3))  ; => #t
 ```
 
 **Note:** Tests whether x is a non-list atomic vector (numeric, character, logical, etc.). R lists are NOT vectors by this predicate.
@@ -204,7 +202,7 @@ Return #t if x is a single logical value.
 **Signature:** `(boolean? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (boolean? #t)  ; => #t
 (boolean? #f)  ; => #t
 (boolean? TRUE)  ; => #t
@@ -220,7 +218,7 @@ Return #t if x is TRUE.
 **Signature:** `(true? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (true? #t)  ; => #t
 ```
 
@@ -233,7 +231,7 @@ Return #t if x is #f.
 **Signature:** `(false? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (false? #f)  ; => #t
 ```
 
@@ -248,7 +246,7 @@ Return #t if x is a function.
 **Signature:** `(fn? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (fn? car)  ; => #t
 ```
 
@@ -285,8 +283,8 @@ Test if x is an environment (including R6 objects).
 **Signature:** `(environment? x)`
 
 **Examples:**
-```lisp
-(environment? (base-env))  ; => #t
+```{arl}
+(environment? (baseenv))  ; => #t
 ```
 
 **Note:** R6 objects, dicts, and sets are all environments in R, so this predicate returns #t for them.
@@ -300,8 +298,8 @@ Test if x is a Reference Class object.
 **Signature:** `(is-refclass? x)`
 
 **Examples:**
-```lisp
-(is-refclass? (base-env))  ; => #f
+```{arl}
+(is-refclass? (baseenv))  ; => #f
 ```
 
 ---
@@ -315,7 +313,7 @@ Return the type of value (alias for R's typeof).
 **Signature:** `(type-of x)`
 
 **Examples:**
-```lisp
+```{arl}
 (type-of 42)  ; => "double"
 ```
 
@@ -332,7 +330,7 @@ Return #t if x is a cons cell (dotted pair).
 **Signature:** `(pair? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (pair? (cons 1 2))        ; => #t
 (pair? '(1 2 3))          ; => #t
 (pair? '())               ; => #f

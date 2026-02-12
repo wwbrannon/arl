@@ -68,8 +68,8 @@
 
   ;;' @description Compare two environments by their bindings and values.
   ;;' @examples
-  ;;' (define e1 (new.env :parent emptyenv))
-  ;;' (define e2 (new.env :parent emptyenv))
+  ;;' (define e1 (new.env :parent (emptyenv)))
+  ;;' (define e2 (new.env :parent (emptyenv)))
   ;;' (assign "x" 1 :envir e1)
   ;;' (assign "x" 1 :envir e2)
   ;;' (env-equal? e1 e2)              ; => #t
@@ -220,8 +220,8 @@
   ;;' @description Compare environments by bindings and values
   ;;' (dict, set, R6, refclass are env-based).
   ;;' @examples
-  ;;' (define e1 (new.env :parent emptyenv))
-  ;;' (define e2 (new.env :parent emptyenv))
+  ;;' (define e1 (new.env :parent (emptyenv)))
+  ;;' (define e2 (new.env :parent (emptyenv)))
   ;;' (assign "x" 1 :envir e1)
   ;;' (assign "x" 1 :envir e2)
   ;;' (equal?.environment e1 e2)       ; => #t

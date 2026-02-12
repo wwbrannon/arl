@@ -1,8 +1,6 @@
 ---
 title: "Standard Library: Equality and S3 Dispatch"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Standard Library: Equality and S3 Dispatch}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +12,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 These functions are provided by the `equality` module (`inst/arl/equality.arl`).
@@ -34,7 +33,7 @@ Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
 **Signature:** `(equal? a b [strict #f])`
 
 **Examples:**
-```lisp
+```{arl}
 (equal? 1 1)                    ; => #t
 (equal? 1 1.0)                  ; => #t (type coercion)
 (equal? 1 1.0 :strict #t)      ; => #f (strict mode, uses identical?)
@@ -54,7 +53,7 @@ R's native equality test. Structural comparison for value
 **Signature:** `(identical? a b)`
 
 **Examples:**
-```lisp
+```{arl}
 (identical? 1 1)          ; => #t
 (identical? 1 1.0)        ; => #f (different types)
 (identical? "a" "a")      ; => #t
@@ -103,9 +102,9 @@ Compare two environments by their bindings and values.
 **Signature:** `(env-equal? env1 env2)`
 
 **Examples:**
-```lisp
-(define e1 (new.env :parent emptyenv))
-(define e2 (new.env :parent emptyenv))
+```{arl}
+(define e1 (new.env :parent (emptyenv)))
+(define e2 (new.env :parent (emptyenv)))
 (assign "x" 1 :envir e1)
 (assign "x" 1 :envir e2)
 (env-equal? e1 e2)              ; => #t
@@ -124,7 +123,7 @@ Recursively compare list elements.
 **Signature:** `(list-equal? lst1 lst2)`
 
 **Examples:**
-```lisp
+```{arl}
 (list-equal? (list 1 2 3) (list 1 2 3))  ; => #t
 (list-equal? (list 1 2) (list 1 2 3))     ; => #f
 (list-equal? (list 1 "a") (list 1 "a"))   ; => #t
@@ -149,7 +148,7 @@ Extract the first S3 class from an object.
 **Signature:** `(s3-type obj)`
 
 **Examples:**
-```lisp
+```{arl}
 (s3-type 42)                    ; => "numeric"
 (s3-type "hello")               ; => "character"
 (s3-type (list 1 2))            ; => "list"
@@ -165,7 +164,7 @@ Check if all objects have the same S3 type.
 **Signature:** `(check-s3-type-match obj rest...)`
 
 **Examples:**
-```lisp
+```{arl}
 (check-s3-type-match 1 2 3)     ; => #t (all numeric)
 (check-s3-type-match 1 "a")     ; => #f (numeric vs character)
 ```
@@ -182,7 +181,7 @@ Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
 **Signature:** `(set-method! generic-name class-name method-fun)`
 
 **Examples:**
-```lisp
+```{arl}
 ;; Register a custom equality method for "point" objects:
 (set-method! 'equal? 'point
   (lambda (a b strict)
@@ -201,7 +200,7 @@ Dispatch to an S3 method based on object class.
 **Signature:** `(use-method generic-name obj args)`
 
 **Examples:**
-```lisp
+```{arl}
 (use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f))  ; dispatches to equal?.list
 ```
 
@@ -225,7 +224,7 @@ Default equality: atomic/vector comparison.
 **Signature:** `(equal?.default a b [strict #f])`
 
 **Examples:**
-```lisp
+```{arl}
 (equal?.default 1 1)             ; => #t
 (equal?.default 1 1.0)           ; => #t (coercion via ==)
 (equal?.default 1 1.0 :strict #t) ; => #f (strict uses identical?)
@@ -241,7 +240,7 @@ Compare lists recursively by structure and elements.
 **Signature:** `(equal?.list a b [strict #f])`
 
 **Examples:**
-```lisp
+```{arl}
 (equal?.list (list 1 2 3) (list 1 2 3))          ; => #t
 (equal?.list (list 1 (list 2 3)) (list 1 (list 2 3)))  ; => #t (nested)
 (equal?.list (list 1 2) (list 1 2 3))             ; => #f
@@ -257,9 +256,9 @@ Compare environments by bindings and values
 **Signature:** `(equal?.environment a b [strict #f])`
 
 **Examples:**
-```lisp
-(define e1 (new.env :parent emptyenv))
-(define e2 (new.env :parent emptyenv))
+```{arl}
+(define e1 (new.env :parent (emptyenv)))
+(define e2 (new.env :parent (emptyenv)))
 (assign "x" 1 :envir e1)
 (assign "x" 1 :envir e2)
 (equal?.environment e1 e2)       ; => #t

@@ -98,6 +98,7 @@ DocParser <- R6::R6Class(
         func_name <- m[i, "Name"]
 
         dcf_field <- function(field) {
+          if (!field %in% colnames(m)) return(NULL)
           val <- m[i, field]
           if (is.na(val) || !nzchar(val)) NULL else val
         }
@@ -108,6 +109,9 @@ DocParser <- R6::R6Class(
         vname <- dcf_field("Vignette")
         sec_name <- dcf_field("Section")
 
+        noeval_val <- dcf_field("Noeval")
+        noeval <- !is.null(noeval_val) && tolower(noeval_val) %in% c("yes", "true")
+
         entries[[func_name]] <- list(
           name         = func_name,
           description  = if (is.null(dcf_field("Description"))) "" else dcf_field("Description"),
@@ -117,7 +121,8 @@ DocParser <- R6::R6Class(
           note         = dcf_field("Note"),
           section      = sec_name,
           section_prose = NULL,
-          vignette     = vname
+          vignette     = vname,
+          noeval       = noeval
         )
       }
 
@@ -203,6 +208,7 @@ DocParser <- R6::R6Class(
           seealso = tags$seealso,
           note = tags$note,
           internal = tags$internal,
+          noeval = tags$noeval,
           section = current_section,
           section_prose = current_section_prose,
           source_line = block_start
@@ -222,7 +228,8 @@ DocParser <- R6::R6Class(
         section = NULL,
         section_prose = NULL,
         signature = NULL,
-        internal = FALSE
+        internal = FALSE,
+        noeval = FALSE
       )
 
       current_tag <- NULL
@@ -291,6 +298,10 @@ DocParser <- R6::R6Class(
         }
         if (grepl("^@internal\\s*$", line) || grepl("^@internal\\s", line)) {
           tags$internal <- TRUE
+          next
+        }
+        if (grepl("^@noeval\\s*$", line) || grepl("^@noeval\\s", line)) {
+          tags$noeval <- TRUE
           next
         }
         if (grepl("^@", line)) {

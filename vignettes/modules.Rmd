@@ -1,8 +1,6 @@
 ---
 title: "Modules and Imports"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Modules and Imports}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 Arl provides a module system for organizing code into reusable, encapsulated units. This guide covers how to create modules, import them, and understand how the module system resolves paths.
@@ -29,13 +28,13 @@ Arl has three mechanisms for loading code:
 
 ### Signature
 
-```lisp
+```{arl, eval=FALSE}
 (load "path")
 ```
 
 ### Examples
 
-```lisp
+```{arl, eval=FALSE}
 ; Load a file from the current directory
 (load "utils.arl")
 
@@ -73,13 +72,13 @@ When you call `(load "name")`, Arl resolves the path in this order:
 
 ### Signature
 
-```lisp
+```{arl, eval=FALSE}
 (run "path")
 ```
 
 ### Examples
 
-```lisp
+```{arl, eval=FALSE}
 ; Run a script in isolation; its definitions are not visible here
 (run "scripts/one-off.arl")
 
@@ -95,7 +94,7 @@ The `module` special form defines a named module with explicit exports.
 
 ### Signature
 
-```lisp
+```{arl, eval=FALSE}
 (module name
   (export symbol1 symbol2 ...)
   body...)
@@ -108,7 +107,7 @@ The `module` special form defines a named module with explicit exports.
 
 ### Examples
 
-```lisp
+```{arl, eval=FALSE}
 ; File: math-utils.arl
 (module math-utils
   (export square cube)
@@ -127,7 +126,7 @@ The `module` special form defines a named module with explicit exports.
 ### Export Strategies
 
 **Explicit exports** (recommended):
-```lisp
+```{arl, eval=FALSE}
 (module mymodule
   (export func1 func2 var1)
   (define func1 (lambda (x) (* x 2)))
@@ -137,7 +136,7 @@ The `module` special form defines a named module with explicit exports.
 ```
 
 **Export all**:
-```lisp
+```{arl, eval=FALSE}
 (module mymodule
   (export-all)
   (define func1 (lambda (x) (* x 2)))
@@ -150,7 +149,7 @@ The `import` special form loads a module and makes its exports available in the 
 
 ### Signature
 
-```lisp
+```{arl, eval=FALSE}
 (import name)      ; name is a symbol: module name (stdlib, then CWD)
 (import "path")    ; path is a string: file path (path-only resolution)
 ```
@@ -160,7 +159,7 @@ The `import` special form loads a module and makes its exports available in the 
 
 ### Examples
 
-```lisp
+```{arl, eval=FALSE}
 ; Import by module name (symbol): stdlib or CWD
 (import math-utils)
 (square 5)  ; => 25
@@ -190,7 +189,7 @@ When you `import` a module:
 
 ### Error Handling
 
-```lisp
+```{arl, eval=FALSE}
 ; Module not found
 (import non-existent-module)
 ; Error: Module not found: non-existent-module
@@ -218,7 +217,7 @@ private-fn  ; Error: object 'private-fn' not found
 
 Create a file `mymodule.arl`:
 
-```lisp
+```{arl, eval=FALSE}
 (module mymodule
   (export greet farewell)
 
@@ -233,7 +232,7 @@ Create a file `mymodule.arl`:
 
 Then import it:
 
-```lisp
+```{arl, eval=FALSE}
 (import mymodule)
 (greet "Alice")     ; => "Hello, Alice!"
 (farewell "Bob")    ; => "Goodbye, Bob!"
@@ -241,7 +240,7 @@ Then import it:
 
 ### Module with Private Helpers
 
-```lisp
+```{arl, eval=FALSE}
 ; File: calculator.arl
 (module calculator
   (export add subtract)
@@ -269,7 +268,7 @@ Then import it:
 
 Modules can load other modules:
 
-```lisp
+```{arl, eval=FALSE}
 ; File: string-helpers.arl
 (module string-helpers
   (export upcase downcase)
@@ -295,7 +294,7 @@ Modules can load other modules:
 
 Arl's standard library is organized into modules that you can load as needed:
 
-```lisp
+```{arl, eval=FALSE}
 ; Control flow macros
 (import control)    ; when, unless, and, or, cond, case
 
@@ -335,7 +334,7 @@ The base stdlib (loaded automatically) includes core functions like `car`, `cdr`
 
 Prefer `(export symbol1 symbol2 ...)` over `(export-all)` to maintain clear module interfaces:
 
-```lisp
+```{arl, eval=FALSE}
 ; Good - clear interface
 (module utils
   (export public-fn1 public-fn2)
@@ -352,7 +351,7 @@ Prefer `(export symbol1 symbol2 ...)` over `(export-all)` to maintain clear modu
 
 Group related functions into logical modules:
 
-```lisp
+```{arl, eval=FALSE}
 ; Good organization
 (module validation
   (export validate-email validate-phone validate-zipcode)
@@ -365,7 +364,7 @@ Group related functions into logical modules:
 
 Use `;;'` annotation comments to document your modules:
 
-```lisp
+```{arl, eval=FALSE}
 ;;' @description String manipulation utilities for text processing.
 (module string-utils
   (export trim upcase downcase)
@@ -376,7 +375,7 @@ Use `;;'` annotation comments to document your modules:
 
 Circular module imports will cause infinite recursion errors:
 
-```lisp
+```{arl, eval=FALSE}
 ; File: a.arl
 (module a
   (export fn-a)
@@ -404,7 +403,7 @@ project/
 
 Then load with relative paths:
 
-```lisp
+```{arl, eval=FALSE}
 ; In app.arl
 (import "lib/utils")
 (import "lib/validators")

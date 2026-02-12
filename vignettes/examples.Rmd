@@ -1,13 +1,16 @@
 ---
 title: "Examples"
-output:
-  rmarkdown::html_vignette:
-    highlight: tango
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Examples}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
+```
 
 These examples are complete Arl programs from `inst/examples`. Each section
 pulls in the full source from the corresponding file at build time, with

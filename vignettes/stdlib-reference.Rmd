@@ -1,8 +1,6 @@
 ---
 title: "Standard Library Overview"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Standard Library Overview}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +12,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 Arl ships with a small standard library implemented in R, plus additional Arl
@@ -36,7 +35,7 @@ For the full, per-function reference, see the individual stdlib reference pages:
 
 ## Importing modules
 
-```lisp
+```{arl, eval=FALSE}
 ; Import focused modules
 (import control)   ; when/unless/and/or/cond/case
 (import binding)   ; let/let*/letrec

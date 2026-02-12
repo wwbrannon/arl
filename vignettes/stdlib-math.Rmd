@@ -1,8 +1,6 @@
 ---
 title: "Standard Library: Math and Numeric Functions"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Standard Library: Math and Numeric Functions}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +12,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 These functions are provided by the `math` module (`inst/arl/math.arl`).
@@ -45,7 +44,7 @@ Return #t if x is a real number (includes ±Inf, excludes complex).
 **Signature:** `(real? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (real? 42)            ; => #t
 (real? 3.14)          ; => #t
 (real? Inf)           ; => #t
@@ -63,7 +62,7 @@ Return #t if x is a complex number.
 **Signature:** `(complex? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (complex? (make-rectangular 3 4))  ; => #t
 (complex? 42)         ; => #f
 ```
@@ -79,7 +78,7 @@ Return #t if x is a finite real number (rational in R are finite floats).
 **Signature:** `(rational? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (rational? 42)        ; => #t
 (rational? 3.14)      ; => #t
 (rational? Inf)       ; => #f (infinities are real but not rational)
@@ -99,7 +98,7 @@ Return #t if x is an exact number (integer storage type in R).
 **Signature:** `(exact? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (exact? 5L)           ; => #t (integer type)
 (exact? 5.0)          ; => #f (double type)
 (exact? (->integer 5)); => #t
@@ -118,7 +117,7 @@ Return #t if x is an inexact number (double or complex in R).
 **Signature:** `(inexact? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (inexact? 5.0)        ; => #t
 (inexact? (make-rectangular 3 4))  ; => #t
 (inexact? 5L)         ; => #f
@@ -135,7 +134,7 @@ Return #t if x is an integer-valued number.
 **Signature:** `(integer? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (integer? 42)         ; => #t
 (integer? 42.0)       ; => #t (value is integer even if storage is double)
 (integer? 3.14)       ; => #f
@@ -155,7 +154,7 @@ Return #t if x is a natural number (integer >= 0).
 **Signature:** `(natural? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (natural? 0)          ; => #t
 (natural? 42)         ; => #t
 (natural? -5)         ; => #f
@@ -173,7 +172,7 @@ Return #t if x is finite.
 **Signature:** `(finite? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (finite? 42)          ; => #t
 (finite? Inf)         ; => #f
 (finite? NaN)         ; => #f
@@ -191,7 +190,7 @@ Return #t if x is infinite.
 **Signature:** `(infinite? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (infinite? Inf)       ; => #t
 (infinite? -Inf)      ; => #t
 (infinite? 42)        ; => #f
@@ -209,7 +208,7 @@ Return #t if x is NaN.
 **Signature:** `(nan? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (nan? NaN)            ; => #t
 (nan? (/ 0 0))        ; => #t (0/0 = NaN)
 (nan? 42)             ; => #f
@@ -229,7 +228,7 @@ Return #t if x is an even number.
 **Signature:** `(even? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (even? 4)             ; => #t
 (even? 3)             ; => #f
 (even? 0)             ; => #t
@@ -246,7 +245,7 @@ Return #t if x is an odd number.
 **Signature:** `(odd? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (odd? 3)              ; => #t
 (odd? 4)              ; => #f
 ```
@@ -262,7 +261,7 @@ Return #t if x is zero.
 **Signature:** `(zero? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (zero? 0)             ; => #t
 (zero? 0.0)           ; => #t
 (zero? 1)             ; => #f
@@ -279,7 +278,7 @@ Return #t if x is greater than zero.
 **Signature:** `(positive? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (positive? 5)         ; => #t
 (positive? 0)         ; => #f
 (positive? -5)        ; => #f
@@ -296,7 +295,7 @@ Return #t if x is less than zero.
 **Signature:** `(negative? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (negative? -5)        ; => #t
 (negative? 0)         ; => #f
 (negative? 5)         ; => #f
@@ -313,7 +312,7 @@ Return #t if x is greater than or equal to zero.
 **Signature:** `(non-negative? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (non-negative? 5)     ; => #t
 (non-negative? 0)     ; => #t
 (non-negative? -5)    ; => #f
@@ -330,7 +329,7 @@ Return #t if x is less than or equal to zero.
 **Signature:** `(non-positive? x)`
 
 **Examples:**
-```lisp
+```{arl}
 (non-positive? -5)    ; => #t
 (non-positive? 0)     ; => #t
 (non-positive? 5)     ; => #f
@@ -349,7 +348,7 @@ Construct a complex number from real and imaginary parts.
 **Signature:** `(make-rectangular real imag)`
 
 **Examples:**
-```lisp
+```{arl}
 (make-rectangular 3 4)  ; => 3+4i
 ```
 
@@ -364,7 +363,7 @@ Construct a complex number from polar coordinates (magnitude and angle).
 **Signature:** `(make-polar magnitude angle)`
 
 **Examples:**
-```lisp
+```{arl}
 (make-polar 5 0)      ; => 5+0i
 ```
 
@@ -379,7 +378,7 @@ Extract the real part of a complex number.
 **Signature:** `(real-part z)`
 
 **Examples:**
-```lisp
+```{arl}
 (real-part (make-rectangular 3 4))  ; => 3.0
 ```
 
@@ -394,7 +393,7 @@ Extract the imaginary part of a complex number.
 **Signature:** `(imag-part z)`
 
 **Examples:**
-```lisp
+```{arl}
 (imag-part (make-rectangular 3 4))  ; => 4.0
 ```
 
@@ -409,7 +408,7 @@ Compute the magnitude (modulus) of a complex number.
 **Signature:** `(magnitude z)`
 
 **Examples:**
-```lisp
+```{arl}
 (magnitude (make-rectangular 3 4))  ; => 5.0
 ```
 
@@ -424,7 +423,7 @@ Compute the angle (argument) of a complex number.
 **Signature:** `(angle z)`
 
 **Examples:**
-```lisp
+```{arl}
 (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (π/4)
 ```
 
@@ -441,7 +440,7 @@ Modulo helper using R %%.
 **Signature:** `(% x y)`
 
 **Examples:**
-```lisp
+```{arl}
 (% 10 3)   ; => 1
 (% 17 5)   ; => 2
 ```
@@ -455,7 +454,7 @@ Variadic less-than comparison. Checks all adjacent pairs.
 **Signature:** `(< a b ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (< 1 2)     ; => #t
 (< 1 2 3)   ; => #t
 (< 1 3 2)   ; => #f
@@ -470,7 +469,7 @@ Variadic greater-than comparison. Checks all adjacent pairs.
 **Signature:** `(> a b ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (> 3 2)     ; => #t
 (> 3 2 1)   ; => #t
 (> 3 1 2)   ; => #f
@@ -485,7 +484,7 @@ Variadic less-than-or-equal comparison. Checks all adjacent pairs.
 **Signature:** `(<= a b ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (<= 1 2)    ; => #t
 (<= 1 1 2)  ; => #t
 (<= 2 1)    ; => #f
@@ -500,7 +499,7 @@ Variadic greater-than-or-equal comparison. Checks all adjacent pairs.
 **Signature:** `(>= a b ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (>= 3 2)    ; => #t
 (>= 2 2 1)  ; => #t
 (>= 1 2)    ; => #f
@@ -523,7 +522,7 @@ Variadic equality comparison. Checks all adjacent pairs.
 **Signature:** `(== a b ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (== 1 1)     ; => #t
 (== 1 1 1)   ; => #t
 (== 1 2)     ; => #f
@@ -536,7 +535,7 @@ Variadic equality comparison. Checks all adjacent pairs.
 **Signature:** `(= a b ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (= 1 1)           ; => #t
 (= "a" "a")       ; => #t
 (= 1 2)           ; => #f
@@ -551,7 +550,7 @@ Variadic addition.
 **Signature:** `(+ a ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (+ 1 2 3)    ; => 6
 (+)           ; => 0
 (+ 5)         ; => 5
@@ -566,7 +565,7 @@ Variadic multiplication.
 **Signature:** `(* a ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (* 2 3 4)    ; => 24
 (*)           ; => 1
 (* 5)         ; => 5
@@ -581,7 +580,7 @@ Variadic subtraction.
 **Signature:** `(- a ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (- 10 3)     ; => 7
 (- 5)        ; => -5
 (- 10 3 2)   ; => 5
@@ -596,7 +595,7 @@ Variadic division.
 **Signature:** `(/ a ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (/ 10 2)     ; => 5
 (/ 5)        ; => 0.2
 (/ 100 5 2)  ; => 10
@@ -611,7 +610,7 @@ Variadic min.
 **Signature:** `(min a ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (min 3 1 2)  ; => 1
 ```
 
@@ -624,7 +623,7 @@ Variadic max.
 **Signature:** `(max a ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (max 3 1 2)  ; => 3
 ```
 
@@ -637,7 +636,7 @@ Increment numeric value by n (default 1).
 **Signature:** `(inc x [n 1])`
 
 **Examples:**
-```lisp
+```{arl}
 (inc 5)       ; => 6
 (inc 5 3)     ; => 8
 ```
@@ -653,7 +652,7 @@ Decrement numeric value by n (default 1).
 **Signature:** `(dec x [n 1])`
 
 **Examples:**
-```lisp
+```{arl}
 (dec 5)       ; => 4
 (dec 5 3)     ; => 2
 ```
@@ -669,7 +668,7 @@ Clamp numeric value x to the inclusive range [lo, hi].
 **Signature:** `(clamp x lo hi)`
 
 **Examples:**
-```lisp
+```{arl}
 (clamp 5 0 10)   ; => 5
 (clamp -3 0 10)  ; => 0
 (clamp 15 0 10)  ; => 10
@@ -686,7 +685,7 @@ Return #t if x is within the inclusive range [lo, hi].
 **Signature:** `(within? x lo hi)`
 
 **Examples:**
-```lisp
+```{arl}
 (within? 5 0 10)   ; => #t
 (within? -3 0 10)  ; => #f
 (within? 10 0 10)  ; => #t
@@ -705,7 +704,7 @@ Return absolute value of x.
 **Signature:** `(abs x)`
 
 **Examples:**
-```lisp
+```{arl}
 (abs -5)      ; => 5
 (abs 5)       ; => 5
 ```
@@ -719,7 +718,7 @@ Return floor (round down) of x.
 **Signature:** `(floor x)`
 
 **Examples:**
-```lisp
+```{arl}
 (floor 3.7)   ; => 3
 (floor -3.2)  ; => -4
 ```
@@ -735,7 +734,7 @@ Return ceiling (round up) of x.
 **Signature:** `(ceiling x)`
 
 **Examples:**
-```lisp
+```{arl}
 (ceiling 3.2)  ; => 4
 (ceiling -3.7) ; => -3
 ```
@@ -751,7 +750,7 @@ Return truncated (towards zero) value of x.
 **Signature:** `(truncate x)`
 
 **Examples:**
-```lisp
+```{arl}
 (truncate 3.7)  ; => 3
 (truncate -3.7) ; => -3
 ```
@@ -767,7 +766,7 @@ Round x to given number of decimal places (default 0).
 **Signature:** `(round x [digits 0])`
 
 **Examples:**
-```lisp
+```{arl}
 (round 3.567)    ; => 4
 (round 3.567 2)  ; => 3.57
 ```
@@ -783,7 +782,7 @@ Return sign of x: -1, 0, or 1.
 **Signature:** `(signum x)`
 
 **Examples:**
-```lisp
+```{arl}
 (signum 42)    ; => 1
 (signum -5)    ; => -1
 (signum 0)     ; => 0
@@ -800,7 +799,7 @@ Return square root of x.
 **Signature:** `(sqrt x)`
 
 **Examples:**
-```lisp
+```{arl}
 (sqrt 16)     ; => 4
 (sqrt 2)      ; => 1.414...
 ```
@@ -816,7 +815,7 @@ Return base raised to power.
 **Signature:** `(expt base power)`
 
 **Examples:**
-```lisp
+```{arl}
 (expt 2 10)   ; => 1024
 (expt 3 3)    ; => 27
 ```
@@ -833,7 +832,7 @@ returns natural log. With two, returns log to the given base.
 **Signature:** `(log x [base #nil])`
 
 **Examples:**
-```lisp
+```{arl}
 (log 1)           ; => 0
 (log (exp 1))     ; => 1.0
 (log 100 10)      ; => 2.0
@@ -850,7 +849,7 @@ Return e raised to power x.
 **Signature:** `(exp x)`
 
 **Examples:**
-```lisp
+```{arl}
 (exp 0)       ; => 1
 (exp 1)       ; => 2.718...
 ```
@@ -866,7 +865,7 @@ Return base-10 logarithm of x.
 **Signature:** `(log10 x)`
 
 **Examples:**
-```lisp
+```{arl}
 (log10 100)   ; => 2
 (log10 1000)  ; => 3
 ```
@@ -882,7 +881,7 @@ Return base-2 logarithm of x.
 **Signature:** `(log2 x)`
 
 **Examples:**
-```lisp
+```{arl}
 (log2 8)      ; => 3
 (log2 1024)   ; => 10
 ```
@@ -900,7 +899,7 @@ Return sine of x (in radians).
 **Signature:** `(sin x)`
 
 **Examples:**
-```lisp
+```{arl}
 (sin 0)       ; => 0
 (cos 0)       ; => 1
 (tan 0)       ; => 0
@@ -931,7 +930,7 @@ Return arcsine of x (in radians).
 **Signature:** `(asin x)`
 
 **Examples:**
-```lisp
+```{arl}
 (asin 1)      ; => 1.5707... (pi/2)
 (acos 1)      ; => 0
 (atan 1)      ; => 0.7853... (pi/4)
@@ -962,7 +961,7 @@ Return arctangent of y/x (in radians), respecting quadrant.
 **Signature:** `(atan2 y x)`
 
 **Examples:**
-```lisp
+```{arl}
 (atan2 1 1)   ; => 0.7853... (pi/4)
 (atan2 -1 -1) ; => -2.356... (-3*pi/4)
 ```
@@ -978,7 +977,7 @@ Return integer quotient of x divided by y.
 **Signature:** `(quotient x y)`
 
 **Examples:**
-```lisp
+```{arl}
 (quotient 10 3)   ; => 3
 (quotient -10 3)  ; => -3
 ```
@@ -994,7 +993,7 @@ Return remainder of x divided by y (same sign as x).
 **Signature:** `(remainder x y)`
 
 **Examples:**
-```lisp
+```{arl}
 (remainder 10 3)   ; => 1
 (remainder -10 3)  ; => -1
 ```
@@ -1010,7 +1009,7 @@ Return modulo of x and y (same sign as y).
 **Signature:** `(modulo x y)`
 
 **Examples:**
-```lisp
+```{arl}
 (modulo 10 3)    ; => 1
 (modulo -10 3)   ; => 2
 ```
@@ -1028,7 +1027,7 @@ Return greatest common divisor of arguments.
 **Signature:** `(gcd a b ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (gcd 12 8)      ; => 4
 (gcd 12 8 6)    ; => 2
 ```
@@ -1044,7 +1043,7 @@ Return least common multiple of arguments.
 **Signature:** `(lcm a b ...)`
 
 **Examples:**
-```lisp
+```{arl}
 (lcm 4 6)       ; => 12
 (lcm 3 4 5)     ; => 60
 ```

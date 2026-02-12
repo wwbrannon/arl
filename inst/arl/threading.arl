@@ -30,9 +30,9 @@
 ;;' @examples
 ;;' (->> '(1 2 3) (map (lambda (x) (* x x))))  ; => (1 4 9)
 ;;' (->> 5 (- 10))           ; => 5  ; (- 10 5)
-;;' (->> '(3 1 2)
-;;'      (sort)
-;;'      (car))              ; => 1
+;;' (->> '(1 2 3)
+;;'      (map (lambda (x) (+ x 10)))
+;;'      (car))              ; => 11
 ;;' @note Threads the value as the LAST argument to each successive form. Compare with `->` which threads as the first argument.
 ;;' @seealso ->
 (defmacro ->> (value . forms)

@@ -1,8 +1,6 @@
 ---
 title: "Arl Compared to Scheme"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Arl Compared to Scheme}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 Arl is a Lisp dialect implemented in and with access to R. It borrows Lisp
@@ -30,14 +29,14 @@ Arl and Scheme share a Lisp-family surface syntax and several familiar ideas:
 
 ## Core differences
 
-The main differences come from Arl leaning on R’s runtime:
+The main differences come from Arl leaning on R's runtime:
 
 ### Evaluation model
 
-Arl evaluates expressions via R’s `eval()` and environments. That means:
+Arl evaluates expressions via R's `eval()` and environments. That means:
 
-- R’s base functions are available without importing.
-- R’s evaluation and error semantics apply under the hood.
+- R's base functions are available without importing.
+- R's evaluation and error semantics apply under the hood.
 
 ### Data model
 
@@ -47,7 +46,7 @@ structures:
 - Lists are R lists or calls (R's type-generic vectors).
 - Arl also has dotted pairs (pairlist cells, `pair?`); `list-or-pair?` is true for non-empty lists or dotted pairs.
 - Vectors are R vectors.
-- `#nil` maps to R’s `NULL`.
+- `#nil` maps to R's `NULL`.
 
 ### Truthiness
 
@@ -65,7 +64,7 @@ This is intentional for R interop, but it is a meaningful semantic difference
 from Scheme. Prefer predicates like `is.infinite`, `is.nan`, and `is.na` when
 you need to branch on these values.
 
-```lisp
+```{arl}
 (/ 1 0)         ; => Inf
 (== NaN NaN)    ; => NA
 (is.infinite (/ 1 0))  ; => TRUE
@@ -99,7 +98,7 @@ inexact? (number? AND NOT is.integer)
 
 **Infinities and special values:**
 
-```lisp
+```{arl}
 (real? Inf)       ; => #t (infinities are real)
 (rational? Inf)   ; => #f (but not rational)
 (finite? Inf)     ; => #f
@@ -132,7 +131,7 @@ stack trace rather than the full chain of recursive calls.
 For cases not covered by self-TCO, use `loop`/`recur` for explicit
 tail-recursive patterns.
 
-```lisp
+```{arl}
 ;; Self-TCO optimizes this automatically
 (define factorial
   (lambda (n acc)
@@ -150,7 +149,7 @@ tail-recursive patterns.
 
 Arl can call R functions directly:
 
-```lisp
+```{arl}
 (mean (c 1 2 3 4 5))
 (seq :from 1 :to 10 :by 2)
 ```
@@ -164,7 +163,7 @@ Many familiar special forms exist (`quote`, `if`, `define`, `lambda`, `begin`),
 but there are Arl-specific forms (`~`, `::`, `:::`) and macro helpers tuned for
 R interop.
 
-## When to think “Scheme” vs “R”
+## When to think "Scheme" vs "R"
 
 - **Think Scheme** for macro structure and list processing patterns.
 - **Think R** for data frames, formulas, statistical modeling, and named

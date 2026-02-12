@@ -1,8 +1,6 @@
 ---
 title: "Standard Library: Lists and Sequences"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Standard Library: Lists and Sequences}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +12,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 ## List Operations {#section-list-operations}
@@ -29,7 +28,7 @@ Convert a list to a callable form.
 **Signature:** `(call lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (call (list '+ 1 2))  ; => language: (+ 1 2)
 ```
 
@@ -44,7 +43,7 @@ Return first element or #nil.
 **Signature:** `(car lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (car (list 1 2 3))    ; => 1
 (car (list))           ; => #nil
 (car (cons 'a 'b))    ; => a
@@ -61,7 +60,7 @@ Return list without first element (or cdr of dotted pair).
 **Signature:** `(cdr lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (cdr (list 1 2 3))    ; => (2 3)
 (cdr (list 1))        ; => ()
 (cdr (cons 'a 'b))    ; => b
@@ -190,7 +189,7 @@ Prepend item to list or call; dotted pair when cdr is not a list.
 **Signature:** `(cons item lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (cons 1 (list 2 3))   ; => (1 2 3)
 (cons 'a (list 'b))   ; => (a b)
 (cons 'a 'b)          ; => dotted pair (a . b)
@@ -207,7 +206,7 @@ Build list ending with last arg.
 **Signature:** `(list* args...)`
 
 **Examples:**
-```lisp
+```{arl}
 (list* 1 2 (list 3 4))  ; => (1 2 3 4)
 (list* 1 2 3)           ; => (1 2 3)
 (list*)                  ; => ()
@@ -224,7 +223,7 @@ Concatenate multiple lists into one.
 **Signature:** `(append lists...)`
 
 **Examples:**
-```lisp
+```{arl}
 (append (list 1 2) (list 3 4))    ; => (1 2 3 4)
 (append (list 1) (list 2) (list 3)); => (1 2 3)
 (append (list 1 2) (list))         ; => (1 2)
@@ -241,7 +240,7 @@ Reverse list.
 **Signature:** `(reverse x)`
 
 **Examples:**
-```lisp
+```{arl}
 (reverse (list 1 2 3))  ; => (3 2 1)
 (reverse (list))        ; => ()
 ```
@@ -299,7 +298,7 @@ Return last item or #nil.
 **Signature:** `(last lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (last (list 1 2 3))   ; => 3
 (last (list 42))      ; => 42
 (last (list))         ; => #nil
@@ -316,7 +315,7 @@ Return nth item (0-based).
 **Signature:** `(nth lst n)`
 
 **Examples:**
-```lisp
+```{arl}
 (nth (list 'a 'b 'c) 0)  ; => a
 (nth (list 'a 'b 'c) 2)  ; => c
 ```
@@ -338,7 +337,7 @@ Find first alist entry (list or dotted pair) with matching key (uses equal?).
 **Signature:** `(assoc key alist)`
 
 **Examples:**
-```lisp
+```{arl}
 (assoc 'b (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
 (assoc 'z (list (list 'a 1) (list 'b 2)))               ; => #nil
 ```
@@ -407,7 +406,7 @@ Find first alist entry with matching value
 **Signature:** `(rassoc value alist)`
 
 **Examples:**
-```lisp
+```{arl}
 (rassoc 2 (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
 (rassoc 9 (list (list 'a 1) (list 'b 2)))               ; => #nil
 ```
@@ -437,7 +436,7 @@ Generate numeric range from start to end (exclusive) with optional step.
 **Signature:** `(range start end step-args...)`
 
 **Examples:**
-```lisp
+```{arl}
 (range 0 5)       ; => (0 1 2 3 4)
 (range 0 10 2)    ; => (0 2 4 6 8)
 (range 5 0 -1)    ; => (5 4 3 2 1)
@@ -455,7 +454,7 @@ start (default 0) with step (default 1).
 **Signature:** `(iota count args...)`
 
 **Examples:**
-```lisp
+```{arl}
 (iota 5)          ; => (0 1 2 3 4)
 (iota 5 1)        ; => (1 2 3 4 5)
 (iota 5 0 2)      ; => (0 2 4 6 8)
@@ -472,7 +471,7 @@ Create list of n copies of value.
 **Signature:** `(make-list n value)`
 
 **Examples:**
-```lisp
+```{arl}
 (make-list 3 'x)    ; => (x x x)
 (make-list 0 'x)    ; => ()
 ```
@@ -490,7 +489,7 @@ Scheme-style list accessor (alias for nth).
 **Signature:** `(list-ref lst index)`
 
 **Examples:**
-```lisp
+```{arl}
 (list-ref (list 'a 'b 'c) 1)  ; => b
 ```
 
@@ -505,7 +504,7 @@ Return list without first k elements.
 **Signature:** `(list-tail lst k)`
 
 **Examples:**
-```lisp
+```{arl}
 (list-tail (list 'a 'b 'c 'd) 2)  ; => (c d)
 (list-tail (list 1 2 3) 0)         ; => (1 2 3)
 ```
@@ -527,7 +526,7 @@ Take first n items.
 **Signature:** `(take n lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (take 3 (list 1 2 3 4 5))  ; => (1 2 3)
 (take 0 (list 1 2 3))      ; => ()
 (take 10 (list 1 2))       ; => (1 2)
@@ -544,7 +543,7 @@ Drop first n items.
 **Signature:** `(drop n lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (drop 2 (list 1 2 3 4 5))  ; => (3 4 5)
 (drop 0 (list 1 2 3))      ; => (1 2 3)
 (drop 10 (list 1 2))       ; => ()
@@ -561,7 +560,7 @@ Take items while predicate is true.
 **Signature:** `(take-while pred lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (take-while odd? (list 1 3 5 2 4))   ; => (1 3 5)
 (take-while even? (list 1 2 3))       ; => ()
 ```
@@ -577,7 +576,7 @@ Drop items while predicate is true.
 **Signature:** `(drop-while pred lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (drop-while odd? (list 1 3 5 2 4))   ; => (2 4)
 (drop-while even? (list 1 2 3))       ; => (1 2 3)
 ```
@@ -593,7 +592,7 @@ Split list into chunks of size n.
 **Signature:** `(partition n lst [step n])`
 
 **Examples:**
-```lisp
+```{arl}
 (partition 2 (list 1 2 3 4 5 6))       ; => ((1 2) (3 4) (5 6))
 (partition 3 (list 1 2 3 4 5 6) 2)     ; => ((1 2 3) (3 4 5))
 (partition 2 (list 1 2 3 4 5))          ; => ((1 2) (3 4))
@@ -610,7 +609,7 @@ Flatten nested lists.
 **Signature:** `(flatten lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (flatten (list 1 (list 2 3) (list 4 (list 5))))  ; => (1 2 3 4 5)
 (flatten (list 1 2 3))                            ; => (1 2 3)
 ```
@@ -626,7 +625,7 @@ Call fn n times collecting results.
 **Signature:** `(repeatedly n fn)`
 
 **Examples:**
-```lisp
+```{arl}
 (repeatedly 3 (lambda () 42))  ; => (42 42 42)
 ```
 
@@ -641,7 +640,7 @@ Repeat value n times.
 **Signature:** `(repeat n value)`
 
 **Examples:**
-```lisp
+```{arl}
 (repeat 4 'x)   ; => (x x x x)
 (repeat 3 0)     ; => (0 0 0)
 ```
@@ -657,7 +656,7 @@ Zip lists into list of tuples.
 **Signature:** `(zip lists...)`
 
 **Examples:**
-```lisp
+```{arl}
 (zip (list 1 2 3) (list 'a 'b 'c))          ; => ((1 a) (2 b) (3 c))
 (zip (list 1 2) (list 'a 'b) (list 'x 'y))  ; => ((1 a x) (2 b y))
 ```
@@ -695,7 +694,7 @@ Return #t if length of x equals n.
 **Signature:** `(length= x n)`
 
 **Examples:**
-```lisp
+```{arl}
 (length= (list 1 2 3) 3)  ; => #t
 (length= (list 1 2) 3)    ; => #f
 ```
@@ -711,7 +710,7 @@ Return #t if length of x is greater than n.
 **Signature:** `(length> x n)`
 
 **Examples:**
-```lisp
+```{arl}
 (length> (list 1 2 3) 2)  ; => #t
 (length> (list 1 2) 3)    ; => #f
 ```
@@ -727,7 +726,7 @@ Return #t if length of x is less than n.
 **Signature:** `(length< x n)`
 
 **Examples:**
-```lisp
+```{arl}
 (length< (list 1 2) 3)    ; => #t
 (length< (list 1 2 3) 2)  ; => #f
 ```
@@ -750,9 +749,10 @@ Sort list using comparison function (simple quicksort implementation).
 **Signature:** `(sort lst comparator)`
 
 **Examples:**
-```lisp
+```{arl}
 (sort (list 3 1 4 1 5) <)        ; => (1 1 3 4 5)
-(sort (list "b" "a" "c") string<); => ("a" "b" "c")
+(sort (list "b" "a" "c")
+      (lambda (a b) (< a b)))   ; => ("a" "b" "c")
 ```
 
 **See also:** [stable-sort](#stable-sort), [sort-by](#sort-by)
@@ -766,9 +766,10 @@ Sort list by applying key-fn to each element, then comparing.
 **Signature:** `(sort-by lst key-fn comparator)`
 
 **Examples:**
-```lisp
-(sort-by (list (list "b" 2) (list "a" 1)) car string<)  ; => (("a" 1) ("b" 2))
-(sort-by (list 3 -1 2) abs <)                            ; => (-1 2 3)
+```{arl}
+(sort-by (list (list "b" 2) (list "a" 1)) car
+         (lambda (a b) (< a b)))  ; => (("a" 1) ("b" 2))
+(sort-by (list 3 -1 2) abs <)     ; => (-1 2 3)
 ```
 
 **See also:** [sort](#sort), [stable-sort](#stable-sort)
@@ -784,7 +785,7 @@ is true), takes from list1 first.
 **Signature:** `(merge list1 list2 comparator)`
 
 **Examples:**
-```lisp
+```{arl}
 (merge (list 1 3 5) (list 2 4 6) <)  ; => (1 2 3 4 5 6)
 (merge (list 1 2) (list) <)           ; => (1 2)
 ```
@@ -800,7 +801,7 @@ Stable sort - preserves order of equal elements. Uses merge sort internally.
 **Signature:** `(stable-sort lst comparator)`
 
 **Examples:**
-```lisp
+```{arl}
 (stable-sort (list 3 1 4 1 5) <)  ; => (1 1 3 4 5)
 ```
 

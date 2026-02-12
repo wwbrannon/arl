@@ -13,6 +13,7 @@
 ;;' and return `#t` on success.
 
   ;;' @description Assert condition or raise error.
+  ;;' @noeval
   ;;' @examples
   ;;' (assert #t)               ; => #t
   ;;' (assert (> 3 2))          ; => #t
@@ -26,6 +27,7 @@
         (error msg))))
 
   ;;' @description Assert expected and actual are equal?.
+  ;;' @noeval
   ;;' @examples
   ;;' (assert-equal 3 (+ 1 2))  ; => #t
   ;;' (assert-equal "a" "a")    ; => #t
@@ -40,6 +42,7 @@
         #t)))
 
   ;;' @description Assert value is truthy.
+  ;;' @noeval
   ;;' @examples
   ;;' (assert-true #t)          ; => #t
   ;;' (assert-true 1)           ; => #t
@@ -54,6 +57,7 @@
         #t)))
 
   ;;' @description Assert value is falsy.
+  ;;' @noeval
   ;;' @examples
   ;;' (assert-false #f)         ; => #t
   ;;' (assert-false #nil)       ; => #t
@@ -68,6 +72,7 @@
         #t)))
 
   ;;' @description Assert expected and actual are identical?.
+  ;;' @noeval
   ;;' @examples
   ;;' (define x '(1 2 3))
   ;;' (assert-eq x x)           ; => #t (same object)
@@ -83,6 +88,7 @@
         #t)))
 
   ;;' @description Assert thunk throws an error.
+  ;;' @noeval
   ;;' @examples
   ;;' (assert-error (lambda () (error "boom")))   ; => #t
   ;;' (assert-error (lambda () (/ 1 0)))           ; => #t

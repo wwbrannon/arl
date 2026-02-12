@@ -13,7 +13,8 @@
 
   ;;' @description Signal an error with message.
   ;;' @examples
-  ;;' (error "something went wrong")   ; signals error
+  ;;' (try (error "something went wrong")
+  ;;'   (catch e ($ e "message")))     ; => "something went wrong"
   ;;' (try (error "oops")
   ;;'   (catch e "caught"))            ; => "caught"
   ;;' @seealso warn, assert, try

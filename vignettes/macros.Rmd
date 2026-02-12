@@ -1,8 +1,6 @@
 ---
 title: "Macros and Quasiquote"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Macros and Quasiquote}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 Macros let you transform code at compile time, before evaluation.  Arl
@@ -45,7 +44,7 @@ In summary:
 
 ## Defining a macro
 
-```lisp
+```{arl}
 ;;' @description Evaluate body forms when test is truthy.
 (defmacro when (test . body)
   `(if ,test (begin ,@body) #nil))
@@ -53,7 +52,7 @@ In summary:
 
 With that macro defined:
 
-```lisp
+```{arl}
 (when (> 5 3) (print "yes"))
 ;; expands to: (if (> 5 3) (begin (print "yes")) #nil)
 ```
@@ -67,7 +66,7 @@ You can document macros with `;;'` annotation comments above the
 definition (see
 [Getting Started -- Documenting functions](getting-started.html#documenting-functions)):
 
-```lisp
+```{arl, eval=FALSE}
 (help "when")
 ```
 
@@ -75,7 +74,7 @@ definition (see
 
 ### Fixed parameters
 
-```lisp
+```{arl}
 (defmacro double (x)
   `(* 2 ,x))
 
@@ -86,7 +85,7 @@ definition (see
 
 Use `.` to collect remaining arguments into a list:
 
-```lisp
+```{arl}
 (defmacro unless (test . body)
   `(if ,test #nil (begin ,@body)))
 
@@ -97,7 +96,7 @@ Use `.` to collect remaining arguments into a list:
 
 Parameters wrapped in a pair `(name default)` are optional:
 
-```lisp
+```{arl}
 (defmacro greet ((name "world"))
   `(str "hello, " ,name))
 
@@ -107,7 +106,7 @@ Parameters wrapped in a pair `(name default)` are optional:
 
 You can mix required and optional parameters, and combine them with rest:
 
-```lisp
+```{arl}
 (defmacro opt-rest ((x 1) . rest)
   `(list ,x ,@rest))
 
@@ -119,7 +118,7 @@ You can mix required and optional parameters, and combine them with rest:
 
 Use `(pattern ...)` to destructure a macro argument:
 
-```lisp
+```{arl}
 (defmacro let-pair ((pattern (name value)))
   `(define ,name ,value))
 
@@ -129,7 +128,7 @@ x  ; => 10
 
 Patterns can be nested, have defaults, or be used as rest parameters:
 
-```lisp
+```{arl}
 ;; Nested pattern
 (defmacro deep ((pattern (a (b c))))
   `(list ,a ,b ,c))
@@ -153,14 +152,14 @@ evaluates `expr` (which must produce a list) and splices its elements.
 
 ### Quasiquote basics
 
-```lisp
+```{arl}
 (define x 10)
 `(+ ,x 20)      ; => (+ 10 20)
 ```
 
 ### Splicing lists
 
-```lisp
+```{arl}
 (define xs (list 2 3))
 `(+ 1 ,@xs 4)   ; => (+ 1 2 3 4)
 ```
@@ -171,7 +170,7 @@ When quasiquotes are nested, each level of backtick adds one to the
 depth, and each comma subtracts one.  Only depth-zero unquotes are
 evaluated:
 
-```lisp
+```{arl}
 `(a `(b ,,x))   ; => (a (quasiquote (b (unquote 10))))
 ```
 
@@ -187,7 +186,7 @@ renamed so they cannot collide with names at the call site.
 
 Consider a `swap` macro that uses a temporary variable:
 
-```lisp
+```{arl}
 (defmacro swap (a b)
   `(let ((temp ,a))
      (set! ,a ,b)
@@ -198,7 +197,7 @@ Without hygiene, if the caller had a variable named `temp`, the macro
 would silently shadow it.  In Arl, the macro-introduced `temp` is
 automatically renamed to a fresh symbol, so caller bindings are safe:
 
-```lisp
+```{arl}
 (define temp 999)
 (define x 1)
 (define y 2)
@@ -227,7 +226,7 @@ these tags to decide which symbols to rename.
 user-defined name.  Use it when you need to create bindings at
 macro-expansion time that must not conflict:
 
-```lisp
+```{arl}
 (gensym)          ; => G__1
 (gensym "tmp")    ; => tmp__2
 ```
@@ -242,7 +241,7 @@ useful when you build binding forms *programmatically at expansion time*
 -- for example, when a macro computes a list of bindings in a `let`
 expression before constructing the quasiquoted result:
 
-```lisp
+```{arl, eval=FALSE}
 (defmacro case (key clause . rest)
   (define key-sym (gensym "case-key"))
   `((lambda (,key-sym)
@@ -257,7 +256,7 @@ not apply.  `gensym` ensures the binding is unique.
 
 Another common pattern is loop macros:
 
-```lisp
+```{arl, eval=FALSE}
 (defmacro for (binding . body)
   (begin
     (define var (car binding))
@@ -284,7 +283,7 @@ telling the hygienizer to leave it alone.
 
 ### Signature
 
-```lisp
+```{arl, eval=FALSE}
 (capture 'symbol expr)
 ```
 
@@ -294,7 +293,7 @@ telling the hygienizer to leave it alone.
 
 ### Example: anaphoric if
 
-```lisp
+```{arl}
 (defmacro aif (test then alt)
   `(let ((it ,test))
      (if it ,(capture 'it then) ,(capture 'it alt))))
@@ -302,7 +301,7 @@ telling the hygienizer to leave it alone.
 
 Usage:
 
-```lisp
+```{arl}
 (aif (+ 2 3)
      (str "result is " it)   ; it => 5
      "no result")
@@ -328,7 +327,7 @@ agree on the name `it`.
 
 Without `capture`, the caller would not be able to refer to `it`:
 
-```lisp
+```{arl, eval=FALSE}
 ;; BROKEN -- without capture, hygiene renames 'it'
 (defmacro bad-aif (test then alt)
   `(let ((it ,test))
@@ -342,7 +341,7 @@ Without `capture`, the caller would not be able to refer to `it`:
 Because the macro body is ordinary Arl code executed at expansion time,
 you can perform arbitrary computation before returning the template:
 
-```lisp
+```{arl}
 (defmacro const-multiply (a b)
   (let ((result (* a b)))
     `(quote ,result)))
@@ -354,7 +353,7 @@ you can perform arbitrary computation before returning the template:
 
 Macros can call themselves recursively or invoke other macros:
 
-```lisp
+```{arl, eval=FALSE}
 ;; Thread-first: recursive macro that threads a value through forms
 (defmacro -> (value . forms)
   (if (null? forms)
@@ -372,7 +371,7 @@ Macros can call themselves recursively or invoke other macros:
 Macros can also expand into calls to other macros.  The expander
 recursively expands until no macro calls remain:
 
-```lisp
+```{arl, eval=FALSE}
 ;; cond expands into nested if, which may contain further macro calls
 (cond
   ((= x 1) "one")
@@ -386,7 +385,7 @@ recursively expands until no macro calls remain:
 
 `macroexpand-1` expands only the outermost macro call (one step):
 
-```lisp
+```{arl}
 (macroexpand-1 '(when #t 1))
 ; => (if #t (begin 1) #nil)
 ```
@@ -394,13 +393,13 @@ recursively expands until no macro calls remain:
 `macroexpand` (or its alias `macroexpand-all`) recursively expands all
 macro calls in the expression:
 
-```lisp
+```{arl}
 (macroexpand '(when #t (unless #f 42)))
 ```
 
 `macro?` tests whether a symbol names a currently defined macro:
 
-```lisp
+```{arl}
 (macro? 'when)   ; => #t
 (macro? 'car)    ; => #f
 ```
@@ -427,7 +426,7 @@ patterns worth studying:
 
 ### `let` -- parallel bindings with `gensym`
 
-```lisp
+```{arl, eval=FALSE}
 (defmacro let (bindings . body)
   (if (null? bindings)
     `(begin ,@body)
@@ -455,7 +454,7 @@ template.
 The `loop` macro rewrites `recur` calls into a `while` loop with flag
 variables, all using `gensym` to avoid conflicts:
 
-```lisp
+```{arl}
 (loop ((n 5) (acc 1))
   (if (= n 0)
     acc
@@ -468,7 +467,7 @@ variables, all using `gensym` to avoid conflicts:
 The `try` macro parses its clause list at expansion time and rewrites
 into calls to the lower-level `try*` function:
 
-```lisp
+```{arl}
 (try (/ 1 0)
   (catch e (str "caught: " ($ e "message")))
   (finally (display "cleanup")))

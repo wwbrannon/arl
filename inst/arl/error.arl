@@ -13,7 +13,7 @@
   ;;' @examples
   ;;' ;; Basic try with catch
   ;;' (try (/ 1 0)
-  ;;'   (catch e (string "caught: " ($ e "message"))))
+  ;;'   (catch e (string-append "caught: " ($ e "message"))))
   ;;'
   ;;' ;; try with finally (always runs)
   ;;' (try (+ 1 2)
@@ -21,7 +21,7 @@
   ;;'
   ;;' ;; try with both catch and finally
   ;;' (try (stop "oops")
-  ;;'   (catch e (string "error: " ($ e "message")))
+  ;;'   (catch e (string-append "error: " ($ e "message")))
   ;;'   (finally (display "done")))       ; => "error: oops"
   ;;'
   ;;' ;; try with no handlers (just evaluates body)

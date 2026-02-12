@@ -1,8 +1,6 @@
 ---
 title: "Tail Call Optimization"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Tail Call Optimization}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 R does not optimize tail calls. A recursive function that works fine in
@@ -26,7 +25,7 @@ entire function as a `while(TRUE)` loop. Each self-call becomes a set of
 parameter reassignments followed by `next`, so no new stack frames are
 allocated.
 
-```lisp
+```{arl}
 ;; The compiler optimizes this automatically
 (define factorial
   (lambda (n acc)
@@ -68,7 +67,7 @@ The compiler recognizes self-calls in tail position through these forms:
 - **`cond`** — the last expression in each clause
 - **`let` / `let*` / `letrec`** — the body
 
-```lisp
+```{arl}
 ;; All three self-calls below are in tail position
 (define sum-positive
   (lambda (lst acc)
@@ -83,7 +82,7 @@ The compiler recognizes self-calls in tail position through these forms:
 A call that is **not** in tail position — for example, wrapped in another
 function call — will not be optimized:
 
-```lisp
+```{arl, eval=FALSE}
 ;; NOT tail-recursive: the + wraps the recursive call
 (define bad-sum
   (lambda (n)
@@ -109,7 +108,7 @@ appear in stack traces on error. Only the outermost call is visible. If
 you need to debug a recursive function, you can temporarily rename the
 self-call to force normal recursion:
 
-```lisp
+```{arl, eval=FALSE}
 ;; Temporarily break TCO for debugging
 (define my-func-debug
   (lambda (n acc)
@@ -123,7 +122,7 @@ self-call to force normal recursion:
 For mutual recursion or explicit looping patterns where self-TCO does
 not apply, the `looping` module provides Clojure-style `loop`/`recur`:
 
-```lisp
+```{arl}
 (import looping)
 
 (define factorial

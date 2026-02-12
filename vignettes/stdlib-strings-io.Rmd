@@ -1,8 +1,6 @@
 ---
 title: "Standard Library: Strings, I/O, and Arithmetic"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Standard Library: Strings, I/O, and Arithmetic}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +12,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 ## String Operations {#section-string-operations}
@@ -29,7 +28,7 @@ Join strings with separator.
 **Signature:** `(string-join x [sep ""])`
 
 **Examples:**
-```lisp
+```{arl}
 (string-join (list "a" "b" "c") "-")  ; => "a-b-c"
 (string-join (list "x" "y" "z"))      ; => "xyz"
 (string-join (list "hello" "world") " ")  ; => "hello world"
@@ -46,7 +45,7 @@ Split string on separator.
 **Signature:** `(string-split x [sep ""])`
 
 **Examples:**
-```lisp
+```{arl}
 (string-split "a-b-c" "-")  ; => ("a" "b" "c")
 (string-split "hello" "")   ; => ("h" "e" "l" "l" "o")
 ```
@@ -62,7 +61,7 @@ Trim leading and trailing whitespace.
 **Signature:** `(trim str)`
 
 **Examples:**
-```lisp
+```{arl}
 (trim "  hello  ")  ; => "hello"
 (trim "no spaces")  ; => "no spaces"
 ```
@@ -76,7 +75,7 @@ Format string with sprintf.
 **Signature:** `(format fmt args...)`
 
 **Examples:**
-```lisp
+```{arl}
 (format "Hello, %s!" "world")   ; => "Hello, world!"
 (format "%d + %d = %d" 1 2 3)   ; => "1 + 2 = 3"
 (format "%.2f" 3.14159)          ; => "3.14"
@@ -93,7 +92,7 @@ Check pattern in string (fixed).
 **Signature:** `(string-contains? str pattern [fixed #t])`
 
 **Examples:**
-```lisp
+```{arl}
 (string-contains? "hello world" "world")       ; => #t
 (string-contains? "hello world" "xyz")          ; => #f
 (string-contains? "hello world" "o.*d" :fixed #f)  ; => #t
@@ -110,7 +109,7 @@ Check pattern in string (regex).
 **Signature:** `(string-match? str pattern [fixed #f])`
 
 **Examples:**
-```lisp
+```{arl}
 (string-match? "hello" "^h.*o$" :fixed #f)  ; => #t
 (string-match? "hello" "xyz" :fixed #f)      ; => #f
 (string-match? "hello" "hello" :fixed #t)     ; => #t
@@ -127,7 +126,7 @@ Find pattern index or #nil.
 **Signature:** `(string-find str pattern [fixed #t])`
 
 **Examples:**
-```lisp
+```{arl}
 (string-find "hello world" "world")  ; => 6
 (string-find "hello world" "xyz")    ; => #nil
 (string-find "hello" "l")            ; => 2
@@ -144,7 +143,7 @@ Replace first match. Default is literal (fixed); pass :fixed #f for regex.
 **Signature:** `(string-replace str pattern replacement [fixed #t])`
 
 **Examples:**
-```lisp
+```{arl}
 (string-replace "hello world" "world" "there")    ; => "hello there"
 (string-replace "aaa" "a" "b")                     ; => "baa"
 ```
@@ -160,7 +159,7 @@ Replace all matches. Default is literal (fixed); pass :fixed #f for regex.
 **Signature:** `(string-replace-all str pattern replacement [fixed #t])`
 
 **Examples:**
-```lisp
+```{arl}
 (string-replace-all "aaa" "a" "b")   ; => "bbb"
 (string-replace-all "hello world world" "world" "there")  ; => "hello there there"
 ```
@@ -176,7 +175,7 @@ Concatenate strings together.
 **Signature:** `(string-append args...)`
 
 **Examples:**
-```lisp
+```{arl}
 (string-append "hello" " " "world")  ; => "hello world"
 (string-append "a" "b" "c")          ; => "abc"
 (string-append)                       ; => ""
@@ -193,7 +192,7 @@ Convert value to string representation.
 **Signature:** `(->string x)`
 
 **Examples:**
-```lisp
+```{arl}
 (->string 42)     ; => "42"
 (->string #t)     ; => "TRUE"
 (->string 3.14)   ; => "3.14"
@@ -208,7 +207,7 @@ Get character at index (0-based).
 **Signature:** `(char-at str index)`
 
 **Examples:**
-```lisp
+```{arl}
 (char-at "hello" 0)  ; => "h"
 (char-at "hello" 4)  ; => "o"
 ```
@@ -234,7 +233,7 @@ Extract substring from start (inclusive) to end (exclusive), 0-based.
 **Signature:** `(substring str start end)`
 
 **Examples:**
-```lisp
+```{arl}
 (substring "hello" 1 4)  ; => "ell"
 (substring "hello" 0 5)  ; => "hello"
 (substring "hello" 2 2)  ; => ""
@@ -251,7 +250,7 @@ Return length of string.
 **Signature:** `(string-length str)`
 
 **Examples:**
-```lisp
+```{arl}
 (string-length "hello")  ; => 5
 (string-length "")       ; => 0
 ```
@@ -269,7 +268,7 @@ Convert string to uppercase.
 **Signature:** `(string-upcase str)`
 
 **Examples:**
-```lisp
+```{arl}
 (string-upcase "hello")  ; => "HELLO"
 (string-upcase "Hello World")  ; => "HELLO WORLD"
 ```
@@ -285,7 +284,7 @@ Convert string to lowercase.
 **Signature:** `(string-downcase str)`
 
 **Examples:**
-```lisp
+```{arl}
 (string-downcase "HELLO")  ; => "hello"
 (string-downcase "Hello World")  ; => "hello world"
 ```
@@ -301,7 +300,7 @@ Convert string to title case (capitalize first letter of each word).
 **Signature:** `(string-titlecase str)`
 
 **Examples:**
-```lisp
+```{arl}
 (string-titlecase "hello world")  ; => "Hello World"
 (string-titlecase "HELLO WORLD")  ; => "Hello World"
 ```
@@ -321,7 +320,7 @@ Lexicographic less-than comparison.
 **Signature:** `(string<? a b)`
 
 **Examples:**
-```lisp
+```{arl}
 (string<? "abc" "def")  ; => #t
 (string<? "def" "abc")  ; => #f
 (string<? "abc" "abc")  ; => #f
@@ -336,7 +335,7 @@ Lexicographic greater-than comparison.
 **Signature:** `(string>? a b)`
 
 **Examples:**
-```lisp
+```{arl}
 (string>? "def" "abc")  ; => #t
 (string>? "abc" "def")  ; => #f
 (string>? "abc" "abc")  ; => #f
@@ -351,7 +350,7 @@ String equality comparison.
 **Signature:** `(string=? a b)`
 
 **Examples:**
-```lisp
+```{arl}
 (string=? "hello" "hello")  ; => #t
 (string=? "hello" "world")  ; => #f
 ```
@@ -365,7 +364,7 @@ Lexicographic less-than-or-equal comparison.
 **Signature:** `(string<=? a b)`
 
 **Examples:**
-```lisp
+```{arl}
 (string<=? "abc" "abc")  ; => #t
 (string<=? "abc" "def")  ; => #t
 (string<=? "def" "abc")  ; => #f
@@ -380,7 +379,7 @@ Lexicographic greater-than-or-equal comparison.
 **Signature:** `(string>=? a b)`
 
 **Examples:**
-```lisp
+```{arl}
 (string>=? "abc" "abc")  ; => #t
 (string>=? "def" "abc")  ; => #t
 (string>=? "abc" "def")  ; => #f
@@ -399,7 +398,7 @@ Convert string to list of characters.
 **Signature:** `(string->list str)`
 
 **Examples:**
-```lisp
+```{arl}
 (string->list "hello")  ; => ("h" "e" "l" "l" "o")
 (string->list "")       ; => ()
 ```
@@ -415,7 +414,7 @@ Convert list of characters to string.
 **Signature:** `(list->string lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (list->string (list "h" "e" "l" "l" "o"))  ; => "hello"
 (list->string (list))                        ; => ""
 ```
@@ -431,7 +430,7 @@ Convert number to string with optional base (2-36).
 **Signature:** `(number->string num base-args...)`
 
 **Examples:**
-```lisp
+```{arl}
 (number->string 42)       ; => "42"
 (number->string 255 16)   ; => "ff"
 (number->string 10 2)     ; => "1010"
@@ -449,7 +448,7 @@ Parse string to number with optional base (2-36).
 **Signature:** `(string->number str base-args...)`
 
 **Examples:**
-```lisp
+```{arl}
 (string->number "42")       ; => 42
 (string->number "3.14")     ; => 3.14
 (string->number "ff" 16)    ; => 255
@@ -472,7 +471,7 @@ Read single line from stdin.
 **Signature:** `(read-line [prompt ""])`
 
 **Examples:**
-```lisp
+```{arl}
 (read-line)              ; waits for user input, returns string
 (read-line "Name? ")     ; prints prompt, then waits for input
 ```
@@ -494,7 +493,7 @@ Print value in Arl representation.
 **Signature:** `(print x)`
 
 **Examples:**
-```lisp
+```{arl}
 (print 42)              ; prints "42" and returns 42
 (print (list 1 2 3))    ; prints "(1 2 3)" and returns the list
 ```
@@ -510,7 +509,7 @@ Write string to output (alias for cat).
 **Signature:** `(write-string x)`
 
 **Examples:**
-```lisp
+```{arl}
 (write-string "hello")  ; outputs "hello" with no newline
 ```
 
@@ -539,7 +538,7 @@ Read entire file as string.
 **Signature:** `(read-file path [encoding "UTF-8"])`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (read-file "data.txt")                  ; => file contents as string
 (read-file "data.txt" "latin1")         ; read with specific encoding
 ```
@@ -553,7 +552,7 @@ Read file into list of lines.
 **Signature:** `(read-lines path [encoding "UTF-8"])`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (read-lines "data.txt")  ; => ("line1" "line2" "line3")
 ```
 
@@ -566,7 +565,7 @@ Write string or lines to file.
 **Signature:** `(write-file path content [sep "\n"])`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (write-file "out.txt" "hello world")
 (write-file "out.txt" (list "line1" "line2"))
 ```
@@ -580,7 +579,7 @@ Write list of lines to file.
 **Signature:** `(write-lines path lines [encoding "UTF-8"])`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (write-lines "out.txt" (list "line1" "line2" "line3"))
 ```
 
@@ -593,7 +592,7 @@ Append content to file.
 **Signature:** `(append-file path content [sep "\n"])`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (append-file "log.txt" "new entry\n")
 ```
 
@@ -606,7 +605,7 @@ Return #t if file exists.
 **Signature:** `(file-exists? path)`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (file-exists? "data.txt")    ; => #t or #f
 (file-exists? "nope.txt")    ; => #f
 ```
@@ -620,7 +619,7 @@ Return size of file in bytes.
 **Signature:** `(file-size path)`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (file-size "data.txt")       ; => 1024 (bytes)
 ```
 
@@ -633,7 +632,7 @@ Return file modification time as numeric timestamp.
 **Signature:** `(file-modified-time path)`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (file-modified-time "data.txt")  ; => 1700000000 (numeric timestamp)
 ```
 
@@ -646,7 +645,7 @@ Delete file. Return #t on success.
 **Signature:** `(file-delete path)`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (file-delete "temp.txt")     ; => #t
 ```
 
@@ -663,7 +662,7 @@ Return #t if directory exists.
 **Signature:** `(directory-exists? path)`
 
 **Examples:**
-```lisp
+```{arl}
 (directory-exists? "/tmp")         ; => #t
 (directory-exists? "/nonexistent") ; => #f
 ```
@@ -677,7 +676,7 @@ List directory contents as list of filenames.
 **Signature:** `(directory-list path [full.names #f])`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (directory-list ".")               ; => ("file1.txt" "file2.txt")
 (directory-list "." #t)            ; => ("./file1.txt" "./file2.txt")
 ```
@@ -691,7 +690,7 @@ Delete directory. Return #t on success.
 **Signature:** `(directory-delete path [recursive #t])`
 
 **Examples:**
-```lisp
+```{arl, eval=FALSE}
 (directory-delete "/tmp/mydir")    ; => #t
 ```
 
@@ -708,7 +707,7 @@ Get environment variable value. Return #nil if not set.
 **Signature:** `(getenv name)`
 
 **Examples:**
-```lisp
+```{arl}
 (getenv "HOME")           ; => "/home/user"
 (getenv "UNDEFINED_VAR")  ; => #nil
 ```
@@ -724,7 +723,7 @@ Set environment variable.
 **Signature:** `(setenv name value)`
 
 **Examples:**
-```lisp
+```{arl}
 (setenv "MY_VAR" "hello")  ; => #t
 ```
 
@@ -739,7 +738,7 @@ Execute shell command. Return exit status.
 **Signature:** `(system command)`
 
 **Examples:**
-```lisp
+```{arl}
 (system "ls")              ; => 0 (exit status)
 ```
 
@@ -754,7 +753,7 @@ Execute shell command and capture output as string.
 **Signature:** `(system-output command)`
 
 **Examples:**
-```lisp
+```{arl}
 (system-output "whoami")   ; => "username"
 (system-output "echo hi")  ; => "hi"
 ```
@@ -790,7 +789,7 @@ Print value with newline.
 **Signature:** `(display x)`
 
 **Examples:**
-```lisp
+```{arl}
 (display 42)             ; prints "42" with newline
 (display "hello")        ; prints "hello" with newline
 (display (list 1 2 3))   ; prints "1 2 3" with newline
@@ -817,7 +816,7 @@ Concatenate formatted values into string.
 **Signature:** `(str args...)`
 
 **Examples:**
-```lisp
+```{arl}
 (str "hello" " " "world")  ; => "hello world"
 (str 1 "+" 2)              ; => "1+2"
 ```
@@ -833,7 +832,7 @@ Print value and return it.
 **Signature:** `(trace x rest...)`
 
 **Examples:**
-```lisp
+```{arl}
 (trace 42)               ; prints "42", returns 42
 (trace 42 "result")      ; prints "result: 42", returns 42
 ```

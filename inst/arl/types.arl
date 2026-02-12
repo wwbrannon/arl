@@ -71,7 +71,6 @@
   ;;' @examples
   ;;' (empty? ())  ; => #t
   ;;' (empty? (list))  ; => #t
-  ;;' (empty? [])  ; => #t
   ;;' (empty? (list 1))  ; => #f
   ;;' @note The empty string `""` has length 1 in R and is NOT considered empty!
   ;;' @seealso null?, length= (in `sequences` module)
@@ -91,8 +90,8 @@
 
   ;;' @description Return #t if x is an Arl keyword.
   ;;' @examples
-  ;;' (keyword? :foo)  ; => #t
-  ;;' (keyword? 'foo)  ; => #f
+  ;;' (keyword? ':foo)  ; => #t
+  ;;' (keyword? 'foo)   ; => #f
   (define keyword?
     (lambda (x)
       (isTRUE (inherits x "arl_keyword"))))
@@ -118,7 +117,7 @@
 
   ;;' @description Return #t if x is a non-list atomic vector.
   ;;' @examples
-  ;;' (vector? [1 2 3])  ; => #t
+  ;;' (vector? (c 1 2 3))  ; => #t
   ;;' @note Tests whether x is a non-list atomic vector (numeric, character, logical, etc.). R lists are NOT vectors by this predicate.
   (define vector?
     (lambda (x)
@@ -176,7 +175,7 @@
 
   ;;' @description Test if x is an environment (including R6 objects).
   ;;' @examples
-  ;;' (environment? (base-env))  ; => #t
+  ;;' (environment? (baseenv))  ; => #t
   ;;' @note R6 objects, dicts, and sets are all environments in R, so this predicate returns #t for them.
   (define environment?
     (lambda (x)
@@ -184,7 +183,7 @@
 
   ;;' @description Test if x is a Reference Class object.
   ;;' @examples
-  ;;' (is-refclass? (base-env))  ; => #f
+  ;;' (is-refclass? (baseenv))  ; => #f
   (define is-refclass?
     (lambda (x)
       (and (r/call "isS4" (list x))

@@ -1,8 +1,6 @@
 ---
 title: "Standard Library: Higher-Order Functions"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Standard Library: Higher-Order Functions}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +12,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 ## Core Higher-Order Functions {#section-core-higher-order-functions}
@@ -29,7 +28,7 @@ Apply function to each element.
 **Signature:** `(map fn lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (map (lambda (x) (* x 2)) (list 1 2 3))  ; => (2 4 6)
 (map (lambda (x) (* x x)) (list 1 2 3 4)) ; => (1 4 9 16)
 (map string-length (list "hi" "hello"))     ; => (2 5)
@@ -46,7 +45,7 @@ Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
 **Signature:** `(mapcat fn lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (mapcat (lambda (x) (list x (* x 10))) (list 1 2 3))  ; => (1 10 2 20 3 30)
 (mapcat (lambda (x) (list x x)) (list 1 2 3))          ; => (1 1 2 2 3 3)
 ```
@@ -62,7 +61,7 @@ Filter items by predicate.
 **Signature:** `(filter pred lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (filter (lambda (x) (> x 2)) (list 1 2 3 4 5))  ; => (3 4 5)
 (filter even? (list 1 2 3 4 5 6))                 ; => (2 4 6)
 (filter string? (list 1 "a" 2 "b"))               ; => ("a" "b")
@@ -79,7 +78,7 @@ Remove items where predicate is true.
 **Signature:** `(remove pred lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (remove even? (list 1 2 3 4 5 6))                 ; => (1 3 5)
 (remove (lambda (x) (> x 3)) (list 1 2 3 4 5))   ; => (1 2 3)
 ```
@@ -95,7 +94,7 @@ Reduce list with function.
 **Signature:** `(reduce fn lst rest...)`
 
 **Examples:**
-```lisp
+```{arl}
 (reduce + (list 1 2 3 4))       ; => 10
 (reduce * (list 1 2 3 4))       ; => 24
 (reduce + (list 1 2 3) 100)     ; => 106 (with initial value)
@@ -113,7 +112,7 @@ Left fold alias for reduce.
 **Signature:** `(foldl fn lst rest...)`
 
 **Examples:**
-```lisp
+```{arl}
 (foldl + (list 1 2 3 4))        ; => 10
 (foldl - (list 1 2 3) 10)       ; => 4 (10 - 1 - 2 - 3)
 (foldl cons (list 1 2 3) (list)) ; => (3 2 1) (reverses)
@@ -130,7 +129,7 @@ Right fold.
 **Signature:** `(foldr fn lst rest...)`
 
 **Examples:**
-```lisp
+```{arl}
 (foldr + (list 1 2 3 4))        ; => 10
 (foldr - (list 1 2 3) 10)       ; => -8 (1 - (2 - (3 - 10)))
 (foldr cons (list 1 2 3) (list)) ; => (1 2 3) (preserves order)
@@ -147,7 +146,7 @@ Return #t if predicate true for all items.
 **Signature:** `(every? pred lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (every? positive? (list 1 2 3))       ; => #t
 (every? even? (list 2 4 6))           ; => #t
 (every? even? (list 2 3 6))           ; => #f
@@ -165,7 +164,7 @@ Return #t if predicate true for any item.
 **Signature:** `(any? pred lst)`
 
 **Examples:**
-```lisp
+```{arl}
 (any? even? (list 1 3 4 5))           ; => #t
 (any? negative? (list 1 2 3))         ; => #f
 (any? string? (list 1 "a" 2))         ; => #t
@@ -182,7 +181,7 @@ Negate predicate.
 **Signature:** `(complement pred)`
 
 **Examples:**
-```lisp
+```{arl}
 (define not-even? (complement even?))
 (not-even? 3)                          ; => #t
 (not-even? 4)                          ; => #f
@@ -200,7 +199,7 @@ Compose two functions.
 **Signature:** `(compose f g)`
 
 **Examples:**
-```lisp
+```{arl}
 (define add1-then-double (compose (lambda (x) (* x 2)) (lambda (x) (+ x 1))))
 (add1-then-double 3)                   ; => 8  ((3+1)*2)
 (define abs-sum (compose abs +))
@@ -218,7 +217,7 @@ Partially apply function.
 **Signature:** `(partial fn captured...)`
 
 **Examples:**
-```lisp
+```{arl}
 (define add5 (partial + 5))
 (add5 3)                               ; => 8
 (define greet (partial string-append "Hello, "))
@@ -242,7 +241,7 @@ with optional initial arguments.
 **Signature:** `(curry fn initial-args...)`
 
 **Examples:**
-```lisp
+```{arl}
 (define add (curry (lambda (a b) (+ a b))))
 (define add5 (add 5))
 (add5 3)                               ; => 8
@@ -261,7 +260,7 @@ Juxtaposition - apply multiple functions to same args, return list of results.
 **Signature:** `(juxt fns...)`
 
 **Examples:**
-```lisp
+```{arl}
 (define stats (juxt min max mean))
 (stats (c 1 2 3 4 5))                  ; => (1 5 3)
 (define first-and-last (juxt car last))
@@ -279,7 +278,7 @@ Return a function that always returns the given value.
 **Signature:** `(constantly value)`
 
 **Examples:**
-```lisp
+```{arl}
 (define always-42 (constantly 42))
 (always-42)                             ; => 42
 (always-42 "ignored" "args")            ; => 42
@@ -295,7 +294,7 @@ Apply function n times to initial value.
 **Signature:** `(iterate fn n init)`
 
 **Examples:**
-```lisp
+```{arl}
 (iterate (lambda (x) (* x 2)) 5 1)     ; => 32  (1 -> 2 -> 4 -> 8 -> 16 -> 32)
 (iterate inc 3 0)                       ; => 3   (0 -> 1 -> 2 -> 3)
 (iterate (lambda (x) (* x x)) 2 2)     ; => 65536  (2 -> 4 -> 16 -> 65536... wait: 2^2=4, 4^2=16)
@@ -314,7 +313,7 @@ predicate is false, stops when next value would satisfy predicate.
 **Signature:** `(iterate-until fn init pred)`
 
 **Examples:**
-```lisp
+```{arl}
 (iterate-until (lambda (x) (* x 2)) 1 (lambda (x) (> x 100)))
   ; => (1 2 4 8 16 32 64)  (stops before 128 which exceeds 100)
 (iterate-until inc 0 (lambda (x) (>= x 5)))
@@ -332,7 +331,7 @@ Memoize function - cache results for previously seen arguments.
 **Signature:** `(memoize fn)`
 
 **Examples:**
-```lisp
+```{arl}
 (define slow-fib (lambda (n) (if (< n 2) n (+ (slow-fib (- n 1)) (slow-fib (- n 2))))))
 (define fast-fib (memoize slow-fib))
 (fast-fib 10)                          ; => 55
@@ -354,7 +353,7 @@ Logical negation with Arl truthiness.
 **Signature:** `(not x)`
 
 **Examples:**
-```lisp
+```{arl}
 (not #t)          ; => #f
 (not #f)          ; => #t
 (not 0)           ; => #t (0 is falsy)
@@ -376,7 +375,7 @@ Logical exclusive OR with Arl truthiness.
 **Signature:** `(xor a b)`
 
 **Examples:**
-```lisp
+```{arl}
 (xor #t #f)       ; => #t
 (xor #f #t)       ; => #t
 (xor #t #t)       ; => #f

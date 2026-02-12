@@ -77,6 +77,7 @@
   ;;' Functions for reading from and writing to files.
 
   ;;' @description Read entire file as string.
+  ;;' @noeval
   ;;' @examples
   ;;' (read-file "data.txt")                  ; => file contents as string
   ;;' (read-file "data.txt" "latin1")         ; read with specific encoding
@@ -88,6 +89,7 @@
       (paste lines :collapse "\n")))
 
   ;;' @description Read file into list of lines.
+  ;;' @noeval
   ;;' @examples
   ;;' (read-lines "data.txt")  ; => ("line1" "line2" "line3")
   (define read-lines
@@ -98,6 +100,7 @@
       (as.list lines)))
 
   ;;' @description Write string or lines to file.
+  ;;' @noeval
   ;;' @examples
   ;;' (write-file "out.txt" "hello world")
   ;;' (write-file "out.txt" (list "line1" "line2"))
@@ -110,6 +113,7 @@
       #t))
 
   ;;' @description Write list of lines to file.
+  ;;' @noeval
   ;;' @examples
   ;;' (write-lines "out.txt" (list "line1" "line2" "line3"))
   (define write-lines
@@ -121,6 +125,7 @@
       #t))
 
   ;;' @description Append content to file.
+  ;;' @noeval
   ;;' @examples
   ;;' (append-file "log.txt" "new entry\n")
   (define append-file
@@ -132,6 +137,7 @@
       #t))
 
   ;;' @description Return #t if file exists.
+  ;;' @noeval
   ;;' @examples
   ;;' (file-exists? "data.txt")    ; => #t or #f
   ;;' (file-exists? "nope.txt")    ; => #f
@@ -144,6 +150,7 @@
   (define __rsystem (get "system" :envir (baseenv)))
 
   ;;' @description Return size of file in bytes.
+  ;;' @noeval
   ;;' @examples
   ;;' (file-size "data.txt")       ; => 1024 (bytes)
   (define file-size
@@ -153,6 +160,7 @@
         (stop (sprintf "file-size: file does not exist: %s" path)))))
 
   ;;' @description Return file modification time as numeric timestamp.
+  ;;' @noeval
   ;;' @examples
   ;;' (file-modified-time "data.txt")  ; => 1700000000 (numeric timestamp)
   (define file-modified-time
@@ -164,6 +172,7 @@
         (stop (sprintf "file-modified-time: file does not exist: %s" path)))))
 
   ;;' @description Delete file. Return #t on success.
+  ;;' @noeval
   ;;' @examples
   ;;' (file-delete "temp.txt")     ; => #t
   (define file-delete
@@ -186,6 +195,7 @@
       (isTRUE (dir.exists path))))
 
   ;;' @description List directory contents as list of filenames.
+  ;;' @noeval
   ;;' @examples
   ;;' (directory-list ".")               ; => ("file1.txt" "file2.txt")
   ;;' (directory-list "." #t)            ; => ("./file1.txt" "./file2.txt")
@@ -196,6 +206,7 @@
         (stop (sprintf "directory-list: directory does not exist: %s" path)))))
 
   ;;' @description Delete directory. Return #t on success.
+  ;;' @noeval
   ;;' @examples
   ;;' (directory-delete "/tmp/mydir")    ; => #t
   (define directory-delete

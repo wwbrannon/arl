@@ -1,8 +1,6 @@
 ---
 title: "Standard Library: Control Flow and Macros"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Standard Library: Control Flow and Macros}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +12,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 ## Control Flow Macros {#section-control-flow-macros}
@@ -25,7 +24,7 @@ Evaluate body forms when test is truthy.
 **Signature:** `(when test body...)`
 
 **Examples:**
-```lisp
+```{arl}
 (when #t "yes")          ; => "yes"
 (when #f "yes")          ; => #nil
 (when (> 3 2) (+ 1 1))   ; => 2
@@ -42,7 +41,7 @@ Evaluate body forms when test is falsy.
 **Signature:** `(unless test body...)`
 
 **Examples:**
-```lisp
+```{arl}
 (unless #f "fallback")    ; => "fallback"
 (unless #t "fallback")    ; => #nil
 (unless (= 1 2) "nope")  ; => "nope"
@@ -61,7 +60,7 @@ Multi-branch conditional.
 **Signature:** `(cond clause rest...)`
 
 **Examples:**
-```lisp
+```{arl}
 (cond
   ((= 1 2) "a")
   ((= 1 1) "b")
@@ -85,7 +84,7 @@ Key expression is evaluated only once.
 **Signature:** `(case key clause rest...)`
 
 **Examples:**
-```lisp
+```{arl}
 (case (+ 1 1)
   ((1) "one")
   ((2) "two")
@@ -113,7 +112,7 @@ Evaluate thunk with error/finally handlers.
 **Signature:** `(try* thunk [error_handler] [finally_handler])`
 
 **Examples:**
-```lisp
+```{arl}
 (try* (lambda () 42))                           ; => 42
 (try* (lambda () (stop "oops"))
       :error_handler (lambda (e) "caught"))      ; => "caught"
@@ -156,7 +155,7 @@ Bind names to values within body.
 **Signature:** `(let bindings body...)`
 
 **Examples:**
-```lisp
+```{arl}
 (let ((x 1) (y 2))
   (+ x y))               ; => 3
 
@@ -175,7 +174,7 @@ Bind names to values within body.
 Sequential let bindings.
 
 **Examples:**
-```lisp
+```{arl}
 (let* ((x 1) (y (+ x 1)))
   (+ x y))               ; => 3
 
@@ -196,7 +195,7 @@ Recursive bindings.
 **Signature:** `(letrec bindings body...)`
 
 **Examples:**
-```lisp
+```{arl}
 (letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
          (odd?  (lambda (n) (if (= n 0) #f (even? (- n 1))))))
   (even? 10))             ; => #t
@@ -215,7 +214,7 @@ Bind pattern to value and evaluate body when value is truthy.
 **Signature:** `(when-let binding body...)`
 
 **Examples:**
-```lisp
+```{arl}
 (when-let ((x (assoc 'a '((a . 1) (b . 2)))))
   (cdr x))               ; => 1
 
@@ -234,7 +233,7 @@ Bind pattern to value and choose branch based on its truthiness.
 **Signature:** `(if-let binding then rest...)`
 
 **Examples:**
-```lisp
+```{arl}
 (if-let ((x 42))
   (+ x 1)
   "nothing")             ; => 43
@@ -257,7 +256,7 @@ Loop over seq binding var each iteration. Expands to while.
 **Signature:** `(for binding body...)`
 
 **Examples:**
-```lisp
+```{arl}
 (define total 0)
 (for (x '(1 2 3))
   (set! total (+ total x)))
@@ -332,7 +331,7 @@ Clojure-style loop/recur that expands to an R while loop.
 **Signature:** `(loop bindings body...)`
 
 **Examples:**
-```lisp
+```{arl}
 ;; Factorial via loop/recur
 (loop ((n 5) (acc 1))
   (if (= n 0)
@@ -359,7 +358,7 @@ Repeat body until test is truthy.
 **Signature:** `(until test body...)`
 
 **Examples:**
-```lisp
+```{arl}
 (define i 0)
 (until (= i 5)
   (set! i (+ i 1)))
@@ -379,7 +378,7 @@ Thread value through forms (first argument).
 **Signature:** `(-> value forms...)`
 
 **Examples:**
-```lisp
+```{arl}
 (-> 5 (+ 3) (* 2))       ; => 16  ; (5+3)*2
 (-> '(1 2 3) (cons 0))   ; => (0 1 2 3)
 (-> "hello"
@@ -399,12 +398,12 @@ Thread value through forms (last argument).
 **Signature:** `(->> value forms...)`
 
 **Examples:**
-```lisp
+```{arl}
 (->> '(1 2 3) (map (lambda (x) (* x x))))  ; => (1 4 9)
 (->> 5 (- 10))           ; => 5  ; (- 10 5)
-(->> '(3 1 2)
-     (sort)
-     (car))              ; => 1
+(->> '(1 2 3)
+     (map (lambda (x) (+ x 10)))
+     (car))              ; => 11
 ```
 
 **Note:** Threads the value as the LAST argument to each successive form. Compare with `->` which threads as the first argument.
@@ -422,10 +421,10 @@ Macro wrapper around try* with catch/finally.
 **Signature:** `(try body clauses...)`
 
 **Examples:**
-```lisp
+```{arl}
 ;; Basic try with catch
 (try (/ 1 0)
-  (catch e (string "caught: " ($ e "message"))))
+  (catch e (string-append "caught: " ($ e "message"))))
 
 ;; try with finally (always runs)
 (try (+ 1 2)
@@ -433,7 +432,7 @@ Macro wrapper around try* with catch/finally.
 
 ;; try with both catch and finally
 (try (stop "oops")
-  (catch e (string "error: " ($ e "message")))
+  (catch e (string-append "error: " ($ e "message")))
   (finally (display "done")))       ; => "error: oops"
 
 ;; try with no handlers (just evaluates body)

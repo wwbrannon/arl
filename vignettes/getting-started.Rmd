@@ -1,8 +1,6 @@
 ---
 title: "Getting Started"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Getting Started}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 Arl is a Lisp dialect implemented in and with access to R. This vignette
@@ -35,7 +34,7 @@ The engine loads the base stdlib automatically.
 
 At the prompt, you can enter Arl expressions:
 
-```lisp
+```{arl}
 (+ 1 2)
 (define x 10)
 (* x 2)
@@ -80,7 +79,7 @@ sequentially and return the last value.
 
 From the REPL, use `load` to run a file in the current environment so that its definitions are visible:
 
-```lisp
+```{arl, eval=FALSE}
 (load "script.arl")
 ```
 
@@ -100,7 +99,7 @@ The engine loads all stdlib modules automatically, so functions like `when`,
 understand the module structure or are working with a bare engine, you can
 import modules explicitly:
 
-```lisp
+```{arl, eval=FALSE}
 (import control)   ; when/unless/cond/case
 (import binding)   ; let/let*/letrec
 (import looping)   ; for/loop/recur/until
@@ -113,7 +112,7 @@ modules.
 
 ## Core syntax
 
-```lisp
+```{arl}
 ; Function definition
 (define factorial
   (lambda (n)
@@ -152,7 +151,7 @@ this package.
 Arl has a built-in help system. Use `help` with a string to look up any
 special form, macro, or function:
 
-```lisp
+```{arl, eval=FALSE}
 (help "define")   ; special form
 (help "when")     ; macro -- shows docs and usage
 (help "map")      ; stdlib function
@@ -174,7 +173,7 @@ runtime). Both produce the same `arl_doc` attribute on the function, which
 Annotation comments use the `;;'` prefix and support roxygen-like tags.
 Place them immediately before a `define`:
 
-```lisp
+```{arl}
 ;;' @description Compute the square of x.
 ;;' @examples
 ;;' (square 3)   ; => 9
@@ -198,7 +197,7 @@ Supported tags:
 
 Multi-line content is written with continuation `;;'` lines:
 
-```lisp
+```{arl, eval=FALSE}
 ;;' @description Concatenate strings with a separator.
 ;;'   Accepts any number of string arguments.
 ;;' @examples
@@ -218,7 +217,7 @@ functions and module exports.
 is useful for interactive work, dynamically generated functions, or adding
 fields incrementally:
 
-```lisp
+```{arl}
 (define double (lambda (x) (* x 2)))
 
 ; Set just the description (backward-compatible form)
@@ -239,7 +238,7 @@ not erase a previously set `:description`.
 
 `doc` reads fields from a function's documentation:
 
-```lisp
+```{arl}
 (doc double)              ; => "Double x." (description, the default)
 (doc double "examples")   ; => "(double 5) ; => 10"
 (doc double "note")       ; => "Pure function."

@@ -1,8 +1,6 @@
 ---
 title: "Standard Library: Type Conversions"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Standard Library: Type Conversions}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,6 +12,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 These functions are provided by the `conversions` module (`inst/arl/conversions.arl`).
@@ -27,7 +26,7 @@ Convert symbol to string.
 **Signature:** `(symbol->string sym)`
 
 **Examples:**
-```lisp
+```{arl}
 (symbol->string 'hello)  ; => "hello"
 (symbol->string 'x)      ; => "x"
 ```
@@ -45,7 +44,7 @@ Convert string to symbol.
 **Signature:** `(string->symbol str)`
 
 **Examples:**
-```lisp
+```{arl}
 (string->symbol "hello")  ; => hello (a symbol)
 (string->symbol "x")      ; => x
 ```
@@ -63,7 +62,7 @@ Convert value to symbol.
 **Signature:** `(->symbol x)`
 
 **Examples:**
-```lisp
+```{arl}
 (->symbol "hello")  ; => hello (a symbol)
 (->symbol 42)       ; => 42 (symbol named "42")
 (->symbol 'x)       ; => x (already a symbol, returned as-is)
@@ -84,7 +83,7 @@ Convert value to number.
 **Signature:** `(->number x)`
 
 **Examples:**
-```lisp
+```{arl}
 (->number "42")     ; => 42
 (->number "3.14")   ; => 3.14
 (->number 5)        ; => 5 (already a number)
@@ -105,7 +104,7 @@ Convert exact number to inexact (integer to double).
 **Signature:** `(exact->inexact x)`
 
 **Examples:**
-```lisp
+```{arl}
 (exact->inexact 5L)     ; => 5.0 (integer to double)
 (exact->inexact 3.14)   ; => 3.14 (already double, returned as double)
 ```
@@ -123,7 +122,7 @@ Convert inexact number to exact (double to integer, rounds to nearest).
 **Signature:** `(inexact->exact x)`
 
 **Examples:**
-```lisp
+```{arl}
 (inexact->exact 3.7)    ; => 4L (rounds to nearest integer)
 (inexact->exact 3.2)    ; => 3L
 (inexact->exact 5L)     ; => 5L (already integer)
@@ -146,7 +145,7 @@ Convert value to integer.
 **Signature:** `(->integer x)`
 
 **Examples:**
-```lisp
+```{arl}
 (->integer 3.7)     ; => 3L (truncates toward zero)
 (->integer "42")    ; => 42L
 (->integer 5L)      ; => 5L (already integer)
@@ -165,7 +164,7 @@ Convert value to double.
 **Signature:** `(->double x)`
 
 **Examples:**
-```lisp
+```{arl}
 (->double 5L)       ; => 5.0
 (->double "3.14")   ; => 3.14
 (->double 2.5)      ; => 2.5 (already double)
@@ -182,7 +181,7 @@ Convert value to complex number (imaginary part = 0).
 **Signature:** `(->complex x)`
 
 **Examples:**
-```lisp
+```{arl}
 (->complex 5)       ; => 5+0i
 (->complex 3.14)    ; => 3.14+0i
 (->complex "2+3i")  ; => 2+3i
@@ -201,8 +200,8 @@ Convert value to list.
 **Signature:** `(->list x)`
 
 **Examples:**
-```lisp
-(->list (vector 1 2 3))  ; => (1 2 3)
+```{arl}
+(->list (c 1 2 3))       ; => (1 2 3)
 (->list '(1 2 3))        ; => (1 2 3) (already a list)
 ```
 
@@ -217,7 +216,7 @@ Convert value to vector.
 **Signature:** `(->vector x)`
 
 **Examples:**
-```lisp
+```{arl}
 (->vector '(1 2 3))   ; => [1] 1 2 3 (atomic vector)
 (->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)
 ```

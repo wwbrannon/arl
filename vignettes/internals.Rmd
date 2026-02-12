@@ -1,8 +1,6 @@
 ---
 title: "Compiler and Internals"
-output:
-  rmarkdown::html_vignette:
-    highlight: null
+output: arl::arl_html_vignette
 vignette: >
   %\VignetteIndexEntry{Compiler and Internals}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +9,7 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
 ```
 
 This vignette explains how Arl code is compiled and executed. It is intended
@@ -54,7 +53,7 @@ Arl does not produce bytecode or machine code. Instead, the compiler
 translates Arl AST nodes into R `language` objects -- the same objects
 you get from `quote()` in R. For example:
 
-```lisp
+```{arl}
 (define x (+ 1 2))
 ```
 
@@ -129,7 +128,7 @@ The key methods:
 
 For example:
 
-```lisp
+```{arl}
 (define factorial
   (lambda (n acc)
     (if (< n 2)
@@ -169,7 +168,7 @@ operations).
 When an `if` test is a compile-time constant, the compiler eliminates the
 dead branch entirely (`eval_constant_test` in `compile_if`). For example:
 
-```lisp
+```{arl}
 (if #t "yes" "no")
 ```
 
@@ -222,7 +221,7 @@ Examples you might encounter:
 Attempting to bind a `.__`-prefixed name with `define` or `set!` is an
 error:
 
-```lisp
+```{arl, error=TRUE}
 (define .__foo 1)  ;; Error: reserved name
 (set! .__bar 2)    ;; Error: reserved name
 ```
