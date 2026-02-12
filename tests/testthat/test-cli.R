@@ -131,6 +131,31 @@ test_that("install_cli installs wrapper to target dir", {
   )
 })
 
+test_that("install_cli warns when target dir is not on PATH", {
+  temp_dir <- tempfile("arl-cli-notinpath-")
+  dir.create(temp_dir)
+  source <- file.path(temp_dir, "arl-src")
+  writeLines(c("#!/usr/bin/env sh", "echo arl"), source)
+
+  messages <- testthat::with_mocked_bindings(
+    {
+      capture.output(
+        arl::install_cli(target_dir = temp_dir, overwrite = TRUE),
+        type = "message"
+      )
+    },
+    system.file = function(..., package = NULL) {
+      if (!is.null(package) && package == "arl") {
+        return(source)
+      }
+      base::system.file(..., package = package)
+    },
+    .package = "base"
+  )
+
+  expect_true(any(grepl("PATH", messages)))
+})
+
 # Environment Loading ----
 
 test_that("Engine initializes environment with stdlib", {

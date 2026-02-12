@@ -418,6 +418,19 @@ same_file <- function(path1, path2) {
   FALSE
 }
 
+# Warn if the given directory is not on the current PATH.
+# @param dir_path Expanded directory path.
+# @keywords internal
+# @noRd
+install_cli_path_warning <- function(dir_path) {
+  path_entries <- strsplit(Sys.getenv("PATH"), .Platform$path.sep, fixed = TRUE)[[1]]
+  normalized_entries <- normalizePath(path_entries, winslash = "/", mustWork = FALSE)
+  normalized_target <- normalizePath(dir_path, winslash = "/", mustWork = FALSE)
+  if (!any(normalized_entries == normalized_target)) {
+    message("Add ", dir_path, " to your PATH to run `arl` from the shell.")
+  }
+}
+
 #' Install the Arl CLI wrapper
 #'
 #' Copies the packaged CLI wrapper into a writable bin directory and makes it
@@ -466,6 +479,7 @@ install_cli <- function(target_dir = Sys.getenv("ARL_BIN_DIR", unset = ""), over
   if (same_file(source, target)) {
     message("Target already points to source, skipping copy")
     message("Already installed at ", target)
+    install_cli_path_warning(chosen)
     return(invisible(target))
   }
 
@@ -487,12 +501,7 @@ install_cli <- function(target_dir = Sys.getenv("ARL_BIN_DIR", unset = ""), over
 
   message("Installed ", .pkg_name, " CLI to ", target)
 
-  path_entries <- strsplit(Sys.getenv("PATH"), .Platform$path.sep, fixed = TRUE)[[1]]
-  normalized_entries <- normalizePath(path_entries, winslash = "/", mustWork = FALSE)
-  normalized_target <- normalizePath(chosen, winslash = "/", mustWork = FALSE)
-  if (!any(normalized_entries == normalized_target)) {
-    message("Add ", chosen, " to your PATH to run `arl` from the shell.")
-  }
+  install_cli_path_warning(chosen)
 
   invisible(target)
 }
