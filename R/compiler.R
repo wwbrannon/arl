@@ -513,6 +513,8 @@ Compiler <- R6::R6Class(
         if (!is.null(ann$note) && nchar(ann$note) > 0) {
           doc_list$note <- ann$note
         }
+        if (isTRUE(ann$internal)) doc_list$internal <- TRUE
+        if (isTRUE(ann$noeval)) doc_list$noeval <- TRUE
         if (length(doc_list) > 0) {
           # Use .__attach_doc helper (handles primitive wrapping)
           return(as.call(list(

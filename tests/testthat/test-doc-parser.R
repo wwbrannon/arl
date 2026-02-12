@@ -181,6 +181,56 @@ test_that("string-input modules get annotation-based docs via eval_text", {
   expect_match(doc$examples, "greet")
 })
 
+test_that("DocParser parses @internal tag", {
+  tmp <- tempfile(fileext = ".arl")
+  on.exit(unlink(tmp))
+  writeLines(c(
+    "(module test-mod",
+    "  (export-all)",
+    "",
+    "  ;;' @internal",
+    "  ;;' @description Internal helper.",
+    "  (define __helper (lambda (x) x))",
+    "",
+    "  ;;' @description Public function.",
+    "  (define pub-fn (lambda (x) x))",
+    ")"
+  ), tmp)
+
+  parser <- DocParser$new()
+  result <- parser$parse_file(tmp)
+
+  expect_true(result$functions[["__helper"]]$internal)
+  expect_false(result$functions[["pub-fn"]]$internal)
+})
+
+test_that("DocParser parses @noeval tag", {
+  tmp <- tempfile(fileext = ".arl")
+  on.exit(unlink(tmp))
+  writeLines(c(
+    "(module test-mod",
+    "  (export io-fn pure-fn)",
+    "",
+    "  ;;' @noeval",
+    "  ;;' @description Reads a file.",
+    "  ;;' @examples",
+    "  ;;' (io-fn \"test.txt\")",
+    "  (define io-fn (lambda (path) path))",
+    "",
+    "  ;;' @description Pure function.",
+    "  ;;' @examples",
+    "  ;;' (pure-fn 42)",
+    "  (define pure-fn (lambda (x) x))",
+    ")"
+  ), tmp)
+
+  parser <- DocParser$new()
+  result <- parser$parse_file(tmp)
+
+  expect_true(result$functions[["io-fn"]]$noeval)
+  expect_false(result$functions[["pure-fn"]]$noeval)
+})
+
 test_that("annotation-based docs are available via compiler", {
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))

@@ -195,6 +195,85 @@ test_that("doc! works on primitives", {
   expect_equal(result, 6)
 })
 
+test_that("@internal flag is present in arl_doc at runtime", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  code <- '(module int-test-mod
+  (export __int-helper int-pub-fn)
+
+  ;;\' @internal
+  ;;\' @description Internal helper.
+  (define __int-helper (lambda (x) x))
+
+  ;;\' @description Public function.
+  (define int-pub-fn (lambda (x) x))
+)'
+
+  child <- new.env(parent = env)
+  engine$eval_text(code, env = child)
+  engine$eval_text("(import int-test-mod)", env = child)
+
+  helper <- get("__int-helper", envir = child)
+  doc_h <- attr(helper, "arl_doc", exact = TRUE)
+  expect_true(isTRUE(doc_h$internal))
+
+  pub <- get("int-pub-fn", envir = child)
+  doc_p <- attr(pub, "arl_doc", exact = TRUE)
+  expect_null(doc_p$internal)
+})
+
+test_that("@noeval flag is present in arl_doc at runtime", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  code <- '(module noeval-test-mod
+  (export io-fn pure-fn)
+
+  ;;\' @noeval
+  ;;\' @description Reads a file.
+  ;;\' @examples
+  ;;\' (io-fn "test.txt")
+  (define io-fn (lambda (path) path))
+
+  ;;\' @description Pure function.
+  ;;\' @examples
+  ;;\' (pure-fn 42)
+  (define pure-fn (lambda (x) x))
+)'
+
+  engine$eval_text(code, env = env)
+  engine$eval_text("(import noeval-test-mod)", env = env)
+
+  io <- get("io-fn", envir = env)
+  doc_io <- attr(io, "arl_doc", exact = TRUE)
+  expect_true(isTRUE(doc_io$noeval))
+
+  pure <- get("pure-fn", envir = env)
+  doc_pure <- attr(pure, "arl_doc", exact = TRUE)
+  expect_null(doc_pure$noeval)
+})
+
+test_that("@noeval flag round-trips through doc/doc!", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  engine$eval_in_env(engine$read('(define my-fn (lambda (x) x))')[[1]], env)
+  engine$eval_in_env(engine$read('(doc! my-fn :noeval #t)')[[1]], env)
+
+  result <- engine$eval_in_env(engine$read('(doc my-fn "noeval")')[[1]], env)
+  expect_true(result)
+})
+
+test_that("stdlib @noeval functions carry the flag at runtime", {
+  engine <- make_engine()
+  env <- engine$env$env
+
+  rf <- get("read-file", envir = env)
+  doc <- attr(rf, "arl_doc", exact = TRUE)
+  expect_true(isTRUE(doc$noeval))
+})
+
 test_that("doc! keyword args evaluate variable values", {
   engine <- make_engine()
   env <- engine$env$env

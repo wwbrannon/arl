@@ -718,6 +718,13 @@ Engine <- R6::R6Class(
             doc[[tolower(field)]] <- val
           }
         }
+        # Boolean metadata flags
+        for (flag in c("Internal", "Noeval")) {
+          val <- if (flag %in% colnames(m)) m[i, flag] else NA
+          if (!is.na(val) && nzchar(val) && tolower(val) %in% c("yes", "true")) {
+            doc[[tolower(flag)]] <- TRUE
+          }
+        }
         if (length(doc) > 0L) {
           attr(obj, "arl_doc") <- doc
           assign(name, obj, envir = env)
