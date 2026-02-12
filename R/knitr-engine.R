@@ -222,10 +222,13 @@ register_knitr_engine <- function() {
 #'
 #' @param pandoc_args Additional Pandoc arguments (merged with the
 #'   syntax-definition argument added automatically).
+#' @param check_title Whether to check that the vignette title matches the
+#'   \code{VignetteIndexEntry}.  Set to \code{FALSE} for pkgdown-only articles
+#'   that intentionally omit a \code{VignetteIndexEntry}.
 #' @param ... Arguments passed to \code{\link[rmarkdown]{html_vignette}}.
 #' @return An R Markdown output format object.
 #' @export
-arl_html_vignette <- function(pandoc_args = NULL, ...) {
+arl_html_vignette <- function(pandoc_args = NULL, check_title = TRUE, ...) {
   # During R CMD check the file is in the installed package; during
   # source-level builds (devtools::build_vignettes) it is under ../inst/
   syntax_file <- system.file("pandoc", "arl.xml", package = "arl")
@@ -235,6 +238,10 @@ arl_html_vignette <- function(pandoc_args = NULL, ...) {
 
   if (file.exists(syntax_file)) {
     pandoc_args <- c(pandoc_args, "--syntax-definition", syntax_file)
+  }
+
+  if (!check_title) {
+    options(rmarkdown.html_vignette.check_title = FALSE)
   }
 
   rmarkdown::html_vignette(pandoc_args = pandoc_args, ...)

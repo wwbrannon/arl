@@ -4,11 +4,15 @@
 \alias{arl_html_vignette}
 \title{HTML vignette format with Arl syntax highlighting}
 \usage{
-arl_html_vignette(pandoc_args = NULL, ...)
+arl_html_vignette(pandoc_args = NULL, check_title = TRUE, ...)
 }
 \arguments{
 \item{pandoc_args}{Additional Pandoc arguments (merged with the
 syntax-definition argument added automatically).}
+
+\item{check_title}{Whether to check that the vignette title matches the
+\code{VignetteIndexEntry}.  Set to \code{FALSE} for pkgdown-only articles
+that intentionally omit a \code{VignetteIndexEntry}.}
 
 \item{...}{Arguments passed to \code{\link[rmarkdown]{html_vignette}}.}
 }
