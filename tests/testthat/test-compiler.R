@@ -161,7 +161,7 @@ test_that("multiple engines have independent current-env", {
 
 make_env <- function(engine, init = NULL) {
   env <- new.env()
-  stdlib_env(engine, env) # nolint: object_usage_linter.
+  toplevel_env(engine, env) # nolint: object_usage_linter.
   if (is.function(init)) {
     init(env)
   }

@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("car returns first element", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   # Test with R list
   expect_equal(env$car(list(1, 2, 3)), 1)
@@ -16,7 +16,7 @@ test_that("car returns first element", {
 
 test_that("cdr returns rest of list", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   # Test with R list
   result <- env$cdr(list(1, 2, 3))
@@ -26,7 +26,7 @@ test_that("cdr returns rest of list", {
 })
 
 test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
 
   # From list values
   expect_equal(engine$eval_in_env(engine$read("(begin (import list) (cadr (list 1 2 3 4)))")[[1]], env), 2)
@@ -62,7 +62,7 @@ test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", 
 
 test_that("ordinal list accessors work (second, third, fourth)", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   expect_equal(env$second(list(1, 2, 3)), 2)
   expect_equal(env$third(list(1, 2, 3, 4)), 3)
@@ -75,7 +75,7 @@ test_that("ordinal list accessors work (second, third, fourth)", {
 
 test_that("first is an alias for car", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   expect_equal(env$first(list(1, 2, 3)), 1)
   expect_null(env$first(list()))
@@ -84,7 +84,7 @@ test_that("first is an alias for car", {
 
 test_that("rest is an alias for cdr", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   expect_equal(env$rest(list(1, 2, 3)), list(2, 3))
   expect_equal(env$rest(list(1)), list())
@@ -93,7 +93,7 @@ test_that("rest is an alias for cdr", {
 
 test_that("last returns last element", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   expect_equal(env$last(list(1, 2, 3)), 3)
   expect_equal(env$last(list(42)), 42)
@@ -103,7 +103,7 @@ test_that("last returns last element", {
 
 test_that("nth returns element at index", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   lst <- list(10, 20, 30, 40)
 
@@ -119,7 +119,7 @@ test_that("nth returns element at index", {
 })
 
 test_that("assoc family: assoc, assoc-by-equal?, assoc-by-identical?, assoc-by-==, rassoc, rassoc-by-equal?", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
 
   # assoc (equal?) and assoc-by-equal? (alias)
   alist <- list(list(quote(a), 1), list(quote(b), 2), list(quote(c), 3))
@@ -142,7 +142,7 @@ test_that("assoc family: assoc, assoc-by-equal?, assoc-by-identical?, assoc-by-=
 })
 
 test_that("assq and assv error (cannot implement eq?/eqv? in R)", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   expect_error(
     engine$eval_in_env(engine$read("(assq 'x (list (list 'x 1)))")[[1]], env),
     "assq cannot be properly implemented"
@@ -155,7 +155,7 @@ test_that("assq and assv error (cannot implement eq?/eqv? in R)", {
 
 test_that("cons adds element to front", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   result <- env$cons(1, list(2, 3))
   expect_equal(result[[1]], 1)
@@ -164,7 +164,7 @@ test_that("cons adds element to front", {
 })
 
 test_that("cons with non-list cdr produces dotted pair (arl_cons)", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   result <- engine$eval_in_env(engine$read("(cons 'a 'b)")[[1]], env)
   expect_true(r6_isinstance(result, "Cons"))
   expect_equal(as.character(result$car), "a")
@@ -172,21 +172,21 @@ test_that("cons with non-list cdr produces dotted pair (arl_cons)", {
 })
 
 test_that("car and cdr on dotted pair", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   pair <- engine$eval_in_env(engine$read("'(a . 42)")[[1]], env)
   expect_equal(as.character(env$car(pair)), "a")
   expect_equal(env$cdr(pair), 42)
 })
 
 test_that("list? is false but pair? is true for dotted pair (Cons)", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   pair <- engine$eval_in_env(engine$read("(cons 1 2)")[[1]], env)
   expect_false(env$`list?`(pair))
   expect_true(env$`pair?`(pair))  # pair? = dotted pair (Cons)
 })
 
 test_that("__as-list on improper list returns proper prefix only", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   pl <- engine$read("'(a b . c)")[[1]][[2]]
   expect_true(r6_isinstance(pl, "Cons"))
   prefix <- env$`__as-list`(pl)
@@ -197,21 +197,21 @@ test_that("__as-list on improper list returns proper prefix only", {
 
 test_that("append combines lists", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   expect_equal(env$append(list(1, 2), list(3)), list(1, 2, 3))
 })
 
 test_that("reverse reverses list order", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   expect_equal(env$reverse(list(1, 2, 3)), list(3, 2, 1))
 })
 
 test_that("list* constructs list with final element as tail", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   expect_equal(env$`list*`(1, list(2, 3)), list(1, 2, 3))
 })
@@ -221,7 +221,7 @@ test_that("list* constructs list with final element as tail", {
 # ============================================================================
 
 test_that("range generates numeric sequences", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env)
 
   # Basic range
@@ -251,7 +251,7 @@ test_that("range generates numeric sequences", {
 })
 
 test_that("iota generates sequences with count", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env)
 
   # Basic iota (count from 0)
@@ -281,7 +281,7 @@ test_that("iota generates sequences with count", {
 })
 
 test_that("make-list creates repeated values", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env)
 
   # Repeat number
@@ -306,7 +306,7 @@ test_that("make-list creates repeated values", {
 })
 
 test_that("list-ref accesses list by index", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env)
 
   # list-ref is an alias for nth (0-indexed)
@@ -325,7 +325,7 @@ test_that("list-ref accesses list by index", {
 })
 
 test_that("list-tail returns list without first k elements", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env)
 
   # Drop first 2 elements
@@ -354,7 +354,7 @@ test_that("list-tail returns list without first k elements", {
 # ============================================================================
 
 test_that("range errors when step is zero", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env)
 
   expect_error(
@@ -364,7 +364,7 @@ test_that("range errors when step is zero", {
 
 test_that("nth errors on negative index", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   expect_error(env$nth(list(1, 2, 3), -1), "out of bounds")
 })

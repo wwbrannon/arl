@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("assert passes on true condition", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # Should return #t
@@ -25,7 +25,7 @@ test_that("assert passes on true condition", {
 
 test_that("assert fails on false condition", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   expect_error(
@@ -39,7 +39,7 @@ test_that("assert fails on false condition", {
 
 test_that("assert accepts custom error message", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   expect_error(
@@ -50,7 +50,7 @@ test_that("assert accepts custom error message", {
 
 test_that("assert-equal compares values with equal?", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # Equal numbers
@@ -71,7 +71,7 @@ test_that("assert-equal compares values with equal?", {
 
 test_that("assert-equal fails on unequal values", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   expect_error(
@@ -91,7 +91,7 @@ test_that("assert-equal fails on unequal values", {
 
 test_that("assert-true passes on truthy values", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # #t
@@ -112,7 +112,7 @@ test_that("assert-true passes on truthy values", {
 
 test_that("assert-true fails on falsy values", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   expect_error(
@@ -126,7 +126,7 @@ test_that("assert-true fails on falsy values", {
 
 test_that("assert-false passes on falsy values", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # #f
@@ -142,7 +142,7 @@ test_that("assert-false passes on falsy values", {
 
 test_that("assert-false fails on truthy values", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   expect_error(
@@ -160,7 +160,7 @@ test_that("assert-false fails on truthy values", {
 
 test_that("assert-eq compares identity with identical?", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # Identical numbers
@@ -182,7 +182,7 @@ test_that("assert-eq compares identity with identical?", {
 
 test_that("assert-eq passes for structurally identical lists", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # R's identical() returns TRUE for structurally identical lists
@@ -198,7 +198,7 @@ test_that("assert-eq passes for structurally identical lists", {
 
 test_that("assert-eq fails on non-identical values", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # Different list contents
@@ -216,7 +216,7 @@ test_that("assert-eq fails on non-identical values", {
 
 test_that("assert-error passes when function throws error", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # Function that throws error
@@ -232,7 +232,7 @@ test_that("assert-error passes when function throws error", {
 
 test_that("assert-error fails when function doesn't throw", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   expect_error(
@@ -248,7 +248,7 @@ test_that("assert-error fails when function doesn't throw", {
 
 test_that("assert functions work with expressions", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # assert with expression
@@ -274,7 +274,7 @@ test_that("assert functions work with expressions", {
 
 test_that("assert functions work in combination", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # Multiple assertions in sequence
@@ -289,7 +289,7 @@ test_that("assert functions work in combination", {
 
 test_that("assert functions short-circuit on first failure", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("assert"), env)
 
   # First assertion fails, second never evaluated

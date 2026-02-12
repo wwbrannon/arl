@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("macroexpand-1 expands macros one level", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   # Define a simple macro
   engine$eval_in_env(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env)
@@ -20,7 +20,7 @@ test_that("macroexpand-1 expands macros one level", {
 
 test_that("macroexpand fully expands nested macros", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   # Define nested macros
   engine$eval_in_env(engine$read("(defmacro inner (x) `(* ,x 2))")[[1]], env)
@@ -37,7 +37,7 @@ test_that("macroexpand fully expands nested macros", {
 
 test_that("macro? predicate identifies macros", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   # Define a macro
   engine$eval_in_env(engine$read("(defmacro test-macro (x) x)")[[1]], env)

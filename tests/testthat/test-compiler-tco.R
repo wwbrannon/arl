@@ -54,7 +54,7 @@ test_that("TCO: GCD (swap pattern tests temp correctness)", {
 
 test_that("TCO: works with cond (macro-expands to nested if)", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("control"), env)
   engine$eval_in_env(
     engine$read("

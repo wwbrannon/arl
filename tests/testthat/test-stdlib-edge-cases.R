@@ -11,7 +11,7 @@ engine <- make_engine()
 # Helper to create test env with stdlib
 setup_env <- function() {
   env <- new.env()
-  stdlib_env(engine, env) # nolint: object_usage_linter.
+  toplevel_env(engine, env) # nolint: object_usage_linter.
   env
 }
 
@@ -289,7 +289,7 @@ test_that("char-at errors on negative index", {
 
 test_that("foldl and foldr with init value from Arl", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("functional"), env)
 
   result <- engine$eval_in_env(
@@ -303,7 +303,7 @@ test_that("foldl and foldr with init value from Arl", {
 
 test_that("repeatedly from Arl code (sequences version, n fn order)", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   engine$eval_in_env(engine$read("(define counter 0)")[[1]], env)
   result <- engine$eval_in_env(

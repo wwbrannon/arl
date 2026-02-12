@@ -149,7 +149,7 @@ Evaluation, macro utilities, dictionaries, sets, structs, assertions, and R inte
 `set-union`, `set-intersection`, `set-difference`, `defstruct`, `assert`,
 `assert-equal`, `assert-true`, `assert-false`, `assert-eq`, `assert-error`,
 `eval`, `read`, `write`, `capture`, `gensym`, `macro?`, `macroexpand`,
-`macroexpand-1`, `promise?`, `force`, `promise-expr`, `r/eval`, `stdlib-env`,
+`macroexpand-1`, `promise?`, `force`, `promise-expr`, `r/eval`, `toplevel-env`,
 `current-env`
 
 ## Source files

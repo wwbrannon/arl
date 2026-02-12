@@ -1,7 +1,7 @@
 engine <- make_engine()
 
 test_that("suppressWarnings suppresses warnings", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Without suppressWarnings, this would generate a warning
   # We capture output to check that no warning appears
@@ -15,14 +15,14 @@ test_that("suppressWarnings suppresses warnings", {
 })
 
 test_that("suppressWarnings returns the value", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   result <- engine$eval_text("(suppressWarnings (+ 1 2))", env = env)
   expect_equal(result, 3)
 })
 
 test_that("suppressMessages suppresses messages", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Create an R function in global env that generates a message
   test_msg <- function() { message("test message"); 42 }
@@ -39,7 +39,7 @@ test_that("suppressMessages suppresses messages", {
 })
 
 test_that("with evaluates expression in data context", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Create a simple test with a named list (easier than data.frame)
   test_list <- list(x = c(1, 2, 3), y = c(4, 5, 6))
@@ -54,7 +54,7 @@ test_that("with evaluates expression in data context", {
 })
 
 test_that("within modifies and returns data", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Create a data frame in global env
   test_df <- data.frame(x = 1:3, y = 4:6)
@@ -69,7 +69,7 @@ test_that("within modifies and returns data", {
 })
 
 test_that("subset filters rows with NSE condition", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Create a data frame in global env
   test_df <- data.frame(x = 1:5, y = c(10, 20, 30, 40, 50))
@@ -83,7 +83,7 @@ test_that("subset filters rows with NSE condition", {
 })
 
 test_that("subset works with complex conditions", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   test_df <- data.frame(a = 1:4, b = 5:8)
   assign("test_df2", test_df, envir = .GlobalEnv)
@@ -96,7 +96,7 @@ test_that("subset works with complex conditions", {
 })
 
 test_that("transform raises helpful error", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   expect_error(
     engine$eval_text("(transform)", env = env),
@@ -105,7 +105,7 @@ test_that("transform raises helpful error", {
 })
 
 test_that("NSE wrappers work with R's base functions correctly", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   test_df <- data.frame(a = 1:3)
   assign("test_df6", test_df, envir = .GlobalEnv)
@@ -118,7 +118,7 @@ test_that("NSE wrappers work with R's base functions correctly", {
 })
 
 test_that("NSE wrappers handle nested expressions", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   test_df <- data.frame(x = 1:3, y = 4:6)
   assign("test_df7", test_df, envir = .GlobalEnv)
@@ -134,7 +134,7 @@ test_that("NSE wrappers handle nested expressions", {
 })
 
 test_that("promise-expr extracts expression from delay", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Create a delayed expression
   result <- engine$eval_text("
@@ -148,7 +148,7 @@ test_that("promise-expr extracts expression from delay", {
 })
 
 test_that("promise-expr errors on non-promise", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   expect_error(
     engine$eval_text("(promise-expr 42)", env = env),
@@ -157,7 +157,7 @@ test_that("promise-expr errors on non-promise", {
 })
 
 test_that("substitute with 1 arg gives helpful error", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   expect_error(
     engine$eval_text("(substitute 'x)", env = env),
@@ -166,7 +166,7 @@ test_that("substitute with 1 arg gives helpful error", {
 })
 
 test_that("substitute with 2 args performs substitution", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   result <- engine$eval_text("
     (define expr '(+ x y))
@@ -179,7 +179,7 @@ test_that("substitute with 2 args performs substitution", {
 })
 
 test_that("substitute with wrong number of args errors", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   expect_error(
     engine$eval_text("(substitute 'a 'b 'c)", env = env),

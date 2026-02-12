@@ -61,7 +61,7 @@ test_that("module is cached after first load", {
   writeLines('(define cached-var 42)', module_path)
 
   engine <- make_engine()
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # First load
   engine$eval_text(sprintf('(load "%s")', module_path))
@@ -166,7 +166,7 @@ test_that("load can access previously defined symbols", {
   writeLines('(+ existing-x 10)', module_path)
 
   engine <- make_engine()
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Define a symbol first
   engine$eval_text("(define existing-x 5)")
@@ -194,7 +194,7 @@ test_that("nested module loads", {
   ), module_a_path)
 
   engine <- make_engine()
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Load module A (which loads B)
   engine$eval_text(sprintf('(load "%s")', module_a_path))
@@ -225,7 +225,7 @@ test_that("circular module dependency detection", {
   writeLines(sprintf('(load "%s")', module_a_path), module_b_path)
 
   engine <- make_engine()
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Circular dependencies should error (recursion limit or C stack limit on older R)
   expect_error(
@@ -248,7 +248,7 @@ test_that("load with relative path", {
   writeLines('(define relative-var 777)', module_path)
 
   engine <- make_engine()
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   result <- engine$eval_text(sprintf('(load "%s")', module_path))
   var_result <- engine$eval_text("relative-var")
@@ -302,7 +302,7 @@ test_that("module defines macro", {
   ), module_path)
 
   engine <- make_engine()
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
 
   # Load module with macro
   engine$eval_text(sprintf('(load "%s")', module_path))

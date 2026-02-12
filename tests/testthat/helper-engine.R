@@ -7,7 +7,7 @@ make_engine <- function(...) {
   }
 }
 
-stdlib_env <- function(engine, env = NULL) {
+toplevel_env <- function(engine, env = NULL) {
   if (is.null(env)) {
     return(engine$env$env)
   }

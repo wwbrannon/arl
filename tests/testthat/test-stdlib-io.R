@@ -8,7 +8,7 @@ engine <- make_engine()
 
 test_that("read-file and write-file work with strings", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -26,7 +26,7 @@ test_that("read-file and write-file work with strings", {
 
 test_that("read-lines and write-lines work with lists", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -44,7 +44,7 @@ test_that("read-lines and write-lines work with lists", {
 
 test_that("write-file works with lists converted to lines", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -62,7 +62,7 @@ test_that("write-file works with lists converted to lines", {
 
 test_that("append-file adds content to existing file", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -84,7 +84,7 @@ test_that("append-file adds content to existing file", {
 
 test_that("file-exists? checks file existence", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -106,7 +106,7 @@ test_that("file-exists? checks file existence", {
 
 test_that("file-size returns file size in bytes", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -123,7 +123,7 @@ test_that("file-size returns file size in bytes", {
 
 test_that("file-size errors on non-existent file", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -136,7 +136,7 @@ test_that("file-size errors on non-existent file", {
 
 test_that("file-modified-time returns modification timestamp", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -155,7 +155,7 @@ test_that("file-modified-time returns modification timestamp", {
 
 test_that("file-delete removes file", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -171,7 +171,7 @@ test_that("file-delete removes file", {
 
 test_that("file-delete errors on non-existent file", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- tempfile()
@@ -188,7 +188,7 @@ test_that("file-delete errors on non-existent file", {
 
 test_that("directory-exists? checks directory existence", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- file.path(tempdir(), "test_dir")
@@ -210,7 +210,7 @@ test_that("directory-exists? checks directory existence", {
 
 test_that("directory-list returns list of filenames", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- file.path(tempdir(), "test_dir")
@@ -232,7 +232,7 @@ test_that("directory-list returns list of filenames", {
 
 test_that("directory-list with full.names returns full paths", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- file.path(tempdir(), "test_dir")
@@ -251,7 +251,7 @@ test_that("directory-list with full.names returns full paths", {
 
 test_that("directory-list errors on non-existent directory", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- file.path(tempdir(), "nonexistent_dir")
@@ -264,7 +264,7 @@ test_that("directory-list errors on non-existent directory", {
 
 test_that("directory-delete removes directory", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- file.path(tempdir(), "test_dir")
@@ -281,7 +281,7 @@ test_that("directory-delete removes directory", {
 
 test_that("directory-delete errors on non-existent directory", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   tmp <- file.path(tempdir(), "nonexistent_dir")
@@ -298,7 +298,7 @@ test_that("directory-delete errors on non-existent directory", {
 
 test_that("read parses Arl expressions from strings", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   # Parse simple expression
@@ -321,7 +321,7 @@ test_that("read parses Arl expressions from strings", {
 
 test_that("read-from-string is alias for read", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   result1 <- engine$eval_in_env(
@@ -338,7 +338,7 @@ test_that("read-from-string is alias for read", {
 
 test_that("setenv and getenv work with environment variables", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   # Set variable
@@ -356,7 +356,7 @@ test_that("setenv and getenv work with environment variables", {
 
 test_that("getenv returns #nil for unset variable", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   Sys.unsetenv("ARL_NONEXISTENT_VAR")
@@ -372,7 +372,7 @@ test_that("getenv returns #nil for unset variable", {
 
 test_that("system executes commands and returns exit code", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   # Successful command (exit code 0)
@@ -388,7 +388,7 @@ test_that("system executes commands and returns exit code", {
 
 test_that("system-output captures command output", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   result <- engine$eval_in_env(
@@ -404,7 +404,7 @@ test_that("system-output captures command output", {
 
 test_that("write-string outputs string", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   output <- capture.output(
@@ -415,7 +415,7 @@ test_that("write-string outputs string", {
 
 test_that("newline outputs a newline", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   output <- capture.output(
@@ -425,7 +425,7 @@ test_that("newline outputs a newline", {
 
 test_that("print outputs value and returns it", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("io"), env)
 
   output <- capture.output(

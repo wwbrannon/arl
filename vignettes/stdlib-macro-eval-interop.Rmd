@@ -1056,16 +1056,16 @@ Extract the unevaluated expression from a promise.
 
 ## Environment Introspection {#section-environment-introspection}
 
-### stdlib-env {#stdlib-env}
+### toplevel-env {#toplevel-env}
 
-Return the stdlib environment (the environment where all
+Return the top-level environment (the environment where all
 standard library bindings live).
 
-**Signature:** `(stdlib-env)`
+**Signature:** `(toplevel-env)`
 
 **Examples:**
 ```{arl}
-(environment? (stdlib-env))  ; => #t
+(environment? (toplevel-env))  ; => #t
 ```
 
 **See also:** [current-env](#current-env)
@@ -1083,7 +1083,7 @@ Return the current Arl evaluation environment.
 (environment? (current-env))  ; => #t
 ```
 
-**See also:** [stdlib-env](#stdlib-env)
+**See also:** [toplevel-env](#toplevel-env)
 
 ---
 

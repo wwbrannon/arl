@@ -203,7 +203,7 @@ The test suite includes both R tests (`tests/testthat/`) and native tests (`test
 ```r
 test_that("string-upcase handles edge cases", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   expect_equal(env$`string-upcase`("hello"), "HELLO")
   expect_equal(env$`string-upcase`(""), "")

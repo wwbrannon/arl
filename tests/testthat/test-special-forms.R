@@ -33,7 +33,7 @@ test_that("delay compiles to a promise", {
 })
 
 test_that("promise? detects promises", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
   result <- engine$eval_in_env(engine$read("(promise? (delay 1))")[[1]], env)
   expect_true(isTRUE(result))
 
@@ -42,7 +42,7 @@ test_that("promise? detects promises", {
 })
 
 test_that("delay is lazy until forced", {
-  env <- stdlib_env(engine)
+  env <- toplevel_env(engine)
   engine$eval_in_env(
     engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  counter)")[[1]],
     env

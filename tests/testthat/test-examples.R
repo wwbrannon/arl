@@ -10,7 +10,7 @@ run_example <- function(example_name) {
   testthat::skip_if_not(file.exists(example_path), "Example file not found")
 
   engine <- Engine$new(env = new.env())
-  stdlib_env(engine) # nolint: object_usage_linter.
+  toplevel_env(engine) # nolint: object_usage_linter.
   env <- engine$env$env
 
   out_dir <- tempfile("arl-example-")

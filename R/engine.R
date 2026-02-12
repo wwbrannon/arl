@@ -184,7 +184,7 @@ Engine <- R6::R6Class(
       self$env$get_registry(".__macros", create = TRUE)
 
       #
-      # Cons-cell primitives (bound in stdlib env so no globalenv/package lookup)
+      # Cons-cell primitives (bound in top-level env so no globalenv/package lookup)
       #
 
       env$`.__cons` <- function(car, cdr) Cons$new(car, cdr)
@@ -242,7 +242,7 @@ Engine <- R6::R6Class(
         self$parser$write(expr)
       }
 
-      env$`stdlib-env` <- function() env
+      env$`toplevel-env` <- function() env
       env$`current-env` <- function() {
         if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
           return(get(".__env", envir = parent.frame(), inherits = TRUE))
@@ -340,7 +340,7 @@ Engine <- R6::R6Class(
       # compile.
       #
       # Why it exists: Arl overrides R's while, for, and other control-flow
-      # keywords with its own implementations in the stdlib environment. But
+      # keywords with its own implementations in the top-level environment. But
       # sometimes you need R's actual while/for -- for example, the try/catch
       # macro in control.arl builds tryCatch calls that R needs to evaluate
       # natively, and r-interop.arl uses it for suppressWarnings,

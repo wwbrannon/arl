@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("let binds variables in parallel", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   # Simple parallel bindings
@@ -31,7 +31,7 @@ test_that("let binds variables in parallel", {
 
 test_that("let* binds variables sequentially", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   # Sequential bindings - later bindings see earlier ones
@@ -57,7 +57,7 @@ test_that("let* binds variables sequentially", {
 
 test_that("letrec allows recursive bindings", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   # Recursive factorial
@@ -82,7 +82,7 @@ test_that("letrec allows recursive bindings", {
 
 test_that("destructuring-bind unpacks structures", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   # Simple list destructuring
@@ -103,7 +103,7 @@ test_that("destructuring-bind unpacks structures", {
 
 test_that("pattern-symbols extracts symbols from patterns", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   # Single symbol
@@ -128,7 +128,7 @@ test_that("pattern-symbols extracts symbols from patterns", {
 
 test_that("binding macros when-let and if-let work", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("binding"), env)
 
   result <- engine$eval_in_env(engine$read("(when-let (x 10) (+ x 1))")[[1]], env)

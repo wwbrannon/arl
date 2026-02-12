@@ -121,7 +121,7 @@
   ;;' @section S3 Dispatch System
   ;;' Arl implements a simplified S3-style dispatch system for generic functions
   ;;' like `equal?`. Types are identified by their first S3 class, and methods
-  ;;' are registered as `generic.class` bindings in the stdlib environment.
+  ;;' are registered as `generic.class` bindings in the top-level environment.
 
   ;;' @description Extract the first S3 class from an object.
   ;;' @examples
@@ -163,7 +163,7 @@
   ;;' @seealso use-method
   (define set-method!
     (lambda (generic-name class-name method-fun)
-      (define env (stdlib-env))
+      (define env (toplevel-env))
       (define method-name (paste0 (as.character generic-name) "." (as.character class-name)))
       (assign method-name method-fun :envir env)))
 
@@ -176,7 +176,7 @@
     ; pass args explicitly because we can't use R's magic internals
     (lambda (generic-name obj args)
       (begin
-        (define env (stdlib-env))
+        (define env (toplevel-env))
         (define class-name (s3-type obj))
         (define method-name (paste0 (as.character generic-name) "." class-name))
         (define method (get0 method-name :envir env :inherits #f))

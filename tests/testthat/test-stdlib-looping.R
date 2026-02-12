@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("until macro repeats until test is truthy", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("looping"), env)
 
   result <- engine$eval_in_env(
@@ -16,7 +16,7 @@ test_that("until macro repeats until test is truthy", {
 
 test_that("loop/recur iterates with rebinding", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("looping"), env)
 
   result <- engine$eval_in_env(
@@ -52,7 +52,7 @@ test_that("loop/recur iterates with rebinding", {
 
 test_that("recur errors outside loop", {
   env <- new.env(parent = baseenv())
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
   import_stdlib_modules(engine, c("looping"), env)
 
   expect_error(engine$eval_in_env(engine$read("(recur 1)")[[1]], env), "recur can only be used inside loop")

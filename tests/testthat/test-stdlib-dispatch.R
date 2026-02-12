@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("equal? dispatches on class of first argument", {
   env <- new.env()
-  stdlib_env(engine, env)
+  toplevel_env(engine, env)
 
   # Built-in methods: list and environment
   expect_true(env$`equal?`(list(1, 2, 3), list(1, 2, 3)))
@@ -43,7 +43,7 @@ test_that("equal? dispatches on class of first argument", {
 
 test_that("use-method dispatches using generic-name parameter (not hardcoded to equal?)", {
   eng <- make_engine()
-  env <- stdlib_env(eng)
+  env <- toplevel_env(eng)
 
   # Register a custom generic (not equal?) via set-method!
   # Use (begin ...) to avoid string being consumed as docstring
@@ -68,7 +68,7 @@ test_that("use-method dispatches using generic-name parameter (not hardcoded to 
 test_that("set-method! registers and overwrites methods", {
   # Fresh engine so equal? and set-method! share one env (no prior test env / copy)
   eng <- make_engine()
-  env <- stdlib_env(eng)
+  env <- toplevel_env(eng)
 
   # Register a method and use it
   my_a <- structure(list(42), class = "my_thing")
@@ -89,14 +89,14 @@ test_that("set-method! registers and overwrites methods", {
   expect_true(identical(res_first, TRUE))
 
   eng$eval_in_env(eng$read('(set-method! (quote equal?) (quote overwrite_test) equal?.list)')[[1]], env)
-  # Binding must exist in (stdlib-env) after set-method!
-  exists_after <- eng$eval_in_env(eng$read('(r/call "exists" (list "equal?.overwrite_test" :envir (stdlib-env)))')[[1]], env)
+  # Binding must exist in (toplevel-env) after set-method!
+  exists_after <- eng$eval_in_env(eng$read('(r/call "exists" (list "equal?.overwrite_test" :envir (toplevel-env)))')[[1]], env)
   expect_true(identical(exists_after, TRUE))
   # set up some objects to use
   eng$eval_in_env(eng$read("(define o3 (r/call \"structure\" (list (list 3) :class \"overwrite_test\")))")[[1]], env)
   eng$eval_in_env(eng$read("(define o4 (r/call \"structure\" (list (list 4) :class \"overwrite_test\")))")[[1]], env)
-  # Directly get method from (stdlib-env) and call it: should be the one able to return FALSE
-  direct_call <- eng$eval_in_env(eng$read('(begin (define e (stdlib-env)) (define m (r/call "get0" (list "equal?.overwrite_test" :envir e :inherits #f))) (m o3 o4 #f))')[[1]], env)
+  # Directly get method from (toplevel-env) and call it: should be the one able to return FALSE
+  direct_call <- eng$eval_in_env(eng$read('(begin (define e (toplevel-env)) (define m (r/call "get0" (list "equal?.overwrite_test" :envir e :inherits #f))) (m o3 o4 #f))')[[1]], env)
   expect_identical(direct_call, FALSE)
   res_second <- eng$eval_in_env(eng$read("(equal? o3 o4)")[[1]], env)
   expect_identical(res_second, FALSE)

@@ -3,7 +3,7 @@
 engine <- make_engine()
 
 test_that("sort works with comparator function", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env)
 
   result <- engine$eval_in_env(
@@ -27,7 +27,7 @@ test_that("sort works with comparator function", {
 })
 
 test_that("sort-by works with key function and comparator", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env)
 
   # Sort by absolute value
@@ -42,7 +42,7 @@ test_that("sort-by works with key function and comparator", {
 })
 
 test_that("stable-sort preserves order of equal elements", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env)
 
   # Basic sorting
@@ -63,7 +63,7 @@ test_that("stable-sort preserves order of equal elements", {
 })
 
 test_that("stable-sort handles edge cases", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env)
 
   # Empty list
@@ -109,7 +109,7 @@ test_that("stable-sort handles edge cases", {
 })
 
 test_that("stable-sort stability across various patterns", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env)
 
   # Many equal keys: all 1s with different second elements
@@ -144,7 +144,7 @@ test_that("stable-sort stability across various patterns", {
 })
 
 test_that("merge combines two sorted lists", {
-  env <- stdlib_env(engine, new.env())
+  env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env)
 
   result <- engine$eval_in_env(

@@ -141,7 +141,7 @@ Recursively compare list elements.
 
 Arl implements a simplified S3-style dispatch system for generic functions
 like `equal?`. Types are identified by their first S3 class, and methods
-are registered as `generic.class` bindings in the stdlib environment.
+are registered as `generic.class` bindings in the top-level environment.
 
 ### s3-type {#s3-type}
 
