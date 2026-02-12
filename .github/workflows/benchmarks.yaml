@@ -9,6 +9,10 @@ permissions:
   contents: write
   deployments: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   benchmark:
     runs-on: ubuntu-latest
@@ -32,7 +36,7 @@ jobs:
         run: make bench
 
       - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
+        uses: benchmark-action/github-action-benchmark@4bdcce38c94cec68da58d012ac24b7b1155efe8b # v1.20.7
         with:
           tool: customSmallerIsBetter
           output-file-path: benchmarks/results/benchmark-results.json

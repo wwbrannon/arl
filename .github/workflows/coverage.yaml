@@ -10,6 +10,10 @@ permissions:
   contents: read
   pull-requests: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   coverage:
     runs-on: ubuntu-latest
@@ -42,22 +46,22 @@ jobs:
         run: make coverage
 
       - name: Upload R coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/r/coverage.xml
           flags: r-code
           name: R Coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
 
       - name: Upload Arl coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/arl/coverage.json
           flags: arl-code
           name: Arl Coverage
-          fail_ci_if_error: false
+          fail_ci_if_error: true
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
@@ -92,7 +96,7 @@ jobs:
             });
 
             const botComment = comments.find(comment =>
-              comment.user.type === 'Bot' &&
+              comment.user.login === 'github-actions[bot]' &&
               comment.body.includes('Coverage Report')
             );
 
