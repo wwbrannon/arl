@@ -150,10 +150,12 @@ register_knitr_engine <- function() {
 #' \code{--syntax-definition} to Pandoc so that \code{{arl}} code blocks
 #' receive proper syntax highlighting.
 #'
+#' @param pandoc_args Additional Pandoc arguments (merged with the
+#'   syntax-definition argument added automatically).
 #' @param ... Arguments passed to \code{\link[rmarkdown]{html_vignette}}.
 #' @return An R Markdown output format object.
 #' @export
-arl_html_vignette <- function(...) {
+arl_html_vignette <- function(pandoc_args = NULL, ...) {
   # During R CMD check the file is in the installed package; during
   # source-level builds (devtools::build_vignettes) it is under ../inst/
   syntax_file <- system.file("pandoc", "arl.xml", package = "arl")
@@ -161,8 +163,8 @@ arl_html_vignette <- function(...) {
     syntax_file <- file.path("..", "inst", "pandoc", "arl.xml")
   }
 
-  pandoc_args <- if (file.exists(syntax_file)) {
-    c("--syntax-definition", syntax_file)
+  if (file.exists(syntax_file)) {
+    pandoc_args <- c(pandoc_args, "--syntax-definition", syntax_file)
   }
 
   rmarkdown::html_vignette(pandoc_args = pandoc_args, ...)

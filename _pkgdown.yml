@@ -98,6 +98,10 @@ reference:
     contents:
       - cli
       - install_cli
+  - title: Vignette infrastructure
+    contents:
+      - arl_html_vignette
+      - register_knitr_engine
 
 articles:
   - title: Guides
