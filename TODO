@@ -1,11 +1,7 @@
-o) do we need codecov.yml and .coverage.yml
-
-o) rename package
-o) also remember to update gh-pages branch benchmark data
-
 o) update README
 
 o) figure out how to host the docs
 o) enable actions / get workflows running
+o) make the site prettier?
 
 o) run other cran submission steps

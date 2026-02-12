@@ -138,7 +138,7 @@ generate_combined_report()
 
 ### Configuration
 
-Coverage thresholds and settings are defined in `.coverage.yml`:
+Coverage thresholds and settings are defined in `codecov.yml`:
 - R code target: 80%
 - Arl code target: 85%
 - Output directories and formats
@@ -213,6 +213,5 @@ All `coverage/` contents are git-ignored except `.gitkeep`.
 
 ### Configuration Files
 
-- **`.coverage.yml`**: Central configuration for all coverage settings
-- **`codecov.yml`**: Codecov.io integration settings
+- **`codecov.yml`**: Coverage settings; Codecov.io integration settings
 - **`.github/workflows/coverage.yaml`**: CI workflow definition

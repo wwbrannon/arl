@@ -115,6 +115,7 @@ ignore:
   - "man/**"
   - "tools/**"
   - "inst/doc/**"
+  - "inst/arl/.arl_cache/**"
 
 # Parsing settings
 parsers:
