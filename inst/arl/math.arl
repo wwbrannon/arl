@@ -768,18 +768,4 @@
                   0
                   (__r/ (__rabs (__r* a b)) (gcd a b)))))
             (Reduce lcm-two args))))))
-
-  ;;' @section Migration from predicates Module
-  ;;' Numeric type predicates were previously in the `predicates` module. They are now in the `math` module:
-  ;;'
-  ;;' ```lisp
-  ;;' ; Old (before reorganization)
-  ;;' (import predicates)
-  ;;'
-  ;;' ; New (after reorganization)
-  ;;' (import math)  ; for real?, complex?, rational?, exact?, inexact?
-  ;;' (import types) ; for number?
-  ;;' ```
-  ;;'
-  ;;' The function signatures and behavior remain unchanged.
 )

@@ -196,16 +196,6 @@ inserts tracking calls at three points:
 The tracker maintains a set of coverable lines derived from AST analysis,
 and coverage reports compare executed lines against this set.
 
-## Compiled vs interpreted fallback
-
-The compiler returns `NULL` when it cannot compile an expression (e.g.,
-unrecognized forms or constructs that require interpreter features). In
-this case, the engine falls back to the interpreted evaluation path. The
-`last_error` field on the compiler records why compilation failed.
-
-In practice, the compiler handles all standard Arl code. The fallback
-exists as a safety net for edge cases.
-
 ## Reserved internal names
 
 If you inspect compiled output (via `inspect_compilation`) or peek inside

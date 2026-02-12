@@ -508,6 +508,14 @@ Variadic greater-than-or-equal comparison. Checks all adjacent pairs.
 
 ---
 
+### __null_safe_eq {#__null_safe_eq}
+
+NULL-safe equality comparison following Scheme semantics.
+
+**Signature:** `(__null_safe_eq a b)`
+
+---
+
 ### == {#num-eq-eq}
 
 Variadic equality comparison. Checks all adjacent pairs.
@@ -1044,19 +1052,4 @@ Return least common multiple of arguments.
 **See also:** [gcd](#gcd)
 
 ---
-
-## Migration from predicates Module {#section-migration-from-predicates-module}
-
-Numeric type predicates were previously in the `predicates` module. They are now in the `math` module:
-
-```lisp
-; Old (before reorganization)
-(import predicates)
-
-; New (after reorganization)
-(import math)  ; for real?, complex?, rational?, exact?, inexact?
-(import types) ; for number?
-```
-
-The function signatures and behavior remain unchanged.
 

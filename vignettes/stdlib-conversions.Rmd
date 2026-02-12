@@ -228,21 +228,3 @@ Convert value to vector.
 
 ---
 
-## Migration from predicates Module {#section-migration-from-predicates-module}
-
-Type conversion functions have always been in the `conversions` module.
-However, the related numeric type predicates (`exact?`, `inexact?`, `integer?`, etc.)
-were previously in the `predicates` module and are now in the `math` module:
-
-```lisp
-; Old (before reorganization)
-(import predicates)
-
-; New (after reorganization)
-(import conversions)  ; for ->number, ->integer, exact->inexact, etc.
-(import math)         ; for exact?, inexact?, integer?, real?, etc.
-(import types)        ; for number?, string?, symbol?, etc.
-```
-
-The function signatures and behavior remain unchanged.
-

@@ -230,18 +230,4 @@
       (if (not (environment? b))
         #f
         (env-equal? a b))))
-
-  ;;' @section Migration from predicates Module
-  ;;' Equality predicates were previously in the `predicates` module. They are now
-  ;;' in the `equality` module:
-  ;;'
-  ;;' ```lisp
-  ;;' ; Old (before reorganization)
-  ;;' (import predicates)
-  ;;'
-  ;;' ; New (after reorganization)
-  ;;' (import equality)  ; for equal?, identical?, eq?, eqv?
-  ;;' ```
-  ;;'
-  ;;' The function signatures and behavior remain unchanged.
 )
