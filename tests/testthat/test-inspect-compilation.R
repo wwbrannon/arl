@@ -1,4 +1,4 @@
-engine <- Engine$new()
+engine <- Engine$new(load_stdlib = FALSE)
 
 test_that("inspect_compilation returns a list with expected names", {
   out <- engine$inspect_compilation("(+ 1 2)")

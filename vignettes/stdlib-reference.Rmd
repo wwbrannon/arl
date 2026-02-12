@@ -37,6 +37,10 @@ For the full, per-function reference, see the individual stdlib reference pages:
 
 ## Importing modules
 
+All stdlib modules are loaded automatically by `Engine$new()`. The `import`
+form is useful inside your own modules (where you start with an empty scope)
+and when working with a bare engine (`Engine$new(load_stdlib = FALSE)`):
+
 ```{arl, eval=FALSE}
 ; Import focused modules
 (import control)   ; when/unless/cond/case/try*
@@ -46,10 +50,9 @@ For the full, per-function reference, see the individual stdlib reference pages:
 (import error)     ; try/catch/finally
 ```
 
-From R, you can create an engine with the stdlib already loaded:
-
 ```r
-engine <- Engine$new()
+engine <- Engine$new()                     # all stdlib loaded
+bare   <- Engine$new(load_stdlib = FALSE)  # builtins only
 ```
 
 ## [Lists and Sequences](stdlib-list-seq.html)

@@ -1,4 +1,4 @@
-engine <- make_engine()
+engine <- make_engine(load_stdlib = FALSE)
 
 test_that("parser handles simple expressions", {
   exprs <- engine$read("(+ 1 2)")

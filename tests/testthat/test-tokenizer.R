@@ -1,4 +1,4 @@
-engine <- make_engine()
+engine <- make_engine(load_stdlib = FALSE)
 
 test_that("tokenizer handles basic tokens", {
   tokens <- engine$tokenize("(+ 1 2)")

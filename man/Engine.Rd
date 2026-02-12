@@ -87,7 +87,8 @@ Initialize engine components and base environment.
   env = NULL,
   parent = NULL,
   use_env_cache = NULL,
-  coverage_tracker = NULL
+  coverage_tracker = NULL,
+  load_stdlib = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -105,6 +106,10 @@ inherits from global option \code{getOption("arl.use_env_cache", FALSE)}.}
 
 \item{\code{coverage_tracker}}{Optional CoverageTracker instance to enable coverage tracking
 from the start. If provided, coverage will be tracked during stdlib loading.}
+
+\item{\code{load_stdlib}}{Logical. If TRUE (the default), loads all stdlib modules
+during initialization. Set to FALSE to create a bare engine with only
+builtins — useful for testing or when you want to import specific modules.}
 }
 \if{html}{\out{</div>}}
 }
@@ -299,9 +304,16 @@ Read and evaluate text.
 \subsection{Method \code{initialize_environment()}}{
 Populate standard bindings
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$initialize_environment()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$initialize_environment(load_stdlib = TRUE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{load_stdlib}}{Logical. If TRUE, loads stdlib modules after setting up builtins.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Engine-load_stdlib_into_env"></a>}}

@@ -32,6 +32,7 @@
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
 #' @param topic Help topic as a single string.
 #' @param compiled_only Logical; if TRUE, require compiled evaluation.
+#' @param load_stdlib Logical; if TRUE (the default), load all stdlib modules.
 #' @examples
 #' engine <- Engine$new()
 #' engine$eval_text("(+ 1 2 3)")
@@ -60,7 +61,11 @@ Engine <- R6::R6Class(
     #'   inherits from global option `getOption("arl.use_env_cache", FALSE)`.
     #' @param coverage_tracker Optional CoverageTracker instance to enable coverage tracking
     #'   from the start. If provided, coverage will be tracked during stdlib loading.
-    initialize = function(env = NULL, parent = NULL, use_env_cache = NULL, coverage_tracker = NULL) {
+    #' @param load_stdlib Logical. If TRUE (the default), loads all stdlib modules
+    #'   during initialization. Set to FALSE to create a bare engine with only
+    #'   builtins — useful for testing or when you want to import specific modules.
+    initialize = function(env = NULL, parent = NULL, use_env_cache = NULL,
+                          coverage_tracker = NULL, load_stdlib = TRUE) {
       # Priority: explicit parameter > global option > default FALSE
       if (is.null(use_env_cache)) {
         self$use_env_cache <- .pkg_option("use_env_cache", FALSE)
@@ -109,7 +114,7 @@ Engine <- R6::R6Class(
       context$compiled_runtime <- self$compiled_runtime
       self$help_system <- HelpSystem$new(self$env, self$macro_expander)
 
-      self$initialize_environment()
+      self$initialize_environment(load_stdlib = isTRUE(load_stdlib))
     },
 
     #' @description
@@ -177,7 +182,8 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Populate standard bindings
-    initialize_environment = function() {
+    #' @param load_stdlib Logical. If TRUE, loads stdlib modules after setting up builtins.
+    initialize_environment = function(load_stdlib = TRUE) {
       env <- self$env$env
 
       self$env$get_registry(".__module_registry", create = TRUE)
@@ -411,7 +417,9 @@ Engine <- R6::R6Class(
       # shared with the vignette generator)
       private$load_builtin_docs(env)
 
-      self$load_stdlib_into_env(env)
+      if (load_stdlib) {
+        self$load_stdlib_into_env(env)
+      }
 
       env
     },

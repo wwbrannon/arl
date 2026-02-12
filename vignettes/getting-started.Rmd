@@ -97,9 +97,10 @@ engine$load_file_in_env("script.arl", engine$env$env)
 ## Loading stdlib modules
 
 The engine loads all stdlib modules automatically, so functions like `when`,
-`let`, `for`, `->`, and `try` are available immediately. If you want to
-understand the module structure or are working with a bare engine, you can
-import modules explicitly:
+`let`, `for`, `->`, and `try` are available immediately. The `import` form is
+primarily useful inside your own modules (which start with an empty scope) and
+when working with a bare engine created via `Engine$new(load_stdlib = FALSE)`
+or `arl --no-stdlib`:
 
 ```{arl, eval=FALSE}
 (import control)   ; when/unless/cond/case

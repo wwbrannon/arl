@@ -1,4 +1,4 @@
-engine <- make_engine()
+engine <- make_engine(load_stdlib = FALSE)
 
 # =============================================================================
 # Atoms

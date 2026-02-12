@@ -10,6 +10,7 @@ CLI_HELP_TEXT <- paste(
   "  -f, --file <path>    Evaluate an Arl source file (repeatable).",
   "  -e, --eval <expr>    Evaluate a single Arl expression.",
   "  -q, --quiet          Start REPL without banner.",
+  "  -n, --no-stdlib      Don't load stdlib modules (bare engine).",
   "  -v, --version        Print version and exit.",
   "  -h, --help           Show this help message.",
   "",
@@ -59,7 +60,7 @@ CLI <- R6::R6Class(
     # @param args Character vector of arguments (after -f/--file extraction).
     # @return List with elements options (list) and args (character).
     parse_remaining = function(args) {
-      opt <- list(eval = NULL, quiet = FALSE)
+      opt <- list(eval = NULL, quiet = FALSE, no_stdlib = FALSE)
       positional <- character(0)
       i <- 1L
       while (i <= length(args)) {
@@ -73,6 +74,9 @@ CLI <- R6::R6Class(
           }
         } else if (a %in% c("-q", "--quiet")) {
           opt$quiet <- TRUE
+          i <- i + 1L
+        } else if (a %in% c("-n", "--no-stdlib")) {
+          opt$no_stdlib <- TRUE
           i <- i + 1L
         } else if (startsWith(a, "-")) {
           stop("Unrecognized flag: ", a)
@@ -195,6 +199,10 @@ CLI <- R6::R6Class(
         .set_pkg_option("repl_quiet", TRUE)
       }
 
+      if (isTRUE(opt$no_stdlib)) {
+        state$no_stdlib <- TRUE
+      }
+
       if (length(positional) > 0) {
         state$files <- c(state$files, as.character(positional))
       }
@@ -238,22 +246,24 @@ CLI <- R6::R6Class(
     },
     # @description Start the Arl REPL (interactive loop).
     do_repl = function() {
+      load_stdlib <- !isTRUE(self$parsed$no_stdlib)
       if (!self$cli_isatty()) {
-        engine <- Engine$new(env = new.env(parent = .GlobalEnv))
+        engine <- Engine$new(env = new.env(parent = .GlobalEnv), load_stdlib = load_stdlib)
         text <- paste(self$cli_read_stdin(), collapse = "\n")
         if (trimws(text) != "") {
           self$cli_eval_text(text, engine, source_name = "<stdin>")
         }
         return(invisible(NULL))
       }
-      engine <- Engine$new(env = new.env(parent = .GlobalEnv))
+      engine <- Engine$new(env = new.env(parent = .GlobalEnv), load_stdlib = load_stdlib)
       engine$repl()
       invisible(NULL)
     },
     # @description Evaluate files from parsed (--file and positional). Uses shared engine env.
     # @param parsed Result of parse().
     do_file = function(parsed) {
-      engine <- Engine$new(env = new.env(parent = .GlobalEnv))
+      engine <- Engine$new(env = new.env(parent = .GlobalEnv),
+                           load_stdlib = !isTRUE(self$parsed$no_stdlib))
       for (path in parsed$files) {
         if (!file.exists(path)) {
           self$cli_exit_with_error(paste0("File not found: ", path), show_help = TRUE)
@@ -270,7 +280,8 @@ CLI <- R6::R6Class(
     # @description Evaluate --eval expression(s) and exit.
     # @param parsed Result of parse().
     do_eval = function(parsed) {
-      engine <- Engine$new(env = new.env(parent = .GlobalEnv))
+      engine <- Engine$new(env = new.env(parent = .GlobalEnv),
+                           load_stdlib = !isTRUE(self$parsed$no_stdlib))
       self$cli_eval_text(parsed$expr, engine, source_name = "<cli>")
       invisible(NULL)
     },
