@@ -425,10 +425,12 @@ test_that("run() displays parse errors to user", {
       exit_messages <<- c(exit_messages, message)
     }
   ))
-  # Capture stdout to check that error text appears
-  output <- capture.output(
-    arl:::cli(c("--unknown-flag")),
-    type = "message"
+  # Capture both stdout (help text) and stderr (error messages)
+  capture.output(
+    output <- capture.output(
+      arl:::cli(c("--unknown-flag")),
+      type = "message"
+    )
   )
   # Either the error goes through exit_fn or is printed — one of these should have content
 
