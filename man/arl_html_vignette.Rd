@@ -4,9 +4,12 @@
 \alias{arl_html_vignette}
 \title{HTML vignette format with Arl syntax highlighting}
 \usage{
-arl_html_vignette(...)
+arl_html_vignette(pandoc_args = NULL, ...)
 }
 \arguments{
+\item{pandoc_args}{Additional Pandoc arguments (merged with the
+syntax-definition argument added automatically).}
+
 \item{...}{Arguments passed to \code{\link[rmarkdown]{html_vignette}}.}
 }
 \value{

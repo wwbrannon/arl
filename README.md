@@ -144,14 +144,21 @@ export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "arl", package = "arl
 - `quote` / `'` - Return unevaluated expression
 - `if` - Conditional evaluation
 - `define` - Variable/function definition
+- `set!` - Mutation of existing bindings
 - `lambda` - Anonymous functions
 - `begin` - Sequence of expressions
 - `defmacro` - Define macros
 - `quasiquote` / `` ` `` - Template with selective evaluation
+- `and`, `or` - Short-circuit boolean operators
+- `while` - Loop with condition
+- `delay` - Lazy promise creation
 - `load` - Load and evaluate a file
+- `run` - Run a file in an isolated environment
 - `import` - Import a module’s exports
 - `module` - Define a module with exports
 - `~` - Formula (for R modeling)
+- `::`, `:::` - R package namespace access
+- `help` - Look up documentation
 
 ### Continuations
 
@@ -218,10 +225,10 @@ helpers and access to all base R functions.
 `symbol?`, `keyword?` - `number?`, `string?`, `vector?`, `true?`,
 `false?`, `fn?`, `callable?`
 
-**Control Flow Macros:** - `when`, `unless`, `and`, `or`, `cond`, `case`
+**Control Flow Macros:** - `when`, `unless`, `cond`, `case`
 
 **Binding & Looping:** - `let`, `let*`, `letrec`, `destructuring-bind` -
-`while`, `for`
+`for`
 
 **Threading Macros:** - `->`, `->>` (thread-first, thread-last)
 
@@ -249,9 +256,9 @@ Additional Arl stdlib modules live in `inst/arl` so you can import just
 what you need:
 
 ``` lisp
-(import control)   ; when/unless/and/or/cond/case
+(import control)   ; when/unless/cond/case/try*
 (import binding)   ; let/let*/letrec
-(import looping)   ; for/loop/recur/until
+(import looping)   ; until/for/loop/recur
 (import threading) ; -> and ->>
 (import error)     ; try/catch/finally
 ```
