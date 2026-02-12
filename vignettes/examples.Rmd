@@ -25,7 +25,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/fibonacci.arl>
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "fibonacci.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "fibonacci.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
@@ -40,7 +40,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/quicksort.arl>
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "quicksort.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "quicksort.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
@@ -55,7 +55,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/fizzbuzz.arl>
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "fizzbuzz.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "fizzbuzz.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
@@ -70,7 +70,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/macro-examples
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "macro-examples.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "macro-examples.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
@@ -85,7 +85,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/pipeline-macro
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "pipeline-macros.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "pipeline-macros.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
@@ -100,7 +100,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/data-analysis.
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "data-analysis.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "data-analysis.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
@@ -115,7 +115,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/graph-paths.ar
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "graph-paths.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "graph-paths.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
@@ -130,7 +130,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/log-parser.arl
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "log-parser.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "log-parser.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
@@ -145,7 +145,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/sales-report.a
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "sales-report.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "sales-report.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
@@ -160,7 +160,7 @@ Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/task-runner.ar
 ```{r echo=FALSE, results='asis'}
 path <- system.file("examples", "task-runner.arl", package = "arl")
 if (path == "") path <- file.path("..", "inst", "examples", "task-runner.arl")
-cat("```lisp\n")
+cat("```arl\n")
 cat(readLines(path, warn = FALSE), sep = "\n")
 cat("\n```\n")
 ```
