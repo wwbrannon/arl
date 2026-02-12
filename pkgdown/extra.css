@@ -100,7 +100,12 @@ code {
 .template-home .section:has(> #install) {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto 1fr 1fr;
   gap: 1rem;
+}
+
+.template-home .section:has(> #install) {
+  grid-template-rows: auto 1fr;
 }
 
 .template-home .section:has(> #quick-examples) > h2,
@@ -114,6 +119,18 @@ code {
   border: 1px solid #dee2e6;
   border-radius: 6px;
   padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.template-home .section:has(> #quick-examples) > .section > .sourceCode,
+.template-home .section:has(> #install) > .section > .sourceCode {
+  flex: 1;
+}
+
+.template-home .section:has(> #quick-examples) > .section > .sourceCode > pre,
+.template-home .section:has(> #install) > .section > .sourceCode > pre {
+  height: 100%;
 }
 
 .template-home .section:has(> #quick-examples) > .section > h3,
