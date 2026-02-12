@@ -52,7 +52,8 @@ reset_arl_engine <- function() {
 #' This is the knitr language engine function registered for \code{{arl}}
 #' chunks.  It parses and evaluates Arl code using a shared \code{Engine}
 #' instance (persistent across chunks within a single vignette) and formats
-#' output in REPL style.
+#' output as an interleaved REPL transcript: each expression's source lines
+#' are prefixed with \code{arl> } and its output with \code{#> }.
 #'
 #' @param options Chunk options list passed by knitr.
 #' @return A character string produced by \code{knitr::engine_output()}.
@@ -69,7 +70,7 @@ eng_arl <- function(options) {
   engine <- get_arl_engine()
   code <- paste(options$code, collapse = "\n")
 
-  out <- tryCatch(
+  transcript <- tryCatch(
     evaluate_arl_code(engine, code),
     error = function(e) {
       if (isTRUE(options$error)) {
@@ -80,48 +81,117 @@ eng_arl <- function(options) {
     }
   )
 
-  knitr::engine_output(options, options$code, out)
+  # The transcript already contains arl> prompts and #> output prefixes,
+  # so suppress knitr's default code echo and comment prefix.
+  repl_options <- options
+  repl_options$echo <- FALSE
+  repl_options$comment <- ""
+  knitr::engine_output(repl_options, code = "", out = transcript)
 }
 
-#' Evaluate Arl code REPL-style and collect output.
+#' Build an interleaved REPL transcript from Arl code.
 #'
-#' Parses \code{code} into expressions, evaluates each one, and collects
-#' both side-effect output (via \code{capture.output}) and formatted return
-#' values.  NULL results are suppressed (matching REPL behaviour).
+#' Parses \code{code} into expressions, maps each back to its source lines
+#' using \code{arl_src} attributes, and builds a transcript where source
+#' lines are prefixed with \code{arl> } and output lines with \code{#> }.
+#' Comments and blank lines between expressions are attributed to the
+#' following expression.  NULL results are suppressed (matching REPL
+#' behaviour).
 #'
 #' @param engine An \code{Engine} instance.
 #' @param code Character string of Arl source code.
-#' @return Character string of collected output lines.
+#' @return Character string of the REPL transcript.
 #' @keywords internal
 #' @noRd
 evaluate_arl_code <- function(engine, code) {
   exprs <- engine$read(code, source_name = "<knitr>")
-  if (length(exprs) == 0L) return("")
+  code_lines <- strsplit(code, "\n", fixed = TRUE)[[1]]
+  n_lines <- length(code_lines)
 
-  output_lines <- character(0L)
+  prompt <- "arl> "
+  output_prefix <- "#> "
+
+  # Helper: append prompted source lines to the transcript.
+  # Blank lines are kept blank (no prompt) for readability.
+  add_source <- function(transcript, from, to) {
+    if (from > to || from < 1L || to > n_lines) return(transcript)
+    for (i in from:to) {
+      ln <- code_lines[i]
+      if (grepl("^\\s*$", ln)) {
+        transcript <- c(transcript, "")
+      } else {
+        transcript <- c(transcript, paste0(prompt, ln))
+      }
+    }
+    transcript
+  }
+
+  # Helper: append output lines (side effects or formatted values).
+  add_output <- function(transcript, text) {
+    if (length(text) == 0L) return(transcript)
+    combined <- paste(text, collapse = "\n")
+    if (!nzchar(combined)) return(transcript)
+    lines <- strsplit(combined, "\n", fixed = TRUE)[[1]]
+    c(transcript, paste0(output_prefix, lines))
+  }
+
+  # No expressions (only comments / blank lines): show prompted source
+  if (length(exprs) == 0L) {
+    if (n_lines == 0L) return("")
+    return(paste(add_source(character(0L), 1L, n_lines), collapse = "\n"))
+  }
+
+  transcript <- character(0L)
+  prev_end <- 0L
 
   engine$source_tracker$with_error_context(function() {
     for (expr in exprs) {
+      src <- attr(expr, "arl_src", exact = TRUE)
+
+      if (!is.null(src)) {
+        expr_end <- src$end_line
+      } else {
+        # Fallback for bare symbols (which can't carry arl_src):
+        # scan forward past blanks/comments to the next content line.
+        scan <- prev_end + 1L
+        while (scan <= n_lines && grepl("^\\s*(;|$)", code_lines[scan])) {
+          scan <- scan + 1L
+        }
+        expr_end <- scan
+      }
+
+      # Include all lines from after the previous expression through this
+      # expression's end.  This captures gap lines (comments, blank lines)
+      # before the expression as well as the expression itself.
+      range_end <- min(expr_end, n_lines)
+      transcript <<- add_source(transcript, prev_end + 1L, range_end)
+      prev_end <<- range_end
+
       # Capture any side-effect output (display, print, etc.)
       side_output <- utils::capture.output({
         result <- engine$eval(expr)
       })
 
       if (length(side_output) > 0L) {
-        output_lines <<- c(output_lines, side_output)
+        transcript <<- add_output(transcript, side_output)
       }
 
       # Format and append the return value (skip NULL, matching REPL)
       if (!is.null(result)) {
         formatted <- engine$env$format_value(result)
         if (nzchar(formatted)) {
-          output_lines <<- c(output_lines, formatted)
+          transcript <<- add_output(transcript, formatted)
         }
       }
     }
   })
 
-  paste(output_lines, collapse = "\n")
+  # Trailing lines after the last expression (comments, blank lines)
+  if (prev_end < n_lines) {
+    transcript <- add_source(transcript, prev_end + 1L, n_lines)
+  }
+
+  paste(transcript, collapse = "\n")
 }
 
 # ---------------------------------------------------------------------------

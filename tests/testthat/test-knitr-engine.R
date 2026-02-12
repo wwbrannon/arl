@@ -4,27 +4,33 @@ engine <- make_engine()
 # evaluate_arl_code
 # ---------------------------------------------------------------------------
 
-test_that("evaluate_arl_code returns result of simple expression", {
+test_that("evaluate_arl_code returns REPL transcript with prompt and output", {
   out <- arl:::evaluate_arl_code(engine, "(+ 1 2)")
-  expect_match(out, "3")
+  expect_match(out, "^arl> \\(\\+ 1 2\\)")
+  expect_match(out, "#> 3")
 })
 
-test_that("evaluate_arl_code evaluates multiple expressions REPL-style", {
+test_that("evaluate_arl_code interleaves output per expression", {
   out <- arl:::evaluate_arl_code(engine, "(+ 1 2)\n(* 3 4)")
   lines <- strsplit(out, "\n")[[1]]
-  expect_true(any(grepl("3", lines)))
-  expect_true(any(grepl("12", lines)))
+  # Source and output should alternate: source, output, source, output
+  expect_equal(lines[1], "arl> (+ 1 2)")
+  expect_equal(lines[2], "#> 3")
+  expect_equal(lines[3], "arl> (* 3 4)")
+  expect_equal(lines[4], "#> 12")
 })
 
 test_that("evaluate_arl_code suppresses invisible/NULL results", {
-  # begin with only side-effect forms produces no visible output
+  # begin with only side-effect forms produces no visible output line
   out <- arl:::evaluate_arl_code(engine, '(begin (define knitr-test-x 42) #nil)')
-  expect_equal(trimws(out), "")
+  # Should have the prompted source but no #> output
+  expect_match(out, "^arl> ")
+  expect_false(grepl("#>", out))
 })
 
 test_that("evaluate_arl_code captures side-effect output", {
   out <- arl:::evaluate_arl_code(engine, '(display "hello")')
-  expect_match(out, "hello")
+  expect_match(out, "#> hello")
 })
 
 test_that("evaluate_arl_code propagates errors by default", {
@@ -37,6 +43,31 @@ test_that("evaluate_arl_code propagates errors by default", {
 test_that("evaluate_arl_code returns empty string for empty input", {
   out <- arl:::evaluate_arl_code(engine, "")
   expect_equal(out, "")
+})
+
+test_that("evaluate_arl_code handles comments as gap lines", {
+  out <- arl:::evaluate_arl_code(engine, ";; a comment\n(+ 1 2)")
+  lines <- strsplit(out, "\n")[[1]]
+  expect_equal(lines[1], "arl> ;; a comment")
+  expect_equal(lines[2], "arl> (+ 1 2)")
+  expect_equal(lines[3], "#> 3")
+})
+
+test_that("evaluate_arl_code preserves blank lines without prompt", {
+  out <- arl:::evaluate_arl_code(engine, "(+ 1 2)\n\n(* 3 4)")
+  lines <- strsplit(out, "\n")[[1]]
+  expect_equal(lines[1], "arl> (+ 1 2)")
+  expect_equal(lines[2], "#> 3")
+  expect_equal(lines[3], "")
+  expect_equal(lines[4], "arl> (* 3 4)")
+  expect_equal(lines[5], "#> 12")
+})
+
+test_that("evaluate_arl_code handles multiline expressions", {
+  out <- arl:::evaluate_arl_code(engine, "(define knitr-ml\n  42)")
+  lines <- strsplit(out, "\n")[[1]]
+  expect_equal(lines[1], "arl> (define knitr-ml")
+  expect_equal(lines[2], "arl>   42)")
 })
 
 # ---------------------------------------------------------------------------
@@ -73,7 +104,7 @@ test_that("state persists across evaluate_arl_code calls on same engine", {
   eng <- make_engine()
   arl:::evaluate_arl_code(eng, "(define knitr-persist-var 99)")
   out <- arl:::evaluate_arl_code(eng, "knitr-persist-var")
-  expect_match(out, "99")
+  expect_match(out, "#> 99")
 })
 
 # ---------------------------------------------------------------------------
