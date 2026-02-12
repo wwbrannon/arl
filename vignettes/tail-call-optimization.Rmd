@@ -45,17 +45,17 @@ function(n, acc) {
     if (n < 2) {
       return(acc)
     } else {
-      .tco_n <- n - 1
-      .tco_acc <- acc * n
-      n <- .tco_n
-      acc <- .tco_acc
+      .__tco_n <- n - 1
+      .__tco_acc <- acc * n
+      n <- .__tco_n
+      acc <- .__tco_acc
       next
     }
   }
 }
 ```
 
-Temporary variables (`.tco_n`, `.tco_acc`) ensure all new argument values
+Temporary variables (`.__tco_n`, `.__tco_acc`) ensure all new argument values
 are computed before any parameter is reassigned — just like a
 simultaneous `let`.
 
