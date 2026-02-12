@@ -74,9 +74,10 @@ rsconnect/
 # Log files
 *.log
 
-# Profiling HTML output (keep .rds files for historical comparison)
-benchmarks/profiles/*.html
-benchmarks/profiles/*_files/
+# Benchmark results (tracked in CI via github-action-benchmark)
+benchmarks/results/
+benchmarks/profiles/
+benchmark-results.json
 
 # Coverage output directories
 /coverage/

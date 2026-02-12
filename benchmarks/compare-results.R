@@ -16,8 +16,8 @@ if (file.exists("benchmarks/benchmark-helpers.R")) {
 
 #' Compare two benchmark results
 #'
-#' @param old_file Path to baseline/old results RDS file
-#' @param new_file Path to comparison/new results RDS file
+#' @param old_file Path to baseline/old results CSV file
+#' @param new_file Path to comparison/new results CSV file
 #' @param regression_threshold Percentage slowdown to flag as regression (default: 5)
 #' @return Comparison data frame
 compare_benchmarks <- function(old_file, new_file, regression_threshold = 5) {
@@ -29,109 +29,35 @@ compare_benchmarks <- function(old_file, new_file, regression_threshold = 5) {
 
   # Load results
   cat("Loading benchmark results...\n")
-  old_results <- load_benchmark_results(old_file) # nolint: object_usage_linter.
-  new_results <- load_benchmark_results(new_file) # nolint: object_usage_linter.
+  old_df <- load_benchmark_results(old_file)
+  new_df <- load_benchmark_results(new_file)
 
   cat(sprintf("  Old: %s\n", basename(old_file)))
   cat(sprintf("  New: %s\n", basename(new_file)))
   cat("\n")
 
-  # Extract results
-  if ("results" %in% names(old_results)) {
-    old_comp <- old_results$results
-    old_time <- old_results$timestamp
-  } else {
-    old_comp <- old_results
-    old_time <- "unknown"
-  }
-
-  if ("results" %in% names(new_results)) {
-    new_comp <- new_results$results
-    new_time <- new_results$timestamp
-  } else {
-    new_comp <- new_results
-    new_time <- "unknown"
-  }
-
   cat("========================================\n")
   cat("Benchmark Comparison\n")
   cat("========================================\n\n")
-  cat(sprintf("Baseline:   %s\n", old_time))
-  cat(sprintf("Comparison: %s\n\n", new_time))
 
-  # Build comparison table
-  comparison <- data.frame(
-    component = character(),
-    benchmark = character(),
-    expression = character(),
-    old_ms = numeric(),
-    new_ms = numeric(),
-    speedup = numeric(),
-    change_pct = numeric(),
-    status = character(),
-    stringsAsFactors = FALSE
+  # Build merge key from available columns
+  key_cols <- intersect(c("component", "benchmark", "expression"), names(old_df))
+  key_cols <- intersect(key_cols, names(new_df))
+
+  comparison <- merge(old_df[, c(key_cols, "median_ms")],
+                      new_df[, c(key_cols, "median_ms")],
+                      by = key_cols, suffixes = c("_old", "_new"))
+
+  names(comparison)[names(comparison) == "median_ms_old"] <- "old_ms"
+  names(comparison)[names(comparison) == "median_ms_new"] <- "new_ms"
+
+  comparison$speedup <- comparison$old_ms / comparison$new_ms
+  comparison$change_pct <- ((comparison$new_ms - comparison$old_ms) / comparison$old_ms) * 100
+
+  comparison$status <- ifelse(
+    comparison$change_pct > regression_threshold, "REGRESSION",
+    ifelse(comparison$change_pct < -5, "IMPROVEMENT", "SIMILAR")
   )
-
-  # Compare each benchmark
-  for (comp_name in names(old_comp)) {
-    if (!(comp_name %in% names(new_comp))) {
-      cat(sprintf("WARNING: Component '%s' not found in new results\n", comp_name))
-      next
-    }
-
-    old_c <- old_comp[[comp_name]]
-    new_c <- new_comp[[comp_name]]
-
-    if (is.list(old_c) && is.list(new_c)) {
-      for (bench_name in names(old_c)) {
-        if (!(bench_name %in% names(new_c))) {
-          next
-        }
-
-        old_bench <- old_c[[bench_name]]
-        new_bench <- new_c[[bench_name]]
-
-        if (inherits(old_bench, "bench_mark") && inherits(new_bench, "bench_mark")) {
-          # Match expressions
-          for (i in seq_len(nrow(old_bench))) {
-            old_expr <- as.character(old_bench$expression[i])
-
-            # Find matching expression in new results
-            new_idx <- which(as.character(new_bench$expression) == old_expr)
-
-            if (length(new_idx) > 0) {
-              old_time <- as.numeric(old_bench$median[i])
-              new_time <- as.numeric(new_bench$median[new_idx[1]])
-
-              speedup <- old_time / new_time
-              change_pct <- ((new_time - old_time) / old_time) * 100
-
-              # Determine status
-              if (change_pct > regression_threshold) {
-                status <- "REGRESSION"
-              } else if (change_pct < -5) {
-                status <- "IMPROVEMENT"
-              } else {
-                status <- "SIMILAR"
-              }
-
-              comparison <- rbind(comparison, data.frame(
-                component = comp_name,
-                benchmark = bench_name,
-                expression = old_expr,
-                old_ms = old_time,
-                new_ms = new_time,
-                speedup = speedup,
-                change_pct = change_pct,
-                status = status,
-                stringsAsFactors = FALSE
-              ))
-            }
-          }
-        }
-      }
-    }
-  }
 
   # Sort by change percentage (worst regressions first)
   comparison <- comparison[order(-comparison$change_pct), ]
@@ -174,8 +100,13 @@ compare_benchmarks <- function(old_file, new_file, regression_threshold = 5) {
 
     for (i in seq_len(min(10, nrow(regressions)))) {
       row <- regressions[i, ]
-      cat(sprintf("%d. %s (%s:%s)\n", i, row$expression, row$component, row$benchmark))
-      cat(sprintf("   Old: %.2f ms → New: %.2f ms\n", row$old_ms, row$new_ms))
+      label <- if ("component" %in% names(row)) {
+        sprintf("%s (%s:%s)", row$expression, row$component, row$benchmark)
+      } else {
+        sprintf("%s (%s)", row$expression, row$benchmark)
+      }
+      cat(sprintf("%d. %s\n", i, label))
+      cat(sprintf("   Old: %.2f ms -> New: %.2f ms\n", row$old_ms, row$new_ms))
       cat(sprintf("   Change: %+.1f%% (%.2fx slower)\n\n", row$change_pct, 1/row$speedup))
     }
   }
@@ -191,41 +122,48 @@ compare_benchmarks <- function(old_file, new_file, regression_threshold = 5) {
 
     for (i in seq_len(min(10, nrow(improvements)))) {
       row <- improvements[i, ]
-      cat(sprintf("%d. %s (%s:%s)\n", i, row$expression, row$component, row$benchmark))
-      cat(sprintf("   Old: %.2f ms → New: %.2f ms\n", row$old_ms, row$new_ms))
+      label <- if ("component" %in% names(row)) {
+        sprintf("%s (%s:%s)", row$expression, row$component, row$benchmark)
+      } else {
+        sprintf("%s (%s)", row$expression, row$benchmark)
+      }
+      cat(sprintf("%d. %s\n", i, label))
+      cat(sprintf("   Old: %.2f ms -> New: %.2f ms\n", row$old_ms, row$new_ms))
       cat(sprintf("   Change: %+.1f%% (%.2fx faster)\n\n", row$change_pct, row$speedup))
     }
   }
 
-  # Component breakdown
-  cat("========================================\n")
-  cat("Component Breakdown\n")
-  cat("========================================\n\n")
+  # Component breakdown (only if component column exists)
+  if ("component" %in% names(comparison)) {
+    cat("========================================\n")
+    cat("Component Breakdown\n")
+    cat("========================================\n\n")
 
-  comp_summary <- aggregate(
-    cbind(old_ms, new_ms) ~ component,
-    data = comparison,
-    FUN = sum
-  )
+    comp_summary <- aggregate(
+      cbind(old_ms, new_ms) ~ component,
+      data = comparison,
+      FUN = sum
+    )
 
-  comp_summary$speedup <- comp_summary$old_ms / comp_summary$new_ms
-  comp_summary$change_pct <- ((comp_summary$new_ms - comp_summary$old_ms) / comp_summary$old_ms) * 100
+    comp_summary$speedup <- comp_summary$old_ms / comp_summary$new_ms
+    comp_summary$change_pct <- ((comp_summary$new_ms - comp_summary$old_ms) / comp_summary$old_ms) * 100
 
-  for (i in seq_len(nrow(comp_summary))) {
-    row <- comp_summary[i, ]
-    cat(sprintf("%-12s: %.2f ms → %.2f ms (%+.1f%%, %.2fx)\n",
-                row$component, row$old_ms, row$new_ms, row$change_pct, row$speedup))
+    for (i in seq_len(nrow(comp_summary))) {
+      row <- comp_summary[i, ]
+      cat(sprintf("%-12s: %.2f ms -> %.2f ms (%+.1f%%, %.2fx)\n",
+                  row$component, row$old_ms, row$new_ms, row$change_pct, row$speedup))
+    }
+
+    cat("\n========================================\n")
   }
-
-  cat("\n========================================\n")
 
   invisible(comparison)
 }
 
 #' Generate comparison report and save to file
 #'
-#' @param old_file Path to baseline/old results RDS file
-#' @param new_file Path to comparison/new results RDS file
+#' @param old_file Path to baseline/old results CSV file
+#' @param new_file Path to comparison/new results CSV file
 #' @param output_file Path to save report (default: auto-generated)
 #' @return Path to saved report
 generate_comparison_report <- function(old_file, new_file, output_file = NULL) {
@@ -254,7 +192,7 @@ generate_comparison_report <- function(old_file, new_file, output_file = NULL) {
 #' @return Comparison data frame
 quick_compare <- function(old_pattern = "baseline", new_pattern = NULL) {
   results_dir <- "benchmarks/results"
-  all_files <- list.files(results_dir, pattern = "\\.rds$", full.names = TRUE)
+  all_files <- list.files(results_dir, pattern = "\\.csv$", full.names = TRUE)
 
   # Find baseline
   baseline_files <- grep(old_pattern, all_files, value = TRUE)
@@ -302,8 +240,8 @@ if (!interactive() && !exists(".comparison_loaded") && !nzchar(Sys.getenv("TESTT
   cat("Example usage:\n")
   cat("  # Compare two specific files\n")
   cat("  comparison <- compare_benchmarks(\n")
-  cat("    'benchmarks/results/baseline-20260127-120000.rds',\n")
-  cat("    'benchmarks/results/optimized-20260127-130000.rds'\n")
+  cat("    'benchmarks/results/baseline-20260127-120000.csv',\n")
+  cat("    'benchmarks/results/optimized-20260127-130000.csv'\n")
   cat("  )\n\n")
   cat("  # Quick comparison with latest\n")
   cat("  comparison <- quick_compare()\n\n")

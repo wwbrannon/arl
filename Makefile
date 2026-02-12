@@ -150,7 +150,7 @@ profile-component: clean-cache stdlib-order ## help: Profile single component (u
 	R -q -e "devtools::load_all(); source('benchmarks/profile-$(COMPONENT).R')"
 
 .PHONY: bench-compare
-bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD=baseline.rds NEW=optimized.rds)
+bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD=baseline.csv NEW=optimized.csv)
 	@if [ -z "$(OLD)" ] || [ -z "$(NEW)" ]; then \
 		echo "Error: OLD and NEW parameters required"; \
 		exit 1; \
@@ -172,9 +172,9 @@ cran-comments: check ## help: Generate cran-comments and CRAN-SUBMISSION
 ## Cleanup
 #
 
-.PHONY: cran-clean
-cran-clean: ## help: Remove CRAN check artifacts
-	rm -rf rye.Rcheck
+.PHONY: clean-cache
+clean-cache: ## help: Remove .rye_cache directories (auto-runs before dev targets)
+	@find . -type d -name ".rye_cache" -exec rm -rf {} + 2>/dev/null || true
 
 .PHONY: clean-coverage
 clean-coverage: ## help: Remove coverage output files
@@ -182,19 +182,22 @@ clean-coverage: ## help: Remove coverage output files
 	@rm -rf coverage
 	@echo "Coverage outputs cleaned."
 
-.PHONY: clean-cache
-clean-cache: ## help: Remove .rye_cache directories (auto-runs before dev targets)
-	@find . -type d -name ".rye_cache" -exec rm -rf {} + 2>/dev/null || true
+.PHONY: clean-bench-profile
+clean-bench-profile: ## help: Remove temporary benchmark / profile results objects
+	rm -rf benchmarks/profiles/
+	rm -rf benchmarks/results/
+
+.PHONY: clean-cran
+clean-cran: ## help: Remove CRAN check artifacts
+	rm -rf rye.Rcheck
 
 .PHONY: clean
-clean: clean-coverage clean-cache cran-clean ## help: Remove build artifacts and all make document output
+clean: clean-cache clean-coverage clean-bench-profile clean-cran ## help: Remove build artifacts and all make document output
 	rm -f rye_*.tar.gz
 	rm -rf site/ doc/ Meta/
 	rm -f README.knit.md
 	rm -f vignettes/*.html vignettes/*.R vignettes/*.knit.md
 	rm -f *.log
-	rm -f benchmarks/profiles/*.html
-	rm -rf benchmarks/profiles/*_files
 	# rm -f README.md  # version-controlled
 	# rm -rf man/  # version-controlled
 

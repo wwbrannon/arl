@@ -145,38 +145,115 @@ load_example_workload <- function(filename) {
   readLines(example_path, warn = FALSE) |> paste(collapse = "\n")
 }
 
-#' Save benchmark results to RDS file
+#' Flatten bench_mark results to a data frame
 #'
-#' @param results Benchmark results (list or bench::mark output)
-#' @param name Name for the results (e.g., "baseline", "optimized")
+#' @param results Named list of bench_mark objects (e.g. list(strings = bench_strings))
+#' @return Data frame with columns: benchmark, expression, median_ms, mem_alloc_bytes, n_itr
+flatten_bench_results <- function(results) {
+  rows <- list()
+  for (bench_name in names(results)) {
+    bench_data <- results[[bench_name]]
+    if (inherits(bench_data, "bench_mark")) {
+      # bench_mark stores labels in names(expression), deparsed code in as.character()
+      expr_names <- names(bench_data$expression)
+      for (i in seq_len(nrow(bench_data))) {
+        label <- if (!is.null(expr_names) && nzchar(expr_names[i])) {
+          expr_names[i]
+        } else {
+          as.character(bench_data$expression[i])
+        }
+        rows[[length(rows) + 1L]] <- data.frame(
+          benchmark = bench_name,
+          expression = label,
+          median_ms = as.numeric(bench_data$median[i]),
+          mem_alloc_bytes = as.numeric(bench_data$mem_alloc[i]),
+          n_itr = as.integer(bench_data$n_itr[i]),
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+  if (length(rows) == 0L) {
+    return(data.frame(
+      benchmark = character(), expression = character(),
+      median_ms = numeric(), mem_alloc_bytes = numeric(),
+      n_itr = integer(), stringsAsFactors = FALSE
+    ))
+  }
+  do.call(rbind, rows)
+}
+
+#' Save benchmark results to CSV file
+#'
+#' @param results Named list of bench_mark objects, or a pre-flattened data frame
+#' @param name Name for the results (e.g., "tokenizer", "baseline")
 #' @param output_dir Directory for results (default: benchmarks/results/)
-#' @return Path to saved RDS file
+#' @return Path to saved CSV file (invisibly)
 save_benchmark_results <- function(results, name = "benchmark",
                                     output_dir = "benchmarks/results") {
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
 
+  # Flatten if given a list of bench_mark objects
+  if (is.data.frame(results)) {
+    df <- results
+  } else {
+    df <- flatten_bench_results(results)
+  }
+
   timestamp <- format(Sys.time(), "%Y%m%d-%H%M%S")
-  filename <- paste0(name, "-", timestamp, ".rds")
+  filename <- paste0(name, "-", timestamp, ".csv")
   output_file <- file.path(output_dir, filename)
 
-  saveRDS(results, output_file)
+  write.csv(df, output_file, row.names = FALSE)
   if (!nzchar(Sys.getenv("TESTTHAT"))) {
     message("Results saved to: ", output_file)
   }
   invisible(output_file)
 }
 
-#' Load benchmark results from RDS file
+#' Load benchmark results from CSV file
 #'
-#' @param file Path to RDS file
-#' @return Benchmark results
+#' @param file Path to CSV file
+#' @return Data frame of benchmark results
 load_benchmark_results <- function(file) {
   if (!file.exists(file)) {
     stop("Results file not found: ", file)
   }
-  readRDS(file)
+  read.csv(file, stringsAsFactors = FALSE)
+}
+
+#' Write benchmark results as JSON for github-action-benchmark
+#'
+#' Produces a JSON array in customSmallerIsBetter format.
+#' No jsonlite dependency — hand-rolled with sprintf/paste.
+#'
+#' @param df Data frame with columns: component (optional), benchmark, expression, median_ms
+#' @param file Output file path (default: "benchmark-results.json")
+#' @return file path (invisibly)
+write_ci_json <- function(df, file = "benchmark-results.json") {
+  entries <- character(nrow(df))
+  for (i in seq_len(nrow(df))) {
+    row <- df[i, ]
+    # Build name: "component/benchmark/expression" or "benchmark/expression"
+    if ("component" %in% names(row) && nzchar(row$component)) {
+      name <- paste(row$component, row$benchmark, row$expression, sep = "/")
+    } else {
+      name <- paste(row$benchmark, row$expression, sep = "/")
+    }
+    # Escape for JSON
+    name <- gsub("\\\\", "\\\\\\\\", name)
+    name <- gsub('"', '\\\\"', name)
+    entries[i] <- sprintf('  {"name": "%s", "unit": "ms", "value": %s}',
+                          name, format(row$median_ms, scientific = FALSE))
+  }
+  json <- paste0("[\n", paste(entries, collapse = ",\n"), "\n]\n")
+  writeLines(json, file, useBytes = TRUE)
+  if (!nzchar(Sys.getenv("TESTTHAT"))) {
+    message("CI JSON written to: ", file)
+  }
+  invisible(file)
 }
 
 #' Print a summary table of benchmark results
