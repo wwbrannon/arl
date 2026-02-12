@@ -151,7 +151,7 @@ write.csv(consolidated, consolidated_file, row.names = FALSE)
 cat(sprintf("\n\nConsolidated results saved to:\n  %s\n", consolidated_file))
 
 # Write CI JSON
-write_ci_json(consolidated, "benchmark-results.json")
+write_ci_json(consolidated, "benchmarks/results/benchmark-results.json")
 
 # Hot path summary
 cat("\n========================================\n")

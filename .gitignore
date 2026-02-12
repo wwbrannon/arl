@@ -77,7 +77,6 @@ rsconnect/
 # Benchmark results (tracked in CI via github-action-benchmark)
 benchmarks/results/
 benchmarks/profiles/
-benchmark-results.json
 
 # Coverage output directories
 /coverage/

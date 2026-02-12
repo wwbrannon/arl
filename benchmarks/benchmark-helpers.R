@@ -230,9 +230,9 @@ load_benchmark_results <- function(file) {
 #' No jsonlite dependency — hand-rolled with sprintf/paste.
 #'
 #' @param df Data frame with columns: component (optional), benchmark, expression, median_ms
-#' @param file Output file path (default: "benchmark-results.json")
+#' @param file Output file path (default: "benchmarks/results/benchmark-results.json")
 #' @return file path (invisibly)
-write_ci_json <- function(df, file = "benchmark-results.json") {
+write_ci_json <- function(df, file = "benchmarks/results/benchmark-results.json") {
   entries <- character(nrow(df))
   for (i in seq_len(nrow(df))) {
     row <- df[i, ]
