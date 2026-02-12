@@ -13,8 +13,35 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-Macros let you transform code before evaluation. Arl supports `defmacro`,
-`quasiquote`, `unquote`, and `unquote-splicing`.
+Macros let you transform code at compile time, before evaluation.  Arl
+provides `defmacro` for defining macros, quasiquote/unquote for building
+output templates, automatic hygiene to prevent accidental variable capture,
+`gensym` for generating fresh symbols, and `capture` for intentionally
+breaking hygiene (anaphoric macros).
+
+## Overview: what kind of macros does Arl support?
+
+Arl macros are **procedural, defmacro-style** macros: each macro is an
+ordinary function that receives its arguments as unevaluated syntax and
+returns new syntax.  This is the same model used by Common Lisp and
+Clojure, as opposed to Scheme's pattern-based `syntax-rules`.
+
+On top of this, Arl adds **automatic hygiene**.  Bindings introduced by a
+macro body are automatically renamed so they cannot shadow the caller's
+variables.  This means that simple macros are hygienic *by default* --
+you do not need to call `gensym` for every temporary.  When you do want
+to intentionally introduce a binding visible to the caller (an anaphoric
+macro), you use `capture` to opt out of hygiene for specific symbols.
+
+In summary:
+
+- **Hygienic by default** -- macro-introduced `define`, `let`, and
+  `lambda` bindings are automatically renamed.
+- **Unhygienic escape via `capture`** -- marks a symbol so hygiene
+  leaves it alone, allowing intentional capture.
+- **`gensym` available** -- generates unique symbols for cases where
+  you need explicit control (e.g. macro-time computation that builds
+  binding forms dynamically).
 
 ## Defining a macro
 
@@ -24,17 +51,21 @@ Macros let you transform code before evaluation. Arl supports `defmacro`,
   `(if ,test (begin ,@body) #nil))
 ```
 
-With that macro defined, you can write:
+With that macro defined:
 
 ```lisp
 (when (> 5 3) (print "yes"))
+;; expands to: (if (> 5 3) (begin (print "yes")) #nil)
 ```
 
-Macros receive their arguments *unevaluated*, so they can rewrite code before
-evaluation happens.
+Macros receive their arguments *unevaluated* -- the forms are passed as
+syntax trees (R calls/symbols), not as values.  The macro body constructs
+and returns new syntax, which the compiler then compiles and evaluates in
+place of the original call.
 
-You can attach documentation with `;;'` annotation comments above the macro
-definition (see [Getting Started — Documenting functions](getting-started.html#documenting-functions)):
+You can document macros with `;;'` annotation comments above the
+definition (see
+[Getting Started -- Documenting functions](getting-started.html#documenting-functions)):
 
 ```lisp
 (help "when")
@@ -42,53 +73,341 @@ definition (see [Getting Started — Documenting functions](getting-started.html
 
 ## Macro parameters
 
-Macros can take any number of parameters:
+### Fixed parameters
 
 ```lisp
-;;' @description Evaluate body forms when test is falsy.
+(defmacro double (x)
+  `(* 2 ,x))
+
+(double (+ 1 2))  ; => 6
+```
+
+### Rest parameters
+
+Use `.` to collect remaining arguments into a list:
+
+```lisp
 (defmacro unless (test . body)
   `(if ,test #nil (begin ,@body)))
+
+(unless (= 1 2) (print "not equal") 42)  ; => 42
 ```
 
-## Generating symbols safely
+### Optional parameters with defaults
 
-Use `gensym` to create unique symbols when you need a temporary binding:
+Parameters wrapped in a pair `(name default)` are optional:
 
 ```lisp
-;;' @description Bind value to a fresh temporary symbol.
-(defmacro with-temp (value body)
-  (let ((tmp (gensym "tmp")))
-    `(let ((,tmp ,value))
-       ,body)))
+(defmacro greet ((name "world"))
+  `(str "hello, " ,name))
+
+(greet)          ; => "hello, world"
+(greet "Alice")  ; => "hello, Alice"
 ```
 
-## Quasiquote basics
+You can mix required and optional parameters, and combine them with rest:
 
-Use backtick to build templates and unquote to evaluate parts.
+```lisp
+(defmacro opt-rest ((x 1) . rest)
+  `(list ,x ,@rest))
+
+(opt-rest)         ; => (1)
+(opt-rest 2 3 4)   ; => (2 3 4)
+```
+
+### Pattern destructuring in parameters
+
+Use `(pattern ...)` to destructure a macro argument:
+
+```lisp
+(defmacro let-pair ((pattern (name value)))
+  `(define ,name ,value))
+
+(let-pair (x 10))
+x  ; => 10
+```
+
+Patterns can be nested, have defaults, or be used as rest parameters:
+
+```lisp
+;; Nested pattern
+(defmacro deep ((pattern (a (b c))))
+  `(list ,a ,b ,c))
+
+(deep (1 (2 3)))  ; => (1 2 3)
+
+;; Pattern with default
+(defmacro with-point ((pattern (x y) (list 0 0)))
+  `(+ ,x ,y))
+
+(with-point)        ; => 0
+(with-point (3 4))  ; => 7
+```
+
+## Quasiquote, unquote, and splicing
+
+Quasiquote (backtick) is the primary tool for constructing macro output.
+Inside a quasiquoted template, `,expr` (unquote) evaluates `expr` and
+splices the result into the template, and `,@expr` (unquote-splicing)
+evaluates `expr` (which must produce a list) and splices its elements.
+
+### Quasiquote basics
 
 ```lisp
 (define x 10)
-`(list ,x 20 30)  ; => (list 10 20 30)
+`(+ ,x 20)      ; => (+ 10 20)
 ```
 
-## Splicing lists
+### Splicing lists
 
 ```lisp
 (define xs (list 2 3))
-`(list 1 ,@xs 4)  ; => (list 1 2 3 4)
+`(+ 1 ,@xs 4)   ; => (+ 1 2 3 4)
 ```
 
-## Nested quasiquote
+### Nested quasiquote
 
-If you nest quasiquotes, only the innermost unquote is evaluated:
+When quasiquotes are nested, each level of backtick adds one to the
+depth, and each comma subtracts one.  Only depth-zero unquotes are
+evaluated:
 
 ```lisp
-`(list `(,x))   ; => (list (quasiquote (unquote x)))
+`(a `(b ,,x))   ; => (a (quasiquote (b (unquote 10))))
 ```
 
-## Macro expansion
+This is useful for writing macros that generate other macros.
 
-You can inspect expansions from R using `engine$macroexpand()`:
+## Hygiene
+
+Arl macros are **hygienic by default**.  When a macro introduces bindings
+(via `define`, `let`, `lambda`, etc.), those bindings are automatically
+renamed so they cannot collide with names at the call site.
+
+### Automatic hygiene example
+
+Consider a `swap` macro that uses a temporary variable:
+
+```lisp
+(defmacro swap (a b)
+  `(let ((temp ,a))
+     (set! ,a ,b)
+     (set! ,b temp)))
+```
+
+Without hygiene, if the caller had a variable named `temp`, the macro
+would silently shadow it.  In Arl, the macro-introduced `temp` is
+automatically renamed to a fresh symbol, so caller bindings are safe:
+
+```lisp
+(define temp 999)
+(define x 1)
+(define y 2)
+(swap x y)
+x     ; => 2
+y     ; => 1
+temp  ; => 999  (unaffected)
+```
+
+### How it works
+
+After a macro function returns its expansion, the expander runs a
+*hygienization* pass.  This pass walks the expanded code and renames
+any symbols that the macro introduced (i.e. not originating from the
+call site) in binding positions (`define`, `let`, `lambda` params) and
+their corresponding references.  Symbols originating from the caller's
+code are marked as "call_site" and left untouched.
+
+The quasiquote expander tags each evaluated value with its origin
+(`call_site` for unquoted caller expressions).  The hygienizer then uses
+these tags to decide which symbols to rename.
+
+## `gensym` -- generating fresh symbols
+
+`gensym` creates a unique symbol guaranteed not to collide with any
+user-defined name.  Use it when you need to create bindings at
+macro-expansion time that must not conflict:
+
+```lisp
+(gensym)          ; => G__1
+(gensym "tmp")    ; => tmp__2
+```
+
+Each call returns a new symbol with a monotonically increasing counter.
+
+### When to use `gensym`
+
+Because Arl macros are hygienic by default, you usually do *not* need
+`gensym` for simple temporaries in quasiquoted output.  `gensym` is
+useful when you build binding forms *programmatically at expansion time*
+-- for example, when a macro computes a list of bindings in a `let`
+expression before constructing the quasiquoted result:
+
+```lisp
+(defmacro case (key clause . rest)
+  (define key-sym (gensym "case-key"))
+  `((lambda (,key-sym)
+      ,(__case-clauses key-sym clause rest))
+    ,key))
+```
+
+Here `key-sym` is used outside quasiquote to thread the fresh symbol
+into a helper function that builds nested `if` forms.  The helper is an
+ordinary function, not a quasiquoted template, so automatic hygiene does
+not apply.  `gensym` ensures the binding is unique.
+
+Another common pattern is loop macros:
+
+```lisp
+(defmacro for (binding . body)
+  (begin
+    (define var (car binding))
+    (define seq (car (cdr binding)))
+    (define remaining (gensym "for_remaining"))
+    `(begin
+       (define ,remaining (__as-list ,seq))
+       (while (not (null? ,remaining))
+         (define ,var (car ,remaining))
+         ,@body
+         (set! ,remaining (cdr ,remaining))))))
+```
+
+## `capture` -- intentional variable capture (anaphoric macros)
+
+Sometimes you *want* a macro to introduce a binding visible to the
+caller.  The classic example is the **anaphoric if** (`aif`), which
+binds the test result to `it` so the then/else branches can use it.
+
+Without any special handling, hygiene would rename the macro's `it` to a
+fresh symbol, making it invisible to the caller.  The `capture` builtin
+overrides this: it marks a specific symbol as "intentionally introduced",
+telling the hygienizer to leave it alone.
+
+### Signature
+
+```lisp
+(capture 'symbol expr)
+```
+
+- `symbol` -- the symbol name to preserve (quoted).
+- `expr` -- the expression in which occurrences of `symbol` should
+  remain unhygienic.
+
+### Example: anaphoric if
+
+```lisp
+(defmacro aif (test then alt)
+  `(let ((it ,test))
+     (if it ,(capture 'it then) ,(capture 'it alt))))
+```
+
+Usage:
+
+```lisp
+(aif (+ 2 3)
+     (str "result is " it)   ; it => 5
+     "no result")
+; => "result is 5"
+```
+
+Here `capture` is applied to the `then` and `alt` expressions (which
+came from the caller).  It marks every occurrence of `it` inside those
+expressions as "introduced" rather than "call_site", so hygiene does not
+rename them.  Meanwhile, the `(let ((it ,test)) ...)` binding itself is
+in the macro's quasiquoted output, and `capture` ensures the two sides
+agree on the name `it`.
+
+### How `capture` interacts with hygiene
+
+1. The macro returns a quasiquoted expansion containing `let ((it ...)) ...`.
+2. Normally, hygiene would rename the macro's `it` to a fresh symbol.
+3. `capture` walks `then` and `alt` and marks each `it` symbol with
+   origin `"introduced"`.
+4. Because both the binding and the references now have the same origin,
+   the hygienizer treats them as belonging to the same scope and does
+   not rename them.
+
+Without `capture`, the caller would not be able to refer to `it`:
+
+```lisp
+;; BROKEN -- without capture, hygiene renames 'it'
+(defmacro bad-aif (test then alt)
+  `(let ((it ,test))
+     (if it ,then ,alt)))
+
+(bad-aif (+ 2 3) it 0)  ; it here refers to the CALLER's 'it', not the macro's
+```
+
+## Compile-time computation
+
+Because the macro body is ordinary Arl code executed at expansion time,
+you can perform arbitrary computation before returning the template:
+
+```lisp
+(defmacro const-multiply (a b)
+  (let ((result (* a b)))
+    `(quote ,result)))
+
+(const-multiply 6 7)  ; => 42 (computed at macro-expansion time)
+```
+
+## Recursive and composing macros
+
+Macros can call themselves recursively or invoke other macros:
+
+```lisp
+;; Thread-first: recursive macro that threads a value through forms
+(defmacro -> (value . forms)
+  (if (null? forms)
+      value
+      (let ((first-form (car forms))
+            (rest-forms (cdr forms)))
+        (if (list-or-pair? first-form)
+            `(-> (,(car first-form) ,value ,@(cdr first-form)) ,@rest-forms)
+            `(-> (,first-form ,value) ,@rest-forms)))))
+
+(-> 5 (+ 3) (* 2) (- 1))  ; => 15
+;; expands to (- (* (+ 5 3) 2) 1)
+```
+
+Macros can also expand into calls to other macros.  The expander
+recursively expands until no macro calls remain:
+
+```lisp
+;; cond expands into nested if, which may contain further macro calls
+(cond
+  ((= x 1) "one")
+  ((= x 2) "two")
+  (else "other"))
+```
+
+## Inspecting macro expansions
+
+### From Arl
+
+`macroexpand-1` expands only the outermost macro call (one step):
+
+```lisp
+(macroexpand-1 '(when #t 1))
+; => (if #t (begin 1) #nil)
+```
+
+`macroexpand` (or its alias `macroexpand-all`) recursively expands all
+macro calls in the expression:
+
+```lisp
+(macroexpand '(when #t (unless #f 42)))
+```
+
+`macro?` tests whether a symbol names a currently defined macro:
+
+```lisp
+(macro? 'when)   ; => #t
+(macro? 'car)    ; => #f
+```
+
+### From R
+
+Use `engine$macroexpand()` to expand from R:
 
 ```{r eval=FALSE}
 engine <- Engine$new()
@@ -96,18 +415,68 @@ engine$eval(engine$read("(defmacro when (test . body) `(if ,test (begin ,@body) 
 engine$macroexpand(engine$read("(when #t 1)")[[1]])
 ```
 
-To see both the macro-expanded form and the compiled R code (e.g. for debugging), use `engine$inspect_compilation(text, env)`. It returns a list with `parsed`, `expanded`, `compiled`, and `compiled_deparsed` (the R source as a character vector). See `?Engine` for details.
+To see the full compilation pipeline (parsed, expanded, compiled R
+code), use `engine$inspect_compilation(text, env)`.  It returns a list
+with `parsed`, `expanded`, `compiled`, and `compiled_deparsed`.  See
+`?Engine` for details.
 
-To expand only one level, use `macroexpand-1` from Arl code:
+## Real-world examples from the standard library
+
+Many of Arl's core forms are implemented as macros.  Here are some
+patterns worth studying:
+
+### `let` -- parallel bindings with `gensym`
 
 ```lisp
-(macroexpand-1 '(when #t 1))
+(defmacro let (bindings . body)
+  (if (null? bindings)
+    `(begin ,@body)
+    (begin
+      (define temps (map (lambda (b) (gensym "tmp")) bindings))
+      (define patterns (map car bindings))
+      (define values (map (lambda (b) (car (cdr b))) bindings))
+      `((lambda ,temps
+          ,@(map (lambda (pair)
+                   `(define ,(car pair) ,(car (cdr pair))))
+                 (zip patterns temps))
+          (begin ,@body))
+        ,@values))))
 ```
 
-For more examples, see the
-[Macro Examples](examples.html#macro-examples) article.
+This macro generates one `gensym` per binding, then creates a `lambda`
+with those fresh names as parameters.  Inside the lambda body, each
+fresh name is destructured into the user's pattern.  The `gensym` calls
+are necessary here because the binding names are computed
+programmatically rather than appearing literally in a quasiquoted
+template.
+
+### `loop`/`recur` -- Clojure-style iteration
+
+The `loop` macro rewrites `recur` calls into a `while` loop with flag
+variables, all using `gensym` to avoid conflicts:
+
+```lisp
+(loop ((n 5) (acc 1))
+  (if (= n 0)
+    acc
+    (recur (- n 1) (* acc n))))
+; => 120
+```
+
+### `try`/`catch`/`finally` -- syntax sugar
+
+The `try` macro parses its clause list at expansion time and rewrites
+into calls to the lower-level `try*` function:
+
+```lisp
+(try (/ 1 0)
+  (catch e (str "caught: " ($ e "message")))
+  (finally (display "cleanup")))
+```
 
 ## Related guides
 
 - [Getting Started](getting-started.html)
 - [Standard Library Overview](stdlib-reference.html)
+- [Standard Library: Macro, Eval, Interop](stdlib-macro-eval-interop.html)
+- [Examples](examples.html#macro-examples)
