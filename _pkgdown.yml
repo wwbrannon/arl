@@ -41,6 +41,32 @@ navbar:
         - text: "Performance"
         - text: Benchmarks
           href: articles/benchmarks.html
+    examples:
+      text: Examples
+      menu:
+        - text: All Examples
+          href: articles/examples.html
+        - text: "---------"
+        - text: Fibonacci
+          href: articles/examples-fibonacci.html
+        - text: Quicksort
+          href: articles/examples-quicksort.html
+        - text: FizzBuzz
+          href: articles/examples-fizzbuzz.html
+        - text: Macro Examples
+          href: articles/examples-macro-examples.html
+        - text: Pipeline Macros
+          href: articles/examples-pipeline-macros.html
+        - text: Data Analysis
+          href: articles/examples-data-analysis.html
+        - text: Graph Paths
+          href: articles/examples-graph-paths.html
+        - text: Log Parser
+          href: articles/examples-log-parser.html
+        - text: Sales Report
+          href: articles/examples-sales-report.html
+        - text: Task Runner
+          href: articles/examples-task-runner.html
     stdlib:
       text: Standard Library
       menu:
@@ -65,9 +91,6 @@ navbar:
           href: articles/stdlib-strings-io.html
         - text: Macros, Eval & Interop
           href: articles/stdlib-macro-eval-interop.html
-    examples:
-      text: Examples
-      href: articles/examples.html
     reference:
       text: R API Reference
       href: reference/index.html
@@ -78,8 +101,8 @@ navbar:
     left:
       - get-started
       - guides
-      - stdlib
       - examples
+      - stdlib
       - reference
     right:
       - changelog
@@ -124,6 +147,7 @@ articles:
     desc: Complete working programs demonstrating Arl features.
     contents:
       - examples
+      - starts_with("articles/examples-")
   - title: Standard Library Reference
     desc: Per-function reference for Arl's standard library.
     contents:

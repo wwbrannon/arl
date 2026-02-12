@@ -1,0 +1,24 @@
+---
+title: "Example: Task Runner"
+output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
+---
+
+```{r setup, include = FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
+```
+
+Dependency ordering and execution sequencing.
+
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/task-runner.arl>
+
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "task-runner.arl", package = "arl")
+if (path == "") path <- file.path("..", "..", "inst", "examples", "task-runner.arl")
+cat("```arl\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
+```

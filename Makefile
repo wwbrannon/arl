@@ -195,6 +195,7 @@ clean: clean-cache clean-coverage clean-bench-profile clean-cran ## help: Remove
 	rm -rf site/ doc/ Meta/
 	rm -f README.knit.md
 	rm -f vignettes/*.html vignettes/*.R vignettes/*.knit.md
+	rm -f vignettes/articles/*.html vignettes/articles/*.knit.md
 	rm -f *.log
 	# rm -f README.md  # version-controlled
 	# rm -rf man/  # version-controlled

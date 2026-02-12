@@ -29,3 +29,4 @@
 ^\.coverage\.yml$
 ^codecov\.yml$
 ^.*\.log$
+^vignettes/articles$

@@ -1,0 +1,24 @@
+---
+title: "Example: Data Analysis"
+output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
+---
+
+```{r setup, include = FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
+```
+
+R interoperability and data transformations.
+
+Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/data-analysis.arl>
+
+```{r echo=FALSE, results='asis'}
+path <- system.file("examples", "data-analysis.arl", package = "arl")
+if (path == "") path <- file.path("..", "..", "inst", "examples", "data-analysis.arl")
+cat("```arl\n")
+cat(readLines(path, warn = FALSE), sep = "\n")
+cat("\n```\n")
+```
