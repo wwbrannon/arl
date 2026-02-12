@@ -1,7 +1,31 @@
-o) update README
+o) vignettes code should be executable / executed during build where possible
 
+o) systematically look through the docs and find mismatches with code or with other docs
+
+o) rename "stdlib-env"?
+o) do we need r/call? (yes, probably) can we take it out of the examples?
+o) import system: should we load everything by default as currently? need to update docs if this changes
+o) actually need to update docs anyway, they say inconsistent things about how everything is loaded automatically and how you can load whatever you need
+
+o) break up examples page? is this a good idea?
+
+o) "load only the modules you need." is not true; lots of "import" we no longer need; should we require them?
+o) "To expand only one level, use macroexpand-1 from Arl code:" also mention the R call
+o) explain this better "Self-TCO only works with the define/lambda form" -- it requires a name
+o) we don't optimize TCO in anonymous functions called recursively via combinators
+o) the "Summary" table in the self-TCO vignette is transposed or otherwise confusing
+o) "Arl also has dotted pairs" note these are not R's pairlist
+
+o) move the badges into the footer
+
+o) README.md: update
+o) index.md: write a couple paragraphs including "Getting Started" and "Examples" up top
+o) sanity-check the inst/examples
+o) sanity-check the vignettes, just read the whole site
+o) logo?
+
+o) enable actions / get non-pkgdown workflows running
 o) figure out how to host the docs
-o) enable actions / get workflows running
-o) make the site prettier?
+o) version number bump?
 
-o) run other cran submission steps
+o) run other cran submission steps and submit
