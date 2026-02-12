@@ -21,7 +21,7 @@
 ```lisp
 (mean (c 1 2 3 4 5))           ; => 3
 (seq :from 1 :to 10 :by 2)     ; => 1 3 5 7 9
-(lm (~ y x) :data df)
+(lm (~ mpg wt) :data mtcars)
 ```
 
 ### Macros
@@ -36,8 +36,6 @@
 ### Data Pipelines
 
 ```lisp
-(import threading)
-
 (->> (list 1 2 3 4 5)
      (filter (lambda (x) (> x 2)))
      (map (lambda (x) (* x x)))
