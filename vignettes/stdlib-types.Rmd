@@ -18,9 +18,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 These functions are provided by the `types` module (`inst/arl/types.arl`).
 
-## List and Pair Predicates
+## List and Pair Predicates {#section-list-and-pair-predicates}
 
-### list? {#list}
+### list? {#list-p}
 
 Return #t if x is a proper list (R list or call), not a dotted pair.
 
@@ -33,11 +33,11 @@ Return #t if x is a proper list (R list or call), not a dotted pair.
 (list? "hello")  ; => #f
 ```
 
-**See also:** [pair?](#pair), [list-or-pair?](#list-or-pair), [null?](#null)
+**See also:** [pair?](#pair-p), [list-or-pair?](#list-or-pair-p), [null?](#null-p)
 
 ---
 
-### list-or-pair? {#list-or-pair}
+### list-or-pair? {#list-or-pair-p}
 
 Return #t if x is a non-empty list or dotted pair (pairlist cell).
 
@@ -48,11 +48,11 @@ Return #t if x is a non-empty list or dotted pair (pairlist cell).
 (list-or-pair? (list 1))  ; => #t
 ```
 
-**See also:** [list?](#list), [pair?](#pair), [null?](#null), [atom?](#atom)
+**See also:** [list?](#list-p), [pair?](#pair-p), [null?](#null-p), [atom?](#atom-p)
 
 ---
 
-### null? {#null}
+### null? {#null-p}
 
 Return #t for empty list or #nil.
 
@@ -65,21 +65,21 @@ Return #t for empty list or #nil.
 (null? (list 1))  ; => #f
 ```
 
-**See also:** [nil?](#nil), [pair?](#pair), [list-or-pair?](#list-or-pair)
+**See also:** [nil?](#nil-p), [pair?](#pair-p), [list-or-pair?](#list-or-pair-p)
 
 ---
 
-### nil? {#nil}
+### nil? {#nil-p}
 
 Alias for null?.
 
 **Signature:** `(nil? x)`
 
-**See also:** [null?](#null)
+**See also:** [null?](#null-p)
 
 ---
 
-### atom? {#atom}
+### atom? {#atom-p}
 
 Return #t if x is not a non-empty list or
 dotted pair (i.e. not list-or-pair?).
@@ -94,11 +94,11 @@ dotted pair (i.e. not list-or-pair?).
 (atom? ())  ; => #t  (empty list is atomic)
 ```
 
-**See also:** [list-or-pair?](#list-or-pair)
+**See also:** [list-or-pair?](#list-or-pair-p)
 
 ---
 
-### empty? {#empty}
+### empty? {#empty-p}
 
 Return #t if x is empty (0-length).
 (Note the empty string "" has length 1 and is not "empty"!)
@@ -115,13 +115,13 @@ Return #t if x is empty (0-length).
 
 **Note:** The empty string `""` has length 1 in R and is NOT considered empty!
 
-**See also:** [null?](#null), [length=](stdlib-list-seq.html#length-eq) (in `sequences` module)
+**See also:** [null?](#null-p), [length=](stdlib-list-seq.html#length-eq) (in `sequences` module)
 
 ---
 
-## Symbol Predicates
+## Symbol Predicates {#section-symbol-predicates}
 
-### symbol? {#symbol}
+### symbol? {#symbol-p}
 
 Return #t if x is a symbol.
 
@@ -136,7 +136,7 @@ Return #t if x is a symbol.
 
 ---
 
-### keyword? {#keyword}
+### keyword? {#keyword-p}
 
 Return #t if x is an Arl keyword.
 
@@ -150,9 +150,9 @@ Return #t if x is an Arl keyword.
 
 ---
 
-## Basic Type Predicates
+## Basic Type Predicates {#section-basic-type-predicates}
 
-### number? {#number}
+### number? {#number-p}
 
 Return #t if x is a number (real or complex).
 
@@ -165,11 +165,11 @@ Return #t if x is a number (real or complex).
 
 **Note:** For numeric type hierarchy predicates (real?, complex?, etc.), see the `math` module documentation.
 
-**See also:** stdlib-math vignette for real?, [complex?](stdlib-math.html#complex), [rational?](stdlib-math.html#rational), [exact?](stdlib-math.html#exact), [inexact?](stdlib-math.html#inexact)
+**See also:** stdlib-math vignette for real?, [complex?](stdlib-math.html#complex-p), [rational?](stdlib-math.html#rational-p), [exact?](stdlib-math.html#exact-p), [inexact?](stdlib-math.html#inexact-p)
 
 ---
 
-### string? {#string}
+### string? {#string-p}
 
 Return #t if x is character.
 
@@ -182,7 +182,7 @@ Return #t if x is character.
 
 ---
 
-### vector? {#vector}
+### vector? {#vector-p}
 
 Return #t if x is a non-list atomic vector.
 
@@ -197,7 +197,7 @@ Return #t if x is a non-list atomic vector.
 
 ---
 
-### boolean? {#boolean}
+### boolean? {#boolean-p}
 
 Return #t if x is a single logical value.
 
@@ -213,7 +213,7 @@ Return #t if x is a single logical value.
 
 ---
 
-### true? {#true}
+### true? {#true-p}
 
 Return #t if x is TRUE.
 
@@ -226,7 +226,7 @@ Return #t if x is TRUE.
 
 ---
 
-### false? {#false}
+### false? {#false-p}
 
 Return #t if x is #f.
 
@@ -239,9 +239,9 @@ Return #t if x is #f.
 
 ---
 
-## Function Predicates
+## Function Predicates {#section-function-predicates}
 
-### fn? {#fn}
+### fn? {#fn-p}
 
 Return #t if x is a function.
 
@@ -252,33 +252,33 @@ Return #t if x is a function.
 (fn? car)  ; => #t
 ```
 
-**See also:** [callable?](#callable), [procedure?](#procedure)
+**See also:** [callable?](#callable-p), [procedure?](#procedure-p)
 
 ---
 
-### callable? {#callable}
+### callable? {#callable-p}
 
 Alias for fn?.
 
 **Signature:** `(callable? x)`
 
-**See also:** [fn?](#fn)
+**See also:** [fn?](#fn-p)
 
 ---
 
-### procedure? {#procedure}
+### procedure? {#procedure-p}
 
 Alias for fn? - return #t if x is a function.
 
 **Signature:** `(procedure? x)`
 
-**See also:** [fn?](#fn), [callable?](#callable)
+**See also:** [fn?](#fn-p), [callable?](#callable-p)
 
 ---
 
-## Environment Predicates
+## Environment Predicates {#section-environment-predicates}
 
-### environment? {#environment}
+### environment? {#environment-p}
 
 Test if x is an environment (including R6 objects).
 
@@ -293,7 +293,7 @@ Test if x is an environment (including R6 objects).
 
 ---
 
-### is-refclass? {#is-refclass}
+### is-refclass? {#is-refclass-p}
 
 Test if x is a Reference Class object.
 
@@ -306,7 +306,7 @@ Test if x is a Reference Class object.
 
 ---
 
-## Type Introspection
+## Type Introspection {#section-type-introspection}
 
 ### type-of {#type-of}
 
@@ -323,9 +323,9 @@ Return the type of value (alias for R's typeof).
 
 ---
 
-## List and Pair Predicates
+## List and Pair Predicates {#section-list-and-pair-predicates-2}
 
-### pair? {#pair}
+### pair? {#pair-p}
 
 Return #t if x is a cons cell (dotted pair).
 
@@ -338,7 +338,7 @@ Return #t if x is a cons cell (dotted pair).
 (pair? '())               ; => #f
 ```
 
-**See also:** [list?](#list), [null?](#null), [atom?](#atom)
+**See also:** [list?](#list-p), [null?](#null-p), [atom?](#atom-p)
 
 ---
 

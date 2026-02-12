@@ -18,14 +18,14 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 These functions are provided by the `equality` module (`inst/arl/equality.arl`).
 
-## Equality Predicates
+## Equality Predicates {#section-equality-predicates}
 
 Arl provides `equal?` for deep structural equality with S3-style dispatch,
 and `identical?` for R's native identity comparison. The Scheme predicates
 `eq?` and `eqv?` are intentionally not implemented because R does not
 provide the pointer-level semantics they require.
 
-### equal? {#equal}
+### equal? {#equal-p}
 
 Deep structural equality. Dispatches on class of
 first argument. Optional :strict #t uses identical? for atomics.
@@ -42,11 +42,11 @@ Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
 (equal? "hello" "hello")        ; => #t
 ```
 
-**See also:** [identical?](#identical), [eq?](#eq), [eqv?](#eqv), [set-method!](#set-method-bang)
+**See also:** [identical?](#identical-p), [eq?](#eq-p), [eqv?](#eqv-p), [set-method!](#set-method-bang)
 
 ---
 
-### identical? {#identical}
+### identical? {#identical-p}
 
 R's native equality test. Structural comparison for value
   types, pointer comparison for reference types.
@@ -63,11 +63,11 @@ R's native equality test. Structural comparison for value
 **Note:** This is R's `identical()` with no modifications. Use `equal?`
   for deep structural equality with type coercion.
 
-**See also:** [equal?](#equal), [eq?](#eq), [eqv?](#eqv)
+**See also:** [equal?](#equal-p), [eq?](#eq-p), [eqv?](#eqv-p)
 
 ---
 
-### eq? {#eq}
+### eq? {#eq-p}
 
 **Not implemented in Arl.** Raises an error when called.
 
@@ -75,11 +75,11 @@ R's native equality test. Structural comparison for value
 
 **Note:** True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
 
-**See also:** [identical?](#identical), [equal?](#equal)
+**See also:** [identical?](#identical-p), [equal?](#equal-p)
 
 ---
 
-### eqv? {#eqv}
+### eqv? {#eqv-p}
 
 **Not implemented in Arl.** Raises an error when called.
 
@@ -87,16 +87,16 @@ R's native equality test. Structural comparison for value
 
 **Note:** True Scheme `eqv?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. Use `identical?` for R's native equality, or `equal?` for deep structural equality.
 
-**See also:** [identical?](#identical), [equal?](#equal)
+**See also:** [identical?](#identical-p), [equal?](#equal-p)
 
 ---
 
-## Helper Functions for Equal?
+## Helper Functions for Equal? {#section-helper-functions-for-equal}
 
 Internal helper functions used by the `equal?` dispatch methods to perform
 recursive structural comparison of environments and lists.
 
-### env-equal? {#env-equal}
+### env-equal? {#env-equal-p}
 
 Compare two environments by their bindings and values.
 
@@ -113,11 +113,11 @@ Compare two environments by their bindings and values.
 
 **Note:** Used internally by `equal?.environment`. Compares environments by sorting their bindings and recursively comparing values.
 
-**See also:** [equal?.environment](#equal-environment)
+**See also:** [equal?.environment](#equal-p-environment)
 
 ---
 
-### list-equal? {#list-equal}
+### list-equal? {#list-equal-p}
 
 Recursively compare list elements.
 
@@ -132,11 +132,11 @@ Recursively compare list elements.
 
 **Note:** Used internally by `equal?.list`. Recursively compares list elements using `equal?`.
 
-**See also:** [equal?.list](#equal-list)
+**See also:** [equal?.list](#equal-p-list)
 
 ---
 
-## S3 Dispatch System
+## S3 Dispatch System {#section-s3-dispatch-system}
 
 Arl implements a simplified S3-style dispatch system for generic functions
 like `equal?`. Types are identified by their first S3 class, and methods
@@ -211,13 +211,13 @@ Dispatch to an S3 method based on object class.
 
 ---
 
-## Built-in Equal? Methods
+## Built-in Equal? Methods {#section-built-in-equal-methods}
 
 These methods handle equality comparison for R's core types. The dispatch
 system selects the appropriate method based on the S3 class of the first
 argument. Users can register additional methods with `set-method!`.
 
-### equal?.default {#equal-default}
+### equal?.default {#equal-p-default}
 
 Default equality: atomic/vector comparison.
 :strict #t => #f; else use == with type coercion.
@@ -234,7 +234,7 @@ Default equality: atomic/vector comparison.
 
 ---
 
-### equal?.list {#equal-list}
+### equal?.list {#equal-p-list}
 
 Compare lists recursively by structure and elements.
 
@@ -249,7 +249,7 @@ Compare lists recursively by structure and elements.
 
 ---
 
-### equal?.environment {#equal-environment}
+### equal?.environment {#equal-p-environment}
 
 Compare environments by bindings and values
 (dict, set, R6, refclass are env-based).
@@ -267,7 +267,7 @@ Compare environments by bindings and values
 
 ---
 
-## Migration from predicates Module
+## Migration from predicates Module {#section-migration-from-predicates-module}
 
 Equality predicates were previously in the `predicates` module. They are now
 in the `equality` module:

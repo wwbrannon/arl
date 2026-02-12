@@ -40,7 +40,7 @@ slugify_func_name <- function(name) {
   # Pure operator names
   op_map <- list(
     "+"  = "plus",  "-"  = "minus", "*"  = "star", "/" = "div",
-    "%"  = "modulo", "="  = "num-eq", "==" = "num-eq-eq",
+    "%"  = "percent", "="  = "num-eq", "==" = "num-eq-eq",
     "<"  = "lt",    ">"  = "gt",    "<=" = "lte",  ">=" = "gte"
   )
   if (name %in% names(op_map)) return(op_map[[name]])
@@ -64,7 +64,7 @@ slugify_func_name <- function(name) {
 
   # Other special chars
   s <- gsub("!",  "-bang", s, fixed = TRUE)
-  s <- gsub("?",  "",      s, fixed = TRUE)
+  s <- gsub("?",  "-p",    s, fixed = TRUE)
   s <- gsub("*",  "-star", s, fixed = TRUE)
   s <- gsub("/",  "-",     s, fixed = TRUE)
   s <- gsub(".",  "-",     s, fixed = TRUE)
@@ -734,6 +734,7 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
 
   # Group functions by section and emit
   current_section <- NULL
+  emitted_slugs <- character(0)
   for (idx in seq_along(all_funcs)) {
     fn <- all_funcs[[idx]]
 
@@ -741,7 +742,15 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
     if (!identical(fn$section, current_section)) {
       current_section <- fn$section
       if (!is.null(current_section)) {
-        out <- c(out, paste0("## ", current_section))
+        section_slug <- paste0("section-", gsub("[^a-z0-9]+", "-", tolower(current_section)))
+        section_slug <- gsub("-+", "-", section_slug)
+        section_slug <- gsub("^-|-$", "", section_slug)
+        if (section_slug %in% emitted_slugs) {
+          n_dup <- sum(emitted_slugs == section_slug)
+          section_slug <- paste0(section_slug, "-", n_dup + 1L)
+        }
+        emitted_slugs <- c(emitted_slugs, section_slug)
+        out <- c(out, paste0("## ", current_section, " {#", section_slug, "}"))
         out <- c(out, "")
         # Find section prose
         for (sec in all_sections) {
@@ -798,7 +807,10 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
   }, character(1)))
   for (sec in all_sections) {
     if (!sec$name %in% emitted_sections) {
-      out <- c(out, paste0("## ", sec$name))
+      sec_slug <- paste0("section-", gsub("[^a-z0-9]+", "-", tolower(sec$name)))
+      sec_slug <- gsub("-+", "-", sec_slug)
+      sec_slug <- gsub("^-|-$", "", sec_slug)
+      out <- c(out, paste0("## ", sec$name, " {#", sec_slug, "}"))
       out <- c(out, "")
       if (!is.null(sec$prose) && nchar(trimws(sec$prose)) > 0) {
         out <- c(out, trimws(sec$prose))

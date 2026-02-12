@@ -16,7 +16,7 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-## Error and Warning
+## Error and Warning {#section-error-and-warning}
 
 ### error {#error}
 
@@ -50,7 +50,7 @@ Emit warning with message.
 
 ---
 
-## Identity and Values
+## Identity and Values {#section-identity-and-values}
 
 ### identity {#identity}
 
@@ -80,11 +80,11 @@ Return multiple values to a call-with-values consumer.
 (values 1 2 3)            ; => multiple-values container
 ```
 
-**See also:** [values?](#values), [call-with-values](#call-with-values)
+**See also:** [values?](#values-p), [call-with-values](#call-with-values)
 
 ---
 
-### values? {#values}
+### values? {#values-p}
 
 Return #t if x is a multiple-values container.
 
@@ -113,11 +113,11 @@ Call producer and pass its values to consumer.
   (lambda (a b) (+ a b)))  ; => 3
 ```
 
-**See also:** [values](#values), [values?](#values)
+**See also:** [values](#values), [values?](#values-p)
 
 ---
 
-## Continuations
+## Continuations {#section-continuations}
 
 ### call/cc {#call-cc}
 
@@ -139,7 +139,7 @@ Call producer and pass its values to consumer.
 
 ---
 
-## Function Application
+## Function Application {#section-function-application}
 
 ### funcall {#funcall}
 
@@ -194,7 +194,7 @@ Get a binding by name, defaulting to .GlobalEnv.
 
 ---
 
-## License
+## License {#section-license}
 
 ### license {#license}
 
@@ -209,7 +209,7 @@ Display Arl and R license information.
 
 ---
 
-## R Nonstandard Evaluation Wrappers
+## R Nonstandard Evaluation Wrappers {#section-r-nonstandard-evaluation-wrappers}
 
 These macros provide Arl-friendly interfaces to R functions that use
 nonstandard evaluation (NSE). They automatically quote expressions so
@@ -318,7 +318,7 @@ Perform substitution in an expression, or error if called with 1 arg.
 
 ---
 
-## Dictionary (Hash Table)
+## Dictionary (Hash Table) {#section-dictionary-hash-table}
 
 Dictionaries are mutable key-value stores backed by R environments.
 Keys must be strings, symbols, or keywords; values can be anything.
@@ -367,7 +367,7 @@ Create a hash-backed dictionary from key/value pairs.
 
 ---
 
-### dict? {#dict}
+### dict? {#dict-p}
 
 Return #t if x is a dictionary.
 
@@ -404,7 +404,7 @@ Get value for key or default if missing.
 (dict-get d "z" 99)        ; => 99  (default value)
 ```
 
-**See also:** [dict-set](#dict-set), [dict-has?](#dict-has)
+**See also:** [dict-set](#dict-set), [dict-has?](#dict-has-p)
 
 ---
 
@@ -475,7 +475,7 @@ Return a list of dict values.
 
 ---
 
-### dict-has? {#dict-has}
+### dict-has? {#dict-has-p}
 
 Return #t if dict contains key.
 
@@ -511,7 +511,7 @@ Merge dicts, later values override earlier.
 
 ---
 
-## Set (Hash-Backed)
+## Set (Hash-Backed) {#section-set-hash-backed}
 
 Sets are mutable collections of unique items backed by R environments.
 Any value can be a set element; uniqueness is determined by serialization.
@@ -548,7 +548,7 @@ Create a hash-backed set of unique items.
 
 ---
 
-### set? {#set}
+### set? {#set-p}
 
 Return #t if x is a set.
 
@@ -597,7 +597,7 @@ Remove item from set and return set.
 
 ---
 
-### set-contains? {#set-contains}
+### set-contains? {#set-contains-p}
 
 Return #t if set contains item.
 
@@ -677,7 +677,7 @@ Copy items from source into target (internal helper).
 
 ---
 
-## Struct Definition
+## Struct Definition {#section-struct-definition}
 
 ### defstruct {#defstruct}
 
@@ -708,7 +708,7 @@ Define a struct constructor, predicate, and accessors.
 
 ---
 
-## Assertion Helpers
+## Assertion Helpers {#section-assertion-helpers}
 
 These functions provide test-style assertions that signal errors on failure
 and return `#t` on success.
@@ -818,7 +818,7 @@ Assert thunk throws an error.
 
 ---
 
-## Evaluation
+## Evaluation {#section-evaluation}
 
 ### eval {#eval}
 
@@ -899,7 +899,7 @@ while) or other constructs that Arl normally overrides.
 
 ---
 
-## Macro Utilities
+## Macro Utilities {#section-macro-utilities}
 
 ### capture {#capture}
 
@@ -945,7 +945,7 @@ user-defined names. The optional prefix defaults to "G".
 
 ---
 
-### macro? {#macro}
+### macro? {#macro-p}
 
 Return #t if the symbol names a currently-defined macro.
 
@@ -976,7 +976,7 @@ remain.
 
 **Note:** Also available as `macroexpand-all` (alias).
 
-**See also:** [macroexpand-1](#macroexpand-1), [macro?](#macro), [gensym](#gensym)
+**See also:** [macroexpand-1](#macroexpand-1), [macro?](#macro-p), [gensym](#gensym)
 
 ---
 
@@ -993,13 +993,13 @@ Expand only the outermost macro call in expr (one step).
 (macroexpand-1 '(my-when #t 42))  ; => (if #t 42 #nil)
 ```
 
-**See also:** [macroexpand](#macroexpand), [macro?](#macro)
+**See also:** [macroexpand](#macroexpand), [macro?](#macro-p)
 
 ---
 
-## Promises (Lazy Evaluation)
+## Promises (Lazy Evaluation) {#section-promises-lazy-evaluation}
 
-### promise? {#promise}
+### promise? {#promise-p}
 
 Return #t if x is a promise (created with `delay`).
 
@@ -1030,7 +1030,7 @@ returning the result. If x is not a promise, returns x unchanged.
 (force 42)                ; => 42 (non-promise passed through)
 ```
 
-**See also:** [promise?](#promise), [promise-expr](#promise-expr), delay
+**See also:** [promise?](#promise-p), [promise-expr](#promise-expr), delay
 
 ---
 
@@ -1048,11 +1048,11 @@ Extract the unevaluated expression from a promise.
 
 **Note:** Signals an error if p is not a promise.
 
-**See also:** [promise?](#promise), [force](#force), delay
+**See also:** [promise?](#promise-p), [force](#force), delay
 
 ---
 
-## Environment Introspection
+## Environment Introspection {#section-environment-introspection}
 
 ### stdlib-env {#stdlib-env}
 

@@ -18,7 +18,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 These functions are provided by the `math` module (`inst/arl/math.arl`).
 
-## Numeric Type Predicates
+## Numeric Type Predicates {#section-numeric-type-predicates}
 
 Arl implements a numeric tower adapted for R's type system:
 
@@ -38,7 +38,7 @@ inexact? (number? AND NOT is.integer)
 
 **Note:** `number?` is provided by the `types` module, not `math`.
 
-### real? {#real}
+### real? {#real-p}
 
 Return #t if x is a real number (includes ±Inf, excludes complex).
 
@@ -52,11 +52,11 @@ Return #t if x is a real number (includes ±Inf, excludes complex).
 (real? (make-rectangular 3 4))  ; => #f
 ```
 
-**See also:** [rational?](#rational), [complex?](#complex), [number?](stdlib-types.html#number) (in `types` module)
+**See also:** [rational?](#rational-p), [complex?](#complex-p), [number?](stdlib-types.html#number-p) (in `types` module)
 
 ---
 
-### complex? {#complex}
+### complex? {#complex-p}
 
 Return #t if x is a complex number.
 
@@ -68,11 +68,11 @@ Return #t if x is a complex number.
 (complex? 42)         ; => #f
 ```
 
-**See also:** [real?](#real), [number?](stdlib-types.html#number) (in `types` module), [make-rectangular](#make-rectangular)
+**See also:** [real?](#real-p), [number?](stdlib-types.html#number-p) (in `types` module), [make-rectangular](#make-rectangular)
 
 ---
 
-### rational? {#rational}
+### rational? {#rational-p}
 
 Return #t if x is a finite real number (rational in R are finite floats).
 
@@ -88,11 +88,11 @@ Return #t if x is a finite real number (rational in R are finite floats).
 
 **Note:** In R, all finite floating-point numbers can be represented as rationals (IEEE 754). R does not have a built-in rational or decimal type like some Schemes.
 
-**See also:** [real?](#real), [integer?](#integer), [number?](stdlib-types.html#number) (in `types` module)
+**See also:** [real?](#real-p), [integer?](#integer-p), [number?](stdlib-types.html#number-p) (in `types` module)
 
 ---
 
-### exact? {#exact}
+### exact? {#exact-p}
 
 Return #t if x is an exact number (integer storage type in R).
 
@@ -107,11 +107,11 @@ Return #t if x is an exact number (integer storage type in R).
 
 **Note:** In Scheme, exactness is a property of the number. In R (and Arl), exactness corresponds to integer storage type. All integers are exact; all doubles and complex numbers are inexact.
 
-**See also:** [inexact?](#inexact), [exact->inexact](stdlib-conversions.html#exact-to-inexact) (in `conversions` module)
+**See also:** [inexact?](#inexact-p), [exact->inexact](stdlib-conversions.html#exact-to-inexact) (in `conversions` module)
 
 ---
 
-### inexact? {#inexact}
+### inexact? {#inexact-p}
 
 Return #t if x is an inexact number (double or complex in R).
 
@@ -124,11 +124,11 @@ Return #t if x is an inexact number (double or complex in R).
 (inexact? 5L)         ; => #f
 ```
 
-**See also:** [exact?](#exact), [inexact->exact](stdlib-conversions.html#inexact-to-exact) (in `conversions` module)
+**See also:** [exact?](#exact-p), [inexact->exact](stdlib-conversions.html#inexact-to-exact) (in `conversions` module)
 
 ---
 
-### integer? {#integer}
+### integer? {#integer-p}
 
 Return #t if x is an integer-valued number.
 
@@ -144,11 +144,11 @@ Return #t if x is an integer-valued number.
 
 **Note:** Tests for integer VALUE, not storage type. Use `exact?` to test storage type.
 
-**See also:** [natural?](#natural), [exact?](#exact), [rational?](#rational)
+**See also:** [natural?](#natural-p), [exact?](#exact-p), [rational?](#rational-p)
 
 ---
 
-### natural? {#natural}
+### natural? {#natural-p}
 
 Return #t if x is a natural number (integer >= 0).
 
@@ -162,11 +162,11 @@ Return #t if x is a natural number (integer >= 0).
 (natural? 3.14)       ; => #f
 ```
 
-**See also:** [integer?](#integer), [positive?](#positive), [non-negative?](#non-negative)
+**See also:** [integer?](#integer-p), [positive?](#positive-p), [non-negative?](#non-negative-p)
 
 ---
 
-### finite? {#finite}
+### finite? {#finite-p}
 
 Return #t if x is finite.
 
@@ -180,11 +180,11 @@ Return #t if x is finite.
 (finite? -Inf)        ; => #f
 ```
 
-**See also:** [infinite?](#infinite), [nan?](#nan), [rational?](#rational)
+**See also:** [infinite?](#infinite-p), [nan?](#nan-p), [rational?](#rational-p)
 
 ---
 
-### infinite? {#infinite}
+### infinite? {#infinite-p}
 
 Return #t if x is infinite.
 
@@ -198,11 +198,11 @@ Return #t if x is infinite.
 (infinite? NaN)       ; => #f
 ```
 
-**See also:** [finite?](#finite), [nan?](#nan)
+**See also:** [finite?](#finite-p), [nan?](#nan-p)
 
 ---
 
-### nan? {#nan}
+### nan? {#nan-p}
 
 Return #t if x is NaN.
 
@@ -216,13 +216,13 @@ Return #t if x is NaN.
 (nan? Inf)            ; => #f
 ```
 
-**See also:** [finite?](#finite), [infinite?](#infinite)
+**See also:** [finite?](#finite-p), [infinite?](#infinite-p)
 
 ---
 
-## Value Predicates
+## Value Predicates {#section-value-predicates}
 
-### even? {#even}
+### even? {#even-p}
 
 Return #t if x is an even number.
 
@@ -235,11 +235,11 @@ Return #t if x is an even number.
 (even? 0)             ; => #t
 ```
 
-**See also:** [odd?](#odd)
+**See also:** [odd?](#odd-p)
 
 ---
 
-### odd? {#odd}
+### odd? {#odd-p}
 
 Return #t if x is an odd number.
 
@@ -251,11 +251,11 @@ Return #t if x is an odd number.
 (odd? 4)              ; => #f
 ```
 
-**See also:** [even?](#even)
+**See also:** [even?](#even-p)
 
 ---
 
-### zero? {#zero}
+### zero? {#zero-p}
 
 Return #t if x is zero.
 
@@ -268,11 +268,11 @@ Return #t if x is zero.
 (zero? 1)             ; => #f
 ```
 
-**See also:** [positive?](#positive), [negative?](#negative)
+**See also:** [positive?](#positive-p), [negative?](#negative-p)
 
 ---
 
-### positive? {#positive}
+### positive? {#positive-p}
 
 Return #t if x is greater than zero.
 
@@ -285,11 +285,11 @@ Return #t if x is greater than zero.
 (positive? -5)        ; => #f
 ```
 
-**See also:** [negative?](#negative), [non-negative?](#non-negative), [zero?](#zero)
+**See also:** [negative?](#negative-p), [non-negative?](#non-negative-p), [zero?](#zero-p)
 
 ---
 
-### negative? {#negative}
+### negative? {#negative-p}
 
 Return #t if x is less than zero.
 
@@ -302,11 +302,11 @@ Return #t if x is less than zero.
 (negative? 5)         ; => #f
 ```
 
-**See also:** [positive?](#positive), [non-positive?](#non-positive), [zero?](#zero)
+**See also:** [positive?](#positive-p), [non-positive?](#non-positive-p), [zero?](#zero-p)
 
 ---
 
-### non-negative? {#non-negative}
+### non-negative? {#non-negative-p}
 
 Return #t if x is greater than or equal to zero.
 
@@ -319,11 +319,11 @@ Return #t if x is greater than or equal to zero.
 (non-negative? -5)    ; => #f
 ```
 
-**See also:** [positive?](#positive), [natural?](#natural)
+**See also:** [positive?](#positive-p), [natural?](#natural-p)
 
 ---
 
-### non-positive? {#non-positive}
+### non-positive? {#non-positive-p}
 
 Return #t if x is less than or equal to zero.
 
@@ -336,11 +336,11 @@ Return #t if x is less than or equal to zero.
 (non-positive? 5)     ; => #f
 ```
 
-**See also:** [negative?](#negative)
+**See also:** [negative?](#negative-p)
 
 ---
 
-## Complex Number Utilities
+## Complex Number Utilities {#section-complex-number-utilities}
 
 ### make-rectangular {#make-rectangular}
 
@@ -432,9 +432,9 @@ Compute the angle (argument) of a complex number.
 
 ---
 
-## Arithmetic Helpers
+## Arithmetic Helpers {#section-arithmetic-helpers}
 
-### % {#modulo}
+### % {#percent}
 
 Modulo helper using R %%.
 
@@ -667,11 +667,11 @@ Clamp numeric value x to the inclusive range [lo, hi].
 (clamp 15 0 10)  ; => 10
 ```
 
-**See also:** [within?](#within)
+**See also:** [within?](#within-p)
 
 ---
 
-### within? {#within}
+### within? {#within-p}
 
 Return #t if x is within the inclusive range [lo, hi].
 
@@ -688,7 +688,7 @@ Return #t if x is within the inclusive range [lo, hi].
 
 ---
 
-## Rounding and Truncation
+## Rounding and Truncation {#section-rounding-and-truncation}
 
 ### abs {#abs}
 
@@ -783,7 +783,7 @@ Return sign of x: -1, 0, or 1.
 
 ---
 
-## Power, Roots, and Logarithms
+## Power, Roots, and Logarithms {#section-power-roots-and-logarithms}
 
 ### sqrt {#sqrt}
 
@@ -883,7 +883,7 @@ Return base-2 logarithm of x.
 
 ---
 
-## Trigonometric Functions
+## Trigonometric Functions {#section-trigonometric-functions}
 
 ### sin {#sin}
 
@@ -961,7 +961,7 @@ Return arctangent of y/x (in radians), respecting quadrant.
 
 ---
 
-## Integer Division
+## Integer Division {#section-integer-division}
 
 ### quotient {#quotient}
 
@@ -1007,11 +1007,11 @@ Return modulo of x and y (same sign as y).
 (modulo -10 3)   ; => 2
 ```
 
-**See also:** [quotient](#quotient), [remainder](#remainder), [%](#modulo)
+**See also:** [quotient](#quotient), [remainder](#remainder), [%](#percent)
 
 ---
 
-## Number Theory
+## Number Theory {#section-number-theory}
 
 ### gcd {#gcd}
 
@@ -1045,7 +1045,7 @@ Return least common multiple of arguments.
 
 ---
 
-## Migration from predicates Module
+## Migration from predicates Module {#section-migration-from-predicates-module}
 
 Numeric type predicates were previously in the `predicates` module. They are now in the `math` module:
 

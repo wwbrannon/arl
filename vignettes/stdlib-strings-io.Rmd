@@ -16,7 +16,7 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-## String Operations
+## String Operations {#section-string-operations}
 
 Core string manipulation functions: joining, splitting, searching,
 replacing, and accessing characters. Most search/replace functions
@@ -86,7 +86,7 @@ Format string with sprintf.
 
 ---
 
-### string-contains? {#string-contains}
+### string-contains? {#string-contains-p}
 
 Check pattern in string (fixed).
 
@@ -99,11 +99,11 @@ Check pattern in string (fixed).
 (string-contains? "hello world" "o.*d" :fixed #f)  ; => #t
 ```
 
-**See also:** [string-match?](#string-match), [string-find](#string-find)
+**See also:** [string-match?](#string-match-p), [string-find](#string-find)
 
 ---
 
-### string-match? {#string-match}
+### string-match? {#string-match-p}
 
 Check pattern in string (regex).
 
@@ -116,7 +116,7 @@ Check pattern in string (regex).
 (string-match? "hello" "hello" :fixed #t)     ; => #t
 ```
 
-**See also:** [string-contains?](#string-contains), [string-find](#string-find)
+**See also:** [string-contains?](#string-contains-p), [string-find](#string-find)
 
 ---
 
@@ -133,7 +133,7 @@ Find pattern index or #nil.
 (string-find "hello" "l")            ; => 2
 ```
 
-**See also:** [string-contains?](#string-contains), [string-match?](#string-match)
+**See also:** [string-contains?](#string-contains-p), [string-match?](#string-match-p)
 
 ---
 
@@ -258,7 +258,7 @@ Return length of string.
 
 ---
 
-## String Case
+## String Case {#section-string-case}
 
 Functions for converting string case.
 
@@ -310,11 +310,11 @@ Convert string to title case (capitalize first letter of each word).
 
 ---
 
-## String Comparison
+## String Comparison {#section-string-comparison}
 
 Lexicographic comparison functions for strings.
 
-### string<? {#string-lt}
+### string<? {#string-lt-p}
 
 Lexicographic less-than comparison.
 
@@ -329,7 +329,7 @@ Lexicographic less-than comparison.
 
 ---
 
-### string>? {#string-gt}
+### string>? {#string-gt-p}
 
 Lexicographic greater-than comparison.
 
@@ -344,7 +344,7 @@ Lexicographic greater-than comparison.
 
 ---
 
-### string=? {#string-eq}
+### string=? {#string-eq-p}
 
 String equality comparison.
 
@@ -358,7 +358,7 @@ String equality comparison.
 
 ---
 
-### string<=? {#string-lte}
+### string<=? {#string-lte-p}
 
 Lexicographic less-than-or-equal comparison.
 
@@ -373,7 +373,7 @@ Lexicographic less-than-or-equal comparison.
 
 ---
 
-### string>=? {#string-gte}
+### string>=? {#string-gte-p}
 
 Lexicographic greater-than-or-equal comparison.
 
@@ -388,7 +388,7 @@ Lexicographic greater-than-or-equal comparison.
 
 ---
 
-## String/List Conversion
+## String/List Conversion {#section-string-list-conversion}
 
 Functions for converting between strings, lists, and numbers.
 
@@ -461,7 +461,7 @@ Parse string to number with optional base (2-36).
 
 ---
 
-## Console I/O
+## Console I/O {#section-console-i-o}
 
 Functions for reading from standard input and writing to standard output.
 
@@ -528,7 +528,7 @@ Output a newline.
 
 ---
 
-## File I/O
+## File I/O {#section-file-i-o}
 
 Functions for reading from and writing to files.
 
@@ -599,7 +599,7 @@ Append content to file.
 
 ---
 
-### file-exists? {#file-exists}
+### file-exists? {#file-exists-p}
 
 Return #t if file exists.
 
@@ -652,11 +652,11 @@ Delete file. Return #t on success.
 
 ---
 
-## Directory Operations
+## Directory Operations {#section-directory-operations}
 
 Functions for querying and manipulating directories.
 
-### directory-exists? {#directory-exists}
+### directory-exists? {#directory-exists-p}
 
 Return #t if directory exists.
 
@@ -697,7 +697,7 @@ Delete directory. Return #t on success.
 
 ---
 
-## Environment and System
+## Environment and System {#section-environment-and-system}
 
 Functions for environment variables, shell commands, and process control.
 
@@ -779,7 +779,7 @@ Format value for display.
 
 ---
 
-## Display and Output
+## Display and Output {#section-display-and-output}
 
 Functions for formatting and printing values.
 

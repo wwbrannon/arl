@@ -16,7 +16,7 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-## Control Flow Macros
+## Control Flow Macros {#section-control-flow-macros}
 
 ### when {#when}
 
@@ -52,7 +52,7 @@ Evaluate body forms when test is falsy.
 
 ---
 
-## Conditional Macros
+## Conditional Macros {#section-conditional-macros}
 
 ### cond {#cond}
 
@@ -104,7 +104,7 @@ Key expression is evaluated only once.
 
 ---
 
-## Error Handling Helper
+## Error Handling Helper {#section-error-handling-helper}
 
 ### try* {#try-star}
 
@@ -127,7 +127,7 @@ Evaluate thunk with error/finally handlers.
 
 ---
 
-## Binding Macros
+## Binding Macros {#section-binding-macros}
 
 ### pattern-symbols {#pattern-symbols}
 
@@ -248,7 +248,7 @@ Bind pattern to value and choose branch based on its truthiness.
 
 ---
 
-## Looping Macros
+## Looping Macros {#section-looping-macros}
 
 ### for {#for}
 
@@ -285,7 +285,7 @@ Signal a recur back to the enclosing `loop`. Only valid inside a `loop` body.
 
 ---
 
-### skip-rewrite-form? {#skip-rewrite-form}
+### skip-rewrite-form? {#skip-rewrite-form-p}
 
 Check if a form should skip recur rewriting (quote, lambda, defmacro, loop).
 
@@ -293,7 +293,7 @@ Check if a form should skip recur rewriting (quote, lambda, defmacro, loop).
 
 ---
 
-### valid-binding-pair? {#valid-binding-pair}
+### valid-binding-pair? {#valid-binding-pair-p}
 
 Validate that a binding pair is a list of length 2.
 
@@ -301,7 +301,7 @@ Validate that a binding pair is a list of length 2.
 
 ---
 
-### valid-bindings? {#valid-bindings}
+### valid-bindings? {#valid-bindings-p}
 
 Validate that bindings is a list of valid binding pairs.
 
@@ -370,7 +370,7 @@ i                          ; => 5
 
 ---
 
-## Threading Macros
+## Threading Macros {#section-threading-macros}
 
 ### -> {#thread-first}
 
@@ -413,7 +413,7 @@ Thread value through forms (last argument).
 
 ---
 
-## Error Handling
+## Error Handling {#section-error-handling}
 
 ### try {#try}
 

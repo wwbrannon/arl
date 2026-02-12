@@ -16,7 +16,7 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-## Core Higher-Order Functions
+## Core Higher-Order Functions {#section-core-higher-order-functions}
 
 The fundamental building blocks for functional programming in Arl.
 These functions operate on lists and follow the convention of taking
@@ -140,7 +140,7 @@ Right fold.
 
 ---
 
-### every? {#every}
+### every? {#every-p}
 
 Return #t if predicate true for all items.
 
@@ -154,11 +154,11 @@ Return #t if predicate true for all items.
 (every? string? (list "a" "b" "c"))   ; => #t
 ```
 
-**See also:** [any?](#any), [filter](#filter)
+**See also:** [any?](#any-p), [filter](#filter)
 
 ---
 
-### any? {#any}
+### any? {#any-p}
 
 Return #t if predicate true for any item.
 
@@ -171,7 +171,7 @@ Return #t if predicate true for any item.
 (any? string? (list 1 "a" 2))         ; => #t
 ```
 
-**See also:** [every?](#every), [filter](#filter)
+**See also:** [every?](#every-p), [filter](#filter)
 
 ---
 
@@ -229,7 +229,7 @@ Partially apply function.
 
 ---
 
-## Advanced Functional Programming
+## Advanced Functional Programming {#section-advanced-functional-programming}
 
 Higher-order combinators for advanced functional patterns including
 currying, juxtaposition, memoization, and iteration.
@@ -341,7 +341,7 @@ Memoize function - cache results for previously seen arguments.
 
 ---
 
-## Logical Operations
+## Logical Operations {#section-logical-operations}
 
 Core logical operations for Arl. Note that `and` and `or` are compiler
 special forms (not functions) with short-circuit evaluation, so they

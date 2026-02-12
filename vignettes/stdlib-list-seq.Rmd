@@ -16,7 +16,7 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-## List Operations
+## List Operations {#section-list-operations}
 
 Core list constructors and accessors, following Scheme conventions.
 Lists in Arl are backed by R lists; `car`/`cdr` provide the fundamental
@@ -349,7 +349,7 @@ Return nth item (0-based).
 
 ---
 
-## Association Lists
+## Association Lists {#section-association-lists}
 
 Association lists (alists) map keys to values. Each entry is a list
 whose `car` is the key and whose `cadr` is the value. `assoc` and
@@ -383,11 +383,11 @@ Find first alist entry (list or dotted pair) with matching key (uses equal?).
 (assoc 'z (list (list 'a 1) (list 'b 2)))               ; => #nil
 ```
 
-**See also:** [rassoc](#rassoc), [assoc-by-identical?](#assoc-by-identical), [assoc-by-==](#assoc-by-eq-eq)
+**See also:** [rassoc](#rassoc), [assoc-by-identical?](#assoc-by-identical-p), [assoc-by-==](#assoc-by-eq-eq)
 
 ---
 
-### assoc-by-equal? {#assoc-by-equal}
+### assoc-by-equal? {#assoc-by-equal-p}
 
 Alias for assoc: find first alist entry with key matching under equal?.
 
@@ -397,7 +397,7 @@ Alias for assoc: find first alist entry with key matching under equal?.
 
 ---
 
-### assoc-by-identical? {#assoc-by-identical}
+### assoc-by-identical? {#assoc-by-identical-p}
 
 Find first alist entry with matching key (uses R's identical?).
 
@@ -413,7 +413,7 @@ Find first alist entry with matching key (uses R's ==).
 
 **Signature:** `(assoc-by-== key alist)`
 
-**See also:** [assoc](#assoc), [assoc-by-identical?](#assoc-by-identical)
+**See also:** [assoc](#assoc), [assoc-by-identical?](#assoc-by-identical-p)
 
 ---
 
@@ -452,11 +452,11 @@ Find first alist entry with matching value
 (rassoc 9 (list (list 'a 1) (list 'b 2)))               ; => #nil
 ```
 
-**See also:** [assoc](#assoc), [rassoc-by-equal?](#rassoc-by-equal)
+**See also:** [assoc](#assoc), [rassoc-by-equal?](#rassoc-by-equal-p)
 
 ---
 
-### rassoc-by-equal? {#rassoc-by-equal}
+### rassoc-by-equal? {#rassoc-by-equal-p}
 
 Alias for rassoc: find first alist entry with value matching under equal?.
 
@@ -466,7 +466,7 @@ Alias for rassoc: find first alist entry with value matching under equal?.
 
 ---
 
-## List Generation
+## List Generation {#section-list-generation}
 
 Utilities for creating lists of numbers or repeated values.
 
@@ -521,7 +521,7 @@ Create list of n copies of value.
 
 ---
 
-## Additional List Accessors
+## Additional List Accessors {#section-additional-list-accessors}
 
 ### list-ref {#list-ref}
 
@@ -554,7 +554,7 @@ Return list without first k elements.
 
 ---
 
-## Sequence Helpers
+## Sequence Helpers {#section-sequence-helpers}
 
 Higher-level operations for slicing, chunking, and transforming
 sequences. These complement the core list operations in the `list`
@@ -716,7 +716,7 @@ pass :use-identical #t for R's identical().
 
 ---
 
-### contains? {#contains}
+### contains? {#contains-p}
 
 Return #t if lst contains element equal to x.
 
@@ -724,7 +724,7 @@ Return #t if lst contains element equal to x.
 
 ---
 
-## Length Predicates
+## Length Predicates {#section-length-predicates}
 
 Efficient length comparisons that short-circuit when possible.
 
@@ -740,7 +740,7 @@ Return #t if length of x equals n.
 (length= (list 1 2) 3)    ; => #f
 ```
 
-**See also:** [length>](#length-gt), [length<](#length-lt), [empty?](stdlib-types.html#empty)
+**See also:** [length>](#length-gt), [length<](#length-lt), [empty?](stdlib-types.html#empty-p)
 
 ---
 
@@ -776,7 +776,7 @@ Return #t if length of x is less than n.
 
 ---
 
-## Sorting
+## Sorting {#section-sorting}
 
 General-purpose sorting with user-supplied comparator functions.
 `sort` uses quicksort (not stable); `stable-sort` uses merge sort
