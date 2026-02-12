@@ -1,0 +1,157 @@
+/* Arl pkgdown custom styles
+ *
+ * Layered on top of Bootstrap 5 defaults. Provides visual identity
+ * without fighting the framework.
+ */
+
+/* ---------- Color tokens ---------- */
+:root {
+  --arl-accent: #2a9d8f;
+  --arl-accent-dark: #1a7a6f;
+  --arl-code-bg: #f4f5f0;
+  --arl-subtle-bg: #f8f9fa;
+  --arl-text: #343a40;
+}
+
+/* ---------- Hero section (homepage) ---------- */
+.template-home .page-header {
+  padding: 3rem 0 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 3px solid var(--arl-accent);
+}
+
+.template-home .page-header h1 {
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--arl-accent-dark);
+}
+
+.template-home .page-header p {
+  font-size: 1.25rem;
+  color: var(--arl-text);
+  max-width: 40em;
+}
+
+/* ---------- Headings ---------- */
+.template-home main h2,
+.template-article main h2 {
+  color: var(--arl-accent-dark);
+  border-bottom: 2px solid var(--arl-accent);
+  padding-bottom: 0.3rem;
+  margin-top: 2.5rem;
+}
+
+/* ---------- Code blocks ---------- */
+pre {
+  background-color: var(--arl-code-bg);
+  border-left: 3px solid var(--arl-accent);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+}
+
+pre code {
+  background-color: transparent;
+}
+
+code {
+  color: var(--arl-accent-dark);
+}
+
+/* ---------- Navbar ---------- */
+.navbar .navbar-brand {
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.navbar .nav-link.active,
+.navbar .nav-link:hover {
+  color: var(--arl-accent) !important;
+}
+
+/* ---------- Feature cards (homepage bullet lists) ---------- */
+.template-home .section ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.template-home .section ul li {
+  background: var(--arl-subtle-bg);
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  transition: box-shadow 0.15s ease;
+}
+
+.template-home .section ul li:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.template-home .section ul li strong {
+  color: var(--arl-accent-dark);
+}
+
+/* ---------- Section spacing ---------- */
+.template-home .section {
+  margin-bottom: 2.5rem;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  border-top: 2px solid var(--arl-accent);
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+}
+
+/* ---------- Sidebar cleanup (homepage badges) ---------- */
+.template-home .sidebar .badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.template-home .sidebar .badges a {
+  display: inline-block;
+}
+
+/* ---------- Links ---------- */
+a {
+  color: var(--arl-accent-dark);
+}
+
+a:hover {
+  color: var(--arl-accent);
+}
+
+/* ---------- Quick-start box ---------- */
+.template-home .section:last-of-type {
+  background: var(--arl-subtle-bg);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #dee2e6;
+}
+
+/* ---------- Dark mode adjustments ---------- */
+[data-bs-theme="dark"] {
+  --arl-accent: #3fc1b0;
+  --arl-accent-dark: #5fd4c5;
+  --arl-code-bg: #1e1e1e;
+  --arl-subtle-bg: #212529;
+  --arl-text: #dee2e6;
+}
+
+[data-bs-theme="dark"] pre {
+  background-color: var(--arl-code-bg);
+}
+
+[data-bs-theme="dark"] .template-home .section ul li {
+  background: var(--arl-subtle-bg);
+  border-color: #495057;
+}
+
+[data-bs-theme="dark"] code {
+  color: var(--arl-accent);
+}

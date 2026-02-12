@@ -1,0 +1,101 @@
+---
+title: "Benchmarks"
+output:
+  rmarkdown::html_vignette:
+    highlight: null
+vignette: >
+  %\VignetteIndexEntry{Benchmarks}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+This page summarises Arl's performance characteristics.
+For full profiling details and optimisation history, see
+[`benchmarks/PERFORMANCE.md`](https://github.com/wwbrannon/arl/blob/main/benchmarks/PERFORMANCE.md)
+in the repository.
+
+## Pipeline Overview
+
+Every Arl expression passes through four stages:
+
+```
+Source → Tokenizer → Parser → Macro Expander → Compiler/Evaluator → Result
+```
+
+The table below shows where time is spent on typical workloads:
+
+| Component | Median Time | % of Total | Notes |
+|-----------|------------|------------|-------|
+| Tokenizer | 10–18 ms | 15–20% | Scales with source size |
+| Parser | 5–7 ms | 8–12% | Scales with nesting depth |
+| Macro Expander | 0–10 ms | 0–35% | Variable; higher for macro-heavy code |
+| Compiler / Evaluator | 40–60 ms | 60–80% | Dominant component |
+
+**Key insight**: the evaluator is the bottleneck for most workloads,
+consuming 60–80% of total execution time.
+
+## Real-Workload Timings
+
+Measured on the example programs shipped with the package:
+
+| Workload | Execution Time |
+|----------|---------------|
+| `fibonacci.arl` | ~11 ms |
+| `quicksort.arl` | ~12 ms |
+| `macro-examples.arl` | ~18 ms |
+
+These are end-to-end times (tokenise + parse + expand + compile + evaluate).
+
+## Optimisations Applied
+
+Three O(n²) bottlenecks were identified by code inspection and fixed:
+
+1. **Tokenizer string accumulation** — character-by-character `c()` replaced
+   with list-indexed collection. 10× improvement for large strings
+   (240 ms → 24 ms on a 10K-character string).
+
+2. **Parser list growing** — repeated `c(elements, list(elem))` replaced
+   with chunked collection. ~9× improvement for large flat lists
+   (1000 elements: ~60 ms → 6.9 ms).
+
+3. **Evaluator argument list growing** — pre-allocated vectors instead of
+   append-per-argument. Now scales linearly with argument count.
+
+4. **CPS overhead removed** — the evaluator was converted from
+   continuation-passing style with trampolines to direct-style evaluation,
+   removing per-expression closure allocation.
+
+All fixes preserve correctness (full test suite passes) and only affect
+pathological inputs on typical code — but they prevent worst-case blowups.
+
+## Running Benchmarks
+
+From the repository root:
+
+```bash
+make bench
+```
+
+This runs the full benchmark suite (component-level and end-to-end) and
+saves results to `benchmarks/results/`. Individual component benchmarks
+are also available:
+
+```bash
+R -e "source('benchmarks/bench-tokenizer.R')"
+R -e "source('benchmarks/bench-parser.R')"
+R -e "source('benchmarks/bench-macro.R')"
+R -e "source('benchmarks/bench-eval.R')"
+R -e "source('benchmarks/bench-stdlib.R')"
+R -e "source('benchmarks/bench-e2e.R')"
+```
+
+Profiling reports (HTML flame graphs) can be generated with:
+
+```bash
+R -e "source('benchmarks/run-all-profiles.R')"
+# View: open benchmarks/profiles/eval-fibonacci.html
+```
