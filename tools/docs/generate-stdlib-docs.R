@@ -931,6 +931,7 @@ check_undocumented <- function(all_parsed, arl_dir, modules) {
 
     documented <- names(parsed$functions)
     undocumented <- setdiff(exports, documented)
+    undocumented <- undocumented[!grepl("^__", undocumented)]
     if (length(undocumented) > 0) {
       message("  Warning: Undocumented exports in ", mod_name, ": ",
               paste(undocumented, collapse = ", "))
