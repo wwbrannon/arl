@@ -157,8 +157,9 @@ code {
 
 /* ---------- Full-width homepage (no sidebar) ---------- */
 .template-home .row > main {
-  max-width: 100%;
-  flex: 0 0 100%;
+  max-width: 72rem;
+  flex: 1;
+  margin: 0 auto;
 }
 
 .template-home .row > aside {
