@@ -39,8 +39,8 @@ test_that("inspect_compilation on empty text returns all NULL", {
 
 test_that("inspect_compilation accepts env and uses it for expansion", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("control"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("control"), env = env)
   # With control loaded, (when x 42) is a real macro that expands to (if x (begin 42) #nil)
   out <- engine$inspect_compilation("(when x 42)", env = env)
   expect_named(out, c("parsed", "expanded", "compiled", "compiled_deparsed"))

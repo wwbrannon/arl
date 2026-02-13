@@ -98,7 +98,7 @@ run_native_tests <- function(dir = "tests/native") {
     }
 
     # Run this test file in its isolated environment
-    run_native_test_file(test_file, engine, env)
+    run_native_test_file(test_file, engine, env = env)
   }
 
   invisible(NULL)

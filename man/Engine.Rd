@@ -10,7 +10,7 @@ Core Arl engine
 }
 \details{
 Provides class-based organization for tokenization, parsing, macro expansion,
-compiled evaluation, and environment management.
+evaluation, and environment management.
 }
 \note{
 The format returned by this method is not guaranteed to be stable across package versions.
@@ -39,7 +39,6 @@ option \code{arl.use_env_cache}.}
 \item \href{#method-Engine-read}{\code{Engine$read()}}
 \item \href{#method-Engine-write}{\code{Engine$write()}}
 \item \href{#method-Engine-eval}{\code{Engine$eval()}}
-\item \href{#method-Engine-eval_exprs}{\code{Engine$eval_exprs()}}
 \item \href{#method-Engine-eval_text}{\code{Engine$eval_text()}}
 \item \href{#method-Engine-load_file}{\code{Engine$load_file()}}
 \item \href{#method-Engine-load_file_with_scope}{\code{Engine$load_file_with_scope()}}
@@ -135,9 +134,9 @@ Convert an Arl expression to its string representation. Inverse of read().
 \if{html}{\out{<a id="method-Engine-eval"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-eval}{}}}
 \subsection{Method \code{eval()}}{
-Evaluate a single expression via compiled evaluation.
+Evaluate one or more expressions.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$eval(expr, env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$eval(expr, ..., env = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -145,32 +144,11 @@ Evaluate a single expression via compiled evaluation.
 \describe{
 \item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 
-\item{\code{env}}{Optional environment or Env used as the engine base.}
-
-\item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-eval_exprs"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-eval_exprs}{}}}
-\subsection{Method \code{eval_exprs()}}{
-Evaluate expressions with source tracking.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$eval_exprs(exprs, env = NULL, compiled_only = TRUE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{exprs}}{List of Arl expressions to evaluate.}
+\item{\code{...}}{Additional Arl expressions to evaluate (variadic).}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
 \item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
-
-\item{\code{compiled_only}}{Logical; if TRUE, require compiled evaluation.}
 }
 \if{html}{\out{</div>}}
 }
@@ -179,14 +157,10 @@ Evaluate expressions with source tracking.
 \if{html}{\out{<a id="method-Engine-eval_text"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-eval_text}{}}}
 \subsection{Method \code{eval_text()}}{
-Read and evaluate text.
+Read and evaluate Arl source text. Convenience wrapper around
+\code{read()} and \code{eval()}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$eval_text(
-  text,
-  env = NULL,
-  source_name = "<eval>",
-  compiled_only = TRUE
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$eval_text(text, env = NULL, source_name = "<eval>")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -199,8 +173,6 @@ Read and evaluate text.
 \item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
 
 \item{\code{source_name}}{Optional source name for error reporting.}
-
-\item{\code{compiled_only}}{Logical; if TRUE, require compiled evaluation.}
 }
 \if{html}{\out{</div>}}
 }
@@ -349,9 +321,6 @@ Should be called before running code you want to track.
 \if{html}{\out{<div class="r">}}\preformatted{Engine$enable_coverage()}\if{html}{\out{</div>}}
 }
 
-\subsection{Returns}{
-The coverage tracker instance
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Engine-disable_coverage"></a>}}

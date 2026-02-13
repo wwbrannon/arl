@@ -70,12 +70,12 @@ expressions directly:
 ```{r eval=FALSE}
 engine <- Engine$new()
 exprs <- engine$read("(define x 10) (+ x 5)")
-engine$eval(exprs[[1]])
-engine$eval(exprs[[2]])
+engine$eval(exprs[[1]], exprs[[2]])
 ```
 
-If you have multiple expressions, `engine$eval_exprs()` will evaluate them
-sequentially and return the last value.
+`eval()` accepts multiple expressions and evaluates them sequentially,
+returning the last value. Or use `engine$eval_text()` to read and evaluate
+in one step.
 
 ## Run Arl files
 

@@ -5,7 +5,7 @@ engine <- make_engine()
 
 test_that("stdlib loads successfully", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_true(exists("car", envir = env))
   expect_true(exists("cdr", envir = env))
@@ -75,14 +75,14 @@ test_that("call/cc is first-class and has an alias", {
 
 test_that("funcall applies function to list of arguments", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$funcall(sum, list(1, 2, 3)), 6)
 })
 
 test_that("values and call-with-values work", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   result <- engine$eval(engine$read("(call-with-values (lambda () (values)) (lambda () 42))")[[1]], env = env)
   expect_equal(result, 42)
@@ -99,7 +99,7 @@ test_that("values and call-with-values work", {
 
 test_that("identity returns its argument", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$identity(42), 42)
   expect_equal(env$identity("hello"), "hello")
@@ -109,7 +109,7 @@ test_that("identity returns its argument", {
 
 test_that("r/call invokes R functions with arguments", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Call R function by name (string)
   result <- env$`r/call`("sum", list(1, 2, 3, 4))
@@ -130,7 +130,7 @@ test_that("r/call invokes R functions with arguments", {
 
 test_that("call function converts lists to calls", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Convert list to call
   lst <- list(quote(`+`), 1, 2)
@@ -150,7 +150,7 @@ test_that("call function converts lists to calls", {
 
 test_that("eval function evaluates Arl expressions", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Eval simple arithmetic
   result <- env$eval(engine$read("(+ 1 2)")[[1]], env = env)
@@ -169,7 +169,7 @@ test_that("eval function evaluates Arl expressions", {
 
 test_that("gensym generates unique symbols", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Generate unique symbols
   sym1 <- env$gensym()
@@ -187,7 +187,7 @@ test_that("gensym generates unique symbols", {
 
 test_that("read is available as engine builtin without importing io", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Parse expression
   result <- engine$eval(engine$read('(read "(+ 1 2)")')[[1]], env = env)
@@ -213,7 +213,7 @@ test_that("read is available as engine builtin without importing io", {
 
 test_that("call-with-values errors when producer is not a function", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_error(
     engine$eval(engine$read("(call-with-values 42 +)")[[1]], env = env),
@@ -222,7 +222,7 @@ test_that("call-with-values errors when producer is not a function", {
 
 test_that("call-with-values errors when consumer is not a function", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_error(
     engine$eval(engine$read("(call-with-values (lambda () 1) 42)")[[1]], env = env),
@@ -235,7 +235,7 @@ test_that("call-with-values errors when consumer is not a function", {
 
 test_that("license function executes without error", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # license prints output; just verify it doesn't error
   expect_no_error(

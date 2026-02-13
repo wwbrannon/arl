@@ -4,8 +4,8 @@ engine <- make_engine()
 
 test_that("defstruct macro defines constructor and accessors", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("struct"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("struct"), env = env)
 
   engine$eval(engine$read("(defstruct Point (x y))")[[1]], env = env)
   engine$eval(engine$read("(define p (make-Point 1 2))")[[1]], env = env)

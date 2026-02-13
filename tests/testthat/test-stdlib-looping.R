@@ -4,8 +4,8 @@ engine <- make_engine()
 
 test_that("until macro repeats until test is truthy", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("looping"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("looping"), env = env)
 
   result <- engine$eval(
     engine$read("(begin (define i 0) (until (= i 3) (set! i (+ i 1))) i)")[[1]],
@@ -16,8 +16,8 @@ test_that("until macro repeats until test is truthy", {
 
 test_that("loop/recur iterates with rebinding", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("looping"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("looping"), env = env)
 
   result <- engine$eval(
     engine$read("(loop ((i 0) (acc 0)) (if (< i 5) (recur (+ i 1) (+ acc i)) acc))")[[1]],
@@ -52,8 +52,8 @@ test_that("loop/recur iterates with rebinding", {
 
 test_that("recur errors outside loop", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("looping"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("looping"), env = env)
 
   expect_error(engine$eval(engine$read("(recur 1)")[[1]], env = env), "recur can only be used inside loop")
 })

@@ -54,8 +54,8 @@ test_that("TCO: GCD (swap pattern tests temp correctness)", {
 
 test_that("TCO: works with cond (macro-expands to nested if)", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("control"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("control"), env = env)
   engine$eval(
     engine$read("
       (define classify (lambda (n)

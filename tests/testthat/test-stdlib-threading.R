@@ -4,8 +4,8 @@ engine <- make_engine()
 
 test_that("-> threads value as first argument", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("threading"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("threading"), env = env)
 
   # Simple threading
   result <- engine$eval(
@@ -25,8 +25,8 @@ test_that("-> threads value as first argument", {
 
 test_that("->> threads value as last argument", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("threading", "list", "functional"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("threading", "list", "functional"), env = env)
 
   # Thread through list operations
   result <- engine$eval(
@@ -41,8 +41,8 @@ test_that("->> threads value as last argument", {
 
 test_that("threading macros work with nested forms", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("threading"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("threading"), env = env)
 
   # Nested threading with ->
   result <- engine$eval(
@@ -57,8 +57,8 @@ test_that("threading macros work with nested forms", {
 
 test_that("threading macros handle single operations", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("threading"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("threading"), env = env)
 
   # Single operation with ->
   result <- engine$eval(
@@ -73,8 +73,8 @@ test_that("threading macros handle single operations", {
 
 test_that("threading can be combined with other macros", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("threading", "binding"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("threading", "binding"), env = env)
 
   # Combine -> with let
   result <- engine$eval(

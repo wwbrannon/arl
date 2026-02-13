@@ -423,7 +423,7 @@ CompiledRuntime <- R6::R6Class(
           result <- self$eval_compiled(block, module_env)
         }
       } else {
-        result <- private$eval_seq_compiled(body_exprs, module_env)
+        result <- private$eval_seq(body_exprs, module_env)
       }
 
       if (export_all) {
@@ -462,7 +462,7 @@ CompiledRuntime <- R6::R6Class(
       }
       value
     },
-    eval_seq_compiled = function(exprs, env) {
+    eval_seq = function(exprs, env) {
       if (is.null(exprs) || length(exprs) == 0) {
         return(invisible(NULL))
       }

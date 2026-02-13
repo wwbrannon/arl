@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("error and debug helpers work", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_error(env$error("boom"), "boom")
   expect_warning(env$warn("warn"))

@@ -8,7 +8,7 @@ engine <- make_engine()
 
 test_that("numeric helpers inc/dec/clamp/within? work", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$inc(5), 6)
   expect_equal(env$inc(5, 2), 7)
@@ -30,7 +30,7 @@ test_that("numeric helpers inc/dec/clamp/within? work", {
 
 test_that("type coercion functions work", {
   env <- new.env(parent = emptyenv())
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(engine$eval(engine$read("(exact->inexact 5)")[[1]], env = env), 5.0)
   expect_equal(engine$eval(engine$read("(inexact->exact 5.7)")[[1]], env = env), 6L)
@@ -40,7 +40,7 @@ test_that("type coercion functions work", {
 
 test_that("complex number utilities work", {
   env <- new.env(parent = emptyenv())
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   z <- engine$eval(engine$read("(make-rectangular 3 4)")[[1]], env = env)
   expect_equal(Re(z), 3.0)
@@ -57,7 +57,7 @@ test_that("complex number utilities work", {
 
 test_that("numeric operations handle boundary conditions", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Large numbers
   large <- 1e100
@@ -76,7 +76,7 @@ test_that("numeric operations handle boundary conditions", {
 
 test_that("division by zero returns Inf", {
   env <- new.env(parent = emptyenv())
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # In R, division by zero returns Inf, not an error
   expect_equal(engine$eval(engine$read("(/ 1 0)")[[1]], env = env), Inf)
@@ -89,7 +89,7 @@ test_that("division by zero returns Inf", {
 
 test_that("variadic comparison operators return #t with 0 or 1 arguments (vacuously true)", {
   env <- new.env(parent = emptyenv())
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # 1 argument: vacuously true
   expect_true(engine$eval(engine$read("(< 1)")[[1]], env = env))
@@ -112,7 +112,7 @@ test_that("variadic comparison operators return #t with 0 or 1 arguments (vacuou
 
 test_that("variadic arithmetic operators error with 0 arguments", {
   env <- new.env(parent = emptyenv())
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_error(engine$eval(engine$read("(-)")[[1]], env = env), "requires at least one argument")
   expect_error(engine$eval(engine$read("(/)")[[1]], env = env), "requires at least one argument")
@@ -130,7 +130,7 @@ test_that("variadic arithmetic operators error with 0 arguments", {
 
 test_that("number predicate edge cases cover remaining lines", {
   env <- new.env(parent = emptyenv())
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # integer? with 3.0 (finite, == as.integer) -> #t
   expect_true(engine$eval(engine$read("(integer? 3.0)")[[1]], env = env))
@@ -154,7 +154,7 @@ test_that("number predicate edge cases cover remaining lines", {
 
 test_that("expt and atan2 work", {
   env <- new.env(parent = emptyenv())
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(engine$eval(engine$read("(expt 2 10)")[[1]], env = env), 1024)
   expect_equal(

@@ -4,8 +4,8 @@ engine <- make_engine()
 
 test_that("let binds variables in parallel", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("binding"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("binding"), env = env)
 
   # Simple parallel bindings
   result <- engine$eval(
@@ -31,8 +31,8 @@ test_that("let binds variables in parallel", {
 
 test_that("let* binds variables sequentially", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("binding"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("binding"), env = env)
 
   # Sequential bindings - later bindings see earlier ones
   result <- engine$eval(
@@ -57,8 +57,8 @@ test_that("let* binds variables sequentially", {
 
 test_that("letrec allows recursive bindings", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("binding"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("binding"), env = env)
 
   # Recursive factorial
   result <- engine$eval(
@@ -82,8 +82,8 @@ test_that("letrec allows recursive bindings", {
 
 test_that("destructuring-bind unpacks structures", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("binding"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("binding"), env = env)
 
   # Simple list destructuring
   result <- engine$eval(
@@ -103,8 +103,8 @@ test_that("destructuring-bind unpacks structures", {
 
 test_that("pattern-symbols extracts symbols from patterns", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("binding"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("binding"), env = env)
 
   # Single symbol
   result <- engine$eval(
@@ -128,8 +128,8 @@ test_that("pattern-symbols extracts symbols from patterns", {
 
 test_that("binding macros when-let and if-let work", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("binding"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("binding"), env = env)
 
   result <- engine$eval(engine$read("(when-let (x 10) (+ x 1))")[[1]], env = env)
   expect_equal(result, 11)

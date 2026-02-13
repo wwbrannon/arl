@@ -8,8 +8,8 @@ engine <- make_engine()
 
 test_that("when evaluates body when test is truthy", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("control"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("control"), env = env)
 
   # Truthy test
   result <- engine$eval(engine$read("(when #t 42)")[[1]], env = env)
@@ -41,8 +41,8 @@ test_that("when evaluates body when test is truthy", {
 
 test_that("unless evaluates body when test is falsy", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("control"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("control"), env = env)
 
   # Falsy test
   result <- engine$eval(engine$read("(unless #f 42)")[[1]], env = env)
@@ -74,8 +74,8 @@ test_that("unless evaluates body when test is falsy", {
 
 test_that("cond selects first matching clause", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("control"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("control"), env = env)
 
   # First clause matches
   result <- engine$eval(
@@ -109,8 +109,8 @@ test_that("cond selects first matching clause", {
 
 test_that("case branches on key equality (Scheme syntax)", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("control"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("control"), env = env)
 
   # Match first case — datums are lists
   result <- engine$eval(
@@ -208,7 +208,7 @@ test_that("or macro works", {
 
 test_that("and/or with zero arguments return identity values", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # (and) with no args returns #t (Scheme identity for and)
   expect_true(engine$eval(engine$read("(and)")[[1]], env = env))
@@ -219,8 +219,8 @@ test_that("and/or with zero arguments return identity values", {
 
 test_that("variadic and/or short-circuit correctly", {
   env <- new.env(parent = baseenv())
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("control"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("control"), env = env)
 
   result <- engine$eval(engine$read("(and #t 1 2 3)")[[1]], env = env)
   expect_equal(result, 3)
@@ -240,7 +240,7 @@ test_that("variadic and/or short-circuit correctly", {
 
 test_that("not function works", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_false(engine$eval(engine$read("(not #t)")[[1]], env = env))
   expect_true(engine$eval(engine$read("(not #f)")[[1]], env = env))
@@ -249,7 +249,7 @@ test_that("not function works", {
 
 test_that("try* with only error handler works", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Success case
   result <- env$`try*`(
@@ -268,7 +268,7 @@ test_that("try* with only error handler works", {
 
 test_that("try* with only finally handler works", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Track whether finally ran
   finally_ran <- FALSE
@@ -296,7 +296,7 @@ test_that("try* with only finally handler works", {
 
 test_that("try* with both handlers works", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Track execution
   finally_ran <- FALSE
@@ -327,7 +327,7 @@ test_that("try* with both handlers works", {
 
 test_that("try* with no handlers (thunk only)", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Just thunk, no error or finally handler
   result <- env$`try*`(function() 99)
@@ -336,21 +336,21 @@ test_that("try* with no handlers (thunk only)", {
 
 test_that("try* errors when thunk is not a function", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_error(env$`try*`(42), "expects a function as first argument")
 })
 
 test_that("try* errors when error handler is not a function", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_error(env$`try*`(function() 1, 42), "error handler must be a function")
 })
 
 test_that("try* errors when finally handler is not a function", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_error(env$`try*`(function() 1, NULL, 42), "finally handler must be a function")
 })

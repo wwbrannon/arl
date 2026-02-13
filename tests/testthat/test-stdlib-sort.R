@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("sort works with comparator function", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("sort"), env)
+  import_stdlib_modules(engine, c("sort"), env = env)
 
   result <- engine$eval(
     engine$read("(sort '(3 1 4 1 5) <)")[[1]], env = env)
@@ -28,7 +28,7 @@ test_that("sort works with comparator function", {
 
 test_that("sort-by works with key function and comparator", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("sort"), env)
+  import_stdlib_modules(engine, c("sort"), env = env)
 
   # Sort by absolute value
   result <- engine$eval(
@@ -43,7 +43,7 @@ test_that("sort-by works with key function and comparator", {
 
 test_that("stable-sort preserves order of equal elements", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("sort"), env)
+  import_stdlib_modules(engine, c("sort"), env = env)
 
   # Basic sorting
   result <- engine$eval(
@@ -64,7 +64,7 @@ test_that("stable-sort preserves order of equal elements", {
 
 test_that("stable-sort handles edge cases", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("sort"), env)
+  import_stdlib_modules(engine, c("sort"), env = env)
 
   # Empty list
   result <- engine$eval(engine$read("(stable-sort '() <)")[[1]], env = env)
@@ -110,7 +110,7 @@ test_that("stable-sort handles edge cases", {
 
 test_that("stable-sort stability across various patterns", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("sort"), env)
+  import_stdlib_modules(engine, c("sort"), env = env)
 
   # Many equal keys: all 1s with different second elements
   result <- engine$eval(
@@ -145,7 +145,7 @@ test_that("stable-sort stability across various patterns", {
 
 test_that("merge combines two sorted lists", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("sort"), env)
+  import_stdlib_modules(engine, c("sort"), env = env)
 
   result <- engine$eval(
     engine$read("(merge '(1 3 5) '(2 4 6) <)")[[1]], env = env)

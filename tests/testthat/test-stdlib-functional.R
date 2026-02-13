@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("map applies function to list", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   double <- function(x) x * 2
   result <- env$map(double, list(1, 2, 3))
@@ -16,7 +16,7 @@ test_that("map applies function to list", {
 
 test_that("map works from Arl code", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Define a doubling function in Arl
   engine$eval(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env = env)
@@ -31,7 +31,7 @@ test_that("map works from Arl code", {
 
 test_that("filter selects matching elements", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   is_even <- function(x) x %% 2 == 0
   result <- env$filter(is_even, list(1, 2, 3, 4, 5, 6))
@@ -44,7 +44,7 @@ test_that("filter selects matching elements", {
 
 test_that("filter works from Arl code", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Define a predicate in Arl
   engine$eval(engine$read("(define even? (lambda (x) (= (% x 2) 0)))")[[1]], env = env)
@@ -57,7 +57,7 @@ test_that("filter works from Arl code", {
 
 test_that("reduce combines list elements", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   result <- env$reduce(`+`, list(1, 2, 3, 4))
   expect_equal(result, 10)
@@ -68,7 +68,7 @@ test_that("reduce combines list elements", {
 
 test_that("foldl and foldr work", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$foldl(`-`, list(1, 2, 3)), -4)
   expect_equal(env$foldr(`-`, list(1, 2, 3)), 2)
@@ -76,7 +76,7 @@ test_that("foldl and foldr work", {
 
 test_that("every? checks all elements match predicate", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_true(env$`every?`(function(x) x > 0, list(1, 2, 3)))
   expect_false(env$`every?`(function(x) x > 1, list(1, 2, 3)))
@@ -84,7 +84,7 @@ test_that("every? checks all elements match predicate", {
 
 test_that("any? checks if any element matches predicate", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_true(env$`any?`(function(x) x > 2, list(1, 2, 3)))
   expect_false(env$`any?`(function(x) x > 5, list(1, 2, 3)))
@@ -92,7 +92,7 @@ test_that("any? checks if any element matches predicate", {
 
 test_that("mapcat maps and concatenates results", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   result <- env$mapcat(function(x) list(x, x + 10), list(1, 2))
   expect_equal(result, list(1, 11, 2, 12))
@@ -100,7 +100,7 @@ test_that("mapcat maps and concatenates results", {
 
 test_that("remove filters out matching elements", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   result <- env$remove(function(x) x %% 2 == 0, list(1, 2, 3, 4))
   expect_equal(result, list(1, 3))
@@ -108,7 +108,7 @@ test_that("remove filters out matching elements", {
 
 test_that("complement negates predicate", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   is_even <- function(x) x %% 2 == 0
   is_odd <- env$complement(is_even)
@@ -125,7 +125,7 @@ test_that("complement negates predicate", {
 
 test_that("compose combines functions", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   double <- function(x) x * 2
   add_one <- function(x) x + 1
@@ -142,7 +142,7 @@ test_that("compose combines functions", {
 
 test_that("partial applies arguments partially", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Partial application
   add <- function(a, b) a + b
@@ -161,7 +161,7 @@ test_that("partial applies arguments partially", {
 
 test_that("repeat creates list with repeated value", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   result <- env$`repeat`(5, "x")
   expect_equal(length(result), 5)
@@ -180,7 +180,7 @@ test_that("repeat creates list with repeated value", {
 
 test_that("zip combines lists element-wise", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Two lists
   result <- env$zip(list(1, 2, 3), list("a", "b", "c"))
@@ -210,7 +210,7 @@ test_that("zip combines lists element-wise", {
 
 test_that("curry creates curried functions", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("functional"), env)
+  import_stdlib_modules(engine, c("functional"), env = env)
 
   # Curry a function with 2 arguments
   engine$eval(engine$read("(define add (lambda (a b) (+ a b)))")[[1]], env = env)
@@ -233,7 +233,7 @@ test_that("curry creates curried functions", {
 
 test_that("memoize caches function results", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("functional"), env)
+  import_stdlib_modules(engine, c("functional"), env = env)
 
   # Create a function that counts how many times it's called
   engine$eval(engine$read("
@@ -264,7 +264,7 @@ test_that("memoize caches function results", {
 
 test_that("juxt applies multiple functions to same arguments", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("functional", "list"), env)
+  import_stdlib_modules(engine, c("functional", "list"), env = env)
 
   # Create juxtaposition of + and *
   engine$eval(engine$read("(define add-and-mult (juxt + *))")[[1]], env = env)
@@ -280,7 +280,7 @@ test_that("juxt applies multiple functions to same arguments", {
 
 test_that("constantly returns function that always returns same value", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("functional"), env)
+  import_stdlib_modules(engine, c("functional"), env = env)
 
   engine$eval(engine$read("(define always-42 (constantly 42))")[[1]], env = env)
 
@@ -297,7 +297,7 @@ test_that("constantly returns function that always returns same value", {
 
 test_that("iterate applies function n times", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("functional"), env)
+  import_stdlib_modules(engine, c("functional"), env = env)
 
   # Double a number 3 times
   engine$eval(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env = env)
@@ -315,7 +315,7 @@ test_that("iterate applies function n times", {
 
 test_that("iterate-until collects values until predicate is true", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("functional"), env)
+  import_stdlib_modules(engine, c("functional"), env = env)
 
   # Double until value > 100
   engine$eval(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env = env)
@@ -337,8 +337,8 @@ test_that("iterate-until collects values until predicate is true", {
 
 test_that("mapcat with empty results returns empty list", {
   env <- new.env()
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("functional"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("functional"), env = env)
 
   result <- engine$eval(
     engine$read("(mapcat (lambda (x) (list)) (list 1 2 3))")[[1]], env = env)
@@ -347,8 +347,8 @@ test_that("mapcat with empty results returns empty list", {
 
 test_that("foldl and foldr with no init value from Arl code", {
   env <- new.env()
-  toplevel_env(engine, env)
-  import_stdlib_modules(engine, c("functional"), env)
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("functional"), env = env)
 
   # foldl with no init (uses Arl's + which is variadic)
   result <- engine$eval(
@@ -363,7 +363,7 @@ test_that("foldl and foldr with no init value from Arl code", {
 
 test_that("curry with 3-arg function enables multi-step partial application", {
   env <- toplevel_env(engine, new.env())
-  import_stdlib_modules(engine, c("functional"), env)
+  import_stdlib_modules(engine, c("functional"), env = env)
 
   engine$eval(engine$read("(define add3 (curry (lambda (a b c) (+ a b c))))")[[1]], env = env)
   result <- engine$eval(engine$read("(((add3 1) 2) 3)")[[1]], env = env)

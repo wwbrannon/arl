@@ -8,7 +8,7 @@ engine <- make_engine()
 
 test_that("dict and set helpers work", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   dict <- env$dict(a = 1, b = 2)
   expect_equal(env$`dict-get`(dict, "a"), 1)

@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("substring extracts string portions", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$substring("hello", 1, 4), "ell")
   expect_equal(env$substring("world", 0, 3), "wor")
@@ -15,7 +15,7 @@ test_that("substring extracts string portions", {
 
 test_that("string case conversion works", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$`string-upcase`("hello"), "HELLO")
   expect_equal(env$`string-downcase`("HELLO"), "hello")
@@ -30,7 +30,7 @@ test_that("string case conversion works", {
 
 test_that("char-at and string-ref access characters", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # char-at (0-indexed)
   expect_equal(env$`char-at`("hello", 0), "h")
@@ -42,7 +42,7 @@ test_that("char-at and string-ref access characters", {
 
 test_that("string-length returns character count", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$`string-length`("hello"), 5)
   expect_equal(env$`string-length`(""), 0)
@@ -51,7 +51,7 @@ test_that("string-length returns character count", {
 
 test_that("number->string converts with bases", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Decimal (default)
   expect_equal(env$`number->string`(42), "42")
@@ -68,7 +68,7 @@ test_that("number->string converts with bases", {
 
 test_that("string->number parses numbers", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$`string->number`("42"), 42)
   expect_equal(env$`string->number`("3.14"), 3.14)
@@ -80,7 +80,7 @@ test_that("string->number parses numbers", {
 
 test_that("string comparison operators work", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # string=?
   expect_true(env$`string=?`("hello", "hello"))
@@ -105,7 +105,7 @@ test_that("string comparison operators work", {
 
 test_that("string->list and list->string convert between representations", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # string->list
   result <- env$`string->list`("abc")
@@ -127,7 +127,7 @@ test_that("string->list and list->string convert between representations", {
 
 test_that("string-append concatenates strings", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$`string-append`("hello", " ", "world"), "hello world")
   expect_equal(env$`string-append`("a", "b", "c"), "abc")
@@ -142,7 +142,7 @@ test_that("string-append concatenates strings", {
 # Note: string-copy may not be implemented
 # test_that("string-copy creates copy of string", {
 #   env <- new.env()
-#   toplevel_env(engine, env)
+#   toplevel_env(engine, env = env)
 #
 #   original <- "hello"
 #   copy <- env$`string-copy`(original)
@@ -156,7 +156,7 @@ test_that("string-append concatenates strings", {
 
 test_that("string and io helpers work", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_equal(env$str("a", 1, "b"), "a1b")
   expect_equal(env$`format-value`(list(1, 2, 3)), "1 2 3")
@@ -177,7 +177,7 @@ test_that("string and io helpers work", {
 
 test_that("string match helpers work", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_true(env$`string-contains?`("hello", "ell"))
   expect_false(env$`string-contains?`("hello", "^ell"))
@@ -205,7 +205,7 @@ test_that("string match helpers work", {
 
 test_that("string operations handle edge cases", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # str with no arguments returns empty string
   expect_equal(env$str(), "")
@@ -246,7 +246,7 @@ test_that("string operations handle edge cases", {
 
 test_that("string-find returns #nil when pattern not found", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   result <- engine$eval(
     engine$read('(string-find "hello" "xyz")')[[1]], env = env)
@@ -255,7 +255,7 @@ test_that("string-find returns #nil when pattern not found", {
 
 test_that("substring errors on negative start", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_error(
     engine$eval(engine$read('(substring "hello" -1 3)')[[1]], env = env),
@@ -264,7 +264,7 @@ test_that("substring errors on negative start", {
 
 test_that("number->string errors on base out of range", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   expect_error(
     engine$eval(engine$read("(number->string 10 1)")[[1]], env = env),

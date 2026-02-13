@@ -540,7 +540,7 @@ test_that("promise_new_compiled() evaluates when forced", {
   env <- eng$get_env()
   env$x <- 42
 
-  promise <- engine_field(eng, "compiled_runtime")$promise_new_compiled(quote(x * 2), env)
+  promise <- engine_field(eng, "compiled_runtime")$promise_new_compiled(quote(x * 2), env = env)
 
   result <- promise$value()
   expect_equal(result, 84)
@@ -553,7 +553,7 @@ test_that("promise_new_compiled() caches result", {
 
   promise <- engine_field(eng, "compiled_runtime")$promise_new_compiled(
     quote({ counter <- counter + 1; counter }),
-    env
+    env = env
   )
 
   result1 <- promise$value()

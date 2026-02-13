@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("equal? dispatches on class of first argument", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Built-in methods: list and environment
   expect_true(env$`equal?`(list(1, 2, 3), list(1, 2, 3)))

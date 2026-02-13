@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("macroexpand with depth=1 expands macros one level", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Define a simple macro
   engine$eval(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env = env)
@@ -20,7 +20,7 @@ test_that("macroexpand with depth=1 expands macros one level", {
 
 test_that("macroexpand fully expands nested macros", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Define nested macros
   engine$eval(engine$read("(defmacro inner (x) `(* ,x 2))")[[1]], env = env)
@@ -37,7 +37,7 @@ test_that("macroexpand fully expands nested macros", {
 
 test_that("Engine macroexpand with depth=0 returns expr unchanged", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   engine$eval(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env = env)
 
@@ -51,7 +51,7 @@ test_that("Engine macroexpand with depth=0 returns expr unchanged", {
 
 test_that("Engine macroexpand with depth=1 expands one layer", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   engine$eval(engine$read("(defmacro inner (x) `(* ,x 2))")[[1]], env = env)
   engine$eval(engine$read("(defmacro outer (y) `(inner (+ ,y 1)))")[[1]], env = env)
@@ -65,7 +65,7 @@ test_that("Engine macroexpand with depth=1 expands one layer", {
 
 test_that("Engine macroexpand with depth=2 expands two layers", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   engine$eval(engine$read("(defmacro inner (x) `(* ,x 2))")[[1]], env = env)
   engine$eval(engine$read("(defmacro middle (y) `(inner (+ ,y 1)))")[[1]], env = env)
@@ -80,7 +80,7 @@ test_that("Engine macroexpand with depth=2 expands two layers", {
 
 test_that("Engine macroexpand with depth=NULL fully expands", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   engine$eval(engine$read("(defmacro inner (x) `(* ,x 2))")[[1]], env = env)
   engine$eval(engine$read("(defmacro outer (y) `(inner (+ ,y 1)))")[[1]], env = env)
@@ -126,7 +126,7 @@ test_that("Arl-level macroexpand with depth parameter", {
 
 test_that("macro? predicate identifies macros", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Define a macro
   engine$eval(engine$read("(defmacro test-macro (x) x)")[[1]], env = env)

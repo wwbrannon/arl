@@ -4,7 +4,7 @@ engine <- make_engine()
 
 test_that("format-value handles environments correctly", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
 
   # Plain environment should format as <environment>
   plain_env <- new.env(hash = TRUE)
@@ -39,7 +39,7 @@ test_that("format-value handles environments correctly", {
 
 test_that("format-value for dotted pair (arl_cons) shows dotted form", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
   pair <- engine$read("'(a . b)")[[1]][[2]]
   expect_true(r6_isinstance(pair, "Cons"))
   formatted <- env$`format-value`(pair)
@@ -50,7 +50,7 @@ test_that("format-value for dotted pair (arl_cons) shows dotted form", {
 
 test_that("format-value for improper list shows dotted tail", {
   env <- new.env()
-  toplevel_env(engine, env)
+  toplevel_env(engine, env = env)
   improper <- engine$read("'(a b . c)")[[1]][[2]]
   expect_true(r6_isinstance(improper, "Cons"))
   formatted <- env$`format-value`(improper)
