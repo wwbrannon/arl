@@ -34,6 +34,9 @@
 #' @export
 Engine <- R6::R6Class(
   "Engine",
+
+  cloneable = FALSE,
+
   public = list(
     use_env_cache = NULL,
 

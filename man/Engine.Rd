@@ -44,7 +44,6 @@ option \code{arl.use_env_cache}.}
 \item \href{#method-Engine-format_value}{\code{Engine$format_value()}}
 \item \href{#method-Engine-with_error_context}{\code{Engine$with_error_context()}}
 \item \href{#method-Engine-print_error}{\code{Engine$print_error()}}
-\item \href{#method-Engine-clone}{\code{Engine$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -409,23 +408,6 @@ Format and print an Arl error with source context.
 \item{\code{e}}{A condition object.}
 
 \item{\code{file}}{Connection to print to (default \code{stderr()}).}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
 }
 \if{html}{\out{</div>}}
 }
