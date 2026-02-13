@@ -1,17 +1,11 @@
 ;; Log Parser Example
 ;; Demonstrates text processing and simple analytics
 
+(import assert)
 (import binding)
 (import control)
 (import looping)
 (import threading)
-
-;; Output directory for reports (set via ARL_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "ARL_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
 
 (define log-lines
   (list
@@ -33,29 +27,22 @@
      :latency (r/call "as.numeric" (list (nth parts 4))))))
 
 (define parsed (map parse-line log-lines))
+(assert-equal 6 (length parsed))
 
 (define statuses (map (lambda (row) (r/call "get" (list "status" row))) parsed))
 (define latencies (map (lambda (row) (r/call "get" (list "latency" row))) parsed))
+(assert-equal (list 200 500 200 200 500 200) statuses)
+(assert-equal (list 100 110 120 130 140 120) latencies)
 
 (define status-500 (length (filter (lambda (s) (= s 500)) statuses)))
 (define avg-latency (/ (reduce + latencies) (length latencies)))
+(assert-equal 2 status-500)
+(assert-equal 120 avg-latency)
 
 (println "=== Log Summary ===")
+(assert-equal 6 (length log-lines))
 (println (str "Total lines: " (length log-lines)))
 (println (str "HTTP 500 count: " status-500))
 (println (str "Average latency: " avg-latency))
-
-(define report-path (r/call "file.path" (list *output-dir* "log-summary.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "lines=" (length log-lines))
-                           (str "status_500=" status-500)
-                           (str "avg_latency=" avg-latency)))
-         report-path))
-
-(define example-result
-  (dict
-   :status_500 status-500
-   :avg_latency avg-latency))
 
 (println "\nExample complete!")

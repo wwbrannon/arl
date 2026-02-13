@@ -1,17 +1,11 @@
 ;; Sales Report Example
 ;; Demonstrates data wrangling with R interop and file output
 
+(import assert)
 (import binding)
 (import control)
 (import looping)
 (import threading)
-
-;; Output directory for reports (set via ARL_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "ARL_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
 
 (define transactions
   (list
@@ -35,6 +29,7 @@
 (define amounts-vec (r/call "unlist" (list amounts)))
 
 (define total-sales (reduce + amounts))
+(assert-equal 690 total-sales)
 
 (define totals-env
   (r/call "new.env" (dict :parent (r/call "emptyenv" ()))))
@@ -48,6 +43,10 @@
                     totals-env))
       (r/call "assign" (list product amount totals-env))))
 
+(assert-equal 190 (r/call "get" (dict :x "alpha" :envir totals-env :inherits #f)))
+(assert-equal 390 (r/call "get" (dict :x "beta" :envir totals-env :inherits #f)))
+(assert-equal 110 (r/call "get" (dict :x "gamma" :envir totals-env :inherits #f)))
+
 (define product-names (r/call "ls" (list totals-env)))
 (define product-names-list (r/call "as.list" (list product-names)))
 (define totals-list
@@ -57,6 +56,7 @@
 (define totals-vec (r/call "unlist" (list totals-list)))
 (define top-index (r/call "which.max" (list totals-vec)))
 (define top-product (r/call "[" (list product-names top-index)))
+(assert-equal "beta" top-product)
 
 (define totals-by-product (list))
 (for (name product-names-list)
@@ -74,12 +74,8 @@
   (r/call "data.frame"
           (dict :product products-vec :region regions-vec :amount amounts-vec)))
 
-(define report-path (r/call "file.path" (list *output-dir* "sales-report.csv")))
+(define report-path (r/call "file.path" (list (r/call "tempdir" ()) "sales-report.csv")))
 ((:: utils write.csv) sales-df report-path #f)
-
-(define example-result
-  (dict
-   :total_sales total-sales
-   :top_product top-product))
+(assert-true (r/call "file.exists" (list report-path)))
 
 (println "\nExample complete!")

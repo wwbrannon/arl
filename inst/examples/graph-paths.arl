@@ -1,18 +1,12 @@
 ;; Graph Paths Example
 ;; Demonstrates BFS traversal and Dijkstra shortest paths
 
+(import assert)
 (import binding)
 (import control)
 (import functional)
 (import looping)
 (import threading)
-
-;; Output directory for reports (set via ARL_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "ARL_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
 
 (define contains?
   (lambda (lst value)
@@ -99,30 +93,24 @@
 
 (println "=== Graph Traversal ===")
 (define bfs-order (bfs graph "A"))
+(assert-equal (list "A" "B" "C" "D" "E") bfs-order)
 (println (str "BFS order from A: " bfs-order))
 
 (println "\n=== Shortest Paths ===")
 (define dijkstra-result (dijkstra graph nodes "A"))
 (define dist-env (r/call "get" (list "dist" dijkstra-result)))
 (define prev-env (r/call "get" (list "prev" dijkstra-result)))
+(assert-equal 0 (r/call "get" (list "A" dist-env)))
+(assert-equal 1 (r/call "get" (list "B" dist-env)))
+(assert-equal 2 (r/call "get" (list "C" dist-env)))
+(assert-equal 5 (r/call "get" (list "D" dist-env)))
+(assert-equal 7 (r/call "get" (list "E" dist-env)))
 (define shortest-path (reconstruct-path prev-env "A" "E"))
 (define shortest-cost (r/call "get" (list "E" dist-env)))
+(assert-equal (list "A" "B" "E") shortest-path)
+(assert-equal 7 shortest-cost)
 
 (println (str "Shortest path A -> E: " shortest-path))
 (println (str "Total cost: " shortest-cost))
-
-(define example-result
-  (dict
-   :bfs_order bfs-order
-   :shortest_path shortest-path
-   :shortest_cost shortest-cost))
-
-(define report-path (r/call "file.path" (list *output-dir* "graph-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "bfs_order=" bfs-order)
-                           (str "shortest_path=" shortest-path)
-                           (str "shortest_cost=" shortest-cost)))
-         report-path))
 
 (println "\nExample complete!")

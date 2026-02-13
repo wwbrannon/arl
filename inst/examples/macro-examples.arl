@@ -1,17 +1,11 @@
 ;; Macro System Examples
 ;; Demonstrates defmacro, quasiquote, unquote, and macro expansion
 
+(import assert)
 (import binding)
 (import control)
 (import looping)
 (import threading)
-
-;; Output directory for reports (set via ARL_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "ARL_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
 
 ;; ============================================================================
 ;; Simple Macros
@@ -24,7 +18,9 @@
 (defmacro double (x)
   `(* 2 ,x))
 
+(assert-equal 10 (double 5))
 (println (str "(double 5) = " (double 5)))
+(assert-equal 6 (double (+ 1 2)))
 (println (str "(double (+ 1 2)) = " (double (+ 1 2))))
 
 ;; A macro that creates a variable with a default value
@@ -33,6 +29,7 @@
   `(define ,name ,value))
 
 (defvar x 42)
+(assert-equal 42 x)
 (println (str "x = " x))
 
 ;; ============================================================================
@@ -85,6 +82,7 @@
 (do-times 5
   (set! count (+ count 1))
   (println (str "Count: " count)))
+(assert-equal 5 count)
 
 ;; ============================================================================
 ;; Macro Expansion Examples
@@ -194,6 +192,10 @@
             `(-> (,first-form ,value) ,@rest-forms)))))
 
 (println "Threading macro example:")
+(assert-equal 15 (-> 5
+                     (+ 3)
+                     (* 2)
+                     (- 1)))
 (println (str "Result: " (-> 5
                               (+ 3)
                               (* 2)
@@ -211,25 +213,13 @@
   (let ((result (* a b)))
     `(quote ,result)))
 
+(assert-equal 42 (const-multiply 6 7))
 (println (str "(const-multiply 6 7) = " (const-multiply 6 7)))
 (println "This multiplication happened at macro expansion time!")
 
 (define threading-result (-> 5 (+ 3) (* 2) (- 1)))
 (define aif-result (aif (+ 2 3) it #nil))
-(define expanded-when (macroexpand-1 '(when (> 5 3) (println "yes"))))
-
-(define example-result
-  (dict
-   :threading_result threading-result
-   :aif_result aif-result
-   :expanded_when expanded-when))
-
-(define report-path (r/call "file.path" (list *output-dir* "macro-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "threading_result=" threading-result)
-                           (str "aif_result=" aif-result)
-                           (str "expanded_when=" expanded-when)))
-         report-path))
+(assert-equal 15 threading-result)
+(assert-equal 5 aif-result)
 
 (println "\nExample complete!")

@@ -1,17 +1,11 @@
 ;; FizzBuzz Implementations
 ;; Demonstrates control flow, looping, and conditionals
 
+(import assert)
 (import binding)
 (import control)
 (import looping)
 (import threading)
-
-;; Output directory for reports (set via ARL_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "ARL_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
 
 ;; ============================================================================
 ;; Classic FizzBuzz using cond
@@ -24,6 +18,12 @@
       ((= (% n 3) 0) "Fizz")
       ((= (% n 5) 0) "Buzz")
       (else (str n)))))
+
+(assert-equal "1" (fizzbuzz 1))
+(assert-equal "2" (fizzbuzz 2))
+(assert-equal "Fizz" (fizzbuzz 3))
+(assert-equal "Buzz" (fizzbuzz 5))
+(assert-equal "FizzBuzz" (fizzbuzz 15))
 
 (println "Classic FizzBuzz (1-20):")
 (define i 1)
@@ -48,6 +48,7 @@
   (lambda (n)
     (map fizzbuzz (r/call "seq" (list 1 n)))))
 
+(assert-equal (list "1" "2" "Fizz" "4" "Buzz" "Fizz" "7" "8" "Fizz" "Buzz") (fizzbuzz-list 10))
 (println (fizzbuzz-list 10))
 
 ;; ============================================================================
@@ -64,6 +65,11 @@
       (when (= result "")
         (set! result (str n)))
       result)))
+
+(assert-equal "Fizz" (fizzbuzz-when 3))
+(assert-equal "Buzz" (fizzbuzz-when 5))
+(assert-equal "FizzBuzz" (fizzbuzz-when 15))
+(assert-equal "1" (fizzbuzz-when 1))
 
 (println "\nUsing when (1-10):")
 (for (n (r/call "seq" (list 1 10)))
@@ -103,6 +109,9 @@
 (define fizzbuzz-numbers
   (filter (lambda (n) (= (% n 15) 0)) range-1-30))
 
+(assert-equal (list 3 6 9 12 15 18 21 24 27 30) fizz-numbers)
+(assert-equal (list 5 10 15 20 25 30) buzz-numbers)
+(assert-equal (list 15 30) fizzbuzz-numbers)
 (println (str "Fizz numbers (1-30): " fizz-numbers))
 (println (str "Buzz numbers (1-30): " buzz-numbers))
 (println (str "FizzBuzz numbers (1-30): " fizzbuzz-numbers))
@@ -124,23 +133,11 @@
                                 results))))))
 
 (println "\nCounts for 1-100:")
-(println (count-fizzbuzz 100))
-
 (define counts-100 (count-fizzbuzz 100))
-(define example-result
-  (dict
-   :count_fizz (r/call "get" (list "fizz" counts-100))
-   :count_buzz (r/call "get" (list "buzz" counts-100))
-   :count_fizzbuzz (r/call "get" (list "fizzbuzz" counts-100))
-   :count_numbers (r/call "get" (list "numbers" counts-100))))
-
-(define report-path (r/call "file.path" (list *output-dir* "fizzbuzz-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "fizz=" (r/call "get" (list "fizz" counts-100)))
-                           (str "buzz=" (r/call "get" (list "buzz" counts-100)))
-                           (str "fizzbuzz=" (r/call "get" (list "fizzbuzz" counts-100)))
-                           (str "numbers=" (r/call "get" (list "numbers" counts-100)))))
-         report-path))
+(assert-equal 27 (r/call "get" (list "fizz" counts-100)))
+(assert-equal 14 (r/call "get" (list "buzz" counts-100)))
+(assert-equal 6 (r/call "get" (list "fizzbuzz" counts-100)))
+(assert-equal 53 (r/call "get" (list "numbers" counts-100)))
+(println counts-100)
 
 (println "\nExample complete!")

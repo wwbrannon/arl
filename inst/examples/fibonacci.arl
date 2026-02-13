@@ -10,17 +10,11 @@
 ;; so TCO does not apply there. For large inputs, prefer `fib-iterative`
 ;; or the sequence-based approach.
 
+(import assert)
 (import binding)
 (import control)
 (import looping)
 (import threading)
-
-;; Output directory for reports (set via ARL_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "ARL_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
 
 ;; ============================================================================
 ;; Classic Recursive Implementation
@@ -35,9 +29,13 @@
                (fib-recursive (- n 2)))))))
 
 (println "Recursive Fibonacci:")
+(assert-equal 0 (fib-recursive 0))
 (println (str "fib(0) = " (fib-recursive 0)))
+(assert-equal 1 (fib-recursive 1))
 (println (str "fib(1) = " (fib-recursive 1)))
+(assert-equal 5 (fib-recursive 5))
 (println (str "fib(5) = " (fib-recursive 5)))
+(assert-equal 55 (fib-recursive 10))
 (println (str "fib(10) = " (fib-recursive 10)))
 
 ;; ============================================================================
@@ -60,7 +58,9 @@
           b))))
 
 (println "\nIterative Fibonacci:")
+(assert-equal 55 (fib-iterative 10))
 (println (str "fib(10) = " (fib-iterative 10)))
+(assert-equal 610 (fib-iterative 15))
 (println (str "fib(15) = " (fib-iterative 15)))
 
 ;; ============================================================================
@@ -89,7 +89,9 @@
                     (generate-next init 2))))))))
 
 (println "\nFibonacci Sequence:")
+(assert-equal (list 0 1 1 2 3 5 8 13 21 34) (fib-sequence 10))
 (println (str "First 10: " (fib-sequence 10)))
+(assert-equal (list 0 1 1 2 3 5 8 13 21 34 55 89 144 233 377) (fib-sequence 15))
 (println (str "First 15: " (fib-sequence 15)))
 
 ;; ============================================================================
@@ -101,6 +103,7 @@
     (reduce + (fib-sequence n))))
 
 (println "\nSum of Fibonacci:")
+(assert-equal 88 (sum-fib 10))
 (println (str "Sum of first 10: " (sum-fib 10)))
 
 ;; ============================================================================
@@ -128,21 +131,9 @@
 (define fib15 (fib-iterative 15))
 (define seq10 (fib-sequence 10))
 (define sum10 (sum-fib 10))
-
-(define example-result
-  (dict
-   :fib10 fib10
-   :fib15 fib15
-   :seq10 seq10
-   :sum10 sum10))
-
-(define report-path (r/call "file.path" (list *output-dir* "fibonacci-report.txt")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "fib10=" fib10)
-                           (str "fib15=" fib15)
-                           (str "sum10=" sum10)
-                           (str "seq10=" seq10)))
-         report-path))
+(assert-equal 55 fib10)
+(assert-equal 610 fib15)
+(assert-equal (list 0 1 1 2 3 5 8 13 21 34) seq10)
+(assert-equal 88 sum10)
 
 (println "\nExample complete!")

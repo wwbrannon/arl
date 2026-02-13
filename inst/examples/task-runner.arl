@@ -1,17 +1,11 @@
 ;; Task Runner Example
 ;; Demonstrates simple dependency resolution and execution ordering
 
+(import assert)
 (import binding)
 (import control)
 (import looping)
 (import threading)
-
-;; Output directory for reports (set via ARL_OUTPUT_DIR env var)
-(define *output-dir*
-  (let ((dir (r/call "Sys.getenv" (list "ARL_OUTPUT_DIR" ""))))
-    (if (= dir "")
-        (r/call "tempdir" ())
-        dir)))
 
 (define contains?
   (lambda (lst value)
@@ -47,16 +41,8 @@
 (println "=== Task Runner ===")
 (for (t tasks)
   (visit (r/call "get" (list "name" t))))
+(assert-equal (list "clean" "compile" "test" "package" "deploy") run-order)
+(assert-equal 5 (length run-order))
 (println (str "Execution order: " run-order))
-
-(define log-path (r/call "file.path" (list *output-dir* "task-runner.log")))
-(r/call "writeLines"
-        (list
-         (r/call "c" (list (str "order=" run-order)))
-         log-path))
-
-(define example-result
-  (dict
-   :run_order run-order))
 
 (println "\nExample complete!")
