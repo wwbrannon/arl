@@ -57,8 +57,9 @@ engine <- Engine$new()
 engine$repl()
 ```
 
-The engine loads all stdlib modules automatically. Type `(quit)` or
-press Ctrl+C to exit the REPL.
+The engine loads all stdlib modules automatically. (If needed, you can
+disable stdlib loading with the `load_stdlib=FALSE` option to
+`Engine$new`.) Type `(quit)` or press Ctrl+C to exit the REPL.
 
 Arithmetic and variables work as you’d expect:
 
@@ -130,7 +131,13 @@ If the install path is not on your `PATH`, run
 
 ## Features
 
-### Special Forms
+### Special Forms and Built-in Functions
+
+Special forms are expressions with evaluation rules that differ from
+normal function calls – for example, `if` does not evaluate all its
+arguments, and `define` binds a name rather than passing it as a value.
+They are handled directly by the compiler and cannot be redefined or
+passed as values.
 
 - `quote` / `'` - Return unevaluated expression
 - `if` - Conditional evaluation
@@ -151,6 +158,14 @@ If the install path is not on your `PATH`, run
 - `::`, `:::` - R package namespace access
 - `help` - Look up documentation
 
+In addition to special forms, Arl provides a small set of **built-in
+functions** implemented in R and available before any stdlib modules
+load (and if stdlib loading is disabled): `eval`, `read`, `write`,
+`gensym`, `capture`, `macro?`, `macroexpand`, `pair?`, `promise?`,
+`force`, `promise-expr`, `toplevel-env`, `current-env`, `r/eval`, `doc`,
+and `doc!`. Unlike special forms, these are ordinary functions and can
+be passed as values.
+
 ### Continuations
 
 Arl provides downward-only continuations via R’s native `callCC`
@@ -162,11 +177,11 @@ control flow; side effects are not rewound.
 ### Tail Call Optimization
 
 Arl’s compiler implements **self-tail-call optimization** (self-TCO).
-When you define a function with `(define name (lambda ...))` and the
-body contains self-calls in tail position, the compiler automatically
-rewrites them as `while` loops – avoiding stack growth. This works
-through `if`, `begin`, `cond`, `let`, `let*`, and `letrec` in tail
-position.
+When you bind a function with `(define name (lambda ...))` or
+`(set! name (lambda ...))` and the body contains self-calls in tail
+position, the compiler automatically rewrites them as `while` loops –
+avoiding stack growth. This works through `if`, `begin`, `cond`, `let`,
+`let*`, and `letrec` in tail position.
 
 ``` lisp
 ;; The compiler optimizes this -- no stack overflow even for large n
@@ -296,6 +311,36 @@ algorithms to macro techniques, data pipelines, and report outputs:
 - **[task-runner.arl](articles/examples.html#task-runner)** - Dependency
   resolution and execution ordering
 
+## Architecture
+
+Arl leverages R’s existing eval/quote/environment system:
+
+1.  **Lexer/Tokenizer**: Lexical analysis of Arl source, producing a
+    token stream for the parser to consume.
+2.  **Parser**: Consume the tokenizer’s token stream and produce an
+    abstrat syntax tree (AST), removing syntactic sugar like `'` (quote)
+    \`\`\` (quasiquote), etc.
+3.  **Macro expander**: Expand macros occurring in the input into code.
+    Macro expansion is recursive, with each step generating new code
+    that may have further macro calls to expand. Expansion terminates
+    when no macros remain to expand. Macros are the signature feature of
+    Lisp, and the expansion phase provides the opportunity to do
+    arbitrary computation and source-code transformation at compile
+    time.
+4.  **Compiler**: Compile the Arl AST resulting from macro expansion
+    into R code, handling all special forms and tail call optimization
+    where possible.
+5.  **R Evaluation**: The R code resulting from compilation is passed to
+    R’s `base::eval()` for evaluation, taking advantage of the highly
+    optimized R evaluator and providing seamless access to all R
+    functions.
+
+Every part of this pipeline is implemented in pure R, with no compiled C
+code. The simplicity of Lisp syntax means that the parser in particular
+can be a simple [recursive
+descent](https://en.wikipedia.org/wiki/Recursive_descent_parser) parser,
+rather than a more complex implementation with flex and bison.
+
 ## Development
 
 See the [Makefile](Makefile) for common development commands:
@@ -320,18 +365,6 @@ If you use Arl in academic work, please cite it. The package includes a
 ``` r
 citation("arl")
 ```
-
-## Architecture
-
-Arl leverages R’s existing eval/quote/environment system:
-
-1.  **Tokenizer**: Lexical analysis of Arl source
-2.  **Parser**: Converts S-expressions to R calls
-3.  **Macro expander**: Processes `defmacro` definitions
-4.  **Compiler**: Compiles Arl AST to R code, handling all special forms
-    and self-TCO
-5.  **R bridge**: Compiled code is evaluated via R’s `eval()`, with
-    seamless access to all R functions
 
 ## License
 
