@@ -116,9 +116,11 @@ in R calls. This is a major ergonomic difference from Scheme.
 ### Tail-call optimization
 
 Scheme mandates full tail-call optimization (proper tail calls). Arl implements
-**self-TCO**: the compiler detects `(define name (lambda ...))` where the lambda
-body has self-calls in tail position and rewrites them as `while` loops. This
-covers tail calls through `if`, `begin`, `cond`, `let`, `let*`, and `letrec`.
+**self-TCO**: the compiler detects `(define name (lambda ...))` or
+`(set! name (lambda ...))` where the lambda body has self-calls in tail
+position and rewrites them as `while` loops. This covers tail calls through
+`if`, `begin`, `cond`, `let`, `let*`, and `letrec`. Because `letrec` expands
+into `set!`, `letrec`-bound self-recursive lambdas are optimized automatically.
 
 What is **not** covered:
 

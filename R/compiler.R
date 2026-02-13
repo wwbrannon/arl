@@ -541,7 +541,18 @@ Compiler <- R6::R6Class(
           as.character(name)
         )))
       }
-      val <- private$compile_impl(expr[[3]])
+      # Detect (set! name (lambda ...)) for self-tail-call optimization
+      val_expr <- expr[[3]]
+      self_name <- NULL
+      if (is.symbol(name) && is.call(val_expr) && length(val_expr) >= 3 &&
+          is.symbol(val_expr[[1]]) && identical(as.character(val_expr[[1]]), "lambda")) {
+        self_name <- as.character(name)
+      }
+      val <- if (!is.null(self_name)) {
+        private$compile_lambda(val_expr, self_name = self_name)
+      } else {
+        private$compile_impl(expr[[3]])
+      }
       if (is.null(val)) {
         return(private$fail("set! value could not be compiled"))
       }

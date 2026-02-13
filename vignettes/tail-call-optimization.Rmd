@@ -21,11 +21,14 @@ iterations. Arl's compiler fixes this for the most common case:
 
 ## How It Works
 
-When the compiler sees the pattern `(define name (lambda ...))` and the
-lambda body contains calls to `name` in tail position, it rewrites the
-entire function as a `while(TRUE)` loop. Each self-call becomes a set of
-parameter reassignments followed by `next`, so no new stack frames are
-allocated.
+When the compiler sees `(define name (lambda ...))` or
+`(set! name (lambda ...))` and the lambda body contains calls to `name`
+in tail position, it rewrites the entire function as a `while(TRUE)` loop.
+Each self-call becomes a set of parameter reassignments followed by `next`,
+so no new stack frames are allocated.
+
+Because `letrec` expands into `set!`, this means `letrec`-bound lambdas
+that self-recurse are automatically optimized too.
 
 ```{arl}
 ;; The compiler optimizes this automatically
@@ -145,7 +148,7 @@ self-TCO.
 | Feature | Self-TCO | loop/recur |
 |---------|----------|------------|
 | Activation | Automatic | Explicit `(import looping)` |
-| Pattern | `(define name (lambda ...))` | `(loop ((var init) ...) body)` |
+| Pattern | `(define name (lambda ...))` or `(set! name (lambda ...))` | `(loop ((var init) ...) body)` |
 | Scope | Self-recursion only | Any loop pattern |
 | Stack growth | None | None |
 | Stack traces | Outermost frame only | Outermost frame only |

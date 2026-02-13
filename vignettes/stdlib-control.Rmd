@@ -307,7 +307,7 @@ Clojure-style loop/recur that expands to an R while loop.
     (recur (cdr xs) (+ total (car xs)))))  ; => 10
 ```
 
-**Note:** The compiler auto-optimizes self-tail-calls in `(define name (lambda ...))` patterns, so `loop`/`recur` is primarily useful for anonymous iteration and mutual recursion patterns. Expands to an R `while` loop internally.
+**Note:** The compiler auto-optimizes self-tail-calls in `(define name (lambda ...))` and `(set! name (lambda ...))` patterns (including `letrec`-bound lambdas), so `loop`/`recur` is primarily useful for anonymous iteration and mutual recursion patterns. Expands to an R `while` loop internally.
 
 **See also:** [recur](#recur), while, [for](#for)
 

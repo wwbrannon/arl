@@ -3,8 +3,9 @@
 ;;
 ;; NOTE: Arl's compiler implements self-tail-call optimization (self-TCO).
 ;; The `generate-next` helper inside `fib-sequence` benefits from this:
-;; its self-call is in tail position within a `let*` body inside `letrec`,
-;; so the compiler rewrites it as a loop.
+;; `letrec` expands to `set!`, and the compiler applies self-TCO to
+;; `(set! name (lambda ...))` just as it does for `(define name (lambda ...))`,
+;; so the self-call in tail position is rewritten as a loop.
 ;;
 ;; The classic `fib-recursive` is NOT tail-recursive (it's doubly recursive),
 ;; so TCO does not apply there. For large inputs, prefer `fib-iterative`

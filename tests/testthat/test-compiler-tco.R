@@ -504,6 +504,72 @@ test_that("TCO: IIFE with complex params still works at runtime", {
 })
 
 # ==============================================================================
+# set!-based self-TCO (covers letrec-bound lambdas)
+# ==============================================================================
+
+test_that("TCO: set!-bound lambda with self-tail-call", {
+  engine$eval_text("
+    (define count-set #f)
+    (set! count-set (lambda (n)
+      (if (<= n 0) 0 (count-set (- n 1)))))
+  ")
+  result <- engine$eval_text("(count-set 10)")
+  expect_equal(result, 0)
+})
+
+test_that("TCO: set!-bound lambda deep recursion does not stack overflow", {
+  engine$eval_text("
+    (define sum-set #f)
+    (set! sum-set (lambda (n acc)
+      (if (<= n 0) acc (sum-set (- n 1) (+ acc n)))))
+  ")
+  result <- engine$eval_text("(sum-set 100000 0)")
+  expect_equal(result, 5000050000)
+})
+
+test_that("VERIFY: set!-bound lambda compiles to while loop", {
+  out <- engine$inspect_compilation("
+    (set! f (lambda (n acc)
+      (if (<= n 0) acc (f (- n 1) (+ acc n)))))
+  ")
+  deparsed <- paste(out$compiled_deparsed, collapse = "\n")
+  expect_true(grepl("while", deparsed, fixed = TRUE))
+  expect_false(grepl("f(", deparsed, fixed = TRUE))
+})
+
+test_that("TCO: letrec-bound self-recursive lambda is optimized", {
+  env <- new.env(parent = baseenv())
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("binding"), env = env)
+  result <- engine$eval(
+    engine$read("
+      (letrec ((count-down
+                (lambda (n)
+                  (if (<= n 0) 0 (count-down (- n 1))))))
+        (count-down 100000))
+    ")[[1]],
+    env = env
+  )
+  expect_equal(result, 0)
+})
+
+test_that("TCO: letrec-bound accumulator pattern", {
+  env <- new.env(parent = baseenv())
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("binding"), env = env)
+  result <- engine$eval(
+    engine$read("
+      (letrec ((sum-up
+                (lambda (n acc)
+                  (if (<= n 0) acc (sum-up (- n 1) (+ acc n))))))
+        (sum-up 100 0))
+    ")[[1]],
+    env = env
+  )
+  expect_equal(result, 5050)
+})
+
+# ==============================================================================
 # Error reporting in TCO-optimized functions
 # ==============================================================================
 

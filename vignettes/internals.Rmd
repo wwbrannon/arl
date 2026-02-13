@@ -95,7 +95,7 @@ known special forms:
 - `quote` -- return the quoted value as-is
 - `if` -- conditional with truthiness wrapping (`.__true_p()`)
 - `define` -- binding with self-TCO detection for lambda definitions
-- `set!` -- mutation of existing bindings
+- `set!` -- mutation of existing bindings, with self-TCO detection for lambda assignments
 - `lambda` -- closure creation with parameter patterns and optional TCO
 - `begin` -- sequential evaluation (compiled to R `{ }` blocks)
 - `defmacro` -- macro definition (registers with the macro expander)
@@ -112,10 +112,12 @@ compiles a regular function call.
 
 ## Self-tail-call optimization
 
-When the compiler sees `(define name (lambda ...))` and the lambda body
-contains self-calls in tail position, it rewrites the entire function as a
-`while(TRUE)` loop. Tail calls become parameter reassignments followed by
-`next`, eliminating stack growth.
+When the compiler sees `(define name (lambda ...))` or
+`(set! name (lambda ...))` and the lambda body contains self-calls in tail
+position, it rewrites the entire function as a `while(TRUE)` loop. Tail calls
+become parameter reassignments followed by `next`, eliminating stack growth.
+The `set!` support means `letrec`-bound lambdas are automatically optimized,
+since `letrec` expands into `set!`.
 
 The key methods:
 

@@ -71,10 +71,11 @@ If you get "symbol not found" after loading a file, you may have used
 `run` or `engine$load_file()` when you needed `load` or
 `engine$load_file_with_scope()`.
 
-## Self-TCO only works with the `define`/`lambda` form
+## Self-TCO limitations
 
-The compiler's self-tail-call optimization requires the specific pattern
-`(define name (lambda ...))`. Other definition styles are not optimized:
+The compiler's self-tail-call optimization applies to `(define name (lambda ...))`
+and `(set! name (lambda ...))` forms, which means `letrec`-bound lambdas are
+also covered. However, some patterns are **not** optimized:
 
 ```{arl, eval=FALSE}
 ;; TCO works here
@@ -83,15 +84,15 @@ The compiler's self-tail-call optimization requires the specific pattern
     (if (< n 2) acc
       (factorial (- n 1) (* acc n)))))
 
-;; TCO does NOT apply -- anonymous lambda
+;; TCO does NOT apply -- anonymous lambda (no name to match self-calls)
 ((lambda (n acc)
    (if (< n 2) acc
      ;; This will overflow the stack for large n
      ...)) 100000 1)
 ```
 
-For mutual recursion or cases where self-TCO does not apply, use
-`loop`/`recur` from the `looping` module:
+For mutual recursion, anonymous lambdas, or other cases where self-TCO
+does not apply, use `loop`/`recur` from the `looping` module:
 
 ```{arl, eval=FALSE}
 (loop ((i n) (acc 1))
