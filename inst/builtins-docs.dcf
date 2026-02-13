@@ -188,7 +188,7 @@ Examples:
 Seealso: toplevel-env
 
 Name: doc!
-Vignette: stdlib-core
+Vignette: stdlib-macro-eval-interop
 Section: Documentation Helpers
 Description: Attach documentation fields to a function. With a single
   string argument, sets the description (backward compatible). With keyword
@@ -201,7 +201,7 @@ Examples:
 Seealso: doc, help
 
 Name: doc
-Vignette: stdlib-core
+Vignette: stdlib-macro-eval-interop
 Section: Documentation Helpers
 Description: Retrieve documentation from a function. With no field argument,
   returns the description. Pass a field name string to get a specific field,
