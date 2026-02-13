@@ -4,18 +4,8 @@
 \alias{Engine}
 \title{Core Arl engine}
 \description{
-Core Arl engine
-
-Core Arl engine
-}
-\details{
 Provides class-based organization for tokenization, parsing, macro expansion,
 evaluation, and environment management.
-}
-\note{
-The format returned by this method is not guaranteed to be stable across package versions.
-
-The format returned by this method is not guaranteed to be stable across package versions.
 }
 \examples{
 engine <- Engine$new()
@@ -98,7 +88,8 @@ builtins — useful for testing or when you want to import specific modules.}
 \if{html}{\out{<a id="method-Engine-read"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-read}{}}}
 \subsection{Method \code{read()}}{
-Tokenize and parse source into expressions.
+Tokenize and parse source into expressions. The format returned by this
+method is not guaranteed to be stable across package versions.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$read(source, source_name = NULL)}\if{html}{\out{</div>}}
 }
@@ -118,6 +109,8 @@ Tokenize and parse source into expressions.
 \if{latex}{\out{\hypertarget{method-Engine-write}{}}}
 \subsection{Method \code{write()}}{
 Convert an Arl expression to its string representation. Inverse of read().
+The format returned by this method is not guaranteed to be stable across
+package versions.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$write(expr)}\if{html}{\out{</div>}}
 }
@@ -147,8 +140,6 @@ Evaluate one or more expressions.
 \item{\code{...}}{Additional Arl expressions to evaluate (variadic).}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
-
-\item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
 }
 \if{html}{\out{</div>}}
 }
@@ -169,8 +160,6 @@ Read and evaluate Arl source text. Convenience wrapper around
 \item{\code{text}}{Character string of Arl code to read/eval.}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
-
-\item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
 
 \item{\code{source_name}}{Optional source name for error reporting.}
 }
@@ -218,8 +207,6 @@ definitions are not visible in \code{env}.
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
-\item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
-
 \item{\code{create_scope}}{If TRUE, evaluate in a new child of \code{env}; if FALSE, in \code{env}.}
 }
 \if{html}{\out{</div>}}
@@ -242,8 +229,6 @@ only the top-level macro up to N times without walking into subexpressions.
 \item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
-
-\item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
 
 \item{\code{depth}}{Number of expansion steps (NULL for full expansion).}
 
@@ -293,8 +278,6 @@ Show help for a topic.
 \item{\code{topic}}{Help topic as a single string.}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
-
-\item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
 }
 \if{html}{\out{</div>}}
 }

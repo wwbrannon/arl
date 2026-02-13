@@ -1,5 +1,6 @@
 #' Core Arl engine
 #'
+#' @description
 #' Provides class-based organization for tokenization, parsing, macro expansion,
 #' evaluation, and environment management.
 #'
@@ -17,7 +18,6 @@
 #' @param expr Arl expression (symbol/call/atomic value).
 #' @param ... Additional Arl expressions to evaluate (variadic).
 #' @param text Character string of Arl code to read/eval.
-#' @param env Optional environment or Env to evaluate in (defaults to engine env).
 #' @param path File path to load.
 #' @param create_scope Logical; evaluate file in a child environment when TRUE.
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
@@ -104,8 +104,8 @@ Engine <- R6::R6Class(
     },
 
     #' @description
-    #' Tokenize and parse source into expressions.
-    #' @note The format returned by this method is not guaranteed to be stable across package versions.
+    #' Tokenize and parse source into expressions. The format returned by this
+    #' method is not guaranteed to be stable across package versions.
     read = function(source, source_name = NULL) {
       tokens <- private$.tokenizer$tokenize(source)
       private$.parser$parse(tokens, source_name = source_name)
@@ -113,7 +113,8 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Convert an Arl expression to its string representation. Inverse of read().
-    #' @note The format returned by this method is not guaranteed to be stable across package versions.
+    #' The format returned by this method is not guaranteed to be stable across
+    #' package versions.
     write = function(expr) {
       private$.parser$write(expr)
     },
