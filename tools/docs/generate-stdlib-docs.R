@@ -410,11 +410,18 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
   out <- c(out, "")
 
   # Intro paragraph
-  out <- c(out, "Arl ships with a small standard library implemented in R, plus additional Arl")
-  out <- c(out, "source modules. The engine loads the base R stdlib and the Arl modules from")
-  out <- c(out, "`inst/arl/` by default. Stdlib modules are loaded in dependency order (each")
-  out <- c(out, "module declares its dependencies with `(import ...)` and is loaded after the")
-  out <- c(out, "modules it imports).")
+  out <- c(out, "Arl's standard library has two layers:")
+  out <- c(out, "")
+  out <- c(out, "1. **Built-in functions** defined in R (`R/engine.R`). These are low-level")
+  out <- c(out, "   primitives that need direct access to engine internals — cons-cell")
+  out <- c(out, "   operations, the macro expander, the evaluator, promise handling, and")
+  out <- c(out, "   documentation helpers. They are always available, even when the stdlib")
+  out <- c(out, "   modules are not loaded (`Engine$new(load_stdlib = FALSE)`).")
+  out <- c(out, "2. **Stdlib modules** written in Arl (`inst/arl/*.arl`). These provide the")
+  out <- c(out, "   bulk of the standard library: list operations, math, strings, control flow,")
+  out <- c(out, "   and everything else. Modules are loaded in dependency order (each module")
+  out <- c(out, "   declares its dependencies with `(import ...)` and is loaded after the")
+  out <- c(out, "   modules it imports).")
   out <- c(out, "")
 
   # Links to detailed pages
@@ -470,14 +477,37 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
     }
   }
 
+  # Built-in functions section
+  out <- c(out, "## Built-in functions")
+  out <- c(out, "")
+  out <- c(out, "The following functions are implemented in R")
+  out <- c(out, paste0(
+    "([`R/engine.R`](", GITHUB_BASE, "/R/engine.R)) rather than in Arl source"
+  ))
+  out <- c(out, "modules. They are available even on a bare engine")
+  out <- c(out, "(`Engine$new(load_stdlib = FALSE)`).")
+  out <- c(out, "")
+  out <- c(out, "| Category | Functions |")
+  out <- c(out, "|----------|-----------|")
+  out <- c(out, "| Cons cells | `pair?`|")
+  out <- c(out, "| Macros | `gensym`, `capture`, `macro?`, `macroexpand` |")
+  out <- c(out, "| Evaluation | `eval`, `read`, `write`, `r/eval` |")
+  out <- c(out, "| Environments | `toplevel-env`, `current-env` |")
+  out <- c(out, "| Promises | `promise?`, `force`, `promise-expr` |")
+  out <- c(out, "| Documentation | `doc!`, `doc` |")
+  out <- c(out, "")
+  out <- c(out, "These builtins are documented alongside the stdlib functions they relate to")
+  out <- c(out, "in the individual reference pages above.")
+  out <- c(out, "")
+
   # Source files section
   out <- c(out, "## Source files")
   out <- c(out, "")
-  out <- c(out, "The base R parts of the stdlib implementation live in")
+  out <- c(out, "Built-in functions are defined in")
   out <- c(out, paste0(
-    "[`R/runtime.R`](", GITHUB_BASE, "/R/runtime.R). The"
+    "[`R/engine.R`](", GITHUB_BASE, "/R/engine.R). The"
   ))
-  out <- c(out, "Arl parts are organized by topic in")
+  out <- c(out, "Arl stdlib modules are organized by topic in")
   out <- c(out, paste0(
     "[`inst/arl/`](", gsub("/blob/", "/tree/", GITHUB_BASE), "/inst/arl) (each file"
   ))

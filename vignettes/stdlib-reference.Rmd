@@ -17,11 +17,18 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
 
-Arl ships with a small standard library implemented in R, plus additional Arl
-source modules. The engine loads the base R stdlib and the Arl modules from
-`inst/arl/` by default. Stdlib modules are loaded in dependency order (each
-module declares its dependencies with `(import ...)` and is loaded after the
-modules it imports).
+Arl's standard library has two layers:
+
+1. **Built-in functions** defined in R (`R/engine.R`). These are low-level
+   primitives that need direct access to engine internals — cons-cell
+   operations, the macro expander, the evaluator, promise handling, and
+   documentation helpers. They are always available, even when the stdlib
+   modules are not loaded (`Engine$new(load_stdlib = FALSE)`).
+2. **Stdlib modules** written in Arl (`inst/arl/*.arl`). These provide the
+   bulk of the standard library: list operations, math, strings, control flow,
+   and everything else. Modules are loaded in dependency order (each module
+   declares its dependencies with `(import ...)` and is loaded after the
+   modules it imports).
 
 For the full, per-function reference, see the individual stdlib reference pages:
 
@@ -155,13 +162,32 @@ Evaluation, macro utilities, dictionaries, sets, structs, assertions, and R inte
 `set-difference`, `defstruct`, `assert`, `assert-equal`, `assert-true`,
 `assert-false`, `assert-eq`, `assert-error`, `eval`, `read`, `write`,
 `capture`, `gensym`, `macro?`, `macroexpand`, `promise?`, `force`,
-`promise-expr`, `r/eval`, `toplevel-env`, `current-env`
+`promise-expr`, `r/eval`, `toplevel-env`, `current-env`, `doc!`, `doc`
+
+## Built-in functions
+
+The following functions are implemented in R
+([`R/engine.R`](https://github.com/wwbrannon/arl/blob/main/R/engine.R)) rather than in Arl source
+modules. They are available even on a bare engine
+(`Engine$new(load_stdlib = FALSE)`).
+
+| Category | Functions |
+|----------|-----------|
+| Cons cells | `pair?`|
+| Macros | `gensym`, `capture`, `macro?`, `macroexpand` |
+| Evaluation | `eval`, `read`, `write`, `r/eval` |
+| Environments | `toplevel-env`, `current-env` |
+| Promises | `promise?`, `force`, `promise-expr` |
+| Documentation | `doc!`, `doc` |
+
+These builtins are documented alongside the stdlib functions they relate to
+in the individual reference pages above.
 
 ## Source files
 
-The base R parts of the stdlib implementation live in
-[`R/runtime.R`](https://github.com/wwbrannon/arl/blob/main/R/runtime.R). The
-Arl parts are organized by topic in
+Built-in functions are defined in
+[`R/engine.R`](https://github.com/wwbrannon/arl/blob/main/R/engine.R). The
+Arl stdlib modules are organized by topic in
 [`inst/arl/`](https://github.com/wwbrannon/arl/tree/main/inst/arl) (each file
 defines a module). The engine loads these modules in dependency order when
 initializing.
