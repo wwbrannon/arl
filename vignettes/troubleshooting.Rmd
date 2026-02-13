@@ -100,25 +100,38 @@ does not apply, use `loop`/`recur` from the `looping` module:
     (recur (- i 1) (* acc i))))
 ```
 
-## Macro hygiene: use `gensym` for temporaries
+## Macro hygiene and `gensym`
 
-Macros that introduce temporary bindings should use `gensym` to avoid
-name collisions with user code:
+Arl macros are **hygienic by default** -- bindings introduced by a macro
+(via `define`, `let`, `lambda`, etc.) are automatically renamed so they
+cannot collide with names at the call site. This means simple macros
+work without any extra effort:
 
 ```{arl, eval=FALSE}
-;; BAD -- 'tmp' could shadow a user variable
+;; This is safe -- hygiene auto-renames 'tmp' so it won't
+;; shadow a caller's variable named 'tmp'
 (defmacro my-swap (a b)
   `(let ((tmp ,a))
      (set! ,a ,b)
      (set! ,b tmp)))
-
-;; GOOD -- unique symbol avoids collision
-(defmacro my-swap (a b)
-  (let ((tmp (gensym "tmp")))
-    `(let ((,tmp ,a))
-       (set! ,a ,b)
-       (set! ,b ,tmp))))
 ```
+
+You need `gensym` when you build binding forms **programmatically at
+expansion time** -- for example, computing a list of bindings in a loop
+before constructing the quasiquoted result. In that case, automatic
+hygiene cannot track the symbols because they are created outside the
+quasiquote template:
+
+```{arl, eval=FALSE}
+;; gensym needed: binding name is computed, not in quasiquote template
+(defmacro bind-all (pairs . body)
+  (define temps (map (lambda (p) (gensym "t")) pairs))
+  `((lambda ,temps ,@body)
+    ,@(map (lambda (p) (car (cdr p))) pairs)))
+```
+
+See [Macros and Quasiquote -- Hygiene](macros.html#hygiene) for a full
+explanation.
 
 ## Module not found errors
 
