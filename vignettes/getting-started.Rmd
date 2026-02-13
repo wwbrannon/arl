@@ -261,7 +261,7 @@ macros:
 
 Both produce the same `arl_doc` attribute, so `help` and `doc` work
 identically regardless of how documentation was attached. See
-[Documenting Functions](documenting-functions.html) for the full reference.
+[Documenting Functions and Macros](documenting-functions-macros.html) for the full reference.
 
 ## Next steps
 

@@ -139,7 +139,7 @@ articles:
     desc: Step-by-step guides for learning Arl.
     contents:
       - getting-started
-      - documenting-functions
+      - documenting-functions-macros
       - macros
       - modules
       - r-interop
