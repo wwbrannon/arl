@@ -41,25 +41,73 @@ Arl is a Lisp dialect that seamlessly integrates with R. It provides:
 ## Installation
 
 ``` r
-# Install from source
-devtools::install()
-
-# Or install dependencies and load
-devtools::install_deps()
-devtools::load_all()
+# install.packages("arl")
+devtools::install_github("wwbrannon/arl")
 ```
+
+Arl is not yet on CRAN; install from GitHub with `devtools` as shown
+above. Once a CRAN release is available, `install.packages("arl")` will
+work.
 
 ## Quick Start
 
 ``` r
 library(arl)
-
-# Start the REPL
 engine <- Engine$new()
 engine$repl()
 ```
 
-The engine loads the base stdlib automatically.
+The engine loads all stdlib modules automatically. Type `(quit)` or
+press Ctrl+C to exit the REPL.
+
+Arithmetic and variables work as you’d expect:
+
+``` lisp
+(+ 1 (* 2 3))  ; => 7
+
+(define x 10)
+(+ x 5)  ; => 15
+```
+
+Functions are defined with `lambda`, and `let` provides local bindings:
+
+``` lisp
+(define factorial
+  (lambda (n)
+    (if (< n 2)
+      1
+      (* n (factorial (- n 1))))))
+
+(factorial 5)  ; => 120
+
+(let ((a 1) (b 2))
+  (+ a b))  ; => 3
+```
+
+All R functions are callable directly, with keywords for named
+arguments:
+
+``` lisp
+(mean (c 1 2 3 4 5))  ; => 3
+(seq :from 1 :to 10 :by 2)  ; => 1 3 5 7 9
+```
+
+Macros transform code at compile time. `;;'` comments attach
+documentation:
+
+``` lisp
+;;' @description Evaluate body when test is truthy.
+(defmacro when (test . body)
+  `(if ,test (begin ,@body) #nil))
+
+(when (> 5 3) (print "yes"))  ; => "yes"
+```
+
+Higher-order functions work on lists:
+
+``` lisp
+(map (lambda (x) (* x 2)) (list 1 2 3))  ; => (2 4 6)
+```
 
 ## Command Line
 
@@ -70,72 +118,15 @@ arl::install_cli()
 ```
 
 ``` bash
-# Start REPL
-arl
-
-# Run a file
-arl --file script.arl
-
-# Eval a single expression
-arl --eval "(+ 1 2)"
-
-# Positional files are executed in order
-arl script.arl other.arl
+arl                       # start REPL
+arl --file script.arl     # run a file
+arl --eval "(+ 1 2)"     # evaluate an expression
+arl script.arl other.arl  # run multiple files in order
+arl --help                # see all options
 ```
 
-If the install path is not on your `PATH`, add it:
-
-``` r
-dirname(system.file("exec", "arl", package = "arl"))
-```
-
-``` bash
-export PATH="$(Rscript -e 'cat(dirname(system.file("exec", "arl", package = "arl")))'):$PATH"
-```
-
-### Examples
-
-``` lisp
-; Arithmetic
-(+ 1 (* 2 3))  ; => 7
-
-; Variables
-(define x 10)
-(+ x 5)  ; => 15
-
-; Destructuring
-(define (a b . rest) (list 1 2 3 4))
-(list a b rest)  ; => (1 2 (3 4))
-
-; Functions
-(define factorial
-  (lambda (n)
-    (if (< n 2)
-      1
-      (* n (factorial (- n 1))))))
-
-(factorial 5)  ; => 120
-
-; R interop
-(mean (c 1 2 3 4 5))  ; => 3
-
-; Named arguments
-(seq :from 1 :to 10 :by 2)  ; => 1 3 5 7 9
-
-; Macros
-;;' @description Evaluate body when test is truthy.
-(defmacro when (test . body)
-  `(if ,test (begin ,@body) #nil))
-
-(when (> 5 3) (print "yes"))  ; => "yes"
-
-; Documentation via ;;' annotation comments
-(help "when")
-
-; Higher-order functions
-(define double (lambda (x) (* x 2)))
-(map double (list 1 2 3))  ; => (2 4 6)
-```
+If the install path is not on your `PATH`, run
+`dirname(system.file("exec", "arl", package = "arl"))` to find it.
 
 ## Features
 
@@ -207,54 +198,29 @@ the `looping` module is still available:
 
 ### Standard Library
 
-The REPL loads a base standard library (implemented in R) with core
-helpers and access to all base R functions.
+All stdlib modules are loaded automatically. Key areas include:
 
-**Core List Operations:** - `car`, `cdr`, `cons`, `call`, `list*`,
-`append`, `reverse`, `apply` - `first`, `rest`, `last`, `nth`
-(convenience aliases)
+- **Lists**: `car`, `cdr`, `cons`, `append`, `reverse`, `nth`, `list*`
+- **Higher-order**: `map`, `filter`, `reduce`, `compose`, `partial`,
+  `every?`, `any?`
+- **Sequences**: `take`, `drop`, `take-while`, `drop-while`,
+  `partition`, `flatten`, `zip`
+- **Control flow**: `when`, `unless`, `cond`, `case`
+- **Bindings**: `let`, `let*`, `letrec`, `destructuring-bind`
+- **Looping**: `for`, `loop`/`recur`, `until`
+- **Threading**: `->`, `->>`
+- **Error handling**: `try`/`catch`/`finally`, `assert`
+- **Strings & I/O**: `str`, `string-join`, `string-split`, `display`,
+  `format`
+- **Macros**: `gensym`, `macroexpand`, `eval`
+- **Predicates**: `null?`, `list?`, `number?`, `string?`, `fn?`, and
+  more
 
-**Higher-Order Functions:** - `map`, `mapcat`, `filter`, `remove`,
-`reduce`, `foldl`, `foldr` - `every?`, `any?`, `complement`, `compose`,
-`partial`
+For the complete function reference, see the [Standard Library
+Reference](articles/stdlib-reference.html).
 
-**Sequence Helpers:** - `take`, `drop`, `take-while`, `drop-while`,
-`partition`, `flatten`, `zip` - `repeatedly`, `repeat`
-
-**Predicates:** - `null?`, `nil?`, `list?`, `pair?`, `list-or-pair?`,
-`symbol?`, `keyword?` - `number?`, `string?`, `vector?`, `true?`,
-`false?`, `fn?`, `callable?`
-
-**Control Flow Macros:** - `when`, `unless`, `cond`, `case`
-
-**Binding & Looping:** - `let`, `let*`, `letrec`, `destructuring-bind` -
-`for`
-
-**Threading Macros:** - `->`, `->>` (thread-first, thread-last)
-
-**Error Handling:** - `try`, `catch`, `finally`, `error`, `warn`,
-`assert`, `trace`, `try*`
-
-**Continuations & Promises:** - `call/cc`,
-`call-with-current-continuation`, `promise?`, `force`
-
-**String & I/O:** - `str`, `string-join`, `string-split`, `trim`,
-`format` - `read-line`, `display`, `println`
-
-**Macro System:** - `gensym`, `macro?`, `eval`, `macroexpand`,
-`macroexpand-1`
-
-**Interop:** - `dict`, `hash`, `r/call`, `identity`
-
-**Arithmetic & Comparison:** - `+`, `-`, `*`, `/`, `%`, `=`, `<`, `>`,
-`<=`, `>=` - `not`
-
-For detailed documentation of all functions, see the [**Standard Library
-Reference**](articles/stdlib-reference.html).
-
-The full standard library is loaded automatically for convenience. It is
-organized into modules, each in `inst/arl/`, which you can also import
-individually in your own modules or when working with a bare engine
+The stdlib is organized into modules under `inst/arl/`. You can import
+them individually in your own modules or when working with a bare engine
 (`Engine$new(load_stdlib = FALSE)`):
 
 ``` lisp
@@ -265,16 +231,43 @@ individually in your own modules or when working with a bare engine
 (import error)     ; try/catch/finally
 ```
 
-**Modules and loading:** `load` runs a file in the current environment
-(definitions visible). `run` runs a file in an isolated child
-(definitions not visible). `import` loads a module and attaches its
-exports into the current scope only; each module is loaded once per
-engine. From R, `engine$load_file_under_env(path)` runs a file in an
-isolated scope; to have definitions visible in the engine, use
-`engine$load_file_in_env(path, engine$get_env())` or evaluate
-`(load "script.arl")` from the REPL. You can define your own modules
-with `module` and `import`—see the [Modules and
-Imports](articles/modules.html) guide.
+### Modules and File Loading
+
+- `(load "file.arl")` – run a file in the current environment
+  (definitions visible)
+- `(run "file.arl")` – run a file in an isolated child environment
+- `(import M)` – load module M and attach its exports to the current
+  scope
+
+From R: `engine$load_file_in_env(path, engine$get_env())` corresponds to
+`load`; `engine$load_file_under_env(path)` corresponds to `run`. See the
+[Modules and Imports](articles/modules.html) guide for defining your own
+modules.
+
+### Semantics
+
+- **Truthiness**: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsey;
+  everything else is truthy (same as R).
+- **Lists**: Arl lists are backed by R lists or calls; `car` returns the
+  head and `cdr` returns the tail as a list.
+- **Keywords**: `:kw` tokens are self-evaluating and become named
+  arguments in function calls.
+
+### R Integration
+
+All R functions are accessible directly:
+
+``` lisp
+; Call R functions
+(lm (~ y x) :data df)
+
+; Use R operators
+($ mylist field)
+([ vector 1)
+
+; Access R data structures
+(define df (data.frame :x (c 1 2 3) :y (c 4 5 6)))
+```
 
 ### Examples
 
@@ -302,31 +295,6 @@ algorithms to macro techniques, data pipelines, and report outputs:
   interop for data wrangling and CSV report generation
 - **[task-runner.arl](articles/examples.html#task-runner)** - Dependency
   resolution and execution ordering
-
-### Semantics
-
-- **Truthiness**: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsey;
-  everything else is truthy.
-- **Lists**: Arl lists are backed by R lists or calls; `car` returns the
-  head and `cdr` returns the tail as a list.
-- **Keywords**: `:kw` tokens are self-evaluating and become named
-  arguments in function calls.
-
-### R Integration
-
-All R functions are accessible directly:
-
-``` lisp
-; Call R functions
-(lm (~ y x) :data df)
-
-; Use R operators
-($ mylist field)
-([ vector 1)
-
-; Access R data structures
-(define df (data.frame :x (c 1 2 3) :y (c 4 5 6)))
-```
 
 ## Development
 
