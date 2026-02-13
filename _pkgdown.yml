@@ -38,6 +38,10 @@ navbar:
         - text: Arl vs Scheme
           href: articles/arl-vs-scheme.html
         - text: "---------"
+        - text: "Tooling"
+        - text: Configuration
+          href: articles/configuration.html
+        - text: "---------"
         - text: "Performance"
         - text: Benchmarks
           href: articles/benchmarks.html
@@ -113,9 +117,6 @@ reference:
   - title: Core engine
     contents:
       - Engine
-  - title: Coverage
-    contents:
-      - CoverageTracker
   - title: CLI
     contents:
       - cli
