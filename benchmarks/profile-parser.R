@@ -29,11 +29,11 @@ cat("Profile 1: Large flat list (1000 elements)\n")
 
 engine1 <- Engine$new()
 flat_1000 <- paste0("(list ", paste(seq_len(1000), collapse = " "), ")")
-tokens_flat_1000 <- engine1$tokenize(flat_1000)
+tokens_flat_1000 <- engine_field(engine1, "tokenizer")$tokenize(flat_1000)
 
 profile_component({
   for (i in 1:100) {
-    engine1$parse(tokens_flat_1000)
+    engine_field(engine1, "parser")$parse(tokens_flat_1000)
   }
 }, "parser-flat-list")
 
@@ -44,11 +44,11 @@ cat("Profile 2: Deep nesting (50 levels)\n")
 engine2 <- Engine$new()
 nested_50 <- paste(rep("(list ", 50), collapse = "")
 nested_50 <- paste0(nested_50, "1", paste(rep(")", 50), collapse = ""))
-tokens_nested_50 <- engine2$tokenize(nested_50)
+tokens_nested_50 <- engine_field(engine2, "tokenizer")$tokenize(nested_50)
 
 profile_component({
   for (i in 1:100) {
-    engine2$parse(tokens_nested_50)
+    engine_field(engine2, "parser")$parse(tokens_nested_50)
   }
 }, "parser-deep-nesting")
 
@@ -60,11 +60,11 @@ engine3 <- Engine$new()
 real_workloads <- get_real_workloads()
 
 if (length(real_workloads) > 0 && "quicksort" %in% names(real_workloads)) {
-  tokens_qs <- engine3$tokenize(real_workloads$quicksort)
+  tokens_qs <- engine_field(engine3, "tokenizer")$tokenize(real_workloads$quicksort)
 
   profile_component({
     for (i in 1:100) {
-      engine3$parse(tokens_qs)
+      engine_field(engine3, "parser")$parse(tokens_qs)
     }
   }, "parser-quicksort")
 
@@ -79,11 +79,11 @@ engine4 <- Engine$new()
 quote_heavy <- "(list 'x 'y 'z `(a ,b ,@c) :key1 val1 :key2 val2)"
 quote_heavy <- paste(rep(quote_heavy, 100), collapse = " ")
 quote_heavy <- paste0("(begin ", quote_heavy, ")")
-tokens_quote <- engine4$tokenize(quote_heavy)
+tokens_quote <- engine_field(engine4, "tokenizer")$tokenize(quote_heavy)
 
 profile_component({
   for (i in 1:50) {
-    engine4$parse(tokens_quote)
+    engine_field(engine4, "parser")$parse(tokens_quote)
   }
 }, "parser-quote-sugar")
 
@@ -93,11 +93,11 @@ cat("Profile 5: Many NULL values\n")
 
 engine5 <- Engine$new()
 many_nulls <- paste0("(list ", paste(rep("#nil", 500), collapse = " "), ")")
-tokens_nulls <- engine5$tokenize(many_nulls)
+tokens_nulls <- engine_field(engine5, "tokenizer")$tokenize(many_nulls)
 
 profile_component({
   for (i in 1:100) {
-    engine5$parse(tokens_nulls)
+    engine_field(engine5, "parser")$parse(tokens_nulls)
   }
 }, "parser-nulls")
 

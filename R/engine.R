@@ -21,6 +21,7 @@
 #' @param path File path to load.
 #' @param create_scope Logical; evaluate file in a child environment when TRUE.
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
+#' @param depth Number of expansion steps (NULL for full expansion).
 #' @param topic Help topic as a single string.
 #' @param compiled_only Logical; if TRUE, require compiled evaluation.
 #' @param load_stdlib Logical; if TRUE (the default), load all stdlib modules.
@@ -93,18 +94,19 @@ Engine <- R6::R6Class(
 
       private$.compiled_runtime <- CompiledRuntime$new(
         context,
-        load_file_fn = function(path, env, create_scope = FALSE) self$load_file_in_env(path, env, create_scope),
-        help_fn = function(topic, env) self$help_in_env(topic, env),
+        load_file_fn = function(path, env, create_scope = FALSE) self$load_file_with_scope(path, env, create_scope),
+        help_fn = function(topic, env) self$help(topic, env),
         module_cache = private$.module_cache
       )
       context$compiled_runtime <- private$.compiled_runtime
       private$.help_system <- HelpSystem$new(private$.env, private$.macro_expander)
 
-      self$initialize_environment(load_stdlib = isTRUE(load_stdlib))
+      private$.initialize_environment(load_stdlib = isTRUE(load_stdlib))
     },
 
     #' @description
     #' Tokenize and parse source into expressions.
+    #' @note The format returned by this method is not guaranteed to be stable across package versions.
     read = function(source, source_name = NULL) {
       tokens <- private$.tokenizer$tokenize(source)
       private$.parser$parse(tokens, source_name = source_name)
@@ -112,39 +114,16 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Convert an Arl expression to its string representation. Inverse of read().
+    #' @note The format returned by this method is not guaranteed to be stable across package versions.
     write = function(expr) {
       private$.parser$write(expr)
     },
 
     #' @description
-    #' Tokenize source into Arl tokens.
-    tokenize = function(source) {
-      private$.tokenizer$tokenize(source)
-    },
-
-    #' @description
-    #' Parse tokens into expressions.
-    parse = function(tokens, source_name = NULL) {
-      private$.parser$parse(tokens, source_name = source_name)
-    },
-
-    #' @description
     #' Evaluate a single expression via compiled evaluation.
-    eval = function(expr) {
-      private$eval_one_compiled(expr, private$.env$env, compiled_only = TRUE)
-    },
-
-    #' @description
-    #' Evaluate a single expression in an explicit environment.
-    eval_in_env = function(expr, env) {
+    eval = function(expr, env = NULL) {
       target_env <- private$resolve_env_arg(env)
       private$eval_one_compiled(expr, target_env, compiled_only = TRUE)
-    },
-
-    #' @description
-    #' Evaluate expressions in order via compiled evaluation.
-    eval_seq = function(exprs, env = NULL) {
-      self$eval_exprs(exprs, env = env, compiled_only = TRUE)
     },
 
     #' @description
@@ -166,10 +145,264 @@ Engine <- R6::R6Class(
       self$eval_exprs(exprs, env = env, compiled_only = compiled_only)
     },
 
+
     #' @description
-    #' Populate standard bindings
-    #' @param load_stdlib Logical. If TRUE, loads stdlib modules after setting up builtins.
-    initialize_environment = function(load_stdlib = TRUE) {
+    #' Load and evaluate an Arl source file in an isolated scope. The file runs in a
+    #' child of the engine's environment, so definitions and imports in the file
+    #' are not visible in the engine's main environment or to subsequent code. For
+    #' source-like behavior (definitions visible in the engine), use
+    #' \code{load_file_with_scope(path, env, create_scope = FALSE)}.
+    load_file = function(path) {
+      self$load_file_with_scope(path, private$.env$env, create_scope = TRUE)
+    },
+
+    #' @description
+    #' Load and evaluate an Arl source file in an explicit environment. By default
+    #' (\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
+    #' and imports in the file are visible in that environment. With
+    #' \code{create_scope = TRUE}, the file runs in a child of \code{env} and its
+    #' definitions are not visible in \code{env}.
+    #' @param create_scope If TRUE, evaluate in a new child of \code{env}; if FALSE, in \code{env}.
+    load_file_with_scope = function(path, env, create_scope = FALSE) {
+      if (!is.character(path) || length(path) != 1) {
+        stop("load requires a single file path string")
+      }
+      resolved <- private$resolve_env_arg(env)
+      module_registry <- private$.env$module_registry
+      if (!grepl("[/\\\\]", path)) {
+        if (module_registry$exists(path)) {
+          return(invisible(NULL))
+        }
+        stdlib_path <- resolve_stdlib_path(path)
+        if (!is.null(stdlib_path)) {
+          path <- stdlib_path
+        }
+      }
+      if (!file.exists(path)) {
+        stop(sprintf("File not found: %s", path))
+      }
+
+      # Try cache loading (only for module files, not create_scope loads)
+      # Skip cache when coverage is enabled — cached expressions lack source info for instrumentation
+      coverage_active <- !is.null(private$.compiled_runtime$context$coverage_tracker) &&
+                         private$.compiled_runtime$context$coverage_tracker$enabled
+      if (!create_scope && !coverage_active) {
+        cache_paths <- private$.module_cache$get_paths(path)
+        if (!is.null(cache_paths)) {
+          target_env <- resolved
+
+          # Try env cache first (fastest - full serialized environment)
+          # ONLY if use_env_cache is enabled
+          if (isTRUE(self$use_env_cache) && file.exists(cache_paths$env_cache)) {
+            cache_data <- private$.module_cache$load_env(cache_paths$env_cache, target_env, path)
+            if (!is.null(cache_data)) {
+              # Register the cached module
+              module_env <- cache_data$module_env
+              module_name <- cache_data$module_name
+              exports <- cache_data$exports
+
+              module_registry$register(module_name, module_env, exports)
+
+              # Also register by absolute path
+              absolute_path <- normalize_path_absolute(path)
+              module_registry$alias(absolute_path, module_name)
+
+              return(invisible(NULL))
+            }
+          }
+
+          # Fallback to expr cache (compiled expressions)
+          if (file.exists(cache_paths$code_cache)) {
+            cache_data <- private$.module_cache$load_code(cache_paths$code_cache, path)
+            if (!is.null(cache_data)) {
+              # Recreate module environment (like module_compiled does)
+              module_name <- cache_data$module_name
+              exports <- cache_data$exports
+              export_all <- cache_data$export_all
+
+              module_env <- new.env(parent = target_env)
+              assign(".__module", TRUE, envir = module_env)
+              lockBinding(".__module", module_env)
+
+              module_registry$register(module_name, module_env, exports)
+
+              # Register by absolute path
+              absolute_path <- normalize_path_absolute(path)
+              module_registry$alias(absolute_path, module_name)
+
+              # Install helpers and setup
+              private$.compiled_runtime$install_helpers(module_env)
+
+              # Evaluate cached compiled expressions in module environment
+              if (length(cache_data$compiled_body) == 1L) {
+                result <- private$.compiled_runtime$eval_compiled(cache_data$compiled_body[[1L]], module_env)
+              } else {
+                block <- as.call(c(list(quote(`{`)), cache_data$compiled_body))
+                result <- private$.compiled_runtime$eval_compiled(block, module_env)
+              }
+
+              # Handle export_all
+              if (export_all) {
+                exports <- setdiff(ls(module_env, all.names = TRUE), ".__module")
+                module_registry$update_exports(module_name, exports)
+              }
+
+              return(invisible(result))
+            }
+          }
+        }
+      }
+
+      # Cache miss - full load
+      text <- paste(readLines(path, warn = FALSE), collapse = "\n")
+      target_env <- if (isTRUE(create_scope)) new.env(parent = resolved) else resolved
+      private$.source_tracker$with_error_context(function() {
+        self$eval_exprs(self$read(text, source_name = path), env = target_env, compiled_only = TRUE)
+      })
+    },
+
+    #' @description
+    #' Expand macros in an expression. With \code{depth = NULL} (the default),
+    #' fully and recursively expand all macros. With \code{depth = N}, expand
+    #' only the top-level macro up to N times without walking into subexpressions.
+    macroexpand = function(expr, env = NULL, depth = NULL, preserve_src = FALSE) {
+      target_env <- private$resolve_env_arg(env)
+      private$.macro_expander$macroexpand(expr, env = target_env,
+                                          preserve_src = preserve_src, depth = depth)
+    },
+
+    #' @description
+    #' Inspect expansion and compilation for debugging. Parse text, expand macros in env,
+    #' then compile to R. Returns parsed AST, expanded form, compiled R expression, and
+    #' deparsed R code so you can see exactly what an Arl program becomes.
+    #' @param text Character; Arl source (single expression or multiple).
+    #' @param env Environment or NULL (use engine env). Must have macros/stdlib if needed.
+    #' @param source_name Name for parse errors.
+    #' @return List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr or NULL), \code{compiled_deparsed} (character, or NULL).
+    inspect_compilation = function(text, env = NULL, source_name = "<inspect>") {
+      target_env <- private$resolve_env_arg(env)
+      exprs <- self$read(text, source_name = source_name)
+      if (length(exprs) == 0) {
+        return(list(parsed = NULL, expanded = NULL, compiled = NULL, compiled_deparsed = NULL))
+      }
+      parsed <- exprs[[1]]
+      expanded <- self$macroexpand(parsed, env = target_env)
+      compiled <- tryCatch(
+        private$.compiler$compile(expanded, target_env, strict = FALSE),
+        error = function(e) NULL
+      )
+      compiled_deparsed <- if (!is.null(compiled)) deparse(compiled) else NULL
+      list(parsed = parsed, expanded = expanded, compiled = compiled, compiled_deparsed = compiled_deparsed)
+    },
+
+    #' @description
+    #' Show help for a topic.
+    help = function(topic, env = NULL) {
+      target_env <- private$resolve_env_arg(env)
+      private$.help_system$help_in_env(topic, target_env)
+    },
+
+    #' @description
+    #' Start the Arl REPL using this engine.
+    repl = function() {
+      REPL$new(engine = self)$run()
+    },
+
+    #' @description
+    #' Enable coverage tracking.
+    #'
+    #' Creates a coverage tracker and installs it in the eval context.
+    #' Should be called before running code you want to track.
+    #'
+    #' @return The coverage tracker instance
+    enable_coverage = function() {
+      if (!requireNamespace("R6", quietly = TRUE)) {
+        stop("R6 package required for coverage tracking")
+      }
+
+      # Create tracker if needed
+      if (is.null(private$.compiled_runtime$context$coverage_tracker)) {
+        private$.compiled_runtime$context$coverage_tracker <- CoverageTracker$new()
+      }
+
+      private$.compiled_runtime$context$coverage_tracker$set_enabled(TRUE)
+      invisible(private$.compiled_runtime$context$coverage_tracker)
+    },
+
+    #' @description
+    #' Disable coverage tracking.
+    disable_coverage = function() {
+      if (!is.null(private$.compiled_runtime$context$coverage_tracker)) {
+        private$.compiled_runtime$context$coverage_tracker$set_enabled(FALSE)
+      }
+      invisible(self)
+    },
+
+    #' @description
+    #' Get coverage data.
+    #'
+    #' @return Coverage tracker instance, or NULL if not enabled
+    get_coverage = function() {
+      private$.compiled_runtime$context$coverage_tracker
+    },
+
+    #' @description
+    #' Reset coverage data.
+    reset_coverage = function() {
+      if (!is.null(private$.compiled_runtime$context$coverage_tracker)) {
+        private$.compiled_runtime$context$coverage_tracker$reset()
+      }
+      invisible(self)
+    },
+
+    #' @description
+    #' Get the top-level R environment backing this engine.
+    #' @return An R environment.
+    get_env = function() {
+      private$.env$env
+    },
+
+    #' @description
+    #' Format a value for display using the engine's formatter.
+    #' @param value Value to format.
+    #' @return Character string.
+    format_value = function(value) {
+      private$.env$format_value(value)
+    },
+
+    #' @description
+    #' Run a function with source-tracking error context.
+    #' @param fn A zero-argument function to call.
+    #' @return The return value of \code{fn}.
+    with_error_context = function(fn) {
+      private$.source_tracker$with_error_context(fn)
+    },
+
+    #' @description
+    #' Format and print an Arl error with source context.
+    #' @param e A condition object.
+    #' @param file Connection to print to (default \code{stderr()}).
+    print_error = function(e, file = stderr()) {
+      private$.source_tracker$print_error(e, file = file)
+    }
+  ),
+
+  private = list(
+    .tokenizer = NULL,
+    .parser = NULL,
+    .macro_expander = NULL,
+    .compiled_runtime = NULL,
+    .compiler = NULL,
+    .help_system = NULL,
+    .env = NULL,
+    .source_tracker = NULL,
+    .module_cache = NULL,
+
+    resolve_env_arg = function(env) {
+      resolve_env(env, private$.env$env)
+    },
+
+    .initialize_environment = function(load_stdlib = TRUE) {
       env <- private$.env$env
 
       private$.env$get_registry(".__module_registry", create = TRUE)
@@ -204,15 +437,10 @@ Engine <- R6::R6Class(
         is.symbol(x) && private$.macro_expander$is_macro(x, env = env)
       }
 
-      env$macroexpand <- function(expr, preserve_src = FALSE) {
-        private$.macro_expander$macroexpand(expr, env = env, preserve_src = preserve_src)
+      env$macroexpand <- function(expr, depth = NULL, preserve_src = FALSE) {
+        private$.macro_expander$macroexpand(expr, env = env,
+                                            preserve_src = preserve_src, depth = depth)
       }
-
-      env$`macroexpand-1` <- function(expr, preserve_src = FALSE) {
-        private$.macro_expander$macroexpand_1(expr, env = env, preserve_src = preserve_src)
-      }
-
-      env$`macroexpand-all` <- env$macroexpand
 
       #
       # Evaluation and environments
@@ -222,7 +450,7 @@ Engine <- R6::R6Class(
       # engine environment
 
       env$eval <- function(expr, env = parent.frame()) {
-        self$eval_in_env(expr, env)
+        self$eval(expr, env)
       }
 
       env$read <- function(source) {
@@ -404,18 +632,13 @@ Engine <- R6::R6Class(
       private$load_builtin_docs(env)
 
       if (load_stdlib) {
-        self$load_stdlib_into_env(env)
+        private$.load_stdlib_into_env(env)
       }
 
       env
     },
 
-    #' @description
-    #' Load all stdlib modules in dependency order into an environment. Each module
-    #' is loaded and its exports attached into \code{env}. Used by
-    #' \code{initialize_environment()} and by the test helper for a custom env.
-    #' @param env Environment to load stdlib into (e.g. \code{private$.env$env} or a test env).
-    load_stdlib_into_env = function(env) {
+    .load_stdlib_into_env = function(env) {
       resolved <- private$resolve_env_arg(env)
       stdlib_dir <- system.file("arl", package = "arl")
       if (!dir.exists(stdlib_dir)) {
@@ -443,7 +666,7 @@ Engine <- R6::R6Class(
             stop("stdlib module not found: ", name)
           }
           tryCatch(
-            self$load_file_in_env(path, resolved, create_scope = FALSE),
+            self$load_file_with_scope(path, resolved, create_scope = FALSE),
             error = function(e) {
               stop(sprintf("Failed to load stdlib module '%s': %s", name, conditionMessage(e)), call. = FALSE)
             }
@@ -457,284 +680,6 @@ Engine <- R6::R6Class(
         )
       }
       invisible(NULL)
-    },
-
-    #' @description
-    #' Load and evaluate an Arl source file in an isolated scope. The file runs in a
-    #' child of the engine's environment, so definitions and imports in the file
-    #' are not visible in the engine's main environment or to subsequent code. For
-    #' source-like behavior (definitions visible in the engine), use
-    #' \code{load_file_in_env(path, env, create_scope = FALSE)}.
-    load_file = function(path) {
-      self$load_file_in_env(path, private$.env$env, create_scope = TRUE)
-    },
-
-    #' @description
-    #' Load and evaluate an Arl source file in an explicit environment. By default
-    #' (\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
-    #' and imports in the file are visible in that environment. With
-    #' \code{create_scope = TRUE}, the file runs in a child of \code{env} and its
-    #' definitions are not visible in \code{env}.
-    #' @param create_scope If TRUE, evaluate in a new child of \code{env}; if FALSE, in \code{env}.
-    load_file_in_env = function(path, env, create_scope = FALSE) {
-      if (!is.character(path) || length(path) != 1) {
-        stop("load requires a single file path string")
-      }
-      resolved <- private$resolve_env_arg(env)
-      module_registry <- private$.env$module_registry
-      if (!grepl("[/\\\\]", path)) {
-        if (module_registry$exists(path)) {
-          return(invisible(NULL))
-        }
-        stdlib_path <- resolve_stdlib_path(path)
-        if (!is.null(stdlib_path)) {
-          path <- stdlib_path
-        }
-      }
-      if (!file.exists(path)) {
-        stop(sprintf("File not found: %s", path))
-      }
-
-      # Try cache loading (only for module files, not create_scope loads)
-      # Skip cache when coverage is enabled — cached expressions lack source info for instrumentation
-      coverage_active <- !is.null(private$.compiled_runtime$context$coverage_tracker) &&
-                         private$.compiled_runtime$context$coverage_tracker$enabled
-      if (!create_scope && !coverage_active) {
-        cache_paths <- private$.module_cache$get_paths(path)
-        if (!is.null(cache_paths)) {
-          target_env <- resolved
-
-          # Try env cache first (fastest - full serialized environment)
-          # ONLY if use_env_cache is enabled
-          if (isTRUE(self$use_env_cache) && file.exists(cache_paths$env_cache)) {
-            cache_data <- private$.module_cache$load_env(cache_paths$env_cache, target_env, path)
-            if (!is.null(cache_data)) {
-              # Register the cached module
-              module_env <- cache_data$module_env
-              module_name <- cache_data$module_name
-              exports <- cache_data$exports
-
-              module_registry$register(module_name, module_env, exports)
-
-              # Also register by absolute path
-              absolute_path <- normalize_path_absolute(path)
-              module_registry$alias(absolute_path, module_name)
-
-              return(invisible(NULL))
-            }
-          }
-
-          # Fallback to expr cache (compiled expressions)
-          if (file.exists(cache_paths$code_cache)) {
-            cache_data <- private$.module_cache$load_code(cache_paths$code_cache, path)
-            if (!is.null(cache_data)) {
-              # Recreate module environment (like module_compiled does)
-              module_name <- cache_data$module_name
-              exports <- cache_data$exports
-              export_all <- cache_data$export_all
-
-              module_env <- new.env(parent = target_env)
-              assign(".__module", TRUE, envir = module_env)
-              lockBinding(".__module", module_env)
-
-              module_registry$register(module_name, module_env, exports)
-
-              # Register by absolute path
-              absolute_path <- normalize_path_absolute(path)
-              module_registry$alias(absolute_path, module_name)
-
-              # Install helpers and setup
-              private$.compiled_runtime$install_helpers(module_env)
-
-              # Evaluate cached compiled expressions in module environment
-              if (length(cache_data$compiled_body) == 1L) {
-                result <- private$.compiled_runtime$eval_compiled(cache_data$compiled_body[[1L]], module_env)
-              } else {
-                block <- as.call(c(list(quote(`{`)), cache_data$compiled_body))
-                result <- private$.compiled_runtime$eval_compiled(block, module_env)
-              }
-
-              # Handle export_all
-              if (export_all) {
-                exports <- setdiff(ls(module_env, all.names = TRUE), ".__module")
-                module_registry$update_exports(module_name, exports)
-              }
-
-              return(invisible(result))
-            }
-          }
-        }
-      }
-
-      # Cache miss - full load
-      text <- paste(readLines(path, warn = FALSE), collapse = "\n")
-      target_env <- if (isTRUE(create_scope)) new.env(parent = resolved) else resolved
-      private$.source_tracker$with_error_context(function() {
-        self$eval_seq(self$read(text, source_name = path), env = target_env)
-      })
-    },
-
-    #' @description
-    #' Expand macros recursively.
-    macroexpand = function(expr, preserve_src = FALSE) {
-      private$.macro_expander$macroexpand(expr, env = private$.env$env, preserve_src = preserve_src)
-    },
-
-    #' @description
-    #' Expand macros recursively in an explicit environment.
-    macroexpand_in_env = function(expr, env, preserve_src = FALSE) {
-      target_env <- private$resolve_env_arg(env)
-      private$.macro_expander$macroexpand(expr, env = target_env, preserve_src = preserve_src)
-    },
-
-    #' @description
-    #' Expand a single macro layer.
-    macroexpand_1 = function(expr, preserve_src = FALSE) {
-      private$.macro_expander$macroexpand_1(expr, env = private$.env$env, preserve_src = preserve_src)
-    },
-
-    #' @description
-    #' Expand a single macro layer in an explicit environment.
-    macroexpand_1_in_env = function(expr, env, preserve_src = FALSE) {
-      target_env <- private$resolve_env_arg(env)
-      private$.macro_expander$macroexpand_1(expr, env = target_env, preserve_src = preserve_src)
-    },
-
-    #' @description
-    #' Inspect expansion and compilation for debugging. Parse text, expand macros in env,
-    #' then compile to R. Returns parsed AST, expanded form, compiled R expression, and
-    #' deparsed R code so you can see exactly what an Arl program becomes.
-    #' @param text Character; Arl source (single expression or multiple).
-    #' @param env Environment or NULL (use engine env). Must have macros/stdlib if needed.
-    #' @param source_name Name for parse errors.
-    #' @return List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr or NULL), \code{compiled_deparsed} (character, or NULL).
-    inspect_compilation = function(text, env = NULL, source_name = "<inspect>") {
-      target_env <- private$resolve_env_arg(env)
-      exprs <- self$read(text, source_name = source_name)
-      if (length(exprs) == 0) {
-        return(list(parsed = NULL, expanded = NULL, compiled = NULL, compiled_deparsed = NULL))
-      }
-      parsed <- exprs[[1]]
-      expanded <- self$macroexpand_in_env(parsed, target_env)
-      compiled <- tryCatch(
-        private$.compiler$compile(expanded, target_env, strict = FALSE),
-        error = function(e) NULL
-      )
-      compiled_deparsed <- if (!is.null(compiled)) deparse(compiled) else NULL
-      list(parsed = parsed, expanded = expanded, compiled = compiled, compiled_deparsed = compiled_deparsed)
-    },
-
-    #' @description
-    #' Show help for a topic.
-    help = function(topic) {
-      private$.help_system$help(topic)
-    },
-
-    #' @description
-    #' Show help for a topic in an explicit environment.
-    help_in_env = function(topic, env) {
-      target_env <- private$resolve_env_arg(env)
-      private$.help_system$help_in_env(topic, target_env)
-    },
-
-    #' @description
-    #' Start the Arl REPL using this engine.
-    repl = function() {
-      REPL$new(engine = self)$run()
-    },
-
-    #' @description
-    #' Enable coverage tracking.
-    #'
-    #' Creates a coverage tracker and installs it in the eval context.
-    #' Should be called before running code you want to track.
-    #'
-    #' @return The coverage tracker instance
-    enable_coverage = function() {
-      if (!requireNamespace("R6", quietly = TRUE)) {
-        stop("R6 package required for coverage tracking")
-      }
-
-      # Create tracker if needed
-      if (is.null(private$.compiled_runtime$context$coverage_tracker)) {
-        private$.compiled_runtime$context$coverage_tracker <- CoverageTracker$new()
-      }
-
-      private$.compiled_runtime$context$coverage_tracker$set_enabled(TRUE)
-      invisible(private$.compiled_runtime$context$coverage_tracker)
-    },
-
-    #' @description
-    #' Disable coverage tracking.
-    disable_coverage = function() {
-      if (!is.null(private$.compiled_runtime$context$coverage_tracker)) {
-        private$.compiled_runtime$context$coverage_tracker$set_enabled(FALSE)
-      }
-      invisible(self)
-    },
-
-    #' @description
-    #' Get coverage data.
-    #'
-    #' @return Coverage tracker instance, or NULL if not enabled
-    get_coverage = function() {
-      private$.compiled_runtime$context$coverage_tracker
-    },
-
-    #' @description
-    #' Reset coverage data.
-    reset_coverage = function() {
-      if (!is.null(private$.compiled_runtime$context$coverage_tracker)) {
-        private$.compiled_runtime$context$coverage_tracker$reset()
-      }
-      invisible(self)
-    },
-
-    #' @description
-    #' Get the top-level R environment backing this engine.
-    #' @return An R environment.
-    get_env = function() {
-      private$.env$env
-    },
-
-    #' @description
-    #' Format a value for display using the engine's formatter.
-    #' @param value Value to format.
-    #' @return Character string.
-    format_value = function(value) {
-      private$.env$format_value(value)
-    },
-
-    #' @description
-    #' Run a function with source-tracking error context.
-    #' @param fn A zero-argument function to call.
-    #' @return The return value of \code{fn}.
-    with_error_context = function(fn) {
-      private$.source_tracker$with_error_context(fn)
-    },
-
-    #' @description
-    #' Format and print an Arl error with source context.
-    #' @param e A condition object.
-    #' @param file Connection to print to (default \code{stderr()}).
-    print_error = function(e, file = stderr()) {
-      private$.source_tracker$print_error(e, file = file)
-    }
-  ),
-
-  private = list(
-    .tokenizer = NULL,
-    .parser = NULL,
-    .macro_expander = NULL,
-    .compiled_runtime = NULL,
-    .compiler = NULL,
-    .help_system = NULL,
-    .env = NULL,
-    .source_tracker = NULL,
-    .module_cache = NULL,
-
-    resolve_env_arg = function(env) {
-      resolve_env(env, private$.env$env)
     },
 
     load_builtin_docs = function(env) {
@@ -769,7 +714,7 @@ Engine <- R6::R6Class(
     },
 
     eval_one_compiled = function(expr, env, compiled_only = TRUE) {
-      expanded <- self$macroexpand_in_env(expr, env, preserve_src = TRUE)
+      expanded <- self$macroexpand(expr, env = env, preserve_src = TRUE)
       compiled <- private$.compiler$compile(expanded, env, strict = isTRUE(compiled_only))
       if (!is.null(compiled)) {
         result_with_vis <- withVisible(private$.compiled_runtime$eval_compiled(compiled, env))
@@ -814,7 +759,7 @@ Engine <- R6::R6Class(
             ))
           }
         }
-        expanded <- self$macroexpand_in_env(expr, target_env, preserve_src = TRUE)
+        expanded <- self$macroexpand(expr, env = target_env, preserve_src = TRUE)
         compiled <- compiler$compile(expanded, target_env, strict = strict)
         if (is.null(compiled)) {
           msg <- compiler$last_error

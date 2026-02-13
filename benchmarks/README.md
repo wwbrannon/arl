@@ -140,7 +140,7 @@ summarize_benchmark(results)
 source("benchmarks/benchmark-helpers.R")
 profile_component({
   engine <- Engine$new()
-  tokens <- engine$tokenize(paste(rep("x", 10000), collapse = ""))
+  tokens <- engine_field(engine, "tokenizer")$tokenize(paste(rep("x", 10000), collapse = ""))
 }, "large-string")
 ```
 

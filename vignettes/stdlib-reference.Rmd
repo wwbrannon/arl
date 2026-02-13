@@ -147,15 +147,15 @@ Evaluation, macro utilities, dictionaries, sets, structs, assertions, and R inte
 
 `license`, `error`, `warn`, `identity`, `values`, `values?`,
 `call-with-values`, `call/cc`, `call-with-current-continuation`, `funcall`,
-`r/call`, `get`, `suppressWarnings`, `suppressMessages`, `with`, `within`,
-`subset`, `transform`, `substitute`, `dict`, `hash`, `dict?`, `dict-get`,
-`dict-set`, `dict-remove`, `dict-keys`, `dict-values`, `dict-has?`,
-`dict-merge`, `set`, `set?`, `set-add`, `set-remove`, `set-contains?`,
-`set-union`, `set-intersection`, `set-difference`, `defstruct`, `assert`,
-`assert-equal`, `assert-true`, `assert-false`, `assert-eq`, `assert-error`,
-`eval`, `read`, `write`, `capture`, `gensym`, `macro?`, `macroexpand`,
-`macroexpand-1`, `promise?`, `force`, `promise-expr`, `r/eval`, `toplevel-env`,
-`current-env`
+`r/call`, `get`, `macroexpand-1`, `macroexpand-all`, `suppressWarnings`,
+`suppressMessages`, `with`, `within`, `subset`, `transform`, `substitute`,
+`dict`, `hash`, `dict?`, `dict-get`, `dict-set`, `dict-remove`, `dict-keys`,
+`dict-values`, `dict-has?`, `dict-merge`, `set`, `set?`, `set-add`,
+`set-remove`, `set-contains?`, `set-union`, `set-intersection`,
+`set-difference`, `defstruct`, `assert`, `assert-equal`, `assert-true`,
+`assert-false`, `assert-eq`, `assert-error`, `eval`, `read`, `write`,
+`capture`, `gensym`, `macro?`, `macroexpand`, `promise?`, `force`,
+`promise-expr`, `r/eval`, `toplevel-env`, `current-env`
 
 ## Source files
 

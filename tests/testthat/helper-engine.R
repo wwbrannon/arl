@@ -18,7 +18,8 @@ toplevel_env <- function(engine, env = NULL) {
     stop("Expected an environment")
   }
   parent.env(env) <- engine$get_env()
-  engine$load_stdlib_into_env(env)
+  # Access private .load_stdlib_into_env via R6 enclosure
+  engine$.__enclos_env__$private$.load_stdlib_into_env(env)
   core_env <- engine$get_env()
   for (name in ls(core_env, all.names = TRUE)) {
     if (!exists(name, envir = env, inherits = FALSE)) {

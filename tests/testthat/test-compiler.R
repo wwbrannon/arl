@@ -19,10 +19,10 @@ test_that("compiled eval handles nested calls", {
 
 test_that("compiled eval evaluates arguments left-to-right", {
   env <- new.env(parent = baseenv())
-  engine$eval_in_env(engine$read("(define x 0)")[[1]], env)
-  engine$eval_in_env(engine$read("(define collect (lambda (a b) (list a b)))")[[1]], env)
+  engine$eval(engine$read("(define x 0)")[[1]], env)
+  engine$eval(engine$read("(define collect (lambda (a b) (list a b)))")[[1]], env)
 
-  result <- engine$eval_in_env(
+  result <- engine$eval(
     engine$read("(collect (begin (set! x (+ x 1)) x) (begin (set! x (+ x 1)) x))")[[1]],
     env
   )
@@ -54,9 +54,9 @@ test_that("compiled eval handles set! scoping and missing bindings", {
   env$x <- 1
   child <- new.env(parent = env)
 
-  engine$eval_in_env(engine$read("(set! x 2)")[[1]], child)
+  engine$eval(engine$read("(set! x 2)")[[1]], child)
   expect_equal(env$x, 2)
-  expect_error(engine$eval_in_env(engine$read("(set! y 1)")[[1]], child), "variable 'y' is not defined")
+  expect_error(engine$eval(engine$read("(set! y 1)")[[1]], child), "variable 'y' is not defined")
 })
 
 test_that("define/set! reject reserved .__* names", {
@@ -73,7 +73,7 @@ test_that("compiled eval validates load arguments and missing files", {
 test_that("compiled eval builds formulas without evaluating arguments", {
   env <- new.env(parent = baseenv())
   env$x <- 10
-  result <- engine$eval_in_env(engine$read("(~ x y)")[[1]], env)
+  result <- engine$eval(engine$read("(~ x y)")[[1]], env)
   expect_s3_class(result, "formula")
   expect_equal(as.character(result)[2], "x")
   expect_equal(as.character(result)[3], "y")
@@ -169,7 +169,7 @@ make_env <- function(engine, init = NULL) {
 }
 
 eval_compiled_in_env <- function(engine, expr, env) {
-  expanded <- engine$macroexpand_in_env(expr, env, preserve_src = TRUE)
+  expanded <- engine$macroexpand(expr, env = env, preserve_src = TRUE)
   compiled <- engine_field(engine, "compiler")$compile(expanded, env, strict = TRUE)
   expect_false(is.null(compiled)) # nolint: object_usage_linter.
   result <- withVisible(engine_field(engine, "compiled_runtime")$eval_compiled(compiled, env))
@@ -249,7 +249,7 @@ test_that("compiler conformance for core constructs", {
     env_compiled <- make_env(engine, case$init)
     expr <- engine$read(case$expr)[[1]]
 
-    expected <- withVisible(engine$eval_in_env(expr, env_eval))
+    expected <- withVisible(engine$eval(expr, env_eval))
     compiled_out <- eval_compiled_in_env(engine, expr, env_compiled)
 
     expect_equal(compiled_out$result$value, expected$value, info = case$name)
@@ -265,7 +265,7 @@ test_that("compiler output is pure R code (no evaluator references)", {
     engine$read("(and #t 1 2)")[[1]]
   )
   for (expr in exprs) {
-    expanded <- engine$macroexpand_in_env(expr, env, preserve_src = TRUE)
+    expanded <- engine$macroexpand(expr, env = env, preserve_src = TRUE)
     compiled <- engine_field(engine, "compiler")$compile(expanded, env, strict = TRUE)
     expect_false(is.null(compiled))
     text <- paste(deparse(compiled), collapse = " ")
@@ -280,19 +280,19 @@ test_that("compiled visibility contract matches engine eval", {
   env_compiled <- make_env(engine)
 
   expr_define <- engine$read("(define x 1)")[[1]]
-  expected_define <- withVisible(engine$eval_in_env(expr_define, env_eval))
+  expected_define <- withVisible(engine$eval(expr_define, env_eval))
   compiled_define <- eval_compiled_in_env(engine, expr_define, env_compiled)
   expect_false(expected_define$visible)
   expect_false(compiled_define$result$visible)
 
   expr_begin <- engine$read("(begin (define x 1) x)")[[1]]
-  expected_begin <- withVisible(engine$eval_in_env(expr_begin, env_eval))
+  expected_begin <- withVisible(engine$eval(expr_begin, env_eval))
   compiled_begin <- eval_compiled_in_env(engine, expr_begin, env_compiled)
   expect_true(expected_begin$visible)
   expect_true(compiled_begin$result$visible)
 
   expr_empty <- engine$read("(begin)")[[1]]
-  expected_empty <- withVisible(engine$eval_in_env(expr_empty, env_eval))
+  expected_empty <- withVisible(engine$eval(expr_empty, env_eval))
   compiled_empty <- eval_compiled_in_env(engine, expr_empty, env_compiled)
   expect_false(expected_empty$visible)
   expect_false(compiled_empty$result$visible)
@@ -304,10 +304,10 @@ test_that("macro pipeline matches engine eval", {
   env_eval <- make_env(engine)
   env_compiled <- make_env(engine)
 
-  engine$eval_in_env(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env_eval)
-  engine$eval_in_env(engine$read("(defmacro my-inc (x) `(+ ,x 1))")[[1]], env_eval)
-  engine$eval_in_env(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env_compiled)
-  engine$eval_in_env(engine$read("(defmacro my-inc (x) `(+ ,x 1))")[[1]], env_compiled)
+  engine$eval(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env_eval)
+  engine$eval(engine$read("(defmacro my-inc (x) `(+ ,x 1))")[[1]], env_eval)
+  engine$eval(engine$read("(defmacro my-when (test body) `(if ,test ,body #nil))")[[1]], env_compiled)
+  engine$eval(engine$read("(defmacro my-inc (x) `(+ ,x 1))")[[1]], env_compiled)
 
   exprs <- list(
     engine$read("(my-inc 2)")[[1]],
@@ -315,9 +315,9 @@ test_that("macro pipeline matches engine eval", {
   )
 
   for (expr in exprs) {
-    expected <- withVisible(engine$eval_in_env(expr, env_eval))
+    expected <- withVisible(engine$eval(expr, env_eval))
 
-    expanded <- engine$macroexpand_in_env(expr, env_compiled, preserve_src = TRUE)
+    expanded <- engine$macroexpand(expr, env = env_compiled, preserve_src = TRUE)
     compiled <- engine_field(engine, "compiler")$compile(expanded, env_compiled, strict = TRUE)
     expect_false(is.null(compiled))
     actual <- withVisible(engine_field(engine, "compiled_runtime")$eval_compiled(compiled, env_compiled))
@@ -373,11 +373,11 @@ test_that("compiler does NOT fold when arguments have side effects", {
   env <- new.env(parent = baseenv())
 
   # Define a function with side effects
-  engine$eval_in_env(engine$read("(define counter 0)")[[1]], env)
-  engine$eval_in_env(engine$read("(define inc! (lambda () (set! counter (+ counter 1)) counter))")[[1]], env)
+  engine$eval(engine$read("(define counter 0)")[[1]], env)
+  engine$eval(engine$read("(define inc! (lambda () (set! counter (+ counter 1)) counter))")[[1]], env)
 
   # This should NOT be folded - inc! has side effects
-  result <- engine$eval_in_env(engine$read("(+ (inc!) (inc!))")[[1]], env)
+  result <- engine$eval(engine$read("(+ (inc!) (inc!))")[[1]], env)
   expect_equal(result, 3)  # 1 + 2 = 3
   expect_equal(env$counter, 2)  # Counter incremented twice
 })
@@ -388,12 +388,12 @@ test_that("compiler does NOT fold when operators are not pure", {
   # Non-literal arguments should not fold
   env <- new.env(parent = baseenv())
   env$x <- 10
-  result <- engine$eval_in_env(engine$read("(+ x 5)")[[1]], env)
+  result <- engine$eval(engine$read("(+ x 5)")[[1]], env)
   expect_equal(result, 15)
 
   # Mixed literal and variable should not fold
   env$y <- 3
-  result <- engine$eval_in_env(engine$read("(* 2 y)")[[1]], env)
+  result <- engine$eval(engine$read("(* 2 y)")[[1]], env)
   expect_equal(result, 6)
 })
 
@@ -520,14 +520,14 @@ test_that("dead code elimination preserves side effects in taken branch", {
   env$x <- 0
 
   # Side effects in then-branch should execute
-  engine$eval_in_env(engine$read("(if #t (set! x 10) (set! x 20))")[[1]], env)
+  engine$eval(engine$read("(if #t (set! x 10) (set! x 20))")[[1]], env)
   expect_equal(env$x, 10)
 
   # Reset
   env$x <- 0
 
   # Side effects in else-branch should execute
-  engine$eval_in_env(engine$read("(if #f (set! x 10) (set! x 20))")[[1]], env)
+  engine$eval(engine$read("(if #f (set! x 10) (set! x 20))")[[1]], env)
   expect_equal(env$x, 20)
 })
 
@@ -537,11 +537,11 @@ test_that("dead code elimination does NOT eliminate for variable tests", {
   env$x <- TRUE
 
   # Variable test - both branches should be compiled (not eliminated)
-  result <- engine$eval_in_env(engine$read("(if x 1 2)")[[1]], env)
+  result <- engine$eval(engine$read("(if x 1 2)")[[1]], env)
   expect_equal(result, 1)
 
   env$x <- FALSE
-  result <- engine$eval_in_env(engine$read("(if x 1 2)")[[1]], env)
+  result <- engine$eval(engine$read("(if x 1 2)")[[1]], env)
   expect_equal(result, 2)
 })
 
@@ -560,7 +560,7 @@ test_that("compiler preserves multi-expression begin blocks", {
   env$x <- 0
 
   # Multiple expressions need block wrapper
-  engine$eval_in_env(engine$read("(begin (set! x 10) (set! x 20) x)")[[1]], env)
+  engine$eval(engine$read("(begin (set! x 10) (set! x 20) x)")[[1]], env)
   expect_equal(env$x, 20)
 })
 
@@ -601,10 +601,10 @@ test_that("identity elimination preserves evaluation order", {
   engine <- make_engine()
   env <- new.env(parent = baseenv())
   env$counter <- 0
-  engine$eval_in_env(engine$read("(define inc! (lambda () (set! counter (+ counter 1)) counter))")[[1]], env)
+  engine$eval(engine$read("(define inc! (lambda () (set! counter (+ counter 1)) counter))")[[1]], env)
 
   # Arguments should still be evaluated even if lambda is eliminated
-  result <- engine$eval_in_env(engine$read("((lambda (x) x) (inc!))")[[1]], env)
+  result <- engine$eval(engine$read("((lambda (x) x) (inc!))")[[1]], env)
   expect_equal(result, 1)
   expect_equal(env$counter, 1)
 })

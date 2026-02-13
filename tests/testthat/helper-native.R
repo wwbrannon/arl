@@ -13,7 +13,7 @@ run_native_test_file <- function(path, engine, env) {
   # Load the test file
   tryCatch({
     exprs <- engine$read(sprintf('(load "%s")', path))
-    engine$eval_in_env(exprs[[1]], env)
+    engine$eval(exprs[[1]], env = env)
   }, error = function(e) {
     stop(sprintf("Failed to load test file %s: %s", path, e$message))
   })
@@ -39,7 +39,7 @@ run_native_test_file <- function(path, engine, env) {
         # Call the test function
         tryCatch({
           exprs <- engine$read(sprintf('(%s)', test_name))
-          engine$eval_in_env(exprs[[1]], env)
+          engine$eval(exprs[[1]], env = env)
           # If we get here, the test passed
           expect_true(TRUE) # nolint: object_usage_linter.
         }, skip = function(e) {
@@ -94,7 +94,7 @@ run_native_tests <- function(dir = "tests/native") {
     }
     if (file.exists(native_helper)) {
       exprs <- engine$read(sprintf('(load "%s")', native_helper))
-      engine$eval_in_env(exprs[[1]], env)
+      engine$eval(exprs[[1]], env = env)
     }
 
     # Run this test file in its isolated environment

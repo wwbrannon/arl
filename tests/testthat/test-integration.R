@@ -12,18 +12,18 @@ test_that("factorial function works", {
           (* n (factorial (- n 1))))))
   "
 
-  engine$eval_in_env(engine$read(factorial_def)[[1]], env)
+  engine$eval(engine$read(factorial_def)[[1]], env = env)
 
   # Test factorial
-  result <- engine$eval_in_env(engine$read("(factorial 5)")[[1]], env)
+  result <- engine$eval(engine$read("(factorial 5)")[[1]], env = env)
   expect_equal(result, 120)
 
-  result <- engine$eval_in_env(engine$read("(factorial 0)")[[1]], env)
+  result <- engine$eval(engine$read("(factorial 0)")[[1]], env = env)
   expect_equal(result, 1)
 
-  result <- engine$eval_in_env(engine$read("(factorial 1)")[[1]], env)
+  result <- engine$eval(engine$read("(factorial 1)")[[1]], env = env)
   expect_equal(result, 1)
 
-  result <- engine$eval_in_env(engine$read("(factorial 10)")[[1]], env)
+  result <- engine$eval(engine$read("(factorial 10)")[[1]], env = env)
   expect_equal(result, 3628800)
 })

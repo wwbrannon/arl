@@ -32,7 +32,7 @@ large_string <- paste0('"', paste(rep("x", 10000), collapse = ""), '"')
 
 result <- profile_component({
   for (i in 1:100) {
-    engine1$tokenize(large_string)
+    engine_field(engine1, "tokenizer")$tokenize(large_string)
   }
 }, "tokenizer-large-string")
 
@@ -48,7 +48,7 @@ nested_100 <- paste0(nested_100, "x", paste(rep(")", 100), collapse = ""))
 
 profile_component({
   for (i in 1:100) {
-    engine2$tokenize(nested_100)
+    engine_field(engine2, "tokenizer")$tokenize(nested_100)
   }
 }, "tokenizer-deep-nesting")
 
@@ -62,7 +62,7 @@ real_workloads <- get_real_workloads()
 if (length(real_workloads) > 0 && "fibonacci" %in% names(real_workloads)) {
   profile_component({
     for (i in 1:100) {
-      engine3$tokenize(real_workloads$fibonacci)
+      engine_field(engine3, "tokenizer")$tokenize(real_workloads$fibonacci)
     }
   }, "tokenizer-fibonacci")
 
@@ -78,7 +78,7 @@ many_escapes <- paste0('"', paste(rep('\\n\\t\\r\\"\\\\', 200), collapse = ""), 
 
 profile_component({
   for (i in 1:100) {
-    engine4$tokenize(many_escapes)
+    engine_field(engine4, "tokenizer")$tokenize(many_escapes)
   }
 }, "tokenizer-escapes")
 
@@ -92,7 +92,7 @@ mixed_large <- paste(rep(mixed, 100), collapse = " ")
 
 profile_component({
   for (i in 1:50) {
-    engine5$tokenize(mixed_large)
+    engine_field(engine5, "tokenizer")$tokenize(mixed_large)
   }
 }, "tokenizer-mixed")
 

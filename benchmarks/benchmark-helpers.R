@@ -1,6 +1,15 @@
 # Benchmark Infrastructure Helpers
 # Helper functions for running benchmarks and profiling Arl components
 
+#' Access a private field on an Engine instance
+#'
+#' @param engine Engine instance
+#' @param name Field name (without leading dot)
+#' @return The private field value
+engine_field <- function(engine, name) {
+  engine$.__enclos_env__$private[[paste0(".", name)]]
+}
+
 #' Evaluate Arl code from text using an engine
 #'
 #' @param text Arl code as string

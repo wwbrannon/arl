@@ -12,6 +12,11 @@ Core Arl engine
 Provides class-based organization for tokenization, parsing, macro expansion,
 compiled evaluation, and environment management.
 }
+\note{
+The format returned by this method is not guaranteed to be stable across package versions.
+
+The format returned by this method is not guaranteed to be stable across package versions.
+}
 \examples{
 engine <- Engine$new()
 engine$eval_text("(+ 1 2 3)")
@@ -33,24 +38,14 @@ option \code{arl.use_env_cache}.}
 \item \href{#method-Engine-new}{\code{Engine$new()}}
 \item \href{#method-Engine-read}{\code{Engine$read()}}
 \item \href{#method-Engine-write}{\code{Engine$write()}}
-\item \href{#method-Engine-tokenize}{\code{Engine$tokenize()}}
-\item \href{#method-Engine-parse}{\code{Engine$parse()}}
 \item \href{#method-Engine-eval}{\code{Engine$eval()}}
-\item \href{#method-Engine-eval_in_env}{\code{Engine$eval_in_env()}}
-\item \href{#method-Engine-eval_seq}{\code{Engine$eval_seq()}}
 \item \href{#method-Engine-eval_exprs}{\code{Engine$eval_exprs()}}
 \item \href{#method-Engine-eval_text}{\code{Engine$eval_text()}}
-\item \href{#method-Engine-initialize_environment}{\code{Engine$initialize_environment()}}
-\item \href{#method-Engine-load_stdlib_into_env}{\code{Engine$load_stdlib_into_env()}}
 \item \href{#method-Engine-load_file}{\code{Engine$load_file()}}
-\item \href{#method-Engine-load_file_in_env}{\code{Engine$load_file_in_env()}}
+\item \href{#method-Engine-load_file_with_scope}{\code{Engine$load_file_with_scope()}}
 \item \href{#method-Engine-macroexpand}{\code{Engine$macroexpand()}}
-\item \href{#method-Engine-macroexpand_in_env}{\code{Engine$macroexpand_in_env()}}
-\item \href{#method-Engine-macroexpand_1}{\code{Engine$macroexpand_1()}}
-\item \href{#method-Engine-macroexpand_1_in_env}{\code{Engine$macroexpand_1_in_env()}}
 \item \href{#method-Engine-inspect_compilation}{\code{Engine$inspect_compilation()}}
 \item \href{#method-Engine-help}{\code{Engine$help()}}
-\item \href{#method-Engine-help_in_env}{\code{Engine$help_in_env()}}
 \item \href{#method-Engine-repl}{\code{Engine$repl()}}
 \item \href{#method-Engine-enable_coverage}{\code{Engine$enable_coverage()}}
 \item \href{#method-Engine-disable_coverage}{\code{Engine$disable_coverage()}}
@@ -137,92 +132,18 @@ Convert an Arl expression to its string representation. Inverse of read().
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-tokenize"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-tokenize}{}}}
-\subsection{Method \code{tokenize()}}{
-Tokenize source into Arl tokens.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$tokenize(source)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{source}}{Character string containing Arl source.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-parse"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-parse}{}}}
-\subsection{Method \code{parse()}}{
-Parse tokens into expressions.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$parse(tokens, source_name = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{tokens}}{Token list produced by the tokenizer.}
-
-\item{\code{source_name}}{Optional source name for error reporting.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Engine-eval"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-eval}{}}}
 \subsection{Method \code{eval()}}{
 Evaluate a single expression via compiled evaluation.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$eval(expr)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$eval(expr, env = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{expr}}{Arl expression (symbol/call/atomic value).}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-eval_in_env"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-eval_in_env}{}}}
-\subsection{Method \code{eval_in_env()}}{
-Evaluate a single expression in an explicit environment.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$eval_in_env(expr, env)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
-
-\item{\code{env}}{Optional environment or Env used as the engine base.}
-
-\item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-eval_seq"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-eval_seq}{}}}
-\subsection{Method \code{eval_seq()}}{
-Evaluate expressions in order via compiled evaluation.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$eval_seq(exprs, env = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{exprs}}{List of Arl expressions to evaluate.}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
@@ -285,42 +206,6 @@ Read and evaluate text.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-initialize_environment"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-initialize_environment}{}}}
-\subsection{Method \code{initialize_environment()}}{
-Populate standard bindings
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$initialize_environment(load_stdlib = TRUE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{load_stdlib}}{Logical. If TRUE, loads stdlib modules after setting up builtins.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-load_stdlib_into_env"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-load_stdlib_into_env}{}}}
-\subsection{Method \code{load_stdlib_into_env()}}{
-Load all stdlib modules in dependency order into an environment. Each module
-is loaded and its exports attached into \code{env}. Used by
-\code{initialize_environment()} and by the test helper for a custom env.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$load_stdlib_into_env(env)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{env}}{Environment to load stdlib into (e.g. \code{private$.env$env} or a test env).}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Engine-load_file"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-load_file}{}}}
 \subsection{Method \code{load_file()}}{
@@ -328,7 +213,7 @@ Load and evaluate an Arl source file in an isolated scope. The file runs in a
 child of the engine's environment, so definitions and imports in the file
 are not visible in the engine's main environment or to subsequent code. For
 source-like behavior (definitions visible in the engine), use
-\code{load_file_in_env(path, env, create_scope = FALSE)}.
+\code{load_file_with_scope(path, env, create_scope = FALSE)}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$load_file(path)}\if{html}{\out{</div>}}
 }
@@ -342,16 +227,16 @@ source-like behavior (definitions visible in the engine), use
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-load_file_in_env"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-load_file_in_env}{}}}
-\subsection{Method \code{load_file_in_env()}}{
+\if{html}{\out{<a id="method-Engine-load_file_with_scope"></a>}}
+\if{latex}{\out{\hypertarget{method-Engine-load_file_with_scope}{}}}
+\subsection{Method \code{load_file_with_scope()}}{
 Load and evaluate an Arl source file in an explicit environment. By default
 (\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
 and imports in the file are visible in that environment. With
 \code{create_scope = TRUE}, the file runs in a child of \code{env} and its
 definitions are not visible in \code{env}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_in_env(path, env, create_scope = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_with_scope(path, env, create_scope = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -372,28 +257,11 @@ definitions are not visible in \code{env}.
 \if{html}{\out{<a id="method-Engine-macroexpand"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-macroexpand}{}}}
 \subsection{Method \code{macroexpand()}}{
-Expand macros recursively.
+Expand macros in an expression. With \code{depth = NULL} (the default),
+fully and recursively expand all macros. With \code{depth = N}, expand
+only the top-level macro up to N times without walking into subexpressions.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$macroexpand(expr, preserve_src = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
-
-\item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-macroexpand_in_env"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-macroexpand_in_env}{}}}
-\subsection{Method \code{macroexpand_in_env()}}{
-Expand macros recursively in an explicit environment.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$macroexpand_in_env(expr, env, preserve_src = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$macroexpand(expr, env = NULL, depth = NULL, preserve_src = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -405,47 +273,7 @@ Expand macros recursively in an explicit environment.
 
 \item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
 
-\item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-macroexpand_1"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-macroexpand_1}{}}}
-\subsection{Method \code{macroexpand_1()}}{
-Expand a single macro layer.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$macroexpand_1(expr, preserve_src = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
-
-\item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-macroexpand_1_in_env"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-macroexpand_1_in_env}{}}}
-\subsection{Method \code{macroexpand_1_in_env()}}{
-Expand a single macro layer in an explicit environment.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$macroexpand_1_in_env(expr, env, preserve_src = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{expr}}{Arl expression (symbol/call/atomic value).}
-
-\item{\code{env}}{Optional environment or Env used as the engine base.}
-
-\item{\code{env}}{Optional environment or Env to evaluate in (defaults to engine env).}
+\item{\code{depth}}{Number of expansion steps (NULL for full expansion).}
 
 \item{\code{preserve_src}}{Logical; keep source metadata when macroexpanding.}
 }
@@ -484,24 +312,7 @@ List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr o
 \subsection{Method \code{help()}}{
 Show help for a topic.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$help(topic)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{topic}}{Help topic as a single string.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-help_in_env"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-help_in_env}{}}}
-\subsection{Method \code{help_in_env()}}{
-Show help for a topic in an explicit environment.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$help_in_env(topic, env)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$help(topic, env = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

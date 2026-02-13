@@ -16,30 +16,30 @@ test_that("stdlib loads successfully", {
 
 test_that("force evaluates promises", {
   env <- toplevel_env(engine, new.env())
-  forced <- engine$eval_in_env(engine$read("(force (delay (+ 1 2)))")[[1]], env)
+  forced <- engine$eval(engine$read("(force (delay (+ 1 2)))")[[1]], env = env)
   expect_equal(forced, 3)
 })
 
 test_that("force memoizes delayed expressions", {
   env <- toplevel_env(engine, new.env())
-  engine$eval_in_env(
+  engine$eval(
     engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  (force p)\n  (force p)\n  counter)")[[1]],
-    env
+    env = env
   )
   expect_equal(env$counter, 1)
 })
 
 test_that("force returns non-promises unchanged", {
   env <- toplevel_env(engine)
-  result <- engine$eval_in_env(engine$read("(force 42)")[[1]], env)
+  result <- engine$eval(engine$read("(force 42)")[[1]], env = env)
   expect_equal(result, 42)
 })
 
 test_that("call/cc exits to current continuation", {
   env <- toplevel_env(engine)
-  result <- engine$eval_in_env(
+  result <- engine$eval(
     engine$read("(call/cc (lambda (k) (+ 1 (k 42) 3)))")[[1]],
-    env
+    env = env
   )
   expect_equal(result, 42)
 })
@@ -47,28 +47,28 @@ test_that("call/cc exits to current continuation", {
 test_that("call/cc is downward-only (R's callCC behavior)", {
   env <- toplevel_env(engine)
   # R's callCC is one-shot and downward-only
-  result <- engine$eval_in_env(
+  result <- engine$eval(
     engine$read("(call/cc (lambda (k) (k 5)))")[[1]],
-    env
+    env = env
   )
   expect_equal(result, 5)
 
   # Test that it works as a regular function
-  result2 <- engine$eval_in_env(
+  result2 <- engine$eval(
     engine$read("(call/cc (lambda (exit) (if (> 2 1) (exit 10) 20)))")[[1]],
-    env
+    env = env
   )
   expect_equal(result2, 10)
 })
 
 test_that("call/cc is first-class and has an alias", {
   env <- toplevel_env(engine)
-  engine$eval_in_env(engine$read("(define cc call/cc)")[[1]], env)
-  result <- engine$eval_in_env(engine$read("(cc (lambda (k) (k 7)))")[[1]], env)
+  engine$eval(engine$read("(define cc call/cc)")[[1]], env = env)
+  result <- engine$eval(engine$read("(cc (lambda (k) (k 7)))")[[1]], env = env)
   expect_equal(result, 7)
-  alias_result <- engine$eval_in_env(
+  alias_result <- engine$eval(
     engine$read("(call-with-current-continuation (lambda (k) (k 9)))")[[1]],
-    env
+    env = env
   )
   expect_equal(alias_result, 9)
 })
@@ -84,16 +84,16 @@ test_that("values and call-with-values work", {
   env <- new.env()
   toplevel_env(engine, env)
 
-  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () (values)) (lambda () 42))")[[1]], env)
+  result <- engine$eval(engine$read("(call-with-values (lambda () (values)) (lambda () 42))")[[1]], env = env)
   expect_equal(result, 42)
 
-  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () (values 1)) (lambda (x) (+ x 1)))")[[1]], env)
+  result <- engine$eval(engine$read("(call-with-values (lambda () (values 1)) (lambda (x) (+ x 1)))")[[1]], env = env)
   expect_equal(result, 2)
 
-  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () (values 1 2)) (lambda (a b) (+ a b)))")[[1]], env)
+  result <- engine$eval(engine$read("(call-with-values (lambda () (values 1 2)) (lambda (a b) (+ a b)))")[[1]], env = env)
   expect_equal(result, 3)
 
-  result <- engine$eval_in_env(engine$read("(call-with-values (lambda () 5) (lambda (x) (* x 2)))")[[1]], env)
+  result <- engine$eval(engine$read("(call-with-values (lambda () 5) (lambda (x) (* x 2)))")[[1]], env = env)
   expect_equal(result, 10)
 })
 
@@ -153,17 +153,17 @@ test_that("eval function evaluates Arl expressions", {
   toplevel_env(engine, env)
 
   # Eval simple arithmetic
-  result <- env$eval(engine$read("(+ 1 2)")[[1]], env)
+  result <- env$eval(engine$read("(+ 1 2)")[[1]], env = env)
   expect_equal(result, 3)
 
   # Eval with variables
   env$x <- 10
-  result <- env$eval(engine$read("(* x 5)")[[1]], env)
+  result <- env$eval(engine$read("(* x 5)")[[1]], env = env)
   expect_equal(result, 50)
 
   # Eval function definition and call
-  env$eval(engine$read("(define double (lambda (n) (* n 2)))")[[1]], env)
-  result <- env$eval(engine$read("(double 21)")[[1]], env)
+  env$eval(engine$read("(define double (lambda (n) (* n 2)))")[[1]], env = env)
+  result <- env$eval(engine$read("(double 21)")[[1]], env = env)
   expect_equal(result, 42)
 })
 
@@ -190,20 +190,20 @@ test_that("read is available as engine builtin without importing io", {
   toplevel_env(engine, env)
 
   # Parse expression
-  result <- engine$eval_in_env(engine$read('(read "(+ 1 2)")')[[1]], env)
+  result <- engine$eval(engine$read('(read "(+ 1 2)")')[[1]], env = env)
   expect_true(is.call(result))
   expect_equal(as.character(result[[1]]), "+")
 
   # Parse symbol
-  result <- engine$eval_in_env(engine$read('(read "foo")')[[1]], env)
+  result <- engine$eval(engine$read('(read "foo")')[[1]], env = env)
   expect_true(is.symbol(result))
 
   # Parse number
-  result <- engine$eval_in_env(engine$read('(read "42")')[[1]], env)
+  result <- engine$eval(engine$read('(read "42")')[[1]], env = env)
   expect_equal(result, 42)
 
   # Empty string returns NULL
-  result <- engine$eval_in_env(engine$read('(read "")')[[1]], env)
+  result <- engine$eval(engine$read('(read "")')[[1]], env = env)
   expect_null(result)
 })
 
@@ -216,7 +216,7 @@ test_that("call-with-values errors when producer is not a function", {
   toplevel_env(engine, env)
 
   expect_error(
-    engine$eval_in_env(engine$read("(call-with-values 42 +)")[[1]], env),
+    engine$eval(engine$read("(call-with-values 42 +)")[[1]], env = env),
     "expects a function as the producer")
 })
 
@@ -225,7 +225,7 @@ test_that("call-with-values errors when consumer is not a function", {
   toplevel_env(engine, env)
 
   expect_error(
-    engine$eval_in_env(engine$read("(call-with-values (lambda () 1) 42)")[[1]], env),
+    engine$eval(engine$read("(call-with-values (lambda () 1) 42)")[[1]], env = env),
     "expects a function as the consumer")
 })
 
@@ -239,6 +239,6 @@ test_that("license function executes without error", {
 
   # license prints output; just verify it doesn't error
   expect_no_error(
-    capture.output(engine$eval_in_env(engine$read("(license)")[[1]], env))
+    capture.output(engine$eval(engine$read("(license)")[[1]], env = env))
   )
 })

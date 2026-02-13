@@ -29,33 +29,33 @@ test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", 
   env <- toplevel_env(engine, new.env())
 
   # From list values
-  expect_equal(engine$eval_in_env(engine$read("(begin (import list) (cadr (list 1 2 3 4)))")[[1]], env), 2)
-  expect_equal(engine$eval_in_env(engine$read("(begin (import list) (caddr (list 1 2 3 4)))")[[1]], env), 3)
-  expect_equal(engine$eval_in_env(engine$read("(begin (import list) (cadddr (list 1 2 3 4)))")[[1]], env), 4)
+  expect_equal(engine$eval(engine$read("(begin (import list) (cadr (list 1 2 3 4)))")[[1]], env = env), 2)
+  expect_equal(engine$eval(engine$read("(begin (import list) (caddr (list 1 2 3 4)))")[[1]], env = env), 3)
+  expect_equal(engine$eval(engine$read("(begin (import list) (cadddr (list 1 2 3 4)))")[[1]], env = env), 4)
   expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (caar (list (list 10 11) (list 20 21))))")[[1]], env),
+    engine$eval(engine$read("(begin (import list) (caar (list (list 10 11) (list 20 21))))")[[1]], env = env),
     10
   )
   expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (cdar (list (list 10 11) (list 20 21))))")[[1]], env),
+    engine$eval(engine$read("(begin (import list) (cdar (list (list 10 11) (list 20 21))))")[[1]], env = env),
     list(11)
   )
   expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (cddr (list 1 2 3 4)))")[[1]], env),
+    engine$eval(engine$read("(begin (import list) (cddr (list 1 2 3 4)))")[[1]], env = env),
     list(3, 4)
   )
 
   # From quoted calls (call objects)
   expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (cadr '(+ 1 2 3)))")[[1]], env),
+    engine$eval(engine$read("(begin (import list) (cadr '(+ 1 2 3)))")[[1]], env = env),
     1
   )
   expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (caddr '(+ 1 2 3)))")[[1]], env),
+    engine$eval(engine$read("(begin (import list) (caddr '(+ 1 2 3)))")[[1]], env = env),
     2
   )
   expect_equal(
-    engine$eval_in_env(engine$read("(begin (import list) (cadddr '(+ 1 2 3)))")[[1]], env),
+    engine$eval(engine$read("(begin (import list) (cadddr '(+ 1 2 3)))")[[1]], env = env),
     3
   )
 })
@@ -144,11 +144,11 @@ test_that("assoc family: assoc, assoc-by-equal?, assoc-by-identical?, assoc-by-=
 test_that("assq and assv error (cannot implement eq?/eqv? in R)", {
   env <- toplevel_env(engine, new.env())
   expect_error(
-    engine$eval_in_env(engine$read("(assq 'x (list (list 'x 1)))")[[1]], env),
+    engine$eval(engine$read("(assq 'x (list (list 'x 1)))")[[1]], env = env),
     "assq cannot be properly implemented"
   )
   expect_error(
-    engine$eval_in_env(engine$read("(assv 5 (list (list 5 \"five\")))")[[1]], env),
+    engine$eval(engine$read("(assv 5 (list (list 5 \"five\")))")[[1]], env = env),
     "assv cannot be properly implemented"
   )
 })
@@ -165,7 +165,7 @@ test_that("cons adds element to front", {
 
 test_that("cons with non-list cdr produces dotted pair (arl_cons)", {
   env <- toplevel_env(engine, new.env())
-  result <- engine$eval_in_env(engine$read("(cons 'a 'b)")[[1]], env)
+  result <- engine$eval(engine$read("(cons 'a 'b)")[[1]], env = env)
   expect_true(r6_isinstance(result, "Cons"))
   expect_equal(as.character(result$car), "a")
   expect_equal(as.character(result$cdr), "b")
@@ -173,14 +173,14 @@ test_that("cons with non-list cdr produces dotted pair (arl_cons)", {
 
 test_that("car and cdr on dotted pair", {
   env <- toplevel_env(engine, new.env())
-  pair <- engine$eval_in_env(engine$read("'(a . 42)")[[1]], env)
+  pair <- engine$eval(engine$read("'(a . 42)")[[1]], env = env)
   expect_equal(as.character(env$car(pair)), "a")
   expect_equal(env$cdr(pair), 42)
 })
 
 test_that("list? is false but pair? is true for dotted pair (Cons)", {
   env <- toplevel_env(engine, new.env())
-  pair <- engine$eval_in_env(engine$read("(cons 1 2)")[[1]], env)
+  pair <- engine$eval(engine$read("(cons 1 2)")[[1]], env = env)
   expect_false(env$`list?`(pair))
   expect_true(env$`pair?`(pair))  # pair? = dotted pair (Cons)
 })
@@ -226,27 +226,27 @@ test_that("range generates numeric sequences", {
 
   # Basic range
   expect_equal(
-    engine$eval_in_env(engine$read("(range 0 5)")[[1]], env),
+    engine$eval(engine$read("(range 0 5)")[[1]], env = env),
     list(0, 1, 2, 3, 4))
 
   # Range with step
   expect_equal(
-    engine$eval_in_env(engine$read("(range 0 10 2)")[[1]], env),
+    engine$eval(engine$read("(range 0 10 2)")[[1]], env = env),
     list(0, 2, 4, 6, 8))
 
   # Negative step (descending)
   expect_equal(
-    engine$eval_in_env(engine$read("(range 10 0 -2)")[[1]], env),
+    engine$eval(engine$read("(range 10 0 -2)")[[1]], env = env),
     list(10, 8, 6, 4, 2))
 
   # Empty range (start >= end with positive step)
   expect_equal(
-    engine$eval_in_env(engine$read("(range 5 5)")[[1]], env),
+    engine$eval(engine$read("(range 5 5)")[[1]], env = env),
     list())
 
   # Single element range
   expect_equal(
-    engine$eval_in_env(engine$read("(range 0 1)")[[1]], env),
+    engine$eval(engine$read("(range 0 1)")[[1]], env = env),
     list(0))
 })
 
@@ -256,27 +256,27 @@ test_that("iota generates sequences with count", {
 
   # Basic iota (count from 0)
   expect_equal(
-    engine$eval_in_env(engine$read("(iota 5)")[[1]], env),
+    engine$eval(engine$read("(iota 5)")[[1]], env = env),
     list(0, 1, 2, 3, 4))
 
   # iota with custom start
   expect_equal(
-    engine$eval_in_env(engine$read("(iota 5 10)")[[1]], env),
+    engine$eval(engine$read("(iota 5 10)")[[1]], env = env),
     list(10, 11, 12, 13, 14))
 
   # iota with custom start and step
   expect_equal(
-    engine$eval_in_env(engine$read("(iota 5 0 2)")[[1]], env),
+    engine$eval(engine$read("(iota 5 0 2)")[[1]], env = env),
     list(0, 2, 4, 6, 8))
 
   # Empty iota (count <= 0)
   expect_equal(
-    engine$eval_in_env(engine$read("(iota 0)")[[1]], env),
+    engine$eval(engine$read("(iota 0)")[[1]], env = env),
     list())
 
   # Single element
   expect_equal(
-    engine$eval_in_env(engine$read("(iota 1)")[[1]], env),
+    engine$eval(engine$read("(iota 1)")[[1]], env = env),
     list(0))
 })
 
@@ -286,22 +286,22 @@ test_that("make-list creates repeated values", {
 
   # Repeat number
   expect_equal(
-    engine$eval_in_env(engine$read("(make-list 5 42)")[[1]], env),
+    engine$eval(engine$read("(make-list 5 42)")[[1]], env = env),
     list(42, 42, 42, 42, 42))
 
   # Repeat symbol
-  result <- engine$eval_in_env(engine$read("(make-list 3 'x)")[[1]], env)
+  result <- engine$eval(engine$read("(make-list 3 'x)")[[1]], env = env)
   expect_equal(length(result), 3)
   expect_equal(as.character(result[[1]]), "x")
 
   # Zero length
   expect_equal(
-    engine$eval_in_env(engine$read("(make-list 0 42)")[[1]], env),
+    engine$eval(engine$read("(make-list 0 42)")[[1]], env = env),
     list())
 
   # Single element
   expect_equal(
-    engine$eval_in_env(engine$read("(make-list 1 99)")[[1]], env),
+    engine$eval(engine$read("(make-list 1 99)")[[1]], env = env),
     list(99))
 })
 
@@ -311,16 +311,16 @@ test_that("list-ref accesses list by index", {
 
   # list-ref is an alias for nth (0-indexed)
   expect_equal(
-    engine$eval_in_env(engine$read("(list-ref '(10 20 30 40) 0)")[[1]], env),
+    engine$eval(engine$read("(list-ref '(10 20 30 40) 0)")[[1]], env = env),
     10)
 
   expect_equal(
-    engine$eval_in_env(engine$read("(list-ref '(10 20 30 40) 2)")[[1]], env),
+    engine$eval(engine$read("(list-ref '(10 20 30 40) 2)")[[1]], env = env),
     30)
 
   # Out of bounds should error
   expect_error(
-    engine$eval_in_env(engine$read("(list-ref '(1 2 3) 5)")[[1]], env),
+    engine$eval(engine$read("(list-ref '(1 2 3) 5)")[[1]], env = env),
     "out of bounds")
 })
 
@@ -330,22 +330,22 @@ test_that("list-tail returns list without first k elements", {
 
   # Drop first 2 elements
   expect_equal(
-    engine$eval_in_env(engine$read("(list-tail '(1 2 3 4 5) 2)")[[1]], env),
+    engine$eval(engine$read("(list-tail '(1 2 3 4 5) 2)")[[1]], env = env),
     list(3, 4, 5))
 
   # Drop all elements
   expect_equal(
-    engine$eval_in_env(engine$read("(list-tail '(1 2 3) 3)")[[1]], env),
+    engine$eval(engine$read("(list-tail '(1 2 3) 3)")[[1]], env = env),
     list())
 
   # Drop more than length
   expect_equal(
-    engine$eval_in_env(engine$read("(list-tail '(1 2 3) 10)")[[1]], env),
+    engine$eval(engine$read("(list-tail '(1 2 3) 10)")[[1]], env = env),
     list())
 
   # Drop 0 elements
   expect_equal(
-    engine$eval_in_env(engine$read("(list-tail '(1 2 3) 0)")[[1]], env),
+    engine$eval(engine$read("(list-tail '(1 2 3) 0)")[[1]], env = env),
     list(1, 2, 3))
 })
 
@@ -358,7 +358,7 @@ test_that("range errors when step is zero", {
   import_stdlib_modules(engine, c("list"), env)
 
   expect_error(
-    engine$eval_in_env(engine$read("(range 1 10 0)")[[1]], env),
+    engine$eval(engine$read("(range 1 10 0)")[[1]], env = env),
     "step cannot be zero")
 })
 

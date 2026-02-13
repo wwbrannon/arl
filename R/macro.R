@@ -28,32 +28,30 @@ MacroExpander <- R6::R6Class(
       private$define_macro(name, params, body, target_env, docstring = docstring)
       invisible(NULL)
     },
-    # @description Recursively expand macros in expr.
+    # @description Expand macros in expr.
     # @param expr Arl expression.
     # @param env Environment for macro lookup or NULL.
     # @param preserve_src Whether to keep source attributes.
+    # @param depth NULL for full recursive expansion, or integer N for N expansion steps.
     # @return Expanded expression.
-    macroexpand = function(expr, env = NULL, preserve_src = FALSE) {
+    macroexpand = function(expr, env = NULL, preserve_src = FALSE, depth = NULL) {
       target_env <- private$normalize_env(env)
-      registry <- private$macro_registry(target_env, create = FALSE)
-      # Use cached macro names (optimization 1.3)
-      macro_names <- private$get_macro_names(registry)
-      if (length(macro_names) == 0 || !private$contains_macro_head(expr, macro_names)) {
-        if (isTRUE(preserve_src)) {
-          return(expr)
+      if (is.null(depth)) {
+        # Full expansion (walk into subexpressions)
+        registry <- private$macro_registry(target_env, create = FALSE)
+        # Use cached macro names (optimization 1.3)
+        macro_names <- private$get_macro_names(registry)
+        if (length(macro_names) == 0 || !private$contains_macro_head(expr, macro_names)) {
+          if (isTRUE(preserve_src)) {
+            return(expr)
+          }
+          return(self$context$source_tracker$strip_src(expr))
         }
-        return(self$context$source_tracker$strip_src(expr))
+        private$macroexpand_impl(expr, target_env, preserve_src, max_depth = Inf, walk = TRUE)
+      } else {
+        # Bounded expansion (no walk into subexpressions)
+        private$macroexpand_impl(expr, target_env, preserve_src, max_depth = depth, walk = FALSE)
       }
-      private$macroexpand_impl(expr, target_env, preserve_src, max_depth = Inf, walk = TRUE)
-    },
-    # @description Expand one layer of macros only.
-    # @param expr Arl expression.
-    # @param env Environment or NULL.
-    # @param preserve_src Whether to keep source attributes.
-    # @return Expanded expression.
-    macroexpand_1 = function(expr, env = NULL, preserve_src = FALSE) {
-      target_env <- private$normalize_env(env)
-      private$macroexpand_impl(expr, target_env, preserve_src, max_depth = 1, walk = FALSE)
     },
     # @description Check if name is bound to a macro in env.
     # @param name Symbol or character.
@@ -962,7 +960,7 @@ MacroExpander <- R6::R6Class(
         expanded <- private$hygiene_unwrap_impl(expanded)
         expanded <- self$context$source_tracker$src_inherit(expanded, expr)
 
-        if (max_depth <= 1 || !walk) {
+        if (max_depth <= 1) {
           if (isTRUE(preserve_src)) {
             return(expanded)
           }
@@ -972,7 +970,7 @@ MacroExpander <- R6::R6Class(
           return(expanded)
         }
 
-        return(private$macroexpand_impl(expanded, env, preserve_src, max_depth - 1, walk = TRUE))
+        return(private$macroexpand_impl(expanded, env, preserve_src, max_depth - 1, walk = walk))
       }
 
       if (!walk) {

@@ -5,7 +5,8 @@
           error warn
           identity values values?
           call-with-values call/cc call-with-current-continuation
-          funcall r/call get)
+          funcall r/call get
+          macroexpand-1 macroexpand-all)
 
   (import _r)
 
@@ -152,4 +153,18 @@
         (r/call "cat" (list license-lines :sep "\n"))
         (r/call "cat" (list "\n\nArl is built on R. R's license:\n\n"))
         (r/call "license" (list)))))
+
+;;' @section Macro Introspection
+
+  ;;' @description Expand one layer of macros in expr.
+  ;;' @examples
+  ;;' (macroexpand-1 '(when #t 42))  ; => (if #t 42 #nil)
+  ;;' @seealso macroexpand, macroexpand-all
+  (define macroexpand-1 (lambda (expr) (macroexpand expr 1)))
+
+  ;;' @description Fully expand all macros in expr. Same as macroexpand with no depth.
+  ;;' @examples
+  ;;' (macroexpand-all '(when #t 42))  ; => (if #t 42 #nil)
+  ;;' @seealso macroexpand, macroexpand-1
+  (define macroexpand-all macroexpand)
 )

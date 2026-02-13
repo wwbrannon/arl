@@ -38,32 +38,32 @@ test_that("length= checks exact length", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  expect_true(engine$eval_in_env(engine$read("(length= '(1 2 3) 3)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length= '(1 2) 3)")[[1]], env))
+  expect_true(engine$eval(engine$read("(length= '(1 2 3) 3)")[[1]], env = env))
+  expect_false(engine$eval(engine$read("(length= '(1 2) 3)")[[1]], env = env))
 })
 
 test_that("length> checks greater length", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  expect_true(engine$eval_in_env(engine$read("(length> '(1 2 3) 2)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length> '(1 2) 2)")[[1]], env))
+  expect_true(engine$eval(engine$read("(length> '(1 2 3) 2)")[[1]], env = env))
+  expect_false(engine$eval(engine$read("(length> '(1 2) 2)")[[1]], env = env))
 })
 
 test_that("length< checks less length", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  expect_true(engine$eval_in_env(engine$read("(length< '(1 2) 3)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length< '(1 2 3) 3)")[[1]], env))
+  expect_true(engine$eval(engine$read("(length< '(1 2) 3)")[[1]], env = env))
+  expect_false(engine$eval(engine$read("(length< '(1 2 3) 3)")[[1]], env = env))
 })
 
 test_that("length predicates work with empty sequences", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  expect_true(engine$eval_in_env(engine$read("(length= '() 0)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(length< '() 1)")[[1]], env))
+  expect_true(engine$eval(engine$read("(length= '() 0)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(length< '() 1)")[[1]], env = env))
 })
 
 test_that("length predicates work with vectors", {
@@ -72,17 +72,17 @@ test_that("length predicates work with vectors", {
 
   # Note: length("hello") is 1 in R (vector length), not 5 (character count)
   # Use nchar() for string character count
-  expect_true(engine$eval_in_env(engine$read("(length= \"hello\" 1)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length> \"hello\" 1)")[[1]], env))
+  expect_true(engine$eval(engine$read("(length= \"hello\" 1)")[[1]], env = env))
+  expect_false(engine$eval(engine$read("(length> \"hello\" 1)")[[1]], env = env))
 })
 
 test_that("length predicates handle boundaries", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  expect_true(engine$eval_in_env(engine$read("(length= '(1 2 3) 3)")[[1]], env))
-  expect_false(engine$eval_in_env(engine$read("(length> '(1 2 3) 3)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(length> '(1 2 3) 2)")[[1]], env))
+  expect_true(engine$eval(engine$read("(length= '(1 2 3) 3)")[[1]], env = env))
+  expect_false(engine$eval(engine$read("(length> '(1 2 3) 3)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(length> '(1 2 3) 2)")[[1]], env = env))
 })
 
 # ============================================================================
@@ -94,7 +94,7 @@ test_that("partition errors when n is zero", {
   toplevel_env(engine, env)
 
   expect_error(
-    engine$eval_in_env(engine$read("(partition 0 (list 1 2 3))")[[1]], env),
+    engine$eval(engine$read("(partition 0 (list 1 2 3))")[[1]], env = env),
     "requires positive n and step")
 })
 
@@ -102,8 +102,8 @@ test_that("flatten handles deeply nested lists", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  result <- engine$eval_in_env(
-    engine$read("(flatten (list 1 (list 2 (list 3))))")[[1]], env)
+  result <- engine$eval(
+    engine$read("(flatten (list 1 (list 2 (list 3))))")[[1]], env = env)
   expect_equal(result, list(1, 2, 3))
 })
 
@@ -111,6 +111,6 @@ test_that("zip with no arguments returns empty list", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  result <- engine$eval_in_env(engine$read("(zip)")[[1]], env)
+  result <- engine$eval(engine$read("(zip)")[[1]], env = env)
   expect_equal(result, list())
 })

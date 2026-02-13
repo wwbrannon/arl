@@ -56,7 +56,7 @@ test_that("TCO: works with cond (macro-expands to nested if)", {
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env)
   import_stdlib_modules(engine, c("control"), env)
-  engine$eval_in_env(
+  engine$eval(
     engine$read("
       (define classify (lambda (n)
         (cond
@@ -64,9 +64,9 @@ test_that("TCO: works with cond (macro-expands to nested if)", {
           ((== n 0) (quote zero))
           (#t (classify (- n 1))))))
     ")[[1]],
-    env
+    env = env
   )
-  result <- engine$eval_in_env(engine$read("(classify 5)")[[1]], env)
+  result <- engine$eval(engine$read("(classify 5)")[[1]], env = env)
   expect_equal(result, quote(zero))
 })
 

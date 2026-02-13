@@ -19,10 +19,10 @@ test_that("map works from Arl code", {
   toplevel_env(engine, env)
 
   # Define a doubling function in Arl
-  engine$eval_in_env(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env)
+  engine$eval(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env = env)
 
   # Use map with the Arl function
-  result <- engine$eval_in_env(engine$read("(map double (list 1 2 3))")[[1]], env)
+  result <- engine$eval(engine$read("(map double (list 1 2 3))")[[1]], env = env)
 
   expect_equal(result[[1]], 2)
   expect_equal(result[[2]], 4)
@@ -47,10 +47,10 @@ test_that("filter works from Arl code", {
   toplevel_env(engine, env)
 
   # Define a predicate in Arl
-  engine$eval_in_env(engine$read("(define even? (lambda (x) (= (% x 2) 0)))")[[1]], env)
+  engine$eval(engine$read("(define even? (lambda (x) (= (% x 2) 0)))")[[1]], env = env)
 
   # Use filter
-  result <- engine$eval_in_env(engine$read("(filter even? (list 1 2 3 4 5 6))")[[1]], env)
+  result <- engine$eval(engine$read("(filter even? (list 1 2 3 4 5 6))")[[1]], env = env)
 
   expect_equal(length(result), 3)
 })
@@ -213,21 +213,21 @@ test_that("curry creates curried functions", {
   import_stdlib_modules(engine, c("functional"), env)
 
   # Curry a function with 2 arguments
-  engine$eval_in_env(engine$read("(define add (lambda (a b) (+ a b)))")[[1]], env)
-  engine$eval_in_env(engine$read("(define add-curried (curry add))")[[1]], env)
+  engine$eval(engine$read("(define add (lambda (a b) (+ a b)))")[[1]], env = env)
+  engine$eval(engine$read("(define add-curried (curry add))")[[1]], env = env)
 
   # Call with one argument returns partially applied function
-  engine$eval_in_env(engine$read("(define add5 (add-curried 5))")[[1]], env)
-  result <- engine$eval_in_env(engine$read("(add5 3)")[[1]], env)
+  engine$eval(engine$read("(define add5 (add-curried 5))")[[1]], env = env)
+  result <- engine$eval(engine$read("(add5 3)")[[1]], env = env)
   expect_equal(result, 8)
 
   # Call with all arguments at once works
-  result <- engine$eval_in_env(engine$read("(add-curried 10 20)")[[1]], env)
+  result <- engine$eval(engine$read("(add-curried 10 20)")[[1]], env = env)
   expect_equal(result, 30)
 
   # Curry with initial arguments
-  engine$eval_in_env(engine$read("(define add10 (curry add 10))")[[1]], env)
-  result <- engine$eval_in_env(engine$read("(add10 7)")[[1]], env)
+  engine$eval(engine$read("(define add10 (curry add 10))")[[1]], env = env)
+  result <- engine$eval(engine$read("(add10 7)")[[1]], env = env)
   expect_equal(result, 17)
 })
 
@@ -236,7 +236,7 @@ test_that("memoize caches function results", {
   import_stdlib_modules(engine, c("functional"), env)
 
   # Create a function that counts how many times it's called
-  engine$eval_in_env(engine$read("
+  engine$eval(engine$read("
     (begin
       (define call-count 0)
       (define expensive (lambda (x)
@@ -244,22 +244,22 @@ test_that("memoize caches function results", {
           (set! call-count (+ call-count 1))
           (* x x))))
       (define memoized (memoize expensive)))
-  ")[[1]], env)
+  ")[[1]], env = env)
 
   # First call - should execute function
-  result1 <- engine$eval_in_env(engine$read("(memoized 5)")[[1]], env)
+  result1 <- engine$eval(engine$read("(memoized 5)")[[1]], env = env)
   expect_equal(result1, 25)
-  expect_equal(engine$eval_in_env(engine$read("call-count")[[1]], env), 1)
+  expect_equal(engine$eval(engine$read("call-count")[[1]], env = env), 1)
 
   # Second call with same argument - should use cache
-  result2 <- engine$eval_in_env(engine$read("(memoized 5)")[[1]], env)
+  result2 <- engine$eval(engine$read("(memoized 5)")[[1]], env = env)
   expect_equal(result2, 25)
-  expect_equal(engine$eval_in_env(engine$read("call-count")[[1]], env), 1)  # Still 1
+  expect_equal(engine$eval(engine$read("call-count")[[1]], env = env), 1)  # Still 1
 
   # Call with different argument - should execute function again
-  result3 <- engine$eval_in_env(engine$read("(memoized 7)")[[1]], env)
+  result3 <- engine$eval(engine$read("(memoized 7)")[[1]], env = env)
   expect_equal(result3, 49)
-  expect_equal(engine$eval_in_env(engine$read("call-count")[[1]], env), 2)
+  expect_equal(engine$eval(engine$read("call-count")[[1]], env = env), 2)
 })
 
 test_that("juxt applies multiple functions to same arguments", {
@@ -267,14 +267,14 @@ test_that("juxt applies multiple functions to same arguments", {
   import_stdlib_modules(engine, c("functional", "list"), env)
 
   # Create juxtaposition of + and *
-  engine$eval_in_env(engine$read("(define add-and-mult (juxt + *))")[[1]], env)
+  engine$eval(engine$read("(define add-and-mult (juxt + *))")[[1]], env = env)
 
-  result <- engine$eval_in_env(engine$read("(add-and-mult 3 4)")[[1]], env)
+  result <- engine$eval(engine$read("(add-and-mult 3 4)")[[1]], env = env)
   expect_equal(result, list(7, 12))  # (+ 3 4) and (* 3 4)
 
   # Juxt with more functions
-  engine$eval_in_env(engine$read("(define trio (juxt car cadr caddr))")[[1]], env)
-  result <- engine$eval_in_env(engine$read("(trio (list 1 2 3 4 5))")[[1]], env)
+  engine$eval(engine$read("(define trio (juxt car cadr caddr))")[[1]], env = env)
+  result <- engine$eval(engine$read("(trio (list 1 2 3 4 5))")[[1]], env = env)
   expect_equal(result, list(1, 2, 3))
 })
 
@@ -282,15 +282,15 @@ test_that("constantly returns function that always returns same value", {
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("functional"), env)
 
-  engine$eval_in_env(engine$read("(define always-42 (constantly 42))")[[1]], env)
+  engine$eval(engine$read("(define always-42 (constantly 42))")[[1]], env = env)
 
   # No matter what arguments, always returns 42
-  expect_equal(engine$eval_in_env(engine$read("(always-42)")[[1]], env), 42)
-  expect_equal(engine$eval_in_env(engine$read("(always-42 1)")[[1]], env), 42)
-  expect_equal(engine$eval_in_env(engine$read("(always-42 1 2 3)")[[1]], env), 42)
+  expect_equal(engine$eval(engine$read("(always-42)")[[1]], env = env), 42)
+  expect_equal(engine$eval(engine$read("(always-42 1)")[[1]], env = env), 42)
+  expect_equal(engine$eval(engine$read("(always-42 1 2 3)")[[1]], env = env), 42)
 
   # Use with map
-  result <- engine$eval_in_env(engine$read("(map (constantly 'x) '(1 2 3))")[[1]], env)
+  result <- engine$eval(engine$read("(map (constantly 'x) '(1 2 3))")[[1]], env = env)
   expect_equal(length(result), 3)
   expect_equal(as.character(result[[1]]), "x")
 })
@@ -300,16 +300,16 @@ test_that("iterate applies function n times", {
   import_stdlib_modules(engine, c("functional"), env)
 
   # Double a number 3 times
-  engine$eval_in_env(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env)
-  result <- engine$eval_in_env(engine$read("(iterate double 3 5)")[[1]], env)
+  engine$eval(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env = env)
+  result <- engine$eval(engine$read("(iterate double 3 5)")[[1]], env = env)
   expect_equal(result, 40)  # 5 * 2 * 2 * 2 = 40
 
   # Zero iterations returns initial value
-  result <- engine$eval_in_env(engine$read("(iterate double 0 5)")[[1]], env)
+  result <- engine$eval(engine$read("(iterate double 0 5)")[[1]], env = env)
   expect_equal(result, 5)
 
   # Single iteration
-  result <- engine$eval_in_env(engine$read("(iterate double 1 10)")[[1]], env)
+  result <- engine$eval(engine$read("(iterate double 1 10)")[[1]], env = env)
   expect_equal(result, 20)
 })
 
@@ -318,16 +318,16 @@ test_that("iterate-until collects values until predicate is true", {
   import_stdlib_modules(engine, c("functional"), env)
 
   # Double until value > 100
-  engine$eval_in_env(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env)
-  result <- engine$eval_in_env(
-    engine$read("(iterate-until double 5 (lambda (x) (> x 100)))")[[1]], env)
+  engine$eval(engine$read("(define double (lambda (x) (* x 2)))")[[1]], env = env)
+  result <- engine$eval(
+    engine$read("(iterate-until double 5 (lambda (x) (> x 100)))")[[1]], env = env)
 
   # Should be: 5, 10, 20, 40, 80 (stops before 160)
   expect_equal(result, list(5, 10, 20, 40, 80))
 
   # Immediate termination
-  result <- engine$eval_in_env(
-    engine$read("(iterate-until (lambda (x) (* x 2)) 200 (lambda (x) (> x 100)))")[[1]], env)
+  result <- engine$eval(
+    engine$read("(iterate-until (lambda (x) (* x 2)) 200 (lambda (x) (> x 100)))")[[1]], env = env)
   expect_equal(result, list(200))  # First value before checking next
 })
 
@@ -340,8 +340,8 @@ test_that("mapcat with empty results returns empty list", {
   toplevel_env(engine, env)
   import_stdlib_modules(engine, c("functional"), env)
 
-  result <- engine$eval_in_env(
-    engine$read("(mapcat (lambda (x) (list)) (list 1 2 3))")[[1]], env)
+  result <- engine$eval(
+    engine$read("(mapcat (lambda (x) (list)) (list 1 2 3))")[[1]], env = env)
   expect_equal(result, list())
 })
 
@@ -351,13 +351,13 @@ test_that("foldl and foldr with no init value from Arl code", {
   import_stdlib_modules(engine, c("functional"), env)
 
   # foldl with no init (uses Arl's + which is variadic)
-  result <- engine$eval_in_env(
-    engine$read("(foldl + (list 1 2 3))")[[1]], env)
+  result <- engine$eval(
+    engine$read("(foldl + (list 1 2 3))")[[1]], env = env)
   expect_equal(result, 6)
 
   # foldr with no init
-  result <- engine$eval_in_env(
-    engine$read("(foldr + (list 1 2 3))")[[1]], env)
+  result <- engine$eval(
+    engine$read("(foldr + (list 1 2 3))")[[1]], env = env)
   expect_equal(result, 6)
 })
 
@@ -365,7 +365,7 @@ test_that("curry with 3-arg function enables multi-step partial application", {
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("functional"), env)
 
-  engine$eval_in_env(engine$read("(define add3 (curry (lambda (a b c) (+ a b c))))")[[1]], env)
-  result <- engine$eval_in_env(engine$read("(((add3 1) 2) 3)")[[1]], env)
+  engine$eval(engine$read("(define add3 (curry (lambda (a b c) (+ a b c))))")[[1]], env = env)
+  result <- engine$eval(engine$read("(((add3 1) 2) 3)")[[1]], env = env)
   expect_equal(result, 6)
 })

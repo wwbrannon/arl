@@ -251,11 +251,11 @@ test_that("annotation-based docs are available via compiler", {
   env <- engine$get_env()
 
   # Load the module from file (triggers annotation parsing in compiler)
-  engine$eval_in_env(engine$read(sprintf('(load "%s")', tmp))[[1]], env)
-  engine$eval_in_env(engine$read("(import test-ann-mod)")[[1]], env)
+  engine$eval(engine$read(sprintf('(load "%s")', tmp))[[1]], env = env)
+  engine$eval(engine$read("(import test-ann-mod)")[[1]], env = env)
 
   # The function should have annotation-based arl_doc
-  fn <- engine$eval_in_env(engine$read("add")[[1]], env)
+  fn <- engine$eval(engine$read("add")[[1]], env = env)
   doc <- attr(fn, "arl_doc", exact = TRUE)
   expect_false(is.null(doc))
   expect_equal(doc$description, "Add two numbers together.")

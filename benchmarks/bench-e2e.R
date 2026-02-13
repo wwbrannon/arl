@@ -12,12 +12,12 @@ cat("=== End-to-End Benchmarks ===\n\n")
 time_components <- function(code, engine) {
   # Tokenize
   t_start <- proc.time()
-  tokens <- engine$tokenize(code)
+  tokens <- engine_field(engine, "tokenizer")$tokenize(code)
   t_tokenize <- (proc.time() - t_start)[["elapsed"]]
 
   # Parse
   t_start <- proc.time()
-  exprs <- engine$parse(tokens)
+  exprs <- engine_field(engine, "parser")$parse(tokens)
   t_parse <- (proc.time() - t_start)[["elapsed"]]
 
   # Eval

@@ -28,7 +28,7 @@ Traditional R tests using the testthat framework. These tests:
 test_that("lambda creates functions", {
   engine <- Engine$new()
   env <- new.env()
-  result <- engine$eval_in_env(
+  result <- engine$eval(
     engine$read("((lambda (x) (* x 2)) 5)")[[1]], env)
   expect_equal(result, 10)
 })

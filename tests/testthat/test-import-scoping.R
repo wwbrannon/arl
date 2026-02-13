@@ -67,7 +67,7 @@ test_that("(load path) runs in caller env - definitions visible", {
   writeLines("(define shared 99)", defs_path)
   main_code <- sprintf('(begin (load "%s") shared)', normalizePath(defs_path, winslash = "/"))
   exprs <- engine$read(main_code)
-  result <- engine$eval_in_env(exprs[[1]], env)
+  result <- engine$eval(exprs[[1]], env = env)
   expect_equal(result, 99)
 })
 
@@ -87,7 +87,7 @@ test_that("(load path) runs in caller env - imports visible to caller", {
   writeLines(c("(import list)", "(define x (cadr (list 1 2 3)))"), with_import_path)
   main_code <- sprintf('(begin (load "%s") x)', normalizePath(with_import_path, winslash = "/"))
   exprs <- engine$read(main_code)
-  result <- engine$eval_in_env(exprs[[1]], env)
+  result <- engine$eval(exprs[[1]], env = env)
   expect_equal(result, 2)
 })
 
@@ -107,7 +107,7 @@ test_that("(run path) runs in child env - definitions not visible in caller", {
   writeLines("(define secret 42)", defs_path)
   main_code <- sprintf('(begin (run "%s") secret)', normalizePath(defs_path, winslash = "/"))
   exprs <- engine$read(main_code)
-  expect_error(engine$eval_in_env(exprs[[1]], env), regexp = "secret|not found|object")
+  expect_error(engine$eval(exprs[[1]], env = env), regexp = "secret|not found|object")
 })
 
 test_that("(run path) runs in child env - imports not visible in caller", {
@@ -134,7 +134,7 @@ test_that("(run path) runs in child env - imports not visible in caller", {
   writeLines(sprintf("(import %s)", mod_name), run_import_path)
   main_code <- sprintf('(begin (run "%s") (uniquefn 1))', normalizePath(run_import_path, winslash = "/"))
   exprs <- engine$read(main_code)
-  expect_error(engine$eval_in_env(exprs[[1]], env), regexp = "uniquefn|not found|object")
+  expect_error(engine$eval(exprs[[1]], env = env), regexp = "uniquefn|not found|object")
 })
 
 test_that("global module cache: same module loaded once per engine, shared across files", {

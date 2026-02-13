@@ -32,23 +32,23 @@ test_that("type coercion functions work", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  expect_equal(engine$eval_in_env(engine$read("(exact->inexact 5)")[[1]], env), 5.0)
-  expect_equal(engine$eval_in_env(engine$read("(inexact->exact 5.7)")[[1]], env), 6L)
-  expect_equal(engine$eval_in_env(engine$read("(->integer \"42\")")[[1]], env), 42L)
-  expect_equal(engine$eval_in_env(engine$read("(->double 5)")[[1]], env), 5.0)
+  expect_equal(engine$eval(engine$read("(exact->inexact 5)")[[1]], env = env), 5.0)
+  expect_equal(engine$eval(engine$read("(inexact->exact 5.7)")[[1]], env = env), 6L)
+  expect_equal(engine$eval(engine$read("(->integer \"42\")")[[1]], env = env), 42L)
+  expect_equal(engine$eval(engine$read("(->double 5)")[[1]], env = env), 5.0)
 })
 
 test_that("complex number utilities work", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  z <- engine$eval_in_env(engine$read("(make-rectangular 3 4)")[[1]], env)
+  z <- engine$eval(engine$read("(make-rectangular 3 4)")[[1]], env = env)
   expect_equal(Re(z), 3.0)
   expect_equal(Im(z), 4.0)
 
-  expect_equal(engine$eval_in_env(engine$read("(real-part (make-rectangular 3 4))")[[1]], env), 3.0)
-  expect_equal(engine$eval_in_env(engine$read("(imag-part (make-rectangular 3 4))")[[1]], env), 4.0)
-  expect_equal(engine$eval_in_env(engine$read("(magnitude (make-rectangular 3 4))")[[1]], env), 5.0)
+  expect_equal(engine$eval(engine$read("(real-part (make-rectangular 3 4))")[[1]], env = env), 3.0)
+  expect_equal(engine$eval(engine$read("(imag-part (make-rectangular 3 4))")[[1]], env = env), 4.0)
+  expect_equal(engine$eval(engine$read("(magnitude (make-rectangular 3 4))")[[1]], env = env), 5.0)
 })
 
 # ============================================================================
@@ -79,8 +79,8 @@ test_that("division by zero returns Inf", {
   toplevel_env(engine, env)
 
   # In R, division by zero returns Inf, not an error
-  expect_equal(engine$eval_in_env(engine$read("(/ 1 0)")[[1]], env), Inf)
-  expect_equal(engine$eval_in_env(engine$read("(/ -10 0)")[[1]], env), -Inf)
+  expect_equal(engine$eval(engine$read("(/ 1 0)")[[1]], env = env), Inf)
+  expect_equal(engine$eval(engine$read("(/ -10 0)")[[1]], env = env), -Inf)
 })
 
 # ============================================================================
@@ -92,18 +92,18 @@ test_that("variadic comparison operators return #t with 0 or 1 arguments (vacuou
   toplevel_env(engine, env)
 
   # 1 argument: vacuously true
-  expect_true(engine$eval_in_env(engine$read("(< 1)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(> 1)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(<= 1)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(>= 1)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(== 1)")[[1]], env))
+  expect_true(engine$eval(engine$read("(< 1)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(> 1)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(<= 1)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(>= 1)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(== 1)")[[1]], env = env))
 
   # 0 arguments: vacuously true
-  expect_true(engine$eval_in_env(engine$read("(<)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(>)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(<=)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(>=)")[[1]], env))
-  expect_true(engine$eval_in_env(engine$read("(==)")[[1]], env))
+  expect_true(engine$eval(engine$read("(<)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(>)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(<=)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(>=)")[[1]], env = env))
+  expect_true(engine$eval(engine$read("(==)")[[1]], env = env))
 })
 
 # ============================================================================
@@ -114,14 +114,14 @@ test_that("variadic arithmetic operators error with 0 arguments", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  expect_error(engine$eval_in_env(engine$read("(-)")[[1]], env), "requires at least one argument")
-  expect_error(engine$eval_in_env(engine$read("(/)")[[1]], env), "requires at least one argument")
-  expect_error(engine$eval_in_env(engine$read("(min)")[[1]], env), "requires at least one argument")
-  expect_error(engine$eval_in_env(engine$read("(max)")[[1]], env), "requires at least one argument")
+  expect_error(engine$eval(engine$read("(-)")[[1]], env = env), "requires at least one argument")
+  expect_error(engine$eval(engine$read("(/)")[[1]], env = env), "requires at least one argument")
+  expect_error(engine$eval(engine$read("(min)")[[1]], env = env), "requires at least one argument")
+  expect_error(engine$eval(engine$read("(max)")[[1]], env = env), "requires at least one argument")
   # gcd with 0 args returns 0 (identity element)
-  expect_equal(engine$eval_in_env(engine$read("(gcd)")[[1]], env), 0)
+  expect_equal(engine$eval(engine$read("(gcd)")[[1]], env = env), 0)
   # lcm with 0 args returns 1 (identity element)
-  expect_equal(engine$eval_in_env(engine$read("(lcm)")[[1]], env), 1)
+  expect_equal(engine$eval(engine$read("(lcm)")[[1]], env = env), 1)
 })
 
 # ============================================================================
@@ -133,19 +133,19 @@ test_that("number predicate edge cases cover remaining lines", {
   toplevel_env(engine, env)
 
   # integer? with 3.0 (finite, == as.integer) -> #t
-  expect_true(engine$eval_in_env(engine$read("(integer? 3.0)")[[1]], env))
+  expect_true(engine$eval(engine$read("(integer? 3.0)")[[1]], env = env))
 
   # rational? with finite real -> #t
-  expect_true(engine$eval_in_env(engine$read("(rational? 1.5)")[[1]], env))
+  expect_true(engine$eval(engine$read("(rational? 1.5)")[[1]], env = env))
 
   # rational? with infinite -> #f
-  expect_false(engine$eval_in_env(engine$read("(rational? Inf)")[[1]], env))
+  expect_false(engine$eval(engine$read("(rational? Inf)")[[1]], env = env))
 
   # inexact? with double -> #t
-  expect_true(engine$eval_in_env(engine$read("(inexact? 3.14)")[[1]], env))
+  expect_true(engine$eval(engine$read("(inexact? 3.14)")[[1]], env = env))
 
   # inexact? with non-number -> #f
-  expect_false(engine$eval_in_env(engine$read("(inexact? \"hi\")")[[1]], env))
+  expect_false(engine$eval(engine$read("(inexact? \"hi\")")[[1]], env = env))
 })
 
 # ============================================================================
@@ -156,9 +156,9 @@ test_that("expt and atan2 work", {
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env)
 
-  expect_equal(engine$eval_in_env(engine$read("(expt 2 10)")[[1]], env), 1024)
+  expect_equal(engine$eval(engine$read("(expt 2 10)")[[1]], env = env), 1024)
   expect_equal(
-    engine$eval_in_env(engine$read("(atan2 1.0 1.0)")[[1]], env),
+    engine$eval(engine$read("(atan2 1.0 1.0)")[[1]], env = env),
     atan2(1.0, 1.0)
   )
 })

@@ -248,8 +248,8 @@ test_that("string-find returns #nil when pattern not found", {
   env <- new.env()
   toplevel_env(engine, env)
 
-  result <- engine$eval_in_env(
-    engine$read('(string-find "hello" "xyz")')[[1]], env)
+  result <- engine$eval(
+    engine$read('(string-find "hello" "xyz")')[[1]], env = env)
   expect_null(result)
 })
 
@@ -258,7 +258,7 @@ test_that("substring errors on negative start", {
   toplevel_env(engine, env)
 
   expect_error(
-    engine$eval_in_env(engine$read('(substring "hello" -1 3)')[[1]], env),
+    engine$eval(engine$read('(substring "hello" -1 3)')[[1]], env = env),
     "start index cannot be negative")
 })
 
@@ -267,10 +267,10 @@ test_that("number->string errors on base out of range", {
   toplevel_env(engine, env)
 
   expect_error(
-    engine$eval_in_env(engine$read("(number->string 10 1)")[[1]], env),
+    engine$eval(engine$read("(number->string 10 1)")[[1]], env = env),
     "base must be between 2 and 36")
 
   expect_error(
-    engine$eval_in_env(engine$read("(number->string 10 37)")[[1]], env),
+    engine$eval(engine$read("(number->string 10 37)")[[1]], env = env),
     "base must be between 2 and 36")
 })
