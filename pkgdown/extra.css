@@ -176,6 +176,30 @@ footer {
   border-top: 2px solid var(--arl-accent);
   margin-top: 3rem;
   padding-top: 1.5rem;
+  align-items: center;
+}
+
+footer .pkgdown-footer-left p,
+footer .pkgdown-footer-right p {
+  margin-bottom: 0;
+}
+
+.pkgdown-footer-center {
+  text-align: center;
+  flex: 1 1 auto;
+}
+
+.pkgdown-footer-center img {
+  height: 20px;
+  vertical-align: middle;
+}
+
+/* Mobile: stack and center all footer columns */
+@media (max-width: 575.98px) {
+  footer .pkgdown-footer-left,
+  footer .pkgdown-footer-right {
+    text-align: center;
+  }
 }
 
 /* ---------- Links ---------- */
@@ -185,16 +209,6 @@ a {
 
 a:hover {
   color: var(--arl-accent);
-}
-
-/* ---------- Status badges (bottom of homepage) ---------- */
-.template-home .section:has(> #status) {
-  text-align: center;
-  margin-top: 1rem;
-}
-
-.template-home .section:has(> #status) > h2 {
-  display: none;
 }
 
 /* ---------- Arl syntax highlighting (Pandoc span classes) ---------- */
