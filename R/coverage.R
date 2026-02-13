@@ -5,11 +5,20 @@
 #' Supports flexible configuration for tracking custom directories,
 #' test files, and custom comment syntax.
 #'
+#' @note This class is exported for use by advanced tooling (CI scripts,
+#'   IDE plugins, etc.) and for testing purposes. Its API should be
+#'   considered **internal** and subject to change without notice.
+#'   Most users should interact with coverage through the
+#'   [Engine] methods `enable_coverage()`, `disable_coverage()`,
+#'   `get_coverage()`, and `reset_coverage()` instead.
+#'
 #' @field coverage Environment mapping "file:line" keys to execution counts
 #' @field enabled Logical flag to enable/disable tracking
 #' @field all_files Character vector of all .arl files being tracked
 #' @field code_lines Environment mapping file paths to integer vectors of code line numbers
 #' @field coverable_lines Environment mapping file paths to integer vectors of AST-derived coverable line numbers
+#'
+#' @keywords internal
 #'
 #' @examples
 #' \dontrun{

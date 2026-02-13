@@ -14,6 +14,14 @@ Maintains execution counts per file/line and generates reports.
 Supports flexible configuration for tracking custom directories,
 test files, and custom comment syntax.
 }
+\note{
+This class is exported for use by advanced tooling (CI scripts,
+IDE plugins, etc.) and for testing purposes. Its API should be
+considered \strong{internal} and subject to change without notice.
+Most users should interact with coverage through the
+\link{Engine} methods \code{enable_coverage()}, \code{disable_coverage()},
+\code{get_coverage()}, and \code{reset_coverage()} instead.
+}
 \examples{
 \dontrun{
 # Default usage: Track Arl stdlib
@@ -51,6 +59,7 @@ tracker <- CoverageTracker$new(
 )
 }
 }
+\keyword{internal}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{

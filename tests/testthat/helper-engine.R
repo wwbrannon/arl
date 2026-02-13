@@ -1,7 +1,6 @@
-make_engine <- function(...) {
-  tracker <- getOption("arl.coverage_tracker")
-  if (!is.null(tracker)) {
-    Engine$new(..., use_env_cache = FALSE, coverage_tracker = tracker)
+make_engine <- function(..., coverage_tracker = getOption("arl.coverage_tracker")) {
+  if (!is.null(coverage_tracker)) {
+    Engine$new(..., coverage_tracker = coverage_tracker)
   } else {
     Engine$new(...)
   }
