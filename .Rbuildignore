@@ -4,6 +4,7 @@
 ^\.claude$
 ^\.Rproj\.user$
 ^.*\.Rproj$
+^index.md$
 ^README\.Rmd$
 ^README\.html$
 ^CLAUDE\.md$
