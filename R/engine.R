@@ -122,14 +122,45 @@ Engine <- R6::R6Class(
     #' Evaluate one or more expressions.
     eval = function(expr, ..., env = NULL) {
       target_env <- private$resolve_env_arg(env)
-      if (...length() == 0L) {
-        private$eval_one(expr, target_env)
-      } else {
-        exprs <- c(list(expr), list(...))
-        private$.source_tracker$with_error_context(function() {
-          private$eval_seq(exprs, target_env)
-        })
-      }
+      exprs <- c(list(expr), list(...))
+      private$.source_tracker$with_error_context(function() {
+        compiler <- private$.compiler
+        source_tracker <- private$.source_tracker
+        compiled_runtime <- private$.compiled_runtime
+        coverage_tracker <- compiled_runtime$context$coverage_tracker
+        result <- NULL
+        result_visible <- FALSE
+        for (e in exprs) {
+          if (!is.null(coverage_tracker) && coverage_tracker$enabled) {
+            src_cov <- source_tracker$src_get(e)
+            if (!is.null(src_cov) && !is.null(src_cov$file) && !is.null(src_cov$start_line)) {
+              coverage_tracker$register_coverable(src_cov$file, src_cov$start_line, src_cov$start_line)
+              coverage_tracker$track(list(
+                file = src_cov$file,
+                start_line = src_cov$start_line,
+                end_line = src_cov$start_line
+              ))
+            }
+          }
+          expanded <- self$macroexpand(e, env = target_env, preserve_src = TRUE)
+          compiled <- compiler$compile(expanded, target_env, strict = TRUE)
+          src <- source_tracker$src_get(e)
+          if (!is.null(src)) {
+            source_tracker$push(src)
+          }
+          result_with_vis <- withVisible(compiled_runtime$eval_compiled(compiled, target_env))
+          if (!is.null(src)) {
+            source_tracker$pop()
+          }
+          result <- result_with_vis$value
+          result_visible <- isTRUE(result_with_vis$visible)
+        }
+        result <- source_tracker$strip_src(result)
+        if (isTRUE(result_visible)) {
+          return(result)
+        }
+        invisible(result)
+      })
     },
 
     #' @description
@@ -137,13 +168,11 @@ Engine <- R6::R6Class(
     #' \code{read()} and \code{eval()}.
     eval_text = function(text, env = NULL, source_name = "<eval>") {
       exprs <- self$read(text, source_name = source_name)
+      if (length(exprs) == 0L) return(invisible(NULL))
       # Stash raw text so module_compiled can parse ;;' annotations from strings
       private$.compiled_runtime$context$compiler$source_text <- text
       on.exit(private$.compiled_runtime$context$compiler$source_text <- NULL)
-      target_env <- private$resolve_env_arg(env)
-      private$.source_tracker$with_error_context(function() {
-        private$eval_seq(exprs, target_env)
-      })
+      do.call(self$eval, c(exprs, list(env = env)), quote = TRUE)
     },
 
 
@@ -256,10 +285,10 @@ Engine <- R6::R6Class(
 
       # Cache miss - full load
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
+      exprs <- self$read(text, source_name = path)
+      if (length(exprs) == 0L) return(invisible(NULL))
       target_env <- if (isTRUE(create_scope)) new.env(parent = resolved) else resolved
-      private$.source_tracker$with_error_context(function() {
-        private$eval_seq(self$read(text, source_name = path), target_env)
-      })
+      do.call(self$eval, c(exprs, list(env = target_env)), quote = TRUE)
     },
 
     #' @description
@@ -710,62 +739,6 @@ Engine <- R6::R6Class(
         }
       }
       invisible(NULL)
-    },
-
-    eval_one = function(expr, env) {
-      expanded <- self$macroexpand(expr, env = env, preserve_src = TRUE)
-      compiled <- private$.compiler$compile(expanded, env, strict = TRUE)
-      result_with_vis <- withVisible(private$.compiled_runtime$eval_compiled(compiled, env))
-      value <- private$.source_tracker$strip_src(result_with_vis$value)
-      if (result_with_vis$visible) {
-        return(value)
-      } else {
-        return(invisible(value))
-      }
-    },
-
-    eval_seq = function(exprs, target_env) {
-      if (length(exprs) == 0) {
-        return(invisible(NULL))
-      }
-      # Cache R6 method references to avoid repeated self$foo lookups in loop
-      compiler <- private$.compiler
-      source_tracker <- private$.source_tracker
-      compiled_runtime <- private$.compiled_runtime
-      coverage_tracker <- compiled_runtime$context$coverage_tracker
-      result <- NULL
-      result_visible <- FALSE
-      for (expr in exprs) {
-        # Track top-level expression start line only (don't paint body ranges)
-        if (!is.null(coverage_tracker) && coverage_tracker$enabled) {
-          src_cov <- source_tracker$src_get(expr)
-          if (!is.null(src_cov) && !is.null(src_cov$file) && !is.null(src_cov$start_line)) {
-            coverage_tracker$register_coverable(src_cov$file, src_cov$start_line, src_cov$start_line)
-            coverage_tracker$track(list(
-              file = src_cov$file,
-              start_line = src_cov$start_line,
-              end_line = src_cov$start_line
-            ))
-          }
-        }
-        expanded <- self$macroexpand(expr, env = target_env, preserve_src = TRUE)
-        compiled <- compiler$compile(expanded, target_env, strict = TRUE)
-        src <- source_tracker$src_get(expr)
-        if (!is.null(src)) {
-          source_tracker$push(src)
-        }
-        result_with_vis <- withVisible(compiled_runtime$eval_compiled(compiled, target_env))
-        if (!is.null(src)) {
-          source_tracker$pop()
-        }
-        result <- result_with_vis$value
-        result_visible <- isTRUE(result_with_vis$visible)
-      }
-      result <- source_tracker$strip_src(result)
-      if (isTRUE(result_visible)) {
-        return(result)
-      }
-      invisible(result)
     }
   )
 )
