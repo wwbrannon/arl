@@ -1324,6 +1324,53 @@ test_that("coverage tracking persists across multiple evaluations", {
   expect_equal(summary[[tmp]][["2"]], 3)
 })
 
+test_that("Engine$get_coverage() returns NULL when coverage not enabled", {
+  engine <- make_engine()
+  expect_null(engine$get_coverage())
+})
+
+test_that("Engine$get_coverage() returns data frame with correct structure", {
+  tmp <- tempfile(fileext = ".arl")
+  writeLines(c("(define x 1)", "(define y 2)"), tmp)
+  on.exit(unlink(tmp))
+
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker$discover_files()
+
+  engine$load_file(tmp)
+
+  result <- engine$get_coverage()
+
+  expect_s3_class(result, "data.frame")
+  expect_true(all(c("file", "total_lines", "covered_lines", "coverage_pct") %in% names(result)))
+  expect_true(nrow(result) > 0)
+
+  total <- attr(result, "total")
+  expect_type(total, "list")
+  expect_true(all(c("total_lines", "covered_lines", "coverage_pct") %in% names(total)))
+})
+
+test_that("Engine$get_coverage() reports correct coverage stats", {
+  tmp <- tempfile(fileext = ".arl")
+  writeLines(c("(define x 1)", "(define y 2)", "(define z 3)"), tmp)
+  on.exit(unlink(tmp))
+
+  tracker <- CoverageTracker$new(search_paths = dirname(tmp))
+  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  tracker$discover_files()
+
+  engine$load_file(tmp)
+
+  result <- engine$get_coverage()
+  row <- result[result$file == tmp, ]
+
+  expect_equal(nrow(row), 1)
+  expect_equal(row$total_lines, 3)
+  expect_equal(row$covered_lines, 3)
+  expect_equal(row$coverage_pct, 100)
+})
+
 # ============================================================================
 # Edge Cases
 # ============================================================================

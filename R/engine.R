@@ -367,11 +367,66 @@ Engine <- R6::R6Class(
     },
 
     #' @description
-    #' Get coverage data.
+    #' Get coverage data as a data frame.
     #'
-    #' @return Coverage tracker instance, or NULL if not enabled
+    #' @return A data frame with columns \code{file}, \code{total_lines},
+    #'   \code{covered_lines}, and \code{coverage_pct} (one row per tracked file),
+    #'   with a \code{"total"} attribute containing aggregate stats.
+    #'   Returns NULL if coverage tracking is not enabled.
     get_coverage = function() {
-      private$.compiled_runtime$context$coverage_tracker
+      tracker <- private$.compiled_runtime$context$coverage_tracker
+      if (is.null(tracker)) return(NULL)
+
+      if (length(tracker$all_files) == 0) {
+        tracker$discover_files()
+      }
+
+      summary <- tracker$get_summary()
+
+      files <- character(0)
+      total_lines <- integer(0)
+      covered_lines <- integer(0)
+
+      for (file in tracker$all_files) {
+        if (!file.exists(file)) next
+
+        coverable <- tracker$coverable_lines[[file]]
+        if (is.null(coverable)) coverable <- tracker$code_lines[[file]]
+        n_total <- if (!is.null(coverable)) length(coverable) else 0L
+
+        file_cov <- summary[[file]]
+        n_covered <- if (!is.null(file_cov) && !is.null(coverable)) {
+          length(intersect(as.integer(names(file_cov)), coverable))
+        } else if (!is.null(file_cov)) {
+          length(file_cov)
+        } else {
+          0L
+        }
+
+        files <- c(files, file)
+        total_lines <- c(total_lines, n_total)
+        covered_lines <- c(covered_lines, n_covered)
+      }
+
+      result <- data.frame(
+        file = files,
+        total_lines = total_lines,
+        covered_lines = covered_lines,
+        coverage_pct = ifelse(total_lines > 0, covered_lines / total_lines * 100, 0),
+        stringsAsFactors = FALSE
+      )
+
+      attr(result, "total") <- list(
+        total_lines = sum(total_lines),
+        covered_lines = sum(covered_lines),
+        coverage_pct = if (sum(total_lines) > 0) {
+          sum(covered_lines) / sum(total_lines) * 100
+        } else {
+          0
+        }
+      )
+
+      result
     },
 
     #' @description

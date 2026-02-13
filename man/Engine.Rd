@@ -336,13 +336,16 @@ Disable coverage tracking.
 \if{html}{\out{<a id="method-Engine-get_coverage"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-get_coverage}{}}}
 \subsection{Method \code{get_coverage()}}{
-Get coverage data.
+Get coverage data as a data frame.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$get_coverage()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-Coverage tracker instance, or NULL if not enabled
+A data frame with columns \code{file}, \code{total_lines},
+\code{covered_lines}, and \code{coverage_pct} (one row per tracked file),
+with a \code{"total"} attribute containing aggregate stats.
+Returns NULL if coverage tracking is not enabled.
 }
 }
 \if{html}{\out{<hr>}}
