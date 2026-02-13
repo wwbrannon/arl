@@ -1,13 +1,13 @@
 test_that("help accepts symbol and string topics", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
   expect_error(capture.output(engine$eval_text("(help mean)", env = env)), NA)
   expect_error(capture.output(engine$eval_text("(help \"mean\")", env = env)), NA)
 })
 
 test_that("help shows Arl special-form docs", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
   output <- capture.output(engine$eval_text("(help if)", env = env))
   expect_true(any(grepl("Topic: if", output)))
   expect_true(any(grepl("Usage: (if test", output, fixed = TRUE)))
@@ -16,14 +16,14 @@ test_that("help shows Arl special-form docs", {
 
 test_that("help shows Arl stdlib docs via attributes", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
   output <- capture.output(engine$eval_text("(help funcall)", env = env))
   expect_true(any(grepl("\\(funcall fn args\\)", output)))
 })
 
 test_that("help shows Arl macro docs from stdlib files", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
   import_stdlib_modules(engine, c("control"))
   output <- capture.output(engine$eval_text("(help when)", env = env))
   expect_true(any(grepl("Topic: when", output)))
@@ -32,7 +32,7 @@ test_that("help shows Arl macro docs from stdlib files", {
 
 test_that("help shows usage for lambda without docstring", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
   engine$eval_text("(define add (lambda (x y) (+ x y)))", env = env)
   output <- capture.output(engine$eval_text("(help add)", env = env))
   expect_true(any(grepl("Usage: \\(add x y\\)", output)))
@@ -48,12 +48,12 @@ test_that("HelpSystem initialization requires Env and MacroExpander", {
 
   # Create full engine to get macro_expander
   engine <- make_engine()
-  expect_true(r6_isinstance(engine$help_system, "HelpSystem"))
+  expect_true(r6_isinstance(engine_field(engine, "help_system"), "HelpSystem"))
 })
 
 test_that("HelpSystem builds special forms help on init", {
   engine <- make_engine()
-  help_sys <- engine$help_system
+  help_sys <- engine_field(engine, "help_system")
 
   # Should have help for all special forms
   specials_help <- environment(help_sys$help_in_env)$private$specials_help
@@ -66,7 +66,7 @@ test_that("HelpSystem builds special forms help on init", {
 # Help lookup chain tests
 test_that("help shows all special forms", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # Test a few key special forms
   specials <- c("quote", "if", "lambda", "define", "set!", "begin", "module", "import")
@@ -80,7 +80,7 @@ test_that("help shows all special forms", {
 
 test_that("help shows macro usage", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # Define a macro without inline docstring (inline docstrings no longer detected)
   engine$eval_text("(defmacro test-macro (x y) (list x y))", env = env)
@@ -92,7 +92,7 @@ test_that("help shows macro usage", {
 
 test_that("help shows R function signatures", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # R function with formals
   env$test_fn <- function(x, y = 10) x + y
@@ -104,7 +104,7 @@ test_that("help shows R function signatures", {
 
 test_that("help handles functions without formals", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # Primitive functions have no formals
   env$primitive_fn <- base::`+`
@@ -116,7 +116,7 @@ test_that("help handles functions without formals", {
 
 test_that("help shows arl_doc attribute on functions", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # Function with arl_doc
   env$documented <- function(x) x * 2
@@ -132,7 +132,7 @@ test_that("help shows arl_doc attribute on functions", {
 
 test_that("help falls back to utils::help for unknown topics", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # Topic not in specials, macros, or env should fall back to R help
   # We can't easily test utils::help output, but we can verify no error
@@ -141,7 +141,7 @@ test_that("help falls back to utils::help for unknown topics", {
 
 test_that("help prioritizes specials over macros", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # Try to define a macro with same name as special (won't override special help)
   # 'quote' is a special form
@@ -153,7 +153,7 @@ test_that("help prioritizes specials over macros", {
 
 test_that("help handles arl_closure with param_specs", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # Lambda creates arl_closure
   engine$eval_text("(define adder (lambda (x y) (+ x y)))", env = env)
@@ -164,7 +164,7 @@ test_that("help handles arl_closure with param_specs", {
 
 test_that("help handles arl_closure with defaults", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # Lambda with default argument
   engine$eval_text("(define greet (lambda ((name \"World\")) (string-append \"Hello, \" name)))", env = env)
@@ -176,7 +176,7 @@ test_that("help handles arl_closure with defaults", {
 
 test_that("help handles arl_closure with rest params", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   # Lambda with rest parameter
   engine$eval_text("(define variadic (lambda (x . rest) x))", env = env)
@@ -190,7 +190,7 @@ test_that("help handles arl_closure with rest params", {
 # Usage generation tests
 test_that("usage_from_closure handles empty params", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   engine$eval_text("(define no_args (lambda () 42))", env = env)
   output <- capture.output(engine$eval_text("(help no_args)", env = env))
@@ -200,7 +200,7 @@ test_that("usage_from_closure handles empty params", {
 
 test_that("usage_from_formals formats R function signatures", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   env$complex_fn <- function(a, b = 1, c = NULL, ...) a + b
   output <- capture.output(engine$eval_text("(help complex_fn)", env = env))
@@ -211,7 +211,7 @@ test_that("usage_from_formals formats R function signatures", {
 
 test_that("usage_from_macro shows macro parameters", {
   engine <- make_engine()
-  env <- engine$env$raw()
+  env <- engine$get_env()
 
   engine$eval_text("(defmacro my-macro (x y z) (list x y z))", env = env)
   output <- capture.output(engine$eval_text("(help my-macro)", env = env))

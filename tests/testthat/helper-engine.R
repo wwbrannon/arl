@@ -6,16 +6,20 @@ make_engine <- function(..., coverage_tracker = getOption("arl.coverage_tracker"
   }
 }
 
+engine_field <- function(engine, name) {
+  engine$.__enclos_env__$private[[paste0(".", name)]]
+}
+
 toplevel_env <- function(engine, env = NULL) {
   if (is.null(env)) {
-    return(engine$env$env)
+    return(engine$get_env())
   }
   if (!is.environment(env)) {
     stop("Expected an environment")
   }
-  parent.env(env) <- engine$env$env
+  parent.env(env) <- engine$get_env()
   engine$load_stdlib_into_env(env)
-  core_env <- engine$env$env
+  core_env <- engine$get_env()
   for (name in ls(core_env, all.names = TRUE)) {
     if (!exists(name, envir = env, inherits = FALSE)) {
       assign(name, get(name, envir = core_env, inherits = FALSE), envir = env)

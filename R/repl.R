@@ -179,7 +179,7 @@ REPL <- R6::R6Class(
     # @description Evaluate expressions and print each resulting value.
     eval_and_print_exprs = function(exprs) {
       private$require_engine()
-      self$engine$source_tracker$with_error_context(function() {
+      self$engine$with_error_context(function() {
         result <- NULL
         for (expr in exprs) {
           result <- self$engine$eval(expr)
@@ -194,7 +194,7 @@ REPL <- R6::R6Class(
       if (is.null(value)) {
         return(invisible(NULL))
       }
-      formatted <- self$engine$env$format_value(value)
+      formatted <- self$engine$format_value(value)
       if (nzchar(formatted)) {
         cat(formatted, "\n", sep = "")
       }
@@ -304,7 +304,7 @@ REPL <- R6::R6Class(
         form <- tryCatch(
           self$read_form(),
           error = function(e) {
-            self$engine$source_tracker$print_error(e, file = stderr())
+            self$engine$print_error(e, file = stderr())
             utils::flush.console()
             list(error = TRUE)
           }
@@ -328,7 +328,7 @@ REPL <- R6::R6Class(
         tryCatch({
           self$eval_and_print_exprs(form$exprs)
         }, error = function(e) {
-          self$engine$source_tracker$print_error(e, file = stderr())
+          self$engine$print_error(e, file = stderr())
           utils::flush.console()
         })
       }

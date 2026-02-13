@@ -109,7 +109,7 @@ test_that("eval text errors include source and stack context", {
   )
   expect_s3_class(err, "arl_error")
 
-  formatted <- engine$source_tracker$format_error(err)
+  formatted <- engine_field(engine, "source_tracker")$format_error(err)
   expect_match(formatted, "test\\.arl:1:1-1:10")
   expect_match(formatted, "R stack:")
   expect_match(formatted, "eval_text")
@@ -170,10 +170,10 @@ make_env <- function(engine, init = NULL) {
 
 eval_compiled_in_env <- function(engine, expr, env) {
   expanded <- engine$macroexpand_in_env(expr, env, preserve_src = TRUE)
-  compiled <- engine$compiler$compile(expanded, env, strict = TRUE)
+  compiled <- engine_field(engine, "compiler")$compile(expanded, env, strict = TRUE)
   expect_false(is.null(compiled)) # nolint: object_usage_linter.
-  result <- withVisible(engine$compiled_runtime$eval_compiled(compiled, env))
-  result$value <- engine$source_tracker$strip_src(result$value)
+  result <- withVisible(engine_field(engine, "compiled_runtime")$eval_compiled(compiled, env))
+  result$value <- engine_field(engine, "source_tracker")$strip_src(result$value)
   list(
     compiled = compiled,
     result = result
@@ -266,7 +266,7 @@ test_that("compiler output is pure R code (no evaluator references)", {
   )
   for (expr in exprs) {
     expanded <- engine$macroexpand_in_env(expr, env, preserve_src = TRUE)
-    compiled <- engine$compiler$compile(expanded, env, strict = TRUE)
+    compiled <- engine_field(engine, "compiler")$compile(expanded, env, strict = TRUE)
     expect_false(is.null(compiled))
     text <- paste(deparse(compiled), collapse = " ")
     expect_false(grepl("Evaluator", text, fixed = TRUE))
@@ -318,10 +318,10 @@ test_that("macro pipeline matches engine eval", {
     expected <- withVisible(engine$eval_in_env(expr, env_eval))
 
     expanded <- engine$macroexpand_in_env(expr, env_compiled, preserve_src = TRUE)
-    compiled <- engine$compiler$compile(expanded, env_compiled, strict = TRUE)
+    compiled <- engine_field(engine, "compiler")$compile(expanded, env_compiled, strict = TRUE)
     expect_false(is.null(compiled))
-    actual <- withVisible(engine$compiled_runtime$eval_compiled(compiled, env_compiled))
-    actual$value <- engine$source_tracker$strip_src(actual$value)
+    actual <- withVisible(engine_field(engine, "compiled_runtime")$eval_compiled(compiled, env_compiled))
+    actual$value <- engine_field(engine, "source_tracker")$strip_src(actual$value)
 
     expect_equal(actual$value, expected$value)
     expect_identical(actual$visible, expected$visible)

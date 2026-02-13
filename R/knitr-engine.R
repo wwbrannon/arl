@@ -144,7 +144,7 @@ evaluate_arl_code <- function(engine, code) {
   transcript <- character(0L)
   prev_end <- 0L
 
-  engine$source_tracker$with_error_context(function() {
+  engine$with_error_context(function() {
     for (expr in exprs) {
       src <- attr(expr, "arl_src", exact = TRUE)
 
@@ -178,7 +178,7 @@ evaluate_arl_code <- function(engine, code) {
 
       # Format and append the return value (skip NULL, matching REPL)
       if (!is.null(result)) {
-        formatted <- engine$env$format_value(result)
+        formatted <- engine$format_value(result)
         if (nzchar(formatted)) {
           transcript <<- add_output(transcript, formatted)
         }

@@ -13,6 +13,11 @@ if (file.exists("DESCRIPTION")) {
 
 source("benchmarks/benchmark-helpers.R")
 
+# Helper to access private engine fields in benchmarks
+engine_field <- function(engine, name) {
+  engine$.__enclos_env__$private[[paste0(".", name)]]
+}
+
 cat("=== Constant Folding Impact Analysis ===\n\n")
 
 # Helper: Count AST nodes
@@ -63,7 +68,7 @@ for (name in names(test_cases)) {
   expr_str <- test_cases[[name]]
 
   # Use env with variable for the variable test case
-  target_env <- if (name == "variable") env_with_var else engine1$env$env
+  target_env <- if (name == "variable") env_with_var else engine1$get_env()
 
   out <- engine1$inspect_compilation(expr_str)
   if (!is.null(out$compiled)) {
@@ -98,14 +103,14 @@ cases <- list(
 compiled_cases <- list()
 for (name in names(cases)) {
   parsed <- engine2$read(cases[[name]])[[1]]
-  compiled_cases[[name]] <- engine2$compiler$compile(parsed, engine2$env$env, strict = TRUE)
+  compiled_cases[[name]] <- engine_field(engine2, "compiler")$compile(parsed, engine2$get_env(), strict = TRUE)
 }
 
 bench_complexity <- benchmark_component(
-  "Simple: (+ 1 2)" = engine2$compiled_runtime$eval_compiled(compiled_cases[["Simple: (+ 1 2)"]], engine2$env$env),
-  "Nested: (+ (* 2 3) (* 4 5))" = engine2$compiled_runtime$eval_compiled(compiled_cases[["Nested: (+ (* 2 3) (* 4 5))"]], engine2$env$env),
-  "Deep: (sqrt (+ (* 3 3) (* 4 4)))" = engine2$compiled_runtime$eval_compiled(compiled_cases[["Deep: (sqrt (+ (* 3 3) (* 4 4)))"]], engine2$env$env),
-  "Chain: (+ 1 (+ 2 (+ 3 (+ 4 5))))" = engine2$compiled_runtime$eval_compiled(compiled_cases[["Chain: (+ 1 (+ 2 (+ 3 (+ 4 5))))"]], engine2$env$env),
+  "Simple: (+ 1 2)" = engine_field(engine2, "compiled_runtime")$eval_compiled(compiled_cases[["Simple: (+ 1 2)"]], engine2$get_env()),
+  "Nested: (+ (* 2 3) (* 4 5))" = engine_field(engine2, "compiled_runtime")$eval_compiled(compiled_cases[["Nested: (+ (* 2 3) (* 4 5))"]], engine2$get_env()),
+  "Deep: (sqrt (+ (* 3 3) (* 4 4)))" = engine_field(engine2, "compiled_runtime")$eval_compiled(compiled_cases[["Deep: (sqrt (+ (* 3 3) (* 4 4)))"]], engine2$get_env()),
+  "Chain: (+ 1 (+ 2 (+ 3 (+ 4 5))))" = engine_field(engine2, "compiled_runtime")$eval_compiled(compiled_cases[["Chain: (+ 1 (+ 2 (+ 3 (+ 4 5))))"]], engine2$get_env()),
   iterations = 5000,
   check = FALSE
 )
@@ -143,10 +148,10 @@ cat("\nNote: Constants like (* 10 100) → 1000 are pre-computed\n\n")
 
 # Benchmark execution
 parsed_stats <- engine3$read('(compute-stats 42)')[[1]]
-compiled_stats <- engine3$compiler$compile(parsed_stats, engine3$env$env, strict = TRUE)
+compiled_stats <- engine_field(engine3, "compiler")$compile(parsed_stats, engine3$get_env(), strict = TRUE)
 
 bench_func <- benchmark_component(
-  "Function with folded constants" = engine3$compiled_runtime$eval_compiled(compiled_stats, engine3$env$env),
+  "Function with folded constants" = engine_field(engine3, "compiled_runtime")$eval_compiled(compiled_stats, engine3$get_env()),
   iterations = 2000,
   check = FALSE
 )
@@ -186,10 +191,10 @@ cat(substr(paste(out_config$compiled_deparsed, collapse = "\n"), 1, 200))
 cat("...\n\n")
 
 parsed_config <- engine4$read('(make-config)')[[1]]
-compiled_config <- engine4$compiler$compile(parsed_config, engine4$env$env, strict = TRUE)
+compiled_config <- engine_field(engine4, "compiler")$compile(parsed_config, engine4$get_env(), strict = TRUE)
 
 bench_config <- benchmark_component(
-  "Config with folded constants" = engine4$compiled_runtime$eval_compiled(compiled_config, engine4$env$env),
+  "Config with folded constants" = engine_field(engine4, "compiled_runtime")$eval_compiled(compiled_config, engine4$get_env()),
   iterations = 2000,
   check = FALSE
 )
@@ -218,18 +223,18 @@ engine5$eval_text('
 ')
 
 parsed_const <- engine5$read('(const-heavy 10)')[[1]]
-compiled_const <- engine5$compiler$compile(parsed_const, engine5$env$env, strict = TRUE)
+compiled_const <- engine_field(engine5, "compiler")$compile(parsed_const, engine5$get_env(), strict = TRUE)
 
 parsed_var <- engine5$read('(var-heavy 2 3 4 5 100)')[[1]]
-compiled_var <- engine5$compiler$compile(parsed_var, engine5$env$env, strict = TRUE)
+compiled_var <- engine_field(engine5, "compiler")$compile(parsed_var, engine5$get_env(), strict = TRUE)
 
 cat(sprintf("Constant-heavy AST nodes: %d\n", count_ast_nodes(compiled_const)))
 cat(sprintf("Variable-heavy AST nodes: %d\n", count_ast_nodes(compiled_var)))
 cat("\nConstant folding significantly simplifies constant-heavy code:\n\n")
 
 bench_compare <- benchmark_component(
-  "Constant-heavy (folded)" = engine5$compiled_runtime$eval_compiled(compiled_const, engine5$env$env),
-  "Variable-heavy (no folding)" = engine5$compiled_runtime$eval_compiled(compiled_var, engine5$env$env),
+  "Constant-heavy (folded)" = engine_field(engine5, "compiled_runtime")$eval_compiled(compiled_const, engine5$get_env()),
+  "Variable-heavy (no folding)" = engine_field(engine5, "compiled_runtime")$eval_compiled(compiled_var, engine5$get_env()),
   iterations = 3000,
   check = FALSE
 )

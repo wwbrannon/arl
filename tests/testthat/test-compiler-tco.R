@@ -519,7 +519,7 @@ test_that("TCO: error in base case includes source location", {
     error = function(e) e
   )
   expect_s3_class(err, "arl_error")
-  formatted <- engine$source_tracker$format_error(err)
+  formatted <- engine_field(engine, "source_tracker")$format_error(err)
   expect_match(formatted, "tco-base\\.arl")
 })
 
@@ -535,7 +535,7 @@ test_that("TCO: error in tail-call argument includes source location", {
     error = function(e) e
   )
   expect_s3_class(err, "arl_error")
-  formatted <- engine$source_tracker$format_error(err)
+  formatted <- engine_field(engine, "source_tracker")$format_error(err)
   expect_match(formatted, "tco-arg\\.arl")
 })
 
@@ -552,6 +552,6 @@ test_that("TCO: error inside let body includes source location", {
     error = function(e) e
   )
   expect_s3_class(err, "arl_error")
-  formatted <- engine$source_tracker$format_error(err)
+  formatted <- engine_field(engine, "source_tracker")$format_error(err)
   expect_match(formatted, "tco-let\\.arl")
 })

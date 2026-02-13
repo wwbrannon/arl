@@ -160,7 +160,7 @@ test_that("install_cli warns when target dir is not on PATH", {
 
 test_that("Engine initializes environment with stdlib", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
   expect_true(is.environment(env))
   expect_true(exists("map", envir = env))  # stdlib function
 })

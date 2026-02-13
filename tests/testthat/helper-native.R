@@ -84,7 +84,7 @@ run_native_tests <- function(dir = "tests/native") {
     # Create a fresh engine for this test file
     # This ensures complete test isolation - no state leaks between files
     engine <- make_engine() # nolint: object_usage_linter.
-    env <- engine$env$env
+    env <- engine$get_env()
 
     # Load test-specific helpers (like skip function)
     native_helper <- system.file("tests", "testthat", "helper-native.arl", package = "arl")

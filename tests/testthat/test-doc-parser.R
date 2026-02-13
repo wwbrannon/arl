@@ -170,7 +170,7 @@ test_that("string-input modules get annotation-based docs via eval_text", {
 )"
 
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
   engine$eval_text(code, env = env)
   engine$eval_text("(import str-ann-mod)", env = env)
 
@@ -248,7 +248,7 @@ test_that("annotation-based docs are available via compiler", {
   ), tmp)
 
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   # Load the module from file (triggers annotation parsing in compiler)
   engine$eval_in_env(engine$read(sprintf('(load "%s")', tmp))[[1]], env)

@@ -19,24 +19,6 @@ engine$eval_text("(+ 1 2 3)")
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{tokenizer}}{Tokenizer instance used to lex source text.}
-
-\item{\code{parser}}{Parser instance used to read expressions.}
-
-\item{\code{macro_expander}}{Macro expander for Arl macros.}
-
-\item{\code{compiled_runtime}}{Compiled runtime helper for executing compiled expressions.}
-
-\item{\code{compiler}}{Compiler for AST-to-R translation.}
-
-\item{\code{help_system}}{Help system for Arl topics.}
-
-\item{\code{env}}{Env backing the engine.}
-
-\item{\code{source_tracker}}{Source tracker used for error context.}
-
-\item{\code{module_cache}}{Module cache for caching compiled modules.}
-
 \item{\code{use_env_cache}}{Logical. If TRUE, enables the env cache (full serialized
 environment) which is faster but only safe when dependencies don't change.
 If FALSE (default), only the expr cache (compiled expressions) is used, which
@@ -74,6 +56,10 @@ option \code{arl.use_env_cache}.}
 \item \href{#method-Engine-disable_coverage}{\code{Engine$disable_coverage()}}
 \item \href{#method-Engine-get_coverage}{\code{Engine$get_coverage()}}
 \item \href{#method-Engine-reset_coverage}{\code{Engine$reset_coverage()}}
+\item \href{#method-Engine-get_env}{\code{Engine$get_env()}}
+\item \href{#method-Engine-format_value}{\code{Engine$format_value()}}
+\item \href{#method-Engine-with_error_context}{\code{Engine$with_error_context()}}
+\item \href{#method-Engine-print_error}{\code{Engine$print_error()}}
 \item \href{#method-Engine-clone}{\code{Engine$clone()}}
 }
 }
@@ -329,7 +315,7 @@ is loaded and its exports attached into \code{env}. Used by
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{env}}{Environment to load stdlib into (e.g. \code{self$env$env} or a test env).}
+\item{\code{env}}{Environment to load stdlib into (e.g. \code{private$.env$env} or a test env).}
 }
 \if{html}{\out{</div>}}
 }
@@ -588,6 +574,78 @@ Reset coverage data.
 \if{html}{\out{<div class="r">}}\preformatted{Engine$reset_coverage()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Engine-get_env"></a>}}
+\if{latex}{\out{\hypertarget{method-Engine-get_env}{}}}
+\subsection{Method \code{get_env()}}{
+Get the top-level R environment backing this engine.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Engine$get_env()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+An R environment.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Engine-format_value"></a>}}
+\if{latex}{\out{\hypertarget{method-Engine-format_value}{}}}
+\subsection{Method \code{format_value()}}{
+Format a value for display using the engine's formatter.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Engine$format_value(value)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{value}}{Value to format.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Character string.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Engine-with_error_context"></a>}}
+\if{latex}{\out{\hypertarget{method-Engine-with_error_context}{}}}
+\subsection{Method \code{with_error_context()}}{
+Run a function with source-tracking error context.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Engine$with_error_context(fn)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{fn}}{A zero-argument function to call.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The return value of \code{fn}.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Engine-print_error"></a>}}
+\if{latex}{\out{\hypertarget{method-Engine-print_error}{}}}
+\subsection{Method \code{print_error()}}{
+Format and print an Arl error with source context.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Engine$print_error(e, file = stderr())}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{e}}{A condition object.}
+
+\item{\code{file}}{Connection to print to (default \code{stderr()}).}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Engine-clone"></a>}}

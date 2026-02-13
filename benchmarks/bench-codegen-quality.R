@@ -7,10 +7,15 @@ source("benchmarks/benchmark-helpers.R")
 
 cat("=== Code Generation Quality Benchmarks ===\n\n")
 
+# Helper to access private engine fields in benchmarks
+engine_field <- function(engine, name) {
+  engine$.__enclos_env__$private[[paste0(".", name)]]
+}
+
 # Helper to measure code size
 measure_code_size <- function(expr_str, engine) {
   expr <- engine$read(expr_str)[[1]]
-  compiled <- engine$compiler$compile(expr, engine$global_env, strict = TRUE)
+  compiled <- engine_field(engine, "compiler")$compile(expr, engine$get_env(), strict = TRUE)
   deparsed <- deparse(compiled)
   list(
     lines = length(deparsed),
@@ -36,18 +41,18 @@ engine1 <- Engine$new()
 
 # Compile the expressions once
 arithmetic_expr <- engine1$read("(+ 1 2)")[[1]]
-compiled_arithmetic <- engine1$compiler$compile(arithmetic_expr, engine1$env$env, strict = TRUE)
+compiled_arithmetic <- engine_field(engine1, "compiler")$compile(arithmetic_expr, engine1$get_env(), strict = TRUE)
 
 nested_expr <- engine1$read("(+ (* 2 3) (* 4 5))")[[1]]
-compiled_nested <- engine1$compiler$compile(nested_expr, engine1$env$env, strict = TRUE)
+compiled_nested <- engine_field(engine1, "compiler")$compile(nested_expr, engine1$get_env(), strict = TRUE)
 
 comparison_expr <- engine1$read("(< 1 2)")[[1]]
-compiled_comparison <- engine1$compiler$compile(comparison_expr, engine1$env$env, strict = TRUE)
+compiled_comparison <- engine_field(engine1, "compiler")$compile(comparison_expr, engine1$get_env(), strict = TRUE)
 
 bench_constant_folding <- benchmark_component(
-  "Arithmetic (+ 1 2)" = engine1$compiled_runtime$eval_compiled(compiled_arithmetic, engine1$env$env),
-  "Nested arithmetic" = engine1$compiled_runtime$eval_compiled(compiled_nested, engine1$env$env),
-  "Comparison (< 1 2)" = engine1$compiled_runtime$eval_compiled(compiled_comparison, engine1$env$env),
+  "Arithmetic (+ 1 2)" = engine_field(engine1, "compiled_runtime")$eval_compiled(compiled_arithmetic, engine1$get_env()),
+  "Nested arithmetic" = engine_field(engine1, "compiled_runtime")$eval_compiled(compiled_nested, engine1$get_env()),
+  "Comparison (< 1 2)" = engine_field(engine1, "compiled_runtime")$eval_compiled(compiled_comparison, engine1$get_env()),
   iterations = 5000,
   check = FALSE
 )
@@ -75,14 +80,14 @@ cat("Benchmark 3: Math Functions - Runtime Performance\n")
 engine3 <- Engine$new()
 
 abs_expr <- engine3$read("(abs -5)")[[1]]
-compiled_abs <- engine3$compiler$compile(abs_expr, engine3$env$env, strict = TRUE)
+compiled_abs <- engine_field(engine3, "compiler")$compile(abs_expr, engine3$get_env(), strict = TRUE)
 
 sqrt_expr <- engine3$read("(sqrt 16)")[[1]]
-compiled_sqrt <- engine3$compiler$compile(sqrt_expr, engine3$env$env, strict = TRUE)
+compiled_sqrt <- engine_field(engine3, "compiler")$compile(sqrt_expr, engine3$get_env(), strict = TRUE)
 
 bench_math <- benchmark_component(
-  "abs(-5)" = engine3$compiled_runtime$eval_compiled(compiled_abs, engine3$env$env),
-  "sqrt(16)" = engine3$compiled_runtime$eval_compiled(compiled_sqrt, engine3$env$env),
+  "abs(-5)" = engine_field(engine3, "compiled_runtime")$eval_compiled(compiled_abs, engine3$get_env()),
+  "sqrt(16)" = engine_field(engine3, "compiled_runtime")$eval_compiled(compiled_sqrt, engine3$get_env()),
   iterations = 5000,
   check = FALSE
 )
@@ -97,10 +102,10 @@ env$x <- 10
 env$y <- 5
 
 var_expr <- engine4$read("(+ x y)")[[1]]
-compiled_var <- engine4$compiler$compile(var_expr, env, strict = TRUE)
+compiled_var <- engine_field(engine4, "compiler")$compile(var_expr, env, strict = TRUE)
 
 bench_baseline <- benchmark_component(
-  "Variable addition (+ x y)" = engine4$compiled_runtime$eval_compiled(compiled_var, env),
+  "Variable addition (+ x y)" = engine_field(engine4, "compiled_runtime")$eval_compiled(compiled_var, env),
   iterations = 5000,
   check = FALSE
 )

@@ -10,6 +10,11 @@ if (file.exists("DESCRIPTION")) {
 
 source("benchmarks/benchmark-helpers.R")
 
+# Helper to access private engine fields in benchmarks
+engine_field <- function(engine, name) {
+  engine$.__enclos_env__$private[[paste0(".", name)]]
+}
+
 cat("=== Truthiness Optimization Benchmark ===\n\n")
 
 # =============================================================================
@@ -67,22 +72,22 @@ engine2$eval_text('
 ', env = env)
 
 # Compile calls to these functions
-compiled_literal <- engine2$compiler$compile(
+compiled_literal <- engine_field(engine2, "compiler")$compile(
   engine2$read('(test-literal)')[[1]], env, strict = TRUE
 )
 
-compiled_comparison <- engine2$compiler$compile(
+compiled_comparison <- engine_field(engine2, "compiler")$compile(
   engine2$read('(test-comparison 10)')[[1]], env, strict = TRUE
 )
 
-compiled_variable <- engine2$compiler$compile(
+compiled_variable <- engine_field(engine2, "compiler")$compile(
   engine2$read('(test-variable #t)')[[1]], env, strict = TRUE
 )
 
 bench_if <- benchmark_component(
-  "Literal boolean (no wrapper)" = engine2$compiled_runtime$eval_compiled(compiled_literal, env),
-  "Comparison (no wrapper)" = engine2$compiled_runtime$eval_compiled(compiled_comparison, env),
-  "Variable (with wrapper)" = engine2$compiled_runtime$eval_compiled(compiled_variable, env),
+  "Literal boolean (no wrapper)" = engine_field(engine2, "compiled_runtime")$eval_compiled(compiled_literal, env),
+  "Comparison (no wrapper)" = engine_field(engine2, "compiled_runtime")$eval_compiled(compiled_comparison, env),
+  "Variable (with wrapper)" = engine_field(engine2, "compiled_runtime")$eval_compiled(compiled_variable, env),
   iterations = 5000,
   check = FALSE
 )
@@ -118,17 +123,17 @@ engine3$eval_text('
   (helper 0 0)))
 ')
 
-compiled_positive <- engine3$compiler$compile(
-  engine3$read('(sum-positive 100)')[[1]], engine3$env$env, strict = TRUE
+compiled_positive <- engine_field(engine3, "compiler")$compile(
+  engine3$read('(sum-positive 100)')[[1]], engine3$get_env(), strict = TRUE
 )
 
-compiled_always <- engine3$compiler$compile(
-  engine3$read('(always-true 100)')[[1]], engine3$env$env, strict = TRUE
+compiled_always <- engine_field(engine3, "compiler")$compile(
+  engine3$read('(always-true 100)')[[1]], engine3$get_env(), strict = TRUE
 )
 
 bench_loop <- benchmark_component(
-  "100 comparisons (optimized)" = engine3$compiled_runtime$eval_compiled(compiled_positive, engine3$env$env),
-  "100 literal tests (optimized)" = engine3$compiled_runtime$eval_compiled(compiled_always, engine3$env$env),
+  "100 comparisons (optimized)" = engine_field(engine3, "compiled_runtime")$eval_compiled(compiled_positive, engine3$get_env()),
+  "100 literal tests (optimized)" = engine_field(engine3, "compiled_runtime")$eval_compiled(compiled_always, engine3$get_env()),
   iterations = 100,
   check = FALSE
 )

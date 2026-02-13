@@ -1,15 +1,15 @@
 engine <- make_engine()
 
 test_that("gensym generates unique symbols", {
-  s1 <- engine$macro_expander$gensym()
-  s2 <- engine$macro_expander$gensym()
+  s1 <- engine_field(engine, "macro_expander")$gensym()
+  s2 <- engine_field(engine, "macro_expander")$gensym()
   expect_true(is.symbol(s1))
   expect_true(is.symbol(s2))
   expect_false(identical(s1, s2))
 })
 
 test_that("gensym accepts prefix", {
-  s <- engine$macro_expander$gensym("temp")
+  s <- engine_field(engine, "macro_expander")$gensym("temp")
   expect_true(grepl("^temp__", as.character(s)))
 })
 
@@ -49,14 +49,14 @@ test_that("defmacro defines macros", {
   engine$eval_in_env(engine$read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]], env)
 
   # Check macro is defined
-  expect_true(engine$macro_expander$is_macro(as.symbol("when"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("when"), env = env))
 })
 
 test_that("get_macro returns registered macro function", {
   env <- new.env()
   engine$eval_in_env(engine$read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]], env)
 
-  macro_fn <- engine$macro_expander$get_macro(as.symbol("when"), env = env)
+  macro_fn <- engine_field(engine, "macro_expander")$get_macro(as.symbol("when"), env = env)
   expect_true(is.function(macro_fn))
 })
 
@@ -64,12 +64,12 @@ test_that("defmacro validates dotted parameter lists", {
   env <- new.env()
   params_multi_dot <- list(as.symbol("a"), as.symbol("."), as.symbol("b"), as.symbol("."), as.symbol("c"))
   expect_error(
-    engine$macro_expander$defmacro(as.symbol("bad"), params_multi_dot, list(as.symbol("a")), env = env),
+    engine_field(engine, "macro_expander")$defmacro(as.symbol("bad"), params_multi_dot, list(as.symbol("a")), env = env),
     "Dotted parameter list can only contain one '\\.'")
 
   params_bad_position <- list(as.symbol("a"), as.symbol("."), as.symbol("b"), as.symbol("c"))
   expect_error(
-    engine$macro_expander$defmacro(as.symbol("bad2"), params_bad_position, list(as.symbol("a")), env = env),
+    engine_field(engine, "macro_expander")$defmacro(as.symbol("bad2"), params_bad_position, list(as.symbol("a")), env = env),
     "Dotted parameter list must have exactly one parameter after '\\.'")
 })
 

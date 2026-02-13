@@ -9,7 +9,7 @@
 #' @return Result of last expression
 eval_text <- function(text, engine, env = NULL) {
   if (is.null(env)) {
-    env <- engine$env$env
+    env <- engine$get_env()
   }
   engine$eval_text(text, env)
 }

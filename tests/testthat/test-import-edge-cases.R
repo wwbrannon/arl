@@ -21,7 +21,7 @@ test_that("import with invalid path", {
 
 test_that("same file imported with different path strings uses one module (absolute path alias)", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   tmp_dir <- tempfile()
   dir.create(tmp_dir)

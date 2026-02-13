@@ -27,7 +27,7 @@ test_that("delay creates a promise", {
 test_that("delay compiles to a promise", {
   info <- engine$inspect_compilation("(delay (+ 1 2))")
   expect_false(is.null(info$compiled))
-  result <- engine$compiled_runtime$eval_compiled(info$compiled, engine$env$env)
+  result <- engine_field(engine, "compiled_runtime")$eval_compiled(info$compiled, engine$get_env())
   expect_true(r6_isinstance(result, "Promise"))
   expect_equal(result$value(), 3)
 })

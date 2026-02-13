@@ -1,6 +1,6 @@
 test_that("engine$load_file evaluates source into environment", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   path <- tempfile(fileext = ".arl")
   writeLines(c("(define foo 42)", "(define bar (+ foo 1))"), path)
@@ -14,7 +14,7 @@ test_that("engine$load_file evaluates source into environment", {
 
 test_that("(load ...) evaluates file in current environment", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   path <- tempfile(fileext = ".arl")
   writeLines("(define foo 7)", path)
@@ -29,30 +29,30 @@ test_that("(load ...) evaluates file in current environment", {
 
 test_that("(load ...) resolves stdlib entries by name", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   exprs <- engine$read("(load \"control\")")
 
   expect_silent(engine$eval_in_env(exprs[[1]], env))
-  expect_true(engine$macro_expander$is_macro(as.symbol("when"), env = env))
-  expect_true(engine$macro_expander$is_macro(as.symbol("unless"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("when"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("unless"), env = env))
 })
 
 test_that("stdlib modules register macros", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
   import_stdlib_modules(engine, c("control", "binding", "threading", "error"))
 
-  expect_true(engine$macro_expander$is_macro(as.symbol("when"), env = env))
-  expect_true(engine$macro_expander$is_macro(as.symbol("unless"), env = env))
-  expect_true(engine$macro_expander$is_macro(as.symbol("let"), env = env))
-  expect_true(engine$macro_expander$is_macro(as.symbol("->"), env = env))
-  expect_true(engine$macro_expander$is_macro(as.symbol("try"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("when"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("unless"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("let"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("->"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("try"), env = env))
 })
 
 test_that("(import ...) loads module exports into environment", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   module_name <- paste0("math", sample.int(100000, 1))
   tmp_dir <- tempfile()
@@ -81,7 +81,7 @@ test_that("(import ...) loads module exports into environment", {
 
 test_that("(import ...) does not re-evaluate loaded modules", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   module_name <- paste0("counter", sample.int(100000, 1))
   tmp_dir <- tempfile()
@@ -115,7 +115,7 @@ test_that("(import ...) does not re-evaluate loaded modules", {
 
 test_that("(import ...) errors on missing modules and exports", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   missing_name <- paste0("missing", sample.int(100000, 1))
   exprs <- engine$read(sprintf("(import %s)", missing_name))
@@ -143,7 +143,7 @@ test_that("(import ...) errors on missing modules and exports", {
 
 test_that("(import \"path\") loads module by path and attaches exports", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -170,7 +170,7 @@ test_that("(import \"path\") loads module by path and attaches exports", {
 
 test_that("second (import \"path\") does not reload module", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -199,10 +199,10 @@ test_that("second (import \"path\") does not reload module", {
 
 test_that("(import symbol) is module name, (import \"string\") is path", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
 
   expect_silent(engine$eval_in_env(engine$read("(import control)")[[1]], env))
-  expect_true(engine$macro_expander$is_macro(as.symbol("when"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("when"), env = env))
 
   missing_path <- tempfile(fileext = ".arl")
   expect_false(file.exists(missing_path))

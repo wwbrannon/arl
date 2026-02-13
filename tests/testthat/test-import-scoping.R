@@ -53,7 +53,7 @@ test_that("imports are visible in the same file", {
 
 test_that("(load path) runs in caller env - definitions visible", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()
@@ -73,7 +73,7 @@ test_that("(load path) runs in caller env - definitions visible", {
 
 test_that("(load path) runs in caller env - imports visible to caller", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()
@@ -93,7 +93,7 @@ test_that("(load path) runs in caller env - imports visible to caller", {
 
 test_that("(run path) runs in child env - definitions not visible in caller", {
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()
@@ -113,7 +113,7 @@ test_that("(run path) runs in child env - definitions not visible in caller", {
 test_that("(run path) runs in child env - imports not visible in caller", {
   # Use a custom module with a unique export; the engine env already has stdlib (e.g. cadr).
   engine <- make_engine()
-  env <- engine$env$env
+  env <- engine$get_env()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()

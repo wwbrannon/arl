@@ -272,7 +272,7 @@ CLI <- R6::R6Class(
       # Run all files in the same engine env so definitions in one file are visible in the next
       for (path in parsed$files) {
         self$cli_eval_with_engine(engine, function() {
-          engine$load_file_in_env(path, engine$env$env, create_scope = FALSE)
+          engine$load_file_in_env(path, engine$get_env(), create_scope = FALSE)
         })
       }
       invisible(NULL)
@@ -292,14 +292,14 @@ CLI <- R6::R6Class(
       result_with_vis <- tryCatch(
         withVisible(fn()),
         error = function(e) {
-          engine$source_tracker$print_error(e, file = stderr())
+          engine$print_error(e, file = stderr())
           self$cli_exit_with_error(conditionMessage(e), show_help = FALSE)
           return(list(value = NULL, visible = FALSE))
         }
       )
       result <- result_with_vis$value
       if (!is.null(result) && result_with_vis$visible) {
-        cat(engine$env$format_value(result), "\n", sep = "")
+        cat(engine$format_value(result), "\n", sep = "")
       }
       invisible(result)
     },

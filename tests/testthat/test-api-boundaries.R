@@ -46,7 +46,7 @@ test_that("module registry bindings are locked", {
   engine$eval_text('(module testmod (export x) (define x 42))')
 
   # Get the module registry entry
-  reg <- engine$env$module_registry$get("testmod")
+  reg <- engine_field(engine, "env")$module_registry$get("testmod")
 
   # Entry should exist and have expected structure
   expect_true(!is.null(reg))
@@ -54,7 +54,7 @@ test_that("module registry bindings are locked", {
   expect_equal(reg$exports, "x")
 
   # The binding in the registry should be locked
-  registry_env <- engine$env$module_registry_env(create = FALSE)
+  registry_env <- engine_field(engine, "env")$module_registry_env(create = FALSE)
 
   # Verify it's locked
   expect_true(bindingIsLocked("testmod", registry_env))
@@ -109,7 +109,7 @@ test_that("module registry entries are truly immutable", {
   engine$eval_text('(module immutmod (export val) (define val 123))')
 
   # Get the entry
-  entry <- engine$env$module_registry$get("immutmod")
+  entry <- engine_field(engine, "env")$module_registry$get("immutmod")
 
   # Entry should be a locked environment
   expect_true(is.environment(entry))
@@ -136,25 +136,25 @@ test_that("Env fields are read-only via active bindings", {
   engine <- make_engine()
 
   # Can read fields
-  expect_true(is.environment(engine$env$env))
-  expect_s3_class(engine$env$module_registry, "ModuleRegistry")
-  expect_true(is.list(engine$env$env_stack))
+  expect_true(is.environment(engine_field(engine, "env")$env))
+  expect_s3_class(engine_field(engine, "env")$module_registry, "ModuleRegistry")
+  expect_true(is.list(engine_field(engine, "env")$env_stack))
 
   # Cannot reassign fields
   expect_error({
-    engine$env$env <- new.env()
+    engine_field(engine, "env")$env <- new.env()
   }, "Cannot reassign env field")
 
   expect_error({
-    engine$env$module_registry <- NULL
+    engine_field(engine, "env")$module_registry <- NULL
   }, "Cannot reassign module_registry field")
 
   expect_error({
-    engine$env$env_stack <- list()
+    engine_field(engine, "env")$env_stack <- list()
   }, "Cannot reassign env_stack field")
 
   expect_error({
-    engine$env$macro_registry <- NULL
+    engine_field(engine, "env")$macro_registry <- NULL
   }, "Cannot reassign macro_registry field")
 })
 
@@ -163,19 +163,19 @@ test_that("Env internal operations still work with private fields", {
 
   # Test env stack operations
   test_env <- new.env()
-  engine$env$push_env(test_env)
+  engine_field(engine, "env")$push_env(test_env)
 
   # Should be on stack
-  expect_identical(engine$env$current_env(), test_env)
+  expect_identical(engine_field(engine, "env")$current_env(), test_env)
 
   # Pop should work
-  engine$env$pop_env()
-  expect_identical(engine$env$current_env(), globalenv())
+  engine_field(engine, "env")$pop_env()
+  expect_identical(engine_field(engine, "env")$current_env(), globalenv())
 
   # Module operations should work
   engine$eval_text('(module testmod2 (export z) (define z 789))')
-  expect_true(engine$env$module_registry$exists("testmod2"))
+  expect_true(engine_field(engine, "env")$module_registry$exists("testmod2"))
 
-  mod_entry <- engine$env$module_registry$get("testmod2")
+  mod_entry <- engine_field(engine, "env")$module_registry$get("testmod2")
   expect_equal(mod_entry$exports, "z")
 })

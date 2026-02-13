@@ -240,7 +240,7 @@ testthat::test_file("tests/testthat/test-file.R")
 For native tests, you can load and run them manually:
 ```r
 engine <- Engine$new()
-env <- engine$env$env
+env <- engine$get_env()
 source("tests/testthat/helper-native.R")  # Loads skip() etc.
 engine$load_file("tests/native/test-something.arl", env)
 # Now you can call test functions directly:
