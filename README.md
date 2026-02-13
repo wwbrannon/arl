@@ -269,9 +269,9 @@ individually in your own modules or when working with a bare engine
 (definitions visible). `run` runs a file in an isolated child
 (definitions not visible). `import` loads a module and attaches its
 exports into the current scope only; each module is loaded once per
-engine. From R, `engine$load_file(path)` runs a file in an isolated
-scope; to have definitions visible in the engine, use
-`engine$load_file_with_scope(path, engine$get_env())` or evaluate
+engine. From R, `engine$load_file_under_env(path)` runs a file in an
+isolated scope; to have definitions visible in the engine, use
+`engine$load_file_in_env(path, engine$get_env())` or evaluate
 `(load "script.arl")` from the REPL. You can define your own modules
 with `module` and `import`—see the [Modules and
 Imports](articles/modules.html) guide.

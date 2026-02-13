@@ -19,7 +19,7 @@
 #' @param ... Additional Arl expressions to evaluate (variadic).
 #' @param text Character string of Arl code to read/eval.
 #' @param path File path to load.
-#' @param create_scope Logical; evaluate file in a child environment when TRUE.
+
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
 #' @param depth Number of expansion steps (NULL for full expansion).
 #' @param topic Help topic as a single string.
@@ -96,7 +96,8 @@ Engine <- R6::R6Class(
 
       private$.compiled_runtime <- CompiledRuntime$new(
         context,
-        load_file_fn = function(path, env, create_scope = FALSE) self$load_file_with_scope(path, env, create_scope),
+        load_file_fn = function(path, env) self$load_file_in_env(path, env),
+        run_file_fn = function(path, env) self$load_file_under_env(path, env),
         help_fn = function(topic, env) self$help(topic, env),
         module_cache = private$.module_cache
       )
@@ -182,22 +183,19 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Load and evaluate an Arl source file in an isolated scope. The file runs in a
-    #' child of the engine's environment, so definitions and imports in the file
-    #' are not visible in the engine's main environment or to subsequent code. For
-    #' source-like behavior (definitions visible in the engine), use
-    #' \code{load_file_with_scope(path, env, create_scope = FALSE)}.
-    load_file = function(path) {
-      self$load_file_with_scope(path, private$.env$env, create_scope = TRUE)
+    #' child of \code{env}, so definitions and imports in the file are not visible
+    #' in \code{env} or to subsequent code. For source-like behavior (definitions
+    #' visible in the engine), use \code{load_file_in_env(path, env)}.
+    load_file_under_env = function(path, env = NULL) {
+      resolved <- private$resolve_env_arg(env)
+      self$load_file_in_env(path, new.env(parent = resolved))
     },
 
     #' @description
-    #' Load and evaluate an Arl source file in an explicit environment. By default
-    #' (\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
-    #' and imports in the file are visible in that environment. With
-    #' \code{create_scope = TRUE}, the file runs in a child of \code{env} and its
-    #' definitions are not visible in \code{env}.
-    #' @param create_scope If TRUE, evaluate in a new child of \code{env}; if FALSE, in \code{env}.
-    load_file_with_scope = function(path, env, create_scope = FALSE) {
+    #' Load and evaluate an Arl source file in the given environment. Definitions
+    #' and imports in the file are visible in \code{env}. For isolated execution
+    #' (definitions not visible), use \code{load_file_under_env(path, env)}.
+    load_file_in_env = function(path, env) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
       }
@@ -216,11 +214,11 @@ Engine <- R6::R6Class(
         stop(sprintf("File not found: %s", path))
       }
 
-      # Try cache loading (only for module files, not create_scope loads)
+      # Try cache loading for module files
       # Skip cache when coverage is enabled — cached expressions lack source info for instrumentation
       coverage_active <- !is.null(private$.compiled_runtime$context$coverage_tracker) &&
                          private$.compiled_runtime$context$coverage_tracker$enabled
-      if (!create_scope && !coverage_active) {
+      if (!coverage_active) {
         cache_paths <- private$.module_cache$get_paths(path)
         if (!is.null(cache_paths)) {
           target_env <- resolved
@@ -291,7 +289,7 @@ Engine <- R6::R6Class(
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
       exprs <- self$read(text, source_name = path)
       if (length(exprs) == 0L) return(invisible(NULL))
-      target_env <- if (isTRUE(create_scope)) new.env(parent = resolved) else resolved
+      target_env <- resolved
       do.call(self$eval, c(exprs, list(env = target_env)), quote = TRUE)
     },
 
@@ -753,7 +751,7 @@ Engine <- R6::R6Class(
             stop("stdlib module not found: ", name)
           }
           tryCatch(
-            self$load_file_with_scope(path, resolved, create_scope = FALSE),
+            self$load_file_in_env(path, resolved),
             error = function(e) {
               stop(sprintf("Failed to load stdlib module '%s': %s", name, conditionMessage(e)), call. = FALSE)
             }

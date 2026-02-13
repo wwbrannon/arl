@@ -855,8 +855,7 @@ Compiler <- R6::R6Class(
       as.call(list(
         as.symbol(".__load"),
         path,
-        as.symbol(self$env_var_name),
-        FALSE
+        as.symbol(self$env_var_name)
       ))
     },
     compile_run = function(expr) {
@@ -868,10 +867,9 @@ Compiler <- R6::R6Class(
         return(private$fail("run path could not be compiled"))
       }
       as.call(list(
-        as.symbol(".__load"),
+        as.symbol(".__run"),
         path,
-        as.symbol(self$env_var_name),
-        TRUE
+        as.symbol(self$env_var_name)
       ))
     },
     compile_import = function(expr) {

@@ -1,3 +1,8 @@
+Engine API:
+    o) load_file_with_scope doesn't need create_scope, it should always be true because otherwise the operation is identical to load_file
+
+o) sanity-check the inst/examples
+
 o) just read the whole doc site and make edits
     o) avoid having examples use r/call so heavily
     o) this para needs update: Inside a quasiquoted template, ,expr (unquote) evaluates expr and splices the result into the template,
@@ -6,7 +11,7 @@ o) just read the whole doc site and make edits
     o) we don't optimize TCO in anonymous functions called recursively via combinators
     o) the "Summary" table in the self-TCO vignette is transposed or otherwise confusing
     o) "Arl also has dotted pairs" note these are not R's pairlist
-    o) sanity-check the inst/examples
+    o) "It also falls through to R’s built-in help for R functions."
 
 o) README.md: update
 o) index.md: write a couple paragraphs including "Getting Started" and "Examples" up top

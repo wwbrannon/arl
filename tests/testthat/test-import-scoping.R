@@ -1,8 +1,8 @@
 # Import scoping, load (source-like), and run (isolated) tests.
 # Written first (TDD); implementation follows.
 
-test_that("imports are not visible in a different file (two load_file calls)", {
-  # Each engine$load_file runs in its own scope; file B must not see file A's imports.
+test_that("imports are not visible in a different file (two load_file_under_env calls)", {
+  # Each engine$load_file_under_env runs in its own scope; file B must not see file A's imports.
   engine <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -29,8 +29,8 @@ test_that("imports are not visible in a different file (two load_file calls)", {
   file_b <- file.path(tmp_dir, "file_b.arl")
   writeLines("(myfn 5)", file_b)
 
-  engine$load_file(file_a)
-  expect_error(engine$load_file(file_b), regexp = "myfn|not found|object")
+  engine$load_file_under_env(file_a)
+  expect_error(engine$load_file_under_env(file_b), regexp = "myfn|not found|object")
 })
 
 test_that("imports are visible in the same file", {
@@ -47,7 +47,7 @@ test_that("imports are visible in the same file", {
   # Use stdlib 'list' so we don't need a temp module
   path <- file.path(tmp_dir, "single.arl")
   writeLines(c("(import list)", "(cadr (list 1 2 3))"), path)
-  result <- engine$load_file(path)
+  result <- engine$load_file_under_env(path)
   expect_equal(result, 2)
 })
 
@@ -164,6 +164,6 @@ test_that("global module cache: same module loaded once per engine, shared acros
   file_b <- file.path(tmp_dir, "file_b.arl")
   writeLines(c(sprintf("(import %s)", mod_name), "(tick)"), file_b)
 
-  expect_equal(engine$load_file(file_a), 1)
-  expect_equal(engine$load_file(file_b), 2)
+  expect_equal(engine$load_file_under_env(file_a), 1)
+  expect_equal(engine$load_file_under_env(file_b), 2)
 })

@@ -242,7 +242,7 @@ For native tests, you can load and run them manually:
 engine <- Engine$new()
 env <- engine$get_env()
 source("tests/testthat/helper-native.R")  # Loads skip() etc.
-engine$load_file("tests/native/test-something.arl", env)
+engine$load_file_in_env("tests/native/test-something.arl", env)
 # Now you can call test functions directly:
 env$`test-my-function`()
 ```

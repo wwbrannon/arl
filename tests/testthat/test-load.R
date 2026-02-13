@@ -1,4 +1,4 @@
-test_that("engine$load_file evaluates source into environment", {
+test_that("engine$load_file_in_env evaluates source into environment", {
   engine <- make_engine()
   env <- engine$get_env()
 
@@ -6,7 +6,7 @@ test_that("engine$load_file evaluates source into environment", {
   writeLines(c("(define foo 42)", "(define bar (+ foo 1))"), path)
   on.exit(unlink(path), add = TRUE)
 
-  engine$load_file_with_scope(path, env = env)
+  engine$load_file_in_env(path, env = env)
 
   expect_equal(get("foo", envir = env), 42)
   expect_equal(get("bar", envir = env), 43)

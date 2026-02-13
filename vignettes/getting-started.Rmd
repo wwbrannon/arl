@@ -85,13 +85,13 @@ From the REPL, use `load` to run a file in the current environment so that its d
 (load "script.arl")
 ```
 
-From R, `engine$load_file(path)` runs the file in an *isolated* environment: definitions and imports in that file are not visible in the engine's main environment or to later code. Use this when you want to execute a script without affecting the session (e.g. run a script and then continue in the REPL with a clean scope). To run a file and have its definitions visible in the engine (e.g. for use in the REPL), call `engine$load_file_with_scope(path, engine$env$env)` or evaluate `(load "script.arl")` from the REPL.
+From R, `engine$load_file_under_env(path)` runs the file in an *isolated* environment: definitions and imports in that file are not visible in the engine's main environment or to later code. Use this when you want to execute a script without affecting the session (e.g. run a script and then continue in the REPL with a clean scope). To run a file and have its definitions visible in the engine (e.g. for use in the REPL), call `engine$load_file_in_env(path, engine$get_env())` or evaluate `(load "script.arl")` from the REPL.
 
 ```{r eval=FALSE}
 engine <- Engine$new()
-engine$load_file("script.arl")  # isolated; definitions not visible
+engine$load_file_under_env("script.arl")  # isolated; definitions not visible
 # Or, to make definitions visible in the engine:
-engine$load_file_with_scope("script.arl", engine$env$env)
+engine$load_file_in_env("script.arl", engine$get_env())
 ```
 
 ## Loading stdlib modules

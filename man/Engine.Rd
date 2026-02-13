@@ -30,8 +30,8 @@ option \code{arl.use_env_cache}.}
 \item \href{#method-Engine-write}{\code{Engine$write()}}
 \item \href{#method-Engine-eval}{\code{Engine$eval()}}
 \item \href{#method-Engine-eval_text}{\code{Engine$eval_text()}}
-\item \href{#method-Engine-load_file}{\code{Engine$load_file()}}
-\item \href{#method-Engine-load_file_with_scope}{\code{Engine$load_file_with_scope()}}
+\item \href{#method-Engine-load_file_under_env}{\code{Engine$load_file_under_env()}}
+\item \href{#method-Engine-load_file_in_env}{\code{Engine$load_file_in_env()}}
 \item \href{#method-Engine-macroexpand}{\code{Engine$macroexpand()}}
 \item \href{#method-Engine-inspect_compilation}{\code{Engine$inspect_compilation()}}
 \item \href{#method-Engine-help}{\code{Engine$help()}}
@@ -166,37 +166,15 @@ Read and evaluate Arl source text. Convenience wrapper around
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-load_file"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-load_file}{}}}
-\subsection{Method \code{load_file()}}{
+\if{html}{\out{<a id="method-Engine-load_file_under_env"></a>}}
+\if{latex}{\out{\hypertarget{method-Engine-load_file_under_env}{}}}
+\subsection{Method \code{load_file_under_env()}}{
 Load and evaluate an Arl source file in an isolated scope. The file runs in a
-child of the engine's environment, so definitions and imports in the file
-are not visible in the engine's main environment or to subsequent code. For
-source-like behavior (definitions visible in the engine), use
-\code{load_file_with_scope(path, env, create_scope = FALSE)}.
+child of \code{env}, so definitions and imports in the file are not visible
+in \code{env} or to subsequent code. For source-like behavior (definitions
+visible in the engine), use \code{load_file_in_env(path, env)}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file(path)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{File path to load.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-load_file_with_scope"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-load_file_with_scope}{}}}
-\subsection{Method \code{load_file_with_scope()}}{
-Load and evaluate an Arl source file in an explicit environment. By default
-(\code{create_scope = FALSE}) the file is evaluated in \code{env}, so definitions
-and imports in the file are visible in that environment. With
-\code{create_scope = TRUE}, the file runs in a child of \code{env} and its
-definitions are not visible in \code{env}.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_with_scope(path, env, create_scope = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_under_env(path, env = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -205,8 +183,27 @@ definitions are not visible in \code{env}.
 \item{\code{path}}{File path to load.}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Engine-load_file_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-Engine-load_file_in_env}{}}}
+\subsection{Method \code{load_file_in_env()}}{
+Load and evaluate an Arl source file in the given environment. Definitions
+and imports in the file are visible in \code{env}. For isolated execution
+(definitions not visible), use \code{load_file_under_env(path, env)}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_in_env(path, env)}\if{html}{\out{</div>}}
+}
 
-\item{\code{create_scope}}{If TRUE, evaluate in a new child of \code{env}; if FALSE, in \code{env}.}
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{path}}{File path to load.}
+
+\item{\code{env}}{Optional environment or Env used as the engine base.}
 }
 \if{html}{\out{</div>}}
 }
