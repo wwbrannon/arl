@@ -21,8 +21,14 @@ expressions.
 ## Installation
 
 ```{r eval=FALSE}
-devtools::install()
+# install.packages("arl")
+devtools::install_github("wwbrannon/arl")
 ```
+
+Arl is not yet on CRAN; install from GitHub with `devtools` as shown
+above. Once a CRAN release is available, `install.packages("arl")` will
+work. If you have a local clone of the repository, `devtools::install()`
+from the repo directory also works.
 
 ## Start the REPL
 
@@ -32,7 +38,8 @@ engine <- Engine$new()
 engine$repl()
 ```
 
-The engine loads the base stdlib automatically.
+The engine loads all stdlib modules automatically, so functions like `when`,
+`let`, `map`, and `->` are available immediately.
 
 At the prompt, you can enter Arl expressions:
 
@@ -41,6 +48,14 @@ At the prompt, you can enter Arl expressions:
 (define x 10)
 (* x 2)
 ```
+
+Type `(quit)` or press Ctrl+C to exit the REPL.
+
+**REPL options:** You can control the REPL with options before calling
+`engine$repl()`: `arl.repl_quiet` (minimal banner),
+`arl.repl_use_history` (set to `FALSE` to avoid touching R's readline
+history), and `arl.repl_bracketed_paste` (enable/disable bracketed paste
+mode for cleaner multiline pastes).
 
 ## Run from the command line
 
@@ -55,43 +70,61 @@ Then you can evaluate code without opening R:
 ```bash
 arl --eval "(+ 1 2)"
 arl --file script.arl
-arl -q
+arl -q                    # quiet REPL (minimal banner)
+arl --help                # see all options
 ```
 
-You can also pass multiple files; they run in order. Use `-q` or `--quiet` to start the REPL with a minimal banner.
-
-**REPL options (when running from R):** You can control the REPL with options before calling `engine$repl()`: `arl.repl_quiet` (minimal banner), `arl.repl_use_history` (set to `FALSE` to avoid touching R's readline history), and `arl.repl_bracketed_paste` (enable/disable bracketed paste mode for cleaner multiline pastes).
+You can also pass multiple files; they run in order in a shared engine, so
+definitions from earlier files are visible to later ones. Use
+`--no-stdlib` to start a bare engine without stdlib modules.
 
 ## Evaluate Arl from R
 
-If you want to evaluate Arl inside an R script, you can parse and evaluate
-expressions directly:
+The simplest way to evaluate Arl inside an R script is `eval_text`, which
+reads and evaluates in one step:
 
 ```{r eval=FALSE}
 engine <- Engine$new()
+engine$eval_text("(define x 10) (+ x 5)")
+```
+
+For finer control, you can parse and evaluate separately:
+
+```{r eval=FALSE}
 exprs <- engine$read("(define x 10) (+ x 5)")
 engine$eval(exprs[[1]], exprs[[2]])
 ```
 
 `eval()` accepts multiple expressions and evaluates them sequentially,
-returning the last value. Or use `engine$eval_text()` to read and evaluate
-in one step.
+returning the last value.
 
 ## Run Arl files
 
-From the REPL, use `load` to run a file in the current environment so that its definitions are visible:
+From the REPL, use `load` to run a file in the current environment so that
+its definitions are visible:
 
 ```{arl, eval=FALSE}
 (load "script.arl")
 ```
 
-From R, `engine$load_file_under_env(path)` runs the file in an *isolated* environment: definitions and imports in that file are not visible in the engine's main environment or to later code. Use this when you want to execute a script without affecting the session (e.g. run a script and then continue in the REPL with a clean scope). To run a file and have its definitions visible in the engine (e.g. for use in the REPL), call `engine$load_file_in_env(path, engine$get_env())` or evaluate `(load "script.arl")` from the REPL.
+Use `run` to execute a file in an isolated child environment (definitions
+are not visible to later code):
+
+```{arl, eval=FALSE}
+(run "script.arl")
+```
+
+From R, `load_file_in_env` and `load_file_under_env` correspond to
+`load` and `run` respectively:
 
 ```{r eval=FALSE}
 engine <- Engine$new()
-engine$load_file_under_env("script.arl")  # isolated; definitions not visible
-# Or, to make definitions visible in the engine:
+
+# Like (load ...): definitions visible in the engine
 engine$load_file_in_env("script.arl", engine$get_env())
+
+# Like (run ...): isolated; definitions not visible
+engine$load_file_under_env("script.arl")
 ```
 
 ## Loading stdlib modules
@@ -115,35 +148,83 @@ modules.
 
 ## Core syntax
 
+### Truthiness
+
+Arl follows R's truthiness rules: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are
+falsy; everything else is truthy. This differs from Scheme, where only `#f`
+is falsy. See [Troubleshooting](troubleshooting.html) for common pitfalls.
+
+### Definitions and functions
+
 ```{arl}
-; Function definition
+; Define a variable
+(define greeting "hello")
+
+; Define a function
 (define factorial
   (lambda (n)
     (if (< n 2)
       1
       (* n (factorial (- n 1))))))
 
-; Lambda destructuring (pattern wrapper keeps defaults unambiguous)
-(define sum-pair
-  (lambda ((pattern (a b)))
-    (+ a b)))
+(factorial 5)
+```
 
-; Dotted rest destructuring
-(define head-tail
-  (lambda (x . (pattern (a b)))
-    (list x a b)))
+### Local bindings
 
-; Lists
+```{arl}
+; let binds variables in a local scope
+(let ((x 10)
+      (y 20))
+  (+ x y))
+```
+
+### Conditionals
+
+```{arl}
+; if is the basic conditional
+(if (> 3 2) "yes" "no")
+
+; cond handles multiple branches
+(define describe
+  (lambda (n)
+    (cond
+      ((< n 0) "negative")
+      ((= n 0) "zero")
+      (#t "positive"))))
+
+(describe 5)
+
+; when is a one-armed conditional (no else branch)
+(when (> 3 2)
+  (display "3 is greater\n"))
+```
+
+### Sequencing
+
+```{arl}
+; begin evaluates expressions in order, returning the last value
+(begin
+  (define a 1)
+  (define b 2)
+  (+ a b))
+```
+
+### Lists and quoting
+
+```{arl}
 (list 1 2 3)
 (car (list 1 2 3))
 (cdr (list 1 2 3))
 
-; Quoting
-'(+ 1 2)           ; => (+ 1 2)
-`(list ,x 20 30)   ; => (list 10 20 30)
+; Quoting prevents evaluation
+'(+ 1 2)           ; => the unevaluated expression (+ 1 2)
+
+; Quasiquote allows selective evaluation with ,
+(define x 10)
+`(list ,x 20 30)   ; => (list 10 20 30) -- x is substituted, rest is literal
 
 ; Comments start with semicolon
-; This line is ignored
 ```
 
 For more details on the standard library and macros, see the other vignettes in
@@ -164,103 +245,23 @@ For functions with documentation, `help` shows the signature, description,
 examples, and cross-references automatically. It also falls through to R's
 built-in help for R functions.
 
-## Documenting functions
+### Documenting your functions
 
-Arl has two ways to attach documentation to functions: `;;'` annotation
-comments (used at definition time) and the `doc!` builtin (used at
-runtime). Both produce the same `arl_doc` attribute on the function, which
-`help` and `doc` read.
+Arl provides two mechanisms for attaching documentation to functions and
+macros:
 
-### Annotation comments (`;;'`)
+- **`;;'` annotation comments** — Place roxygen-like tags (`@description`,
+  `@examples`, `@seealso`, `@note`) immediately before a `define` or
+  `defmacro`. The compiler bakes the documentation in at compile time with
+  no runtime overhead. This is the recommended approach for source files.
 
-Annotation comments use the `;;'` prefix and support roxygen-like tags.
-Place them immediately before a `define`:
+- **`doc!`** — Attach or update documentation at runtime, useful for
+  interactive work: `(doc! my-fn "Description here.")` or with keyword
+  arguments like `(doc! my-fn :examples "(my-fn 3)")`.
 
-```{arl}
-;;' @description Compute the square of x.
-;;' @examples
-;;' (square 3)   ; => 9
-;;' (square -2)  ; => 4
-;;' @seealso cube, expt
-;;' @note Pure function; no side effects.
-(define square
-  (lambda (x) (* x x)))
-```
-
-Supported tags:
-
-| Tag | Purpose |
-|-----|---------|
-| `@description` | One-line or multi-line description. If omitted, the parser falls back to a `(doc! ...)` call. |
-| `@examples` | One or more example expressions (one per continuation line). |
-| `@seealso` | Comma-separated list of related function names. |
-| `@note` | Additional notes (caveats, performance, history). |
-| `@signature` | Override the auto-detected call signature. |
-| `@section` | Section heading for grouping functions in generated docs. |
-
-Multi-line content is written with continuation `;;'` lines:
-
-```{arl, eval=FALSE}
-;;' @description Concatenate strings with a separator.
-;;'   Accepts any number of string arguments.
-;;' @examples
-;;' (string-join ", " '("a" "b" "c"))  ; => "a, b, c"
-;;' (string-join "" '("x" "y"))        ; => "xy"
-(define string-join ...)
-```
-
-The compiler reads `;;'` blocks at compile time and bakes the resulting
-documentation into the function's `arl_doc` attribute, so no runtime
-overhead is incurred. This is the recommended way to document stdlib
-functions and module exports.
-
-### Runtime documentation with `doc!`
-
-`doc!` attaches documentation fields to an already-defined function. It
-is useful for interactive work, dynamically generated functions, or adding
-fields incrementally:
-
-```{arl}
-(define double (lambda (x) (* x 2)))
-
-; Set just the description (backward-compatible form)
-(doc! double "Double the input value.")
-
-; Set specific fields with keyword arguments
-(doc! double :examples "(double 3) ; => 6")
-(doc! double :note "Pure function.")
-
-; Set multiple fields at once
-(doc! double :description "Double x." :examples "(double 5) ; => 10")
-```
-
-`doc!` **merges** with existing documentation — setting `:examples` does
-not erase a previously set `:description`.
-
-### Retrieving documentation with `doc`
-
-`doc` reads fields from a function's documentation:
-
-```{arl}
-(doc double)              ; => "Double x." (description, the default)
-(doc double "examples")   ; => "(double 5) ; => 10"
-(doc double "note")       ; => "Pure function."
-(doc double "all")        ; => named list of all fields
-```
-
-### Which mechanism to use
-
-| Situation | Use |
-|-----------|-----|
-| Defining a function in a `.arl` source file | `;;'` annotations |
-| Attaching docs interactively in the REPL | `doc!` or `;;'` |
-| Building docs dynamically from data | `doc!` with keyword args |
-| Reading docs programmatically | `doc` |
-| Looking up docs as a user | `help` |
-
-Both `;;'` and `doc!` produce the same `arl_doc` attribute, so `help`
-and `doc` work identically regardless of how the documentation was
-attached.
+Both produce the same `arl_doc` attribute, so `help` and `doc` work
+identically regardless of how documentation was attached. See
+[Documenting Functions](documenting-functions.html) for the full reference.
 
 ## Next steps
 
@@ -268,3 +269,6 @@ attached.
 - [Macros and Quasiquote](macros.html)
 - [R Interop and Data Workflows](r-interop.html)
 - [Standard Library Overview](stdlib-reference.html)
+- [Examples](examples.html)
+- [Troubleshooting](troubleshooting.html)
+- [Arl Compared to Scheme](arl-vs-scheme.html)
