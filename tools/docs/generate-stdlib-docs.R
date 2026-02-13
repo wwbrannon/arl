@@ -429,6 +429,10 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
   # Importing modules section
   out <- c(out, "## Importing modules")
   out <- c(out, "")
+  out <- c(out, "All stdlib modules are loaded automatically by `Engine$new()`. The `import`")
+  out <- c(out, "form is useful inside your own modules (where you start with an empty scope)")
+  out <- c(out, "and when working with a bare engine (`Engine$new(load_stdlib = FALSE)`):")
+  out <- c(out, "")
   out <- c(out, "```{arl, eval=FALSE}")
   out <- c(out, "; Import focused modules")
   out <- c(out, "(import control)   ; when/unless/cond/case/try*")
@@ -441,7 +445,8 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
   out <- c(out, "From R, you can create an engine with the stdlib already loaded:")
   out <- c(out, "")
   out <- c(out, "```r")
-  out <- c(out, "engine <- Engine$new()")
+  out <- c(out, "engine <- Engine$new()                   # all stdlib loaded")
+  out <- c(out, "bare <- Engine$new(load_stdlib=FALSE)    # builtins only")
   out <- c(out, "```")
   out <- c(out, "")
 

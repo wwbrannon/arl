@@ -50,9 +50,11 @@ and when working with a bare engine (`Engine$new(load_stdlib = FALSE)`):
 (import error)     ; try/catch/finally
 ```
 
+From R, you can create an engine with the stdlib already loaded:
+
 ```r
-engine <- Engine$new()                     # all stdlib loaded
-bare   <- Engine$new(load_stdlib = FALSE)  # builtins only
+engine <- Engine$new()                   # all stdlib loaded
+bare <- Engine$new(load_stdlib=FALSE)    # builtins only
 ```
 
 ## [Lists and Sequences](stdlib-list-seq.html)
