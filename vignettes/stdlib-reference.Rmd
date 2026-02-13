@@ -68,101 +68,307 @@ bare <- Engine$new(load_stdlib=FALSE)    # builtins only
 
 List construction, accessors, association lists, sequence helpers, and sorting.
 
-`call`, `car`, `cdr`, `caar`, `cadr`, `cdar`, `cddr`, `caaar`, `caadr`,
-`cadar`, `caddr`, `cdaar`, `cdadr`, `cddar`, `cdddr`, `cadddr`, `cddddr`,
-`cons`, `list*`, `append`, `reverse`, `first`, `second`, `third`, `fourth`,
-`rest`, `last`, `nth`, `assoc`, `assoc-by-equal?`, `assoc-by-identical?`,
-`assoc-by-==`, `assq`, `assv`, `rassoc`, `rassoc-by-equal?`, `range`, `iota`,
-`make-list`, `list-ref`, `list-tail`, `take`, `drop`, `take-while`,
-`drop-while`, `partition`, `flatten`, `repeatedly`, `repeat`, `zip`, `member`,
-`contains?`, `length=`, `length>`, `length<`, `sort`, `sort-by`, `merge`,
-`stable-sort`
+[`call`](stdlib-list-seq.html#call), [`car`](stdlib-list-seq.html#car),
+[`cdr`](stdlib-list-seq.html#cdr), [`caar`](stdlib-list-seq.html#caar),
+[`cadr`](stdlib-list-seq.html#cadr), [`cdar`](stdlib-list-seq.html#cdar),
+[`cddr`](stdlib-list-seq.html#cddr), [`caaar`](stdlib-list-seq.html#caaar),
+[`caadr`](stdlib-list-seq.html#caadr), [`cadar`](stdlib-list-seq.html#cadar),
+[`caddr`](stdlib-list-seq.html#caddr), [`cdaar`](stdlib-list-seq.html#cdaar),
+[`cdadr`](stdlib-list-seq.html#cdadr), [`cddar`](stdlib-list-seq.html#cddar),
+[`cdddr`](stdlib-list-seq.html#cdddr), [`cadddr`](stdlib-list-seq.html#cadddr),
+[`cddddr`](stdlib-list-seq.html#cddddr), [`cons`](stdlib-list-seq.html#cons),
+[`list*`](stdlib-list-seq.html#list-star),
+[`append`](stdlib-list-seq.html#append),
+[`reverse`](stdlib-list-seq.html#reverse),
+[`first`](stdlib-list-seq.html#first), [`second`](stdlib-list-seq.html#second),
+[`third`](stdlib-list-seq.html#third), [`fourth`](stdlib-list-seq.html#fourth),
+[`rest`](stdlib-list-seq.html#rest), [`last`](stdlib-list-seq.html#last),
+[`nth`](stdlib-list-seq.html#nth), [`assoc`](stdlib-list-seq.html#assoc),
+[`assoc-by-equal?`](stdlib-list-seq.html#assoc-by-equal-p),
+[`assoc-by-identical?`](stdlib-list-seq.html#assoc-by-identical-p),
+[`assoc-by-==`](stdlib-list-seq.html#assoc-by-eq-eq),
+[`assq`](stdlib-list-seq.html#assq), [`assv`](stdlib-list-seq.html#assv),
+[`rassoc`](stdlib-list-seq.html#rassoc),
+[`rassoc-by-equal?`](stdlib-list-seq.html#rassoc-by-equal-p),
+[`range`](stdlib-list-seq.html#range), [`iota`](stdlib-list-seq.html#iota),
+[`make-list`](stdlib-list-seq.html#make-list),
+[`list-ref`](stdlib-list-seq.html#list-ref),
+[`list-tail`](stdlib-list-seq.html#list-tail),
+[`take`](stdlib-list-seq.html#take), [`drop`](stdlib-list-seq.html#drop),
+[`take-while`](stdlib-list-seq.html#take-while),
+[`drop-while`](stdlib-list-seq.html#drop-while),
+[`partition`](stdlib-list-seq.html#partition),
+[`flatten`](stdlib-list-seq.html#flatten),
+[`repeatedly`](stdlib-list-seq.html#repeatedly),
+[`repeat`](stdlib-list-seq.html#repeat), [`zip`](stdlib-list-seq.html#zip),
+[`member`](stdlib-list-seq.html#member),
+[`contains?`](stdlib-list-seq.html#contains-p),
+[`length=`](stdlib-list-seq.html#length-eq),
+[`length>`](stdlib-list-seq.html#length-gt),
+[`length<`](stdlib-list-seq.html#length-lt),
+[`sort`](stdlib-list-seq.html#sort), [`sort-by`](stdlib-list-seq.html#sort-by),
+[`merge`](stdlib-list-seq.html#merge),
+[`stable-sort`](stdlib-list-seq.html#stable-sort)
 
 ## [Higher-Order Functions](stdlib-functional.html)
 
 Mapping, filtering, folding, function composition, and logical combinators.
 
-`map`, `mapcat`, `filter`, `remove`, `reduce`, `foldl`, `foldr`, `every?`,
-`any?`, `complement`, `compose`, `partial`, `curry`, `juxt`, `constantly`,
-`iterate`, `iterate-until`, `memoize`, `not`, `xor`
+[`map`](stdlib-functional.html#map), [`mapcat`](stdlib-functional.html#mapcat),
+[`filter`](stdlib-functional.html#filter),
+[`remove`](stdlib-functional.html#remove),
+[`reduce`](stdlib-functional.html#reduce),
+[`foldl`](stdlib-functional.html#foldl),
+[`foldr`](stdlib-functional.html#foldr),
+[`every?`](stdlib-functional.html#every-p),
+[`any?`](stdlib-functional.html#any-p),
+[`complement`](stdlib-functional.html#complement),
+[`compose`](stdlib-functional.html#compose),
+[`partial`](stdlib-functional.html#partial),
+[`curry`](stdlib-functional.html#curry), [`juxt`](stdlib-functional.html#juxt),
+[`constantly`](stdlib-functional.html#constantly),
+[`iterate`](stdlib-functional.html#iterate),
+[`iterate-until`](stdlib-functional.html#iterate-until),
+[`memoize`](stdlib-functional.html#memoize),
+[`not`](stdlib-functional.html#not), [`xor`](stdlib-functional.html#xor)
 
 ## [Type Predicates](stdlib-types.html)
 
 Predicates for testing the type of a value.
 
-`list?`, `list-or-pair?`, `null?`, `nil?`, `symbol?`, `keyword?`, `number?`,
-`string?`, `vector?`, `true?`, `false?`, `boolean?`, `fn?`, `callable?`,
-`procedure?`, `environment?`, `is-refclass?`, `atom?`, `empty?`, `type-of`,
-`pair?`
+[`list?`](stdlib-types.html#list-p),
+[`list-or-pair?`](stdlib-types.html#list-or-pair-p),
+[`null?`](stdlib-types.html#null-p), [`nil?`](stdlib-types.html#nil-p),
+[`symbol?`](stdlib-types.html#symbol-p),
+[`keyword?`](stdlib-types.html#keyword-p),
+[`number?`](stdlib-types.html#number-p),
+[`string?`](stdlib-types.html#string-p),
+[`vector?`](stdlib-types.html#vector-p), [`true?`](stdlib-types.html#true-p),
+[`false?`](stdlib-types.html#false-p),
+[`boolean?`](stdlib-types.html#boolean-p), [`fn?`](stdlib-types.html#fn-p),
+[`callable?`](stdlib-types.html#callable-p),
+[`procedure?`](stdlib-types.html#procedure-p),
+[`environment?`](stdlib-types.html#environment-p),
+[`is-refclass?`](stdlib-types.html#is-refclass-p),
+[`atom?`](stdlib-types.html#atom-p), [`empty?`](stdlib-types.html#empty-p),
+[`type-of`](stdlib-types.html#type-of), [`pair?`](stdlib-types.html#pair-p)
 
 ## [Equality and S3 Dispatch](stdlib-equality.html)
 
 Structural and identity equality, plus an S3-style method dispatch system.
 
-`identical?`, `eq?`, `eqv?`, `equal?`, `equal?.default`, `equal?.environment`,
-`equal?.list`, `env-equal?`, `list-equal?`, `s3-type`, `check-s3-type-match`,
-`use-method`, `set-method!`
+[`identical?`](stdlib-equality.html#identical-p),
+[`eq?`](stdlib-equality.html#eq-p), [`eqv?`](stdlib-equality.html#eqv-p),
+[`equal?`](stdlib-equality.html#equal-p),
+[`equal?.default`](stdlib-equality.html#equal-p-default),
+[`equal?.environment`](stdlib-equality.html#equal-p-environment),
+[`equal?.list`](stdlib-equality.html#equal-p-list),
+[`env-equal?`](stdlib-equality.html#env-equal-p),
+[`list-equal?`](stdlib-equality.html#list-equal-p),
+[`s3-type`](stdlib-equality.html#s3-type),
+[`check-s3-type-match`](stdlib-equality.html#check-s3-type-match),
+[`use-method`](stdlib-equality.html#use-method),
+[`set-method!`](stdlib-equality.html#set-method-bang)
 
 ## [Type Conversions](stdlib-conversions.html)
 
 Convert between symbols, strings, numbers, lists, and vectors.
 
-`symbol->string`, `string->symbol`, `->symbol`, `->number`, `->list`,
-`->vector`, `->integer`, `->double`, `->complex`, `exact->inexact`,
-`inexact->exact`
+[`symbol->string`](stdlib-conversions.html#symbol-to-string),
+[`string->symbol`](stdlib-conversions.html#string-to-symbol),
+[`->symbol`](stdlib-conversions.html#to-symbol),
+[`->number`](stdlib-conversions.html#to-number),
+[`->list`](stdlib-conversions.html#to-list),
+[`->vector`](stdlib-conversions.html#to-vector),
+[`->integer`](stdlib-conversions.html#to-integer),
+[`->double`](stdlib-conversions.html#to-double),
+[`->complex`](stdlib-conversions.html#to-complex),
+[`exact->inexact`](stdlib-conversions.html#exact-to-inexact),
+[`inexact->exact`](stdlib-conversions.html#inexact-to-exact)
 
 ## [Math and Numeric Functions](stdlib-math.html)
 
 Arithmetic, comparison, rounding, trigonometry, number theory, and numeric predicates.
 
-`%`, `+`, `*`, `-`, `/`, `min`, `max`, `<`, `>`, `<=`, `>=`, `==`, `=`, `inc`,
-`dec`, `clamp`, `within?`, `even?`, `odd?`, `zero?`, `positive?`, `negative?`,
-`non-negative?`, `non-positive?`, `integer?`, `natural?`, `real?`, `complex?`,
-`rational?`, `exact?`, `inexact?`, `finite?`, `infinite?`, `nan?`, `abs`,
-`floor`, `ceiling`, `truncate`, `round`, `signum`, `sqrt`, `expt`, `log`,
-`exp`, `log10`, `log2`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`,
-`quotient`, `remainder`, `modulo`, `gcd`, `lcm`, `make-rectangular`,
-`make-polar`, `real-part`, `imag-part`, `magnitude`, `angle`
+[`%`](stdlib-math.html#percent), [`+`](stdlib-math.html#plus),
+[`*`](stdlib-math.html#star), [`-`](stdlib-math.html#minus),
+[`/`](stdlib-math.html#div), [`min`](stdlib-math.html#min),
+[`max`](stdlib-math.html#max), [`<`](stdlib-math.html#lt),
+[`>`](stdlib-math.html#gt), [`<=`](stdlib-math.html#lte),
+[`>=`](stdlib-math.html#gte), [`==`](stdlib-math.html#num-eq-eq),
+[`=`](stdlib-math.html#num-eq), [`inc`](stdlib-math.html#inc),
+[`dec`](stdlib-math.html#dec), [`clamp`](stdlib-math.html#clamp),
+[`within?`](stdlib-math.html#within-p), [`even?`](stdlib-math.html#even-p),
+[`odd?`](stdlib-math.html#odd-p), [`zero?`](stdlib-math.html#zero-p),
+[`positive?`](stdlib-math.html#positive-p),
+[`negative?`](stdlib-math.html#negative-p),
+[`non-negative?`](stdlib-math.html#non-negative-p),
+[`non-positive?`](stdlib-math.html#non-positive-p),
+[`integer?`](stdlib-math.html#integer-p),
+[`natural?`](stdlib-math.html#natural-p), [`real?`](stdlib-math.html#real-p),
+[`complex?`](stdlib-math.html#complex-p),
+[`rational?`](stdlib-math.html#rational-p),
+[`exact?`](stdlib-math.html#exact-p), [`inexact?`](stdlib-math.html#inexact-p),
+[`finite?`](stdlib-math.html#finite-p),
+[`infinite?`](stdlib-math.html#infinite-p), [`nan?`](stdlib-math.html#nan-p),
+[`abs`](stdlib-math.html#abs), [`floor`](stdlib-math.html#floor),
+[`ceiling`](stdlib-math.html#ceiling), [`truncate`](stdlib-math.html#truncate),
+[`round`](stdlib-math.html#round), [`signum`](stdlib-math.html#signum),
+[`sqrt`](stdlib-math.html#sqrt), [`expt`](stdlib-math.html#expt),
+[`log`](stdlib-math.html#log), [`exp`](stdlib-math.html#exp),
+[`log10`](stdlib-math.html#log10), [`log2`](stdlib-math.html#log2),
+[`sin`](stdlib-math.html#sin), [`cos`](stdlib-math.html#cos),
+[`tan`](stdlib-math.html#tan), [`asin`](stdlib-math.html#asin),
+[`acos`](stdlib-math.html#acos), [`atan`](stdlib-math.html#atan),
+[`atan2`](stdlib-math.html#atan2), [`quotient`](stdlib-math.html#quotient),
+[`remainder`](stdlib-math.html#remainder), [`modulo`](stdlib-math.html#modulo),
+[`gcd`](stdlib-math.html#gcd), [`lcm`](stdlib-math.html#lcm),
+[`make-rectangular`](stdlib-math.html#make-rectangular),
+[`make-polar`](stdlib-math.html#make-polar),
+[`real-part`](stdlib-math.html#real-part),
+[`imag-part`](stdlib-math.html#imag-part),
+[`magnitude`](stdlib-math.html#magnitude), [`angle`](stdlib-math.html#angle)
 
 ## [Control Flow and Macros](stdlib-control.html)
 
 Conditionals, binding forms, looping, threading macros, and error handling.
 
-`when`, `unless`, `cond`, `case`, `try*`, `pattern-symbols`,
-`destructuring-bind`, `let`, `let*`, `letrec`, `when-let`, `if-let`, `until`,
-`for`, `loop`, `recur`, `->`, `->>`, `try`
+[`when`](stdlib-control.html#when), [`unless`](stdlib-control.html#unless),
+[`cond`](stdlib-control.html#cond), [`case`](stdlib-control.html#case),
+[`try*`](stdlib-control.html#try-star),
+[`pattern-symbols`](stdlib-control.html#pattern-symbols),
+[`destructuring-bind`](stdlib-control.html#destructuring-bind),
+[`let`](stdlib-control.html#let), [`let*`](stdlib-control.html#let-star),
+[`letrec`](stdlib-control.html#letrec),
+[`when-let`](stdlib-control.html#when-let),
+[`if-let`](stdlib-control.html#if-let), [`until`](stdlib-control.html#until),
+[`for`](stdlib-control.html#for), [`loop`](stdlib-control.html#loop),
+[`recur`](stdlib-control.html#recur), [`->`](stdlib-control.html#thread-first),
+[`->>`](stdlib-control.html#thread-last), [`try`](stdlib-control.html#try)
 
 ## [Strings, I/O, and Arithmetic](stdlib-strings-io.html)
 
 String manipulation, file and console I/O, environment access, and display formatting.
 
-`string-join`, `string-split`, `trim`, `format`, `string-contains?`,
-`string-match?`, `string-find`, `string-replace`, `string-replace-all`,
-`string-append`, `->string`, `char-at`, `string-ref`, `substring`,
-`string-length`, `string-upcase`, `string-downcase`, `string-titlecase`,
-`string<?`, `string>?`, `string=?`, `string<=?`, `string>=?`, `string->list`,
-`list->string`, `number->string`, `string->number`, `read-line`, `read-file`,
-`read-lines`, `write-file`, `write-lines`, `append-file`, `file-exists?`,
-`print`, `newline`, `read-from-string`, `write-string`, `file-size`,
-`file-modified-time`, `file-delete`, `directory-exists?`, `directory-list`,
-`directory-delete`, `getenv`, `setenv`, `system`, `system-output`, `exit`,
-`format-value`, `display`, `println`, `str`, `trace`
+[`string-join`](stdlib-strings-io.html#string-join),
+[`string-split`](stdlib-strings-io.html#string-split),
+[`trim`](stdlib-strings-io.html#trim),
+[`format`](stdlib-strings-io.html#format),
+[`string-contains?`](stdlib-strings-io.html#string-contains-p),
+[`string-match?`](stdlib-strings-io.html#string-match-p),
+[`string-find`](stdlib-strings-io.html#string-find),
+[`string-replace`](stdlib-strings-io.html#string-replace),
+[`string-replace-all`](stdlib-strings-io.html#string-replace-all),
+[`string-append`](stdlib-strings-io.html#string-append),
+[`->string`](stdlib-strings-io.html#to-string),
+[`char-at`](stdlib-strings-io.html#char-at),
+[`string-ref`](stdlib-strings-io.html#string-ref),
+[`substring`](stdlib-strings-io.html#substring),
+[`string-length`](stdlib-strings-io.html#string-length),
+[`string-upcase`](stdlib-strings-io.html#string-upcase),
+[`string-downcase`](stdlib-strings-io.html#string-downcase),
+[`string-titlecase`](stdlib-strings-io.html#string-titlecase),
+[`string<?`](stdlib-strings-io.html#string-lt-p),
+[`string>?`](stdlib-strings-io.html#string-gt-p),
+[`string=?`](stdlib-strings-io.html#string-eq-p),
+[`string<=?`](stdlib-strings-io.html#string-lte-p),
+[`string>=?`](stdlib-strings-io.html#string-gte-p),
+[`string->list`](stdlib-strings-io.html#string-to-list),
+[`list->string`](stdlib-strings-io.html#list-to-string),
+[`number->string`](stdlib-strings-io.html#number-to-string),
+[`string->number`](stdlib-strings-io.html#string-to-number),
+[`read-line`](stdlib-strings-io.html#read-line),
+[`read-file`](stdlib-strings-io.html#read-file),
+[`read-lines`](stdlib-strings-io.html#read-lines),
+[`write-file`](stdlib-strings-io.html#write-file),
+[`write-lines`](stdlib-strings-io.html#write-lines),
+[`append-file`](stdlib-strings-io.html#append-file),
+[`file-exists?`](stdlib-strings-io.html#file-exists-p),
+[`print`](stdlib-strings-io.html#print),
+[`newline`](stdlib-strings-io.html#newline),
+[`read-from-string`](stdlib-strings-io.html#read-from-string),
+[`write-string`](stdlib-strings-io.html#write-string),
+[`file-size`](stdlib-strings-io.html#file-size),
+[`file-modified-time`](stdlib-strings-io.html#file-modified-time),
+[`file-delete`](stdlib-strings-io.html#file-delete),
+[`directory-exists?`](stdlib-strings-io.html#directory-exists-p),
+[`directory-list`](stdlib-strings-io.html#directory-list),
+[`directory-delete`](stdlib-strings-io.html#directory-delete),
+[`getenv`](stdlib-strings-io.html#getenv),
+[`setenv`](stdlib-strings-io.html#setenv),
+[`system`](stdlib-strings-io.html#system),
+[`system-output`](stdlib-strings-io.html#system-output),
+[`exit`](stdlib-strings-io.html#exit),
+[`format-value`](stdlib-strings-io.html#format-value),
+[`display`](stdlib-strings-io.html#display),
+[`println`](stdlib-strings-io.html#println),
+[`str`](stdlib-strings-io.html#str), [`trace`](stdlib-strings-io.html#trace)
 
 ## [Macro, Eval, Interop, and Convenience](stdlib-macro-eval-interop.html)
 
 Evaluation, macro utilities, dictionaries, sets, structs, assertions, and R interop helpers.
 
-`license`, `error`, `warn`, `identity`, `values`, `values?`,
-`call-with-values`, `call/cc`, `call-with-current-continuation`, `funcall`,
-`r/call`, `get`, `macroexpand-1`, `macroexpand-all`, `suppressWarnings`,
-`suppressMessages`, `with`, `within`, `subset`, `transform`, `substitute`,
-`dict`, `hash`, `dict?`, `dict-get`, `dict-set`, `dict-remove`, `dict-keys`,
-`dict-values`, `dict-has?`, `dict-merge`, `set`, `set?`, `set-add`,
-`set-remove`, `set-contains?`, `set-union`, `set-intersection`,
-`set-difference`, `defstruct`, `assert`, `assert-equal`, `assert-true`,
-`assert-false`, `assert-eq`, `assert-error`, `eval`, `read`, `write`,
-`capture`, `gensym`, `macro?`, `macroexpand`, `promise?`, `force`,
-`promise-expr`, `r/eval`, `toplevel-env`, `current-env`, `doc!`, `doc`
+[`license`](stdlib-macro-eval-interop.html#license),
+[`error`](stdlib-macro-eval-interop.html#error),
+[`warn`](stdlib-macro-eval-interop.html#warn),
+[`identity`](stdlib-macro-eval-interop.html#identity),
+[`values`](stdlib-macro-eval-interop.html#values),
+[`values?`](stdlib-macro-eval-interop.html#values-p),
+[`call-with-values`](stdlib-macro-eval-interop.html#call-with-values),
+[`call/cc`](stdlib-macro-eval-interop.html#call-cc),
+[`call-with-current-continuation`](stdlib-macro-eval-interop.html#call-with-current-continuation),
+[`funcall`](stdlib-macro-eval-interop.html#funcall),
+[`r/call`](stdlib-macro-eval-interop.html#r-call),
+[`get`](stdlib-macro-eval-interop.html#get),
+[`macroexpand-1`](stdlib-macro-eval-interop.html#macroexpand-1),
+[`macroexpand-all`](stdlib-macro-eval-interop.html#macroexpand-all),
+[`suppressWarnings`](stdlib-macro-eval-interop.html#suppresswarnings),
+[`suppressMessages`](stdlib-macro-eval-interop.html#suppressmessages),
+[`with`](stdlib-macro-eval-interop.html#with),
+[`within`](stdlib-macro-eval-interop.html#within),
+[`subset`](stdlib-macro-eval-interop.html#subset),
+[`transform`](stdlib-macro-eval-interop.html#transform),
+[`substitute`](stdlib-macro-eval-interop.html#substitute),
+[`dict`](stdlib-macro-eval-interop.html#dict),
+[`hash`](stdlib-macro-eval-interop.html#hash),
+[`dict?`](stdlib-macro-eval-interop.html#dict-p),
+[`dict-get`](stdlib-macro-eval-interop.html#dict-get),
+[`dict-set`](stdlib-macro-eval-interop.html#dict-set),
+[`dict-remove`](stdlib-macro-eval-interop.html#dict-remove),
+[`dict-keys`](stdlib-macro-eval-interop.html#dict-keys),
+[`dict-values`](stdlib-macro-eval-interop.html#dict-values),
+[`dict-has?`](stdlib-macro-eval-interop.html#dict-has-p),
+[`dict-merge`](stdlib-macro-eval-interop.html#dict-merge),
+[`set`](stdlib-macro-eval-interop.html#set),
+[`set?`](stdlib-macro-eval-interop.html#set-p),
+[`set-add`](stdlib-macro-eval-interop.html#set-add),
+[`set-remove`](stdlib-macro-eval-interop.html#set-remove),
+[`set-contains?`](stdlib-macro-eval-interop.html#set-contains-p),
+[`set-union`](stdlib-macro-eval-interop.html#set-union),
+[`set-intersection`](stdlib-macro-eval-interop.html#set-intersection),
+[`set-difference`](stdlib-macro-eval-interop.html#set-difference),
+[`defstruct`](stdlib-macro-eval-interop.html#defstruct),
+[`assert`](stdlib-macro-eval-interop.html#assert),
+[`assert-equal`](stdlib-macro-eval-interop.html#assert-equal),
+[`assert-true`](stdlib-macro-eval-interop.html#assert-true),
+[`assert-false`](stdlib-macro-eval-interop.html#assert-false),
+[`assert-eq`](stdlib-macro-eval-interop.html#assert-eq),
+[`assert-error`](stdlib-macro-eval-interop.html#assert-error),
+[`eval`](stdlib-macro-eval-interop.html#eval),
+[`read`](stdlib-macro-eval-interop.html#read),
+[`write`](stdlib-macro-eval-interop.html#write),
+[`capture`](stdlib-macro-eval-interop.html#capture),
+[`gensym`](stdlib-macro-eval-interop.html#gensym),
+[`macro?`](stdlib-macro-eval-interop.html#macro-p),
+[`macroexpand`](stdlib-macro-eval-interop.html#macroexpand),
+[`promise?`](stdlib-macro-eval-interop.html#promise-p),
+[`force`](stdlib-macro-eval-interop.html#force),
+[`promise-expr`](stdlib-macro-eval-interop.html#promise-expr),
+[`r/eval`](stdlib-macro-eval-interop.html#r-eval),
+[`toplevel-env`](stdlib-macro-eval-interop.html#toplevel-env),
+[`current-env`](stdlib-macro-eval-interop.html#current-env),
+[`doc!`](stdlib-macro-eval-interop.html#doc-bang),
+[`doc`](stdlib-macro-eval-interop.html#doc)
 
 ## Built-in functions
 
@@ -173,12 +379,12 @@ modules. They are available even on a bare engine
 
 | Category | Functions |
 |----------|-----------|
-| Cons cells | `pair?`|
-| Macros | `gensym`, `capture`, `macro?`, `macroexpand` |
-| Evaluation | `eval`, `read`, `write`, `r/eval` |
-| Environments | `toplevel-env`, `current-env` |
-| Promises | `promise?`, `force`, `promise-expr` |
-| Documentation | `doc!`, `doc` |
+| Cons cells | [`pair?`](stdlib-types.html#pair-p) |
+| Macros | [`gensym`](stdlib-macro-eval-interop.html#gensym), [`capture`](stdlib-macro-eval-interop.html#capture), [`macro?`](stdlib-macro-eval-interop.html#macro-p), [`macroexpand`](stdlib-macro-eval-interop.html#macroexpand) |
+| Evaluation | [`eval`](stdlib-macro-eval-interop.html#eval), [`read`](stdlib-macro-eval-interop.html#read), [`write`](stdlib-macro-eval-interop.html#write), [`r/eval`](stdlib-macro-eval-interop.html#r-eval) |
+| Environments | [`toplevel-env`](stdlib-macro-eval-interop.html#toplevel-env), [`current-env`](stdlib-macro-eval-interop.html#current-env) |
+| Promises | [`promise?`](stdlib-macro-eval-interop.html#promise-p), [`force`](stdlib-macro-eval-interop.html#force), [`promise-expr`](stdlib-macro-eval-interop.html#promise-expr) |
+| Documentation | [`doc!`](stdlib-macro-eval-interop.html#doc-bang), [`doc`](stdlib-macro-eval-interop.html#doc) |
 
 These builtins are documented alongside the stdlib functions they relate to
 in the individual reference pages above.

@@ -369,8 +369,15 @@ collect_vignette_exports <- function(vconfig, arl_dir, builtins_functions) {
 
 #' Format a character vector of function names as backtick-wrapped,
 #' comma-separated inline code, wrapping at ~80 characters.
-format_func_list <- function(func_names) {
-  items <- paste0("`", func_names, "`")
+format_func_list <- function(func_names, func_index = list()) {
+  items <- vapply(func_names, function(fn) {
+    entry <- func_index[[fn]]
+    if (!is.null(entry)) {
+      paste0("[`", fn, "`](", entry$vignette, ".html#", entry$slug, ")")
+    } else {
+      paste0("`", fn, "`")
+    }
+  }, character(1), USE.NAMES = FALSE)
   lines <- character()
   current <- ""
   for (item in items) {
@@ -387,7 +394,8 @@ format_func_list <- function(func_names) {
 }
 
 #' Generate the stdlib-reference.Rmd overview page.
-generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
+generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
+                                   func_index = list()) {
   out <- character()
 
   # YAML frontmatter
@@ -472,7 +480,7 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
       vconfig, arl_dir, builtins_by_vignette[[vname]]
     )
     if (length(exports) > 0) {
-      out <- c(out, format_func_list(exports))
+      out <- c(out, format_func_list(exports, func_index))
       out <- c(out, "")
     }
   }
@@ -487,14 +495,33 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette) {
   out <- c(out, "modules. They are available even on a bare engine")
   out <- c(out, "(`Engine$new(load_stdlib = FALSE)`).")
   out <- c(out, "")
+  # Helper to turn a vector of function names into linked backtick items
+  link_builtins <- function(fns) {
+    items <- vapply(fns, function(fn) {
+      entry <- func_index[[fn]]
+      if (!is.null(entry)) {
+        paste0("[`", fn, "`](", entry$vignette, ".html#", entry$slug, ")")
+      } else {
+        paste0("`", fn, "`")
+      }
+    }, character(1), USE.NAMES = FALSE)
+    paste(items, collapse = ", ")
+  }
+
+  builtin_categories <- list(
+    list(cat = "Cons cells",     fns = c("pair?")),
+    list(cat = "Macros",         fns = c("gensym", "capture", "macro?", "macroexpand")),
+    list(cat = "Evaluation",     fns = c("eval", "read", "write", "r/eval")),
+    list(cat = "Environments",   fns = c("toplevel-env", "current-env")),
+    list(cat = "Promises",       fns = c("promise?", "force", "promise-expr")),
+    list(cat = "Documentation",  fns = c("doc!", "doc"))
+  )
+
   out <- c(out, "| Category | Functions |")
   out <- c(out, "|----------|-----------|")
-  out <- c(out, "| Cons cells | `pair?`|")
-  out <- c(out, "| Macros | `gensym`, `capture`, `macro?`, `macroexpand` |")
-  out <- c(out, "| Evaluation | `eval`, `read`, `write`, `r/eval` |")
-  out <- c(out, "| Environments | `toplevel-env`, `current-env` |")
-  out <- c(out, "| Promises | `promise?`, `force`, `promise-expr` |")
-  out <- c(out, "| Documentation | `doc!`, `doc` |")
+  for (bc in builtin_categories) {
+    out <- c(out, paste0("| ", bc$cat, " | ", link_builtins(bc$fns), " |"))
+  }
   out <- c(out, "")
   out <- c(out, "These builtins are documented alongside the stdlib functions they relate to")
   out <- c(out, "in the individual reference pages above.")
@@ -625,7 +652,8 @@ generate_all <- function(
 
   # Generate the overview page (stdlib-reference.Rmd)
   message("Generating: stdlib-reference.Rmd")
-  ref_rmd <- generate_reference_rmd(vignettes, arl_dir, builtins_by_vignette)
+  ref_rmd <- generate_reference_rmd(vignettes, arl_dir, builtins_by_vignette,
+                                    func_index = func_index)
   ref_file <- file.path(output_dir, "stdlib-reference.Rmd")
   writeLines(ref_rmd, ref_file, useBytes = TRUE)
   message("  Wrote: ", ref_file)
