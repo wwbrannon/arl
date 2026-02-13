@@ -25,9 +25,9 @@ expressions.
 devtools::install_github("wwbrannon/arl")
 ```
 
-Arl is not yet on CRAN; install from GitHub with `devtools` as shown
-above. Once a CRAN release is available, `install.packages("arl")` will
-work. If you have a local clone of the repository, `devtools::install()`
+Arl is not on CRAN at the time of writing; install from GitHub with `devtools`
+as shown above. Once a CRAN release is available, `install.packages("arl")`
+will work. If you have a local clone of the repository, `devtools::install()`
 from the repo directory also works.
 
 ## Start the REPL

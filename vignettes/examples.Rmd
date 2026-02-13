@@ -14,9 +14,10 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
 
-These examples are complete Arl programs from `inst/examples`. Each section
-pulls in the full source from the corresponding file at build time, with
-syntax highlighting, plus a link back to the repository version.
+These examples are complete Arl programs from
+[`inst/examples`](https://github.com/wwbrannon/arl/blob/main/inst/examples/).
+Each section pulls in the full source from the corresponding file, with syntax
+highlighting, and links back to the repository version.
 
 ## Fibonacci
 
