@@ -1,30 +1,22 @@
-o) import system: should we load everything by default as currently? need to update docs if this changes
-o) "bare engine" -- implement?
-
-o) import: actually need to update docs anyway, they say inconsistent things about how everything is loaded automatically and how you can load whatever you need
-o) "load only the modules you need." is not true; lots of "import" we no longer need; should we require them?
-
-o) avoid having examples use r/call so heavily
-o) this para needs update: Inside a quasiquoted template, ,expr (unquote) evaluates expr and splices the result into the template,
-o) "To expand only one level, use macroexpand-1 from Arl code:" also mention the R call
-o) explain this better "Self-TCO only works with the define/lambda form" -- it requires a name
-o) we don't optimize TCO in anonymous functions called recursively via combinators
-o) the "Summary" table in the self-TCO vignette is transposed or otherwise confusing
-o) "Arl also has dotted pairs" note these are not R's pairlist
-
-o) move the badges into the footer
+o) just read the whole doc site and make edits
+    o) avoid having examples use r/call so heavily
+    o) this para needs update: Inside a quasiquoted template, ,expr (unquote) evaluates expr and splices the result into the template,
+    o) "To expand only one level, use macroexpand-1 from Arl code:" also mention the R call
+    o) explain this better "Self-TCO only works with the define/lambda form" -- it requires a name
+    o) we don't optimize TCO in anonymous functions called recursively via combinators
+    o) the "Summary" table in the self-TCO vignette is transposed or otherwise confusing
+    o) "Arl also has dotted pairs" note these are not R's pairlist
+    o) sanity-check the inst/examples
 
 o) README.md: update
 o) index.md: write a couple paragraphs including "Getting Started" and "Examples" up top
 o) getting started: update
-
-o) sanity-check the inst/examples
-o) sanity-check the vignettes, just read the whole site
+o) move the badges into the footer
 
 o) logo?
 
 o) enable actions / get non-pkgdown workflows running
 o) figure out how to host the docs
-o) version number bump?
+o) version number bump
 
 o) run other cran submission steps and submit

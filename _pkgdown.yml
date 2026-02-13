@@ -38,9 +38,9 @@ navbar:
         - text: Arl vs Scheme
           href: articles/arl-vs-scheme.html
         - text: "---------"
-        - text: "Tooling"
-        - text: Configuration
-          href: articles/configuration.html
+        - text: "Configuration"
+        - text: Runtime Options
+          href: articles/runtime-options.html
         - text: "---------"
         - text: "Performance"
         - text: Benchmarks
@@ -138,7 +138,7 @@ articles:
       - tail-call-optimization
       - internals
       - troubleshooting
-      - configuration
+      - runtime-options
       - arl-vs-scheme
   - title: Performance
     desc: Performance characteristics and benchmarks.

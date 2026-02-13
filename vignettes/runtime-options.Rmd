@@ -1,10 +1,10 @@
 ---
-title: "Configuration"
+title: "Runtime Options"
 output: arl::arl_html_vignette
 pkgdown:
   as_is: true
 vignette: >
-  %\VignetteIndexEntry{Configuration}
+  %\VignetteIndexEntry{Runtime Options}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
