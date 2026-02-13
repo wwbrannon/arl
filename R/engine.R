@@ -49,7 +49,8 @@ Engine <- R6::R6Class(
     #'   module loading. Only safe when dependencies don't change. Defaults to NULL, which
     #'   inherits from global option `getOption("arl.use_env_cache", FALSE)`.
     #' @param coverage_tracker Optional CoverageTracker instance to enable coverage tracking
-    #'   from the start. If provided, coverage will be tracked during stdlib loading.
+    #'   from the start. If provided, coverage will be tracked during stdlib
+    #'   loading. Intended for internal development use.
     #' @param load_stdlib Logical. If TRUE (the default), loads all stdlib modules
     #'   during initialization. Set to FALSE to create a bare engine with only
     #'   builtins — useful for testing or when you want to import specific modules.

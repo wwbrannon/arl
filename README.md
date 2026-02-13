@@ -250,7 +250,7 @@ helpers and access to all base R functions.
 `<=`, `>=` - `not`
 
 For detailed documentation of all functions, see the [**Standard Library
-Reference**](docs/stdlib-reference.md).
+Reference**](articles/stdlib-reference.html).
 
 The full standard library is loaded automatically for convenience. It is
 organized into modules, each in `inst/arl/`, which you can also import

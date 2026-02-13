@@ -22,7 +22,7 @@ Source Code
     ↓
 [Macro Expander] → Macro expansion with hygiene (R/macro.R)
     ↓
-[Evaluator] → Direct-style evaluation (R/eval.R)
+[Evaluator] → Compilation and evaluation (R/compiler.R, R/engine.R)
     ↓
 Result
 ```

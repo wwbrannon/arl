@@ -65,9 +65,9 @@ Create a file `tests/native/test-feature.arl`:
   (assert-true (null? (list)))))
 
 (define test-error-handling (lambda ()
-  ;; Test that division by zero errors
+  ;; Test that calling a non-existent function errors
   (assert-error (lambda ()
-    (/ 1 0)))))
+    (error "something went wrong")))))
 ```
 
 **Key points:**

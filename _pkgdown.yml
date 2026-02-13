@@ -1,6 +1,12 @@
 destination: site
 url:
 
+autolink:  # pkgdown is incorrectly linking these to the base R functions' docs
+  exclude:
+    - base::eval
+    - base::write
+    - utils::help
+
 template:
   bootstrap: 5
 

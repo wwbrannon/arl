@@ -46,7 +46,7 @@ Scheme has pairs and lists as the fundamental sequence type. Arl uses R data
 structures:
 
 - Lists are R lists or calls (R's type-generic vectors).
-- Arl also has dotted pairs (pairlist cells, `pair?`); `list-or-pair?` is true for non-empty lists or dotted pairs.
+- Arl also has dotted pairs (R6 `Cons` objects, tested with `pair?`); `list-or-pair?` is true for non-empty lists or dotted pairs.
 - Vectors are R vectors.
 - `#nil` maps to R's `NULL`.
 
