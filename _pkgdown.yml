@@ -31,10 +31,12 @@ navbar:
           href: articles/macros.html
         - text: Modules
           href: articles/modules.html
-        - text: R Interop
+        - text: R Interopability
           href: articles/r-interop.html
         - text: Tail Call Optimization
           href: articles/tail-call-optimization.html
+        - text: Documenting Functions/Macros
+          href: articles/documenting-functions-macros.html
         - text: "---------"
         - text: "Deep Dives"
         - text: Internals
@@ -137,6 +139,7 @@ articles:
     desc: Step-by-step guides for learning Arl.
     contents:
       - getting-started
+      - documenting-functions
       - macros
       - modules
       - r-interop
