@@ -21,7 +21,7 @@
 
 (define task-by-name
   (lambda (name)
-    (car (filter (lambda (t) (= (r/call "get" (list "name" t)) name)) tasks))))
+    (car (filter (lambda (t) (= (get "name" t) name)) tasks))))
 
 (define visited (list))
 (define run-order (list))
@@ -33,14 +33,14 @@
         (begin
           (set! visited (append visited (list name)))
           (define task (task-by-name name))
-          (define deps (r/call "get" (list "deps" task)))
+          (define deps (get "deps" task))
           (for (dep deps)
             (visit dep))
           (set! run-order (append run-order (list name)))))))
 
 (println "=== Task Runner ===")
 (for (t tasks)
-  (visit (r/call "get" (list "name" t))))
+  (visit (get "name" t)))
 (assert-equal (list "clean" "compile" "test" "package" "deploy") run-order)
 (assert-equal 5 (length run-order))
 (println (str "Execution order: " run-order))

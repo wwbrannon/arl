@@ -21,40 +21,40 @@
 (println "=== Sales Transactions ===")
 (println transactions)
 
-(define products (map (lambda (t) (r/call "get" (list "product" t))) transactions))
-(define regions (map (lambda (t) (r/call "get" (list "region" t))) transactions))
-(define amounts (map (lambda (t) (r/call "get" (list "amount" t))) transactions))
-(define products-vec (r/call "unlist" (list products)))
-(define regions-vec (r/call "unlist" (list regions)))
-(define amounts-vec (r/call "unlist" (list amounts)))
+(define products (map (lambda (t) (get "product" t)) transactions))
+(define regions (map (lambda (t) (get "region" t)) transactions))
+(define amounts (map (lambda (t) (get "amount" t)) transactions))
+(define products-vec (unlist products))
+(define regions-vec (unlist regions))
+(define amounts-vec (unlist amounts))
 
 (define total-sales (reduce + amounts))
 (assert-equal 690 total-sales)
 
 (define totals-env
-  (r/call "new.env" (dict :parent (r/call "emptyenv" ()))))
+  (new.env :parent (emptyenv)))
 (for (t transactions)
-  (define product (r/call "get" (list "product" t)))
-  (define amount (r/call "get" (list "amount" t)))
-  (define has (r/call "exists" (dict :x product :envir totals-env :inherits #f)))
+  (define product (get "product" t))
+  (define amount (get "amount" t))
+  (define has (exists product :envir totals-env :inherits #f))
   (if has
-      (r/call "assign"
-              (list product (+ (r/call "get" (dict :x product :envir totals-env :inherits #f)) amount)
-                    totals-env))
-      (r/call "assign" (list product amount totals-env))))
+      (assign product (+ (get product totals-env #f) amount)
+              totals-env)
+      (assign product amount totals-env)))
 
-(assert-equal 190 (r/call "get" (dict :x "alpha" :envir totals-env :inherits #f)))
-(assert-equal 390 (r/call "get" (dict :x "beta" :envir totals-env :inherits #f)))
-(assert-equal 110 (r/call "get" (dict :x "gamma" :envir totals-env :inherits #f)))
+(assert-equal 190 (get "alpha" totals-env #f))
+(assert-equal 390 (get "beta" totals-env #f))
+(assert-equal 110 (get "gamma" totals-env #f))
 
-(define product-names (r/call "ls" (list totals-env)))
-(define product-names-list (r/call "as.list" (list product-names)))
+(define product-names (ls totals-env))
+(define product-names-list (as.list product-names))
 (define totals-list
   (map (lambda (name)
-         (r/call "get" (dict :x name :envir totals-env :inherits #f)))
+         (get name totals-env #f))
        product-names-list))
-(define totals-vec (r/call "unlist" (list totals-list)))
-(define top-index (r/call "which.max" (list totals-vec)))
+(define totals-vec (unlist totals-list))
+(define top-index (which.max totals-vec))
+;; r/call is handy for calling R operators with special names like "["
 (define top-product (r/call "[" (list product-names top-index)))
 (assert-equal "beta" top-product)
 
@@ -63,7 +63,7 @@
   (set! totals-by-product
         (append totals-by-product
                 (list (dict :product name
-                            :total (r/call "get" (dict :x name :envir totals-env :inherits #f)))))))
+                            :total (get name totals-env #f))))))
 
 (println "\n=== Summary ===")
 (println (str "Total sales: " total-sales))
@@ -71,11 +71,10 @@
 (println (str "Top product: " top-product))
 
 (define sales-df
-  (r/call "data.frame"
-          (dict :product products-vec :region regions-vec :amount amounts-vec)))
+  (data.frame :product products-vec :region regions-vec :amount amounts-vec))
 
-(define report-path (r/call "file.path" (list (r/call "tempdir" ()) "sales-report.csv")))
+(define report-path (file.path (tempdir) "sales-report.csv"))
 ((:: utils write.csv) sales-df report-path #f)
-(assert-true (r/call "file.exists" (list report-path)))
+(assert-true (file.exists report-path))
 
 (println "\nExample complete!")

@@ -36,7 +36,7 @@
 ;; ============================================================================
 
 (println "\nUsing for loop (1-15):")
-(for (n (r/call "seq" (list 1 15)))
+(for (n (seq 1 15))
   (println (fizzbuzz n)))
 
 ;; ============================================================================
@@ -46,7 +46,7 @@
 (println "\nFunctional approach (1-10):")
 (define fizzbuzz-list
   (lambda (n)
-    (map fizzbuzz (r/call "seq" (list 1 n)))))
+    (map fizzbuzz (seq 1 n))))
 
 (assert-equal (list "1" "2" "Fizz" "4" "Buzz" "Fizz" "7" "8" "Fizz" "Buzz") (fizzbuzz-list 10))
 (println (fizzbuzz-list 10))
@@ -72,7 +72,7 @@
 (assert-equal "1" (fizzbuzz-when 1))
 
 (println "\nUsing when (1-10):")
-(for (n (r/call "seq" (list 1 10)))
+(for (n (seq 1 10))
   (println (fizzbuzz-when n)))
 
 ;; ============================================================================
@@ -89,7 +89,7 @@
 
 (println "\nUsing case (note: case checks exact value, not pattern):")
 (println "1-15 with case-based FizzBuzz:")
-(for (n (r/call "seq" (list 1 15)))
+(for (n (seq 1 15))
   (println (fizzbuzz-case n)))
 
 ;; ============================================================================
@@ -98,7 +98,7 @@
 
 (println "\nFiltering FizzBuzz numbers:")
 
-(define range-1-30 (r/call "seq" (list 1 30)))
+(define range-1-30 (seq 1 30))
 
 (define fizz-numbers
   (filter (lambda (n) (= (% n 3) 0)) range-1-30))
@@ -122,7 +122,7 @@
 
 (define count-fizzbuzz
   (lambda (n)
-    (let ((results (map fizzbuzz (r/call "seq" (list 1 n)))))
+    (let ((results (map fizzbuzz (seq 1 n))))
       (dict
        :fizz (length (filter (lambda (x) (= x "Fizz")) results))
        :buzz (length (filter (lambda (x) (= x "Buzz")) results))
@@ -134,10 +134,10 @@
 
 (println "\nCounts for 1-100:")
 (define counts-100 (count-fizzbuzz 100))
-(assert-equal 27 (r/call "get" (list "fizz" counts-100)))
-(assert-equal 14 (r/call "get" (list "buzz" counts-100)))
-(assert-equal 6 (r/call "get" (list "fizzbuzz" counts-100)))
-(assert-equal 53 (r/call "get" (list "numbers" counts-100)))
+(assert-equal 27 (get "fizz" counts-100))
+(assert-equal 14 (get "buzz" counts-100))
+(assert-equal 6 (get "fizzbuzz" counts-100))
+(assert-equal 53 (get "numbers" counts-100))
 (println counts-100)
 
 (println "\nExample complete!")

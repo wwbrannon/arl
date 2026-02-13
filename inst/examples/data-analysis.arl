@@ -1,5 +1,20 @@
 ;; Data Analysis with R Interop
 ;; Demonstrates seamless integration between Arl and R
+;;
+;; NOTE ON R INTEROP: All R functions are directly callable from Arl:
+;;
+;;   (mean (c 1 2 3))              ; call R's mean() and c()
+;;   (seq :from 1 :to 10 :by 2)   ; named arguments via keywords
+;;
+;; Arl also provides r/call, which bypasses bindings in intermediate
+;; scopes to reach objects in R environments that Arl's stack isn't
+;; managing. For example:
+;;
+;;   (r/call "mean" (list (c 1 2 3)))         ; look up "mean" by string name
+;;   (r/call "fn" args (some-environment))    ; search a specific environment
+;;
+;; In practice, direct calls are simpler and preferred. This example
+;; uses direct calls throughout.
 
 (import assert)
 (import binding)
@@ -8,7 +23,7 @@
 (import threading)
 
 ;; Deterministic randomness for reproducible examples
-(r/call "set.seed" (list 123))
+(set.seed 123)
 
 ;; ============================================================================
 ;; Working with R Vectors and Lists
@@ -16,13 +31,13 @@
 
 (println "=== R Interop Basics ===\n")
 
-;; Create R vectors using r/call
-(define nums (r/call "c" (list 1 2 3 4 5 6 7 8 9 10)))
-(assert-equal (list 1 2 3 4 5 6 7 8 9 10) (r/call "as.list" (list nums)))
+;; Create R vectors directly
+(define nums (c 1 2 3 4 5 6 7 8 9 10))
+(assert-equal (list 1 2 3 4 5 6 7 8 9 10) (as.list nums))
 (println (str "R vector: " nums))
 
 ;; Use R statistical functions
-(define mean-val (r/call "mean" (list nums)))
+(define mean-val (mean nums))
 (define median-val ((:: stats median) nums))
 (define sd-val ((:: stats sd) nums))
 (assert-equal 5.5 mean-val)
@@ -47,7 +62,7 @@
 
 ;; Summary statistics
 (println "\nSummary:")
-(println (r/call "summary" (list random-data)))
+(println (summary random-data))
 
 ;; ============================================================================
 ;; Data Transformation Pipeline
@@ -56,11 +71,11 @@
 (println "\n=== Data Transformation Pipeline ===\n")
 
 ;; Create sample data
-(define scores (r/call "c" (list 85 92 78 90 88 76 95 89 91 87)))
+(define scores (c 85 92 78 90 88 76 95 89 91 87))
 (println (str "Original scores: " scores))
 
 ;; Transform data using Arl's higher-order functions
-(define score-list (r/call "as.list" (list scores)))
+(define score-list (as.list scores))
 
 ;; Add 5 points to each score
 (define adjusted-scores (map (lambda (x) (+ x 5)) score-list))
@@ -94,12 +109,12 @@
 (println student-data)
 
 ;; Extract and process names
-(define names (r/call "get" (list "names" student-data)))
+(define names (get "names" student-data))
 (assert-equal (list "Alice" "Bob" "Carol" "Dave" "Eve") names)
 (println (str "\nStudent names: " names))
 
 ;; Extract and analyze scores
-(define scores-data (r/call "get" (list "scores" student-data)))
+(define scores-data (get "scores" student-data))
 (assert-equal (list 85 92 78 90 88) scores-data)
 (println (str "Scores: " scores-data))
 
@@ -110,17 +125,17 @@
 (println "\n=== Statistical Analysis ===\n")
 
 ;; Create two groups
-(define group-a (r/call "c" (list 23 25 21 24 22 26 20)))
-(define group-b (r/call "c" (list 30 32 28 31 29 33 27)))
+(define group-a (c 23 25 21 24 22 26 20))
+(define group-b (c 30 32 28 31 29 33 27))
 
-(assert-equal 23 (r/call "mean" (list group-a)))
-(println (str "Group A mean: " (r/call "mean" (list group-a))))
-(assert-equal 30 (r/call "mean" (list group-b)))
-(println (str "Group B mean: " (r/call "mean" (list group-b))))
+(assert-equal 23 (mean group-a))
+(println (str "Group A mean: " (mean group-a)))
+(assert-equal 30 (mean group-b))
+(println (str "Group B mean: " (mean group-b)))
 
 ;; Combine groups for comparison
-(define all-values (r/call "c" (list group-a group-b)))
-(println (str "\nCombined range: " (r/call "range" (list all-values))))
+(define all-values (c group-a group-b))
+(println (str "\nCombined range: " ((:: base range) all-values)))
 (println (str "Combined quantiles: " ((:: stats quantile) all-values)))
 
 ;; ============================================================================
@@ -130,17 +145,17 @@
 (println "\n=== Sequences and Repetition ===\n")
 
 ;; Create sequences
-(define seq-1-10 (r/call "seq" (list 1 10)))
-(assert-equal (list 1 2 3 4 5 6 7 8 9 10) (r/call "as.list" (list seq-1-10)))
+(define seq-1-10 (seq 1 10))
+(assert-equal (list 1 2 3 4 5 6 7 8 9 10) (as.list seq-1-10))
 (println (str "Sequence 1-10: " seq-1-10))
 
-(define seq-by-2 (r/call "seq" (list 0 20 2)))
-(assert-equal (list 0 2 4 6 8 10 12 14 16 18 20) (r/call "as.list" (list seq-by-2)))
+(define seq-by-2 (seq 0 20 2))
+(assert-equal (list 0 2 4 6 8 10 12 14 16 18 20) (as.list seq-by-2))
 (println (str "Even numbers 0-20: " seq-by-2))
 
 ;; Repeat values
-(define repeated (r/call "rep" (list 5 10)))
-(assert-equal (list 5 5 5 5 5 5 5 5 5 5) (r/call "as.list" (list repeated)))
+(define repeated (rep 5 10))
+(assert-equal (list 5 5 5 5 5 5 5 5 5 5) (as.list repeated))
 (println (str "Repeat 5 ten times: " repeated))
 
 ;; ============================================================================
@@ -153,7 +168,7 @@
 (define raw-data ((:: stats rnorm) 20 50 10))
 
 ;; Convert to list for Arl processing
-(define data-list (r/call "as.list" (list raw-data)))
+(define data-list (as.list raw-data))
 
 ;; Process with Arl functions
 (define filtered (filter (lambda (x) (> x 50)) data-list))
@@ -163,8 +178,8 @@
 (println (str "Squared: " squared))
 
 ;; Convert back to R vector for R functions
-(define result-vec (r/call "unlist" (list squared)))
-(println (str "Mean of squared values: " (r/call "mean" (list result-vec))))
+(define result-vec (unlist squared))
+(println (str "Mean of squared values: " (mean result-vec)))
 
 ;; ============================================================================
 ;; Using keyword arguments (R named arguments)
@@ -173,12 +188,9 @@
 (println "\n=== Keyword Arguments ===\n")
 
 ;; R functions can be called with named arguments using keywords
-;; Note: This feature depends on keyword argument implementation
-
-;; Example: creating a sequence with named arguments
 (println "Creating sequences with named arguments:")
-(define seq-named (r/call "seq" (dict :from 1 :to 10 :by 2)))
-(assert-equal (list 1 3 5 7 9) (r/call "as.list" (list seq-named)))
+(define seq-named (seq :from 1 :to 10 :by 2))
+(assert-equal (list 1 3 5 7 9) (as.list seq-named))
 (println (str "seq(from=1, to=10, by=2): " seq-named))
 
 ;; ============================================================================
@@ -200,7 +212,7 @@
 (println transactions)
 
 ;; Extract all amounts
-(define amounts (map (lambda (t) (r/call "get" (list "amount" t))) transactions))
+(define amounts (map (lambda (t) (get "amount" t)) transactions))
 (assert-equal (list 100 50 75 200 30) amounts)
 (println (str "\nAll amounts: " amounts))
 
@@ -211,12 +223,12 @@
 
 ;; Filter food transactions
 (define food-trans (filter (lambda (t)
-                             (= (r/call "get" (list "category" t)) "food"))
+                             (= (get "category" t) "food"))
                            transactions))
 (assert-equal 2 (length food-trans))
 (println (str "\nFood transactions: " (length food-trans) " items"))
 
-(define food-total (reduce + (map (lambda (t) (r/call "get" (list "amount" t)))
+(define food-total (reduce + (map (lambda (t) (get "amount" t))
                                   food-trans)))
 (assert-equal 175 food-total)
 (println (str "Food total: $" food-total))

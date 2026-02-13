@@ -23,14 +23,14 @@
      :date (nth parts 0)
      :method (nth parts 1)
      :path (nth parts 2)
-     :status (r/call "as.numeric" (list (nth parts 3)))
-     :latency (r/call "as.numeric" (list (nth parts 4))))))
+     :status (as.numeric (nth parts 3))
+     :latency (as.numeric (nth parts 4)))))
 
 (define parsed (map parse-line log-lines))
 (assert-equal 6 (length parsed))
 
-(define statuses (map (lambda (row) (r/call "get" (list "status" row))) parsed))
-(define latencies (map (lambda (row) (r/call "get" (list "latency" row))) parsed))
+(define statuses (map (lambda (row) (get "status" row)) parsed))
+(define latencies (map (lambda (row) (get "latency" row)) parsed))
 (assert-equal (list 200 500 200 200 500 200) statuses)
 (assert-equal (list 100 110 120 130 140 120) latencies)
 

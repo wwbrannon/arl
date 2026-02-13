@@ -113,15 +113,15 @@
 
 (define make-memoized-fib
   (lambda ()
-    (let ((cache (r/call "new.env" ())))
+    (let ((cache (new.env)))
       (lambda (n)
         (if (< n 2)
             n
-            (let ((cached (r/call "get" (list (str n) cache))))
+            (let ((cached (get (str n) cache)))
               (if (null? cached)
                   (let ((result (+ (fib-recursive (- n 1))
                                   (fib-recursive (- n 2)))))
-                    (r/call "assign" (list (str n) result cache))
+                    (assign (str n) result cache)
                     result)
                   cached)))))))
 
