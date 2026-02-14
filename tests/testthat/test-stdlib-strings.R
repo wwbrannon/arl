@@ -159,8 +159,8 @@ test_that("string and io helpers work", {
   toplevel_env(engine, env = env)
 
   expect_equal(env$str("a", 1, "b"), "a1b")
-  expect_equal(env$`format-value`(list(1, 2, 3)), "1 2 3")
-  expect_equal(env$`format-value`(quote(f(a, b))), "f a b")
+  expect_equal(env$`format-value`(list(1, 2, 3)), "(1 2 3)")
+  expect_equal(env$`format-value`(quote(f(a, b))), "(f a b)")
   expect_equal(env$`string-join`(list("a", "b", "c"), "-"), "a-b-c")
   expect_equal(env$`string-split`("a-b-c", "-"), list("a", "b", "c"))
   expect_equal(env$trim("  hi "), "hi")

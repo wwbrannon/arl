@@ -1046,7 +1046,7 @@ Print value with newline.
 ```{arl}
 (display 42)             ; prints "42" with newline
 (display "hello")        ; prints "hello" with newline
-(display (list 1 2 3))   ; prints "1 2 3" with newline
+(display (list 1 2 3))   ; prints "(1 2 3)" with newline
 ```
 
 **See also:** [println](#println), [trace](#trace)

@@ -37,6 +37,26 @@ test_that("format-value handles environments correctly", {
   }
 })
 
+test_that("format-value wraps lists and calls in parentheses", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Simple list
+  expect_equal(env$`format-value`(list(1, 2, 3)), "(1 2 3)")
+
+  # Nested list
+  expect_equal(env$`format-value`(list(1, 2, list(3, 4))), "(1 2 (3 4))")
+
+  # Empty list
+  expect_equal(env$`format-value`(list()), "()")
+
+  # List with empty inner list (the flexible function case)
+  expect_equal(env$`format-value`(list(1, 10, list())), "(1 10 ())")
+
+  # Call/quote
+  expect_equal(env$`format-value`(quote(f(a, b))), "(f a b)")
+})
+
 test_that("format-value for dotted pair (arl_cons) shows dotted form", {
   env <- new.env()
   toplevel_env(engine, env = env)

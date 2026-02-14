@@ -94,7 +94,7 @@
                       (if (is.symbol x)
                         (as.character x)
                         (if (or (is.call x) (is.list x))
-                          (__format-seq x)
+                          (string-join (list "(" (__format-seq x) ")") "")
                           (__format-atomic x))))))))))))))
 
   ;;' @section Display and Output
@@ -104,7 +104,7 @@
   ;;' @examples
   ;;' (display 42)             ; prints "42" with newline
   ;;' (display "hello")        ; prints "hello" with newline
-  ;;' (display (list 1 2 3))   ; prints "1 2 3" with newline
+  ;;' (display (list 1 2 3))   ; prints "(1 2 3)" with newline
   ;;' @seealso println, trace
   (define display
     (lambda (x)
