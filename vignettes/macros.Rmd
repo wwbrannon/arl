@@ -59,6 +59,10 @@ With that macro defined:
 ;; expands to: (if (> 5 3) (begin (print "yes")) #nil)
 ```
 
+```{arl, include=FALSE}
+(assert-equal "yes" (when (> 5 3) "yes"))
+```
+
 Macros receive their arguments *unevaluated* -- the forms are passed as
 syntax trees (R calls/symbols), not as values.  The macro body constructs
 and returns new syntax, which the compiler then compiles and evaluates in
@@ -212,6 +216,10 @@ evaluated:
 `(a `(b ,,x))   ; => (a (quasiquote (b (unquote 10))))
 ```
 
+```{arl, include=FALSE}
+(assert-true (list? `(a `(b ,,x))))
+```
+
 This is useful for writing macros that generate other macros.
 
 ## Hygiene
@@ -273,6 +281,11 @@ macro-expansion time that must not conflict:
 ```{arl}
 (gensym)          ; => G__1
 (gensym "tmp")    ; => tmp__2
+```
+
+```{arl, include=FALSE}
+(assert-true (symbol? (gensym)))
+(assert-true (symbol? (gensym "tmp")))
 ```
 
 Each call returns a new symbol with a monotonically increasing counter.
@@ -463,11 +476,19 @@ recursively expands until no macro calls remain:
 ; => (if #t (begin 1) #nil)
 ```
 
+```{arl, include=FALSE}
+(assert-equal '(if #t (begin 1) #nil) (macroexpand-1 '(when #t 1)))
+```
+
 `macroexpand` (or its alias `macroexpand-all`) recursively expands all
 macro calls in the expression:
 
 ```{arl}
 (macroexpand '(when #t (unless #f 42)))
+```
+
+```{arl, include=FALSE}
+(assert-true (list? (macroexpand '(when #t (unless #f 42)))))
 ```
 
 `macro?` tests whether a symbol names a currently defined macro:
@@ -569,9 +590,13 @@ The `try` macro parses its clause list at expansion time and rewrites
 into calls to the lower-level `try*` function:
 
 ```{arl}
-(try (/ 1 0)
+(try (stop "something went wrong")
   (catch e (str "caught: " ($ e "message")))
   (finally (display "cleanup")))
+```
+
+```{arl, include=FALSE}
+(assert-true (string? (try (stop "test error") (catch e (str "caught: " ($ e "message"))))))
 ```
 
 ## Related guides

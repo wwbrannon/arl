@@ -172,6 +172,9 @@
   ;;' (->complex 5)       ; => 5+0i
   ;;' (->complex 3.14)    ; => 3.14+0i
   ;;' (->complex "2+3i")  ; => 2+3i
+  ;;' @assert
+  ;;' (assert-true (complex? (->complex 5)))
+  ;;' (assert-equal (complex :real 5 :imaginary 0) (->complex 5))
   ;;' @seealso ->number, ->double, make-rectangular (in `types` module)
   (define ->complex
     (lambda (x)
@@ -205,6 +208,9 @@
   ;;' @examples
   ;;' (->vector (list 1 2 3))   ; => [1] 1 2 3 (atomic vector)
   ;;' (->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)
+  ;;' @assert
+  ;;' (assert-true (vector? (->vector (list 1 2 3))))
+  ;;' (assert-equal (c 1 2 3) (->vector (list 1 2 3)))
   ;;' @note When given a list, `->vector` flattens it into an atomic vector using `unlist`. Nested lists will be recursively flattened.
   ;;' @seealso ->list
   (define ->vector

@@ -156,6 +156,9 @@
   ;;' @examples
   ;;' (check-s3-type-match 1 2 3)     ; => #t (all numeric)
   ;;' (check-s3-type-match 1 "a")     ; => #f (numeric vs character)
+  ;;' @assert
+  ;;' (assert-true (check-s3-type-match 1 2 3))
+  ;;' (assert-false (check-s3-type-match 1 "a"))
   ;;' @note Internal function used by `equal?` to verify type consistency before dispatch.
   (define check-s3-type-match
     (lambda (obj . rest)
@@ -179,6 +182,9 @@
   ;;'   (lambda (a b strict)
   ;;'     (and (equal? ($ a "x") ($ b "x"))
   ;;'          (equal? ($ a "y") ($ b "y")))))
+  ;;' @assert
+  ;;' (set-method! 'equal? 'test-dummy (lambda (a b strict) #t))
+  ;;' (assert-true (is.function (get "equal?.test-dummy" :envir (toplevel-env))))
   ;;' @seealso use-method
   (define set-method!
     (lambda (generic-name class-name method-fun)
@@ -190,6 +196,8 @@
   ;;' @note Internal function. Dispatches to the appropriate S3 method based on the object's class, falling back to the `.default` method if no class-specific method is found.
   ;;' @examples
   ;;' (use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f))  ; dispatches to equal?.list
+  ;;' @assert
+  ;;' (assert-true (use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f)))
   ;;' @seealso set-method!, s3-type
   (define use-method
     ; pass args explicitly because we can't use R's magic internals
@@ -252,6 +260,12 @@
   ;;' (assign "x" 1 :envir e1)
   ;;' (assign "x" 1 :envir e2)
   ;;' (equal?.environment e1 e2)       ; => #t
+  ;;' @assert
+  ;;' (define __e1 (new.env :parent (emptyenv)))
+  ;;' (define __e2 (new.env :parent (emptyenv)))
+  ;;' (assign "x" 1 :envir __e1)
+  ;;' (assign "x" 1 :envir __e2)
+  ;;' (assert-true (equal?.environment __e1 __e2))
   (define equal?.environment
     (lambda (a b (strict #f))
       (if (not (environment? b))

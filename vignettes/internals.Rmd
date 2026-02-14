@@ -61,6 +61,10 @@ you get from `quote()` in R. For example:
 (define x (+ 1 2))
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3 x)
+```
+
 compiles to something like:
 
 ```r
@@ -142,6 +146,10 @@ For example:
       (factorial (- n 1) (* acc n)))))
 ```
 
+```{arl, include=FALSE}
+(assert-equal 120 (factorial 5 1))
+```
+
 compiles to something like:
 
 ```r
@@ -176,6 +184,10 @@ dead branch entirely (`eval_constant_test` in `compile_if`). For example:
 
 ```{arl}
 (if #t "yes" "no")
+```
+
+```{arl, include=FALSE}
+(assert-equal "yes" (if #t "yes" "no"))
 ```
 
 compiles to just `"yes"`.

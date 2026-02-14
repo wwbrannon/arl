@@ -53,6 +53,8 @@
   ;;' @description Convert a list to a callable form.
   ;;' @examples
   ;;' (call (list '+ 1 2))  ; => language: (+ 1 2)
+  ;;' @assert
+  ;;' (assert-true (is.call (call (list '+ 1 2))))
   ;;' @seealso eval, apply
   (define call
     (lambda (lst)

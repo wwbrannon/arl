@@ -166,13 +166,17 @@
 
   ;;' @description Expand one layer of macros in expr.
   ;;' @examples
-  ;;' (macroexpand-1 '(when #t 42))  ; => (if #t 42 #nil)
+  ;;' (macroexpand-1 '(when #t 42))  ; => (if #t (begin 42) #nil)
+  ;;' @assert
+  ;;' (assert-equal '(if #t (begin 42) #nil) (macroexpand-1 '(when #t 42)))
   ;;' @seealso macroexpand, macroexpand-all
   (define macroexpand-1 (lambda (expr) (macroexpand expr 1)))
 
   ;;' @description Fully expand all macros in expr. Same as macroexpand with no depth.
   ;;' @examples
-  ;;' (macroexpand-all '(when #t 42))  ; => (if #t 42 #nil)
+  ;;' (macroexpand-all '(when #t 42))  ; => (if #t (begin 42) #nil)
+  ;;' @assert
+  ;;' (assert-equal '(if #t (begin 42) #nil) (macroexpand-all '(when #t 42)))
   ;;' @seealso macroexpand, macroexpand-1
   (define macroexpand-all macroexpand)
 )

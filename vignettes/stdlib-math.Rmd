@@ -125,6 +125,10 @@ Compute the angle (argument) of a complex number.
 (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (π/4)
 ```
 
+```{arl, include=FALSE}
+(assert-true (< (abs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
+```
+
 **See also:** [magnitude](#magnitude), [make-polar](#make-polar)
 
 ---
@@ -787,6 +791,12 @@ Return arcsine of x (in radians).
 (atan 1)      ; => 0.7853... (pi/4)
 ```
 
+```{arl, include=FALSE}
+(assert-true (< (abs (- (asin 1) (/ pi 2))) 1e-10))
+(assert-true (< (abs (acos 1)) 1e-10))
+(assert-true (< (abs (- (atan 1) (/ pi 4))) 1e-10))
+```
+
 ---
 
 ### acos {#acos}
@@ -815,6 +825,10 @@ Return arctangent of y/x (in radians), respecting quadrant.
 ```{arl}
 (atan2 1 1)   ; => 0.7853... (pi/4)
 (atan2 -1 -1) ; => -2.356... (-3*pi/4)
+```
+
+```{arl, include=FALSE}
+(assert-true (< (abs (- (atan2 1 1) (/ pi 4))) 1e-10))
 ```
 
 ---

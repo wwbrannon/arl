@@ -1008,6 +1008,11 @@ Check if all objects have the same S3 type.
 (check-s3-type-match 1 "a")     ; => #f (numeric vs character)
 ```
 
+```{arl, include=FALSE}
+(assert-true (check-s3-type-match 1 2 3))
+(assert-false (check-s3-type-match 1 "a"))
+```
+
 **Note:** Internal function used by `equal?` to verify type consistency before dispatch.
 
 ---
@@ -1028,6 +1033,11 @@ Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
          (equal? ($ a "y") ($ b "y")))))
 ```
 
+```{arl, include=FALSE}
+(set-method! 'equal? 'test-dummy (lambda (a b strict) #t))
+(assert-true (is.function (get "equal?.test-dummy" :envir (toplevel-env))))
+```
+
 **See also:** [use-method](#use-method)
 
 ---
@@ -1041,6 +1051,10 @@ Dispatch to an S3 method based on object class.
 **Examples:**
 ```{arl}
 (use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f))  ; dispatches to equal?.list
+```
+
+```{arl, include=FALSE}
+(assert-true (use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f)))
 ```
 
 **Note:** Internal function. Dispatches to the appropriate S3 method based on the object's class, falling back to the `.default` method if no class-specific method is found.
@@ -1113,6 +1127,14 @@ Compare environments by bindings and values
 (assign "x" 1 :envir e1)
 (assign "x" 1 :envir e2)
 (equal?.environment e1 e2)       ; => #t
+```
+
+```{arl, include=FALSE}
+(define __e1 (new.env :parent (emptyenv)))
+(define __e2 (new.env :parent (emptyenv)))
+(assign "x" 1 :envir __e1)
+(assign "x" 1 :envir __e2)
+(assert-true (equal?.environment __e1 __e2))
 ```
 
 ---
@@ -1332,6 +1354,11 @@ Convert value to complex number (imaginary part = 0).
 (->complex "2+3i")  ; => 2+3i
 ```
 
+```{arl, include=FALSE}
+(assert-true (complex? (->complex 5)))
+(assert-equal (complex :real 5 :imaginary 0) (->complex 5))
+```
+
 **See also:** [->number](#to-number), [->double](#to-double), [make-rectangular](stdlib-math.html#make-rectangular) (in `types` module)
 
 ---
@@ -1369,6 +1396,11 @@ Convert value to vector.
 ```{arl}
 (->vector (list 1 2 3))   ; => [1] 1 2 3 (atomic vector)
 (->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)
+```
+
+```{arl, include=FALSE}
+(assert-true (vector? (->vector (list 1 2 3))))
+(assert-equal (c 1 2 3) (->vector (list 1 2 3)))
 ```
 
 **Note:** When given a list, `->vector` flattens it into an atomic vector using `unlist`. Nested lists will be recursively flattened.

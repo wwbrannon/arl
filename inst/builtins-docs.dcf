@@ -84,6 +84,8 @@ Examples:
     `(let ((it ,test))
        (if it ,(capture 'it then) ,(capture 'it alt))))
   (aif (+ 2 3) it 0)          ; => 5
+Assert:
+  (assert-equal 5 (aif (+ 2 3) it 0))
 Seealso: gensym, macroexpand, defmacro
 Note: Use capture when writing anaphoric macros or other macros that
   intentionally introduce a binding visible to the caller. Without
@@ -99,6 +101,9 @@ Signature: (gensym [prefix])
 Examples:
   (gensym)                  ; => G1 (unique symbol)
   (gensym "tmp")            ; => tmp2 (unique with prefix)
+Assert:
+  (assert-true (symbol? (gensym)))
+  (assert-true (symbol? (gensym "tmp")))
 Seealso: macroexpand, macroexpand-1
 Note: Each call returns a fresh symbol guaranteed not to conflict with
   user-defined names. The optional prefix defaults to "G".
@@ -112,6 +117,9 @@ Examples:
   (defmacro my-mac (x) x)
   (macro? 'my-mac)          ; => #t
   (macro? 'car)             ; => #f
+Assert:
+  (assert-true (macro? 'my-mac))
+  (assert-false (macro? 'car))
 
 Name: macroexpand
 Vignette: stdlib-core
@@ -123,6 +131,8 @@ Examples:
   (defmacro my-when (test body)
     `(if ,test ,body #nil))
   (macroexpand '(my-when #t 42))  ; => (if #t 42 #nil)
+Assert:
+  (assert-equal '(if #t 42 #nil) (macroexpand '(my-when #t 42)))
 Seealso: macroexpand-1, macro?, gensym
 Note: Also available as `macroexpand-all` (alias).
 
@@ -135,6 +145,8 @@ Examples:
   (defmacro my-when (test body)
     `(if ,test ,body #nil))
   (macroexpand-1 '(my-when #t 42))  ; => (if #t 42 #nil)
+Assert:
+  (assert-equal '(if #t 42 #nil) (macroexpand-1 '(my-when #t 42)))
 Seealso: macroexpand, macro?
 
 Name: promise?
@@ -176,6 +188,9 @@ Signature: (promise-expr p)
 Examples:
   (define p (delay (+ 1 2)))
   (promise-expr p)          ; => (+ 1 2)
+Assert:
+  (define __pe (delay (+ 1 2)))
+  (assert-equal '(+ 1 2) (promise-expr __pe))
 Seealso: promise?, force, delay
 Note: Signals an error if p is not a promise.
 
@@ -187,6 +202,8 @@ Description: Evaluate an R expression directly via R's eval(), bypassing
 Signature: (r/eval expr)
 Examples:
   (r/eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
+Assert:
+  (assert-equal (c 1 2 3 4 5) (r/eval (quote (seq_len 5))))
 Seealso: eval, r/call
 Note: Useful for evaluating raw R calls that use R control flow (for,
   while) or other constructs that Arl normally overrides.
@@ -199,6 +216,8 @@ Description: Return the top-level environment (the environment where all
 Signature: (toplevel-env)
 Examples:
   (environment? (toplevel-env))  ; => #t
+Assert:
+  (assert-true (environment? (toplevel-env)))
 Seealso: current-env
 
 Name: current-env
@@ -208,6 +227,8 @@ Description: Return the current Arl evaluation environment.
 Signature: (current-env)
 Examples:
   (environment? (current-env))  ; => #t
+Assert:
+  (assert-true (environment? (current-env)))
 Seealso: toplevel-env
 
 Name: doc!

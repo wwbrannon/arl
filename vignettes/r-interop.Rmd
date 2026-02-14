@@ -38,11 +38,17 @@ Keywords starting with `:` serve a dual purpose in Arl:
    ```{arl}
    (seq :from 1 :to 10)  ; R: seq(from = 1, to = 10)
    ```
+   ```{arl, include=FALSE}
+   (assert-equal (c 1 2 3 4 5 6 7 8 9 10) (seq :from 1 :to 10))
+   ```
 
 2. **As self-evaluating values**: Keywords are first-class values that can be bound to variables
    ```{arl}
    :keyword          ; evaluates to a keyword object
    (define k :foo)   ; bind a keyword to a variable
+   ```
+   ```{arl, include=FALSE}
+   (assert-true (keyword? ':foo))
    ```
 
 To pass a keyword as a *value* (rather than as named argument syntax), quote it:

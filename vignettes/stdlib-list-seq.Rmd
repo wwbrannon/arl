@@ -34,6 +34,10 @@ Convert a list to a callable form.
 (call (list '+ 1 2))  ; => language: (+ 1 2)
 ```
 
+```{arl, include=FALSE}
+(assert-true (is.call (call (list '+ 1 2))))
+```
+
 **See also:** [eval](stdlib-core.html#eval), apply
 
 ---

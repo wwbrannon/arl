@@ -159,6 +159,10 @@ You can mix required, optional, destructuring, and rest parameters:
 (add 3 4)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 7 (add 3 4))
+```
+
 ### Keyword arguments
 
 Keywords (`:name value`) pass named arguments. This is especially useful
@@ -166,6 +170,10 @@ when calling R functions:
 
 ```{arl}
 (seq :from 1 :to 5)
+```
+
+```{arl, include=FALSE}
+(assert-equal (c 1 2 3 4 5) (seq :from 1 :to 5))
 ```
 
 Keywords also work with Arl-defined functions — the keyword name is

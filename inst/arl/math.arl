@@ -69,6 +69,8 @@
   ;;' @description Compute the angle (argument) of a complex number.
   ;;' @examples
   ;;' (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (π/4)
+  ;;' @assert
+  ;;' (assert-true (< (abs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
   ;;' @seealso magnitude, make-polar
   (define angle
     (lambda (z)
@@ -573,6 +575,10 @@
   ;;' (asin 1)      ; => 1.5707... (pi/2)
   ;;' (acos 1)      ; => 0
   ;;' (atan 1)      ; => 0.7853... (pi/4)
+  ;;' @assert
+  ;;' (assert-true (< (abs (- (asin 1) (/ pi 2))) 1e-10))
+  ;;' (assert-true (< (abs (acos 1)) 1e-10))
+  ;;' (assert-true (< (abs (- (atan 1) (/ pi 4))) 1e-10))
   (define asin __rasin)
 
   ;;' @description Return arccosine of x (in radians).
@@ -587,6 +593,8 @@
   ;;' @examples
   ;;' (atan2 1 1)   ; => 0.7853... (pi/4)
   ;;' (atan2 -1 -1) ; => -2.356... (-3*pi/4)
+  ;;' @assert
+  ;;' (assert-true (< (abs (- (atan2 1 1) (/ pi 4))) 1e-10))
   (define atan2
     (lambda (y x)
       (__ratan2 y x)))
