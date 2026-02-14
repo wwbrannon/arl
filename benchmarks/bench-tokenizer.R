@@ -71,6 +71,7 @@ if (length(real_workloads) > 0) {
   bench_real <- benchmark_component(
     "fibonacci.arl" = engine_field(engine4, "tokenizer")$tokenize(real_workloads$fibonacci),
     "quicksort.arl" = engine_field(engine4, "tokenizer")$tokenize(real_workloads$quicksort),
+    "graph-paths.arl" = engine_field(engine4, "tokenizer")$tokenize(real_workloads$graph_paths),
     "macro-examples.arl" = engine_field(engine4, "tokenizer")$tokenize(real_workloads$macro_examples),
     check = FALSE
   )

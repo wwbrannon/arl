@@ -85,6 +85,11 @@ if (length(real_workloads) > 0) {
       engine <- Engine$new()
       engine$eval_text(real_workloads$quicksort)
     },
+    "graph-paths.arl" = {
+      engine <- Engine$new()
+      load_modules(engine, c("binding", "control", "functional", "looping", "threading"))
+      engine$eval_text(real_workloads$graph_paths)
+    },
     "macro-examples.arl" = {
       engine <- Engine$new()
       load_modules(engine, c("control", "binding"))
@@ -105,7 +110,9 @@ if (length(real_workloads) > 0) {
     # Run multiple times and average
     timings <- replicate(10, {
       engine <- Engine$new()
-      if (name == "macro_examples") {
+      if (name == "graph_paths") {
+        load_modules(engine, c("binding", "control", "functional", "looping", "threading"))
+      } else if (name == "macro_examples") {
         load_modules(engine, c("control", "binding"))
       }
       time_components(real_workloads[[name]], engine)

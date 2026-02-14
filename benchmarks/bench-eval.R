@@ -99,6 +99,8 @@ if (length(real_workloads) > 0) {
   bench_real <- benchmark_component(
     "fibonacci.arl" = engine5$eval_text(real_workloads$fibonacci),
     "quicksort.arl" = engine5$eval_text(real_workloads$quicksort),
+    "graph-paths.arl" = engine5$eval_text(real_workloads$graph_paths),
+    "macro-examples.arl" = engine5$eval_text(real_workloads$macro_examples),
     iterations = 10,
     check = FALSE
   )

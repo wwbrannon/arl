@@ -80,11 +80,13 @@ real_workloads <- get_real_workloads()
 if (length(real_workloads) > 0) {
   tokens_fib <- engine_field(engine4, "tokenizer")$tokenize(real_workloads$fibonacci)
   tokens_qs <- engine_field(engine4, "tokenizer")$tokenize(real_workloads$quicksort)
+  tokens_gp <- engine_field(engine4, "tokenizer")$tokenize(real_workloads$graph_paths)
   tokens_macro <- engine_field(engine4, "tokenizer")$tokenize(real_workloads$macro_examples)
 
   bench_real <- benchmark_component(
     "fibonacci.arl" = engine_field(engine4, "parser")$parse(tokens_fib),
     "quicksort.arl" = engine_field(engine4, "parser")$parse(tokens_qs),
+    "graph-paths.arl" = engine_field(engine4, "parser")$parse(tokens_gp),
     "macro-examples.arl" = engine_field(engine4, "parser")$parse(tokens_macro),
     check = FALSE
   )

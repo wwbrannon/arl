@@ -124,22 +124,32 @@ cat("\n")
 cat("Benchmark 6: Real macro examples\n")
 real_workloads <- get_real_workloads()
 
-if (length(real_workloads) > 0 && "macro_examples" %in% names(real_workloads)) {
+if (length(real_workloads) > 0) {
   engine6 <- Engine$new()
 
   bench_real <- benchmark_component(
+    "fibonacci.arl" = {
+      exprs <- engine6$read(real_workloads$fibonacci)
+      for (expr in exprs) engine6$macroexpand(expr)
+    },
+    "quicksort.arl" = {
+      exprs <- engine6$read(real_workloads$quicksort)
+      for (expr in exprs) engine6$macroexpand(expr)
+    },
+    "graph-paths.arl" = {
+      exprs <- engine6$read(real_workloads$graph_paths)
+      for (expr in exprs) engine6$macroexpand(expr)
+    },
     "macro-examples.arl" = {
       exprs <- engine6$read(real_workloads$macro_examples)
-      for (expr in exprs) {
-        engine6$eval(expr)
-      }
+      for (expr in exprs) engine6$macroexpand(expr)
     },
     iterations = 10,
     check = FALSE
   )
   print(bench_real[, c("expression", "median", "mem_alloc")])
 } else {
-  cat("(Skipped - macro examples not available)\n")
+  cat("(Skipped - real workloads not available)\n")
 }
 cat("\n")
 
