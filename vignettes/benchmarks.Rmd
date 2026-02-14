@@ -50,16 +50,58 @@ Every Arl expression passes through four stages:
 Source → Tokenizer → Parser → Macro Expander → Compiler/Evaluator → Result
 ```
 
-In general, the either the compiler / evaluator or macro expander (or both)
-will account for most of the runtime, depending on how macro-heavy the workload
-is. The tokenizer and parser are usually fast by comparison. Component-level
-benchmarks for the tokenizer, parser, macro expander, and compiler/evaluator
-are available via `make bench` (see [Running Benchmarks](#running-benchmarks)
-below).
+The table below shows where time is spent on each of the example programs
+shipped with the package:
+
+```{r pipeline-table, echo = FALSE, results = "asis"}
+if (has_bench_data) {
+  real_names <- c("fibonacci.arl", "quicksort.arl",
+                  "graph-paths.arl", "macro-examples.arl")
+  components <- c("tokenizer", "parser", "macro", "eval")
+  comp_labels <- c("Tokenizer", "Parser", "Macro Expander", "Compiler / Evaluator")
+
+  comp_vals <- sapply(components, function(comp) {
+    vapply(real_names, function(wl) {
+      idx <- which(benches$name == paste0(comp, "/real/", wl))
+      if (length(idx) == 1) benches$value[idx] else NA_real_
+    }, numeric(1))
+  })
+
+  totals <- rowSums(comp_vals, na.rm = TRUE)
+  pct_mat <- 100 * comp_vals / totals
+
+  fmt_cell <- function(ms, pct) {
+    if (is.na(ms)) return("\u2014")
+    sprintf("%.0f ms (%.0f%%)", ms, pct)
+  }
+
+  rows <- lapply(seq_along(real_names), function(i) {
+    cells <- vapply(seq_along(components), function(j) {
+      fmt_cell(comp_vals[i, j], pct_mat[i, j])
+    }, character(1))
+    data.frame(
+      Workload = paste0("`", real_names[i], "`"),
+      Tokenizer = cells[1],
+      Parser = cells[2],
+      `Macro Expander` = cells[3],
+      `Compiler / Evaluator` = cells[4],
+      check.names = FALSE,
+      stringsAsFactors = FALSE
+    )
+  })
+  tbl <- do.call(rbind, rows)
+  knitr::kable(tbl, format = "pipe")
+} else {
+  cat("*Benchmark data not available — rebuild with access to the `gh-pages` branch.*\n")
+}
+```
+
+The compiler/evaluator and macro expander together dominate runtime.
+The tokenizer and parser are fast by comparison.
 
 ## End-to-End Timings
 
-Measured on the example programs shipped with the package:
+The same workloads measured end-to-end:
 
 ```{r e2e-table, echo = FALSE, results = "asis"}
 if (has_bench_data) {
@@ -79,7 +121,8 @@ if (has_bench_data) {
 }
 ```
 
-These are end-to-end times (tokenise + parse + expand + compile + evaluate).
+These are end-to-end times (i.e., tokenize + parse + expand + compile +
+evaluate), and also include engine startup and module loading.
 
 ## Optimizations Applied
 
@@ -154,17 +197,14 @@ saves results to `benchmarks/results/`. Individual component benchmarks
 are also available:
 
 ```bash
-R -e "source('benchmarks/bench-tokenizer.R')"
-R -e "source('benchmarks/bench-parser.R')"
-R -e "source('benchmarks/bench-macro.R')"
-R -e "source('benchmarks/bench-eval.R')"
-R -e "source('benchmarks/bench-stdlib.R')"
-R -e "source('benchmarks/bench-e2e.R')"
+# COMPONENT can be tokenizer, parser, macro, eval, stdlib, e2e
+make bench-component COMPONENT=tokenizer
 ```
 
 Profiling reports (HTML flame graphs) can be generated with:
 
 ```bash
-R -e "source('benchmarks/run-all-profiles.R')"
+make profile
+
 # View: open benchmarks/profiles/eval-fibonacci.html
 ```
