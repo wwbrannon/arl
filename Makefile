@@ -155,6 +155,14 @@ profile-component: clean-cache stdlib-order ## help: Profile single component (u
 	fi
 	R -q -e "devtools::load_all(); source('benchmarks/profile-$(COMPONENT).R')"
 
+.PHONY: bench-publish
+bench-publish: ## help: Publish benchmark results to gh-pages branch (run after make bench)
+	@if [ ! -f benchmarks/results/benchmark-results.json ]; then \
+		echo "Error: benchmarks/results/benchmark-results.json not found. Run 'make bench' first."; \
+		exit 1; \
+	fi
+	@benchmarks/publish-results.sh
+
 .PHONY: bench-compare
 bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD=baseline.csv NEW=optimized.csv)
 	@if [ -z "$(OLD)" ] || [ -z "$(NEW)" ]; then \
