@@ -103,20 +103,19 @@
 
 ;;' @description Bind pattern to value and evaluate body when value is truthy.
 ;;' @examples
-;;' (when-let ((x (assoc 'a '((a . 1) (b . 2)))))
+;;' (when-let (x (assoc 'a '((a . 1) (b . 2))))
 ;;'   (cdr x))               ; => 1
 ;;'
-;;' (when-let ((x #f))
+;;' (when-let (x #f)
 ;;'   "never reached")       ; => #nil
 ;;' @assert
-;;' (assert-equal 1 (when-let ((x (assoc 'a '((a . 1) (b . 2))))) (cdr x)))
-;;' (assert-equal #nil (when-let ((x #f)) "never reached"))
+;;' (assert-equal 1 (when-let (x (assoc 'a '((a . 1) (b . 2)))) (cdr x)))
+;;' (assert-equal #nil (when-let (x #f) "never reached"))
 ;;' @seealso if-let, when, let
 (defmacro when-let (binding . body)
   (begin
-    (define first-binding (car binding))
-    (define pattern (car first-binding))
-    (define value (car (cdr first-binding)))
+    (define pattern (car binding))
+    (define value (car (cdr binding)))
     (define tmp (gensym "when-let"))
     `((lambda (,tmp)
         (if (car ,tmp)
@@ -127,22 +126,21 @@
 
 ;;' @description Bind pattern to value and choose branch based on its truthiness.
 ;;' @examples
-;;' (if-let ((x 42))
+;;' (if-let (x 42)
 ;;'   (+ x 1)
 ;;'   "nothing")             ; => 43
 ;;'
-;;' (if-let ((x #f))
+;;' (if-let (x #f)
 ;;'   "truthy"
 ;;'   "falsy")               ; => "falsy"
 ;;' @assert
-;;' (assert-equal 43 (if-let ((x 42)) (+ x 1) "nothing"))
-;;' (assert-equal "falsy" (if-let ((x #f)) "truthy" "falsy"))
+;;' (assert-equal 43 (if-let (x 42) (+ x 1) "nothing"))
+;;' (assert-equal "falsy" (if-let (x #f) "truthy" "falsy"))
 ;;' @seealso when-let, if, let
 (defmacro if-let (binding then . rest)
   (begin
-    (define first-binding (car binding))
-    (define pattern (car first-binding))
-    (define value (car (cdr first-binding)))
+    (define pattern (car binding))
+    (define value (car (cdr binding)))
     (define else (if (null? rest) #nil (car rest)))
     (define tmp (gensym "if-let"))
     `((lambda (,tmp)
