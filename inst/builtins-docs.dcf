@@ -4,7 +4,7 @@
 # the runtime help system.
 #
 # Format: Debian Control File (DCF), read by base R's read.dcf().
-# Fields: Name, Vignette, Section, Description, Signature, Examples, Seealso, Note.
+# Fields: Name, Vignette, Section, Description, Signature, Examples, Assert, Seealso, Note.
 # Multi-line values use leading whitespace on continuation lines.
 
 Name: pair?
@@ -13,9 +13,15 @@ Section: List and Pair Predicates
 Description: Return #t if x is a cons cell (dotted pair).
 Signature: (pair? x)
 Examples:
-  (pair? (cons 1 2))        ; => #t
-  (pair? '(1 2 3))          ; => #t
+  (pair? (cons 1 2))        ; => #t (dotted pair)
+  (pair? (cons 1 (list 2 3)))  ; => #f (cons onto list returns a list)
+  (pair? '(1 2 3))          ; => #f (quoted list, not a cons cell)
   (pair? '())               ; => #f
+Assert:
+  (assert-true (pair? (cons 1 2)))
+  (assert-false (pair? (cons 1 (list 2 3))))
+  (assert-false (pair? '(1 2 3)))
+  (assert-false (pair? '()))
 Seealso: list?, null?, atom?
 
 Name: eval
@@ -26,6 +32,9 @@ Signature: (eval expr)
 Examples:
   (eval '(+ 1 2))           ; => 3
   (eval '(list 1 2 3))      ; => (1 2 3)
+Assert:
+  (assert-equal 3 (eval '(+ 1 2)))
+  (assert-equal (list 1 2 3) (eval '(list 1 2 3)))
 Seealso: r/eval, read, macroexpand
 
 Name: read
@@ -37,6 +46,9 @@ Examples:
   (read "(+ 1 2)")          ; => (+ 1 2) (unevaluated)
   (read "42")               ; => 42
   (read "foo")              ; => foo (symbol)
+Assert:
+  (assert-equal 42 (read "42"))
+  (assert-equal 3 (eval (read "(+ 1 2)")))
 Seealso: eval, read-from-string
 Note: Returns the first expression from the source string, or #nil if
   the string contains no expressions. Like R's parse(), but returns Arl
@@ -53,6 +65,9 @@ Examples:
   (write 42)                ; => "42"
   (write "hello")           ; => "\"hello\""
   (write #t)                ; => "#t"
+Assert:
+  (assert-equal "42" (write 42))
+  (assert-equal "#t" (write #t))
 Seealso: read, eval, format-value
 Note: Produces output that can be parsed back with read, ensuring the
   round-trip property: (read (write expr)) equals expr for any expression
@@ -131,6 +146,10 @@ Examples:
   (define p (delay (+ 1 2)))
   (promise? p)              ; => #t
   (promise? 42)             ; => #f
+Assert:
+  (define __p (delay (+ 1 2)))
+  (assert-true (promise? __p))
+  (assert-false (promise? 42))
 Seealso: force, promise-expr
 
 Name: force
@@ -143,6 +162,10 @@ Examples:
   (define p (delay (+ 1 2)))
   (force p)                 ; => 3
   (force 42)                ; => 42 (non-promise passed through)
+Assert:
+  (define __fp (delay (+ 10 20)))
+  (assert-equal 30 (force __fp))
+  (assert-equal 42 (force 42))
 Seealso: promise?, promise-expr, delay
 
 Name: promise-expr
@@ -199,6 +222,12 @@ Examples:
   (doc! my-fn "Doubles the input.")
   (doc! my-fn :examples "(my-fn 3) ; => 6")
   (doc! my-fn :description "Doubles." :note "Fast path.")
+Assert:
+  (define __doc-test-fn (lambda (x) (* x 2)))
+  (doc! __doc-test-fn "Doubles the input.")
+  (assert-equal "Doubles the input." (doc __doc-test-fn))
+  (doc! __doc-test-fn :examples "(my-fn 3) ; => 6")
+  (assert-equal "(my-fn 3) ; => 6" (doc __doc-test-fn "examples"))
 Seealso: doc, help
 
 Name: doc
@@ -213,4 +242,10 @@ Examples:
   (doc my-fn)              ; => "Doubles the input."
   (doc my-fn "examples")   ; => "(my-fn 3) ; => 6"
   (doc my-fn "all")        ; => named list of all fields
+Assert:
+  (define __doc-get-fn (lambda (x) (+ x 1)))
+  (doc! __doc-get-fn "Increments input.")
+  (assert-equal "Increments input." (doc __doc-get-fn))
+  (doc! __doc-get-fn :note "Simple function.")
+  (assert-equal "Simple function." (doc __doc-get-fn "note"))
 Seealso: doc!, help

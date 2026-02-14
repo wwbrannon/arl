@@ -81,6 +81,11 @@
   ;;' @examples
   ;;' (read-file "data.txt")                  ; => file contents as string
   ;;' (read-file "data.txt" "latin1")         ; read with specific encoding
+  ;;' @assert
+  ;;' (define __tmp (r/call "tempfile" (list)))
+  ;;' (r/call "writeLines" (list (r/call "c" (list "line1" "line2")) __tmp))
+  ;;' (assert-equal "line1\nline2" (read-file __tmp))
+  ;;' (r/call "unlink" (list __tmp))
   (define read-file
     (lambda (path (encoding "UTF-8"))
       (define con (file path :open "r" :encoding encoding))
@@ -92,6 +97,11 @@
   ;;' @noeval
   ;;' @examples
   ;;' (read-lines "data.txt")  ; => ("line1" "line2" "line3")
+  ;;' @assert
+  ;;' (define __tmp (r/call "tempfile" (list)))
+  ;;' (r/call "writeLines" (list (r/call "c" (list "alpha" "beta" "gamma")) __tmp))
+  ;;' (assert-equal (list "alpha" "beta" "gamma") (read-lines __tmp))
+  ;;' (r/call "unlink" (list __tmp))
   (define read-lines
     (lambda (path (encoding "UTF-8"))
       (define con (file path :open "r" :encoding encoding))
@@ -104,6 +114,11 @@
   ;;' @examples
   ;;' (write-file "out.txt" "hello world")
   ;;' (write-file "out.txt" (list "line1" "line2"))
+  ;;' @assert
+  ;;' (define __tmp (r/call "tempfile" (list)))
+  ;;' (write-file __tmp "hello world")
+  ;;' (assert-equal "hello world" (read-file __tmp))
+  ;;' (r/call "unlink" (list __tmp))
   (define write-file
     (lambda (path content (sep "\n") (encoding "UTF-8"))
       (define text (__normalize-lines content sep))
@@ -116,6 +131,11 @@
   ;;' @noeval
   ;;' @examples
   ;;' (write-lines "out.txt" (list "line1" "line2" "line3"))
+  ;;' @assert
+  ;;' (define __tmp (r/call "tempfile" (list)))
+  ;;' (write-lines __tmp (list "one" "two" "three"))
+  ;;' (assert-equal (list "one" "two" "three") (read-lines __tmp))
+  ;;' (r/call "unlink" (list __tmp))
   (define write-lines
     (lambda (path lines (encoding "UTF-8"))
       (define out (__normalize-line-vector lines))
@@ -128,6 +148,13 @@
   ;;' @noeval
   ;;' @examples
   ;;' (append-file "log.txt" "new entry\n")
+  ;;' @assert
+  ;;' (define __tmp (r/call "tempfile" (list)))
+  ;;' (write-file __tmp "first")
+  ;;' (append-file __tmp "second")
+  ;;' (assert-true (string-contains? (read-file __tmp) "first"))
+  ;;' (assert-true (string-contains? (read-file __tmp) "second"))
+  ;;' (r/call "unlink" (list __tmp))
   (define append-file
     (lambda (path content (sep "\n") (encoding "UTF-8"))
       (define text (__normalize-lines content sep))
@@ -141,6 +168,12 @@
   ;;' @examples
   ;;' (file-exists? "data.txt")    ; => #t or #f
   ;;' (file-exists? "nope.txt")    ; => #f
+  ;;' @assert
+  ;;' (define __tmp (r/call "tempfile" (list)))
+  ;;' (r/call "writeLines" (list "" __tmp))
+  ;;' (assert-true (file-exists? __tmp))
+  ;;' (assert-false (file-exists? "/nonexistent/path/to/file.txt"))
+  ;;' (r/call "unlink" (list __tmp))
   (define file-exists?
     (lambda (path)
       (isTRUE (file.exists path))))
@@ -153,6 +186,11 @@
   ;;' @noeval
   ;;' @examples
   ;;' (file-size "data.txt")       ; => 1024 (bytes)
+  ;;' @assert
+  ;;' (define __tmp (r/call "tempfile" (list)))
+  ;;' (r/call "writeLines" (list "hello" __tmp))
+  ;;' (assert-true (> (file-size __tmp) 0))
+  ;;' (r/call "unlink" (list __tmp))
   (define file-size
     (lambda (path)
       (if (file.exists path)
@@ -163,6 +201,11 @@
   ;;' @noeval
   ;;' @examples
   ;;' (file-modified-time "data.txt")  ; => 1700000000 (numeric timestamp)
+  ;;' @assert
+  ;;' (define __tmp (r/call "tempfile" (list)))
+  ;;' (r/call "writeLines" (list "" __tmp))
+  ;;' (assert-true (> (file-modified-time __tmp) 0))
+  ;;' (r/call "unlink" (list __tmp))
   (define file-modified-time
     (lambda (path)
       (if (file.exists path)
@@ -175,6 +218,12 @@
   ;;' @noeval
   ;;' @examples
   ;;' (file-delete "temp.txt")     ; => #t
+  ;;' @assert
+  ;;' (define __tmp (r/call "tempfile" (list)))
+  ;;' (r/call "writeLines" (list "" __tmp))
+  ;;' (assert-true (file-exists? __tmp))
+  ;;' (assert-true (file-delete __tmp))
+  ;;' (assert-false (file-exists? __tmp))
   (define file-delete
     (lambda (path)
       (if (file.exists path)
@@ -199,6 +248,15 @@
   ;;' @examples
   ;;' (directory-list ".")               ; => ("file1.txt" "file2.txt")
   ;;' (directory-list "." #t)            ; => ("./file1.txt" "./file2.txt")
+  ;;' @assert
+  ;;' (define __tmpdir (r/call "tempfile" (list "dir")))
+  ;;' (r/call "dir.create" (list __tmpdir))
+  ;;' (r/call "writeLines" (list "" (r/call "file.path" (list __tmpdir "a.txt"))))
+  ;;' (r/call "writeLines" (list "" (r/call "file.path" (list __tmpdir "b.txt"))))
+  ;;' (define __listing (directory-list __tmpdir))
+  ;;' (assert-true (> (length __listing) 0))
+  ;;' (assert-true (r/call "%in%" (list "a.txt" __listing)))
+  ;;' (r/call "unlink" (list __tmpdir :recursive #t))
   (define directory-list
     (lambda (path (full.names #f))
       (if (dir.exists path)
@@ -209,6 +267,12 @@
   ;;' @noeval
   ;;' @examples
   ;;' (directory-delete "/tmp/mydir")    ; => #t
+  ;;' @assert
+  ;;' (define __tmpdir (r/call "tempfile" (list "deldir")))
+  ;;' (r/call "dir.create" (list __tmpdir))
+  ;;' (assert-true (directory-exists? __tmpdir))
+  ;;' (assert-true (directory-delete __tmpdir))
+  ;;' (assert-false (directory-exists? __tmpdir))
   (define directory-delete
     (lambda (path (recursive #t))
       (if (dir.exists path)

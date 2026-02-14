@@ -277,6 +277,13 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
       out <- c(out, "")
     }
 
+    if (!is.null(fn$assert) && nchar(fn$assert) > 0) {
+      out <- c(out, "```{arl, include=FALSE}")
+      out <- c(out, fn$assert)
+      out <- c(out, "```")
+      out <- c(out, "")
+    }
+
     if (!is.null(fn$note) && nchar(fn$note) > 0) {
       out <- c(out, paste0("**Note:** ", fn$note))
       out <- c(out, "")

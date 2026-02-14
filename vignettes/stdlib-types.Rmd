@@ -1108,9 +1108,17 @@ Return #t if x is a cons cell (dotted pair).
 
 **Examples:**
 ```{arl}
-(pair? (cons 1 2))        ; => #t
-(pair? '(1 2 3))          ; => #t
+(pair? (cons 1 2))        ; => #t (dotted pair)
+(pair? (cons 1 (list 2 3)))  ; => #f (cons onto list returns a list)
+(pair? '(1 2 3))          ; => #f (quoted list, not a cons cell)
 (pair? '())               ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (pair? (cons 1 2)))
+(assert-false (pair? (cons 1 (list 2 3))))
+(assert-false (pair? '(1 2 3)))
+(assert-false (pair? '()))
 ```
 
 **See also:** [list?](#list-p), [null?](#null-p), [atom?](#atom-p)

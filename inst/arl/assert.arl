@@ -19,6 +19,11 @@
   ;;' (assert (> 3 2))          ; => #t
   ;;' (assert #f "must be true")  ; signals "must be true"
   ;;' (assert #f)               ; signals "Assertion failed"
+  ;;' @assert
+  ;;' (assert-true (assert #t))
+  ;;' (assert-true (assert (> 3 2)))
+  ;;' (assert-error (lambda () (assert #f "must be true")))
+  ;;' (assert-error (lambda () (assert #f)))
   ;;' @seealso error
   (define assert
     (lambda (cond (msg "Assertion failed"))
@@ -32,6 +37,10 @@
   ;;' (assert-equal 3 (+ 1 2))  ; => #t
   ;;' (assert-equal "a" "a")    ; => #t
   ;;' (assert-equal 1 2)        ; signals error
+  ;;' @assert
+  ;;' (assert-true (assert-equal 3 (+ 1 2)))
+  ;;' (assert-true (assert-equal "a" "a"))
+  ;;' (assert-error (lambda () (assert-equal 1 2)))
   ;;' @seealso assert-eq, assert-true
   (define assert-equal
     (lambda (expected actual)
@@ -47,6 +56,10 @@
   ;;' (assert-true #t)          ; => #t
   ;;' (assert-true 1)           ; => #t
   ;;' (assert-true #f)          ; signals error
+  ;;' @assert
+  ;;' (assert-true (assert-true #t))
+  ;;' (assert-true (assert-true 1))
+  ;;' (assert-error (lambda () (assert-true #f)))
   ;;' @seealso assert-false, assert
   (define assert-true
     (lambda (value)
@@ -62,6 +75,10 @@
   ;;' (assert-false #f)         ; => #t
   ;;' (assert-false #nil)       ; => #t
   ;;' (assert-false #t)         ; signals error
+  ;;' @assert
+  ;;' (assert-true (assert-false #f))
+  ;;' (assert-true (assert-false #nil))
+  ;;' (assert-error (lambda () (assert-false #t)))
   ;;' @seealso assert-true, assert
   (define assert-false
     (lambda (value)
@@ -71,13 +88,18 @@
           (error error-msg))
         #t)))
 
-  ;;' @description Assert expected and actual are identical?.
+  ;;' @description Assert expected and actual are identical (R's `identical()`).
   ;;' @noeval
   ;;' @examples
-  ;;' (define x '(1 2 3))
-  ;;' (assert-eq x x)           ; => #t (same object)
-  ;;' (assert-eq '(1) '(1))     ; signals error (not identical)
-  ;;' @note Uses `identical?` (pointer equality), not `equal?` (structural equality). Use `assert-equal` for value comparison.
+  ;;' (assert-eq 42 42)          ; => #t
+  ;;' (assert-eq "abc" "abc")    ; => #t
+  ;;' (assert-eq 1 1L)           ; signals error (double vs integer)
+  ;;' (assert-eq 1 "1")          ; signals error (different types)
+  ;;' @assert
+  ;;' (assert-true (assert-eq 42 42))
+  ;;' (assert-true (assert-eq "abc" "abc"))
+  ;;' (assert-error (lambda () (assert-eq 1 "1")))
+  ;;' @note Uses R's `identical()`, which checks exact structural identity including type. `1` (double) and `1L` (integer) are not identical. Use `assert-equal` for value comparison with `equal?`.
   ;;' @seealso assert-equal, assert
   (define assert-eq
     (lambda (expected actual)
@@ -91,8 +113,12 @@
   ;;' @noeval
   ;;' @examples
   ;;' (assert-error (lambda () (error "boom")))   ; => #t
-  ;;' (assert-error (lambda () (/ 1 0)))           ; => #t
+  ;;' (assert-error (lambda () (stop "fail")))    ; => #t
   ;;' (assert-error (lambda () 42))                ; signals error
+  ;;' @assert
+  ;;' (assert-true (assert-error (lambda () (error "boom"))))
+  ;;' (assert-true (assert-error (lambda () (stop "fail"))))
+  ;;' (assert-error (lambda () (assert-error (lambda () 42))))
   ;;' @seealso assert, error
   (define assert-error
     (lambda (thunk)

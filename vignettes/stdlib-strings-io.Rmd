@@ -545,6 +545,13 @@ Read entire file as string.
 (read-file "data.txt" "latin1")         ; read with specific encoding
 ```
 
+```{arl, include=FALSE}
+(define __tmp (r/call "tempfile" (list)))
+(r/call "writeLines" (list (r/call "c" (list "line1" "line2")) __tmp))
+(assert-equal "line1\nline2" (read-file __tmp))
+(r/call "unlink" (list __tmp))
+```
+
 ---
 
 ### read-lines {#read-lines}
@@ -556,6 +563,13 @@ Read file into list of lines.
 **Examples:**
 ```{arl, eval=FALSE}
 (read-lines "data.txt")  ; => ("line1" "line2" "line3")
+```
+
+```{arl, include=FALSE}
+(define __tmp (r/call "tempfile" (list)))
+(r/call "writeLines" (list (r/call "c" (list "alpha" "beta" "gamma")) __tmp))
+(assert-equal (list "alpha" "beta" "gamma") (read-lines __tmp))
+(r/call "unlink" (list __tmp))
 ```
 
 ---
@@ -572,6 +586,13 @@ Write string or lines to file.
 (write-file "out.txt" (list "line1" "line2"))
 ```
 
+```{arl, include=FALSE}
+(define __tmp (r/call "tempfile" (list)))
+(write-file __tmp "hello world")
+(assert-equal "hello world" (read-file __tmp))
+(r/call "unlink" (list __tmp))
+```
+
 ---
 
 ### write-lines {#write-lines}
@@ -585,6 +606,13 @@ Write list of lines to file.
 (write-lines "out.txt" (list "line1" "line2" "line3"))
 ```
 
+```{arl, include=FALSE}
+(define __tmp (r/call "tempfile" (list)))
+(write-lines __tmp (list "one" "two" "three"))
+(assert-equal (list "one" "two" "three") (read-lines __tmp))
+(r/call "unlink" (list __tmp))
+```
+
 ---
 
 ### append-file {#append-file}
@@ -596,6 +624,15 @@ Append content to file.
 **Examples:**
 ```{arl, eval=FALSE}
 (append-file "log.txt" "new entry\n")
+```
+
+```{arl, include=FALSE}
+(define __tmp (r/call "tempfile" (list)))
+(write-file __tmp "first")
+(append-file __tmp "second")
+(assert-true (string-contains? (read-file __tmp) "first"))
+(assert-true (string-contains? (read-file __tmp) "second"))
+(r/call "unlink" (list __tmp))
 ```
 
 ---
@@ -612,6 +649,14 @@ Return #t if file exists.
 (file-exists? "nope.txt")    ; => #f
 ```
 
+```{arl, include=FALSE}
+(define __tmp (r/call "tempfile" (list)))
+(r/call "writeLines" (list "" __tmp))
+(assert-true (file-exists? __tmp))
+(assert-false (file-exists? "/nonexistent/path/to/file.txt"))
+(r/call "unlink" (list __tmp))
+```
+
 ---
 
 ### file-size {#file-size}
@@ -623,6 +668,13 @@ Return size of file in bytes.
 **Examples:**
 ```{arl, eval=FALSE}
 (file-size "data.txt")       ; => 1024 (bytes)
+```
+
+```{arl, include=FALSE}
+(define __tmp (r/call "tempfile" (list)))
+(r/call "writeLines" (list "hello" __tmp))
+(assert-true (> (file-size __tmp) 0))
+(r/call "unlink" (list __tmp))
 ```
 
 ---
@@ -638,6 +690,13 @@ Return file modification time as numeric timestamp.
 (file-modified-time "data.txt")  ; => 1700000000 (numeric timestamp)
 ```
 
+```{arl, include=FALSE}
+(define __tmp (r/call "tempfile" (list)))
+(r/call "writeLines" (list "" __tmp))
+(assert-true (> (file-modified-time __tmp) 0))
+(r/call "unlink" (list __tmp))
+```
+
 ---
 
 ### file-delete {#file-delete}
@@ -649,6 +708,14 @@ Delete file. Return #t on success.
 **Examples:**
 ```{arl, eval=FALSE}
 (file-delete "temp.txt")     ; => #t
+```
+
+```{arl, include=FALSE}
+(define __tmp (r/call "tempfile" (list)))
+(r/call "writeLines" (list "" __tmp))
+(assert-true (file-exists? __tmp))
+(assert-true (file-delete __tmp))
+(assert-false (file-exists? __tmp))
 ```
 
 ---
@@ -683,6 +750,17 @@ List directory contents as list of filenames.
 (directory-list "." #t)            ; => ("./file1.txt" "./file2.txt")
 ```
 
+```{arl, include=FALSE}
+(define __tmpdir (r/call "tempfile" (list "dir")))
+(r/call "dir.create" (list __tmpdir))
+(r/call "writeLines" (list "" (r/call "file.path" (list __tmpdir "a.txt"))))
+(r/call "writeLines" (list "" (r/call "file.path" (list __tmpdir "b.txt"))))
+(define __listing (directory-list __tmpdir))
+(assert-true (> (length __listing) 0))
+(assert-true (r/call "%in%" (list "a.txt" __listing)))
+(r/call "unlink" (list __tmpdir :recursive #t))
+```
+
 ---
 
 ### directory-delete {#directory-delete}
@@ -694,6 +772,14 @@ Delete directory. Return #t on success.
 **Examples:**
 ```{arl, eval=FALSE}
 (directory-delete "/tmp/mydir")    ; => #t
+```
+
+```{arl, include=FALSE}
+(define __tmpdir (r/call "tempfile" (list "deldir")))
+(r/call "dir.create" (list __tmpdir))
+(assert-true (directory-exists? __tmpdir))
+(assert-true (directory-delete __tmpdir))
+(assert-false (directory-exists? __tmpdir))
 ```
 
 ---

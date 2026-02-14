@@ -347,6 +347,13 @@ Assert condition or raise error.
 (assert #f)               ; signals "Assertion failed"
 ```
 
+```{arl, include=FALSE}
+(assert-true (assert #t))
+(assert-true (assert (> 3 2)))
+(assert-error (lambda () (assert #f "must be true")))
+(assert-error (lambda () (assert #f)))
+```
+
 **See also:** [error](#error)
 
 ---
@@ -362,6 +369,12 @@ Assert expected and actual are equal?.
 (assert-equal 3 (+ 1 2))  ; => #t
 (assert-equal "a" "a")    ; => #t
 (assert-equal 1 2)        ; signals error
+```
+
+```{arl, include=FALSE}
+(assert-true (assert-equal 3 (+ 1 2)))
+(assert-true (assert-equal "a" "a"))
+(assert-error (lambda () (assert-equal 1 2)))
 ```
 
 **See also:** [assert-eq](#assert-eq), [assert-true](#assert-true)
@@ -381,6 +394,12 @@ Assert value is truthy.
 (assert-true #f)          ; signals error
 ```
 
+```{arl, include=FALSE}
+(assert-true (assert-true #t))
+(assert-true (assert-true 1))
+(assert-error (lambda () (assert-true #f)))
+```
+
 **See also:** [assert-false](#assert-false), [assert](#assert)
 
 ---
@@ -398,24 +417,37 @@ Assert value is falsy.
 (assert-false #t)         ; signals error
 ```
 
+```{arl, include=FALSE}
+(assert-true (assert-false #f))
+(assert-true (assert-false #nil))
+(assert-error (lambda () (assert-false #t)))
+```
+
 **See also:** [assert-true](#assert-true), [assert](#assert)
 
 ---
 
 ### assert-eq {#assert-eq}
 
-Assert expected and actual are identical?.
+Assert expected and actual are identical (R's `identical()`).
 
 **Signature:** `(assert-eq expected actual)`
 
 **Examples:**
 ```{arl, eval=FALSE}
-(define x '(1 2 3))
-(assert-eq x x)           ; => #t (same object)
-(assert-eq '(1) '(1))     ; signals error (not identical)
+(assert-eq 42 42)          ; => #t
+(assert-eq "abc" "abc")    ; => #t
+(assert-eq 1 1L)           ; signals error (double vs integer)
+(assert-eq 1 "1")          ; signals error (different types)
 ```
 
-**Note:** Uses `identical?` (pointer equality), not `equal?` (structural equality). Use `assert-equal` for value comparison.
+```{arl, include=FALSE}
+(assert-true (assert-eq 42 42))
+(assert-true (assert-eq "abc" "abc"))
+(assert-error (lambda () (assert-eq 1 "1")))
+```
+
+**Note:** Uses R's `identical()`, which checks exact structural identity including type. `1` (double) and `1L` (integer) are not identical. Use `assert-equal` for value comparison with `equal?`.
 
 **See also:** [assert-equal](#assert-equal), [assert](#assert)
 
@@ -430,8 +462,14 @@ Assert thunk throws an error.
 **Examples:**
 ```{arl, eval=FALSE}
 (assert-error (lambda () (error "boom")))   ; => #t
-(assert-error (lambda () (/ 1 0)))           ; => #t
+(assert-error (lambda () (stop "fail")))    ; => #t
 (assert-error (lambda () 42))                ; signals error
+```
+
+```{arl, include=FALSE}
+(assert-true (assert-error (lambda () (error "boom"))))
+(assert-true (assert-error (lambda () (stop "fail"))))
+(assert-error (lambda () (assert-error (lambda () 42))))
 ```
 
 **See also:** [assert](#assert), [error](#error)
@@ -452,6 +490,11 @@ Evaluate a Arl expression in the current environment.
 (eval '(list 1 2 3))      ; => (1 2 3)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3 (eval '(+ 1 2)))
+(assert-equal (list 1 2 3) (eval '(list 1 2 3)))
+```
+
 **See also:** [r/eval](#r-eval), [read](#read), [macroexpand](#macroexpand)
 
 ---
@@ -467,6 +510,11 @@ Parse a string into a Arl expression without evaluating it.
 (read "(+ 1 2)")          ; => (+ 1 2) (unevaluated)
 (read "42")               ; => 42
 (read "foo")              ; => foo (symbol)
+```
+
+```{arl, include=FALSE}
+(assert-equal 42 (read "42"))
+(assert-equal 3 (eval (read "(+ 1 2)")))
 ```
 
 **Note:** Returns the first expression from the source string, or #nil if
@@ -490,6 +538,11 @@ The inverse of read.
 (write 42)                ; => "42"
 (write "hello")           ; => "\"hello\""
 (write #t)                ; => "#t"
+```
+
+```{arl, include=FALSE}
+(assert-equal "42" (write 42))
+(assert-equal "#t" (write #t))
 ```
 
 **Note:** Produces output that can be parsed back with read, ensuring the
@@ -632,6 +685,12 @@ Return #t if x is a promise (created with `delay`).
 (promise? 42)             ; => #f
 ```
 
+```{arl, include=FALSE}
+(define __p (delay (+ 1 2)))
+(assert-true (promise? __p))
+(assert-false (promise? 42))
+```
+
 **See also:** [force](#force), [promise-expr](#promise-expr)
 
 ---
@@ -648,6 +707,12 @@ returning the result. If x is not a promise, returns x unchanged.
 (define p (delay (+ 1 2)))
 (force p)                 ; => 3
 (force 42)                ; => 42 (non-promise passed through)
+```
+
+```{arl, include=FALSE}
+(define __fp (delay (+ 10 20)))
+(assert-equal 30 (force __fp))
+(assert-equal 42 (force 42))
 ```
 
 **See also:** [promise?](#promise-p), [promise-expr](#promise-expr), delay
@@ -722,6 +787,14 @@ arguments, sets specific fields and merges with existing documentation.
 (doc! my-fn :description "Doubles." :note "Fast path.")
 ```
 
+```{arl, include=FALSE}
+(define __doc-test-fn (lambda (x) (* x 2)))
+(doc! __doc-test-fn "Doubles the input.")
+(assert-equal "Doubles the input." (doc __doc-test-fn))
+(doc! __doc-test-fn :examples "(my-fn 3) ; => 6")
+(assert-equal "(my-fn 3) ; => 6" (doc __doc-test-fn "examples"))
+```
+
 **See also:** [doc](#doc), help
 
 ---
@@ -739,6 +812,14 @@ or "all" to get the full documentation list.
 (doc my-fn)              ; => "Doubles the input."
 (doc my-fn "examples")   ; => "(my-fn 3) ; => 6"
 (doc my-fn "all")        ; => named list of all fields
+```
+
+```{arl, include=FALSE}
+(define __doc-get-fn (lambda (x) (+ x 1)))
+(doc! __doc-get-fn "Increments input.")
+(assert-equal "Increments input." (doc __doc-get-fn))
+(doc! __doc-get-fn :note "Simple function.")
+(assert-equal "Simple function." (doc __doc-get-fn "note"))
 ```
 
 **See also:** [doc!](#doc-bang), help
