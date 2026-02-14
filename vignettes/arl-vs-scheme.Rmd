@@ -15,16 +15,19 @@ arl::register_knitr_engine()
 ```
 
 Arl is a Lisp dialect implemented in and with access to R. It borrows Lisp
-syntax and macro conventions, but its runtime model and interop are rooted in R.
-This vignette highlights key similarities with Scheme and the most important
-differences.
+syntax and macro conventions, but its runtime model and interop are rooted in
+R. This vignette highlights key similarities with Scheme and the most important
+differences. (The development of R was [heavily
+influenced](https://cran.r-project.org/doc/html/interface98-paper/paper_1.html)
+by Scheme, making the comparison natural.)
 
 ## Common ground
 
 Arl and Scheme share a Lisp-family surface syntax and several familiar ideas:
 
 - **S-expressions**: code and data use the same list syntax.
-- **Homoiconic macros**: `defmacro` plus quasiquote/unquote are central.
+- **[Homoiconic](https://en.wikipedia.org/wiki/Homoiconicity) macros**:
+  `defmacro` plus quasiquote/unquote are central.
 - **First-class functions**: anonymous functions and higher-order patterns are
   idiomatic.
 - **Lexical scoping**: bindings are local by default and resolve predictably.
@@ -143,7 +146,6 @@ tail-recursive patterns.
         (factorial (- n 1) (* acc n)))))
 
 ;; loop/recur for explicit control
-(import looping)
 (loop ((i 10) (acc 1))
   (if (< i 2) acc
       (recur (- i 1) (* acc i))))
@@ -164,8 +166,8 @@ normal function application.
 ## Special forms and macros
 
 Many familiar special forms exist (`quote`, `if`, `define`, `lambda`, `begin`),
-but there are Arl-specific forms (`~`, `::`, `:::`) and macro helpers tuned for
-R interop.
+but there are Arl-specific forms (`~`, `::`, `:::` for R formula definition and
+package access) and macro helpers tuned for R interop.
 
 ## When to think "Scheme" vs "R"
 

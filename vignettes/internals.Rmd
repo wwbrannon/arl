@@ -16,7 +16,9 @@ arl::register_knitr_engine()
 
 This vignette explains how Arl code is compiled and executed. It is intended
 for contributors and curious users who want to understand what happens between
-typing an expression and seeing its result.
+typing an expression and seeing its result. Note that everything in this
+document should be considered an internal implementation detail subject to
+change without notice.
 
 ## Pipeline overview
 
@@ -88,9 +90,8 @@ what R code the compiler generates.
 
 ## Special form dispatch
 
-The compiler's core is a dispatch table in `compile_impl` (line ~191 of
-`compiler.R`). When it encounters a call, it checks the operator against
-known special forms:
+The compiler's core is a dispatch table in `compile_impl` (see `compiler.R`).
+When it encounters a call, it checks the operator against known special forms:
 
 - `quote` -- return the quoted value as-is
 - `if` -- conditional with truthiness wrapping (`.__true_p()`)
