@@ -32,6 +32,12 @@ Return #t if x is a proper list (R list or call), not a dotted pair.
 (list? "hello")  ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (list? (list 1 2 3)))
+(assert-true (list? ()))
+(assert-false (list? "hello"))
+```
+
 **See also:** [pair?](#pair-p), [list-or-pair?](#list-or-pair-p), [null?](#null-p)
 
 ---
@@ -45,6 +51,10 @@ Return #t if x is a non-empty list or dotted pair (pairlist cell).
 **Examples:**
 ```{arl}
 (list-or-pair? (list 1))  ; => #t
+```
+
+```{arl, include=FALSE}
+(assert-true (list-or-pair? (list 1)))
 ```
 
 **See also:** [list?](#list-p), [pair?](#pair-p), [null?](#null-p), [atom?](#atom-p)
@@ -62,6 +72,12 @@ Return #t for empty list or #nil.
 (null? #nil)  ; => #t
 (null? ())  ; => #t
 (null? (list 1))  ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (null? #nil))
+(assert-true (null? ()))
+(assert-false (null? (list 1)))
 ```
 
 **See also:** [nil?](#nil-p), [pair?](#pair-p), [list-or-pair?](#list-or-pair-p)
@@ -93,6 +109,13 @@ dotted pair (i.e. not list-or-pair?).
 (atom? ())  ; => #t  (empty list is atomic)
 ```
 
+```{arl, include=FALSE}
+(assert-true (atom? 42))
+(assert-true (atom? "hello"))
+(assert-false (atom? (list 1 2)))
+(assert-true (atom? ()))
+```
+
 **See also:** [list-or-pair?](#list-or-pair-p)
 
 ---
@@ -109,6 +132,12 @@ Return #t if x is empty (0-length).
 (empty? ())  ; => #t
 (empty? (list))  ; => #t
 (empty? (list 1))  ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (empty? ()))
+(assert-true (empty? (list)))
+(assert-false (empty? (list 1)))
 ```
 
 **Note:** The empty string `""` has length 1 in R and is NOT considered empty!
@@ -132,6 +161,12 @@ Return #t if x is a symbol.
 (symbol? 42)  ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (symbol? 'foo))
+(assert-false (symbol? "foo"))
+(assert-false (symbol? 42))
+```
+
 ---
 
 ### keyword? {#keyword-p}
@@ -144,6 +179,11 @@ Return #t if x is an Arl keyword.
 ```{arl}
 (keyword? ':foo)  ; => #t
 (keyword? 'foo)   ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (keyword? ':foo))
+(assert-false (keyword? 'foo))
 ```
 
 ---
@@ -161,6 +201,10 @@ Return #t if x is a number (real or complex).
 (number? 42)  ; => #t
 ```
 
+```{arl, include=FALSE}
+(assert-true (number? 42))
+```
+
 **See also:** [real?](#real-p), [complex?](#complex-p), [rational?](#rational-p), [exact?](#exact-p), [inexact?](#inexact-p)
 
 ---
@@ -176,6 +220,10 @@ Return #t if x is character.
 (string? "hello")  ; => #t
 ```
 
+```{arl, include=FALSE}
+(assert-true (string? "hello"))
+```
+
 ---
 
 ### vector? {#vector-p}
@@ -187,6 +235,10 @@ Return #t if x is a non-list atomic vector.
 **Examples:**
 ```{arl}
 (vector? (c 1 2 3))  ; => #t
+```
+
+```{arl, include=FALSE}
+(assert-true (vector? (c 1 2 3)))
 ```
 
 **Note:** Tests whether x is a non-list atomic vector (numeric, character, logical, etc.). R lists are NOT vectors by this predicate.
@@ -207,6 +259,13 @@ Return #t if x is a single logical value.
 (boolean? (c TRUE FALSE))  ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (boolean? #t))
+(assert-true (boolean? #f))
+(assert-true (boolean? TRUE))
+(assert-false (boolean? (c TRUE FALSE)))
+```
+
 ---
 
 ### true? {#true-p}
@@ -218,6 +277,10 @@ Return #t if x is TRUE.
 **Examples:**
 ```{arl}
 (true? #t)  ; => #t
+```
+
+```{arl, include=FALSE}
+(assert-true (true? #t))
 ```
 
 ---
@@ -233,6 +296,10 @@ Return #t if x is #f.
 (false? #f)  ; => #t
 ```
 
+```{arl, include=FALSE}
+(assert-true (false? #f))
+```
+
 ---
 
 ## Function Predicates {#section-function-predicates}
@@ -246,6 +313,10 @@ Return #t if x is a function.
 **Examples:**
 ```{arl}
 (fn? car)  ; => #t
+```
+
+```{arl, include=FALSE}
+(assert-true (fn? car))
 ```
 
 **See also:** [callable?](#callable-p), [procedure?](#procedure-p)
@@ -285,6 +356,10 @@ Test if x is an environment (including R6 objects).
 (environment? (baseenv))  ; => #t
 ```
 
+```{arl, include=FALSE}
+(assert-true (environment? (baseenv)))
+```
+
 **Note:** R6 objects, dicts, and sets are all environments in R, so this predicate returns #t for them.
 
 ---
@@ -300,6 +375,10 @@ Test if x is a Reference Class object.
 (is-refclass? (baseenv))  ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-false (is-refclass? (baseenv)))
+```
+
 ---
 
 ## Type Introspection {#section-type-introspection}
@@ -313,6 +392,10 @@ Return the type of value (alias for R's typeof).
 **Examples:**
 ```{arl}
 (type-of 42)  ; => "double"
+```
+
+```{arl, include=FALSE}
+(assert-equal "double" (type-of 42))
 ```
 
 **See also:** class, mode (R functions)
@@ -351,6 +434,13 @@ Return #t if x is a real number (includes ±Inf, excludes complex).
 (real? (make-rectangular 3 4))  ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (real? 42))
+(assert-true (real? 3.14))
+(assert-true (real? Inf))
+(assert-false (real? (make-rectangular 3 4)))
+```
+
 **See also:** [rational?](#rational-p), [complex?](#complex-p), [number?](#number-p)
 
 ---
@@ -365,6 +455,11 @@ Return #t if x is a complex number.
 ```{arl}
 (complex? (make-rectangular 3 4))  ; => #t
 (complex? 42)         ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (complex? (make-rectangular 3 4)))
+(assert-false (complex? 42))
 ```
 
 **See also:** [real?](#real-p), [number?](#number-p), [make-rectangular](stdlib-math.html#make-rectangular) (in `math` module)
@@ -383,6 +478,13 @@ Return #t if x is a finite real number (rational in R are finite floats).
 (rational? 3.14)      ; => #t
 (rational? Inf)       ; => #f (infinities are real but not rational)
 (rational? NaN)       ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (rational? 42))
+(assert-true (rational? 3.14))
+(assert-false (rational? Inf))
+(assert-false (rational? NaN))
 ```
 
 **Note:** In R, all finite floating-point numbers can be represented as rationals (IEEE 754). R does not have a built-in rational or decimal type like some Schemes.
@@ -404,6 +506,12 @@ Return #t if x is an exact number (integer storage type in R).
 (exact? (->integer 5)); => #t
 ```
 
+```{arl, include=FALSE}
+(assert-true (exact? 5L))
+(assert-false (exact? 5.0))
+(assert-true (exact? (->integer 5)))
+```
+
 **Note:** In Scheme, exactness is a property of the number. In R (and Arl), exactness corresponds to integer storage type. All integers are exact; all doubles and complex numbers are inexact.
 
 **See also:** [inexact?](#inexact-p), [exact->inexact](#exact-to-inexact) (in `conversions` module)
@@ -423,6 +531,12 @@ Return #t if x is an inexact number (double or complex in R).
 (inexact? 5L)         ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (inexact? 5.0))
+(assert-true (inexact? (make-rectangular 3 4)))
+(assert-false (inexact? 5L))
+```
+
 **See also:** [exact?](#exact-p), [inexact->exact](#inexact-to-exact) (in `conversions` module)
 
 ---
@@ -439,6 +553,13 @@ Return #t if x is an integer-valued number.
 (integer? 42.0)       ; => #t (value is integer even if storage is double)
 (integer? 3.14)       ; => #f
 (integer? Inf)        ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (integer? 42))
+(assert-true (integer? 42.0))
+(assert-false (integer? 3.14))
+(assert-false (integer? Inf))
 ```
 
 **Note:** Tests for integer VALUE, not storage type. Use `exact?` to test storage type.
@@ -461,6 +582,13 @@ Return #t if x is a natural number (integer >= 0).
 (natural? 3.14)       ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (natural? 0))
+(assert-true (natural? 42))
+(assert-false (natural? -5))
+(assert-false (natural? 3.14))
+```
+
 **See also:** [integer?](#integer-p), [positive?](#positive-p), [non-negative?](#non-negative-p)
 
 ---
@@ -477,6 +605,13 @@ Return #t if x is finite.
 (finite? Inf)         ; => #f
 (finite? NaN)         ; => #f
 (finite? -Inf)        ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (finite? 42))
+(assert-false (finite? Inf))
+(assert-false (finite? NaN))
+(assert-false (finite? -Inf))
 ```
 
 **See also:** [infinite?](#infinite-p), [nan?](#nan-p), [rational?](#rational-p)
@@ -497,6 +632,13 @@ Return #t if x is infinite.
 (infinite? NaN)       ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (infinite? Inf))
+(assert-true (infinite? -Inf))
+(assert-false (infinite? 42))
+(assert-false (infinite? NaN))
+```
+
 **See also:** [finite?](#finite-p), [nan?](#nan-p)
 
 ---
@@ -513,6 +655,13 @@ Return #t if x is NaN.
 (nan? (/ 0 0))        ; => #t (0/0 = NaN)
 (nan? 42)             ; => #f
 (nan? Inf)            ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (nan? NaN))
+(assert-true (nan? (/ 0 0)))
+(assert-false (nan? 42))
+(assert-false (nan? Inf))
 ```
 
 **See also:** [finite?](#finite-p), [infinite?](#infinite-p)
@@ -534,6 +683,12 @@ Return #t if x is an even number.
 (even? 0)             ; => #t
 ```
 
+```{arl, include=FALSE}
+(assert-true (even? 4))
+(assert-false (even? 3))
+(assert-true (even? 0))
+```
+
 **See also:** [odd?](#odd-p)
 
 ---
@@ -548,6 +703,11 @@ Return #t if x is an odd number.
 ```{arl}
 (odd? 3)              ; => #t
 (odd? 4)              ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (odd? 3))
+(assert-false (odd? 4))
 ```
 
 **See also:** [even?](#even-p)
@@ -567,6 +727,12 @@ Return #t if x is zero.
 (zero? 1)             ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (zero? 0))
+(assert-true (zero? 0.0))
+(assert-false (zero? 1))
+```
+
 **See also:** [positive?](#positive-p), [negative?](#negative-p)
 
 ---
@@ -582,6 +748,12 @@ Return #t if x is greater than zero.
 (positive? 5)         ; => #t
 (positive? 0)         ; => #f
 (positive? -5)        ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (positive? 5))
+(assert-false (positive? 0))
+(assert-false (positive? -5))
 ```
 
 **See also:** [negative?](#negative-p), [non-negative?](#non-negative-p), [zero?](#zero-p)
@@ -601,6 +773,12 @@ Return #t if x is less than zero.
 (negative? 5)         ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (negative? -5))
+(assert-false (negative? 0))
+(assert-false (negative? 5))
+```
+
 **See also:** [positive?](#positive-p), [non-positive?](#non-positive-p), [zero?](#zero-p)
 
 ---
@@ -618,6 +796,12 @@ Return #t if x is greater than or equal to zero.
 (non-negative? -5)    ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (non-negative? 5))
+(assert-true (non-negative? 0))
+(assert-false (non-negative? -5))
+```
+
 **See also:** [positive?](#positive-p), [natural?](#natural-p)
 
 ---
@@ -633,6 +817,12 @@ Return #t if x is less than or equal to zero.
 (non-positive? -5)    ; => #t
 (non-positive? 0)     ; => #t
 (non-positive? 5)     ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (non-positive? -5))
+(assert-true (non-positive? 0))
+(assert-false (non-positive? 5))
 ```
 
 **See also:** [negative?](#negative-p)
@@ -658,9 +848,17 @@ Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
 ```{arl}
 (equal? 1 1)                    ; => #t
 (equal? 1 1.0)                  ; => #t (type coercion)
-(equal? 1 1.0 :strict #t)      ; => #f (strict mode, uses identical?)
+(equal? 1L 1.0 :strict #t)     ; => #f (strict mode, uses identical?)
 (equal? (list 1 2) (list 1 2))  ; => #t (deep structural)
 (equal? "hello" "hello")        ; => #t
+```
+
+```{arl, include=FALSE}
+(assert-true (equal? 1 1))
+(assert-true (equal? 1 1.0))
+(assert-false (equal? 1L 1.0 :strict #t))
+(assert-true (equal? (list 1 2) (list 1 2)))
+(assert-true (equal? "hello" "hello"))
 ```
 
 **See also:** [identical?](#identical-p), [eq?](#eq-p), [eqv?](#eqv-p), [set-method!](#set-method-bang)
@@ -677,8 +875,14 @@ R's native equality test. Structural comparison for value
 **Examples:**
 ```{arl}
 (identical? 1 1)          ; => #t
-(identical? 1 1.0)        ; => #f (different types)
+(identical? 1L 1.0)       ; => #f (integer vs double)
 (identical? "a" "a")      ; => #t
+```
+
+```{arl, include=FALSE}
+(assert-true (identical? 1 1))
+(assert-false (identical? 1L 1.0))
+(assert-true (identical? "a" "a"))
 ```
 
 **Note:** This is R's `identical()` with no modifications. Use `equal?`
@@ -751,6 +955,12 @@ Recursively compare list elements.
 (list-equal? (list 1 "a") (list 1 "a"))   ; => #t
 ```
 
+```{arl, include=FALSE}
+(assert-true (list-equal? (list 1 2 3) (list 1 2 3)))
+(assert-false (list-equal? (list 1 2) (list 1 2 3)))
+(assert-true (list-equal? (list 1 "a") (list 1 "a")))
+```
+
 **Note:** Used internally by `equal?.list`. Recursively compares list elements using `equal?`.
 
 **See also:** [equal?.list](#equal-p-list)
@@ -775,6 +985,13 @@ Extract the first S3 class from an object.
 (s3-type "hello")               ; => "character"
 (s3-type (list 1 2))            ; => "list"
 (s3-type (new.env))             ; => "environment"
+```
+
+```{arl, include=FALSE}
+(assert-equal "numeric" (s3-type 42))
+(assert-equal "character" (s3-type "hello"))
+(assert-equal "list" (s3-type (list 1 2)))
+(assert-equal "environment" (s3-type (new.env)))
 ```
 
 ---
@@ -849,8 +1066,14 @@ Default equality: atomic/vector comparison.
 ```{arl}
 (equal?.default 1 1)             ; => #t
 (equal?.default 1 1.0)           ; => #t (coercion via ==)
-(equal?.default 1 1.0 :strict #t) ; => #f (strict uses identical?)
+(equal?.default 1L 1.0 :strict #t) ; => #f (strict uses identical?)
 (equal?.default (c 1 2 3) (c 1 2 3))  ; => #t (element-wise)
+```
+
+```{arl, include=FALSE}
+(assert-true (equal?.default 1 1))
+(assert-true (equal?.default 1 1.0))
+(assert-false (equal?.default 1L 1.0 :strict #t))
 ```
 
 ---
@@ -866,6 +1089,12 @@ Compare lists recursively by structure and elements.
 (equal?.list (list 1 2 3) (list 1 2 3))          ; => #t
 (equal?.list (list 1 (list 2 3)) (list 1 (list 2 3)))  ; => #t (nested)
 (equal?.list (list 1 2) (list 1 2 3))             ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (equal?.list (list 1 2 3) (list 1 2 3)))
+(assert-false (equal?.list (list 1 2) (list 1 2 3)))
+(assert-true (equal?.list (list 1 (list 2 3)) (list 1 (list 2 3))))
 ```
 
 ---
@@ -902,6 +1131,11 @@ Convert symbol to string.
 (symbol->string 'x)      ; => "x"
 ```
 
+```{arl, include=FALSE}
+(assert-equal "hello" (symbol->string 'hello))
+(assert-equal "x" (symbol->string 'x))
+```
+
 **Note:** Signals an error if the argument is not a symbol.
 
 **See also:** [string->symbol](#string-to-symbol), [->symbol](#to-symbol)
@@ -918,6 +1152,11 @@ Convert string to symbol.
 ```{arl}
 (string->symbol "hello")  ; => hello (a symbol)
 (string->symbol "x")      ; => x
+```
+
+```{arl, include=FALSE}
+(assert-true (symbol? (string->symbol "hello")))
+(assert-equal 'hello (string->symbol "hello"))
 ```
 
 **Note:** Signals an error if the argument is not a string.
@@ -937,6 +1176,12 @@ Convert value to symbol.
 (->symbol "hello")  ; => hello (a symbol)
 (->symbol 42)       ; => 42 (symbol named "42")
 (->symbol 'x)       ; => x (already a symbol, returned as-is)
+```
+
+```{arl, include=FALSE}
+(assert-true (symbol? (->symbol "hello")))
+(assert-true (symbol? (->symbol 42)))
+(assert-equal 'x (->symbol 'x))
 ```
 
 **See also:** [symbol->string](#symbol-to-string), [string->symbol](#string-to-symbol)
@@ -960,6 +1205,12 @@ Convert value to number.
 (->number 5)        ; => 5 (already a number)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 42 (->number "42"))
+(assert-equal 3.14 (->number "3.14"))
+(assert-equal 5 (->number 5))
+```
+
 **Note:** Signals an error for non-numeric strings (e.g. `(->number "abc")`).
 
 **See also:** [->integer](#to-integer), [->double](#to-double), [->complex](#to-complex)
@@ -980,6 +1231,11 @@ Convert exact number to inexact (integer to double).
 (exact->inexact 3.14)   ; => 3.14 (already double, returned as double)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 5.0 (exact->inexact 5L))
+(assert-equal 3.14 (exact->inexact 3.14))
+```
+
 **Note:** In Scheme, exactness is a property of any number. In R (and Arl), exact means integer storage type and inexact means double or complex. See also `exact?` and `inexact?` in the `math` module.
 
 **See also:** [inexact->exact](#inexact-to-exact), [exact?](#exact-p) (in `types` module), [inexact?](#inexact-p) (in `types` module)
@@ -997,6 +1253,12 @@ Convert inexact number to exact (double to integer, rounds to nearest).
 (inexact->exact 3.7)    ; => 4L (rounds to nearest integer)
 (inexact->exact 3.2)    ; => 3L
 (inexact->exact 5L)     ; => 5L (already integer)
+```
+
+```{arl, include=FALSE}
+(assert-equal 4L (inexact->exact 3.7))
+(assert-equal 3L (inexact->exact 3.2))
+(assert-equal 5L (inexact->exact 5L))
 ```
 
 **Note:** **Warning:** Converting double to integer rounds to the nearest integer, which may lose precision. For example, `(inexact->exact 3.7)` returns `4L`, not `3L`.
@@ -1022,6 +1284,12 @@ Convert value to integer.
 (->integer 5L)      ; => 5L (already integer)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3L (->integer 3.7))
+(assert-equal 42L (->integer "42"))
+(assert-equal 5L (->integer 5L))
+```
+
 **Note:** Signals an error for non-numeric strings. Note that `->integer` truncates toward zero (like R's `as.integer`), whereas `inexact->exact` rounds to nearest.
 
 **See also:** [->number](#to-number), [->double](#to-double), [inexact->exact](#inexact-to-exact)
@@ -1039,6 +1307,12 @@ Convert value to double.
 (->double 5L)       ; => 5.0
 (->double "3.14")   ; => 3.14
 (->double 2.5)      ; => 2.5 (already double)
+```
+
+```{arl, include=FALSE}
+(assert-equal 5.0 (->double 5L))
+(assert-equal 3.14 (->double "3.14"))
+(assert-equal 2.5 (->double 2.5))
 ```
 
 **See also:** [->number](#to-number), [->integer](#to-integer), [exact->inexact](#exact-to-inexact)
@@ -1073,7 +1347,12 @@ Convert value to list.
 **Examples:**
 ```{arl}
 (->list (c 1 2 3))       ; => (1 2 3)
-(->list '(1 2 3))        ; => (1 2 3) (already a list)
+(->list (list 1 2 3))    ; => (1 2 3) (already a list)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3) (->list (c 1 2 3)))
+(assert-equal (list 1 2 3) (->list (list 1 2 3)))
 ```
 
 **See also:** [->vector](#to-vector)
@@ -1088,7 +1367,7 @@ Convert value to vector.
 
 **Examples:**
 ```{arl}
-(->vector '(1 2 3))   ; => [1] 1 2 3 (atomic vector)
+(->vector (list 1 2 3))   ; => [1] 1 2 3 (atomic vector)
 (->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)
 ```
 

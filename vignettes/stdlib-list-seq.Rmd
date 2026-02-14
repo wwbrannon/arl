@@ -51,6 +51,11 @@ Return first element or #nil.
 (car (cons 'a 'b))    ; => a
 ```
 
+```{arl, include=FALSE}
+(assert-equal 1 (car (list 1 2 3)))
+(assert-equal #nil (car (list)))
+```
+
 **See also:** [cdr](#cdr), [cons](#cons), [first](#first)
 
 ---
@@ -66,6 +71,11 @@ Return list without first element (or cdr of dotted pair).
 (cdr (list 1 2 3))    ; => (2 3)
 (cdr (list 1))        ; => ()
 (cdr (cons 'a 'b))    ; => b
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 2 3) (cdr (list 1 2 3)))
+(assert-equal (list) (cdr (list 1)))
 ```
 
 **See also:** [car](#car), [cons](#cons), [rest](#rest)
@@ -197,6 +207,11 @@ Prepend item to list or call; dotted pair when cdr is not a list.
 (cons 'a 'b)          ; => dotted pair (a . b)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3) (cons 1 (list 2 3)))
+(assert-equal (list 'a 'b) (cons 'a (list 'b)))
+```
+
 **See also:** [car](#car), [cdr](#cdr), [append](#append)
 
 ---
@@ -212,6 +227,12 @@ Build list ending with last arg.
 (list* 1 2 (list 3 4))  ; => (1 2 3 4)
 (list* 1 2 3)           ; => (1 2 3)
 (list*)                  ; => ()
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3 4) (list* 1 2 (list 3 4)))
+(assert-equal (list 1 2 3) (list* 1 2 3))
+(assert-equal (list) (list*))
 ```
 
 **See also:** list, [cons](#cons), [append](#append)
@@ -231,6 +252,12 @@ Concatenate multiple lists into one.
 (append (list 1 2) (list))         ; => (1 2)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3 4) (append (list 1 2) (list 3 4)))
+(assert-equal (list 1 2 3) (append (list 1) (list 2) (list 3)))
+(assert-equal (list 1 2) (append (list 1 2) (list)))
+```
+
 **See also:** [cons](#cons), [list*](#list-star)
 
 ---
@@ -245,6 +272,11 @@ Reverse list.
 ```{arl}
 (reverse (list 1 2 3))  ; => (3 2 1)
 (reverse (list))        ; => ()
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 3 2 1) (reverse (list 1 2 3)))
+(assert-equal (list) (reverse (list)))
 ```
 
 ---
@@ -306,6 +338,12 @@ Return last item or #nil.
 (last (list))         ; => #nil
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3 (last (list 1 2 3)))
+(assert-equal 42 (last (list 42)))
+(assert-equal #nil (last (list)))
+```
+
 **See also:** [first](#first), [nth](#nth)
 
 ---
@@ -320,6 +358,11 @@ Return nth item (0-based).
 ```{arl}
 (nth (list 'a 'b 'c) 0)  ; => a
 (nth (list 'a 'b 'c) 2)  ; => c
+```
+
+```{arl, include=FALSE}
+(assert-equal 'a (nth (list 'a 'b 'c) 0))
+(assert-equal 'c (nth (list 'a 'b 'c) 2))
 ```
 
 **See also:** [first](#first), [last](#last)
@@ -342,6 +385,11 @@ Find first alist entry (list or dotted pair) with matching key (uses equal?).
 ```{arl}
 (assoc 'b (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
 (assoc 'z (list (list 'a 1) (list 'b 2)))               ; => #nil
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 'b 2) (assoc 'b (list (list 'a 1) (list 'b 2) (list 'c 3))))
+(assert-equal #nil (assoc 'z (list (list 'a 1) (list 'b 2))))
 ```
 
 **See also:** [rassoc](#rassoc), [assoc-by-identical?](#assoc-by-identical-p), [assoc-by-==](#assoc-by-eq-eq)
@@ -413,6 +461,11 @@ Find first alist entry with matching value
 (rassoc 9 (list (list 'a 1) (list 'b 2)))               ; => #nil
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 'b 2) (rassoc 2 (list (list 'a 1) (list 'b 2) (list 'c 3))))
+(assert-equal #nil (rassoc 9 (list (list 'a 1) (list 'b 2))))
+```
+
 **See also:** [assoc](#assoc), [rassoc-by-equal?](#rassoc-by-equal-p)
 
 ---
@@ -444,6 +497,12 @@ Generate numeric range from start to end (exclusive) with optional step.
 (range 5 0 -1)    ; => (5 4 3 2 1)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 0 1 2 3 4) (range 0 5))
+(assert-equal (list 0 2 4 6 8) (range 0 10 2))
+(assert-equal (list 5 4 3 2 1) (range 5 0 -1))
+```
+
 **See also:** [iota](#iota), [make-list](#make-list)
 
 ---
@@ -462,6 +521,12 @@ start (default 0) with step (default 1).
 (iota 5 0 2)      ; => (0 2 4 6 8)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 0 1 2 3 4) (iota 5))
+(assert-equal (list 1 2 3 4 5) (iota 5 1))
+(assert-equal (list 0 2 4 6 8) (iota 5 0 2))
+```
+
 **See also:** [range](#range), [make-list](#make-list)
 
 ---
@@ -476,6 +541,11 @@ Create list of n copies of value.
 ```{arl}
 (make-list 3 'x)    ; => (x x x)
 (make-list 0 'x)    ; => ()
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 'x 'x 'x) (make-list 3 'x))
+(assert-equal (list) (make-list 0 'x))
 ```
 
 **See also:** [iota](#iota), [range](#range)
@@ -495,6 +565,10 @@ Scheme-style list accessor (alias for nth).
 (list-ref (list 'a 'b 'c) 1)  ; => b
 ```
 
+```{arl, include=FALSE}
+(assert-equal 'b (list-ref (list 'a 'b 'c) 1))
+```
+
 **See also:** [nth](#nth)
 
 ---
@@ -509,6 +583,11 @@ Return list without first k elements.
 ```{arl}
 (list-tail (list 'a 'b 'c 'd) 2)  ; => (c d)
 (list-tail (list 1 2 3) 0)         ; => (1 2 3)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 'c 'd) (list-tail (list 'a 'b 'c 'd) 2))
+(assert-equal (list 1 2 3) (list-tail (list 1 2 3) 0))
 ```
 
 **See also:** [drop](#drop)
@@ -534,6 +613,12 @@ Take first n items.
 (take 10 (list 1 2))       ; => (1 2)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3) (take 3 (list 1 2 3 4 5)))
+(assert-equal (list) (take 0 (list 1 2 3)))
+(assert-equal (list 1 2) (take 10 (list 1 2)))
+```
+
 **See also:** [drop](#drop), [take-while](#take-while)
 
 ---
@@ -549,6 +634,12 @@ Drop first n items.
 (drop 2 (list 1 2 3 4 5))  ; => (3 4 5)
 (drop 0 (list 1 2 3))      ; => (1 2 3)
 (drop 10 (list 1 2))       ; => ()
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 3 4 5) (drop 2 (list 1 2 3 4 5)))
+(assert-equal (list 1 2 3) (drop 0 (list 1 2 3)))
+(assert-equal (list) (drop 10 (list 1 2)))
 ```
 
 **See also:** [take](#take), [drop-while](#drop-while)
@@ -567,6 +658,11 @@ Take items while predicate is true.
 (take-while even? (list 1 2 3))       ; => ()
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 3 5) (take-while odd? (list 1 3 5 2 4)))
+(assert-equal (list) (take-while even? (list 1 2 3)))
+```
+
 **See also:** [take](#take), [drop-while](#drop-while), [filter](stdlib-functional.html#filter)
 
 ---
@@ -581,6 +677,11 @@ Drop items while predicate is true.
 ```{arl}
 (drop-while odd? (list 1 3 5 2 4))   ; => (2 4)
 (drop-while even? (list 1 2 3))       ; => (1 2 3)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 2 4) (drop-while odd? (list 1 3 5 2 4)))
+(assert-equal (list 1 2 3) (drop-while even? (list 1 2 3)))
 ```
 
 **See also:** [drop](#drop), [take-while](#take-while), [filter](stdlib-functional.html#filter)
@@ -600,6 +701,11 @@ Split list into chunks of size n.
 (partition 2 (list 1 2 3 4 5))          ; => ((1 2) (3 4))
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list (list 1 2) (list 3 4) (list 5 6)) (partition 2 (list 1 2 3 4 5 6)))
+(assert-equal (list (list 1 2) (list 3 4)) (partition 2 (list 1 2 3 4 5)))
+```
+
 **See also:** [take](#take), [drop](#drop)
 
 ---
@@ -616,6 +722,11 @@ Flatten nested lists.
 (flatten (list 1 2 3))                            ; => (1 2 3)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3 4 5) (flatten (list 1 (list 2 3) (list 4 (list 5)))))
+(assert-equal (list 1 2 3) (flatten (list 1 2 3)))
+```
+
 **See also:** [mapcat](stdlib-functional.html#mapcat), [append](#append)
 
 ---
@@ -629,6 +740,10 @@ Call fn n times collecting results.
 **Examples:**
 ```{arl}
 (repeatedly 3 (lambda () 42))  ; => (42 42 42)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 42 42 42) (repeatedly 3 (lambda () 42)))
 ```
 
 **See also:** [repeat](#repeat), [map](stdlib-functional.html#map)
@@ -647,6 +762,11 @@ Repeat value n times.
 (repeat 3 0)     ; => (0 0 0)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 'x 'x 'x 'x) (repeat 4 'x))
+(assert-equal (list 0 0 0) (repeat 3 0))
+```
+
 **See also:** [repeatedly](#repeatedly)
 
 ---
@@ -661,6 +781,10 @@ Zip lists into list of tuples.
 ```{arl}
 (zip (list 1 2 3) (list 'a 'b 'c))          ; => ((1 a) (2 b) (3 c))
 (zip (list 1 2) (list 'a 'b) (list 'x 'y))  ; => ((1 a x) (2 b y))
+```
+
+```{arl, include=FALSE}
+(assert-equal (list (list 1 'a) (list 2 'b) (list 3 'c)) (zip (list 1 2 3) (list 'a 'b 'c)))
 ```
 
 **See also:** [map](stdlib-functional.html#map)
@@ -701,6 +825,11 @@ Return #t if length of x equals n.
 (length= (list 1 2) 3)    ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (length= (list 1 2 3) 3))
+(assert-false (length= (list 1 2) 3))
+```
+
 **See also:** [length>](#length-gt), [length<](#length-lt), [empty?](stdlib-types.html#empty-p)
 
 ---
@@ -717,6 +846,11 @@ Return #t if length of x is greater than n.
 (length> (list 1 2) 3)    ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (length> (list 1 2 3) 2))
+(assert-false (length> (list 1 2) 3))
+```
+
 **See also:** [length=](#length-eq), [length<](#length-lt)
 
 ---
@@ -731,6 +865,11 @@ Return #t if length of x is less than n.
 ```{arl}
 (length< (list 1 2) 3)    ; => #t
 (length< (list 1 2 3) 2)  ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (length< (list 1 2) 3))
+(assert-false (length< (list 1 2 3) 2))
 ```
 
 **See also:** [length=](#length-eq), [length>](#length-gt)
@@ -757,6 +896,10 @@ Sort list using comparison function (simple quicksort implementation).
       (lambda (a b) (< a b)))   ; => ("a" "b" "c")
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 1 3 4 5) (sort (list 3 1 4 1 5) <))
+```
+
 **See also:** [stable-sort](#stable-sort), [sort-by](#sort-by)
 
 ---
@@ -772,6 +915,10 @@ Sort list by applying key-fn to each element, then comparing.
 (sort-by (list (list "b" 2) (list "a" 1)) car
          (lambda (a b) (< a b)))  ; => (("a" 1) ("b" 2))
 (sort-by (list 3 -1 2) abs <)     ; => (-1 2 3)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list -1 2 3) (sort-by (list 3 -1 2) abs <))
 ```
 
 **See also:** [sort](#sort), [stable-sort](#stable-sort)
@@ -792,6 +939,11 @@ is true), takes from list1 first.
 (merge (list 1 2) (list) <)           ; => (1 2)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3 4 5 6) (merge (list 1 3 5) (list 2 4 6) <))
+(assert-equal (list 1 2) (merge (list 1 2) (list) <))
+```
+
 **See also:** [stable-sort](#stable-sort), [sort](#sort)
 
 ---
@@ -805,6 +957,10 @@ Stable sort - preserves order of equal elements. Uses merge sort internally.
 **Examples:**
 ```{arl}
 (stable-sort (list 3 1 4 1 5) <)  ; => (1 1 3 4 5)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 1 1 3 4 5) (stable-sort (list 3 1 4 1 5) <))
 ```
 
 **Note:** Preserves the relative order of elements that compare equal, unlike `sort`.

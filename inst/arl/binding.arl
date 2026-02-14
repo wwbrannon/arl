@@ -103,13 +103,13 @@
 
 ;;' @description Bind pattern to value and evaluate body when value is truthy.
 ;;' @examples
-;;' (when-let (x (assoc 'a '((a . 1) (b . 2))))
-;;'   (cdr x))               ; => 1
+;;' (when-let (x (assoc 'a (list (list 'a 1) (list 'b 2))))
+;;'   (cadr x))              ; => 1
 ;;'
 ;;' (when-let (x #f)
 ;;'   "never reached")       ; => #nil
 ;;' @assert
-;;' (assert-equal 1 (when-let (x (assoc 'a '((a . 1) (b . 2)))) (cdr x)))
+;;' (assert-equal 1 (when-let (x (assoc 'a (list (list 'a 1) (list 'b 2)))) (cadr x)))
 ;;' (assert-equal #nil (when-let (x #f) "never reached"))
 ;;' @seealso if-let, when, let
 (defmacro when-let (binding . body)

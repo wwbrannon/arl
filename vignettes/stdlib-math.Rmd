@@ -30,6 +30,10 @@ Construct a complex number from real and imaginary parts.
 (make-rectangular 3 4)  ; => 3+4i
 ```
 
+```{arl, include=FALSE}
+(assert-equal (complex :real 3 :imaginary 4) (make-rectangular 3 4))
+```
+
 **See also:** [make-polar](#make-polar), [real-part](#real-part), [imag-part](#imag-part)
 
 ---
@@ -43,6 +47,10 @@ Construct a complex number from polar coordinates (magnitude and angle).
 **Examples:**
 ```{arl}
 (make-polar 5 0)      ; => 5+0i
+```
+
+```{arl, include=FALSE}
+(assert-equal (complex :modulus 5 :argument 0) (make-polar 5 0))
 ```
 
 **See also:** [make-rectangular](#make-rectangular), [magnitude](#magnitude), [angle](#angle)
@@ -60,6 +68,10 @@ Extract the real part of a complex number.
 (real-part (make-rectangular 3 4))  ; => 3.0
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3.0 (real-part (make-rectangular 3 4)))
+```
+
 **See also:** [imag-part](#imag-part), [make-rectangular](#make-rectangular)
 
 ---
@@ -75,6 +87,10 @@ Extract the imaginary part of a complex number.
 (imag-part (make-rectangular 3 4))  ; => 4.0
 ```
 
+```{arl, include=FALSE}
+(assert-equal 4.0 (imag-part (make-rectangular 3 4)))
+```
+
 **See also:** [real-part](#real-part), [make-rectangular](#make-rectangular)
 
 ---
@@ -88,6 +104,10 @@ Compute the magnitude (modulus) of a complex number.
 **Examples:**
 ```{arl}
 (magnitude (make-rectangular 3 4))  ; => 5.0
+```
+
+```{arl, include=FALSE}
+(assert-equal 5.0 (magnitude (make-rectangular 3 4)))
 ```
 
 **See also:** [angle](#angle), [make-polar](#make-polar)
@@ -123,6 +143,11 @@ Modulo helper using R %%.
 (% 17 5)   ; => 2
 ```
 
+```{arl, include=FALSE}
+(assert-equal 1 (% 10 3))
+(assert-equal 2 (% 17 5))
+```
+
 ---
 
 ### < {#lt}
@@ -136,6 +161,12 @@ Variadic less-than comparison. Checks all adjacent pairs.
 (< 1 2)     ; => #t
 (< 1 2 3)   ; => #t
 (< 1 3 2)   ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (< 1 2))
+(assert-true (< 1 2 3))
+(assert-false (< 1 3 2))
 ```
 
 ---
@@ -153,6 +184,12 @@ Variadic greater-than comparison. Checks all adjacent pairs.
 (> 3 1 2)   ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (> 3 2))
+(assert-true (> 3 2 1))
+(assert-false (> 3 1 2))
+```
+
 ---
 
 ### <= {#lte}
@@ -166,6 +203,12 @@ Variadic less-than-or-equal comparison. Checks all adjacent pairs.
 (<= 1 2)    ; => #t
 (<= 1 1 2)  ; => #t
 (<= 2 1)    ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (<= 1 2))
+(assert-true (<= 1 1 2))
+(assert-false (<= 2 1))
 ```
 
 ---
@@ -183,6 +226,12 @@ Variadic greater-than-or-equal comparison. Checks all adjacent pairs.
 (>= 1 2)    ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (>= 3 2))
+(assert-true (>= 2 2 1))
+(assert-false (>= 1 2))
+```
+
 ---
 
 ### == {#num-eq-eq}
@@ -198,6 +247,12 @@ Variadic equality comparison. Checks all adjacent pairs.
 (== 1 2)     ; => #f
 ```
 
+```{arl, include=FALSE}
+(assert-true (== 1 1))
+(assert-true (== 1 1 1))
+(assert-false (== 1 2))
+```
+
 ---
 
 ### = {#num-eq}
@@ -209,6 +264,12 @@ Variadic equality comparison. Checks all adjacent pairs.
 (= 1 1)           ; => #t
 (= "a" "a")       ; => #t
 (= 1 2)           ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (= 1 1))
+(assert-true (= "a" "a"))
+(assert-false (= 1 2))
 ```
 
 ---
@@ -226,6 +287,12 @@ Variadic addition.
 (+ 5)         ; => 5
 ```
 
+```{arl, include=FALSE}
+(assert-equal 6 (+ 1 2 3))
+(assert-equal 0 (+))
+(assert-equal 5 (+ 5))
+```
+
 ---
 
 ### * {#star}
@@ -239,6 +306,12 @@ Variadic multiplication.
 (* 2 3 4)    ; => 24
 (*)           ; => 1
 (* 5)         ; => 5
+```
+
+```{arl, include=FALSE}
+(assert-equal 24 (* 2 3 4))
+(assert-equal 1 (*))
+(assert-equal 5 (* 5))
 ```
 
 ---
@@ -256,6 +329,12 @@ Variadic subtraction.
 (- 10 3 2)   ; => 5
 ```
 
+```{arl, include=FALSE}
+(assert-equal 7 (- 10 3))
+(assert-equal -5 (- 5))
+(assert-equal 5 (- 10 3 2))
+```
+
 ---
 
 ### / {#div}
@@ -271,6 +350,12 @@ Variadic division.
 (/ 100 5 2)  ; => 10
 ```
 
+```{arl, include=FALSE}
+(assert-equal 5 (/ 10 2))
+(assert-equal 0.2 (/ 5))
+(assert-equal 10 (/ 100 5 2))
+```
+
 ---
 
 ### min {#min}
@@ -284,6 +369,10 @@ Variadic min.
 (min 3 1 2)  ; => 1
 ```
 
+```{arl, include=FALSE}
+(assert-equal 1 (min 3 1 2))
+```
+
 ---
 
 ### max {#max}
@@ -295,6 +384,10 @@ Variadic max.
 **Examples:**
 ```{arl}
 (max 3 1 2)  ; => 3
+```
+
+```{arl, include=FALSE}
+(assert-equal 3 (max 3 1 2))
 ```
 
 ---
@@ -311,6 +404,11 @@ Increment numeric value by n (default 1).
 (inc 5 3)     ; => 8
 ```
 
+```{arl, include=FALSE}
+(assert-equal 6 (inc 5))
+(assert-equal 8 (inc 5 3))
+```
+
 **See also:** [dec](#dec)
 
 ---
@@ -325,6 +423,11 @@ Decrement numeric value by n (default 1).
 ```{arl}
 (dec 5)       ; => 4
 (dec 5 3)     ; => 2
+```
+
+```{arl, include=FALSE}
+(assert-equal 4 (dec 5))
+(assert-equal 2 (dec 5 3))
 ```
 
 **See also:** [inc](#inc)
@@ -344,6 +447,12 @@ Clamp numeric value x to the inclusive range [lo, hi].
 (clamp 15 0 10)  ; => 10
 ```
 
+```{arl, include=FALSE}
+(assert-equal 5 (clamp 5 0 10))
+(assert-equal 0 (clamp -3 0 10))
+(assert-equal 10 (clamp 15 0 10))
+```
+
 **See also:** [within?](#within-p)
 
 ---
@@ -359,6 +468,12 @@ Return #t if x is within the inclusive range [lo, hi].
 (within? 5 0 10)   ; => #t
 (within? -3 0 10)  ; => #f
 (within? 10 0 10)  ; => #t
+```
+
+```{arl, include=FALSE}
+(assert-true (within? 5 0 10))
+(assert-false (within? -3 0 10))
+(assert-true (within? 10 0 10))
 ```
 
 **See also:** [clamp](#clamp)
@@ -379,6 +494,11 @@ Return absolute value of x.
 (abs 5)       ; => 5
 ```
 
+```{arl, include=FALSE}
+(assert-equal 5 (abs -5))
+(assert-equal 5 (abs 5))
+```
+
 ---
 
 ### floor {#floor}
@@ -391,6 +511,11 @@ Return floor (round down) of x.
 ```{arl}
 (floor 3.7)   ; => 3
 (floor -3.2)  ; => -4
+```
+
+```{arl, include=FALSE}
+(assert-equal 3 (floor 3.7))
+(assert-equal -4 (floor -3.2))
 ```
 
 **See also:** [ceiling](#ceiling), [truncate](#truncate), [round](#round)
@@ -409,6 +534,11 @@ Return ceiling (round up) of x.
 (ceiling -3.7) ; => -3
 ```
 
+```{arl, include=FALSE}
+(assert-equal 4 (ceiling 3.2))
+(assert-equal -3 (ceiling -3.7))
+```
+
 **See also:** [floor](#floor), [truncate](#truncate), [round](#round)
 
 ---
@@ -425,6 +555,11 @@ Return truncated (towards zero) value of x.
 (truncate -3.7) ; => -3
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3 (truncate 3.7))
+(assert-equal -3 (truncate -3.7))
+```
+
 **See also:** [floor](#floor), [ceiling](#ceiling), [round](#round)
 
 ---
@@ -439,6 +574,11 @@ Round x to given number of decimal places (default 0).
 ```{arl}
 (round 3.567)    ; => 4
 (round 3.567 2)  ; => 3.57
+```
+
+```{arl, include=FALSE}
+(assert-equal 4 (round 3.567))
+(assert-equal 3.57 (round 3.567 2))
 ```
 
 **See also:** [floor](#floor), [ceiling](#ceiling), [truncate](#truncate)
@@ -458,6 +598,12 @@ Return sign of x: -1, 0, or 1.
 (signum 0)     ; => 0
 ```
 
+```{arl, include=FALSE}
+(assert-equal 1 (signum 42))
+(assert-equal -1 (signum -5))
+(assert-equal 0 (signum 0))
+```
+
 ---
 
 ## Power, Roots, and Logarithms {#section-power-roots-and-logarithms}
@@ -474,6 +620,10 @@ Return square root of x.
 (sqrt 2)      ; => 1.414...
 ```
 
+```{arl, include=FALSE}
+(assert-equal 4 (sqrt 16))
+```
+
 **See also:** [expt](#expt)
 
 ---
@@ -488,6 +638,11 @@ Return base raised to power.
 ```{arl}
 (expt 2 10)   ; => 1024
 (expt 3 3)    ; => 27
+```
+
+```{arl, include=FALSE}
+(assert-equal 1024 (expt 2 10))
+(assert-equal 27 (expt 3 3))
 ```
 
 **See also:** [sqrt](#sqrt)
@@ -508,6 +663,12 @@ returns natural log. With two, returns log to the given base.
 (log 100 10)      ; => 2.0
 ```
 
+```{arl, include=FALSE}
+(assert-equal 0 (log 1))
+(assert-equal 1.0 (log (exp 1)))
+(assert-equal 2.0 (log 100 10))
+```
+
 **See also:** [exp](#exp), [log10](#log10), [log2](#log2)
 
 ---
@@ -522,6 +683,10 @@ Return e raised to power x.
 ```{arl}
 (exp 0)       ; => 1
 (exp 1)       ; => 2.718...
+```
+
+```{arl, include=FALSE}
+(assert-equal 1 (exp 0))
 ```
 
 **See also:** [log](#log)
@@ -540,6 +705,11 @@ Return base-10 logarithm of x.
 (log10 1000)  ; => 3
 ```
 
+```{arl, include=FALSE}
+(assert-equal 2 (log10 100))
+(assert-equal 3 (log10 1000))
+```
+
 **See also:** [log](#log), [log2](#log2)
 
 ---
@@ -554,6 +724,11 @@ Return base-2 logarithm of x.
 ```{arl}
 (log2 8)      ; => 3
 (log2 1024)   ; => 10
+```
+
+```{arl, include=FALSE}
+(assert-equal 3 (log2 8))
+(assert-equal 10 (log2 1024))
 ```
 
 **See also:** [log](#log), [log10](#log10)
@@ -573,6 +748,12 @@ Return sine of x (in radians).
 (sin 0)       ; => 0
 (cos 0)       ; => 1
 (tan 0)       ; => 0
+```
+
+```{arl, include=FALSE}
+(assert-equal 0 (sin 0))
+(assert-equal 1 (cos 0))
+(assert-equal 0 (tan 0))
 ```
 
 ---
@@ -652,6 +833,11 @@ Return integer quotient of x divided by y.
 (quotient -10 3)  ; => -3
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3 (quotient 10 3))
+(assert-equal -3 (quotient -10 3))
+```
+
 **See also:** [remainder](#remainder), [modulo](#modulo)
 
 ---
@@ -668,6 +854,11 @@ Return remainder of x divided by y (same sign as x).
 (remainder -10 3)  ; => -1
 ```
 
+```{arl, include=FALSE}
+(assert-equal 1 (remainder 10 3))
+(assert-equal -1 (remainder -10 3))
+```
+
 **See also:** [quotient](#quotient), [modulo](#modulo)
 
 ---
@@ -682,6 +873,11 @@ Return modulo of x and y (same sign as y).
 ```{arl}
 (modulo 10 3)    ; => 1
 (modulo -10 3)   ; => 2
+```
+
+```{arl, include=FALSE}
+(assert-equal 1 (modulo 10 3))
+(assert-equal 2 (modulo -10 3))
 ```
 
 **See also:** [quotient](#quotient), [remainder](#remainder), [%](#percent)
@@ -702,6 +898,11 @@ Return greatest common divisor of arguments.
 (gcd 12 8 6)    ; => 2
 ```
 
+```{arl, include=FALSE}
+(assert-equal 4 (gcd 12 8))
+(assert-equal 2 (gcd 12 8 6))
+```
+
 **See also:** [lcm](#lcm)
 
 ---
@@ -716,6 +917,11 @@ Return least common multiple of arguments.
 ```{arl}
 (lcm 4 6)       ; => 12
 (lcm 3 4 5)     ; => 60
+```
+
+```{arl, include=FALSE}
+(assert-equal 12 (lcm 4 6))
+(assert-equal 60 (lcm 3 4 5))
 ```
 
 **See also:** [gcd](#gcd)

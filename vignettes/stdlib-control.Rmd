@@ -32,6 +32,12 @@ Evaluate body forms when test is truthy.
 (when (> 3 2) (+ 1 1))   ; => 2
 ```
 
+```{arl, include=FALSE}
+(assert-equal "yes" (when #t "yes"))
+(assert-equal #nil (when #f "yes"))
+(assert-equal 2 (when (> 3 2) (+ 1 1)))
+```
+
 **See also:** [unless](#unless), if, [cond](#cond)
 
 ---
@@ -47,6 +53,12 @@ Evaluate body forms when test is falsy.
 (unless #f "fallback")    ; => "fallback"
 (unless #t "fallback")    ; => #nil
 (unless (= 1 2) "nope")  ; => "nope"
+```
+
+```{arl, include=FALSE}
+(assert-equal "fallback" (unless #f "fallback"))
+(assert-equal #nil (unless #t "fallback"))
+(assert-equal "nope" (unless (= 1 2) "nope"))
 ```
 
 **See also:** [when](#when), if
@@ -71,6 +83,11 @@ Multi-branch conditional.
 (cond
   ((> 10 20) "big")
   (else "small"))        ; => "small"
+```
+
+```{arl, include=FALSE}
+(assert-equal "b" (cond ((= 1 2) "a") ((= 1 1) "b") (else "c")))
+(assert-equal "small" (cond ((> 10 20) "big") (else "small")))
 ```
 
 **See also:** [case](#case), if, [when](#when)
@@ -99,6 +116,11 @@ Key expression is evaluated only once.
   (else "?"))            ; => "xy"
 ```
 
+```{arl, include=FALSE}
+(assert-equal "two" (case (+ 1 1) ((1) "one") ((2) "two") ((3) "three") (else "other")))
+(assert-equal "xy" (case 'x ((a b) "ab") ((x y) "xy") (else "?")))
+```
+
 **Note:** The key expression is evaluated only once. Each clause datum list can contain multiple values.
 
 **See also:** [cond](#cond), if
@@ -120,6 +142,11 @@ Evaluate thunk with error/finally handlers.
       :error_handler (lambda (e) "caught"))      ; => "caught"
 (try* (lambda () 1)
       :finally_handler (lambda () (display "done")))  ; => 1
+```
+
+```{arl, include=FALSE}
+(assert-equal 42 (try* (lambda () 42)))
+(assert-equal "caught" (try* (lambda () (stop "oops")) :error_handler (lambda (e) "caught")))
 ```
 
 **Note:** Low-level functional interface to R's tryCatch. Prefer the `try` macro for cleaner syntax.
@@ -187,6 +214,11 @@ Bind names to values within body.
   (* x x))               ; => 100
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3 (let ((x 1) (y 2)) (+ x y)))
+(assert-equal 100 (let ((x 10)) (* x x)))
+```
+
 **Note:** Bindings are evaluated in parallel: earlier bindings are NOT visible to later ones. Use `let*` for sequential binding.
 
 **See also:** [let*](#let-star), [letrec](#letrec)
@@ -204,6 +236,11 @@ Sequential let bindings.
 
 (let* ((a 10) (b (* a 2)) (c (+ a b)))
   c)                      ; => 30
+```
+
+```{arl, include=FALSE}
+(assert-equal 3 (let* ((x 1) (y (+ x 1))) (+ x y)))
+(assert-equal 30 (let* ((a 10) (b (* a 2)) (c (+ a b))) c))
 ```
 
 **Note:** Bindings are evaluated sequentially: each binding can refer to previously bound names. Supports destructuring patterns.
@@ -225,6 +262,10 @@ Recursive bindings.
   (even? 10))             ; => #t
 ```
 
+```{arl, include=FALSE}
+(assert-true (letrec ((ev? (lambda (n) (if (= n 0) #t (od? (- n 1))))) (od? (lambda (n) (if (= n 0) #f (ev? (- n 1)))))) (ev? 10)))
+```
+
 **Note:** All bindings are visible to all init expressions, enabling mutual recursion. Init values are assigned via `set!` into pre-allocated slots.
 
 **See also:** [let](#let), [let*](#let-star)
@@ -239,11 +280,16 @@ Bind pattern to value and evaluate body when value is truthy.
 
 **Examples:**
 ```{arl}
-(when-let ((x (assoc 'a '((a . 1) (b . 2)))))
-  (cdr x))               ; => 1
+(when-let (x (assoc 'a (list (list 'a 1) (list 'b 2))))
+  (cadr x))              ; => 1
 
-(when-let ((x #f))
+(when-let (x #f)
   "never reached")       ; => #nil
+```
+
+```{arl, include=FALSE}
+(assert-equal 1 (when-let (x (assoc 'a (list (list 'a 1) (list 'b 2)))) (cadr x)))
+(assert-equal #nil (when-let (x #f) "never reached"))
 ```
 
 **See also:** [if-let](#if-let), [when](#when), [let](#let)
@@ -258,13 +304,18 @@ Bind pattern to value and choose branch based on its truthiness.
 
 **Examples:**
 ```{arl}
-(if-let ((x 42))
+(if-let (x 42)
   (+ x 1)
   "nothing")             ; => 43
 
-(if-let ((x #f))
+(if-let (x #f)
   "truthy"
   "falsy")               ; => "falsy"
+```
+
+```{arl, include=FALSE}
+(assert-equal 43 (if-let (x 42) (+ x 1) "nothing"))
+(assert-equal "falsy" (if-let (x #f) "truthy" "falsy"))
 ```
 
 **See also:** [when-let](#when-let), if, [let](#let)
@@ -290,6 +341,12 @@ total                       ; => 6
 (for (ch '("a" "b" "c"))
   (set! result (append result (list ch))))
 result                      ; => ("a" "b" "c")
+```
+
+```{arl, include=FALSE}
+(define __test-total 0)
+(for (__x '(1 2 3)) (set! __test-total (+ __test-total __x)))
+(assert-equal 6 __test-total)
 ```
 
 **Note:** Expands to a `while` loop over the sequence converted to a list.
@@ -329,6 +386,11 @@ Clojure-style loop/recur that expands to an R while loop.
     (recur (cdr xs) (+ total (car xs)))))  ; => 10
 ```
 
+```{arl, include=FALSE}
+(assert-equal 120 (loop ((n 5) (acc 1)) (if (= n 0) acc (recur (- n 1) (* acc n)))))
+(assert-equal 10 (loop ((xs '(1 2 3 4)) (total 0)) (if (null? xs) total (recur (cdr xs) (+ total (car xs))))))
+```
+
 **Note:** The compiler auto-optimizes self-tail-calls in `(define name (lambda ...))` patterns, so `loop`/`recur` is primarily useful for anonymous iteration and mutual recursion patterns. Expands to an R `while` loop internally.
 
 **See also:** [recur](#recur), while, [for](#for)
@@ -349,6 +411,12 @@ Repeat body until test is truthy.
 i                          ; => 5
 ```
 
+```{arl, include=FALSE}
+(define __test-i 0)
+(until (= __test-i 5) (set! __test-i (+ __test-i 1)))
+(assert-equal 5 __test-i)
+```
+
 **See also:** while
 
 ---
@@ -364,9 +432,15 @@ Thread value through forms (first argument).
 **Examples:**
 ```{arl}
 (-> 5 (+ 3) (* 2))       ; => 16  ; (5+3)*2
-(-> '(1 2 3) (cons 0))   ; => (0 1 2 3)
+(-> (list 1 2 3) reverse) ; => (3 2 1)
 (-> "hello"
     nchar)                ; => 5
+```
+
+```{arl, include=FALSE}
+(assert-equal 16 (-> 5 (+ 3) (* 2)))
+(assert-equal (list 3 2 1) (-> (list 1 2 3) reverse))
+(assert-equal 5 (-> "hello" nchar))
 ```
 
 **Note:** Threads the value as the FIRST argument to each successive form. If a form is a bare symbol, it is called as a one-argument function.
@@ -388,6 +462,12 @@ Thread value through forms (last argument).
 (->> '(1 2 3)
      (map (lambda (x) (+ x 10)))
      (car))              ; => 11
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 1 4 9) (->> '(1 2 3) (map (lambda (x) (* x x)))))
+(assert-equal 5 (->> 5 (- 10)))
+(assert-equal 11 (->> '(1 2 3) (map (lambda (x) (+ x 10))) (car)))
 ```
 
 **Note:** Threads the value as the LAST argument to each successive form. Compare with `->` which threads as the first argument.
@@ -421,6 +501,11 @@ Macro wrapper around try* with catch/finally.
 
 ;; try with no handlers (just evaluates body)
 (try (+ 1 2))                       ; => 3
+```
+
+```{arl, include=FALSE}
+(assert-equal 3 (try (+ 1 2)))
+(assert-equal "error: oops" (try (stop "oops") (catch e (string-append "error: " ($ e "message")))))
 ```
 
 **Note:** Macro wrapper around `try*` that provides familiar catch/finally syntax. The catch clause binds the error condition to the given variable. The finally clause runs regardless of success or failure.

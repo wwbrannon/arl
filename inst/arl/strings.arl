@@ -42,7 +42,7 @@
   ;;' @seealso string-join
   (define string-split
     (lambda (x (sep ""))
-      (unname (r/call "[[" (list (strsplit x :split sep :fixed #t) 1)))))
+      (as.list (unname (r/call "[[" (list (strsplit x :split sep :fixed #t) 1))))))
 
   ;; DESIGN NOTE: Simple one-argument pass-through functions use direct
   ;; assignment to avoid unnecessary stack frames.

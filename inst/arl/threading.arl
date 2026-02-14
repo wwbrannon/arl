@@ -12,12 +12,12 @@
 ;;' @description Thread value through forms (first argument).
 ;;' @examples
 ;;' (-> 5 (+ 3) (* 2))       ; => 16  ; (5+3)*2
-;;' (-> '(1 2 3) (cons 0))   ; => (0 1 2 3)
+;;' (-> (list 1 2 3) reverse) ; => (3 2 1)
 ;;' (-> "hello"
 ;;'     nchar)                ; => 5
 ;;' @assert
 ;;' (assert-equal 16 (-> 5 (+ 3) (* 2)))
-;;' (assert-equal (list 0 1 2 3) (-> '(1 2 3) (cons 0)))
+;;' (assert-equal (list 3 2 1) (-> (list 1 2 3) reverse))
 ;;' (assert-equal 5 (-> "hello" nchar))
 ;;' @note Threads the value as the FIRST argument to each successive form. If a form is a bare symbol, it is called as a one-argument function.
 ;;' @seealso ->>

@@ -162,7 +162,7 @@ test_that("string and io helpers work", {
   expect_equal(env$`format-value`(list(1, 2, 3)), "1 2 3")
   expect_equal(env$`format-value`(quote(f(a, b))), "f a b")
   expect_equal(env$`string-join`(list("a", "b", "c"), "-"), "a-b-c")
-  expect_equal(env$`string-split`("a-b-c", "-"), c("a", "b", "c"))
+  expect_equal(env$`string-split`("a-b-c", "-"), list("a", "b", "c"))
   expect_equal(env$trim("  hi "), "hi")
   expect_equal(env$format("x=%s", "y"), "x=y")
 
@@ -228,10 +228,10 @@ test_that("string operations handle edge cases", {
   # string-split with empty string (R's strsplit("", "-", fixed=TRUE) returns character(0))
   result <- env$`string-split`("", "-")
   expect_equal(length(result), 0)
-  expect_true(is.character(result))
+  expect_true(is.list(result))
 
   # string-split with delimiter not present
-  expect_equal(env$`string-split`("hello", "-"), c("hello"))
+  expect_equal(env$`string-split`("hello", "-"), list("hello"))
 
   # trim with already trimmed string
   expect_equal(env$trim("hello"), "hello")
