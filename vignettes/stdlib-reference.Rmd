@@ -1,10 +1,10 @@
 ---
-title: "Standard Library Overview"
+title: "Language Reference"
 output: arl::arl_html_vignette
 pkgdown:
   as_is: true
 vignette: >
-  %\VignetteIndexEntry{Standard Library Overview}
+  %\VignetteIndexEntry{Language Reference}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,6 +16,38 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
+
+## Special forms
+
+Special forms are expressions with evaluation rules that differ from normal
+function calls -- for example, `if` does not evaluate all its arguments, and
+`define` binds a name rather than passing it as a value. They are handled
+directly by the compiler and cannot be redefined or passed as values.
+
+- `quote` / `'` -- return unevaluated expression
+- `if` -- conditional evaluation
+- `define` -- variable/function definition
+- `set!` -- mutation of existing bindings
+- `lambda` -- anonymous functions
+- `begin` -- sequence of expressions
+- `defmacro` -- define macros
+- `quasiquote` / `` ` `` -- template with selective evaluation
+- `and`, `or` -- short-circuit boolean operators
+- `while` -- loop with condition
+- `delay` -- lazy promise creation
+- `load` -- load and evaluate a file
+- `run` -- run a file in an isolated environment
+- `import` -- import a module's exports
+- `module` -- define a module with exports
+- `~` -- formula (for R modeling)
+- `::`, `:::` -- R package namespace access
+- `help` -- look up documentation
+
+Anything not in this list is either a built-in function or a stdlib-provided
+function or macro. Unlike special forms, those are ordinary values and can be
+passed around, stored in variables, and so on.
+
+## Standard library
 
 Arl's standard library has two layers:
 

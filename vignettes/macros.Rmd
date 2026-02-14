@@ -602,6 +602,6 @@ into calls to the lower-level `try*` function:
 ## Related guides
 
 - [Getting Started](getting-started.html)
-- [Standard Library Overview](stdlib-reference.html)
+- [Language Reference](stdlib-reference.html)
 - [Standard Library: Core, R Interop, and Testing](stdlib-core.html)
 - [Examples](examples.html#macro-examples)

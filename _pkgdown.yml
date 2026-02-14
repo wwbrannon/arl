@@ -82,7 +82,7 @@ navbar:
         - text: Task Runner
           href: articles/examples-task-runner.html
     stdlib:
-      text: Standard Library
+      text: Language Reference
       menu:
         - text: Overview
           href: articles/stdlib-reference.html

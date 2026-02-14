@@ -95,25 +95,22 @@ what R code the compiler generates.
 ## Special form dispatch
 
 The compiler's core is a dispatch table in `compile_impl` (see `compiler.R`).
-When it encounters a call, it checks the operator against known special forms:
+When it encounters a call, it checks the operator against the
+[known special forms](stdlib-reference.html#special-forms). Anything not in
+that list falls through to `compile_application`, which compiles a regular
+function call.
 
-- `quote` -- return the quoted value as-is
-- `if` -- conditional with truthiness wrapping (`.__true_p()`)
-- `define` -- binding with self-TCO detection for lambda definitions
-- `set!` -- mutation of existing bindings, with self-TCO detection for lambda assignments
-- `lambda` -- closure creation with parameter patterns and optional TCO
-- `begin` -- sequential evaluation (compiled to R `{ }` blocks)
-- `defmacro` -- macro definition (registers with the macro expander)
-- `while`, `and`, `or` -- control flow compiled to R equivalents
-- `delay` -- lazy promise creation
-- `quasiquote` -- template expansion with unquote/splicing
-- `load`, `run`, `import`, `module` -- file and module operations
-- `help` -- dispatches to the help system
-- `~` -- R formula construction
-- `::`, `:::` -- R package namespace access
+A few implementation notes on how individual special forms are compiled:
 
-Anything not in this list falls through to `compile_application`, which
-compiles a regular function call.
+- `if` -- wraps the condition in a truthiness check (`.__true_p()`)
+- `define` / `set!` -- detect `(define name (lambda ...))` patterns and
+  enable self-TCO when applicable
+- `lambda` -- compiles closure creation with parameter patterns and optional
+  TCO rewriting
+- `begin` -- compiled to R `{ }` blocks
+- `defmacro` -- registers the macro with the macro expander at compile time
+- `while`, `and`, `or` -- compiled to their R equivalents
+- `quasiquote` -- expands templates with unquote/splicing
 
 ## Self-tail-call optimization
 
@@ -253,4 +250,4 @@ explicit.
 
 - [Getting Started](getting-started.html)
 - [Macros and Quasiquote](macros.html)
-- [Standard Library Overview](stdlib-reference.html)
+- [Language Reference](stdlib-reference.html)
