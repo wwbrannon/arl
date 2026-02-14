@@ -1,10 +1,17 @@
-Engine API:
-    o) load_file_with_scope doesn't need create_scope, it should always be true because otherwise the operation is identical to load_file
+o) reorganize stdlib vignettes and underlying modules
 
-o) sanity-check the inst/examples
+o) do we test well enough that call/cc works?
+
+o) does this break things?
+Env var	Description
+ARL_SKIP_USER_PROFILE	Skip sourcing ~/.Rprofile when launching the CLI
+
+o) this is not silent, but the env var version just below does work:
+options(arl.quiet = TRUE)
+engine <- arl::Engine$new()
+engine$eval_text('(display "this is silent")')  # no output
 
 o) just read the whole doc site and make edits
-    o) avoid having examples use r/call so heavily
     o) this para needs update: Inside a quasiquoted template, ,expr (unquote) evaluates expr and splices the result into the template,
     o) "To expand only one level, use macroexpand-1 from Arl code:" also mention the R call
     o) explain this better "Self-TCO only works with the define/lambda form" -- it requires a name
@@ -13,9 +20,11 @@ o) just read the whole doc site and make edits
     o) "Arl also has dotted pairs" note these are not R's pairlist
     o) "It also falls through to R’s built-in help for R functions."
 
-o) README.md: update
-o) index.md: write a couple paragraphs including "Getting Started" and "Examples" up top
-o) getting started: update
+words to write yourself
+o) README: package does not include a citation file, revise wording, actually figure out the citation at all
+o) top couple paras of Getting Started, README and index.md need updating
+o) include links to getting started and examples at top of index.md
+o) DESCRIPTION title and description
 o) logo?
 
 o) enable actions / get non-pkgdown workflows running

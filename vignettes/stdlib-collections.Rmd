@@ -1,0 +1,409 @@
+---
+title: "Standard Library: Collections and Data Structures"
+output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
+vignette: >
+  %\VignetteIndexEntry{Standard Library: Collections and Data Structures}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
+<!-- Regenerate with: make stdlib-docs -->
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
+```
+
+## Dictionary (Hash Table) {#section-dictionary-hash-table}
+
+Dictionaries are mutable key-value stores backed by R environments.
+Keys must be strings, symbols, or keywords; values can be anything.
+
+### dict-new {#dict-new}
+
+Create a new empty dictionary environment.
+
+**Signature:** `(dict-new)`
+
+---
+
+### dict-key-to-name {#dict-key-to-name}
+
+Convert key to string name for dict storage.
+
+**Signature:** `(dict-key-to-name key)`
+
+---
+
+### dict {#dict}
+
+Create a hash-backed dictionary from key/value pairs.
+
+**Signature:** `(dict args...)`
+
+**Examples:**
+```{arl}
+(dict :x 1 :y 2)           ; => dict with keys "x" and "y"
+(dict)                      ; => empty dict
+(define d (dict :name "Alice" :age 30))
+(dict-get d "name")         ; => "Alice"
+```
+
+**See also:** [hash](#hash)
+
+---
+
+### hash {#hash}
+
+**Signature:** `(hash . args)`
+
+**Note:** Alias for `dict`.
+
+**See also:** [dict](#dict)
+
+---
+
+### dict? {#dict-p}
+
+Return #t if x is a dictionary.
+
+**Signature:** `(dict? x)`
+
+**Examples:**
+```{arl}
+(dict? (dict :x 1))        ; => #t
+(dict? (list 1 2))         ; => #f
+(dict? 42)                 ; => #f
+```
+
+---
+
+### dict-keys-ordered {#dict-keys-ordered}
+
+Return ordered keys vector (internal helper).
+
+**Signature:** `(dict-keys-ordered dict)`
+
+---
+
+### dict-get {#dict-get}
+
+Get value for key or default if missing.
+
+**Signature:** `(dict-get dict key rest...)`
+
+**Examples:**
+```{arl}
+(define d (dict :x 1 :y 2))
+(dict-get d "x")           ; => 1
+(dict-get d "z")           ; => #nil
+(dict-get d "z" 99)        ; => 99  (default value)
+```
+
+**See also:** [dict-set](#dict-set), [dict-has?](#dict-has-p)
+
+---
+
+### dict-set {#dict-set}
+
+Set key to value in dict and return dict.
+
+**Signature:** `(dict-set dict key value)`
+
+**Examples:**
+```{arl}
+(define d (dict))
+(dict-set d "x" 42)        ; => d (mutated, x=42)
+(dict-get d "x")           ; => 42
+```
+
+**See also:** [dict-get](#dict-get), [dict-remove](#dict-remove)
+
+---
+
+### dict-remove {#dict-remove}
+
+Remove key from dict and return dict.
+
+**Signature:** `(dict-remove dict key)`
+
+**Examples:**
+```{arl}
+(define d (dict :x 1 :y 2))
+(dict-remove d "x")        ; => d (mutated, x removed)
+(dict-has? d "x")          ; => #f
+```
+
+**See also:** [dict-set](#dict-set)
+
+---
+
+### dict-keys {#dict-keys}
+
+Return a list of dict keys.
+
+**Signature:** `(dict-keys dict)`
+
+**Examples:**
+```{arl}
+(define d (dict :x 1 :y 2))
+(dict-keys d)              ; => ("x" "y")
+(dict-keys (dict))         ; => ()
+```
+
+**See also:** [dict-values](#dict-values)
+
+---
+
+### dict-values {#dict-values}
+
+Return a list of dict values.
+
+**Signature:** `(dict-values dict)`
+
+**Examples:**
+```{arl}
+(define d (dict :x 1 :y 2))
+(dict-values d)            ; => (1 2)
+```
+
+**See also:** [dict-keys](#dict-keys)
+
+---
+
+### dict-has? {#dict-has-p}
+
+Return #t if dict contains key.
+
+**Signature:** `(dict-has? dict key)`
+
+**Examples:**
+```{arl}
+(define d (dict :x 1 :y 2))
+(dict-has? d "x")          ; => #t
+(dict-has? d "z")          ; => #f
+```
+
+**See also:** [dict-get](#dict-get)
+
+---
+
+### dict-merge {#dict-merge}
+
+Merge dicts, later values override earlier.
+
+**Signature:** `(dict-merge dicts...)`
+
+**Examples:**
+```{arl}
+(define a (dict :x 1 :y 2))
+(define b (dict :y 99 :z 3))
+(define m (dict-merge a b))
+(dict-get m "y")           ; => 99  (b overrides a)
+(dict-get m "z")           ; => 3
+```
+
+**See also:** [dict](#dict), [dict-set](#dict-set)
+
+---
+
+## Set (Hash-Backed) {#section-set-hash-backed}
+
+Sets are mutable collections of unique items backed by R environments.
+Any value can be a set element; uniqueness is determined by serialization.
+
+### set-new {#set-new}
+
+Create a new empty set environment.
+
+**Signature:** `(set-new)`
+
+---
+
+### set-key {#set-key}
+
+Convert value to string key for set storage via serialization.
+
+**Signature:** `(set-key value)`
+
+---
+
+### set {#set}
+
+Create a hash-backed set of unique items.
+
+**Signature:** `(set args...)`
+
+**Examples:**
+```{arl}
+(set 1 2 3)                ; => set of {1, 2, 3}
+(set 1 1 2)                ; => set of {1, 2} (duplicates removed)
+(set)                      ; => empty set
+(set '(a b c))             ; => set from list
+```
+
+---
+
+### set? {#set-p}
+
+Return #t if x is a set.
+
+**Signature:** `(set? x)`
+
+**Examples:**
+```{arl}
+(set? (set 1 2))           ; => #t
+(set? (list 1 2))          ; => #f
+(set? 42)                  ; => #f
+```
+
+---
+
+### set-add {#set-add}
+
+Add item to set and return set.
+
+**Signature:** `(set-add set item)`
+
+**Examples:**
+```{arl}
+(define s (set 1 2))
+(set-add s 3)              ; => s (mutated, now {1, 2, 3})
+(set-contains? s 3)        ; => #t
+```
+
+**See also:** [set-remove](#set-remove)
+
+---
+
+### set-remove {#set-remove}
+
+Remove item from set and return set.
+
+**Signature:** `(set-remove set item)`
+
+**Examples:**
+```{arl}
+(define s (set 1 2 3))
+(set-remove s 2)           ; => s (mutated, now {1, 3})
+(set-contains? s 2)        ; => #f
+```
+
+**See also:** [set-add](#set-add)
+
+---
+
+### set-contains? {#set-contains-p}
+
+Return #t if set contains item.
+
+**Signature:** `(set-contains? set item)`
+
+**Examples:**
+```{arl}
+(define s (set 1 2 3))
+(set-contains? s 2)        ; => #t
+(set-contains? s 99)       ; => #f
+```
+
+---
+
+### set-union {#set-union}
+
+Return union of two sets.
+
+**Signature:** `(set-union a b)`
+
+**Examples:**
+```{arl}
+(define a (set 1 2 3))
+(define b (set 3 4 5))
+(define u (set-union a b))
+(set-contains? u 1)        ; => #t
+(set-contains? u 5)        ; => #t
+```
+
+**See also:** [set-intersection](#set-intersection), [set-difference](#set-difference)
+
+---
+
+### set-intersection {#set-intersection}
+
+Return intersection of two sets.
+
+**Signature:** `(set-intersection a b)`
+
+**Examples:**
+```{arl}
+(define a (set 1 2 3))
+(define b (set 2 3 4))
+(define i (set-intersection a b))
+(set-contains? i 2)        ; => #t
+(set-contains? i 1)        ; => #f
+```
+
+**See also:** [set-union](#set-union), [set-difference](#set-difference)
+
+---
+
+### set-difference {#set-difference}
+
+Return items in a that are not in b.
+
+**Signature:** `(set-difference a b)`
+
+**Examples:**
+```{arl}
+(define a (set 1 2 3))
+(define b (set 2 3 4))
+(define d (set-difference a b))
+(set-contains? d 1)        ; => #t
+(set-contains? d 2)        ; => #f
+```
+
+**See also:** [set-union](#set-union), [set-intersection](#set-intersection)
+
+---
+
+### set-copy-into {#set-copy-into}
+
+Copy items from source into target (internal helper).
+
+**Signature:** `(set-copy-into target source)`
+
+---
+
+## Struct Definition {#section-struct-definition}
+
+### defstruct {#defstruct}
+
+Define a struct constructor, predicate, and accessors.
+
+**Signature:** `(defstruct name fields)`
+
+**Examples:**
+```{arl}
+;; Define a Point struct
+(defstruct Point (x y))
+
+;; Constructor: make-Point
+(define p (make-Point 3 4))
+
+;; Predicate: Point?
+(Point? p)                  ; => #t
+(Point? 42)                 ; => #f
+
+;; Accessors: Point-x, Point-y
+(Point-x p)                 ; => 3
+(Point-y p)                 ; => 4
+```
+
+**Note:** `defstruct` generates a constructor (`make-Name`), a type predicate (`Name?`), and field accessors (`Name-field`) for each field. The struct is backed by an R named list with an S3 class.
+
+**See also:** [dict](#dict)
+
+---
+

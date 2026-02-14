@@ -89,20 +89,18 @@ navbar:
           href: articles/stdlib-list-seq.html
         - text: Functional Programming
           href: articles/stdlib-functional.html
-        - text: Types & Predicates
+        - text: Types, Equality & Conversions
           href: articles/stdlib-types.html
         - text: Math
           href: articles/stdlib-math.html
-        - text: Equality & Comparison
-          href: articles/stdlib-equality.html
-        - text: Conversions
-          href: articles/stdlib-conversions.html
         - text: Control Flow
           href: articles/stdlib-control.html
-        - text: Strings & I/O
+        - text: Strings, Display & I/O
           href: articles/stdlib-strings-io.html
-        - text: Macros, Eval & Interop
-          href: articles/stdlib-macro-eval-interop.html
+        - text: Collections
+          href: articles/stdlib-collections.html
+        - text: Core, R Interop & Testing
+          href: articles/stdlib-core.html
     reference:
       text: R API Reference
       href: reference/index.html
@@ -165,8 +163,7 @@ articles:
       - stdlib-functional
       - stdlib-types
       - stdlib-math
-      - stdlib-equality
-      - stdlib-conversions
       - stdlib-control
       - stdlib-strings-io
-      - stdlib-macro-eval-interop
+      - stdlib-collections
+      - stdlib-core

@@ -128,6 +128,28 @@ Evaluate thunk with error/finally handlers.
 
 ---
 
+## Continuations {#section-continuations}
+
+### call/cc {#call-cc}
+
+**Signature:** `(call/cc receiver)`
+
+**Note:** Alias for R's `callCC`. The receiver is passed the current continuation.
+
+**See also:** [call-with-current-continuation](#call-with-current-continuation)
+
+---
+
+### call-with-current-continuation {#call-with-current-continuation}
+
+**Signature:** `(call-with-current-continuation receiver)`
+
+**Note:** Full name alias for `call/cc`.
+
+**See also:** [call/cc](#call-cc)
+
+---
+
 ## Binding Macros {#section-binding-macros}
 
 ### pattern-symbols {#pattern-symbols}

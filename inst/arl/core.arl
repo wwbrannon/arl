@@ -4,7 +4,7 @@
   (export license
           error warn
           identity values values?
-          call-with-values call/cc call-with-current-continuation
+          call-with-values
           funcall r/call get
           macroexpand-1 macroexpand-all)
 
@@ -80,18 +80,6 @@
           (r/call "unclass" (list produced))
           (list produced)))
       (funcall consumer args)))
-
-;;' @section Continuations
-
-  ;;' @signature (call/cc receiver)
-  ;;' @note Alias for R's `callCC`. The receiver is passed the current continuation.
-  ;;' @seealso call-with-current-continuation
-  (define call/cc callCC)
-
-  ;;' @signature (call-with-current-continuation receiver)
-  ;;' @note Full name alias for `call/cc`.
-  ;;' @seealso call/cc
-  (define call-with-current-continuation callCC)
 
 ;;' @section Function Application
 

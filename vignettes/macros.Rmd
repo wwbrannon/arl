@@ -479,5 +479,5 @@ into calls to the lower-level `try*` function:
 
 - [Getting Started](getting-started.html)
 - [Standard Library Overview](stdlib-reference.html)
-- [Standard Library: Macro, Eval, Interop](stdlib-macro-eval-interop.html)
+- [Standard Library: Core, R Interop, and Testing](stdlib-core.html)
 - [Examples](examples.html#macro-examples)

@@ -1,10 +1,10 @@
 ---
-title: "Standard Library: Strings, I/O, and Arithmetic"
+title: "Standard Library: Strings, Display, and I/O"
 output: arl::arl_html_vignette
 pkgdown:
   as_is: true
 vignette: >
-  %\VignetteIndexEntry{Standard Library: Strings, I/O, and Arithmetic}
+  %\VignetteIndexEntry{Standard Library: Strings, Display, and I/O}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -484,7 +484,7 @@ Read single line from stdin.
 
 **Signature:** `(read-from-string x)`
 
-**See also:** [read](stdlib-macro-eval-interop.html#read)
+**See also:** [read](stdlib-core.html#read)
 
 ---
 
@@ -839,7 +839,7 @@ Print value and return it.
 (trace 42 "result")      ; prints "result: 42", returns 42
 ```
 
-**See also:** [warn](stdlib-macro-eval-interop.html#warn), [display](#display)
+**See also:** [warn](stdlib-core.html#warn), [display](#display)
 
 ---
 

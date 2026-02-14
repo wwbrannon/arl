@@ -324,7 +324,7 @@ MODULE_SOURCE_FILES <- list(
   list(file = "_r.arl",          desc = "R operator/function aliases, internal"),
   list(file = "core.arl",        desc = NULL),
   list(file = "list.arl",        desc = NULL),
-  list(file = "types.arl",       desc = "type predicates"),
+  list(file = "types.arl",       desc = "type predicates, numeric type hierarchy"),
   list(file = "logic.arl",       desc = "logical operations"),
   list(file = "conversions.arl", desc = "type conversions"),
   list(file = "equality.arl",    desc = "equality and S3 dispatch"),
@@ -338,7 +338,7 @@ MODULE_SOURCE_FILES <- list(
   list(file = "binding.arl",     desc = NULL),
   list(file = "looping.arl",     desc = NULL),
   list(file = "dict.arl",        desc = NULL),
-  list(file = "math.arl",        desc = "includes numeric type predicates"),
+  list(file = "math.arl",        desc = NULL),
   list(file = "set.arl",         desc = NULL),
   list(file = "strings.arl",     desc = NULL),
   list(file = "display.arl",     desc = NULL),
@@ -483,6 +483,13 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
       out <- c(out, format_func_list(exports, func_index))
       out <- c(out, "")
     }
+    # List source modules with GitHub links
+    mod_links <- vapply(vconfig$modules, function(mod) {
+      fname <- paste0(mod, ".arl")
+      paste0("[`", fname, "`](", GITHUB_BASE, "/inst/arl/", fname, ")")
+    }, character(1), USE.NAMES = FALSE)
+    out <- c(out, paste0("Modules: ", paste(mod_links, collapse = ", ")))
+    out <- c(out, "")
   }
 
   # Built-in functions section
@@ -589,9 +596,9 @@ generate_all <- function(
   for (i in seq_len(nrow(m))) {
     vname <- m[i, "Name"]
     modules <- trimws(strsplit(m[i, "Modules"], ",")[[1]])
-    preamble_val <- m[i, "Preamble"]
+    preamble_val <- if ("Preamble" %in% colnames(m)) m[i, "Preamble"] else NA
     preamble <- if (is.na(preamble_val) || !nzchar(preamble_val)) "" else preamble_val
-    summary_val <- m[i, "Summary"]
+    summary_val <- if ("Summary" %in% colnames(m)) m[i, "Summary"] else NA
     summary <- if (is.na(summary_val) || !nzchar(summary_val)) "" else summary_val
     vignettes[[vname]] <- list(
       title   = m[i, "Title"],

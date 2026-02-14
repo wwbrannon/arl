@@ -1,10 +1,10 @@
 ---
-title: "Standard Library: Type Predicates"
+title: "Standard Library: Types, Equality, and Conversions"
 output: arl::arl_html_vignette
 pkgdown:
   as_is: true
 vignette: >
-  %\VignetteIndexEntry{Standard Library: Type Predicates}
+  %\VignetteIndexEntry{Standard Library: Types, Equality, and Conversions}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,8 +16,6 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
-
-These functions are provided by the `types` module (`inst/arl/types.arl`).
 
 ## List and Pair Predicates {#section-list-and-pair-predicates}
 
@@ -163,9 +161,7 @@ Return #t if x is a number (real or complex).
 (number? 42)  ; => #t
 ```
 
-**Note:** For numeric type hierarchy predicates (real?, complex?, etc.), see the `math` module documentation.
-
-**See also:** stdlib-math vignette for real?, [complex?](stdlib-math.html#complex-p), [rational?](stdlib-math.html#rational-p), [exact?](stdlib-math.html#exact-p), [inexact?](stdlib-math.html#inexact-p)
+**See also:** [real?](#real-p), [complex?](#complex-p), [rational?](#rational-p), [exact?](#exact-p), [inexact?](#inexact-p)
 
 ---
 
@@ -320,6 +316,785 @@ Return the type of value (alias for R's typeof).
 ```
 
 **See also:** class, mode (R functions)
+
+---
+
+## Numeric Type Predicates {#section-numeric-type-predicates}
+
+Arl implements a numeric tower adapted for R's type system:
+
+```
+number?    (is.numeric OR is.complex)
+├─ complex?  (is.complex)
+└─ real?     (is.numeric AND NOT is.complex)
+   ├─ ±Inf   (real but not rational)
+   └─ rational? (real? AND is.finite)
+      └─ integer? (is.finite AND is.numeric AND x == as.integer(x))
+         └─ natural? (integer? AND x >= 0)
+
+Orthogonal predicates:
+exact?   (is.integer - storage type)
+inexact? (number? AND NOT is.integer)
+```
+
+### real? {#real-p}
+
+Return #t if x is a real number (includes ±Inf, excludes complex).
+
+**Signature:** `(real? x)`
+
+**Examples:**
+```{arl}
+(real? 42)            ; => #t
+(real? 3.14)          ; => #t
+(real? Inf)           ; => #t
+(real? (make-rectangular 3 4))  ; => #f
+```
+
+**See also:** [rational?](#rational-p), [complex?](#complex-p), [number?](#number-p)
+
+---
+
+### complex? {#complex-p}
+
+Return #t if x is a complex number.
+
+**Signature:** `(complex? x)`
+
+**Examples:**
+```{arl}
+(complex? (make-rectangular 3 4))  ; => #t
+(complex? 42)         ; => #f
+```
+
+**See also:** [real?](#real-p), [number?](#number-p), [make-rectangular](stdlib-math.html#make-rectangular) (in `math` module)
+
+---
+
+### rational? {#rational-p}
+
+Return #t if x is a finite real number (rational in R are finite floats).
+
+**Signature:** `(rational? x)`
+
+**Examples:**
+```{arl}
+(rational? 42)        ; => #t
+(rational? 3.14)      ; => #t
+(rational? Inf)       ; => #f (infinities are real but not rational)
+(rational? NaN)       ; => #f
+```
+
+**Note:** In R, all finite floating-point numbers can be represented as rationals (IEEE 754). R does not have a built-in rational or decimal type like some Schemes.
+
+**See also:** [real?](#real-p), [integer?](#integer-p), [number?](#number-p)
+
+---
+
+### exact? {#exact-p}
+
+Return #t if x is an exact number (integer storage type in R).
+
+**Signature:** `(exact? x)`
+
+**Examples:**
+```{arl}
+(exact? 5L)           ; => #t (integer type)
+(exact? 5.0)          ; => #f (double type)
+(exact? (->integer 5)); => #t
+```
+
+**Note:** In Scheme, exactness is a property of the number. In R (and Arl), exactness corresponds to integer storage type. All integers are exact; all doubles and complex numbers are inexact.
+
+**See also:** [inexact?](#inexact-p), [exact->inexact](#exact-to-inexact) (in `conversions` module)
+
+---
+
+### inexact? {#inexact-p}
+
+Return #t if x is an inexact number (double or complex in R).
+
+**Signature:** `(inexact? x)`
+
+**Examples:**
+```{arl}
+(inexact? 5.0)        ; => #t
+(inexact? (make-rectangular 3 4))  ; => #t
+(inexact? 5L)         ; => #f
+```
+
+**See also:** [exact?](#exact-p), [inexact->exact](#inexact-to-exact) (in `conversions` module)
+
+---
+
+### integer? {#integer-p}
+
+Return #t if x is an integer-valued number.
+
+**Signature:** `(integer? x)`
+
+**Examples:**
+```{arl}
+(integer? 42)         ; => #t
+(integer? 42.0)       ; => #t (value is integer even if storage is double)
+(integer? 3.14)       ; => #f
+(integer? Inf)        ; => #f
+```
+
+**Note:** Tests for integer VALUE, not storage type. Use `exact?` to test storage type.
+
+**See also:** [natural?](#natural-p), [exact?](#exact-p), [rational?](#rational-p)
+
+---
+
+### natural? {#natural-p}
+
+Return #t if x is a natural number (integer >= 0).
+
+**Signature:** `(natural? x)`
+
+**Examples:**
+```{arl}
+(natural? 0)          ; => #t
+(natural? 42)         ; => #t
+(natural? -5)         ; => #f
+(natural? 3.14)       ; => #f
+```
+
+**See also:** [integer?](#integer-p), [positive?](#positive-p), [non-negative?](#non-negative-p)
+
+---
+
+### finite? {#finite-p}
+
+Return #t if x is finite.
+
+**Signature:** `(finite? x)`
+
+**Examples:**
+```{arl}
+(finite? 42)          ; => #t
+(finite? Inf)         ; => #f
+(finite? NaN)         ; => #f
+(finite? -Inf)        ; => #f
+```
+
+**See also:** [infinite?](#infinite-p), [nan?](#nan-p), [rational?](#rational-p)
+
+---
+
+### infinite? {#infinite-p}
+
+Return #t if x is infinite.
+
+**Signature:** `(infinite? x)`
+
+**Examples:**
+```{arl}
+(infinite? Inf)       ; => #t
+(infinite? -Inf)      ; => #t
+(infinite? 42)        ; => #f
+(infinite? NaN)       ; => #f
+```
+
+**See also:** [finite?](#finite-p), [nan?](#nan-p)
+
+---
+
+### nan? {#nan-p}
+
+Return #t if x is NaN.
+
+**Signature:** `(nan? x)`
+
+**Examples:**
+```{arl}
+(nan? NaN)            ; => #t
+(nan? (/ 0 0))        ; => #t (0/0 = NaN)
+(nan? 42)             ; => #f
+(nan? Inf)            ; => #f
+```
+
+**See also:** [finite?](#finite-p), [infinite?](#infinite-p)
+
+---
+
+## Value Predicates {#section-value-predicates}
+
+### even? {#even-p}
+
+Return #t if x is an even number.
+
+**Signature:** `(even? x)`
+
+**Examples:**
+```{arl}
+(even? 4)             ; => #t
+(even? 3)             ; => #f
+(even? 0)             ; => #t
+```
+
+**See also:** [odd?](#odd-p)
+
+---
+
+### odd? {#odd-p}
+
+Return #t if x is an odd number.
+
+**Signature:** `(odd? x)`
+
+**Examples:**
+```{arl}
+(odd? 3)              ; => #t
+(odd? 4)              ; => #f
+```
+
+**See also:** [even?](#even-p)
+
+---
+
+### zero? {#zero-p}
+
+Return #t if x is zero.
+
+**Signature:** `(zero? x)`
+
+**Examples:**
+```{arl}
+(zero? 0)             ; => #t
+(zero? 0.0)           ; => #t
+(zero? 1)             ; => #f
+```
+
+**See also:** [positive?](#positive-p), [negative?](#negative-p)
+
+---
+
+### positive? {#positive-p}
+
+Return #t if x is greater than zero.
+
+**Signature:** `(positive? x)`
+
+**Examples:**
+```{arl}
+(positive? 5)         ; => #t
+(positive? 0)         ; => #f
+(positive? -5)        ; => #f
+```
+
+**See also:** [negative?](#negative-p), [non-negative?](#non-negative-p), [zero?](#zero-p)
+
+---
+
+### negative? {#negative-p}
+
+Return #t if x is less than zero.
+
+**Signature:** `(negative? x)`
+
+**Examples:**
+```{arl}
+(negative? -5)        ; => #t
+(negative? 0)         ; => #f
+(negative? 5)         ; => #f
+```
+
+**See also:** [positive?](#positive-p), [non-positive?](#non-positive-p), [zero?](#zero-p)
+
+---
+
+### non-negative? {#non-negative-p}
+
+Return #t if x is greater than or equal to zero.
+
+**Signature:** `(non-negative? x)`
+
+**Examples:**
+```{arl}
+(non-negative? 5)     ; => #t
+(non-negative? 0)     ; => #t
+(non-negative? -5)    ; => #f
+```
+
+**See also:** [positive?](#positive-p), [natural?](#natural-p)
+
+---
+
+### non-positive? {#non-positive-p}
+
+Return #t if x is less than or equal to zero.
+
+**Signature:** `(non-positive? x)`
+
+**Examples:**
+```{arl}
+(non-positive? -5)    ; => #t
+(non-positive? 0)     ; => #t
+(non-positive? 5)     ; => #f
+```
+
+**See also:** [negative?](#negative-p)
+
+---
+
+## Equality Predicates {#section-equality-predicates}
+
+Arl provides `equal?` for deep structural equality with S3-style dispatch,
+and `identical?` for R's native identity comparison. The Scheme predicates
+`eq?` and `eqv?` are intentionally not implemented because R does not
+provide the pointer-level semantics they require.
+
+### equal? {#equal-p}
+
+Deep structural equality. Dispatches on class of
+first argument. Optional :strict #t uses identical? for atomics.
+Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
+
+**Signature:** `(equal? a b [strict #f])`
+
+**Examples:**
+```{arl}
+(equal? 1 1)                    ; => #t
+(equal? 1 1.0)                  ; => #t (type coercion)
+(equal? 1 1.0 :strict #t)      ; => #f (strict mode, uses identical?)
+(equal? (list 1 2) (list 1 2))  ; => #t (deep structural)
+(equal? "hello" "hello")        ; => #t
+```
+
+**See also:** [identical?](#identical-p), [eq?](#eq-p), [eqv?](#eqv-p), [set-method!](#set-method-bang)
+
+---
+
+### identical? {#identical-p}
+
+R's native equality test. Structural comparison for value
+  types, pointer comparison for reference types.
+
+**Signature:** `(identical? a b)`
+
+**Examples:**
+```{arl}
+(identical? 1 1)          ; => #t
+(identical? 1 1.0)        ; => #f (different types)
+(identical? "a" "a")      ; => #t
+```
+
+**Note:** This is R's `identical()` with no modifications. Use `equal?`
+  for deep structural equality with type coercion.
+
+**See also:** [equal?](#equal-p), [eq?](#eq-p), [eqv?](#eqv-p)
+
+---
+
+### eq? {#eq-p}
+
+**Not implemented in Arl.** Raises an error when called.
+
+**Signature:** `(eq? a b)`
+
+**Note:** True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
+
+**See also:** [identical?](#identical-p), [equal?](#equal-p)
+
+---
+
+### eqv? {#eqv-p}
+
+**Not implemented in Arl.** Raises an error when called.
+
+**Signature:** `(eqv? a b)`
+
+**Note:** True Scheme `eqv?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. Use `identical?` for R's native equality, or `equal?` for deep structural equality.
+
+**See also:** [identical?](#identical-p), [equal?](#equal-p)
+
+---
+
+## Helper Functions for Equal? {#section-helper-functions-for-equal}
+
+Internal helper functions used by the `equal?` dispatch methods to perform
+recursive structural comparison of environments and lists.
+
+### env-equal? {#env-equal-p}
+
+Compare two environments by their bindings and values.
+
+**Signature:** `(env-equal? env1 env2)`
+
+**Examples:**
+```{arl}
+(define e1 (new.env :parent (emptyenv)))
+(define e2 (new.env :parent (emptyenv)))
+(assign "x" 1 :envir e1)
+(assign "x" 1 :envir e2)
+(env-equal? e1 e2)              ; => #t
+```
+
+**Note:** Used internally by `equal?.environment`. Compares environments by sorting their bindings and recursively comparing values.
+
+**See also:** [equal?.environment](#equal-p-environment)
+
+---
+
+### list-equal? {#list-equal-p}
+
+Recursively compare list elements.
+
+**Signature:** `(list-equal? lst1 lst2)`
+
+**Examples:**
+```{arl}
+(list-equal? (list 1 2 3) (list 1 2 3))  ; => #t
+(list-equal? (list 1 2) (list 1 2 3))     ; => #f
+(list-equal? (list 1 "a") (list 1 "a"))   ; => #t
+```
+
+**Note:** Used internally by `equal?.list`. Recursively compares list elements using `equal?`.
+
+**See also:** [equal?.list](#equal-p-list)
+
+---
+
+## S3 Dispatch System {#section-s3-dispatch-system}
+
+Arl implements a simplified S3-style dispatch system for generic functions
+like `equal?`. Types are identified by their first S3 class, and methods
+are registered as `generic.class` bindings in the top-level environment.
+
+### s3-type {#s3-type}
+
+Extract the first S3 class from an object.
+
+**Signature:** `(s3-type obj)`
+
+**Examples:**
+```{arl}
+(s3-type 42)                    ; => "numeric"
+(s3-type "hello")               ; => "character"
+(s3-type (list 1 2))            ; => "list"
+(s3-type (new.env))             ; => "environment"
+```
+
+---
+
+### check-s3-type-match {#check-s3-type-match}
+
+Check if all objects have the same S3 type.
+
+**Signature:** `(check-s3-type-match obj rest...)`
+
+**Examples:**
+```{arl}
+(check-s3-type-match 1 2 3)     ; => #t (all numeric)
+(check-s3-type-match 1 "a")     ; => #f (numeric vs character)
+```
+
+**Note:** Internal function used by `equal?` to verify type consistency before dispatch.
+
+---
+
+### set-method! {#set-method-bang}
+
+Register an S3-style method.
+Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
+
+**Signature:** `(set-method! generic-name class-name method-fun)`
+
+**Examples:**
+```{arl}
+;; Register a custom equality method for "point" objects:
+(set-method! 'equal? 'point
+  (lambda (a b strict)
+    (and (equal? ($ a "x") ($ b "x"))
+         (equal? ($ a "y") ($ b "y")))))
+```
+
+**See also:** [use-method](#use-method)
+
+---
+
+### use-method {#use-method}
+
+Dispatch to an S3 method based on object class.
+
+**Signature:** `(use-method generic-name obj args)`
+
+**Examples:**
+```{arl}
+(use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f))  ; dispatches to equal?.list
+```
+
+**Note:** Internal function. Dispatches to the appropriate S3 method based on the object's class, falling back to the `.default` method if no class-specific method is found.
+
+**See also:** [set-method!](#set-method-bang), [s3-type](#s3-type)
+
+---
+
+## Built-in Equal? Methods {#section-built-in-equal-methods}
+
+These methods handle equality comparison for R's core types. The dispatch
+system selects the appropriate method based on the S3 class of the first
+argument. Users can register additional methods with `set-method!`.
+
+### equal?.default {#equal-p-default}
+
+Default equality: atomic/vector comparison.
+:strict #t => #f; else use == with type coercion.
+
+**Signature:** `(equal?.default a b [strict #f])`
+
+**Examples:**
+```{arl}
+(equal?.default 1 1)             ; => #t
+(equal?.default 1 1.0)           ; => #t (coercion via ==)
+(equal?.default 1 1.0 :strict #t) ; => #f (strict uses identical?)
+(equal?.default (c 1 2 3) (c 1 2 3))  ; => #t (element-wise)
+```
+
+---
+
+### equal?.list {#equal-p-list}
+
+Compare lists recursively by structure and elements.
+
+**Signature:** `(equal?.list a b [strict #f])`
+
+**Examples:**
+```{arl}
+(equal?.list (list 1 2 3) (list 1 2 3))          ; => #t
+(equal?.list (list 1 (list 2 3)) (list 1 (list 2 3)))  ; => #t (nested)
+(equal?.list (list 1 2) (list 1 2 3))             ; => #f
+```
+
+---
+
+### equal?.environment {#equal-p-environment}
+
+Compare environments by bindings and values
+(dict, set, R6, refclass are env-based).
+
+**Signature:** `(equal?.environment a b [strict #f])`
+
+**Examples:**
+```{arl}
+(define e1 (new.env :parent (emptyenv)))
+(define e2 (new.env :parent (emptyenv)))
+(assign "x" 1 :envir e1)
+(assign "x" 1 :envir e2)
+(equal?.environment e1 e2)       ; => #t
+```
+
+---
+
+## Symbol Conversions {#section-symbol-conversions}
+
+### symbol->string {#symbol-to-string}
+
+Convert symbol to string.
+
+**Signature:** `(symbol->string sym)`
+
+**Examples:**
+```{arl}
+(symbol->string 'hello)  ; => "hello"
+(symbol->string 'x)      ; => "x"
+```
+
+**Note:** Signals an error if the argument is not a symbol.
+
+**See also:** [string->symbol](#string-to-symbol), [->symbol](#to-symbol)
+
+---
+
+### string->symbol {#string-to-symbol}
+
+Convert string to symbol.
+
+**Signature:** `(string->symbol str)`
+
+**Examples:**
+```{arl}
+(string->symbol "hello")  ; => hello (a symbol)
+(string->symbol "x")      ; => x
+```
+
+**Note:** Signals an error if the argument is not a string.
+
+**See also:** [symbol->string](#symbol-to-string), [->symbol](#to-symbol)
+
+---
+
+### ->symbol {#to-symbol}
+
+Convert value to symbol.
+
+**Signature:** `(->symbol x)`
+
+**Examples:**
+```{arl}
+(->symbol "hello")  ; => hello (a symbol)
+(->symbol 42)       ; => 42 (symbol named "42")
+(->symbol 'x)       ; => x (already a symbol, returned as-is)
+```
+
+**See also:** [symbol->string](#symbol-to-string), [string->symbol](#string-to-symbol)
+
+---
+
+## Numeric Conversions {#section-numeric-conversions}
+
+R-style type conversions providing explicit control over the target numeric type.
+
+### ->number {#to-number}
+
+Convert value to number.
+
+**Signature:** `(->number x)`
+
+**Examples:**
+```{arl}
+(->number "42")     ; => 42
+(->number "3.14")   ; => 3.14
+(->number 5)        ; => 5 (already a number)
+```
+
+**Note:** Signals an error for non-numeric strings (e.g. `(->number "abc")`).
+
+**See also:** [->integer](#to-integer), [->double](#to-double), [->complex](#to-complex)
+
+---
+
+## Scheme-Style Exact/Inexact Conversions {#section-scheme-style-exact-inexact-conversions}
+
+### exact->inexact {#exact-to-inexact}
+
+Convert exact number to inexact (integer to double).
+
+**Signature:** `(exact->inexact x)`
+
+**Examples:**
+```{arl}
+(exact->inexact 5L)     ; => 5.0 (integer to double)
+(exact->inexact 3.14)   ; => 3.14 (already double, returned as double)
+```
+
+**Note:** In Scheme, exactness is a property of any number. In R (and Arl), exact means integer storage type and inexact means double or complex. See also `exact?` and `inexact?` in the `math` module.
+
+**See also:** [inexact->exact](#inexact-to-exact), [exact?](#exact-p) (in `types` module), [inexact?](#inexact-p) (in `types` module)
+
+---
+
+### inexact->exact {#inexact-to-exact}
+
+Convert inexact number to exact (double to integer, rounds to nearest).
+
+**Signature:** `(inexact->exact x)`
+
+**Examples:**
+```{arl}
+(inexact->exact 3.7)    ; => 4L (rounds to nearest integer)
+(inexact->exact 3.2)    ; => 3L
+(inexact->exact 5L)     ; => 5L (already integer)
+```
+
+**Note:** **Warning:** Converting double to integer rounds to the nearest integer, which may lose precision. For example, `(inexact->exact 3.7)` returns `4L`, not `3L`.
+
+**See also:** [exact->inexact](#exact-to-inexact), [exact?](#exact-p) (in `types` module), [inexact?](#inexact-p) (in `types` module)
+
+---
+
+## Numeric Conversions {#section-numeric-conversions-2}
+
+R-style type conversions providing explicit control over the target numeric type.
+
+### ->integer {#to-integer}
+
+Convert value to integer.
+
+**Signature:** `(->integer x)`
+
+**Examples:**
+```{arl}
+(->integer 3.7)     ; => 3L (truncates toward zero)
+(->integer "42")    ; => 42L
+(->integer 5L)      ; => 5L (already integer)
+```
+
+**Note:** Signals an error for non-numeric strings. Note that `->integer` truncates toward zero (like R's `as.integer`), whereas `inexact->exact` rounds to nearest.
+
+**See also:** [->number](#to-number), [->double](#to-double), [inexact->exact](#inexact-to-exact)
+
+---
+
+### ->double {#to-double}
+
+Convert value to double.
+
+**Signature:** `(->double x)`
+
+**Examples:**
+```{arl}
+(->double 5L)       ; => 5.0
+(->double "3.14")   ; => 3.14
+(->double 2.5)      ; => 2.5 (already double)
+```
+
+**See also:** [->number](#to-number), [->integer](#to-integer), [exact->inexact](#exact-to-inexact)
+
+---
+
+### ->complex {#to-complex}
+
+Convert value to complex number (imaginary part = 0).
+
+**Signature:** `(->complex x)`
+
+**Examples:**
+```{arl}
+(->complex 5)       ; => 5+0i
+(->complex 3.14)    ; => 3.14+0i
+(->complex "2+3i")  ; => 2+3i
+```
+
+**See also:** [->number](#to-number), [->double](#to-double), [make-rectangular](stdlib-math.html#make-rectangular) (in `types` module)
+
+---
+
+## Collection Conversions {#section-collection-conversions}
+
+### ->list {#to-list}
+
+Convert value to list.
+
+**Signature:** `(->list x)`
+
+**Examples:**
+```{arl}
+(->list (c 1 2 3))       ; => (1 2 3)
+(->list '(1 2 3))        ; => (1 2 3) (already a list)
+```
+
+**See also:** [->vector](#to-vector)
+
+---
+
+### ->vector {#to-vector}
+
+Convert value to vector.
+
+**Signature:** `(->vector x)`
+
+**Examples:**
+```{arl}
+(->vector '(1 2 3))   ; => [1] 1 2 3 (atomic vector)
+(->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)
+```
+
+**Note:** When given a list, `->vector` flattens it into an atomic vector using `unlist`. Nested lists will be recursively flattened.
+
+**See also:** [->list](#to-list)
 
 ---
 

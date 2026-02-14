@@ -1,7 +1,8 @@
 ;;; Arl Standard Library - Control Flow Macros
 
 (module control
-  (export when unless cond case try*)
+  (export when unless cond case try*
+          call/cc call-with-current-continuation)
   ;; Note: 'and' and 'or' removed from exports - now compiler special forms
 
   (import types)
@@ -128,4 +129,16 @@
                             :error error_handler
                             :finally (call (list finally_handler))))
                 (current-env))))))
+
+;;' @section Continuations
+
+  ;;' @signature (call/cc receiver)
+  ;;' @note Alias for R's `callCC`. The receiver is passed the current continuation.
+  ;;' @seealso call-with-current-continuation
+  (define call/cc callCC)
+
+  ;;' @signature (call-with-current-continuation receiver)
+  ;;' @note Full name alias for `call/cc`.
+  ;;' @seealso call/cc
+  (define call-with-current-continuation callCC)
 )

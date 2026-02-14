@@ -211,9 +211,9 @@ test_that("import_compiled() by module name loads stdlib module", {
   eng <- make_engine()
   test_env <- new.env(parent = eng$get_env())
 
-  # Import a simple stdlib module (math is one of the core modules)
+  # Import a simple stdlib module (types is one of the core modules)
   # Module names are passed as symbols in compiled code
-  engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("math"), test_env)
+  engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("types"), test_env)
 
   # Check that some exported functions from math are now available
   expect_true(exists("even?", envir = test_env, inherits = FALSE))

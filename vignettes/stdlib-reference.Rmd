@@ -34,13 +34,12 @@ For the full, per-function reference, see the individual stdlib reference pages:
 
 - [Standard Library: Lists and Sequences](stdlib-list-seq.html)
 - [Standard Library: Higher-Order Functions](stdlib-functional.html)
-- [Standard Library: Type Predicates](stdlib-types.html)
-- [Standard Library: Equality and S3 Dispatch](stdlib-equality.html)
-- [Standard Library: Type Conversions](stdlib-conversions.html)
+- [Standard Library: Types, Equality, and Conversions](stdlib-types.html)
 - [Standard Library: Math and Numeric Functions](stdlib-math.html)
 - [Standard Library: Control Flow and Macros](stdlib-control.html)
-- [Standard Library: Strings, I/O, and Arithmetic](stdlib-strings-io.html)
-- [Standard Library: Macro, Eval, Interop, and Convenience](stdlib-macro-eval-interop.html)
+- [Standard Library: Strings, Display, and I/O](stdlib-strings-io.html)
+- [Standard Library: Collections and Data Structures](stdlib-collections.html)
+- [Standard Library: Core, R Interop, and Testing](stdlib-core.html)
 
 ## Importing modules
 
@@ -110,6 +109,8 @@ List construction, accessors, association lists, sequence helpers, and sorting.
 [`merge`](stdlib-list-seq.html#merge),
 [`stable-sort`](stdlib-list-seq.html#stable-sort)
 
+Modules: [`list.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/list.arl), [`sequences.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/sequences.arl), [`sort.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/sort.arl)
+
 ## [Higher-Order Functions](stdlib-functional.html)
 
 Mapping, filtering, folding, function composition, and logical combinators.
@@ -132,9 +133,11 @@ Mapping, filtering, folding, function composition, and logical combinators.
 [`memoize`](stdlib-functional.html#memoize),
 [`not`](stdlib-functional.html#not), [`xor`](stdlib-functional.html#xor)
 
-## [Type Predicates](stdlib-types.html)
+Modules: [`functional.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/functional.arl), [`logic.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/logic.arl)
 
-Predicates for testing the type of a value.
+## [Types, Equality, and Conversions](stdlib-types.html)
+
+Type predicates, numeric type hierarchy, structural and identity equality, S3-style dispatch, and type conversions.
 
 [`list?`](stdlib-types.html#list-p),
 [`list-or-pair?`](stdlib-types.html#list-or-pair-p),
@@ -151,44 +154,50 @@ Predicates for testing the type of a value.
 [`environment?`](stdlib-types.html#environment-p),
 [`is-refclass?`](stdlib-types.html#is-refclass-p),
 [`atom?`](stdlib-types.html#atom-p), [`empty?`](stdlib-types.html#empty-p),
-[`type-of`](stdlib-types.html#type-of), [`pair?`](stdlib-types.html#pair-p)
+[`type-of`](stdlib-types.html#type-of), [`real?`](stdlib-types.html#real-p),
+[`complex?`](stdlib-types.html#complex-p),
+[`rational?`](stdlib-types.html#rational-p),
+[`exact?`](stdlib-types.html#exact-p),
+[`inexact?`](stdlib-types.html#inexact-p),
+[`integer?`](stdlib-types.html#integer-p),
+[`natural?`](stdlib-types.html#natural-p),
+[`finite?`](stdlib-types.html#finite-p),
+[`infinite?`](stdlib-types.html#infinite-p), [`nan?`](stdlib-types.html#nan-p),
+[`even?`](stdlib-types.html#even-p), [`odd?`](stdlib-types.html#odd-p),
+[`zero?`](stdlib-types.html#zero-p),
+[`positive?`](stdlib-types.html#positive-p),
+[`negative?`](stdlib-types.html#negative-p),
+[`non-negative?`](stdlib-types.html#non-negative-p),
+[`non-positive?`](stdlib-types.html#non-positive-p),
+[`identical?`](stdlib-types.html#identical-p), [`eq?`](stdlib-types.html#eq-p),
+[`eqv?`](stdlib-types.html#eqv-p), [`equal?`](stdlib-types.html#equal-p),
+[`equal?.default`](stdlib-types.html#equal-p-default),
+[`equal?.environment`](stdlib-types.html#equal-p-environment),
+[`equal?.list`](stdlib-types.html#equal-p-list),
+[`env-equal?`](stdlib-types.html#env-equal-p),
+[`list-equal?`](stdlib-types.html#list-equal-p),
+[`s3-type`](stdlib-types.html#s3-type),
+[`check-s3-type-match`](stdlib-types.html#check-s3-type-match),
+[`use-method`](stdlib-types.html#use-method),
+[`set-method!`](stdlib-types.html#set-method-bang),
+[`symbol->string`](stdlib-types.html#symbol-to-string),
+[`string->symbol`](stdlib-types.html#string-to-symbol),
+[`->symbol`](stdlib-types.html#to-symbol),
+[`->number`](stdlib-types.html#to-number),
+[`->list`](stdlib-types.html#to-list),
+[`->vector`](stdlib-types.html#to-vector),
+[`->integer`](stdlib-types.html#to-integer),
+[`->double`](stdlib-types.html#to-double),
+[`->complex`](stdlib-types.html#to-complex),
+[`exact->inexact`](stdlib-types.html#exact-to-inexact),
+[`inexact->exact`](stdlib-types.html#inexact-to-exact),
+[`pair?`](stdlib-types.html#pair-p)
 
-## [Equality and S3 Dispatch](stdlib-equality.html)
-
-Structural and identity equality, plus an S3-style method dispatch system.
-
-[`identical?`](stdlib-equality.html#identical-p),
-[`eq?`](stdlib-equality.html#eq-p), [`eqv?`](stdlib-equality.html#eqv-p),
-[`equal?`](stdlib-equality.html#equal-p),
-[`equal?.default`](stdlib-equality.html#equal-p-default),
-[`equal?.environment`](stdlib-equality.html#equal-p-environment),
-[`equal?.list`](stdlib-equality.html#equal-p-list),
-[`env-equal?`](stdlib-equality.html#env-equal-p),
-[`list-equal?`](stdlib-equality.html#list-equal-p),
-[`s3-type`](stdlib-equality.html#s3-type),
-[`check-s3-type-match`](stdlib-equality.html#check-s3-type-match),
-[`use-method`](stdlib-equality.html#use-method),
-[`set-method!`](stdlib-equality.html#set-method-bang)
-
-## [Type Conversions](stdlib-conversions.html)
-
-Convert between symbols, strings, numbers, lists, and vectors.
-
-[`symbol->string`](stdlib-conversions.html#symbol-to-string),
-[`string->symbol`](stdlib-conversions.html#string-to-symbol),
-[`->symbol`](stdlib-conversions.html#to-symbol),
-[`->number`](stdlib-conversions.html#to-number),
-[`->list`](stdlib-conversions.html#to-list),
-[`->vector`](stdlib-conversions.html#to-vector),
-[`->integer`](stdlib-conversions.html#to-integer),
-[`->double`](stdlib-conversions.html#to-double),
-[`->complex`](stdlib-conversions.html#to-complex),
-[`exact->inexact`](stdlib-conversions.html#exact-to-inexact),
-[`inexact->exact`](stdlib-conversions.html#inexact-to-exact)
+Modules: [`types.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/types.arl), [`equality.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/equality.arl), [`conversions.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/conversions.arl)
 
 ## [Math and Numeric Functions](stdlib-math.html)
 
-Arithmetic, comparison, rounding, trigonometry, number theory, and numeric predicates.
+Arithmetic, comparison, rounding, trigonometry, number theory, and complex number utilities.
 
 [`%`](stdlib-math.html#percent), [`+`](stdlib-math.html#plus),
 [`*`](stdlib-math.html#star), [`-`](stdlib-math.html#minus),
@@ -198,29 +207,17 @@ Arithmetic, comparison, rounding, trigonometry, number theory, and numeric predi
 [`>=`](stdlib-math.html#gte), [`==`](stdlib-math.html#num-eq-eq),
 [`=`](stdlib-math.html#num-eq), [`inc`](stdlib-math.html#inc),
 [`dec`](stdlib-math.html#dec), [`clamp`](stdlib-math.html#clamp),
-[`within?`](stdlib-math.html#within-p), [`even?`](stdlib-math.html#even-p),
-[`odd?`](stdlib-math.html#odd-p), [`zero?`](stdlib-math.html#zero-p),
-[`positive?`](stdlib-math.html#positive-p),
-[`negative?`](stdlib-math.html#negative-p),
-[`non-negative?`](stdlib-math.html#non-negative-p),
-[`non-positive?`](stdlib-math.html#non-positive-p),
-[`integer?`](stdlib-math.html#integer-p),
-[`natural?`](stdlib-math.html#natural-p), [`real?`](stdlib-math.html#real-p),
-[`complex?`](stdlib-math.html#complex-p),
-[`rational?`](stdlib-math.html#rational-p),
-[`exact?`](stdlib-math.html#exact-p), [`inexact?`](stdlib-math.html#inexact-p),
-[`finite?`](stdlib-math.html#finite-p),
-[`infinite?`](stdlib-math.html#infinite-p), [`nan?`](stdlib-math.html#nan-p),
-[`abs`](stdlib-math.html#abs), [`floor`](stdlib-math.html#floor),
-[`ceiling`](stdlib-math.html#ceiling), [`truncate`](stdlib-math.html#truncate),
-[`round`](stdlib-math.html#round), [`signum`](stdlib-math.html#signum),
-[`sqrt`](stdlib-math.html#sqrt), [`expt`](stdlib-math.html#expt),
-[`log`](stdlib-math.html#log), [`exp`](stdlib-math.html#exp),
-[`log10`](stdlib-math.html#log10), [`log2`](stdlib-math.html#log2),
-[`sin`](stdlib-math.html#sin), [`cos`](stdlib-math.html#cos),
-[`tan`](stdlib-math.html#tan), [`asin`](stdlib-math.html#asin),
-[`acos`](stdlib-math.html#acos), [`atan`](stdlib-math.html#atan),
-[`atan2`](stdlib-math.html#atan2), [`quotient`](stdlib-math.html#quotient),
+[`within?`](stdlib-math.html#within-p), [`abs`](stdlib-math.html#abs),
+[`floor`](stdlib-math.html#floor), [`ceiling`](stdlib-math.html#ceiling),
+[`truncate`](stdlib-math.html#truncate), [`round`](stdlib-math.html#round),
+[`signum`](stdlib-math.html#signum), [`sqrt`](stdlib-math.html#sqrt),
+[`expt`](stdlib-math.html#expt), [`log`](stdlib-math.html#log),
+[`exp`](stdlib-math.html#exp), [`log10`](stdlib-math.html#log10),
+[`log2`](stdlib-math.html#log2), [`sin`](stdlib-math.html#sin),
+[`cos`](stdlib-math.html#cos), [`tan`](stdlib-math.html#tan),
+[`asin`](stdlib-math.html#asin), [`acos`](stdlib-math.html#acos),
+[`atan`](stdlib-math.html#atan), [`atan2`](stdlib-math.html#atan2),
+[`quotient`](stdlib-math.html#quotient),
 [`remainder`](stdlib-math.html#remainder), [`modulo`](stdlib-math.html#modulo),
 [`gcd`](stdlib-math.html#gcd), [`lcm`](stdlib-math.html#lcm),
 [`make-rectangular`](stdlib-math.html#make-rectangular),
@@ -229,13 +226,17 @@ Arithmetic, comparison, rounding, trigonometry, number theory, and numeric predi
 [`imag-part`](stdlib-math.html#imag-part),
 [`magnitude`](stdlib-math.html#magnitude), [`angle`](stdlib-math.html#angle)
 
+Modules: [`math.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/math.arl)
+
 ## [Control Flow and Macros](stdlib-control.html)
 
-Conditionals, binding forms, looping, threading macros, and error handling.
+Conditionals, binding forms, looping, threading macros, continuations, and error handling.
 
 [`when`](stdlib-control.html#when), [`unless`](stdlib-control.html#unless),
 [`cond`](stdlib-control.html#cond), [`case`](stdlib-control.html#case),
 [`try*`](stdlib-control.html#try-star),
+[`call/cc`](stdlib-control.html#call-cc),
+[`call-with-current-continuation`](stdlib-control.html#call-with-current-continuation),
 [`pattern-symbols`](stdlib-control.html#pattern-symbols),
 [`destructuring-bind`](stdlib-control.html#destructuring-bind),
 [`let`](stdlib-control.html#let), [`let*`](stdlib-control.html#let-star),
@@ -246,7 +247,9 @@ Conditionals, binding forms, looping, threading macros, and error handling.
 [`recur`](stdlib-control.html#recur), [`->`](stdlib-control.html#thread-first),
 [`->>`](stdlib-control.html#thread-last), [`try`](stdlib-control.html#try)
 
-## [Strings, I/O, and Arithmetic](stdlib-strings-io.html)
+Modules: [`control.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/control.arl), [`binding.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/binding.arl), [`looping.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/looping.arl), [`threading.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/threading.arl), [`error.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/error.arl)
+
+## [Strings, Display, and I/O](stdlib-strings-io.html)
 
 String manipulation, file and console I/O, environment access, and display formatting.
 
@@ -304,71 +307,67 @@ String manipulation, file and console I/O, environment access, and display forma
 [`println`](stdlib-strings-io.html#println),
 [`str`](stdlib-strings-io.html#str), [`trace`](stdlib-strings-io.html#trace)
 
-## [Macro, Eval, Interop, and Convenience](stdlib-macro-eval-interop.html)
+Modules: [`strings.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/strings.arl), [`io.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/io.arl), [`display.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/display.arl)
 
-Evaluation, macro utilities, dictionaries, sets, structs, assertions, and R interop helpers.
+## [Collections and Data Structures](stdlib-collections.html)
 
-[`license`](stdlib-macro-eval-interop.html#license),
-[`error`](stdlib-macro-eval-interop.html#error),
-[`warn`](stdlib-macro-eval-interop.html#warn),
-[`identity`](stdlib-macro-eval-interop.html#identity),
-[`values`](stdlib-macro-eval-interop.html#values),
-[`values?`](stdlib-macro-eval-interop.html#values-p),
-[`call-with-values`](stdlib-macro-eval-interop.html#call-with-values),
-[`call/cc`](stdlib-macro-eval-interop.html#call-cc),
-[`call-with-current-continuation`](stdlib-macro-eval-interop.html#call-with-current-continuation),
-[`funcall`](stdlib-macro-eval-interop.html#funcall),
-[`r/call`](stdlib-macro-eval-interop.html#r-call),
-[`get`](stdlib-macro-eval-interop.html#get),
-[`macroexpand-1`](stdlib-macro-eval-interop.html#macroexpand-1),
-[`macroexpand-all`](stdlib-macro-eval-interop.html#macroexpand-all),
-[`suppressWarnings`](stdlib-macro-eval-interop.html#suppresswarnings),
-[`suppressMessages`](stdlib-macro-eval-interop.html#suppressmessages),
-[`with`](stdlib-macro-eval-interop.html#with),
-[`within`](stdlib-macro-eval-interop.html#within),
-[`subset`](stdlib-macro-eval-interop.html#subset),
-[`transform`](stdlib-macro-eval-interop.html#transform),
-[`substitute`](stdlib-macro-eval-interop.html#substitute),
-[`dict`](stdlib-macro-eval-interop.html#dict),
-[`hash`](stdlib-macro-eval-interop.html#hash),
-[`dict?`](stdlib-macro-eval-interop.html#dict-p),
-[`dict-get`](stdlib-macro-eval-interop.html#dict-get),
-[`dict-set`](stdlib-macro-eval-interop.html#dict-set),
-[`dict-remove`](stdlib-macro-eval-interop.html#dict-remove),
-[`dict-keys`](stdlib-macro-eval-interop.html#dict-keys),
-[`dict-values`](stdlib-macro-eval-interop.html#dict-values),
-[`dict-has?`](stdlib-macro-eval-interop.html#dict-has-p),
-[`dict-merge`](stdlib-macro-eval-interop.html#dict-merge),
-[`set`](stdlib-macro-eval-interop.html#set),
-[`set?`](stdlib-macro-eval-interop.html#set-p),
-[`set-add`](stdlib-macro-eval-interop.html#set-add),
-[`set-remove`](stdlib-macro-eval-interop.html#set-remove),
-[`set-contains?`](stdlib-macro-eval-interop.html#set-contains-p),
-[`set-union`](stdlib-macro-eval-interop.html#set-union),
-[`set-intersection`](stdlib-macro-eval-interop.html#set-intersection),
-[`set-difference`](stdlib-macro-eval-interop.html#set-difference),
-[`defstruct`](stdlib-macro-eval-interop.html#defstruct),
-[`assert`](stdlib-macro-eval-interop.html#assert),
-[`assert-equal`](stdlib-macro-eval-interop.html#assert-equal),
-[`assert-true`](stdlib-macro-eval-interop.html#assert-true),
-[`assert-false`](stdlib-macro-eval-interop.html#assert-false),
-[`assert-eq`](stdlib-macro-eval-interop.html#assert-eq),
-[`assert-error`](stdlib-macro-eval-interop.html#assert-error),
-[`eval`](stdlib-macro-eval-interop.html#eval),
-[`read`](stdlib-macro-eval-interop.html#read),
-[`write`](stdlib-macro-eval-interop.html#write),
-[`capture`](stdlib-macro-eval-interop.html#capture),
-[`gensym`](stdlib-macro-eval-interop.html#gensym),
-[`macro?`](stdlib-macro-eval-interop.html#macro-p),
-[`macroexpand`](stdlib-macro-eval-interop.html#macroexpand),
-[`promise?`](stdlib-macro-eval-interop.html#promise-p),
-[`force`](stdlib-macro-eval-interop.html#force),
-[`promise-expr`](stdlib-macro-eval-interop.html#promise-expr),
-[`r/eval`](stdlib-macro-eval-interop.html#r-eval),
-[`toplevel-env`](stdlib-macro-eval-interop.html#toplevel-env),
-[`current-env`](stdlib-macro-eval-interop.html#current-env),
-[`doc!`](stdlib-macro-eval-interop.html#doc-bang),
-[`doc`](stdlib-macro-eval-interop.html#doc)
+Dictionaries, sets, and struct definitions for structured data.
+
+[`dict`](stdlib-collections.html#dict), [`hash`](stdlib-collections.html#hash),
+[`dict?`](stdlib-collections.html#dict-p),
+[`dict-get`](stdlib-collections.html#dict-get),
+[`dict-set`](stdlib-collections.html#dict-set),
+[`dict-remove`](stdlib-collections.html#dict-remove),
+[`dict-keys`](stdlib-collections.html#dict-keys),
+[`dict-values`](stdlib-collections.html#dict-values),
+[`dict-has?`](stdlib-collections.html#dict-has-p),
+[`dict-merge`](stdlib-collections.html#dict-merge),
+[`set`](stdlib-collections.html#set), [`set?`](stdlib-collections.html#set-p),
+[`set-add`](stdlib-collections.html#set-add),
+[`set-remove`](stdlib-collections.html#set-remove),
+[`set-contains?`](stdlib-collections.html#set-contains-p),
+[`set-union`](stdlib-collections.html#set-union),
+[`set-intersection`](stdlib-collections.html#set-intersection),
+[`set-difference`](stdlib-collections.html#set-difference),
+[`defstruct`](stdlib-collections.html#defstruct)
+
+Modules: [`dict.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/dict.arl), [`set.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/set.arl), [`struct.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/struct.arl)
+
+## [Core, R Interop, and Testing](stdlib-core.html)
+
+Evaluation, macro utilities, R interop helpers, and assertions.
+
+[`license`](stdlib-core.html#license), [`error`](stdlib-core.html#error),
+[`warn`](stdlib-core.html#warn), [`identity`](stdlib-core.html#identity),
+[`values`](stdlib-core.html#values), [`values?`](stdlib-core.html#values-p),
+[`call-with-values`](stdlib-core.html#call-with-values),
+[`funcall`](stdlib-core.html#funcall), [`r/call`](stdlib-core.html#r-call),
+[`get`](stdlib-core.html#get),
+[`macroexpand-1`](stdlib-core.html#macroexpand-1),
+[`macroexpand-all`](stdlib-core.html#macroexpand-all),
+[`suppressWarnings`](stdlib-core.html#suppresswarnings),
+[`suppressMessages`](stdlib-core.html#suppressmessages),
+[`with`](stdlib-core.html#with), [`within`](stdlib-core.html#within),
+[`subset`](stdlib-core.html#subset), [`transform`](stdlib-core.html#transform),
+[`substitute`](stdlib-core.html#substitute),
+[`assert`](stdlib-core.html#assert),
+[`assert-equal`](stdlib-core.html#assert-equal),
+[`assert-true`](stdlib-core.html#assert-true),
+[`assert-false`](stdlib-core.html#assert-false),
+[`assert-eq`](stdlib-core.html#assert-eq),
+[`assert-error`](stdlib-core.html#assert-error),
+[`eval`](stdlib-core.html#eval), [`read`](stdlib-core.html#read),
+[`write`](stdlib-core.html#write), [`capture`](stdlib-core.html#capture),
+[`gensym`](stdlib-core.html#gensym), [`macro?`](stdlib-core.html#macro-p),
+[`macroexpand`](stdlib-core.html#macroexpand),
+[`promise?`](stdlib-core.html#promise-p), [`force`](stdlib-core.html#force),
+[`promise-expr`](stdlib-core.html#promise-expr),
+[`r/eval`](stdlib-core.html#r-eval),
+[`toplevel-env`](stdlib-core.html#toplevel-env),
+[`current-env`](stdlib-core.html#current-env),
+[`doc!`](stdlib-core.html#doc-bang), [`doc`](stdlib-core.html#doc)
+
+Modules: [`core.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/core.arl), [`r-interop.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/r-interop.arl), [`assert.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/assert.arl)
 
 ## Built-in functions
 
@@ -380,11 +379,11 @@ modules. They are available even on a bare engine
 | Category | Functions |
 |----------|-----------|
 | Cons cells | [`pair?`](stdlib-types.html#pair-p) |
-| Macros | [`gensym`](stdlib-macro-eval-interop.html#gensym), [`capture`](stdlib-macro-eval-interop.html#capture), [`macro?`](stdlib-macro-eval-interop.html#macro-p), [`macroexpand`](stdlib-macro-eval-interop.html#macroexpand) |
-| Evaluation | [`eval`](stdlib-macro-eval-interop.html#eval), [`read`](stdlib-macro-eval-interop.html#read), [`write`](stdlib-macro-eval-interop.html#write), [`r/eval`](stdlib-macro-eval-interop.html#r-eval) |
-| Environments | [`toplevel-env`](stdlib-macro-eval-interop.html#toplevel-env), [`current-env`](stdlib-macro-eval-interop.html#current-env) |
-| Promises | [`promise?`](stdlib-macro-eval-interop.html#promise-p), [`force`](stdlib-macro-eval-interop.html#force), [`promise-expr`](stdlib-macro-eval-interop.html#promise-expr) |
-| Documentation | [`doc!`](stdlib-macro-eval-interop.html#doc-bang), [`doc`](stdlib-macro-eval-interop.html#doc) |
+| Macros | [`gensym`](stdlib-core.html#gensym), [`capture`](stdlib-core.html#capture), [`macro?`](stdlib-core.html#macro-p), [`macroexpand`](stdlib-core.html#macroexpand) |
+| Evaluation | [`eval`](stdlib-core.html#eval), [`read`](stdlib-core.html#read), [`write`](stdlib-core.html#write), [`r/eval`](stdlib-core.html#r-eval) |
+| Environments | [`toplevel-env`](stdlib-core.html#toplevel-env), [`current-env`](stdlib-core.html#current-env) |
+| Promises | [`promise?`](stdlib-core.html#promise-p), [`force`](stdlib-core.html#force), [`promise-expr`](stdlib-core.html#promise-expr) |
+| Documentation | [`doc!`](stdlib-core.html#doc-bang), [`doc`](stdlib-core.html#doc) |
 
 These builtins are documented alongside the stdlib functions they relate to
 in the individual reference pages above.
@@ -401,7 +400,7 @@ initializing.
 - [`_r.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/_r.arl) (R operator/function aliases, internal)
 - [`core.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/core.arl)
 - [`list.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/list.arl)
-- [`types.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/types.arl) (type predicates)
+- [`types.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/types.arl) (type predicates, numeric type hierarchy)
 - [`logic.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/logic.arl) (logical operations)
 - [`conversions.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/conversions.arl) (type conversions)
 - [`equality.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/equality.arl) (equality and S3 dispatch)
@@ -415,7 +414,7 @@ initializing.
 - [`binding.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/binding.arl)
 - [`looping.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/looping.arl)
 - [`dict.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/dict.arl)
-- [`math.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/math.arl) (includes numeric type predicates)
+- [`math.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/math.arl)
 - [`set.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/set.arl)
 - [`strings.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/strings.arl)
 - [`display.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/display.arl)

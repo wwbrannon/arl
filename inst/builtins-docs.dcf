@@ -19,7 +19,7 @@ Examples:
 Seealso: list?, null?, atom?
 
 Name: eval
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Evaluation
 Description: Evaluate a Arl expression in the current environment.
 Signature: (eval expr)
@@ -29,7 +29,7 @@ Examples:
 Seealso: r/eval, read, macroexpand
 
 Name: read
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Evaluation
 Description: Parse a string into a Arl expression without evaluating it.
 Signature: (read source)
@@ -43,7 +43,7 @@ Note: Returns the first expression from the source string, or #nil if
   S-expressions.
 
 Name: write
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Evaluation
 Description: Convert a Arl expression to its string representation.
   The inverse of read.
@@ -59,7 +59,7 @@ Note: Produces output that can be parsed back with read, ensuring the
   produced by read.
 
 Name: capture
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Macro Utilities
 Description: Mark a symbol for intentional capture in a macro body,
   overriding hygiene.
@@ -76,7 +76,7 @@ Note: Use capture when writing anaphoric macros or other macros that
   prevent accidental capture.
 
 Name: gensym
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Macro Utilities
 Description: Generate a unique uninterned symbol, useful for writing
   hygienic macros.
@@ -89,7 +89,7 @@ Note: Each call returns a fresh symbol guaranteed not to conflict with
   user-defined names. The optional prefix defaults to "G".
 
 Name: macro?
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Macro Utilities
 Description: Return #t if the symbol names a currently-defined macro.
 Signature: (macro? sym)
@@ -99,7 +99,7 @@ Examples:
   (macro? 'car)             ; => #f
 
 Name: macroexpand
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Macro Utilities
 Description: Recursively expand all macros in expr until no macro calls
   remain.
@@ -112,7 +112,7 @@ Seealso: macroexpand-1, macro?, gensym
 Note: Also available as `macroexpand-all` (alias).
 
 Name: macroexpand-1
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Macro Utilities
 Description: Expand only the outermost macro call in expr (one step).
 Signature: (macroexpand-1 expr)
@@ -123,7 +123,7 @@ Examples:
 Seealso: macroexpand, macro?
 
 Name: promise?
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Promises (Lazy Evaluation)
 Description: Return #t if x is a promise (created with `delay`).
 Signature: (promise? x)
@@ -134,7 +134,7 @@ Examples:
 Seealso: force, promise-expr
 
 Name: force
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Promises (Lazy Evaluation)
 Description: Force a promise, evaluating its delayed expression and
   returning the result. If x is not a promise, returns x unchanged.
@@ -146,7 +146,7 @@ Examples:
 Seealso: promise?, promise-expr, delay
 
 Name: promise-expr
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Promises (Lazy Evaluation)
 Description: Extract the unevaluated expression from a promise.
 Signature: (promise-expr p)
@@ -157,7 +157,7 @@ Seealso: promise?, force, delay
 Note: Signals an error if p is not a promise.
 
 Name: r/eval
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Evaluation
 Description: Evaluate an R expression directly via R's eval(), bypassing
   Arl's compiler.
@@ -169,7 +169,7 @@ Note: Useful for evaluating raw R calls that use R control flow (for,
   while) or other constructs that Arl normally overrides.
 
 Name: toplevel-env
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Environment Introspection
 Description: Return the top-level environment (the environment where all
   standard library bindings live).
@@ -179,7 +179,7 @@ Examples:
 Seealso: current-env
 
 Name: current-env
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Environment Introspection
 Description: Return the current Arl evaluation environment.
 Signature: (current-env)
@@ -188,7 +188,7 @@ Examples:
 Seealso: toplevel-env
 
 Name: doc!
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Documentation Helpers
 Description: Attach documentation fields to a function. With a single
   string argument, sets the description (backward compatible). With keyword
@@ -202,7 +202,7 @@ Examples:
 Seealso: doc, help
 
 Name: doc
-Vignette: stdlib-macro-eval-interop
+Vignette: stdlib-core
 Section: Documentation Helpers
 Description: Retrieve documentation from a function. With no field argument,
   returns the description. Pass a field name string to get a specific field,
