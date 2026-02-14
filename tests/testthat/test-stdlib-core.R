@@ -73,6 +73,74 @@ test_that("call/cc is first-class and has an alias", {
   expect_equal(alias_result, 9)
 })
 
+test_that("call/cc returns receiver's value when continuation is not invoked", {
+  env <- toplevel_env(engine)
+  result <- engine$eval(
+    engine$read("(call/cc (lambda (k) 99))")[[1]],
+    env = env
+  )
+  expect_equal(result, 99)
+})
+
+test_that("call/cc can return complex values", {
+  env <- toplevel_env(engine)
+  result <- engine$eval(
+    engine$read("(call/cc (lambda (k) (k (list 1 2 3))))")[[1]],
+    env = env
+  )
+  expect_equal(result, list(1L, 2L, 3L))
+})
+
+test_that("call/cc preserves side effects before escape", {
+  env <- toplevel_env(engine)
+  engine$eval(engine$read("(define x 0)")[[1]], env = env)
+  engine$eval(
+    engine$read("(call/cc (lambda (k) (set! x 42) (k #nil)))")[[1]],
+    env = env
+  )
+  result <- engine$eval(engine$read("x")[[1]], env = env)
+  expect_equal(result, 42)
+})
+
+test_that("nested call/cc works correctly", {
+  env <- toplevel_env(engine)
+  result <- engine$eval(
+    engine$read("(call/cc (lambda (outer) (+ 1 (call/cc (lambda (inner) (inner 10))))))")[[1]],
+    env = env
+  )
+  expect_equal(result, 11)
+
+  # Inner continuation escapes outer
+  result2 <- engine$eval(
+    engine$read("(call/cc (lambda (outer) (+ 1 (call/cc (lambda (inner) (outer 42))))))")[[1]],
+    env = env
+  )
+  expect_equal(result2, 42)
+})
+
+test_that("call/cc can simulate early return from nested computation", {
+  env <- toplevel_env(engine)
+  # Use call/cc to bail out of a deep computation early
+  result <- engine$eval(engine$read("
+    (call/cc (lambda (return)
+      (define a 1)
+      (define b 2)
+      (when (= (+ a b) 3) (return 'found))
+      'not-found))
+  ")[[1]], env = env)
+  expect_equal(result, as.symbol("found"))
+
+  # Without early return: continuation not invoked, falls through
+  result2 <- engine$eval(engine$read("
+    (call/cc (lambda (return)
+      (define a 1)
+      (define b 2)
+      (when (= (+ a b) 99) (return 'found))
+      'not-found))
+  ")[[1]], env = env)
+  expect_equal(result2, as.symbol("not-found"))
+})
+
 test_that("funcall applies function to list of arguments", {
   env <- new.env()
   toplevel_env(engine, env = env)
