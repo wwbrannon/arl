@@ -85,24 +85,24 @@ navbar:
       text: Language Reference
       menu:
         - text: Overview
-          href: articles/stdlib-reference.html
+          href: articles/lang-reference.html
         - text: "---------"
         - text: Lists & Sequences
-          href: articles/stdlib-list-seq.html
+          href: articles/lang-list-seq.html
         - text: Functional Programming
-          href: articles/stdlib-functional.html
+          href: articles/lang-functional.html
         - text: Types, Equality & Conversions
-          href: articles/stdlib-types.html
+          href: articles/lang-types.html
         - text: Math
-          href: articles/stdlib-math.html
+          href: articles/lang-math.html
         - text: Control Flow
-          href: articles/stdlib-control.html
+          href: articles/lang-control.html
         - text: Strings, Display & I/O
-          href: articles/stdlib-strings-io.html
+          href: articles/lang-strings-io.html
         - text: Collections
-          href: articles/stdlib-collections.html
+          href: articles/lang-collections.html
         - text: Core, R Interop & Testing
-          href: articles/stdlib-core.html
+          href: articles/lang-core.html
     reference:
       text: R API Reference
       href: reference/index.html
@@ -144,7 +144,7 @@ articles:
       - macros
       - modules
       - r-interop
-      - stdlib-reference
+      - lang-reference
       - tail-call-optimization
       - internals
       - troubleshooting
@@ -162,11 +162,11 @@ articles:
   - title: Standard Library Reference
     desc: Per-function reference for Arl's standard library.
     contents:
-      - stdlib-list-seq
-      - stdlib-functional
-      - stdlib-types
-      - stdlib-math
-      - stdlib-control
-      - stdlib-strings-io
-      - stdlib-collections
-      - stdlib-core
+      - lang-list-seq
+      - lang-functional
+      - lang-types
+      - lang-math
+      - lang-control
+      - lang-strings-io
+      - lang-collections
+      - lang-core

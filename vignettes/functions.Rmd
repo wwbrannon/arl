@@ -263,7 +263,7 @@ Arl's standard library provides the usual higher-order toolkit:
 (assert-equal 6 (abs-then-double -3))
 ```
 
-See [Standard Library: Higher-Order Functions](stdlib-functional.html)
+See [Standard Library: Higher-Order Functions](lang-functional.html)
 for the full reference including `reduce`, `curry`, `juxt`, `memoize`,
 and more.
 
@@ -332,6 +332,6 @@ See [Macros and Quasiquote](macros.html) for the full guide.
 - [Getting Started](getting-started.html)
 - [Macros and Quasiquote](macros.html)
 - [Tail Call Optimization](tail-call-optimization.html)
-- [Standard Library: Higher-Order Functions](stdlib-functional.html)
+- [Standard Library: Higher-Order Functions](lang-functional.html)
 - [R Interop and Data Workflows](r-interop.html)
 - [Arl Compared to Scheme](arl-vs-scheme.html)

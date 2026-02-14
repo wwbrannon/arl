@@ -10,7 +10,7 @@ vignette: >
 ---
 
 <!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
-<!-- Regenerate with: make stdlib-docs -->
+<!-- Regenerate with: make lang-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
@@ -142,7 +142,7 @@ Return #t if x is empty (0-length).
 
 **Note:** The empty string `""` has length 1 in R and is NOT considered empty!
 
-**See also:** [null?](#null-p), [length=](stdlib-list-seq.html#length-eq) (in `sequences` module)
+**See also:** [null?](#null-p), [length=](lang-list-seq.html#length-eq) (in `sequences` module)
 
 ---
 
@@ -462,7 +462,7 @@ Return #t if x is a complex number.
 (assert-false (complex? 42))
 ```
 
-**See also:** [real?](#real-p), [number?](#number-p), [make-rectangular](stdlib-math.html#make-rectangular) (in `math` module)
+**See also:** [real?](#real-p), [number?](#number-p), [make-rectangular](lang-math.html#make-rectangular) (in `math` module)
 
 ---
 
@@ -1359,7 +1359,7 @@ Convert value to complex number (imaginary part = 0).
 (assert-equal (complex :real 5 :imaginary 0) (->complex 5))
 ```
 
-**See also:** [->number](#to-number), [->double](#to-double), [make-rectangular](stdlib-math.html#make-rectangular) (in `types` module)
+**See also:** [->number](#to-number), [->double](#to-double), [make-rectangular](lang-math.html#make-rectangular) (in `types` module)
 
 ---
 

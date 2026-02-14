@@ -223,11 +223,11 @@ engine$load_file_under_env(system.file("examples", "data-analysis.arl", package 
 ## Standard library helpers
 
 The stdlib exposes helpers like `map`, `filter`, `reduce`, and threading macros
-(`->`, `->>`). See the [Language Reference](stdlib-reference.html) for the
+(`->`, `->>`). See the [Language Reference](lang-reference.html) for the
 full list.
 
 ## Related guides
 
 - [Getting Started](getting-started.html)
 - [Macros and Quasiquote](macros.html)
-- [Language Reference](stdlib-reference.html)
+- [Language Reference](lang-reference.html)

@@ -1,17 +1,4 @@
-o) reorganize stdlib vignettes and underlying modules
-
-o) do we test well enough that call/cc works?
-
-o) does this break things?
-Env var	Description
-ARL_SKIP_USER_PROFILE	Skip sourcing ~/.Rprofile when launching the CLI
-
-o) this is not silent, but the env var version just below does work:
-options(arl.quiet = TRUE)
-engine <- arl::Engine$new()
-engine$eval_text('(display "this is silent")')  # no output
-
-o) just read the whole doc site and make edits
+o) just read the whole doc site, especially "Guides" and make edits
     o) this para needs update: Inside a quasiquoted template, ,expr (unquote) evaluates expr and splices the result into the template,
     o) "To expand only one level, use macroexpand-1 from Arl code:" also mention the R call
     o) explain this better "Self-TCO only works with the define/lambda form" -- it requires a name

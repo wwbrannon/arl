@@ -10,7 +10,7 @@ vignette: >
 ---
 
 <!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
-<!-- Regenerate with: make stdlib-docs -->
+<!-- Regenerate with: make lang-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
@@ -38,7 +38,7 @@ Signal an error with message.
 (assert-equal "caught" (try (error "oops") (catch e "caught")))
 ```
 
-**See also:** [warn](#warn), [assert](#assert), [try](stdlib-control.html#try)
+**See also:** [warn](#warn), [assert](#assert), [try](lang-control.html#try)
 
 ---
 
@@ -53,7 +53,7 @@ Emit warning with message.
 (warn "check your input")       ; emits warning, returns #nil
 ```
 
-**See also:** [error](#error), [trace](stdlib-strings-io.html#trace)
+**See also:** [error](#error), [trace](lang-strings-io.html#trace)
 
 ---
 
@@ -77,7 +77,7 @@ Return argument.
 (assert-equal "hello" (identity "hello"))
 ```
 
-**See also:** [map](stdlib-functional.html#map)
+**See also:** [map](lang-functional.html#map)
 
 ---
 
@@ -586,7 +586,7 @@ Parse a string into a Arl expression without evaluating it.
 the string contains no expressions. Like R's parse(), but returns Arl
 S-expressions.
 
-**See also:** [eval](#eval), [read-from-string](stdlib-strings-io.html#read-from-string)
+**See also:** [eval](#eval), [read-from-string](lang-strings-io.html#read-from-string)
 
 ---
 
@@ -614,7 +614,7 @@ The inverse of read.
 round-trip property: (read (write expr)) equals expr for any expression
 produced by read.
 
-**See also:** [read](#read), [eval](#eval), [format-value](stdlib-strings-io.html#format-value)
+**See also:** [read](#read), [eval](#eval), [format-value](lang-strings-io.html#format-value)
 
 ---
 

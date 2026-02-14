@@ -1,49 +1,49 @@
 # Module-to-vignette mapping for auto-generated stdlib documentation.
-# Used by tools/docs/generate-stdlib-docs.R to produce vignettes/stdlib-*.Rmd files.
+# Used by tools/docs/generate-lang-docs.R to produce vignettes/lang-*.Rmd files.
 #
 # Format: Debian Control File (DCF), read by base R's read.dcf().
 # Fields:
-#   Name:     Vignette basename (e.g. stdlib-math)
+#   Name:     Vignette basename (e.g. lang-math)
 #   Title:    Vignette title (used in YAML frontmatter and VignetteIndexEntry)
 #   Modules:  Comma-separated list of .arl module names
 #   Preamble: Optional introductory text placed before the first section
 
-Name: stdlib-list-seq
+Name: lang-list-seq
 Title: Standard Library: Lists and Sequences
 Modules: list, sequences, sort
 Summary: List construction, accessors, association lists, sequence helpers, and sorting.
 
-Name: stdlib-functional
+Name: lang-functional
 Title: Standard Library: Higher-Order Functions
 Modules: functional, logic
 Summary: Mapping, filtering, folding, function composition, and logical combinators.
 
-Name: stdlib-types
+Name: lang-types
 Title: Standard Library: Types, Equality, and Conversions
 Modules: types, equality, conversions
 Summary: Type predicates, numeric type hierarchy, structural and identity equality, S3-style dispatch, and type conversions.
 
-Name: stdlib-math
+Name: lang-math
 Title: Standard Library: Math and Numeric Functions
 Modules: math
 Summary: Arithmetic, comparison, rounding, trigonometry, number theory, and complex number utilities.
 
-Name: stdlib-control
+Name: lang-control
 Title: Standard Library: Control Flow and Macros
 Modules: control, binding, looping, threading, error
 Summary: Conditionals, binding forms, looping, threading macros, continuations, and error handling.
 
-Name: stdlib-strings-io
+Name: lang-strings-io
 Title: Standard Library: Strings, Display, and I/O
 Modules: strings, io, display
 Summary: String manipulation, file and console I/O, environment access, and display formatting.
 
-Name: stdlib-collections
+Name: lang-collections
 Title: Standard Library: Collections and Data Structures
 Modules: dict, set, struct
 Summary: Dictionaries, sets, and struct definitions for structured data.
 
-Name: stdlib-core
+Name: lang-core
 Title: Standard Library: Core, R Interop, and Testing
 Modules: core, r-interop, assert
 Summary: Evaluation, macro utilities, R interop helpers, and assertions.

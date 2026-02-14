@@ -10,7 +10,7 @@ vignette: >
 ---
 
 <!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
-<!-- Regenerate with: make stdlib-docs -->
+<!-- Regenerate with: make lang-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
@@ -60,7 +60,7 @@ Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
 (assert-equal (list 1 10 2 20 3 30) (mapcat (lambda (x) (list x (* x 10))) (list 1 2 3)))
 ```
 
-**See also:** [map](#map), [flatten](stdlib-list-seq.html#flatten)
+**See also:** [map](#map), [flatten](lang-list-seq.html#flatten)
 
 ---
 
@@ -81,7 +81,7 @@ Filter items by predicate.
 (assert-equal (list 3 4 5) (filter (lambda (x) (> x 2)) (list 1 2 3 4 5)))
 ```
 
-**See also:** [remove](#remove), [take-while](stdlib-list-seq.html#take-while), [drop-while](stdlib-list-seq.html#drop-while)
+**See also:** [remove](#remove), [take-while](lang-list-seq.html#take-while), [drop-while](lang-list-seq.html#drop-while)
 
 ---
 
@@ -404,7 +404,7 @@ predicate is false, stops when next value would satisfy predicate.
 (assert-equal (list 0 1 2 3 4) (iterate-until inc 0 (lambda (x) (>= x 5))))
 ```
 
-**See also:** [iterate](#iterate), [take-while](stdlib-list-seq.html#take-while)
+**See also:** [iterate](#iterate), [take-while](lang-list-seq.html#take-while)
 
 ---
 

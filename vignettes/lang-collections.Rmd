@@ -10,7 +10,7 @@ vignette: >
 ---
 
 <!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
-<!-- Regenerate with: make stdlib-docs -->
+<!-- Regenerate with: make lang-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")

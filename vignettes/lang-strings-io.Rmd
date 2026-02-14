@@ -10,7 +10,7 @@ vignette: >
 ---
 
 <!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
-<!-- Regenerate with: make stdlib-docs -->
+<!-- Regenerate with: make lang-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
@@ -631,7 +631,7 @@ Read single line from stdin.
 
 **Signature:** `(read-from-string x)`
 
-**See also:** [read](stdlib-core.html#read)
+**See also:** [read](lang-core.html#read)
 
 ---
 
@@ -1096,7 +1096,7 @@ Print value and return it.
 (trace 42 "result")      ; prints "result: 42", returns 42
 ```
 
-**See also:** [warn](stdlib-core.html#warn), [display](#display)
+**See also:** [warn](lang-core.html#warn), [display](#display)
 
 ---
 

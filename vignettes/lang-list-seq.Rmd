@@ -10,7 +10,7 @@ vignette: >
 ---
 
 <!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
-<!-- Regenerate with: make stdlib-docs -->
+<!-- Regenerate with: make lang-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
@@ -38,7 +38,7 @@ Convert a list to a callable form.
 (assert-true (is.call (call (list '+ 1 2))))
 ```
 
-**See also:** [eval](stdlib-core.html#eval), apply
+**See also:** [eval](lang-core.html#eval), apply
 
 ---
 
@@ -667,7 +667,7 @@ Take items while predicate is true.
 (assert-equal (list) (take-while even? (list 1 2 3)))
 ```
 
-**See also:** [take](#take), [drop-while](#drop-while), [filter](stdlib-functional.html#filter)
+**See also:** [take](#take), [drop-while](#drop-while), [filter](lang-functional.html#filter)
 
 ---
 
@@ -688,7 +688,7 @@ Drop items while predicate is true.
 (assert-equal (list 1 2 3) (drop-while even? (list 1 2 3)))
 ```
 
-**See also:** [drop](#drop), [take-while](#take-while), [filter](stdlib-functional.html#filter)
+**See also:** [drop](#drop), [take-while](#take-while), [filter](lang-functional.html#filter)
 
 ---
 
@@ -731,7 +731,7 @@ Flatten nested lists.
 (assert-equal (list 1 2 3) (flatten (list 1 2 3)))
 ```
 
-**See also:** [mapcat](stdlib-functional.html#mapcat), [append](#append)
+**See also:** [mapcat](lang-functional.html#mapcat), [append](#append)
 
 ---
 
@@ -750,7 +750,7 @@ Call fn n times collecting results.
 (assert-equal (list 42 42 42) (repeatedly 3 (lambda () 42)))
 ```
 
-**See also:** [repeat](#repeat), [map](stdlib-functional.html#map)
+**See also:** [repeat](#repeat), [map](lang-functional.html#map)
 
 ---
 
@@ -791,7 +791,7 @@ Zip lists into list of tuples.
 (assert-equal (list (list 1 'a) (list 2 'b) (list 3 'c)) (zip (list 1 2 3) (list 'a 'b 'c)))
 ```
 
-**See also:** [map](stdlib-functional.html#map)
+**See also:** [map](lang-functional.html#map)
 
 ---
 
@@ -834,7 +834,7 @@ Return #t if length of x equals n.
 (assert-false (length= (list 1 2) 3))
 ```
 
-**See also:** [length>](#length-gt), [length<](#length-lt), [empty?](stdlib-types.html#empty-p)
+**See also:** [length>](#length-gt), [length<](#length-lt), [empty?](lang-types.html#empty-p)
 
 ---
 

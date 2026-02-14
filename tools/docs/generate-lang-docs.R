@@ -1,11 +1,11 @@
 #!/usr/bin/env Rscript
-# generate-stdlib-docs.R — Auto-generate stdlib reference vignettes from .arl source files.
+# generate-lang-docs.R — Auto-generate stdlib reference vignettes from .arl source files.
 #
-# Usage: Rscript tools/docs/generate-stdlib-docs.R
-#        make stdlib-docs
+# Usage: Rscript tools/docs/generate-lang-docs.R
+#        make lang-docs
 #
-# Reads tools/docs/stdlib-docs.dcf for module-to-vignette mapping, parses ;;' annotations
-# from inst/arl/*.arl, and writes vignettes/stdlib-*.Rmd files.
+# Reads tools/docs/lang-docs.dcf for module-to-vignette mapping, parses ;;' annotations
+# from inst/arl/*.arl, and writes vignettes/lang-*.Rmd files.
 
 # ---------------------------------------------------------------------------
 # Dependencies
@@ -26,7 +26,7 @@ if (requireNamespace("arl", quietly = TRUE)) {
 
 AUTOGEN_HEADER <- paste0(
   "<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->\n",
-  "<!-- Regenerate with: make stdlib-docs -->\n"
+  "<!-- Regenerate with: make lang-docs -->\n"
 )
 
 # ---------------------------------------------------------------------------
@@ -138,7 +138,7 @@ group_builtins_by_vignette <- function(builtins) {
 
 #' Generate a single vignette Rmd from parsed annotation data.
 #'
-#' @param vignette_name Basename of the vignette (e.g., "stdlib-math")
+#' @param vignette_name Basename of the vignette (e.g., "lang-math")
 #' @param config Config entry with title, modules, preamble
 #' @param all_parsed List of parse results from parse_arl_annotations(), keyed by module name
 #' @return Character string with the full Rmd content
@@ -321,7 +321,7 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
 }
 
 # ---------------------------------------------------------------------------
-# Overview page generator (stdlib-reference.Rmd)
+# Overview page generator (lang-reference.Rmd)
 # ---------------------------------------------------------------------------
 
 GITHUB_BASE <- "https://github.com/wwbrannon/arl/blob/main"
@@ -400,7 +400,7 @@ format_func_list <- function(func_names, func_index = list()) {
   paste(lines, collapse = "\n")
 }
 
-#' Generate the stdlib-reference.Rmd overview page.
+#' Generate the lang-reference.Rmd overview page.
 generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
                                    func_index = list()) {
   out <- character()
@@ -451,7 +451,7 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
   out <- c(out, "- `::`, `:::` -- R package namespace access")
   out <- c(out, "- `help` -- look up documentation")
   out <- c(out, "")
-  out <- c(out, "Anything not in this list is either a built-in function or a stdlib-provided")
+  out <- c(out, "Anything not in this list is either a built-in function or a lang-provided")
   out <- c(out, "function or macro. Unlike special forms, those are ordinary values and can be")
   out <- c(out, "passed around, stored in variables, and so on.")
   out <- c(out, "")
@@ -613,11 +613,11 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
 
 #' Generate all stdlib documentation vignettes.
 #'
-#' @param config_path Path to stdlib-docs.dcf
+#' @param config_path Path to lang-docs.dcf
 #' @param arl_dir Path to inst/arl/ directory
 #' @param output_dir Path to vignettes/ directory
 generate_all <- function(
-  config_path = "tools/docs/stdlib-docs.dcf",
+  config_path = "tools/docs/lang-docs.dcf",
   arl_dir = "inst/arl",
   output_dir = "vignettes"
 ) {
@@ -701,11 +701,11 @@ generate_all <- function(
     message("  Wrote: ", output_file)
   }
 
-  # Generate the overview page (stdlib-reference.Rmd)
-  message("Generating: stdlib-reference.Rmd")
+  # Generate the overview page (lang-reference.Rmd)
+  message("Generating: lang-reference.Rmd")
   ref_rmd <- generate_reference_rmd(vignettes, arl_dir, builtins_by_vignette,
                                     func_index = func_index)
-  ref_file <- file.path(output_dir, "stdlib-reference.Rmd")
+  ref_file <- file.path(output_dir, "lang-reference.Rmd")
   writeLines(ref_rmd, ref_file, useBytes = TRUE)
   message("  Wrote: ", ref_file)
 

@@ -58,7 +58,7 @@ TODO: a couple paragraphs here incl getting started and examples links
 - **[Seamless R interop](articles/r-interop.html)** — call any R function, use keywords for named arguments, work with R data structures directly.
 - **[Powerful macro system](articles/macros.html)** — `defmacro` with quasiquote, unquote, and splicing gives you compile-time code transformation.
 - **[Self-tail-call optimization](articles/tail-call-optimization.html)** — the compiler rewrites self-recursive tail calls as loops, so deep recursion won't overflow the stack.
-- **[Modular standard library](articles/stdlib-reference.html)** — `(import threading)`, `(import control)`, `(import error)` — load only the modules you need.
+- **[Modular standard library](articles/lang-reference.html)** — `(import threading)`, `(import control)`, `(import error)` — load only the modules you need.
 - **[Benchmarks](articles/benchmarks.html)** — performance characteristics, profiling, and optimization history.
 
 ## Install

@@ -1,7 +1,7 @@
 # DocParser: Parses ;;' annotation blocks from .arl source files.
 # Extracts @description, @examples, @assert, @seealso, @note, @section,
 # @signature for use by the compiler (baking docs into compiled code) and
-# the vignette generator (tools/docs/generate-stdlib-docs.R).
+# the vignette generator (tools/docs/generate-lang-docs.R).
 
 #' @importFrom R6 R6Class
 #' @keywords internal

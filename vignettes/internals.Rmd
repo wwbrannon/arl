@@ -96,7 +96,7 @@ what R code the compiler generates.
 
 The compiler's core is a dispatch table in `compile_impl` (see `compiler.R`).
 When it encounters a call, it checks the operator against the
-[known special forms](stdlib-reference.html#special-forms). Anything not in
+[known special forms](lang-reference.html#special-forms). Anything not in
 that list falls through to `compile_application`, which compiles a regular
 function call.
 
@@ -250,4 +250,4 @@ explicit.
 
 - [Getting Started](getting-started.html)
 - [Macros and Quasiquote](macros.html)
-- [Language Reference](stdlib-reference.html)
+- [Language Reference](lang-reference.html)

@@ -10,7 +10,7 @@ vignette: >
 ---
 
 <!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
-<!-- Regenerate with: make stdlib-docs -->
+<!-- Regenerate with: make lang-docs -->
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
@@ -351,7 +351,7 @@ result                      ; => ("a" "b" "c")
 
 **Note:** Expands to a `while` loop over the sequence converted to a list.
 
-**See also:** while, [map](stdlib-functional.html#map), [loop](#loop)
+**See also:** while, [map](lang-functional.html#map), [loop](#loop)
 
 ---
 

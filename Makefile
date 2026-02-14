@@ -21,9 +21,9 @@ build: clean-cache stdlib-order ## help: Build the package tarball
 ## Documentation targets
 #
 
-.PHONY: stdlib-docs
-stdlib-docs: clean-cache stdlib-order ## help: Generate stdlib reference vignettes from .arl source
-	R -q -e "devtools::load_all(); source('tools/docs/generate-stdlib-docs.R')"
+.PHONY: lang-docs
+lang-docs: clean-cache stdlib-order ## help: Generate stdlib reference vignettes from .arl source
+	R -q -e "devtools::load_all(); source('tools/docs/generate-lang-docs.R')"
 
 .PHONY: devdoc
 devdoc: clean-cache stdlib-order ## help: Generate roxygen documentation
@@ -40,7 +40,7 @@ bench-data: ## help: Check out benchmark data from gh-pages branch
 		|| echo "Warning: could not fetch benchmark data from gh-pages branch"
 
 .PHONY: vignettes
-vignettes: clean-cache stdlib-order stdlib-docs bench-data ## help: Build vignettes
+vignettes: clean-cache stdlib-order lang-docs bench-data ## help: Build vignettes
 	R -q -e "devtools::build_vignettes()"
 
 .PHONY: site
