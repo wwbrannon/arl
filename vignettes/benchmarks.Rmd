@@ -12,10 +12,33 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
+
+# Read benchmark data checked out by `make bench-data` (or `make vignettes`).
+bench_json <- tryCatch({
+  data_file <- "benchmarks/results/data.js"
+  if (!file.exists(data_file)) data_file <- file.path("..", data_file)
+  raw <- readLines(data_file, warn = FALSE)
+  json_text <- sub("^window\\.BENCHMARK_DATA = ", "", paste(raw, collapse = "\n"))
+  jsonlite::fromJSON(json_text)
+}, error = function(e) NULL)
+
+if (!is.null(bench_json)) {
+  runs <- bench_json$entries$Benchmark
+  # runs is a data.frame; benches column is a list of data.frames
+  n_runs <- nrow(runs)
+  benches <- runs$benches[[n_runs]]
+  # Also grab the first run for before/after comparisons
+  if (n_runs > 1) {
+    first_benches <- runs$benches[[1L]]
+  } else {
+    first_benches <- NULL
+  }
+}
+has_bench_data <- !is.null(bench_json)
 ```
 
 This page summarises Arl's performance characteristics.
-For full profiling details and optimisation history, see
+For full profiling details and optimization history, see
 [`benchmarks/PERFORMANCE.md`](https://github.com/wwbrannon/arl/blob/main/benchmarks/PERFORMANCE.md)
 in the repository.
 
@@ -27,51 +50,96 @@ Every Arl expression passes through four stages:
 Source → Tokenizer → Parser → Macro Expander → Compiler/Evaluator → Result
 ```
 
-The table below shows where time is spent on typical workloads:
+In general, the either the compiler / evaluator or macro expander (or both)
+will account for most of the runtime, depending on how macro-heavy the workload
+is. The tokenizer and parser are usually fast by comparison. Component-level
+benchmarks for the tokenizer, parser, macro expander, and compiler/evaluator
+are available via `make bench` (see [Running Benchmarks](#running-benchmarks)
+below).
 
-| Component | Median Time | % of Total | Notes |
-|-----------|------------|------------|-------|
-| Tokenizer | 10–18 ms | 15–20% | Scales with source size |
-| Parser | 5–7 ms | 8–12% | Scales with nesting depth |
-| Macro Expander | 0–10 ms | 0–35% | Variable; higher for macro-heavy code |
-| Compiler / Evaluator | 40–60 ms | 60–80% | Dominant component |
-
-**Key insight**: the evaluator is the bottleneck for most workloads,
-consuming 60–80% of total execution time.
-
-## Real-Workload Timings
+## End-to-End Timings
 
 Measured on the example programs shipped with the package:
 
-| Workload | Execution Time |
-|----------|---------------|
-| `fibonacci.arl` | ~11 ms |
-| `quicksort.arl` | ~12 ms |
-| `macro-examples.arl` | ~18 ms |
+```{r e2e-table, echo = FALSE, results = "asis"}
+if (has_bench_data) {
+  e2e_idx <- grepl("^e2e/real/", benches$name)
+  e2e <- benches[e2e_idx, , drop = FALSE]
+  e2e$workload <- sub("^e2e/real/", "", e2e$name)
+
+  tbl <- data.frame(
+    Workload = paste0("`", e2e$workload, "`"),
+    `Execution Time` = sprintf("~%.0f ms", e2e$value),
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  )
+  knitr::kable(tbl, format = "pipe")
+} else {
+  cat("*Benchmark data not available — rebuild with access to the `gh-pages` branch.*\n")
+}
+```
 
 These are end-to-end times (tokenise + parse + expand + compile + evaluate).
 
-## Optimisations Applied
+## Optimizations Applied
 
 Three O(n²) bottlenecks were identified by code inspection and fixed:
 
 1. **Tokenizer string accumulation** — character-by-character `c()` replaced
-   with list-indexed collection. 10× improvement for large strings
-   (240 ms → 24 ms on a 10K-character string).
+   with a regex-based approach that processes entire tokens in one pass,
+   eliminating per-character overhead entirely.
 
 2. **Parser list growing** — repeated `c(elements, list(elem))` replaced
    with chunked collection. ~9× improvement for large flat lists
    (1000 elements: ~60 ms → 6.9 ms).
 
-3. **Evaluator argument list growing** — pre-allocated vectors instead of
-   append-per-argument. Now scales linearly with argument count.
+3. **CPS overhead removed** — the evaluator was converted from
+   continuation-passing style with trampolines to a compiler that emits
+   R code evaluated by R's native `eval()`, removing per-expression
+   closure allocation.
 
-4. **CPS overhead removed** — the evaluator was converted from
-   continuation-passing style with trampolines to direct-style evaluation,
-   removing per-expression closure allocation.
+```{r before-after, echo = FALSE, results = "asis"}
+if (has_bench_data && !is.null(first_benches)) {
+  # Compare first run (baseline) to latest run for e2e/real workloads
+  e2e_names <- benches$name[grepl("^e2e/real/", benches$name)]
+  rows <- lapply(e2e_names, function(nm) {
+    before <- first_benches$value[first_benches$name == nm]
+    after  <- benches$value[benches$name == nm]
+    if (length(before) == 1 && length(after) == 1) {
+      data.frame(
+        Workload = paste0("`", sub("^e2e/real/", "", nm), "`"),
+        Before = sprintf("~%.0f ms", before),
+        After = sprintf("~%.0f ms", after),
+        Speedup = sprintf("%.1fx", before / after),
+        check.names = FALSE,
+        stringsAsFactors = FALSE
+      )
+    }
+  })
+  tbl <- do.call(rbind, rows)
+  if (!is.null(tbl) && nrow(tbl) > 0) {
+    cat("\nBefore/after comparison (first recorded run vs latest):\n\n")
+    print(knitr::kable(tbl, format = "pipe"))
+  }
+} else if (!has_bench_data) {
+  cat("*Benchmark data not available.*\n")
+}
+```
 
-All fixes preserve correctness (full test suite passes) and only affect
-pathological inputs on typical code — but they prevent worst-case blowups.
+All fixes preserve correctness (full test suite passes) and significantly
+improve performance on most code, as well as preventing worst-case blowups.
+
+## Benchmark Data
+
+Historical benchmark results are stored on the `gh-pages` branch in
+`dev/bench/data.js`. You can inspect them with:
+
+```bash
+git show gh-pages:dev/bench/data.js
+```
+
+Each entry records a benchmark run with commit metadata and per-benchmark
+timings. The tables on this page are generated from the latest run.
 
 ## Running Benchmarks
 

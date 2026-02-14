@@ -48,11 +48,11 @@ Result
 - Stores macros in environment-based registry
 - ~700 lines of code
 
-**Evaluator (R/eval.R)**
-- Direct-style evaluator (no CPS/trampolines)
-- Handles special forms (quote, if, define, lambda, begin, defmacro, quasiquote, ~)
-- Delegates non-special forms to R's native `eval()`
-- ~850 lines of code
+**Compiler / Evaluator (R/compiler.R, R/engine.R)**
+- Compiles Arl AST to R code; R's native `eval()` executes the result
+- Handles all special forms (quote, if, define, lambda, begin, defmacro, quasiquote, ~)
+- Implements self-tail-call optimisation
+- ~1200 lines of code across both files
 
 ### Performance Characteristics
 
@@ -63,7 +63,7 @@ Based on initial benchmarking (2026-01-27):
 | Tokenizer | 10-18 ms | 15-20% | Scales with source size and string content |
 | Parser | 5-7 ms | 8-12% | Scales with nesting depth and list size |
 | Macro | 0-10 ms | 0-35% | Variable; high for macro-heavy code |
-| Evaluator | 40-60 ms | 60-80% | Dominant component; CPS overhead |
+| Compiler / Evaluator | 40-60 ms | 60-80% | Dominant component |
 
 **Key Insight**: The evaluator is the performance bottleneck for most workloads, consuming 60-80% of total execution time.
 
@@ -194,81 +194,26 @@ Nearly linear scaling (small overhead from chunking).
 
 ---
 
-#### Issue 3: Evaluator Argument List Growing (O(n²)) - FIXED ✅
+#### Issue 3: Evaluator Argument List Growing (O(n²)) - HISTORICAL
 
-**Location**: `R/eval.R:699-739` (arl_eval_args_cps function)
+**Note**: This issue applied to the old CPS evaluator (`R/eval.R`), which has
+since been replaced by the compiler (`R/compiler.R`) + runtime (`R/engine.R`).
+The compiled code no longer builds argument lists incrementally, so this issue
+no longer applies. Kept here for historical reference.
 
-**Original Code Pattern**:
-```r
-arl_eval_args_cps <- function(expr, env, k) {
-  args <- list()
-  arg_names <- character(0)
-  step <- function(i) {
-    # ...
-    arl_eval_cps(arg_expr, env, function(value) {
-      args <<- c(args, list(value))      # O(n) copy
-      arg_names <<- c(arg_names, "")     # O(n) copy
-      step(i + 1)
-    })
-  }
-  step(2)
-}
-```
+**Original Location**: `R/eval.R:699-739` (arl_eval_args_cps function)
 
-**Problem**: For a function with n arguments, each argument evaluation appends to the lists, causing O(n²) total time.
+**Original Problem**: For a function with n arguments, each argument evaluation
+appended to lists with `c(args, list(value))`, causing O(n²) total time.
 
-**Impact**:
-- Functions with 1-5 args: Negligible
-- Functions with 10 args: ~2x slowdown
-- Functions with 50 args: ~10x slowdown
-- Functions with 100+ args: ~25x slowdown
+**Original Fix**: Pre-allocated vectors instead of append-per-argument.
 
-**Fix Applied**:
-```r
-arl_eval_args_cps <- function(expr, env, k) {
-  # Pre-allocate to max size
-  max_args <- max(0, length(expr) - 1)
-  args <- vector("list", max_args)
-  arg_names <- character(max_args)
-  arg_idx <- 1
-
-  step <- function(i) {
-    if (i > length(expr)) {
-      # Trim to actual size
-      actual_size <- arg_idx - 1
-      if (actual_size == 0) {
-        return(arl_call_k(k, list(args = list(), arg_names = character(0))))
-      }
-      args <- args[1:actual_size]
-      arg_names <- arg_names[1:actual_size]
-      return(arl_call_k(k, list(args = args, arg_names = arg_names)))
-    }
-    # ...
-    arl_eval_cps(arg_expr, env, function(value) {
-      args[[arg_idx]] <<- value         # O(1) assignment
-      arg_names[[arg_idx]] <<- ""       # O(1) assignment
-      arg_idx <<- arg_idx + 1
-      step(i + 1)
-    })
-  }
-  step(2)
-}
-```
-
-**Verification**:
-```r
-# Test with many-argument functions
-source("benchmarks/bench-eval.R")
-
-# Tests functions with 1, 5, 10, 20 arguments
-```
-
-**Benchmark Results** (after fix):
+**Benchmark Results** (at the time):
 - 1 arg: 0.05 ms
 - 5 args: 0.06 ms
 - 10 args: 0.08 ms
 
-Linear scaling confirmed.
+Linear scaling was confirmed.
 
 ---
 
@@ -278,9 +223,10 @@ These issues remain in the codebase and represent potential performance improvem
 
 #### Issue 4: CPS Overhead for Non-Tail Positions
 
-**Location**: `R/eval.R:56-681` (entire evaluator)
+**Original Location**: `R/eval.R` (old CPS evaluator, now removed)
 
-**Status**: Completed. The evaluator has been converted from CPS/trampolines to direct style.
+**Status**: Completed. The CPS/trampoline evaluator was replaced by a compiler
+(`R/compiler.R`) that emits R code evaluated by R's native `eval()`.
 
 ---
 
@@ -463,7 +409,7 @@ if (token$type == "UNQUOTE") {
 
 #### Issue 8: Environment Lookup in Hot Paths
 
-**Location**: Multiple locations in `R/eval.R` and `R/macro.R`
+**Location**: Multiple locations in `R/compiler.R`, `R/runtime.R`, and `R/macro.R`
 
 **Pattern**: Repeated environment lookups in tight loops, especially for standard library functions.
 
@@ -502,7 +448,7 @@ if (token$type == "UNQUOTE") {
 |-------|----------|----------|---------|--------------|
 | String accumulation | tokenizer.R:96-131 | List indexing | 10x for large strings | ✅ Benchmarked |
 | List growing | parser.R:126-154 | Chunked collection | 3-10x for large lists | ✅ Benchmarked |
-| Arg list growing | eval.R:699-739 | Pre-allocation | Linear scaling | ✅ Benchmarked |
+| Arg list growing | eval.R:699-739 (historical) | Pre-allocation | Linear scaling | ✅ Benchmarked |
 
 ### Test Results After Fixes
 
@@ -535,10 +481,8 @@ All 871 tests pass. Performance improvements verified:
 
 ### High Priority
 
-1. **CPS Overhead** (Issue 4)
-   - **Impact**: 2-3x speedup for recursive workloads
-   - **Effort**: Completed
-   - **Risk**: Low
+1. **CPS Overhead** (Issue 4) — **Completed**
+   - Evaluator replaced by compiler + runtime
 
 2. **Multiple Macro Tree Walks** (Issue 5)
    - **Impact**: 30-50% speedup for macro-heavy code
@@ -651,11 +595,10 @@ The benchmark suite provides comprehensive coverage:
    - **Next**: arl_strip_src memoization (10-20% gain, low risk)
    - **Then**: Macro tree walk consolidation (30-50% for macros, low risk)
 
-4. **Consider CPS optimization carefully**
-   - **Highest potential impact** (2-3x for recursive code)
-   - **Highest complexity** (requires tail position analysis)
-   - **Medium risk** (must preserve correctness)
-   - Recommend prototyping on a branch first
+4. **CPS optimization completed**
+   - Evaluator replaced by compiler (`R/compiler.R`) + runtime (`R/engine.R`)
+   - Self-tail-call optimisation implemented
+   - Significant speedup achieved (see benchmark data)
 
 5. **Profile-guided optimization**
    - Use `run-all-profiles.R` to identify actual hotspots
@@ -762,8 +705,8 @@ Arl's performance has already been significantly improved through fixing three O
 
 **Key Takeaways**:
 
-1. **Evaluator is the bottleneck** - Consumes 60-80% of execution time
-2. **CPS overhead is significant** - 2-3x potential speedup available
+1. **Compiler/evaluator is the bottleneck** - Consumes 60-80% of execution time
+2. **CPS overhead was removed** - Evaluator replaced by compiler emitting R code
 3. **Macro hygiene is expensive** - 35x overhead for simple macros
 4. **Fixed issues prevent worst-case behavior** - Linear scaling achieved
 5. **Profiling infrastructure is comprehensive** - Ready for optimization work

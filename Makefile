@@ -33,8 +33,14 @@ devdoc: clean-cache stdlib-order ## help: Generate roxygen documentation
 readme: clean-cache stdlib-order ## help: Render README from README.Rmd
 	R -q -e "devtools::load_all(); rmarkdown::render('README.Rmd')"
 
+.PHONY: bench-data
+bench-data: ## help: Check out benchmark data from gh-pages branch
+	@mkdir -p benchmarks/results
+	@git show gh-pages:dev/bench/data.js > benchmarks/results/data.js 2>/dev/null \
+		|| echo "Warning: could not fetch benchmark data from gh-pages branch"
+
 .PHONY: vignettes
-vignettes: clean-cache stdlib-order stdlib-docs ## help: Build vignettes
+vignettes: clean-cache stdlib-order stdlib-docs bench-data ## help: Build vignettes
 	R -q -e "devtools::build_vignettes()"
 
 .PHONY: site
