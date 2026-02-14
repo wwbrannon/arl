@@ -109,7 +109,7 @@ Reduce list with function.
 
 ### foldl {#foldl}
 
-Left fold alias for reduce.
+Left fold alias for reduce. Applies fn as (fn acc elem).
 
 **Signature:** `(foldl fn lst rest...)`
 
@@ -117,7 +117,13 @@ Left fold alias for reduce.
 ```{arl}
 (foldl + (list 1 2 3 4))        ; => 10
 (foldl - (list 1 2 3) 10)       ; => 4 (10 - 1 - 2 - 3)
-(foldl cons (list 1 2 3) (list)) ; => (3 2 1) (reverses)
+(foldl (lambda (acc x) (cons x acc)) (list 1 2 3) (list))  ; => (3 2 1)
+```
+
+```{arl, include=FALSE}
+(assert-equal 10 (foldl + (list 1 2 3 4)))
+(assert-equal 4 (foldl - (list 1 2 3) 10))
+(assert-equal (list 3 2 1) (foldl (lambda (acc x) (cons x acc)) (list 1 2 3) (list)))
 ```
 
 **See also:** [foldr](#foldr), [reduce](#reduce)
@@ -126,7 +132,7 @@ Left fold alias for reduce.
 
 ### foldr {#foldr}
 
-Right fold.
+Right fold. Applies fn as (fn elem acc).
 
 **Signature:** `(foldr fn lst rest...)`
 
@@ -135,6 +141,12 @@ Right fold.
 (foldr + (list 1 2 3 4))        ; => 10
 (foldr - (list 1 2 3) 10)       ; => -8 (1 - (2 - (3 - 10)))
 (foldr cons (list 1 2 3) (list)) ; => (1 2 3) (preserves order)
+```
+
+```{arl, include=FALSE}
+(assert-equal 10 (foldr + (list 1 2 3 4)))
+(assert-equal -8 (foldr - (list 1 2 3) 10))
+(assert-equal (list 1 2 3) (foldr cons (list 1 2 3) (list)))
 ```
 
 **See also:** [foldl](#foldl), [reduce](#reduce)
