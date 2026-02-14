@@ -1,5 +1,4 @@
 # Compiler: Compiles macro-expanded Arl AST to R expressions for single eval().
-# Used for the optional compiled evaluation path; falls back to interpreter on failure.
 #
 # Reserved name: .__env is used for the current environment in compiled code.
 # (define .__env x) and (set! .__env x) are not compiled (return NULL).
@@ -527,7 +526,7 @@ Compiler <- R6::R6Class(
           )))
         }
       }
-      # (define x v) returns invisible(v) like the interpreter; evaluate v once.
+      # (define x v) returns invisible(v); evaluate v once.
       as.call(list(quote(`{`), assign_tmp, assign_call, as.call(list(quote(invisible), tmp_sym))))
     },
     compile_set = function(expr) {
@@ -924,7 +923,7 @@ Compiler <- R6::R6Class(
       if (is.null(compiled)) {
         return(private$fail("delay expression could not be compiled"))
       }
-      # Compiled delay uses .__delay; promise memoization may differ from interpreter.
+      # delay uses .__delay for promise creation and memoization.
       as.call(list(
         as.symbol(".__delay"),
         as.call(list(quote(quote), compiled)),
