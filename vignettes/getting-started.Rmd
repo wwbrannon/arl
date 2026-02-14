@@ -265,10 +265,10 @@ identically regardless of how documentation was attached. See
 
 ## Next steps
 
+- [Functions](functions.html)
 - [Modules and Imports](modules.html)
 - [Macros and Quasiquote](macros.html)
 - [R Interop and Data Workflows](r-interop.html)
-- [Standard Library Overview](stdlib-reference.html)
 - [Examples](examples.html)
 - [Troubleshooting](troubleshooting.html)
 - [Arl Compared to Scheme](arl-vs-scheme.html)

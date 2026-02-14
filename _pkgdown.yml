@@ -27,6 +27,8 @@ navbar:
       text: Guides
       menu:
         - text: "Language"
+        - text: Functions
+          href: articles/functions.html
         - text: Macros
           href: articles/macros.html
         - text: Modules
@@ -138,6 +140,7 @@ articles:
     contents:
       - getting-started
       - documenting-functions-macros
+      - functions
       - macros
       - modules
       - r-interop
