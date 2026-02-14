@@ -1,7 +1,7 @@
 # DocParser: Parses ;;' annotation blocks from .arl source files.
-# Extracts @description, @examples, @seealso, @note, @section, @signature
-# for use by the compiler (baking docs into compiled code) and the
-# vignette generator (tools/docs/generate-stdlib-docs.R).
+# Extracts @description, @examples, @assert, @seealso, @note, @section,
+# @signature for use by the compiler (baking docs into compiled code) and
+# the vignette generator (tools/docs/generate-stdlib-docs.R).
 
 #' @importFrom R6 R6Class
 #' @keywords internal
@@ -112,11 +112,15 @@ DocParser <- R6::R6Class(
         noeval_val <- dcf_field("Noeval")
         noeval <- !is.null(noeval_val) && tolower(noeval_val) %in% c("yes", "true")
 
+        assert_val <- dcf_field("Assert")
+        if (!is.null(assert_val)) assert_val <- sub("\\s+$", "", assert_val)
+
         entries[[func_name]] <- list(
           name         = func_name,
           description  = if (is.null(dcf_field("Description"))) "" else dcf_field("Description"),
           signature    = if (is.null(dcf_field("Signature"))) "" else dcf_field("Signature"),
           examples     = examples,
+          assert       = assert_val,
           seealso      = dcf_field("Seealso"),
           note         = dcf_field("Note"),
           section      = sec_name,
@@ -205,6 +209,7 @@ DocParser <- R6::R6Class(
           description = if (is.null(description)) "" else description,
           signature = if (is.null(signature)) "" else signature,
           examples = tags$examples,
+          assert = tags$assert,
           seealso = tags$seealso,
           note = tags$note,
           internal = tags$internal,
@@ -223,6 +228,7 @@ DocParser <- R6::R6Class(
       tags <- list(
         description = NULL,
         examples = NULL,
+        assert = NULL,
         seealso = NULL,
         note = NULL,
         section = NULL,
@@ -242,6 +248,8 @@ DocParser <- R6::R6Class(
         content <- trimws(content)
         if (current_tag == "examples") {
           tags$examples <<- content
+        } else if (current_tag == "assert") {
+          tags$assert <<- content
         } else if (current_tag == "seealso") {
           tags$seealso <<- content
         } else if (current_tag == "note") {
@@ -267,6 +275,13 @@ DocParser <- R6::R6Class(
           flush_tag()
           current_tag <- "examples"
           rest <- trimws(sub("^@examples\\s*", "", line))
+          current_content <- if (nchar(rest) > 0) rest else character()
+          next
+        }
+        if (grepl("^@assert\\s*$", line) || grepl("^@assert\\s", line)) {
+          flush_tag()
+          current_tag <- "assert"
+          rest <- trimws(sub("^@assert\\s*", "", line))
           current_content <- if (nchar(rest) > 0) rest else character()
           next
         }
