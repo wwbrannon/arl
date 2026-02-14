@@ -488,6 +488,9 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
       fname <- paste0(mod, ".arl")
       paste0("[`", fname, "`](", GITHUB_BASE, "/inst/arl/", fname, ")")
     }, character(1), USE.NAMES = FALSE)
+    has_builtins <- !is.null(builtins_by_vignette[[vname]]) &&
+      length(builtins_by_vignette[[vname]]$functions) > 0
+    if (has_builtins) mod_links <- c(mod_links, "and builtins")
     out <- c(out, paste0("Modules: ", paste(mod_links, collapse = ", ")))
     out <- c(out, "")
   }

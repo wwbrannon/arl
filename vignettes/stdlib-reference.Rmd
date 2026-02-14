@@ -193,7 +193,7 @@ Type predicates, numeric type hierarchy, structural and identity equality, S3-st
 [`inexact->exact`](stdlib-types.html#inexact-to-exact),
 [`pair?`](stdlib-types.html#pair-p)
 
-Modules: [`types.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/types.arl), [`equality.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/equality.arl), [`conversions.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/conversions.arl)
+Modules: [`types.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/types.arl), [`equality.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/equality.arl), [`conversions.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/conversions.arl), and builtins
 
 ## [Math and Numeric Functions](stdlib-math.html)
 
@@ -367,7 +367,7 @@ Evaluation, macro utilities, R interop helpers, and assertions.
 [`current-env`](stdlib-core.html#current-env),
 [`doc!`](stdlib-core.html#doc-bang), [`doc`](stdlib-core.html#doc)
 
-Modules: [`core.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/core.arl), [`r-interop.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/r-interop.arl), [`assert.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/assert.arl)
+Modules: [`core.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/core.arl), [`r-interop.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/r-interop.arl), [`assert.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/assert.arl), and builtins
 
 ## Built-in functions
 
