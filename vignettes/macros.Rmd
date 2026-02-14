@@ -338,6 +338,14 @@ Without `capture`, the caller would not be able to refer to `it`:
 (bad-aif (+ 2 3) it 0)  ; it here refers to the CALLER's 'it', not the macro's
 ```
 
+```{arl, include=FALSE}
+;; Verify the broken aif: 'it' in the caller is unbound, so it should error
+(defmacro bad-aif (test then alt)
+  `(let ((it ,test))
+     (if it ,then ,alt)))
+(assert-error (lambda () (bad-aif (+ 2 3) it 0)))
+```
+
 ## Compile-time computation
 
 Because the macro body is ordinary Arl code executed at expansion time,
@@ -370,6 +378,10 @@ Macros can call themselves recursively or invoke other macros:
 ;; expands to (- (* (+ 5 3) 2) 1)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 15 (-> 5 (+ 3) (* 2) (- 1)))
+```
+
 Macros can also expand into calls to other macros.  The expander
 recursively expands until no macro calls remain:
 
@@ -379,6 +391,15 @@ recursively expands until no macro calls remain:
   ((= x 1) "one")
   ((= x 2) "two")
   (else "other"))
+```
+
+```{arl, include=FALSE}
+(define __cond-x 2)
+(assert-equal "two"
+  (cond
+    ((= __cond-x 1) "one")
+    ((= __cond-x 2) "two")
+    (else "other")))
 ```
 
 ## Inspecting macro expansions
@@ -442,6 +463,24 @@ patterns worth studying:
                  (zip patterns temps))
           (begin ,@body))
         ,@values))))
+```
+
+```{arl, include=FALSE}
+;; Verify let-like macro works by defining a differently-named copy
+(defmacro my-let (bindings . body)
+  (if (null? bindings)
+    `(begin ,@body)
+    (begin
+      (define temps (map (lambda (b) (gensym "tmp")) bindings))
+      (define patterns (map car bindings))
+      (define values (map (lambda (b) (car (cdr b))) bindings))
+      `((lambda ,temps
+          ,@(map (lambda (pair)
+                   `(define ,(car pair) ,(car (cdr pair))))
+                 (zip patterns temps))
+          (begin ,@body))
+        ,@values))))
+(assert-equal 3 (my-let ((x 1) (y 2)) (+ x y)))
 ```
 
 This macro generates one `gensym` per binding, then creates a `lambda`

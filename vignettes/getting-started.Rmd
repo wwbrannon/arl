@@ -143,6 +143,17 @@ or `arl --no-stdlib`:
 (import error)     ; try/catch/finally
 ```
 
+```{arl, include=FALSE}
+;; Verify key stdlib functions are available (loaded by default engine)
+(assert-true (macro? 'when))
+(assert-true (macro? 'unless))
+(assert-true (macro? 'cond))
+(assert-true (macro? 'let))
+(assert-true (macro? 'loop))
+(assert-true (macro? '->))
+(assert-true (macro? 'try))
+```
+
 See [Modules and Imports](modules.html) for details on creating and importing
 modules.
 
@@ -239,6 +250,12 @@ special form, macro, or function:
 (help "define")   ; special form
 (help "when")     ; macro -- shows docs and usage
 (help "map")      ; stdlib function
+```
+
+```{arl, include=FALSE}
+;; Verify zero-is-falsy block from above
+(assert-equal "falsy" (if 0 "truthy" "falsy"))
+(assert-equal "truthy" (if 1 "truthy" "falsy"))
 ```
 
 For functions with documentation, `help` shows the signature, description,

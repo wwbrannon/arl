@@ -44,10 +44,16 @@ Keywords starting with `:` serve a dual purpose in Arl:
 To pass a keyword as a *value* (rather than as named argument syntax), quote it:
 
 ```{arl, eval=FALSE}
-(= ':foo ':bar)     ; compares two keywords as values → FALSE
-(= ':foo ':foo)     ; → TRUE
+(equal? ':foo ':bar)     ; compares two keyword values → #f
+(equal? ':foo ':foo)     ; → #t
 
-(= :foo :bar)       ; error: tries to call = with named argument 'foo'
+(equal? :foo :bar)       ; error: bare keywords become named arguments
+```
+
+```{arl, include=FALSE}
+(assert-false (equal? ':foo ':bar))
+(assert-true (equal? ':foo ':foo))
+(assert-error (lambda () (equal? :foo :bar)))
 ```
 
 This design allows keywords to work naturally with R's named arguments while
@@ -84,6 +90,17 @@ functions like `tryCatch` that need to control when evaluation happens.
         (current-env))
 ```
 
+```{arl, include=FALSE}
+;; Verify the correct NSE tryCatch pattern works
+(define __nse-thunk (lambda () (error "test error")))
+(define __nse-thunk-expr (call (list __nse-thunk)))
+(define __nse-result
+  (r/eval (call (list 'tryCatch __nse-thunk-expr
+                      :error (lambda (e) "caught")))
+          (current-env)))
+(assert-equal "caught" __nse-result)
+```
+
 **Key points:**
 
 1. Use Arl's `call` function to build unevaluated call expressions
@@ -110,6 +127,18 @@ to create a unique sentinel:
 (if (identical? result error-caught)
   "error was caught"
   "code ran successfully")
+```
+
+```{arl, include=FALSE}
+;; Verify sentinel pattern with a concrete thunk that errors
+(define __sentinel (gensym "error-caught"))
+(define __err-thunk (lambda () (error "boom")))
+(define __err-thunk-expr (call (list __err-thunk)))
+(define __sentinel-result
+  (r/eval (call (list 'tryCatch __err-thunk-expr
+                      :error (lambda (e) __sentinel)))
+          (current-env)))
+(assert-true (identical? __sentinel-result __sentinel))
 ```
 
 ## Working with formulas

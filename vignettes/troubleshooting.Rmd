@@ -91,6 +91,14 @@ also covered. However, some patterns are **not** optimized:
      ...)) 100000 1)
 ```
 
+```{arl, include=FALSE}
+(define __tco-fact
+  (lambda (n acc)
+    (if (< n 2) acc
+      (__tco-fact (- n 1) (* acc n)))))
+(assert-equal 120 (__tco-fact 5 1))
+```
+
 For mutual recursion, anonymous lambdas, or other cases where self-TCO
 does not apply, use `loop`/`recur` from the `looping` module:
 
@@ -98,6 +106,13 @@ does not apply, use `loop`/`recur` from the `looping` module:
 (loop ((i n) (acc 1))
   (if (< i 2) acc
     (recur (- i 1) (* acc i))))
+```
+
+```{arl, include=FALSE}
+(assert-equal 120
+  (loop ((i 5) (acc 1))
+    (if (< i 2) acc
+      (recur (- i 1) (* acc i)))))
 ```
 
 ## Macro hygiene and `gensym`
@@ -114,6 +129,18 @@ work without any extra effort:
   `(let ((tmp ,a))
      (set! ,a ,b)
      (set! ,b tmp)))
+```
+
+```{arl, include=FALSE}
+(defmacro my-swap (a b)
+  `(let ((tmp ,a))
+     (set! ,a ,b)
+     (set! ,b tmp)))
+(define __sa 1)
+(define __sb 2)
+(my-swap __sa __sb)
+(assert-equal 2 __sa)
+(assert-equal 1 __sb)
 ```
 
 You need `gensym` when you build binding forms **programmatically at

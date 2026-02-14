@@ -96,6 +96,14 @@ function call — will not be optimized:
       (+ n (bad-sum (- n 1))))))   ; not in tail position
 ```
 
+```{arl, include=FALSE}
+;; Verify the non-tail-recursive version works for small n
+(define __bad-sum
+  (lambda (n)
+    (if (< n 1) 0 (+ n (__bad-sum (- n 1))))))
+(assert-equal 15 (__bad-sum 5))
+```
+
 ## Advanced Features
 
 Self-TCO works with all of Arl's parameter features:

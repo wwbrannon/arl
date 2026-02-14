@@ -41,6 +41,11 @@ form shown above.
 (define f (lambda (x) (+ x 1)))
 ```
 
+```{arl, include=FALSE}
+;; Verify the wrong pattern errors (destructuring bind mismatch)
+(assert-error (lambda () (eval '(define (f x) (+ x 1)))))
+```
+
 ## Parameter Features
 
 Arl's `lambda` supports several parameter styles. These work identically

@@ -125,6 +125,18 @@ The `module` special form defines a named module with explicit exports.
     (lambda (x) (+ x 1))))
 ```
 
+```{arl, include=FALSE}
+;; Verify inline module definition works
+(module __test-math-utils
+  (export __test-square __test-cube)
+  (define __test-square (lambda (x) (* x x)))
+  (define __test-cube (lambda (x) (* x x x)))
+  (define __test-helper (lambda (x) (+ x 1))))
+(import __test-math-utils)
+(assert-equal 25 (__test-square 5))
+(assert-equal 27 (__test-cube 3))
+```
+
 ### Export Strategies
 
 **Explicit exports** (recommended):
@@ -264,6 +276,24 @@ Then import it:
     (lambda (a b)
       (- (validate-number a)
          (validate-number b)))))
+```
+
+```{arl, include=FALSE}
+(module __test-calculator
+  (export __calc-add __calc-subtract)
+  (define __validate-number
+    (lambda (x)
+      (if (number? x) x (error "Not a number"))))
+  (define __calc-add
+    (lambda (a b)
+      (+ (__validate-number a) (__validate-number b))))
+  (define __calc-subtract
+    (lambda (a b)
+      (- (__validate-number a) (__validate-number b)))))
+(import __test-calculator)
+(assert-equal 7 (__calc-add 3 4))
+(assert-equal 1 (__calc-subtract 5 4))
+(assert-error (lambda () (__calc-add "x" 1)))
 ```
 
 ### Nested Module Loading

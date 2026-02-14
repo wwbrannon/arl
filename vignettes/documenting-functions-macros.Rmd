@@ -37,12 +37,17 @@ Place them immediately before a `define` or `defmacro`:
 
 The same syntax works for macros:
 
-```{arl, eval=FALSE}
+```{arl}
 ;;' @description Execute body only when condition is false.
 ;;' @examples
 ;;' (unless #f (display "ran\n"))
 (defmacro unless (condition . body)
   `(if (not ,condition) (begin ,@body)))
+```
+
+```{arl, include=FALSE}
+(assert-equal 42 (unless #f 42))
+(assert-equal #nil (unless #t 42))
 ```
 
 ### Supported tags
