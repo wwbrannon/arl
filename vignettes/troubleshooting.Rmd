@@ -95,11 +95,20 @@ also covered. However, some patterns are **not** optimized:
     (if (< n 2) acc
       (factorial (- n 1) (* acc n)))))
 
-;; TCO does NOT apply -- anonymous lambda (no name to match self-calls)
-((lambda (n acc)
-   (if (< n 2) acc
-     ;; This will overflow the stack for large n
-     ...)) 100000 1)
+;; TCO does NOT apply -- mutual recursion (each function calls the other,
+;; not itself, so self-TCO cannot help)
+(define is-even?
+  (lambda (n)
+    (if (= n 0) #t
+      (is-odd? (- n 1)))))
+
+(define is-odd?
+  (lambda (n)
+    (if (= n 0) #f
+      (is-even? (- n 1)))))
+
+;; This will overflow the stack for large n
+(is-even? 100000)
 ```
 
 ```{arl, include=FALSE}
