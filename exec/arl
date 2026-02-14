@@ -46,6 +46,16 @@ local({
 })
 RPROFILE
 
+# When skipping user profile, preserve library paths so arl can still be found.
+# The user's .Rprofile may configure .libPaths() to include the directory where
+# arl is installed; without this, library(arl) fails.
+if [ -n "$ARL_SKIP_USER_PROFILE" ]; then
+  _arl_libs=$(Rscript -e "cat(paste(.libPaths(), collapse=':'))" 2>/dev/null || true)
+  if [ -n "$_arl_libs" ]; then
+    export R_LIBS="$_arl_libs"
+  fi
+fi
+
 # Use R_PROFILE_USER to inject our launcher
 # This makes R start interactively (if stdin is a tty) and then run our code
 export R_PROFILE_USER="$TEMP_PROFILE"
