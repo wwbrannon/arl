@@ -18,6 +18,9 @@
   ;;'   (catch e ($ e "message")))     ; => "something went wrong"
   ;;' (try (error "oops")
   ;;'   (catch e "caught"))            ; => "caught"
+  ;;' @assert
+  ;;' (assert-equal "something went wrong" (try (error "something went wrong") (catch e ($ e "message"))))
+  ;;' (assert-equal "caught" (try (error "oops") (catch e "caught")))
   ;;' @seealso warn, assert, try
   (define error
     (lambda (msg)
@@ -38,6 +41,9 @@
   ;;' (identity 42)             ; => 42
   ;;' (identity "hello")        ; => "hello"
   ;;' (map identity '(1 2 3))   ; => (1 2 3)
+  ;;' @assert
+  ;;' (assert-equal 42 (identity 42))
+  ;;' (assert-equal "hello" (identity "hello"))
   ;;' @seealso map
   (define identity
     (lambda (x)
@@ -46,6 +52,8 @@
   ;;' @description Return multiple values to a call-with-values consumer.
   ;;' @examples
   ;;' (values 1 2 3)            ; => multiple-values container
+  ;;' @assert
+  ;;' (assert-true (values? (values 1 2 3)))
   ;;' @seealso values?, call-with-values
   (define values
     (lambda (. args)
@@ -55,6 +63,9 @@
   ;;' @examples
   ;;' (values? (values 1 2))    ; => #t
   ;;' (values? 42)              ; => #f
+  ;;' @assert
+  ;;' (assert-true (values? (values 1 2)))
+  ;;' (assert-false (values? 42))
   ;;' @seealso values, call-with-values
   (define values?
     (lambda (x)
@@ -67,6 +78,8 @@
   ;;' (call-with-values
   ;;'   (lambda () (values 1 2))
   ;;'   (lambda (a b) (+ a b)))  ; => 3
+  ;;' @assert
+  ;;' (assert-equal 3 (call-with-values (lambda () (values 1 2)) (lambda (a b) (+ a b))))
   ;;' @seealso values, values?
   (define call-with-values
     (lambda (producer consumer)
@@ -88,6 +101,8 @@
   ;;' @examples
   ;;' (funcall + (list 1 2 3))  ; => 6
   ;;' (funcall c (list 1 2 3))  ; => c(1, 2, 3)
+  ;;' @assert
+  ;;' (assert-equal 6 (funcall + (list 1 2 3)))
   ;;' @seealso apply, r/call
   (define funcall
     (lambda (fn args)
@@ -100,6 +115,8 @@
   ;;' (r/call "mean" (list (c 1 2 3)))   ; => 2
   ;;' (r/call "ls" (list))                ; list .GlobalEnv bindings
   ;;' (r/call "Sys.time" (list))          ; current time
+  ;;' @assert
+  ;;' (assert-equal 2 (r/call "mean" (list (c 1 2 3))))
   ;;' @note R functions are directly available in Arl without `r/call`. Use `r/call` when you need to look up a function by string name or specify the search environment.
   ;;' @seealso funcall, r/eval
   (define r/call
@@ -118,6 +135,9 @@
   ;;' @examples
   ;;' (get "mean")              ; => the `mean` function
   ;;' (get "pi" (baseenv))      ; => 3.141593
+  ;;' @assert
+  ;;' (assert-true (is.function (get "mean")))
+  ;;' (assert-true (> (get "pi" (baseenv)) 3.14))
   ;;' @seealso r/call
   (define get
     (lambda (name (envir (globalenv)) (inherits #t))

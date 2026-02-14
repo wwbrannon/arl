@@ -25,6 +25,10 @@
   ;;' (for (ch '("a" "b" "c"))
   ;;'   (set! result (append result (list ch))))
   ;;' result                      ; => ("a" "b" "c")
+  ;;' @assert
+  ;;' (define __test-total 0)
+  ;;' (for (__x '(1 2 3)) (set! __test-total (+ __test-total __x)))
+  ;;' (assert-equal 6 __test-total)
   ;;' @note Expands to a `while` loop over the sequence converted to a list.
   ;;' @seealso while, map, loop
   (defmacro for (binding . body)
@@ -141,6 +145,9 @@
   ;;'   (if (null? xs)
   ;;'     total
   ;;'     (recur (cdr xs) (+ total (car xs)))))  ; => 10
+  ;;' @assert
+  ;;' (assert-equal 120 (loop ((n 5) (acc 1)) (if (= n 0) acc (recur (- n 1) (* acc n)))))
+  ;;' (assert-equal 10 (loop ((xs '(1 2 3 4)) (total 0)) (if (null? xs) total (recur (cdr xs) (+ total (car xs))))))
   ;;' @note The compiler auto-optimizes self-tail-calls in `(define name (lambda ...))` patterns, so `loop`/`recur` is primarily useful for anonymous iteration and mutual recursion patterns. Expands to an R `while` loop internally.
   ;;' @seealso recur, while, for
   (defmacro loop (bindings . body)
@@ -194,6 +201,10 @@
   ;;' (until (= i 5)
   ;;'   (set! i (+ i 1)))
   ;;' i                          ; => 5
+  ;;' @assert
+  ;;' (define __test-i 0)
+  ;;' (until (= __test-i 5) (set! __test-i (+ __test-i 1)))
+  ;;' (assert-equal 5 __test-i)
   ;;' @seealso while
   (defmacro until (test . body)
     `(while (not ,test) ,@body))

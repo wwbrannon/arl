@@ -22,6 +22,10 @@
   ;;' (list? (list 1 2 3))  ; => #t
   ;;' (list? ())  ; => #t
   ;;' (list? "hello")  ; => #f
+  ;;' @assert
+  ;;' (assert-true (list? (list 1 2 3)))
+  ;;' (assert-true (list? ()))
+  ;;' (assert-false (list? "hello"))
   ;;' @seealso pair?, list-or-pair?, null?
   (define list?
     (lambda (x)
@@ -31,6 +35,8 @@
   ;;' @description Return #t if x is a non-empty list or dotted pair (pairlist cell).
   ;;' @examples
   ;;' (list-or-pair? (list 1))  ; => #t
+  ;;' @assert
+  ;;' (assert-true (list-or-pair? (list 1)))
   ;;' @seealso list?, pair?, null?, atom?
   (define list-or-pair?
     (lambda (x)
@@ -42,6 +48,10 @@
   ;;' (null? #nil)  ; => #t
   ;;' (null? ())  ; => #t
   ;;' (null? (list 1))  ; => #f
+  ;;' @assert
+  ;;' (assert-true (null? #nil))
+  ;;' (assert-true (null? ()))
+  ;;' (assert-false (null? (list 1)))
   ;;' @seealso nil?, pair?, list-or-pair?
   (define null?
     (lambda (x)
@@ -66,6 +76,11 @@
   ;;' (atom? "hello")  ; => #t
   ;;' (atom? (list 1 2))  ; => #f
   ;;' (atom? ())  ; => #t  (empty list is atomic)
+  ;;' @assert
+  ;;' (assert-true (atom? 42))
+  ;;' (assert-true (atom? "hello"))
+  ;;' (assert-false (atom? (list 1 2)))
+  ;;' (assert-true (atom? ()))
   ;;' @seealso list-or-pair?
   (define atom?
     (lambda (x)
@@ -77,6 +92,10 @@
   ;;' (empty? ())  ; => #t
   ;;' (empty? (list))  ; => #t
   ;;' (empty? (list 1))  ; => #f
+  ;;' @assert
+  ;;' (assert-true (empty? ()))
+  ;;' (assert-true (empty? (list)))
+  ;;' (assert-false (empty? (list 1)))
   ;;' @note The empty string `""` has length 1 in R and is NOT considered empty!
   ;;' @seealso null?, length= (in `sequences` module)
   (define empty?
@@ -91,12 +110,19 @@
   ;;' (symbol? 'foo)  ; => #t
   ;;' (symbol? "foo")  ; => #f
   ;;' (symbol? 42)  ; => #f
+  ;;' @assert
+  ;;' (assert-true (symbol? 'foo))
+  ;;' (assert-false (symbol? "foo"))
+  ;;' (assert-false (symbol? 42))
   (define symbol? is.symbol)
 
   ;;' @description Return #t if x is an Arl keyword.
   ;;' @examples
   ;;' (keyword? ':foo)  ; => #t
   ;;' (keyword? 'foo)   ; => #f
+  ;;' @assert
+  ;;' (assert-true (keyword? ':foo))
+  ;;' (assert-false (keyword? 'foo))
   (define keyword?
     (lambda (x)
       (isTRUE (inherits x "arl_keyword"))))
@@ -106,6 +132,8 @@
   ;;' @description Return #t if x is a number (real or complex).
   ;;' @examples
   ;;' (number? 42)  ; => #t
+  ;;' @assert
+  ;;' (assert-true (number? 42))
   ;;' @seealso real?, complex?, rational?, exact?, inexact?
   (define number?
     (lambda (x)
@@ -117,11 +145,15 @@
   ;;' @signature (string? x)
   ;;' @examples
   ;;' (string? "hello")  ; => #t
+  ;;' @assert
+  ;;' (assert-true (string? "hello"))
   (define string? is.character)
 
   ;;' @description Return #t if x is a non-list atomic vector.
   ;;' @examples
   ;;' (vector? (c 1 2 3))  ; => #t
+  ;;' @assert
+  ;;' (assert-true (vector? (c 1 2 3)))
   ;;' @note Tests whether x is a non-list atomic vector (numeric, character, logical, etc.). R lists are NOT vectors by this predicate.
   (define vector?
     (lambda (x)
@@ -135,6 +167,11 @@
   ;;' (boolean? #f)  ; => #t
   ;;' (boolean? TRUE)  ; => #t
   ;;' (boolean? (c TRUE FALSE))  ; => #f
+  ;;' @assert
+  ;;' (assert-true (boolean? #t))
+  ;;' (assert-true (boolean? #f))
+  ;;' (assert-true (boolean? TRUE))
+  ;;' (assert-false (boolean? (c TRUE FALSE)))
   (define boolean?
     (lambda (x)
       (if (is.logical x)
@@ -144,6 +181,8 @@
   ;;' @description Return #t if x is TRUE.
   ;;' @examples
   ;;' (true? #t)  ; => #t
+  ;;' @assert
+  ;;' (assert-true (true? #t))
   (define true?
     (lambda (x)
       (isTRUE x)))
@@ -151,6 +190,8 @@
   ;;' @description Return #t if x is #f.
   ;;' @examples
   ;;' (false? #f)  ; => #t
+  ;;' @assert
+  ;;' (assert-true (false? #f))
   (define false?
     (lambda (x)
       (identical x #f)))
@@ -161,6 +202,8 @@
   ;;' @signature (fn? x)
   ;;' @examples
   ;;' (fn? car)  ; => #t
+  ;;' @assert
+  ;;' (assert-true (fn? car))
   ;;' @seealso callable?, procedure?
   (define fn? is.function)
 
@@ -180,6 +223,8 @@
   ;;' @description Test if x is an environment (including R6 objects).
   ;;' @examples
   ;;' (environment? (baseenv))  ; => #t
+  ;;' @assert
+  ;;' (assert-true (environment? (baseenv)))
   ;;' @note R6 objects, dicts, and sets are all environments in R, so this predicate returns #t for them.
   (define environment?
     (lambda (x)
@@ -188,6 +233,8 @@
   ;;' @description Test if x is a Reference Class object.
   ;;' @examples
   ;;' (is-refclass? (baseenv))  ; => #f
+  ;;' @assert
+  ;;' (assert-false (is-refclass? (baseenv)))
   (define is-refclass?
     (lambda (x)
       (and (r/call "isS4" (list x))
@@ -199,6 +246,8 @@
   ;;' @signature (type-of x)
   ;;' @examples
   ;;' (type-of 42)  ; => "double"
+  ;;' @assert
+  ;;' (assert-equal "double" (type-of 42))
   ;;' @seealso class, mode (R functions)
   (define type-of typeof)
 
@@ -225,6 +274,11 @@
   ;;' (real? 3.14)          ; => #t
   ;;' (real? Inf)           ; => #t
   ;;' (real? (make-rectangular 3 4))  ; => #f
+  ;;' @assert
+  ;;' (assert-true (real? 42))
+  ;;' (assert-true (real? 3.14))
+  ;;' (assert-true (real? Inf))
+  ;;' (assert-false (real? (make-rectangular 3 4)))
   ;;' @seealso rational?, complex?, number?
   (define real?
     (lambda (x)
@@ -236,6 +290,9 @@
   ;;' @examples
   ;;' (complex? (make-rectangular 3 4))  ; => #t
   ;;' (complex? 42)         ; => #f
+  ;;' @assert
+  ;;' (assert-true (complex? (make-rectangular 3 4)))
+  ;;' (assert-false (complex? 42))
   ;;' @seealso real?, number?, make-rectangular (in `math` module)
   (define complex?
     (lambda (x)
@@ -247,6 +304,11 @@
   ;;' (rational? 3.14)      ; => #t
   ;;' (rational? Inf)       ; => #f (infinities are real but not rational)
   ;;' (rational? NaN)       ; => #f
+  ;;' @assert
+  ;;' (assert-true (rational? 42))
+  ;;' (assert-true (rational? 3.14))
+  ;;' (assert-false (rational? Inf))
+  ;;' (assert-false (rational? NaN))
   ;;' @note In R, all finite floating-point numbers can be represented as rationals (IEEE 754). R does not have a built-in rational or decimal type like some Schemes.
   ;;' @seealso real?, integer?, number?
   (define rational?
@@ -260,6 +322,10 @@
   ;;' (exact? 5L)           ; => #t (integer type)
   ;;' (exact? 5.0)          ; => #f (double type)
   ;;' (exact? (->integer 5)); => #t
+  ;;' @assert
+  ;;' (assert-true (exact? 5L))
+  ;;' (assert-false (exact? 5.0))
+  ;;' (assert-true (exact? (->integer 5)))
   ;;' @note In Scheme, exactness is a property of the number. In R (and Arl), exactness corresponds to integer storage type. All integers are exact; all doubles and complex numbers are inexact.
   ;;' @seealso inexact?, exact->inexact (in `conversions` module)
   (define exact?
@@ -271,6 +337,10 @@
   ;;' (inexact? 5.0)        ; => #t
   ;;' (inexact? (make-rectangular 3 4))  ; => #t
   ;;' (inexact? 5L)         ; => #f
+  ;;' @assert
+  ;;' (assert-true (inexact? 5.0))
+  ;;' (assert-true (inexact? (make-rectangular 3 4)))
+  ;;' (assert-false (inexact? 5L))
   ;;' @seealso exact?, inexact->exact (in `conversions` module)
   (define inexact?
     (lambda (x)
@@ -284,6 +354,11 @@
   ;;' (integer? 42.0)       ; => #t (value is integer even if storage is double)
   ;;' (integer? 3.14)       ; => #f
   ;;' (integer? Inf)        ; => #f
+  ;;' @assert
+  ;;' (assert-true (integer? 42))
+  ;;' (assert-true (integer? 42.0))
+  ;;' (assert-false (integer? 3.14))
+  ;;' (assert-false (integer? Inf))
   ;;' @note Tests for integer VALUE, not storage type. Use `exact?` to test storage type.
   ;;' @seealso natural?, exact?, rational?
   (define integer?
@@ -300,6 +375,11 @@
   ;;' (natural? 42)         ; => #t
   ;;' (natural? -5)         ; => #f
   ;;' (natural? 3.14)       ; => #f
+  ;;' @assert
+  ;;' (assert-true (natural? 0))
+  ;;' (assert-true (natural? 42))
+  ;;' (assert-false (natural? -5))
+  ;;' (assert-false (natural? 3.14))
   ;;' @seealso integer?, positive?, non-negative?
   (define natural?
     (lambda (x)
@@ -313,6 +393,11 @@
   ;;' (finite? Inf)         ; => #f
   ;;' (finite? NaN)         ; => #f
   ;;' (finite? -Inf)        ; => #f
+  ;;' @assert
+  ;;' (assert-true (finite? 42))
+  ;;' (assert-false (finite? Inf))
+  ;;' (assert-false (finite? NaN))
+  ;;' (assert-false (finite? -Inf))
   ;;' @seealso infinite?, nan?, rational?
   (define finite?
     (lambda (x)
@@ -324,6 +409,11 @@
   ;;' (infinite? -Inf)      ; => #t
   ;;' (infinite? 42)        ; => #f
   ;;' (infinite? NaN)       ; => #f
+  ;;' @assert
+  ;;' (assert-true (infinite? Inf))
+  ;;' (assert-true (infinite? -Inf))
+  ;;' (assert-false (infinite? 42))
+  ;;' (assert-false (infinite? NaN))
   ;;' @seealso finite?, nan?
   (define infinite?
     (lambda (x)
@@ -335,6 +425,11 @@
   ;;' (nan? (/ 0 0))        ; => #t (0/0 = NaN)
   ;;' (nan? 42)             ; => #f
   ;;' (nan? Inf)            ; => #f
+  ;;' @assert
+  ;;' (assert-true (nan? NaN))
+  ;;' (assert-true (nan? (/ 0 0)))
+  ;;' (assert-false (nan? 42))
+  ;;' (assert-false (nan? Inf))
   ;;' @seealso finite?, infinite?
   (define nan?
     (lambda (x)
@@ -347,6 +442,10 @@
   ;;' (even? 4)             ; => #t
   ;;' (even? 3)             ; => #f
   ;;' (even? 0)             ; => #t
+  ;;' @assert
+  ;;' (assert-true (even? 4))
+  ;;' (assert-false (even? 3))
+  ;;' (assert-true (even? 0))
   ;;' @seealso odd?
   (define even?
     (lambda (x)
@@ -356,6 +455,9 @@
   ;;' @examples
   ;;' (odd? 3)              ; => #t
   ;;' (odd? 4)              ; => #f
+  ;;' @assert
+  ;;' (assert-true (odd? 3))
+  ;;' (assert-false (odd? 4))
   ;;' @seealso even?
   (define odd?
     (lambda (x)
@@ -366,6 +468,10 @@
   ;;' (zero? 0)             ; => #t
   ;;' (zero? 0.0)           ; => #t
   ;;' (zero? 1)             ; => #f
+  ;;' @assert
+  ;;' (assert-true (zero? 0))
+  ;;' (assert-true (zero? 0.0))
+  ;;' (assert-false (zero? 1))
   ;;' @seealso positive?, negative?
   (define zero?
     (lambda (x)
@@ -376,6 +482,10 @@
   ;;' (positive? 5)         ; => #t
   ;;' (positive? 0)         ; => #f
   ;;' (positive? -5)        ; => #f
+  ;;' @assert
+  ;;' (assert-true (positive? 5))
+  ;;' (assert-false (positive? 0))
+  ;;' (assert-false (positive? -5))
   ;;' @seealso negative?, non-negative?, zero?
   (define positive?
     (lambda (x)
@@ -386,6 +496,10 @@
   ;;' (negative? -5)        ; => #t
   ;;' (negative? 0)         ; => #f
   ;;' (negative? 5)         ; => #f
+  ;;' @assert
+  ;;' (assert-true (negative? -5))
+  ;;' (assert-false (negative? 0))
+  ;;' (assert-false (negative? 5))
   ;;' @seealso positive?, non-positive?, zero?
   (define negative?
     (lambda (x)
@@ -396,6 +510,10 @@
   ;;' (non-negative? 5)     ; => #t
   ;;' (non-negative? 0)     ; => #t
   ;;' (non-negative? -5)    ; => #f
+  ;;' @assert
+  ;;' (assert-true (non-negative? 5))
+  ;;' (assert-true (non-negative? 0))
+  ;;' (assert-false (non-negative? -5))
   ;;' @seealso positive?, natural?
   (define non-negative?
     (lambda (x)
@@ -406,6 +524,10 @@
   ;;' (non-positive? -5)    ; => #t
   ;;' (non-positive? 0)     ; => #t
   ;;' (non-positive? 5)     ; => #f
+  ;;' @assert
+  ;;' (assert-true (non-positive? -5))
+  ;;' (assert-true (non-positive? 0))
+  ;;' (assert-false (non-positive? 5))
   ;;' @seealso negative?
   (define non-positive?
     (lambda (x)

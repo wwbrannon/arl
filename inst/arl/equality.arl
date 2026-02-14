@@ -24,9 +24,15 @@
   ;;' @examples
   ;;' (equal? 1 1)                    ; => #t
   ;;' (equal? 1 1.0)                  ; => #t (type coercion)
-  ;;' (equal? 1 1.0 :strict #t)      ; => #f (strict mode, uses identical?)
+  ;;' (equal? 1L 1.0 :strict #t)     ; => #f (strict mode, uses identical?)
   ;;' (equal? (list 1 2) (list 1 2))  ; => #t (deep structural)
   ;;' (equal? "hello" "hello")        ; => #t
+  ;;' @assert
+  ;;' (assert-true (equal? 1 1))
+  ;;' (assert-true (equal? 1 1.0))
+  ;;' (assert-false (equal? 1L 1.0 :strict #t))
+  ;;' (assert-true (equal? (list 1 2) (list 1 2)))
+  ;;' (assert-true (equal? "hello" "hello"))
   ;;' @seealso identical?, eq?, eqv?, set-method!
   (define equal?
     (lambda (a b (strict #f))
@@ -40,8 +46,12 @@
   ;;'   types, pointer comparison for reference types.
   ;;' @examples
   ;;' (identical? 1 1)          ; => #t
-  ;;' (identical? 1 1.0)        ; => #f (different types)
+  ;;' (identical? 1L 1.0)       ; => #f (integer vs double)
   ;;' (identical? "a" "a")      ; => #t
+  ;;' @assert
+  ;;' (assert-true (identical? 1 1))
+  ;;' (assert-false (identical? 1L 1.0))
+  ;;' (assert-true (identical? "a" "a"))
   ;;' @seealso equal?, eq?, eqv?
   ;;' @note This is R's `identical()` with no modifications. Use `equal?`
   ;;'   for deep structural equality with type coercion.
@@ -99,6 +109,10 @@
   ;;' (list-equal? (list 1 2 3) (list 1 2 3))  ; => #t
   ;;' (list-equal? (list 1 2) (list 1 2 3))     ; => #f
   ;;' (list-equal? (list 1 "a") (list 1 "a"))   ; => #t
+  ;;' @assert
+  ;;' (assert-true (list-equal? (list 1 2 3) (list 1 2 3)))
+  ;;' (assert-false (list-equal? (list 1 2) (list 1 2 3)))
+  ;;' (assert-true (list-equal? (list 1 "a") (list 1 "a")))
   ;;' @note Used internally by `equal?.list`. Recursively compares list elements using `equal?`.
   ;;' @seealso equal?.list
   (define list-equal?
@@ -129,6 +143,11 @@
   ;;' (s3-type "hello")               ; => "character"
   ;;' (s3-type (list 1 2))            ; => "list"
   ;;' (s3-type (new.env))             ; => "environment"
+  ;;' @assert
+  ;;' (assert-equal "numeric" (s3-type 42))
+  ;;' (assert-equal "character" (s3-type "hello"))
+  ;;' (assert-equal "list" (s3-type (list 1 2)))
+  ;;' (assert-equal "environment" (s3-type (new.env)))
   (define s3-type
     (lambda (obj)
       (__r[[ (__rclass obj) 1)))
@@ -194,8 +213,12 @@
   ;;' @examples
   ;;' (equal?.default 1 1)             ; => #t
   ;;' (equal?.default 1 1.0)           ; => #t (coercion via ==)
-  ;;' (equal?.default 1 1.0 :strict #t) ; => #f (strict uses identical?)
+  ;;' (equal?.default 1L 1.0 :strict #t) ; => #f (strict uses identical?)
   ;;' (equal?.default (c 1 2 3) (c 1 2 3))  ; => #t (element-wise)
+  ;;' @assert
+  ;;' (assert-true (equal?.default 1 1))
+  ;;' (assert-true (equal?.default 1 1.0))
+  ;;' (assert-false (equal?.default 1L 1.0 :strict #t))
   (define equal?.default
     (lambda (a b (strict #f))
       (begin
@@ -211,6 +234,10 @@
   ;;' (equal?.list (list 1 2 3) (list 1 2 3))          ; => #t
   ;;' (equal?.list (list 1 (list 2 3)) (list 1 (list 2 3)))  ; => #t (nested)
   ;;' (equal?.list (list 1 2) (list 1 2 3))             ; => #f
+  ;;' @assert
+  ;;' (assert-true (equal?.list (list 1 2 3) (list 1 2 3)))
+  ;;' (assert-false (equal?.list (list 1 2) (list 1 2 3)))
+  ;;' (assert-true (equal?.list (list 1 (list 2 3)) (list 1 (list 2 3))))
   (define equal?.list
     (lambda (a b (strict #f))
       (if (not (list? b))

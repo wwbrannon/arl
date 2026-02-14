@@ -45,6 +45,9 @@
 ;;'
 ;;' (let ((x 10))
 ;;'   (* x x))               ; => 100
+;;' @assert
+;;' (assert-equal 3 (let ((x 1) (y 2)) (+ x y)))
+;;' (assert-equal 100 (let ((x 10)) (* x x)))
 ;;' @note Bindings are evaluated in parallel: earlier bindings are NOT visible to later ones. Use `let*` for sequential binding.
 ;;' @seealso let*, letrec
 (defmacro let (bindings . body)
@@ -68,6 +71,9 @@
 ;;'
 ;;' (let* ((a 10) (b (* a 2)) (c (+ a b)))
 ;;'   c)                      ; => 30
+;;' @assert
+;;' (assert-equal 3 (let* ((x 1) (y (+ x 1))) (+ x y)))
+;;' (assert-equal 30 (let* ((a 10) (b (* a 2)) (c (+ a b))) c))
 ;;' @note Bindings are evaluated sequentially: each binding can refer to previously bound names. Supports destructuring patterns.
 ;;' @seealso let, letrec
 (defmacro let* (bindings . body)
@@ -85,6 +91,8 @@
 ;;' (letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
 ;;'          (odd?  (lambda (n) (if (= n 0) #f (even? (- n 1))))))
 ;;'   (even? 10))             ; => #t
+;;' @assert
+;;' (assert-true (letrec ((ev? (lambda (n) (if (= n 0) #t (od? (- n 1))))) (od? (lambda (n) (if (= n 0) #f (ev? (- n 1)))))) (ev? 10)))
 ;;' @note All bindings are visible to all init expressions, enabling mutual recursion. Init values are assigned via `set!` into pre-allocated slots.
 ;;' @seealso let, let*
 (defmacro letrec (bindings . body)
@@ -100,11 +108,15 @@
 ;;'
 ;;' (when-let ((x #f))
 ;;'   "never reached")       ; => #nil
+;;' @assert
+;;' (assert-equal 1 (when-let ((x (assoc 'a '((a . 1) (b . 2))))) (cdr x)))
+;;' (assert-equal #nil (when-let ((x #f)) "never reached"))
 ;;' @seealso if-let, when, let
 (defmacro when-let (binding . body)
   (begin
-    (define pattern (car binding))
-    (define value (car (cdr binding)))
+    (define first-binding (car binding))
+    (define pattern (car first-binding))
+    (define value (car (cdr first-binding)))
     (define tmp (gensym "when-let"))
     `((lambda (,tmp)
         (if (car ,tmp)
@@ -122,11 +134,15 @@
 ;;' (if-let ((x #f))
 ;;'   "truthy"
 ;;'   "falsy")               ; => "falsy"
+;;' @assert
+;;' (assert-equal 43 (if-let ((x 42)) (+ x 1) "nothing"))
+;;' (assert-equal "falsy" (if-let ((x #f)) "truthy" "falsy"))
 ;;' @seealso when-let, if, let
 (defmacro if-let (binding then . rest)
   (begin
-    (define pattern (car binding))
-    (define value (car (cdr binding)))
+    (define first-binding (car binding))
+    (define pattern (car first-binding))
+    (define value (car (cdr first-binding)))
     (define else (if (null? rest) #nil (car rest)))
     (define tmp (gensym "if-let"))
     `((lambda (,tmp)

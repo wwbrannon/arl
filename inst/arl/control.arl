@@ -15,6 +15,10 @@
 ;;' (when #t "yes")          ; => "yes"
 ;;' (when #f "yes")          ; => #nil
 ;;' (when (> 3 2) (+ 1 1))   ; => 2
+;;' @assert
+;;' (assert-equal "yes" (when #t "yes"))
+;;' (assert-equal #nil (when #f "yes"))
+;;' (assert-equal 2 (when (> 3 2) (+ 1 1)))
 ;;' @seealso unless, if, cond
 (defmacro when (test . body)
   `(if ,test (begin ,@body) #nil))
@@ -24,6 +28,10 @@
 ;;' (unless #f "fallback")    ; => "fallback"
 ;;' (unless #t "fallback")    ; => #nil
 ;;' (unless (= 1 2) "nope")  ; => "nope"
+;;' @assert
+;;' (assert-equal "fallback" (unless #f "fallback"))
+;;' (assert-equal #nil (unless #t "fallback"))
+;;' (assert-equal "nope" (unless (= 1 2) "nope"))
 ;;' @seealso when, if
 (defmacro unless (test . body)
   `(if ,test #nil (begin ,@body)))
@@ -40,6 +48,9 @@
 ;;' (cond
 ;;'   ((> 10 20) "big")
 ;;'   (else "small"))        ; => "small"
+;;' @assert
+;;' (assert-equal "b" (cond ((= 1 2) "a") ((= 1 1) "b") (else "c")))
+;;' (assert-equal "small" (cond ((> 10 20) "big") (else "small")))
 ;;' @seealso case, if, when
 (defmacro cond (clause . rest)
   (if (null? clause)
@@ -88,6 +99,9 @@
 ;;'   ((a b) "ab")
 ;;'   ((x y) "xy")
 ;;'   (else "?"))            ; => "xy"
+;;' @assert
+;;' (assert-equal "two" (case (+ 1 1) ((1) "one") ((2) "two") ((3) "three") (else "other")))
+;;' (assert-equal "xy" (case 'x ((a b) "ab") ((x y) "xy") (else "?")))
 ;;' @note The key expression is evaluated only once. Each clause datum list can contain multiple values.
 ;;' @seealso cond, if
 (defmacro case (key clause . rest)
@@ -104,6 +118,9 @@
 ;;'       :error_handler (lambda (e) "caught"))      ; => "caught"
 ;;' (try* (lambda () 1)
 ;;'       :finally_handler (lambda () (display "done")))  ; => 1
+;;' @assert
+;;' (assert-equal 42 (try* (lambda () 42)))
+;;' (assert-equal "caught" (try* (lambda () (stop "oops")) :error_handler (lambda (e) "caught")))
 ;;' @note Low-level functional interface to R's tryCatch. Prefer the `try` macro for cleaner syntax.
 ;;' @seealso try (in `error` module), catch, finally
 (define try*

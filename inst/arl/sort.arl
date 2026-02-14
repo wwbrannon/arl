@@ -21,6 +21,8 @@
   ;;' (sort (list 3 1 4 1 5) <)        ; => (1 1 3 4 5)
   ;;' (sort (list "b" "a" "c")
   ;;'       (lambda (a b) (< a b)))   ; => ("a" "b" "c")
+  ;;' @assert
+  ;;' (assert-equal (list 1 1 3 4 5) (sort (list 3 1 4 1 5) <))
   ;;' @seealso stable-sort, sort-by
   ;; Sorting
   (define sort
@@ -50,6 +52,8 @@
   ;;' (sort-by (list (list "b" 2) (list "a" 1)) car
   ;;'          (lambda (a b) (< a b)))  ; => (("a" 1) ("b" 2))
   ;;' (sort-by (list 3 -1 2) abs <)     ; => (-1 2 3)
+  ;;' @assert
+  ;;' (assert-equal (list -1 2 3) (sort-by (list 3 -1 2) abs <))
   ;;' @seealso sort, stable-sort
   (define sort-by
     (lambda (lst key-fn comparator)
@@ -70,6 +74,9 @@
   ;;' @examples
   ;;' (merge (list 1 3 5) (list 2 4 6) <)  ; => (1 2 3 4 5 6)
   ;;' (merge (list 1 2) (list) <)           ; => (1 2)
+  ;;' @assert
+  ;;' (assert-equal (list 1 2 3 4 5 6) (merge (list 1 3 5) (list 2 4 6) <))
+  ;;' (assert-equal (list 1 2) (merge (list 1 2) (list) <))
   ;;' @seealso stable-sort, sort
   (define merge
     (lambda (list1 list2 comparator)
@@ -92,6 +99,8 @@
   ;;' @description Stable sort - preserves order of equal elements. Uses merge sort internally.
   ;;' @examples
   ;;' (stable-sort (list 3 1 4 1 5) <)  ; => (1 1 3 4 5)
+  ;;' @assert
+  ;;' (assert-equal (list 1 1 3 4 5) (stable-sort (list 3 1 4 1 5) <))
   ;;' @note Preserves the relative order of elements that compare equal, unlike `sort`.
   ;;' @seealso sort, merge, sort-by
   (define stable-sort

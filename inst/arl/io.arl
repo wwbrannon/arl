@@ -239,6 +239,9 @@
   ;;' @examples
   ;;' (directory-exists? "/tmp")         ; => #t
   ;;' (directory-exists? "/nonexistent") ; => #f
+  ;;' @assert
+  ;;' (assert-true (directory-exists? (r/call "tempdir" (list))))
+  ;;' (assert-false (directory-exists? "/nonexistent/path/that/does/not/exist"))
   (define directory-exists?
     (lambda (path)
       (isTRUE (dir.exists path))))
@@ -288,6 +291,9 @@
   ;;' @examples
   ;;' (getenv "HOME")           ; => "/home/user"
   ;;' (getenv "UNDEFINED_VAR")  ; => #nil
+  ;;' @assert
+  ;;' (assert-true (is.character (getenv "HOME")))
+  ;;' (assert-true (is.null (getenv "ARL_UNDEFINED_TEST_VAR_XYZ")))
   ;;' @seealso setenv
   (define getenv
     (lambda (name)
@@ -299,6 +305,9 @@
   ;;' @description Set environment variable.
   ;;' @examples
   ;;' (setenv "MY_VAR" "hello")  ; => #t
+  ;;' @assert
+  ;;' (setenv "ARL_TEST_SETENV_VAR" "test_value_123")
+  ;;' (assert-equal "test_value_123" (getenv "ARL_TEST_SETENV_VAR"))
   ;;' @seealso getenv
   (define setenv
     (lambda (name value)
@@ -323,6 +332,8 @@
   ;;' @examples
   ;;' (system-output "whoami")   ; => "username"
   ;;' (system-output "echo hi")  ; => "hi"
+  ;;' @assert
+  ;;' (assert-equal "hi" (system-output "echo hi"))
   ;;' @seealso system
   (define system-output
     (lambda (command)

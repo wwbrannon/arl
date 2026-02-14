@@ -19,6 +19,8 @@
   ;;' @description Construct a complex number from real and imaginary parts.
   ;;' @examples
   ;;' (make-rectangular 3 4)  ; => 3+4i
+  ;;' @assert
+  ;;' (assert-equal (complex :real 3 :imaginary 4) (make-rectangular 3 4))
   ;;' @seealso make-polar, real-part, imag-part
   (define make-rectangular
     (lambda (real imag)
@@ -27,6 +29,8 @@
   ;;' @description Construct a complex number from polar coordinates (magnitude and angle).
   ;;' @examples
   ;;' (make-polar 5 0)      ; => 5+0i
+  ;;' @assert
+  ;;' (assert-equal (complex :modulus 5 :argument 0) (make-polar 5 0))
   ;;' @seealso make-rectangular, magnitude, angle
   (define make-polar
     (lambda (magnitude angle)
@@ -35,6 +39,8 @@
   ;;' @description Extract the real part of a complex number.
   ;;' @examples
   ;;' (real-part (make-rectangular 3 4))  ; => 3.0
+  ;;' @assert
+  ;;' (assert-equal 3.0 (real-part (make-rectangular 3 4)))
   ;;' @seealso imag-part, make-rectangular
   (define real-part
     (lambda (z)
@@ -43,6 +49,8 @@
   ;;' @description Extract the imaginary part of a complex number.
   ;;' @examples
   ;;' (imag-part (make-rectangular 3 4))  ; => 4.0
+  ;;' @assert
+  ;;' (assert-equal 4.0 (imag-part (make-rectangular 3 4)))
   ;;' @seealso real-part, make-rectangular
   (define imag-part
     (lambda (z)
@@ -51,6 +59,8 @@
   ;;' @description Compute the magnitude (modulus) of a complex number.
   ;;' @examples
   ;;' (magnitude (make-rectangular 3 4))  ; => 5.0
+  ;;' @assert
+  ;;' (assert-equal 5.0 (magnitude (make-rectangular 3 4)))
   ;;' @seealso angle, make-polar
   (define magnitude
     (lambda (z)
@@ -70,6 +80,9 @@
   ;;' @examples
   ;;' (% 10 3)   ; => 1
   ;;' (% 17 5)   ; => 2
+  ;;' @assert
+  ;;' (assert-equal 1 (% 10 3))
+  ;;' (assert-equal 2 (% 17 5))
   (define %
     (lambda (x y)
       (%% x y)))
@@ -80,6 +93,10 @@
   ;;' (< 1 2)     ; => #t
   ;;' (< 1 2 3)   ; => #t
   ;;' (< 1 3 2)   ; => #f
+  ;;' @assert
+  ;;' (assert-true (< 1 2))
+  ;;' (assert-true (< 1 2 3))
+  ;;' (assert-false (< 1 3 2))
   (define <
     (lambda (. args)
       (if (__r< (__rlength args) 2)
@@ -103,6 +120,10 @@
   ;;' (> 3 2)     ; => #t
   ;;' (> 3 2 1)   ; => #t
   ;;' (> 3 1 2)   ; => #f
+  ;;' @assert
+  ;;' (assert-true (> 3 2))
+  ;;' (assert-true (> 3 2 1))
+  ;;' (assert-false (> 3 1 2))
   (define >
     (lambda (. args)
       (if (__r< (__rlength args) 2)
@@ -126,6 +147,10 @@
   ;;' (<= 1 2)    ; => #t
   ;;' (<= 1 1 2)  ; => #t
   ;;' (<= 2 1)    ; => #f
+  ;;' @assert
+  ;;' (assert-true (<= 1 2))
+  ;;' (assert-true (<= 1 1 2))
+  ;;' (assert-false (<= 2 1))
   (define <=
     (lambda (. args)
       (if (__r< (__rlength args) 2)
@@ -149,6 +174,10 @@
   ;;' (>= 3 2)    ; => #t
   ;;' (>= 2 2 1)  ; => #t
   ;;' (>= 1 2)    ; => #f
+  ;;' @assert
+  ;;' (assert-true (>= 3 2))
+  ;;' (assert-true (>= 2 2 1))
+  ;;' (assert-false (>= 1 2))
   (define >=
     (lambda (. args)
       (if (__r< (__rlength args) 2)
@@ -185,6 +214,10 @@
   ;;' (== 1 1)     ; => #t
   ;;' (== 1 1 1)   ; => #t
   ;;' (== 1 2)     ; => #f
+  ;;' @assert
+  ;;' (assert-true (== 1 1))
+  ;;' (assert-true (== 1 1 1))
+  ;;' (assert-false (== 1 2))
   (define ==
     (lambda (. args)
       (if (__r< (__rlength args) 2)
@@ -207,6 +240,10 @@
   ;;' (= 1 1)           ; => #t
   ;;' (= "a" "a")       ; => #t
   ;;' (= 1 2)           ; => #f
+  ;;' @assert
+  ;;' (assert-true (= 1 1))
+  ;;' (assert-true (= "a" "a"))
+  ;;' (assert-false (= 1 2))
   ;; Alias = to == for convenience
   (define = ==)
 
@@ -216,6 +253,10 @@
   ;;' (+ 1 2 3)    ; => 6
   ;;' (+)           ; => 0
   ;;' (+ 5)         ; => 5
+  ;;' @assert
+  ;;' (assert-equal 6 (+ 1 2 3))
+  ;;' (assert-equal 0 (+))
+  ;;' (assert-equal 5 (+ 5))
   (define +
     (lambda (. args)
       (if (__r== (__rlength args) 0)
@@ -230,6 +271,10 @@
   ;;' (* 2 3 4)    ; => 24
   ;;' (*)           ; => 1
   ;;' (* 5)         ; => 5
+  ;;' @assert
+  ;;' (assert-equal 24 (* 2 3 4))
+  ;;' (assert-equal 1 (*))
+  ;;' (assert-equal 5 (* 5))
   (define *
     (lambda (. args)
       (if (__r== (__rlength args) 0)
@@ -244,6 +289,10 @@
   ;;' (- 10 3)     ; => 7
   ;;' (- 5)        ; => -5
   ;;' (- 10 3 2)   ; => 5
+  ;;' @assert
+  ;;' (assert-equal 7 (- 10 3))
+  ;;' (assert-equal -5 (- 5))
+  ;;' (assert-equal 5 (- 10 3 2))
   (define -
     (lambda (. args)
       (if (__r== (__rlength args) 0)
@@ -258,6 +307,10 @@
   ;;' (/ 10 2)     ; => 5
   ;;' (/ 5)        ; => 0.2
   ;;' (/ 100 5 2)  ; => 10
+  ;;' @assert
+  ;;' (assert-equal 5 (/ 10 2))
+  ;;' (assert-equal 0.2 (/ 5))
+  ;;' (assert-equal 10 (/ 100 5 2))
   (define /
     (lambda (. args)
       (if (__r== (__rlength args) 0)
@@ -270,6 +323,8 @@
   ;;' @signature (min a ...)
   ;;' @examples
   ;;' (min 3 1 2)  ; => 1
+  ;;' @assert
+  ;;' (assert-equal 1 (min 3 1 2))
   (define min
     (lambda (. args)
       (if (= (__rlength args) 0)
@@ -280,6 +335,8 @@
   ;;' @signature (max a ...)
   ;;' @examples
   ;;' (max 3 1 2)  ; => 3
+  ;;' @assert
+  ;;' (assert-equal 3 (max 3 1 2))
   (define max
     (lambda (. args)
       (if (= (__rlength args) 0)
@@ -290,6 +347,9 @@
   ;;' @examples
   ;;' (inc 5)       ; => 6
   ;;' (inc 5 3)     ; => 8
+  ;;' @assert
+  ;;' (assert-equal 6 (inc 5))
+  ;;' (assert-equal 8 (inc 5 3))
   ;;' @seealso dec
   (define inc
     (lambda (x (n 1))
@@ -299,6 +359,9 @@
   ;;' @examples
   ;;' (dec 5)       ; => 4
   ;;' (dec 5 3)     ; => 2
+  ;;' @assert
+  ;;' (assert-equal 4 (dec 5))
+  ;;' (assert-equal 2 (dec 5 3))
   ;;' @seealso inc
   (define dec
     (lambda (x (n 1))
@@ -309,6 +372,10 @@
   ;;' (clamp 5 0 10)   ; => 5
   ;;' (clamp -3 0 10)  ; => 0
   ;;' (clamp 15 0 10)  ; => 10
+  ;;' @assert
+  ;;' (assert-equal 5 (clamp 5 0 10))
+  ;;' (assert-equal 0 (clamp -3 0 10))
+  ;;' (assert-equal 10 (clamp 15 0 10))
   ;;' @seealso within?
   (define clamp
     (lambda (x lo hi)
@@ -321,6 +388,10 @@
   ;;' (within? 5 0 10)   ; => #t
   ;;' (within? -3 0 10)  ; => #f
   ;;' (within? 10 0 10)  ; => #t
+  ;;' @assert
+  ;;' (assert-true (within? 5 0 10))
+  ;;' (assert-false (within? -3 0 10))
+  ;;' (assert-true (within? 10 0 10))
   ;;' @seealso clamp
   (define within?
     (lambda (x lo hi)
@@ -338,6 +409,9 @@
   ;;' @examples
   ;;' (abs -5)      ; => 5
   ;;' (abs 5)       ; => 5
+  ;;' @assert
+  ;;' (assert-equal 5 (abs -5))
+  ;;' (assert-equal 5 (abs 5))
   ;;' @signature (abs x)
   (define abs __rabs)
 
@@ -345,6 +419,9 @@
   ;;' @examples
   ;;' (floor 3.7)   ; => 3
   ;;' (floor -3.2)  ; => -4
+  ;;' @assert
+  ;;' (assert-equal 3 (floor 3.7))
+  ;;' (assert-equal -4 (floor -3.2))
   ;;' @seealso ceiling, truncate, round
   ;;' @signature (floor x)
   (define floor __rfloor)
@@ -353,6 +430,9 @@
   ;;' @examples
   ;;' (ceiling 3.2)  ; => 4
   ;;' (ceiling -3.7) ; => -3
+  ;;' @assert
+  ;;' (assert-equal 4 (ceiling 3.2))
+  ;;' (assert-equal -3 (ceiling -3.7))
   ;;' @seealso floor, truncate, round
   ;;' @signature (ceiling x)
   (define ceiling __rceiling)
@@ -361,6 +441,9 @@
   ;;' @examples
   ;;' (truncate 3.7)  ; => 3
   ;;' (truncate -3.7) ; => -3
+  ;;' @assert
+  ;;' (assert-equal 3 (truncate 3.7))
+  ;;' (assert-equal -3 (truncate -3.7))
   ;;' @seealso floor, ceiling, round
   ;;' @signature (truncate x)
   (define truncate __rtrunc)
@@ -369,6 +452,9 @@
   ;;' @examples
   ;;' (round 3.567)    ; => 4
   ;;' (round 3.567 2)  ; => 3.57
+  ;;' @assert
+  ;;' (assert-equal 4 (round 3.567))
+  ;;' (assert-equal 3.57 (round 3.567 2))
   ;;' @seealso floor, ceiling, truncate
   (define round
     (lambda (x (digits 0))
@@ -379,6 +465,10 @@
   ;;' (signum 42)    ; => 1
   ;;' (signum -5)    ; => -1
   ;;' (signum 0)     ; => 0
+  ;;' @assert
+  ;;' (assert-equal 1 (signum 42))
+  ;;' (assert-equal -1 (signum -5))
+  ;;' (assert-equal 0 (signum 0))
   ;;' @signature (signum x)
   (define signum __rsign)
 
@@ -388,6 +478,8 @@
   ;;' @examples
   ;;' (sqrt 16)     ; => 4
   ;;' (sqrt 2)      ; => 1.414...
+  ;;' @assert
+  ;;' (assert-equal 4 (sqrt 16))
   ;;' @seealso expt
   ;;' @signature (sqrt x)
   (define sqrt __rsqrt)
@@ -396,6 +488,9 @@
   ;;' @examples
   ;;' (expt 2 10)   ; => 1024
   ;;' (expt 3 3)    ; => 27
+  ;;' @assert
+  ;;' (assert-equal 1024 (expt 2 10))
+  ;;' (assert-equal 27 (expt 3 3))
   ;;' @seealso sqrt
   (define expt
     (lambda (base power)
@@ -407,6 +502,10 @@
   ;;' (log 1)           ; => 0
   ;;' (log (exp 1))     ; => 1.0
   ;;' (log 100 10)      ; => 2.0
+  ;;' @assert
+  ;;' (assert-equal 0 (log 1))
+  ;;' (assert-equal 1.0 (log (exp 1)))
+  ;;' (assert-equal 2.0 (log 100 10))
   ;;' @seealso exp, log10, log2
   (define log
     (lambda (x (base #nil))
@@ -418,6 +517,8 @@
   ;;' @examples
   ;;' (exp 0)       ; => 1
   ;;' (exp 1)       ; => 2.718...
+  ;;' @assert
+  ;;' (assert-equal 1 (exp 0))
   ;;' @seealso log
   ;;' @signature (exp x)
   (define exp __rexp)
@@ -426,6 +527,9 @@
   ;;' @examples
   ;;' (log10 100)   ; => 2
   ;;' (log10 1000)  ; => 3
+  ;;' @assert
+  ;;' (assert-equal 2 (log10 100))
+  ;;' (assert-equal 3 (log10 1000))
   ;;' @seealso log, log2
   ;;' @signature (log10 x)
   (define log10 __rlog10)
@@ -434,6 +538,9 @@
   ;;' @examples
   ;;' (log2 8)      ; => 3
   ;;' (log2 1024)   ; => 10
+  ;;' @assert
+  ;;' (assert-equal 3 (log2 8))
+  ;;' (assert-equal 10 (log2 1024))
   ;;' @seealso log, log10
   ;;' @signature (log2 x)
   (define log2 __rlog2)
@@ -446,6 +553,10 @@
   ;;' (sin 0)       ; => 0
   ;;' (cos 0)       ; => 1
   ;;' (tan 0)       ; => 0
+  ;;' @assert
+  ;;' (assert-equal 0 (sin 0))
+  ;;' (assert-equal 1 (cos 0))
+  ;;' (assert-equal 0 (tan 0))
   (define sin __rsin)
 
   ;;' @description Return cosine of x (in radians).
@@ -486,6 +597,9 @@
   ;;' @examples
   ;;' (quotient 10 3)   ; => 3
   ;;' (quotient -10 3)  ; => -3
+  ;;' @assert
+  ;;' (assert-equal 3 (quotient 10 3))
+  ;;' (assert-equal -3 (quotient -10 3))
   ;;' @seealso remainder, modulo
   (define quotient
     (lambda (x y)
@@ -495,6 +609,9 @@
   ;;' @examples
   ;;' (remainder 10 3)   ; => 1
   ;;' (remainder -10 3)  ; => -1
+  ;;' @assert
+  ;;' (assert-equal 1 (remainder 10 3))
+  ;;' (assert-equal -1 (remainder -10 3))
   ;;' @seealso quotient, modulo
   (define remainder
     (lambda (x y)
@@ -504,6 +621,9 @@
   ;;' @examples
   ;;' (modulo 10 3)    ; => 1
   ;;' (modulo -10 3)   ; => 2
+  ;;' @assert
+  ;;' (assert-equal 1 (modulo 10 3))
+  ;;' (assert-equal 2 (modulo -10 3))
   ;;' @seealso quotient, remainder, %
   (define modulo
     (lambda (x y)
@@ -516,6 +636,9 @@
   ;;' @examples
   ;;' (gcd 12 8)      ; => 4
   ;;' (gcd 12 8 6)    ; => 2
+  ;;' @assert
+  ;;' (assert-equal 4 (gcd 12 8))
+  ;;' (assert-equal 2 (gcd 12 8 6))
   ;;' @seealso lcm
   (define gcd
     (lambda (. args)
@@ -537,6 +660,9 @@
   ;;' @examples
   ;;' (lcm 4 6)       ; => 12
   ;;' (lcm 3 4 5)     ; => 60
+  ;;' @assert
+  ;;' (assert-equal 12 (lcm 4 6))
+  ;;' (assert-equal 60 (lcm 3 4 5))
   ;;' @seealso gcd
   (define lcm
     (lambda (. args)

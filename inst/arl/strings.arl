@@ -23,6 +23,10 @@
   ;;' (string-join (list "a" "b" "c") "-")  ; => "a-b-c"
   ;;' (string-join (list "x" "y" "z"))      ; => "xyz"
   ;;' (string-join (list "hello" "world") " ")  ; => "hello world"
+  ;;' @assert
+  ;;' (assert-equal "a-b-c" (string-join (list "a" "b" "c") "-"))
+  ;;' (assert-equal "xyz" (string-join (list "x" "y" "z")))
+  ;;' (assert-equal "hello world" (string-join (list "hello" "world") " "))
   ;;' @seealso string-split, str
   (define string-join
     (lambda (x (sep ""))
@@ -32,6 +36,9 @@
   ;;' @examples
   ;;' (string-split "a-b-c" "-")  ; => ("a" "b" "c")
   ;;' (string-split "hello" "")   ; => ("h" "e" "l" "l" "o")
+  ;;' @assert
+  ;;' (assert-equal (list "a" "b" "c") (string-split "a-b-c" "-"))
+  ;;' (assert-equal (list "h" "e" "l" "l" "o") (string-split "hello" ""))
   ;;' @seealso string-join
   (define string-split
     (lambda (x (sep ""))
@@ -45,6 +52,9 @@
   ;;' @examples
   ;;' (trim "  hello  ")  ; => "hello"
   ;;' (trim "no spaces")  ; => "no spaces"
+  ;;' @assert
+  ;;' (assert-equal "hello" (trim "  hello  "))
+  ;;' (assert-equal "no spaces" (trim "no spaces"))
   (define trim trimws)
 
   ;;' @description Format string with sprintf.
@@ -52,6 +62,10 @@
   ;;' (format "Hello, %s!" "world")   ; => "Hello, world!"
   ;;' (format "%d + %d = %d" 1 2 3)   ; => "1 + 2 = 3"
   ;;' (format "%.2f" 3.14159)          ; => "3.14"
+  ;;' @assert
+  ;;' (assert-equal "Hello, world!" (format "Hello, %s!" "world"))
+  ;;' (assert-equal "1 + 2 = 3" (format "%d + %d = %d" 1 2 3))
+  ;;' (assert-equal "3.14" (format "%.2f" 3.14159))
   ;;' @seealso str
   (define format
     (lambda (fmt . args)
@@ -62,6 +76,10 @@
   ;;' (string-contains? "hello world" "world")       ; => #t
   ;;' (string-contains? "hello world" "xyz")          ; => #f
   ;;' (string-contains? "hello world" "o.*d" :fixed #f)  ; => #t
+  ;;' @assert
+  ;;' (assert-true (string-contains? "hello world" "world"))
+  ;;' (assert-false (string-contains? "hello world" "xyz"))
+  ;;' (assert-true (string-contains? "hello world" "o.*d" :fixed #f))
   ;;' @seealso string-match?, string-find
   (define string-contains?
     (lambda (str pattern (fixed #t))
@@ -72,6 +90,10 @@
   ;;' (string-match? "hello" "^h.*o$" :fixed #f)  ; => #t
   ;;' (string-match? "hello" "xyz" :fixed #f)      ; => #f
   ;;' (string-match? "hello" "hello" :fixed #t)     ; => #t
+  ;;' @assert
+  ;;' (assert-true (string-match? "hello" "^h.*o$" :fixed #f))
+  ;;' (assert-false (string-match? "hello" "xyz" :fixed #f))
+  ;;' (assert-true (string-match? "hello" "hello" :fixed #t))
   ;;' @seealso string-contains?, string-find
   (define string-match?
     (lambda (str pattern (fixed #f))
@@ -82,6 +104,10 @@
   ;;' (string-find "hello world" "world")  ; => 6
   ;;' (string-find "hello world" "xyz")    ; => #nil
   ;;' (string-find "hello" "l")            ; => 2
+  ;;' @assert
+  ;;' (assert-equal 6 (string-find "hello world" "world"))
+  ;;' (assert-equal #nil (string-find "hello world" "xyz"))
+  ;;' (assert-equal 2 (string-find "hello" "l"))
   ;;' @seealso string-contains?, string-match?
   (define string-find
     (lambda (str pattern (fixed #t))
@@ -93,6 +119,9 @@
   ;;' @examples
   ;;' (string-replace "hello world" "world" "there")    ; => "hello there"
   ;;' (string-replace "aaa" "a" "b")                     ; => "baa"
+  ;;' @assert
+  ;;' (assert-equal "hello there" (string-replace "hello world" "world" "there"))
+  ;;' (assert-equal "baa" (string-replace "aaa" "a" "b"))
   ;;' @seealso string-replace-all
   (define string-replace
     (lambda (str pattern replacement (fixed #t))
@@ -102,6 +131,9 @@
   ;;' @examples
   ;;' (string-replace-all "aaa" "a" "b")   ; => "bbb"
   ;;' (string-replace-all "hello world world" "world" "there")  ; => "hello there there"
+  ;;' @assert
+  ;;' (assert-equal "bbb" (string-replace-all "aaa" "a" "b"))
+  ;;' (assert-equal "hello there there" (string-replace-all "hello world world" "world" "there"))
   ;;' @seealso string-replace
   (define string-replace-all
     (lambda (str pattern replacement (fixed #t))
@@ -112,6 +144,10 @@
   ;;' (string-append "hello" " " "world")  ; => "hello world"
   ;;' (string-append "a" "b" "c")          ; => "abc"
   ;;' (string-append)                       ; => ""
+  ;;' @assert
+  ;;' (assert-equal "hello world" (string-append "hello" " " "world"))
+  ;;' (assert-equal "abc" (string-append "a" "b" "c"))
+  ;;' (assert-equal "" (string-append))
   ;;' @seealso str, string-join
   (define string-append
     (lambda (. args)
@@ -125,6 +161,10 @@
   ;;' (->string 42)     ; => "42"
   ;;' (->string #t)     ; => "TRUE"
   ;;' (->string 3.14)   ; => "3.14"
+  ;;' @assert
+  ;;' (assert-equal "42" (->string 42))
+  ;;' (assert-equal "TRUE" (->string #t))
+  ;;' (assert-equal "3.14" (->string 3.14))
   (define ->string as.character)
 
   ;; ==========================================================================
@@ -136,6 +176,9 @@
   ;;' @examples
   ;;' (char-at "hello" 0)  ; => "h"
   ;;' (char-at "hello" 4)  ; => "o"
+  ;;' @assert
+  ;;' (assert-equal "h" (char-at "hello" 0))
+  ;;' (assert-equal "o" (char-at "hello" 4))
   ;;' @seealso string-ref, substring
   (define char-at
     (lambda (str index)
@@ -157,6 +200,10 @@
   ;;' (substring "hello" 1 4)  ; => "ell"
   ;;' (substring "hello" 0 5)  ; => "hello"
   ;;' (substring "hello" 2 2)  ; => ""
+  ;;' @assert
+  ;;' (assert-equal "ell" (substring "hello" 1 4))
+  ;;' (assert-equal "hello" (substring "hello" 0 5))
+  ;;' (assert-equal "" (substring "hello" 2 2))
   ;;' @seealso char-at
   (define substring
     (lambda (str start end)
@@ -175,6 +222,9 @@
   ;;' @examples
   ;;' (string-length "hello")  ; => 5
   ;;' (string-length "")       ; => 0
+  ;;' @assert
+  ;;' (assert-equal 5 (string-length "hello"))
+  ;;' (assert-equal 0 (string-length ""))
   (define string-length
     (lambda (str)
       (nchar str)))
@@ -186,6 +236,9 @@
   ;;' @examples
   ;;' (string-upcase "hello")  ; => "HELLO"
   ;;' (string-upcase "Hello World")  ; => "HELLO WORLD"
+  ;;' @assert
+  ;;' (assert-equal "HELLO" (string-upcase "hello"))
+  ;;' (assert-equal "HELLO WORLD" (string-upcase "Hello World"))
   ;;' @seealso string-downcase, string-titlecase
   (define string-upcase
     (lambda (str)
@@ -195,6 +248,9 @@
   ;;' @examples
   ;;' (string-downcase "HELLO")  ; => "hello"
   ;;' (string-downcase "Hello World")  ; => "hello world"
+  ;;' @assert
+  ;;' (assert-equal "hello" (string-downcase "HELLO"))
+  ;;' (assert-equal "hello world" (string-downcase "Hello World"))
   ;;' @seealso string-upcase, string-titlecase
   (define string-downcase
     (lambda (str)
@@ -204,6 +260,9 @@
   ;;' @examples
   ;;' (string-titlecase "hello world")  ; => "Hello World"
   ;;' (string-titlecase "HELLO WORLD")  ; => "Hello World"
+  ;;' @assert
+  ;;' (assert-equal "Hello World" (string-titlecase "hello world"))
+  ;;' (assert-equal "Hello World" (string-titlecase "HELLO WORLD"))
   ;;' @seealso string-upcase, string-downcase
   (define string-titlecase
     (lambda (str)
@@ -226,6 +285,10 @@
   ;;' (string<? "abc" "def")  ; => #t
   ;;' (string<? "def" "abc")  ; => #f
   ;;' (string<? "abc" "abc")  ; => #f
+  ;;' @assert
+  ;;' (assert-true (string<? "abc" "def"))
+  ;;' (assert-false (string<? "def" "abc"))
+  ;;' (assert-false (string<? "abc" "abc"))
   (define string<?
     (lambda (a b)
       (isTRUE (< a b))))
@@ -235,6 +298,10 @@
   ;;' (string>? "def" "abc")  ; => #t
   ;;' (string>? "abc" "def")  ; => #f
   ;;' (string>? "abc" "abc")  ; => #f
+  ;;' @assert
+  ;;' (assert-true (string>? "def" "abc"))
+  ;;' (assert-false (string>? "abc" "def"))
+  ;;' (assert-false (string>? "abc" "abc"))
   (define string>?
     (lambda (a b)
       (isTRUE (> a b))))
@@ -243,6 +310,9 @@
   ;;' @examples
   ;;' (string=? "hello" "hello")  ; => #t
   ;;' (string=? "hello" "world")  ; => #f
+  ;;' @assert
+  ;;' (assert-true (string=? "hello" "hello"))
+  ;;' (assert-false (string=? "hello" "world"))
   (define string=?
     (lambda (a b)
       (isTRUE (== a b))))
@@ -252,6 +322,10 @@
   ;;' (string<=? "abc" "abc")  ; => #t
   ;;' (string<=? "abc" "def")  ; => #t
   ;;' (string<=? "def" "abc")  ; => #f
+  ;;' @assert
+  ;;' (assert-true (string<=? "abc" "abc"))
+  ;;' (assert-true (string<=? "abc" "def"))
+  ;;' (assert-false (string<=? "def" "abc"))
   (define string<=?
     (lambda (a b)
       (isTRUE (<= a b))))
@@ -261,6 +335,10 @@
   ;;' (string>=? "abc" "abc")  ; => #t
   ;;' (string>=? "def" "abc")  ; => #t
   ;;' (string>=? "abc" "def")  ; => #f
+  ;;' @assert
+  ;;' (assert-true (string>=? "abc" "abc"))
+  ;;' (assert-true (string>=? "def" "abc"))
+  ;;' (assert-false (string>=? "abc" "def"))
   (define string>=?
     (lambda (a b)
       (isTRUE (>= a b))))
@@ -272,6 +350,9 @@
   ;;' @examples
   ;;' (string->list "hello")  ; => ("h" "e" "l" "l" "o")
   ;;' (string->list "")       ; => ()
+  ;;' @assert
+  ;;' (assert-equal (list "h" "e" "l" "l" "o") (string->list "hello"))
+  ;;' (assert-equal (list) (string->list ""))
   ;;' @seealso list->string
   (define string->list
     (lambda (str)
@@ -283,6 +364,9 @@
   ;;' @examples
   ;;' (list->string (list "h" "e" "l" "l" "o"))  ; => "hello"
   ;;' (list->string (list))                        ; => ""
+  ;;' @assert
+  ;;' (assert-equal "hello" (list->string (list "h" "e" "l" "l" "o")))
+  ;;' (assert-equal "" (list->string (list)))
   ;;' @seealso string->list
   (define list->string
     (lambda (lst)
@@ -295,6 +379,11 @@
   ;;' (number->string 255 16)   ; => "ff"
   ;;' (number->string 10 2)     ; => "1010"
   ;;' (number->string 8 8)      ; => "10"
+  ;;' @assert
+  ;;' (assert-equal "42" (number->string 42))
+  ;;' (assert-equal "ff" (number->string 255 16))
+  ;;' (assert-equal "1010" (number->string 10 2))
+  ;;' (assert-equal "10" (number->string 8 8))
   ;;' @seealso string->number
   (define number->string
     (lambda (num . base-args)
@@ -338,6 +427,12 @@
   ;;' (string->number "ff" 16)    ; => 255
   ;;' (string->number "1010" 2)   ; => 10
   ;;' (string->number "bad")      ; => #f
+  ;;' @assert
+  ;;' (assert-equal 42 (string->number "42"))
+  ;;' (assert-equal 3.14 (string->number "3.14"))
+  ;;' (assert-equal 255 (string->number "ff" 16))
+  ;;' (assert-equal 10 (string->number "1010" 2))
+  ;;' (assert-false (string->number "bad"))
   ;;' @seealso number->string
   (define string->number
     (lambda (str . base-args)

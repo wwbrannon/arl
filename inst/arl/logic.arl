@@ -37,6 +37,13 @@
   ;;' (not 1)           ; => #f (non-zero is truthy)
   ;;' (not #nil)        ; => #t (NULL is falsy)
   ;;' (not "hello")     ; => #f (non-empty values are truthy)
+  ;;' @assert
+  ;;' (assert-false (not #t))
+  ;;' (assert-true (not #f))
+  ;;' (assert-true (not 0))
+  ;;' (assert-false (not 1))
+  ;;' (assert-true (not #nil))
+  ;;' (assert-false (not "hello"))
   ;;' @note Arl follows Scheme-like truthiness: #f/FALSE, #nil/NULL, and 0 are falsy. Everything else is truthy. This differs from R where only FALSE and NULL are falsy.
   ;;' @seealso xor, and, or (special forms)
   (define not
@@ -51,6 +58,13 @@
   ;;' (xor #f #f)       ; => #f
   ;;' (xor 1 0)         ; => #t (1 is truthy, 0 is falsy)
   ;;' (xor 1 2)         ; => #f (both truthy)
+  ;;' @assert
+  ;;' (assert-true (xor #t #f))
+  ;;' (assert-true (xor #f #t))
+  ;;' (assert-false (xor #t #t))
+  ;;' (assert-false (xor #f #f))
+  ;;' (assert-true (xor 1 0))
+  ;;' (assert-false (xor 1 2))
   ;;' @note Exclusive OR: returns #t when exactly one argument is truthy, #f when both are truthy or both are falsy.
   ;;' @seealso not, and, or (special forms)
   (define xor

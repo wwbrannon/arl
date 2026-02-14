@@ -26,6 +26,9 @@
   ;;'
   ;;' ;; try with no handlers (just evaluates body)
   ;;' (try (+ 1 2))                       ; => 3
+  ;;' @assert
+  ;;' (assert-equal 3 (try (+ 1 2)))
+  ;;' (assert-equal "error: oops" (try (stop "oops") (catch e (string-append "error: " ($ e "message")))))
   ;;' @note Macro wrapper around `try*` that provides familiar catch/finally syntax. The catch clause binds the error condition to the given variable. The finally clause runs regardless of success or failure.
   ;;' @seealso try* (in `control` module)
   (defmacro try (body . clauses)

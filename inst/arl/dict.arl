@@ -39,6 +39,10 @@
 ;;' (dict)                      ; => empty dict
 ;;' (define d (dict :name "Alice" :age 30))
 ;;' (dict-get d "name")         ; => "Alice"
+;;' @assert
+;;' (assert-true (dict? (dict :x 1 :y 2)))
+;;' (assert-true (dict? (dict)))
+;;' (assert-equal "Alice" (dict-get (dict :name "Alice" :age 30) "name"))
 ;;' @seealso hash
 (define dict
   (lambda (. args)
@@ -73,6 +77,10 @@
 ;;' (dict? (dict :x 1))        ; => #t
 ;;' (dict? (list 1 2))         ; => #f
 ;;' (dict? 42)                 ; => #f
+;;' @assert
+;;' (assert-true (dict? (dict :x 1)))
+;;' (assert-false (dict? (list 1 2)))
+;;' (assert-false (dict? 42))
 (define dict?
   (lambda (x)
     (and (r/call "is.environment" (list x)) (r/call "inherits" (list x "arl_dict")))))
@@ -98,6 +106,10 @@
 ;;' (dict-get d "x")           ; => 1
 ;;' (dict-get d "z")           ; => #nil
 ;;' (dict-get d "z" 99)        ; => 99  (default value)
+;;' @assert
+;;' (assert-equal 1 (dict-get (dict :x 1 :y 2) "x"))
+;;' (assert-equal #nil (dict-get (dict :x 1 :y 2) "z"))
+;;' (assert-equal 99 (dict-get (dict :x 1 :y 2) "z" 99))
 ;;' @seealso dict-set, dict-has?
 (define dict-get
   (lambda (dict key . rest)
@@ -114,6 +126,10 @@
 ;;' (define d (dict))
 ;;' (dict-set d "x" 42)        ; => d (mutated, x=42)
 ;;' (dict-get d "x")           ; => 42
+;;' @assert
+;;' (define __test-d (dict))
+;;' (dict-set __test-d "x" 42)
+;;' (assert-equal 42 (dict-get __test-d "x"))
 ;;' @seealso dict-get, dict-remove
 (define dict-set
   (lambda (dict key value)
@@ -134,6 +150,10 @@
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-remove d "x")        ; => d (mutated, x removed)
 ;;' (dict-has? d "x")          ; => #f
+;;' @assert
+;;' (define __test-dr (dict :x 1 :y 2))
+;;' (dict-remove __test-dr "x")
+;;' (assert-false (dict-has? __test-dr "x"))
 ;;' @seealso dict-set
 (define dict-remove
   (lambda (dict key)
@@ -154,6 +174,9 @@
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-keys d)              ; => ("x" "y")
 ;;' (dict-keys (dict))         ; => ()
+;;' @assert
+;;' (assert-equal (list "x" "y") (dict-keys (dict :x 1 :y 2)))
+;;' (assert-equal (list) (dict-keys (dict)))
 ;;' @seealso dict-values
 (define dict-keys
   (lambda (dict)
@@ -167,6 +190,8 @@
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-values d)            ; => (1 2)
+;;' @assert
+;;' (assert-equal (list 1 2) (dict-values (dict :x 1 :y 2)))
 ;;' @seealso dict-keys
 (define dict-values
   (lambda (dict)
@@ -185,6 +210,9 @@
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-has? d "x")          ; => #t
 ;;' (dict-has? d "z")          ; => #f
+;;' @assert
+;;' (assert-true (dict-has? (dict :x 1 :y 2) "x"))
+;;' (assert-false (dict-has? (dict :x 1 :y 2) "z"))
 ;;' @seealso dict-get
 (define dict-has?
   (lambda (dict key)
@@ -200,6 +228,12 @@
 ;;' (define m (dict-merge a b))
 ;;' (dict-get m "y")           ; => 99  (b overrides a)
 ;;' (dict-get m "z")           ; => 3
+;;' @assert
+;;' (define __test-ma (dict :x 1 :y 2))
+;;' (define __test-mb (dict :y 99 :z 3))
+;;' (define __test-mm (dict-merge __test-ma __test-mb))
+;;' (assert-equal 99 (dict-get __test-mm "y"))
+;;' (assert-equal 3 (dict-get __test-mm "z"))
 ;;' @seealso dict, dict-set
 (define dict-merge
   (lambda (. dicts)

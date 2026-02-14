@@ -16,6 +16,9 @@
   ;;' @examples
   ;;' (symbol->string 'hello)  ; => "hello"
   ;;' (symbol->string 'x)      ; => "x"
+  ;;' @assert
+  ;;' (assert-equal "hello" (symbol->string 'hello))
+  ;;' (assert-equal "x" (symbol->string 'x))
   ;;' @note Signals an error if the argument is not a symbol.
   ;;' @seealso string->symbol, ->symbol
   (define symbol->string
@@ -28,6 +31,9 @@
   ;;' @examples
   ;;' (string->symbol "hello")  ; => hello (a symbol)
   ;;' (string->symbol "x")      ; => x
+  ;;' @assert
+  ;;' (assert-true (symbol? (string->symbol "hello")))
+  ;;' (assert-equal 'hello (string->symbol "hello"))
   ;;' @note Signals an error if the argument is not a string.
   ;;' @seealso symbol->string, ->symbol
   (define string->symbol
@@ -41,6 +47,10 @@
   ;;' (->symbol "hello")  ; => hello (a symbol)
   ;;' (->symbol 42)       ; => 42 (symbol named "42")
   ;;' (->symbol 'x)       ; => x (already a symbol, returned as-is)
+  ;;' @assert
+  ;;' (assert-true (symbol? (->symbol "hello")))
+  ;;' (assert-true (symbol? (->symbol 42)))
+  ;;' (assert-equal 'x (->symbol 'x))
   ;;' @seealso symbol->string, string->symbol
   (define ->symbol
     (lambda (x)
@@ -55,6 +65,10 @@
   ;;' (->number "42")     ; => 42
   ;;' (->number "3.14")   ; => 3.14
   ;;' (->number 5)        ; => 5 (already a number)
+  ;;' @assert
+  ;;' (assert-equal 42 (->number "42"))
+  ;;' (assert-equal 3.14 (->number "3.14"))
+  ;;' (assert-equal 5 (->number 5))
   ;;' @note Signals an error for non-numeric strings (e.g. `(->number "abc")`).
   ;;' @seealso ->integer, ->double, ->complex
   (define ->number
@@ -75,6 +89,9 @@
   ;;' @examples
   ;;' (exact->inexact 5L)     ; => 5.0 (integer to double)
   ;;' (exact->inexact 3.14)   ; => 3.14 (already double, returned as double)
+  ;;' @assert
+  ;;' (assert-equal 5.0 (exact->inexact 5L))
+  ;;' (assert-equal 3.14 (exact->inexact 3.14))
   ;;' @note Signals an error if the argument is not a number.
   ;;' @note In Scheme, exactness is a property of any number. In R (and Arl), exact means integer storage type and inexact means double or complex. See also `exact?` and `inexact?` in the `math` module.
   ;;' @seealso inexact->exact, exact? (in `types` module), inexact? (in `types` module)
@@ -89,6 +106,10 @@
   ;;' (inexact->exact 3.7)    ; => 4L (rounds to nearest integer)
   ;;' (inexact->exact 3.2)    ; => 3L
   ;;' (inexact->exact 5L)     ; => 5L (already integer)
+  ;;' @assert
+  ;;' (assert-equal 4L (inexact->exact 3.7))
+  ;;' (assert-equal 3L (inexact->exact 3.2))
+  ;;' (assert-equal 5L (inexact->exact 5L))
   ;;' @note Signals an error if the argument is not a number.
   ;;' @note **Warning:** Converting double to integer rounds to the nearest integer, which may lose precision. For example, `(inexact->exact 3.7)` returns `4L`, not `3L`.
   ;;' @seealso exact->inexact, exact? (in `types` module), inexact? (in `types` module)
@@ -106,6 +127,10 @@
   ;;' (->integer 3.7)     ; => 3L (truncates toward zero)
   ;;' (->integer "42")    ; => 42L
   ;;' (->integer 5L)      ; => 5L (already integer)
+  ;;' @assert
+  ;;' (assert-equal 3L (->integer 3.7))
+  ;;' (assert-equal 42L (->integer "42"))
+  ;;' (assert-equal 5L (->integer 5L))
   ;;' @note Signals an error for non-numeric strings. Note that `->integer` truncates toward zero (like R's `as.integer`), whereas `inexact->exact` rounds to nearest.
   ;;' @seealso ->number, ->double, inexact->exact
   (define ->integer
@@ -125,6 +150,10 @@
   ;;' (->double 5L)       ; => 5.0
   ;;' (->double "3.14")   ; => 3.14
   ;;' (->double 2.5)      ; => 2.5 (already double)
+  ;;' @assert
+  ;;' (assert-equal 5.0 (->double 5L))
+  ;;' (assert-equal 3.14 (->double "3.14"))
+  ;;' (assert-equal 2.5 (->double 2.5))
   ;;' @seealso ->number, ->integer, exact->inexact
   (define ->double
     (lambda (x)
@@ -161,7 +190,10 @@
   ;;' @description Convert value to list.
   ;;' @examples
   ;;' (->list (c 1 2 3))       ; => (1 2 3)
-  ;;' (->list '(1 2 3))        ; => (1 2 3) (already a list)
+  ;;' (->list (list 1 2 3))    ; => (1 2 3) (already a list)
+  ;;' @assert
+  ;;' (assert-equal (list 1 2 3) (->list (c 1 2 3)))
+  ;;' (assert-equal (list 1 2 3) (->list (list 1 2 3)))
   ;;' @seealso ->vector
   (define ->list
     (lambda (x)
@@ -171,7 +203,7 @@
 
   ;;' @description Convert value to vector.
   ;;' @examples
-  ;;' (->vector '(1 2 3))   ; => [1] 1 2 3 (atomic vector)
+  ;;' (->vector (list 1 2 3))   ; => [1] 1 2 3 (atomic vector)
   ;;' (->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)
   ;;' @note When given a list, `->vector` flattens it into an atomic vector using `unlist`. Nested lists will be recursively flattened.
   ;;' @seealso ->list

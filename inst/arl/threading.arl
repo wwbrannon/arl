@@ -15,6 +15,10 @@
 ;;' (-> '(1 2 3) (cons 0))   ; => (0 1 2 3)
 ;;' (-> "hello"
 ;;'     nchar)                ; => 5
+;;' @assert
+;;' (assert-equal 16 (-> 5 (+ 3) (* 2)))
+;;' (assert-equal (list 0 1 2 3) (-> '(1 2 3) (cons 0)))
+;;' (assert-equal 5 (-> "hello" nchar))
 ;;' @note Threads the value as the FIRST argument to each successive form. If a form is a bare symbol, it is called as a one-argument function.
 ;;' @seealso ->>
 (defmacro -> (value . forms)
@@ -33,6 +37,10 @@
 ;;' (->> '(1 2 3)
 ;;'      (map (lambda (x) (+ x 10)))
 ;;'      (car))              ; => 11
+;;' @assert
+;;' (assert-equal (list 1 4 9) (->> '(1 2 3) (map (lambda (x) (* x x)))))
+;;' (assert-equal 5 (->> 5 (- 10)))
+;;' (assert-equal 11 (->> '(1 2 3) (map (lambda (x) (+ x 10))) (car)))
 ;;' @note Threads the value as the LAST argument to each successive form. Compare with `->` which threads as the first argument.
 ;;' @seealso ->
 (defmacro ->> (value . forms)

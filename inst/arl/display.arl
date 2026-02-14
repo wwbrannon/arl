@@ -124,6 +124,9 @@
   ;;' @examples
   ;;' (str "hello" " " "world")  ; => "hello world"
   ;;' (str 1 "+" 2)              ; => "1+2"
+  ;;' @assert
+  ;;' (assert-equal "hello world" (str "hello" " " "world"))
+  ;;' (assert-equal "1+2" (str 1 "+" 2))
   ;;' @seealso string-join, format
   (define str
     (lambda (. args)

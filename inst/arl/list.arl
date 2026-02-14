@@ -65,6 +65,9 @@
   ;;' (car (list 1 2 3))    ; => 1
   ;;' (car (list))           ; => #nil
   ;;' (car (cons 'a 'b))    ; => a
+  ;;' @assert
+  ;;' (assert-equal 1 (car (list 1 2 3)))
+  ;;' (assert-equal #nil (car (list)))
   ;;' @seealso cdr, cons, first
   (define car
     (lambda (lst)
@@ -81,6 +84,9 @@
   ;;' (cdr (list 1 2 3))    ; => (2 3)
   ;;' (cdr (list 1))        ; => ()
   ;;' (cdr (cons 'a 'b))    ; => b
+  ;;' @assert
+  ;;' (assert-equal (list 2 3) (cdr (list 1 2 3)))
+  ;;' (assert-equal (list) (cdr (list 1)))
   ;;' @seealso car, cons, rest
   (define cdr
     (lambda (lst)
@@ -135,6 +141,9 @@
   ;;' (cons 1 (list 2 3))   ; => (1 2 3)
   ;;' (cons 'a (list 'b))   ; => (a b)
   ;;' (cons 'a 'b)          ; => dotted pair (a . b)
+  ;;' @assert
+  ;;' (assert-equal (list 1 2 3) (cons 1 (list 2 3)))
+  ;;' (assert-equal (list 'a 'b) (cons 'a (list 'b)))
   ;;' @seealso car, cdr, append
   (define cons
     (lambda (item lst)
@@ -149,6 +158,10 @@
   ;;' (list* 1 2 (list 3 4))  ; => (1 2 3 4)
   ;;' (list* 1 2 3)           ; => (1 2 3)
   ;;' (list*)                  ; => ()
+  ;;' @assert
+  ;;' (assert-equal (list 1 2 3 4) (list* 1 2 (list 3 4)))
+  ;;' (assert-equal (list 1 2 3) (list* 1 2 3))
+  ;;' (assert-equal (list) (list*))
   ;;' @seealso list, cons, append
   (define list*
     (lambda (. args)
@@ -170,6 +183,10 @@
   ;;' (append (list 1 2) (list 3 4))    ; => (1 2 3 4)
   ;;' (append (list 1) (list 2) (list 3)); => (1 2 3)
   ;;' (append (list 1 2) (list))         ; => (1 2)
+  ;;' @assert
+  ;;' (assert-equal (list 1 2 3 4) (append (list 1 2) (list 3 4)))
+  ;;' (assert-equal (list 1 2 3) (append (list 1) (list 2) (list 3)))
+  ;;' (assert-equal (list 1 2) (append (list 1 2) (list)))
   ;;' @seealso cons, list*
   (define append
     (lambda (. lists)
@@ -184,6 +201,9 @@
   ;;' @examples
   ;;' (reverse (list 1 2 3))  ; => (3 2 1)
   ;;' (reverse (list))        ; => ()
+  ;;' @assert
+  ;;' (assert-equal (list 3 2 1) (reverse (list 1 2 3)))
+  ;;' (assert-equal (list) (reverse (list)))
   (define reverse
     (lambda (x)
       (rev (__as-list x))))
@@ -220,6 +240,10 @@
   ;;' (last (list 1 2 3))   ; => 3
   ;;' (last (list 42))      ; => 42
   ;;' (last (list))         ; => #nil
+  ;;' @assert
+  ;;' (assert-equal 3 (last (list 1 2 3)))
+  ;;' (assert-equal 42 (last (list 42)))
+  ;;' (assert-equal #nil (last (list)))
   ;;' @seealso first, nth
   (define last
     (lambda (lst)
@@ -230,6 +254,9 @@
   ;;' @examples
   ;;' (nth (list 'a 'b 'c) 0)  ; => a
   ;;' (nth (list 'a 'b 'c) 2)  ; => c
+  ;;' @assert
+  ;;' (assert-equal 'a (nth (list 'a 'b 'c) 0))
+  ;;' (assert-equal 'c (nth (list 'a 'b 'c) 2))
   ;;' @seealso first, last
   (define nth
     (lambda (lst n)
@@ -283,6 +310,9 @@
   ;;' @examples
   ;;' (assoc 'b (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
   ;;' (assoc 'z (list (list 'a 1) (list 'b 2)))               ; => #nil
+  ;;' @assert
+  ;;' (assert-equal (list 'b 2) (assoc 'b (list (list 'a 1) (list 'b 2) (list 'c 3))))
+  ;;' (assert-equal #nil (assoc 'z (list (list 'a 1) (list 'b 2))))
   ;;' @seealso rassoc, assoc-by-identical?, assoc-by-==
   (define assoc
     (lambda (key alist)
@@ -325,6 +355,9 @@
   ;;' @examples
   ;;' (rassoc 2 (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
   ;;' (rassoc 9 (list (list 'a 1) (list 'b 2)))               ; => #nil
+  ;;' @assert
+  ;;' (assert-equal (list 'b 2) (rassoc 2 (list (list 'a 1) (list 'b 2) (list 'c 3))))
+  ;;' (assert-equal #nil (rassoc 9 (list (list 'a 1) (list 'b 2))))
   ;;' @seealso assoc, rassoc-by-equal?
   (define rassoc
     (lambda (value alist)
@@ -355,6 +388,10 @@
   ;;' (range 0 5)       ; => (0 1 2 3 4)
   ;;' (range 0 10 2)    ; => (0 2 4 6 8)
   ;;' (range 5 0 -1)    ; => (5 4 3 2 1)
+  ;;' @assert
+  ;;' (assert-equal (list 0 1 2 3 4) (range 0 5))
+  ;;' (assert-equal (list 0 2 4 6 8) (range 0 10 2))
+  ;;' (assert-equal (list 5 4 3 2 1) (range 5 0 -1))
   ;;' @seealso iota, make-list
   (define range
     (lambda (start end . step-args)
@@ -377,6 +414,10 @@
   ;;' (iota 5)          ; => (0 1 2 3 4)
   ;;' (iota 5 1)        ; => (1 2 3 4 5)
   ;;' (iota 5 0 2)      ; => (0 2 4 6 8)
+  ;;' @assert
+  ;;' (assert-equal (list 0 1 2 3 4) (iota 5))
+  ;;' (assert-equal (list 1 2 3 4 5) (iota 5 1))
+  ;;' (assert-equal (list 0 2 4 6 8) (iota 5 0 2))
   ;;' @seealso range, make-list
   (define iota
     (lambda (count . args)
@@ -390,6 +431,9 @@
   ;;' @examples
   ;;' (make-list 3 'x)    ; => (x x x)
   ;;' (make-list 0 'x)    ; => ()
+  ;;' @assert
+  ;;' (assert-equal (list 'x 'x 'x) (make-list 3 'x))
+  ;;' (assert-equal (list) (make-list 0 'x))
   ;;' @seealso iota, range
   (define make-list
     (lambda (n value)
@@ -410,6 +454,8 @@
   ;;' @description Scheme-style list accessor (alias for nth).
   ;;' @examples
   ;;' (list-ref (list 'a 'b 'c) 1)  ; => b
+  ;;' @assert
+  ;;' (assert-equal 'b (list-ref (list 'a 'b 'c) 1))
   ;;' @seealso nth
   (define list-ref
     (lambda (lst index)
@@ -419,6 +465,9 @@
   ;;' @examples
   ;;' (list-tail (list 'a 'b 'c 'd) 2)  ; => (c d)
   ;;' (list-tail (list 1 2 3) 0)         ; => (1 2 3)
+  ;;' @assert
+  ;;' (assert-equal (list 'c 'd) (list-tail (list 'a 'b 'c 'd) 2))
+  ;;' (assert-equal (list 1 2 3) (list-tail (list 1 2 3) 0))
   ;;' @seealso drop
   (define list-tail
     (lambda (lst k)
