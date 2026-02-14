@@ -70,7 +70,7 @@ These three forms load code differently:
 |------|-------|---------------------|----------|
 | `(load "file.arl")` | Current env | Yes | Source a script into REPL |
 | `(import module)` | Current scope | Exports only | Use a module's public API |
-| `(run "file.arl")` | Isolated child | No | Execute a script without side effects |
+| `(run "file.arl")` | Isolated child | No | Execute a script without binding side effects |
 
 From R:
 

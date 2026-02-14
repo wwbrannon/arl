@@ -14,8 +14,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
 
-Arl can call any R function directly. Function names, operators, and data
-structures are shared between Arl and R.
+Arl can call any R function directly. Because Arl code is compiled to R code
+before being execute, function names, operators, and data structures are shared
+between Arl and R.
 
 ## Calling R functions
 
@@ -69,14 +70,22 @@ To pass a keyword as a *value* (rather than as named argument syntax), quote it:
 This design allows keywords to work naturally with R's named arguments while
 remaining first-class values when needed.
 
-You can also call functions via `r/call` if you need to pass a name
-programmatically:
+### r/call
+
+You can also call R functions via `r/call` if you need to pass a name
+programmatically. This function skips all Arl-defined evaluation frames and
+looks up its character argument in the containing R scopes:
 
 ```{arl}
+; shadow the binding so direct calls fail
+(define sum (lambda () (stop "error")))
+
+; r/call can still find it
 (r/call "sum" (list 1 2 3))
 ```
 
 ```{arl, include=FALSE}
+(define sum (lambda () (stop "error")))
 (assert-equal 6 (r/call "sum" (list 1 2 3)))
 ```
 
@@ -158,18 +167,32 @@ to create a unique sentinel:
 ## Working with formulas
 
 ```{arl, eval=FALSE}
-(lm (~ y x) :data df)
+(lm (~ mpg cyl) :data mtcars)
+```
+
+```{arl, include=FALSE}
+(assert-no-error (lm (~ mpg cyl) :data mtcars))
 ```
 
 The `~` special form builds an R formula without evaluating its arguments.
 
 ## Accessing R objects
 
-```{arl, eval=FALSE}
-($ mylist field)
-([ vector 1)
+```{arl}
+(define mylist (list :a 1 :b 2))
+($ mylist a) ; => 1
+
+(define vector (c 1 2 3))
+([ vector 1) ; => 1
 ```
 
+```{arl, include=FALSE}
+(define mylist (list :a 1 :b 2))
+(assert-equal ($ mylist a) 1)
+
+(define vector (c 1 2 3))
+(assert-equal ([ vector 1) 1)
+```
 Use `::` and `:::` to access R packages:
 
 ```{arl}

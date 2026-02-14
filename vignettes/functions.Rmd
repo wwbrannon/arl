@@ -232,8 +232,9 @@ local recursive or mutually-recursive functions:
     (list (even? 10) (odd? 7))))
 ```
 
-Because `letrec` expands into `set!`, self-recursive `letrec` lambdas
-are automatically tail-call optimized.
+Because `letrec` expands into `set!`, self-recursive `letrec` lambdas are
+[automatically tail-call optimized](tail-call-optimization.html). (Note that
+mutually recursive functions are not!)
 
 ## Higher-Order Functions
 
@@ -281,7 +282,9 @@ compiler automatically rewrites it as a loop — no stack overflow:
       acc
       (factorial (- n 1) (* acc n)))))
 
-(factorial 100000 1)  ; no stack overflow
+;; No stack overflow (but 100000! is too large
+;; to be representable and overflows to Inf)
+(factorial 100000 1)
 ```
 
 ```{arl, include=FALSE}
@@ -294,8 +297,6 @@ For explicit looping or patterns where self-TCO does not apply, use
 `loop`/`recur`:
 
 ```{arl}
-(import looping)
-
 (loop ((i 5) (acc 1))
   (if (< i 2)
     acc
@@ -314,13 +315,14 @@ what counts as tail position and how the optimization works.
 
 Macros use the same parameter syntax (required, optional, rest,
 destructuring) but operate on **unevaluated syntax** at compile time
-rather than on runtime values. Use `defmacro` instead of `lambda`:
+rather than on runtime values. To define a macro, use `defmacro` instead of
+`define` and `lambda`:
 
 ```{arl, eval=FALSE}
-;; Function — receives evaluated arguments
+;; Function: runs at eval time, receives evaluated args, returns new value
 (define double (lambda (x) (* x 2)))
 
-;; Macro — receives unevaluated syntax, returns new syntax
+;; Macro: runs at compile time, receives unevaluated syntax, returns new syntax
 (defmacro when (test . body)
   `(if ,test (begin ,@body) #nil))
 ```

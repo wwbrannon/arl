@@ -38,9 +38,10 @@ Source text -> Tokenizer -> Parser -> Macro Expander -> Compiler -> R eval()
    and `unquote-splicing` forms during parsing.
 
 3. **Macro Expander** (`R/macro.R`) -- Walks the parsed AST and expands
-   `defmacro`-defined macros. Supports `macroexpand` (recursive) and
-   `macroexpand-1` (single level). Quasiquote templates are processed by
-   a shared walker (`R/quasiquote.R`).
+   `defmacro`-defined macros. Supports macro expansion up to an arbitrary fixed
+   depth (e.g., the single-level `macroexpand-1`, or 2-level, 3-level, etc), or
+   full recursive expansion until no macros remain. Quasiquote templates are
+   processed by a shared walker (`R/quasiquote.R`).
 
 4. **Compiler** (`R/compiler.R`) -- Translates the macro-expanded Arl AST
    into R language objects. Handles all special forms, applies
@@ -73,7 +74,9 @@ assign("x", 1 + 2, envir = .__env)
 
 The result is a single R expression that can be passed to `eval()`. This
 approach piggybacks on R's own evaluation machinery, giving Arl access to
-R's scoping, garbage collection, and entire function library for free.
+R's scoping, garbage collection, and entire function library for free. (Note
+that in practice, constant folding would precompute `3` rather than leaving an
+unevaluated `1 + 2` in the generated R code.)
 
 ## Inspecting the compilation pipeline
 
@@ -103,13 +106,15 @@ function call.
 A few implementation notes on how individual special forms are compiled:
 
 - `if` -- wraps the condition in a truthiness check (`.__true_p()`)
-- `define` / `set!` -- detect `(define name (lambda ...))` patterns and
-  enable self-TCO when applicable
+- `define` / `set!` -- detect `(define name (lambda ...))` or `(set! name
+  (lambda ...))` patterns and enable self-TCO when applicable
 - `lambda` -- compiles closure creation with parameter patterns and optional
   TCO rewriting
 - `begin` -- compiled to R `{ }` blocks
 - `defmacro` -- registers the macro with the macro expander at compile time
-- `while`, `and`, `or` -- compiled to their R equivalents
+- `while` -- compiled to its R equivalent
+- `and`, `or` -- multi-argument wrappers around R's `&&` and `||`, which can
+  only take two arguments
 - `quasiquote` -- expands templates with unquote/splicing
 
 ## Self-tail-call optimization
@@ -119,7 +124,7 @@ When the compiler sees `(define name (lambda ...))` or
 position, it rewrites the entire function as a `while(TRUE)` loop. Tail calls
 become parameter reassignments followed by `next`, eliminating stack growth.
 The `set!` support means `letrec`-bound lambdas are automatically optimized,
-since `letrec` expands into `set!`.
+since the `letrec` macro expands into `set!`.
 
 The key methods:
 
@@ -173,8 +178,7 @@ appear in stack traces -- only the outermost call is visible.
 
 The compiler evaluates pure function calls on compile-time literals at
 compile time. This is controlled by `try_constant_fold`, which maintains
-a whitelist of safe functions (arithmetic, comparisons, math, string
-operations).
+a list of safe functions (arithmetic, comparisons, math, string operations).
 
 When an `if` test is a compile-time constant, the compiler eliminates the
 dead branch entirely (`eval_constant_test` in `compile_if`). For example:
@@ -187,7 +191,8 @@ dead branch entirely (`eval_constant_test` in `compile_if`). For example:
 (assert-equal "yes" (if #t "yes" "no"))
 ```
 
-compiles to just `"yes"`.
+compiles to just `"yes"`. Note that compile-time constant tests are not as
+trivial as they sound and can often result from macro expansion.
 
 Constant folding is automatically disabled when coverage tracking is
 active, because folding would bypass the instrumented function bodies

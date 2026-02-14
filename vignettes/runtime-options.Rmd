@@ -103,8 +103,9 @@ Install the CLI to a custom directory:
 
 ```r
 options(arl.bin_dir = "~/my-bin")
-arl::install_cli()
 # or: Sys.setenv(ARL_BIN_DIR = "~/my-bin")
+
+arl::install_cli()
 ```
 
 ## Internal settings

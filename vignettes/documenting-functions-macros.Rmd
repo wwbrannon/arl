@@ -79,8 +79,7 @@ Multi-line content is written with continuation `;;'` lines:
 
 The compiler reads `;;'` blocks at compile time and bakes the resulting
 documentation into the definition, so no runtime overhead is incurred.
-This is the recommended way to document stdlib functions, macros, and
-module exports.
+This is the recommended way to document functions, macros, and module exports.
 
 ## Runtime documentation with `doc!`
 
@@ -91,7 +90,7 @@ definitions, or adding fields incrementally:
 ```{arl}
 (define double (lambda (x) (* x 2)))
 
-; Set just the description (backward-compatible form)
+; Set just the description
 (doc! double "Double the input value.")
 
 ; Set specific fields with keyword arguments

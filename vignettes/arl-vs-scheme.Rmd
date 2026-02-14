@@ -135,14 +135,16 @@ Scheme mandates full tail-call optimization (proper tail calls). Arl implements
 **self-TCO**: the compiler detects `(define name (lambda ...))` or
 `(set! name (lambda ...))` where the lambda body has self-calls in tail
 position and rewrites them as `while` loops. This covers tail calls through
-`if`, `begin`, `cond`, `let`, `let*`, and `letrec`. Because `letrec` expands
-into `set!`, `letrec`-bound self-recursive lambdas are optimized automatically.
+the `if` and `begin` special forms, as well as through macros in terms of them
+like  `cond`, `let`, `let*`, `letrec`, etc. Because `letrec` expands into
+`set!`, `letrec`-bound self-recursive lambdas are optimized automatically.
 
 What is **not** covered:
 
 - **Mutual recursion** (`f` calls `g` in tail position, `g` calls `f`).
 - **`apply`-based tail calls** or indirect calls through higher-order functions.
-- **Anonymous lambdas** (no name for the compiler to detect self-calls against).
+- **Anonymous lambdas** which tail-recurse by use of a fixed-point combinator
+  (no name for the compiler to detect self-calls against).
 
 Like Scheme's proper tail calls, self-TCO elides recursive stack frames: on
 error inside an optimized function, only the outermost call appears in the
@@ -190,7 +192,8 @@ normal function application.
 
 Many familiar special forms exist (`quote`, `if`, `define`, `lambda`, `begin`),
 but there are Arl-specific forms (`~`, `::`, `:::` for R formula definition and
-package access) and macro helpers tuned for R interop.
+package access) and macro helpers tuned for R interop. See the [language
+reference](lang-reference.html) for more details.
 
 ## When to think "Scheme" vs "R"
 
