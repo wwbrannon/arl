@@ -1,0 +1,78 @@
+---
+title: "{{ title }}"
+output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
+vignette: >
+  %\VignetteIndexEntry{{ "{" }}{{ title }}{{ "}" }}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
+<!-- Regenerate with: make lang-docs -->
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
+```
+{% if preamble %}
+
+{{ preamble }}
+{% endif %}
+
+{% for entry in entries %}
+{% if entry.section_header %}
+## {{ entry.section_name }} {{ "{#" }}{{ entry.section_slug }}{{ "}" }}
+{% if entry.section_prose %}
+
+{{ entry.section_prose }}
+{% endif %}
+
+{% endif %}
+### {{ entry.name }} {{ "{#" }}{{ entry.slug }}{{ "}" }}
+{% if entry.description %}
+
+{{ entry.description }}
+{% endif %}
+{% if entry.signature %}
+
+**Signature:** `{{ entry.signature }}`
+{% endif %}
+{% if entry.has_examples %}
+
+**Examples:**
+{% if entry.noeval %}
+```{arl, eval=FALSE}
+{% else %}
+```{arl}
+{% endif %}
+{{ entry.examples }}
+```
+{% endif %}
+{% if entry.has_assert %}
+
+```{arl, include=FALSE}
+{{ entry.assert }}
+```
+{% endif %}
+{% if entry.note %}
+
+**Note:** {{ entry.note }}
+{% endif %}
+{% if entry.seealso %}
+
+**See also:** {{ entry.seealso }}
+{% endif %}
+
+---
+
+{% endfor %}
+{% for sec in standalone_sections %}
+## {{ sec.name }} {{ "{#" }}{{ sec.slug }}{{ "}" }}
+{% if sec.prose %}
+
+{{ sec.prose }}
+{% endif %}
+
+{% endfor %}

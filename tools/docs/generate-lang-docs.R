@@ -21,15 +21,6 @@ if (requireNamespace("arl", quietly = TRUE)) {
 }
 
 # ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-AUTOGEN_HEADER <- paste0(
-  "<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->\n",
-  "<!-- Regenerate with: make lang-docs -->\n"
-)
-
-# ---------------------------------------------------------------------------
 # Cross-referencing helpers
 # ---------------------------------------------------------------------------
 
@@ -133,47 +124,24 @@ group_builtins_by_vignette <- function(builtins) {
 }
 
 # ---------------------------------------------------------------------------
-# Rmd generator
+# Topic vignette generator (jinjar-based)
 # ---------------------------------------------------------------------------
 
-#' Generate a single vignette Rmd from parsed annotation data.
+#' Build template context for a single topic vignette.
 #'
 #' @param vignette_name Basename of the vignette (e.g., "lang-math")
 #' @param config Config entry with title, modules, preamble
 #' @param all_parsed List of parse results from parse_arl_annotations(), keyed by module name
-#' @return Character string with the full Rmd content
-generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
-                         builtin_funcs = NULL) {
+#' @param func_index Global function index for cross-linking
+#' @param builtin_funcs R-defined builtin entries for this vignette
+#' @return Named list suitable for passing to jinjar::render()
+build_topic_context <- function(vignette_name, config, all_parsed,
+                                func_index = list(), builtin_funcs = NULL) {
   title <- config$title
   preamble <- config$preamble
   if (is.null(preamble)) preamble <- ""
   preamble <- trimws(preamble)
-
-  out <- character()
-
-  # YAML frontmatter (--- must be on line 1 for Rmd title rendering)
-  out <- c(out, "---")
-  out <- c(out, paste0('title: "', title, '"'))
-  out <- c(out, "output: arl::arl_html_vignette")
-  out <- c(out, "pkgdown:")
-  out <- c(out, "  as_is: true")
-  out <- c(out, "vignette: >")
-  out <- c(out, paste0("  %\\VignetteIndexEntry{", title, "}"))
-  out <- c(out, "  %\\VignetteEngine{knitr::rmarkdown}")
-  out <- c(out, "  %\\VignetteEncoding{UTF-8}")
-  out <- c(out, "---")
-  out <- c(out, "")
-  out <- c(out, AUTOGEN_HEADER)
-  out <- c(out, "```{r setup, include = FALSE}")
-  out <- c(out, 'knitr::opts_chunk$set(collapse = TRUE, comment = "#>")')
-  out <- c(out, "arl::register_knitr_engine()")
-  out <- c(out, "```")
-  out <- c(out, "")
-
-  if (nchar(preamble) > 0) {
-    out <- c(out, preamble)
-    out <- c(out, "")
-  }
+  if (!nzchar(preamble)) preamble <- FALSE
 
   # Collect all functions across modules, preserving order
   all_funcs <- list()
@@ -195,14 +163,12 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
 
   # Merge R-defined builtin entries into the appropriate sections
   if (!is.null(builtin_funcs) && length(builtin_funcs$functions) > 0) {
-    # Add new sections that don't already exist
     existing_sec_names <- vapply(all_sections, function(s) s$name, character(1))
     for (bsec in builtin_funcs$sections) {
       if (!bsec$name %in% existing_sec_names) {
         all_sections[[length(all_sections) + 1L]] <- bsec
       }
     }
-    # Insert each builtin after the last function in its section (or at end)
     for (bfn in builtin_funcs$functions) {
       insert_pos <- length(all_funcs) + 1L
       for (idx in rev(seq_along(all_funcs))) {
@@ -219,13 +185,16 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
     }
   }
 
-  # Group functions by section and emit
+  # Build entries list with section tracking
+  entries <- list()
   current_section <- NULL
   emitted_slugs <- character(0)
+
   for (idx in seq_along(all_funcs)) {
     fn <- all_funcs[[idx]]
+    entry <- list()
 
-    # Emit section header if changed
+    # Section header info
     if (!identical(fn$section, current_section)) {
       current_section <- fn$section
       if (!is.null(current_section)) {
@@ -237,69 +206,58 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
           section_slug <- paste0(section_slug, "-", n_dup + 1L)
         }
         emitted_slugs <- c(emitted_slugs, section_slug)
-        out <- c(out, paste0("## ", current_section, " {#", section_slug, "}"))
-        out <- c(out, "")
+
+        entry$section_header <- TRUE
+        entry$section_name <- current_section
+        entry$section_slug <- section_slug
+
         # Find section prose
+        section_prose <- FALSE
         for (sec in all_sections) {
-          if (sec$name == current_section && !is.null(sec$prose) && nchar(trimws(sec$prose)) > 0) {
-            out <- c(out, trimws(sec$prose))
-            out <- c(out, "")
+          if (sec$name == current_section && !is.null(sec$prose) &&
+              nchar(trimws(sec$prose)) > 0) {
+            section_prose <- trimws(sec$prose)
             break
           }
         }
-      }
-    }
-
-    # Emit function entry with explicit anchor
-    slug <- .doc_parser$slugify(fn$name)
-    out <- c(out, paste0("### ", fn$name, " {#", slug, "}"))
-    out <- c(out, "")
-
-    if (nchar(fn$description) > 0) {
-      out <- c(out, fn$description)
-      out <- c(out, "")
-    }
-
-    if (nchar(fn$signature) > 0) {
-      out <- c(out, paste0("**Signature:** `", fn$signature, "`"))
-      out <- c(out, "")
-    }
-
-    if (!is.null(fn$examples) && nchar(fn$examples) > 0) {
-      out <- c(out, "**Examples:**")
-      if (isTRUE(fn$noeval)) {
-        out <- c(out, "```{arl, eval=FALSE}")
+        entry$section_prose <- section_prose
       } else {
-        out <- c(out, "```{arl}")
+        entry$section_header <- FALSE
       }
-      out <- c(out, fn$examples)
-      out <- c(out, "```")
-      out <- c(out, "")
+    } else {
+      entry$section_header <- FALSE
     }
 
-    if (!is.null(fn$assert) && nchar(fn$assert) > 0) {
-      out <- c(out, "```{arl, include=FALSE}")
-      out <- c(out, fn$assert)
-      out <- c(out, "```")
-      out <- c(out, "")
-    }
+    # Function details
+    entry$name <- fn$name
+    entry$slug <- .doc_parser$slugify(fn$name)
+    entry$description <- if (nchar(fn$description) > 0) fn$description else FALSE
+    entry$signature <- if (nchar(fn$signature) > 0) fn$signature else FALSE
 
-    if (!is.null(fn$note) && nchar(fn$note) > 0) {
-      out <- c(out, paste0("**Note:** ", fn$note))
-      out <- c(out, "")
-    }
+    # Examples
+    entry$has_examples <- !is.null(fn$examples) && nchar(fn$examples) > 0
+    entry$examples <- if (entry$has_examples) fn$examples else ""
+    entry$noeval <- isTRUE(fn$noeval)
 
+    # Assert
+    entry$has_assert <- !is.null(fn$assert) && nchar(fn$assert) > 0
+    entry$assert <- if (entry$has_assert) fn$assert else ""
+
+    # Note
+    entry$note <- if (!is.null(fn$note) && nchar(fn$note) > 0) fn$note else FALSE
+
+    # See also (pre-linkified)
     if (!is.null(fn$seealso) && nchar(fn$seealso) > 0) {
-      linked_seealso <- linkify_seealso(fn$seealso, func_index, vignette_name)
-      out <- c(out, paste0("**See also:** ", linked_seealso))
-      out <- c(out, "")
+      entry$seealso <- linkify_seealso(fn$seealso, func_index, vignette_name)
+    } else {
+      entry$seealso <- FALSE
     }
 
-    out <- c(out, "---")
-    out <- c(out, "")
+    entries[[length(entries) + 1L]] <- entry
   }
 
-  # Emit any standalone sections that had no associated functions
+  # Standalone sections (sections with no associated functions)
+  standalone <- list()
   emitted_sections <- unique(vapply(all_funcs, function(fn) {
     if (is.null(fn$section)) "" else fn$section
   }, character(1)))
@@ -308,16 +266,36 @@ generate_rmd <- function(vignette_name, config, all_parsed, func_index = list(),
       sec_slug <- paste0("section-", gsub("[^a-z0-9]+", "-", tolower(sec$name)))
       sec_slug <- gsub("-+", "-", sec_slug)
       sec_slug <- gsub("^-|-$", "", sec_slug)
-      out <- c(out, paste0("## ", sec$name, " {#", sec_slug, "}"))
-      out <- c(out, "")
-      if (!is.null(sec$prose) && nchar(trimws(sec$prose)) > 0) {
-        out <- c(out, trimws(sec$prose))
-        out <- c(out, "")
+      prose <- if (!is.null(sec$prose) && nchar(trimws(sec$prose)) > 0) {
+        trimws(sec$prose)
+      } else {
+        FALSE
       }
+      standalone[[length(standalone) + 1L]] <- list(
+        name = sec$name, slug = sec_slug, prose = prose
+      )
     }
   }
 
-  paste(out, collapse = "\n")
+  list(
+    title = title,
+    preamble = preamble,
+    entries = entries,
+    standalone_sections = standalone
+  )
+}
+
+#' Render a topic vignette from a context list using the jinjar template.
+#'
+#' @param context Named list from build_topic_context()
+#' @return Character string with the full Rmd content
+render_topic_rmd <- function(context) {
+  template_path <- file.path("tools", "docs", "templates", "topic.Rmd.jinja")
+  template_text <- paste(readLines(template_path, warn = FALSE), collapse = "\n")
+  config <- jinjar::jinjar_config(trim_blocks = TRUE, lstrip_blocks = TRUE)
+  rendered <- do.call(jinjar::render, c(list(template_text, .config = config), context))
+  # Strip one trailing newline to match the format expected by writeLines()
+  sub("\n$", "", rendered)
 }
 
 # ---------------------------------------------------------------------------
@@ -400,136 +378,35 @@ format_func_list <- function(func_names, func_index = list()) {
   paste(lines, collapse = "\n")
 }
 
-#' Generate the lang-reference.Rmd overview page.
-generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
-                                   func_index = list()) {
-  out <- character()
+#' Turn a vector of function names into linked backtick items.
+link_builtins <- function(fns, func_index) {
+  items <- vapply(fns, function(fn) {
+    entry <- func_index[[fn]]
+    if (!is.null(entry)) {
+      paste0("[`", fn, "`](", entry$vignette, ".html#", entry$slug, ")")
+    } else {
+      paste0("`", fn, "`")
+    }
+  }, character(1), USE.NAMES = FALSE)
+  paste(items, collapse = ", ")
+}
 
-  # YAML frontmatter
-  out <- c(out, "---")
-  out <- c(out, 'title: "Language Reference"')
-  out <- c(out, "output: arl::arl_html_vignette")
-  out <- c(out, "pkgdown:")
-  out <- c(out, "  as_is: true")
-  out <- c(out, "vignette: >")
-  out <- c(out, "  %\\VignetteIndexEntry{Language Reference}")
-  out <- c(out, "  %\\VignetteEngine{knitr::rmarkdown}")
-  out <- c(out, "  %\\VignetteEncoding{UTF-8}")
-  out <- c(out, "---")
-  out <- c(out, "")
-  out <- c(out, AUTOGEN_HEADER)
-  out <- c(out, "```{r setup, include = FALSE}")
-  out <- c(out, 'knitr::opts_chunk$set(collapse = TRUE, comment = "#>")')
-  out <- c(out, "arl::register_knitr_engine()")
-  out <- c(out, "```")
-  out <- c(out, "")
+#' Build template context for the lang-reference.Rmd overview page.
+#'
+#' @param vignettes Named list of vignette configs
+#' @param arl_dir Path to inst/arl/ directory
+#' @param builtins_by_vignette Builtins grouped by vignette name
+#' @param func_index Global function index for cross-linking
+#' @return Named list suitable for passing to jinjar::render()
+build_reference_context <- function(vignettes, arl_dir, builtins_by_vignette,
+                                    func_index = list()) {
+  # Vignette links
+  vignette_links <- lapply(names(vignettes), function(vname) {
+    list(title = vignettes[[vname]]$title, name = vname)
+  })
 
-  # Special forms section
-  out <- c(out, "## Special forms")
-  out <- c(out, "")
-  out <- c(out, "Special forms are expressions with evaluation rules that differ from normal")
-  out <- c(out, "function calls -- for example, `if` does not evaluate all its arguments, and")
-  out <- c(out, "`define` binds a name rather than passing it as a value. They are handled")
-  out <- c(out, "directly by the compiler and cannot be redefined or passed as values.")
-  out <- c(out, "")
-  out <- c(out, "- `quote` / `'` -- return unevaluated expression")
-  out <- c(out, "- `if` -- conditional evaluation")
-  out <- c(out, "- `define` -- variable/function definition")
-  out <- c(out, "- `set!` -- mutation of existing bindings")
-  out <- c(out, "- `lambda` -- anonymous functions")
-  out <- c(out, "- `begin` -- sequence of expressions")
-  out <- c(out, "- `defmacro` -- define macros")
-  out <- c(out, "- `quasiquote` / `` ` `` -- template with selective evaluation")
-  out <- c(out, "- `and`, `or` -- short-circuit boolean operators")
-  out <- c(out, "- `while` -- loop with condition")
-  out <- c(out, "- `delay` -- lazy promise creation")
-  out <- c(out, "- `load` -- load and evaluate a file")
-  out <- c(out, "- `run` -- run a file in an isolated environment")
-  out <- c(out, "- `import` -- import a module's exports")
-  out <- c(out, "- `module` -- define a module with exports")
-  out <- c(out, "- `~` -- formula (for R modeling)")
-  out <- c(out, "- `::`, `:::` -- R package namespace access")
-  out <- c(out, "- `help` -- look up documentation")
-  out <- c(out, "")
-  out <- c(out, "Anything not in this list is either a built-in function or a lang-provided")
-  out <- c(out, "function or macro. Unlike special forms, those are ordinary values and can be")
-  out <- c(out, "passed around, stored in variables, and so on.")
-  out <- c(out, "")
-
-  # Intro paragraph
-  out <- c(out, "## Standard library")
-  out <- c(out, "")
-  out <- c(out, "Arl's standard library has two layers:")
-  out <- c(out, "")
-  out <- c(out, "1. **Built-in functions** defined in R (`R/engine.R`). These are low-level")
-  out <- c(out, "   primitives that need direct access to engine internals — cons-cell")
-  out <- c(out, "   operations, the macro expander, the evaluator, promise handling, and")
-  out <- c(out, "   documentation helpers. They are always available, even when the stdlib")
-  out <- c(out, "   modules are not loaded (`Engine$new(load_stdlib = FALSE)`).")
-  out <- c(out, "2. **Stdlib modules** written in Arl (`inst/arl/*.arl`). These provide the")
-  out <- c(out, "   bulk of the standard library: list operations, math, strings, control flow,")
-  out <- c(out, "   and everything else. Modules are loaded in dependency order (each module")
-  out <- c(out, "   declares its dependencies with `(import ...)` and is loaded after the")
-  out <- c(out, "   modules it imports).")
-  out <- c(out, "")
-
-  # Links to detailed pages
-  out <- c(out, "For the full, per-function reference, see the individual stdlib reference pages:")
-  out <- c(out, "")
-  for (vname in names(vignettes)) {
-    vconfig <- vignettes[[vname]]
-    out <- c(out, paste0("- [", vconfig$title, "](", vname, ".html)"))
-  }
-  out <- c(out, "")
-
-  # Importing modules section
-  out <- c(out, "## Importing modules")
-  out <- c(out, "")
-  out <- c(out, "All stdlib modules are loaded automatically by `Engine$new()`. The `import`")
-  out <- c(out, "form is useful inside your own modules (where you start with an empty scope)")
-  out <- c(out, "and when working with a bare engine (`Engine$new(load_stdlib = FALSE)`):")
-  out <- c(out, "")
-  out <- c(out, "```{arl, eval=FALSE}")
-  out <- c(out, "; Import focused modules")
-  out <- c(out, "(import control)   ; when/unless/cond/case/try*")
-  out <- c(out, "(import binding)   ; let/let*/letrec")
-  out <- c(out, "(import looping)   ; for/loop/recur/until")
-  out <- c(out, "(import threading) ; -> and ->>")
-  out <- c(out, "(import error)     ; try/catch/finally")
-  out <- c(out, "```")
-  out <- c(out, "")
-  out <- c(out, "From R, you can create an engine with the stdlib already loaded:")
-  out <- c(out, "")
-  out <- c(out, "```r")
-  out <- c(out, "engine <- Engine$new()                   # all stdlib loaded")
-  out <- c(out, "bare <- Engine$new(load_stdlib=FALSE)    # builtins only")
-  out <- c(out, "```")
-  out <- c(out, "")
-
-  # Built-in functions section
-  out <- c(out, "## Built-in functions")
-  out <- c(out, "")
-  out <- c(out, "The following functions are implemented in R")
-  out <- c(out, paste0(
-    "([`R/engine.R`](", GITHUB_BASE, "/R/engine.R)) rather than in Arl source"
-  ))
-  out <- c(out, "modules. They are available even on a bare engine")
-  out <- c(out, "(`Engine$new(load_stdlib = FALSE)`).")
-  out <- c(out, "")
-  # Helper to turn a vector of function names into linked backtick items
-  link_builtins <- function(fns) {
-    items <- vapply(fns, function(fn) {
-      entry <- func_index[[fn]]
-      if (!is.null(entry)) {
-        paste0("[`", fn, "`](", entry$vignette, ".html#", entry$slug, ")")
-      } else {
-        paste0("`", fn, "`")
-      }
-    }, character(1), USE.NAMES = FALSE)
-    paste(items, collapse = ", ")
-  }
-
-  builtin_categories <- list(
+  # Builtin categories with linked function names
+  builtin_categories_raw <- list(
     list(cat = "Cons cells",     fns = c("pair?")),
     list(cat = "Macros",         fns = c("gensym", "capture", "macro?", "macroexpand")),
     list(cat = "Evaluation",     fns = c("eval", "read", "write", "r/eval")),
@@ -538,35 +415,20 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
     list(cat = "Documentation",  fns = c("doc!", "doc"))
   )
 
-  out <- c(out, "| Category | Functions |")
-  out <- c(out, "|----------|-----------|")
-  for (bc in builtin_categories) {
-    out <- c(out, paste0("| ", bc$cat, " | ", link_builtins(bc$fns), " |"))
-  }
-  out <- c(out, "")
-  out <- c(out, "These builtins are documented alongside the stdlib functions they relate to")
-  out <- c(out, "in the individual reference pages above.")
-  out <- c(out, "")
+  builtin_categories <- lapply(builtin_categories_raw, function(bc) {
+    list(cat = bc$cat, functions = link_builtins(bc$fns, func_index))
+  })
 
-  # Per-vignette sections with auto-generated function lists
-  for (vname in names(vignettes)) {
+  # Per-vignette sections
+  vignette_sections <- lapply(names(vignettes), function(vname) {
     vconfig <- vignettes[[vname]]
-    # Strip "Standard Library: " prefix for section heading
     heading <- sub("^Standard Library:\\s*", "", vconfig$title)
-    out <- c(out, paste0("## [", heading, "](", vname, ".html)"))
-    out <- c(out, "")
-    if (nchar(vconfig$summary) > 0) {
-      out <- c(out, vconfig$summary)
-      out <- c(out, "")
-    }
     exports <- collect_vignette_exports(
       vconfig, arl_dir, builtins_by_vignette[[vname]]
     )
-    if (length(exports) > 0) {
-      out <- c(out, format_func_list(exports, func_index))
-      out <- c(out, "")
-    }
-    # List source modules with GitHub links
+    func_list <- if (length(exports) > 0) format_func_list(exports, func_index) else FALSE
+
+    # Module links
     mod_links <- vapply(vconfig$modules, function(mod) {
       fname <- paste0(mod, ".arl")
       paste0("[`", fname, "`](", GITHUB_BASE, "/inst/arl/", fname, ")")
@@ -574,37 +436,47 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
     has_builtins <- !is.null(builtins_by_vignette[[vname]]) &&
       length(builtins_by_vignette[[vname]]$functions) > 0
     if (has_builtins) mod_links <- c(mod_links, "and builtins")
-    out <- c(out, paste0("Modules: ", paste(mod_links, collapse = ", ")))
-    out <- c(out, "")
-  }
+    modules_line <- paste(mod_links, collapse = ", ")
 
-  # Source files section
-  out <- c(out, "## Source files")
-  out <- c(out, "")
-  out <- c(out, "Built-in functions are defined in")
-  out <- c(out, paste0(
-    "[`R/engine.R`](", GITHUB_BASE, "/R/engine.R). The"
-  ))
-  out <- c(out, "Arl stdlib modules are organized by topic in")
-  out <- c(out, paste0(
-    "[`inst/arl/`](", gsub("/blob/", "/tree/", GITHUB_BASE), "/inst/arl) (each file"
-  ))
-  out <- c(out, "defines a module). The engine loads these modules in dependency order when")
-  out <- c(out, "initializing.")
-  out <- c(out, "")
-  for (entry in MODULE_SOURCE_FILES) {
+    list(
+      heading = heading,
+      name = vname,
+      summary = if (nchar(vconfig$summary) > 0) vconfig$summary else FALSE,
+      func_list = func_list,
+      modules_line = modules_line
+    )
+  })
+
+  # Source files (pre-formatted strings)
+  source_files <- vapply(MODULE_SOURCE_FILES, function(entry) {
     link <- paste0("[`", entry$file, "`](", GITHUB_BASE, "/inst/arl/", entry$file, ")")
     if (!is.null(entry$desc)) {
-      out <- c(out, paste0("- ", link, " (", entry$desc, ")"))
+      paste0("- ", link, " (", entry$desc, ")")
     } else {
-      out <- c(out, paste0("- ", link))
+      paste0("- ", link)
     }
-  }
-  out <- c(out, "")
-  out <- c(out, "If you're looking for implementation details, these files are the source of")
-  out <- c(out, "truth for the stdlib definitions.")
+  }, character(1))
 
-  paste(out, collapse = "\n")
+  list(
+    github_base = GITHUB_BASE,
+    github_tree = gsub("/blob/", "/tree/", GITHUB_BASE),
+    vignette_links = vignette_links,
+    builtin_categories = builtin_categories,
+    vignette_sections = vignette_sections,
+    source_files = source_files
+  )
+}
+
+#' Render the lang-reference.Rmd overview page from a context list.
+#'
+#' @param context Named list from build_reference_context()
+#' @return Character string with the full Rmd content
+render_reference_rmd <- function(context) {
+  template_path <- file.path("tools", "docs", "templates", "reference.Rmd.jinja")
+  template_text <- paste(readLines(template_path, warn = FALSE), collapse = "\n")
+  config <- jinjar::jinjar_config(trim_blocks = TRUE, lstrip_blocks = TRUE)
+  rendered <- do.call(jinjar::render, c(list(template_text, .config = config), context))
+  sub("\n$", "", rendered)
 }
 
 # ---------------------------------------------------------------------------
@@ -621,6 +493,11 @@ generate_all <- function(
   arl_dir = "inst/arl",
   output_dir = "vignettes"
 ) {
+  if (!requireNamespace("jinjar", quietly = TRUE)) {
+    stop("Package 'jinjar' is required for doc generation. ",
+         "Install it with: install.packages('jinjar')")
+  }
+
   if (!file.exists(config_path)) {
     stop("Config file not found: ", config_path)
   }
@@ -694,8 +571,9 @@ generate_all <- function(
   for (vname in names(vignettes)) {
     vconfig <- vignettes[[vname]]
     message("Generating: ", vname, ".Rmd")
-    rmd <- generate_rmd(vname, vconfig, all_parsed, func_index,
-                        builtin_funcs = builtins_by_vignette[[vname]])
+    ctx <- build_topic_context(vname, vconfig, all_parsed, func_index,
+                               builtin_funcs = builtins_by_vignette[[vname]])
+    rmd <- render_topic_rmd(ctx)
     output_file <- file.path(output_dir, paste0(vname, ".Rmd"))
     writeLines(rmd, output_file, useBytes = TRUE)
     message("  Wrote: ", output_file)
@@ -703,8 +581,9 @@ generate_all <- function(
 
   # Generate the overview page (lang-reference.Rmd)
   message("Generating: lang-reference.Rmd")
-  ref_rmd <- generate_reference_rmd(vignettes, arl_dir, builtins_by_vignette,
-                                    func_index = func_index)
+  ctx <- build_reference_context(vignettes, arl_dir, builtins_by_vignette,
+                                 func_index = func_index)
+  ref_rmd <- render_reference_rmd(ctx)
   ref_file <- file.path(output_dir, "lang-reference.Rmd")
   writeLines(ref_rmd, ref_file, useBytes = TRUE)
   message("  Wrote: ", ref_file)

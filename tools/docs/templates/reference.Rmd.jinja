@@ -1,0 +1,137 @@
+---
+title: "Language Reference"
+output: arl::arl_html_vignette
+pkgdown:
+  as_is: true
+vignette: >
+  %\VignetteIndexEntry{{ "{" }}Language Reference{{ "}" }}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<!-- AUTO-GENERATED from inst/arl/ source files. Do not edit manually. -->
+<!-- Regenerate with: make lang-docs -->
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+arl::register_knitr_engine()
+```
+
+## Special forms
+
+Special forms are expressions with evaluation rules that differ from normal
+function calls -- for example, `if` does not evaluate all its arguments, and
+`define` binds a name rather than passing it as a value. They are handled
+directly by the compiler and cannot be redefined or passed as values.
+
+- `quote` / `'` -- return unevaluated expression
+- `if` -- conditional evaluation
+- `define` -- variable/function definition
+- `set!` -- mutation of existing bindings
+- `lambda` -- anonymous functions
+- `begin` -- sequence of expressions
+- `defmacro` -- define macros
+- `quasiquote` / `` ` `` -- template with selective evaluation
+- `and`, `or` -- short-circuit boolean operators
+- `while` -- loop with condition
+- `delay` -- lazy promise creation
+- `load` -- load and evaluate a file
+- `run` -- run a file in an isolated environment
+- `import` -- import a module's exports
+- `module` -- define a module with exports
+- `~` -- formula (for R modeling)
+- `::`, `:::` -- R package namespace access
+- `help` -- look up documentation
+
+Anything not in this list is either a built-in function or a lang-provided
+function or macro. Unlike special forms, those are ordinary values and can be
+passed around, stored in variables, and so on.
+
+## Standard library
+
+Arl's standard library has two layers:
+
+1. **Built-in functions** defined in R (`R/engine.R`). These are low-level
+   primitives that need direct access to engine internals — cons-cell
+   operations, the macro expander, the evaluator, promise handling, and
+   documentation helpers. They are always available, even when the stdlib
+   modules are not loaded (`Engine$new(load_stdlib = FALSE)`).
+2. **Stdlib modules** written in Arl (`inst/arl/*.arl`). These provide the
+   bulk of the standard library: list operations, math, strings, control flow,
+   and everything else. Modules are loaded in dependency order (each module
+   declares its dependencies with `(import ...)` and is loaded after the
+   modules it imports).
+
+For the full, per-function reference, see the individual stdlib reference pages:
+
+{% for v in vignette_links %}
+- [{{ v.title }}]({{ v.name }}.html)
+{% endfor %}
+
+## Importing modules
+
+All stdlib modules are loaded automatically by `Engine$new()`. The `import`
+form is useful inside your own modules (where you start with an empty scope)
+and when working with a bare engine (`Engine$new(load_stdlib = FALSE)`):
+
+```{arl, eval=FALSE}
+; Import focused modules
+(import control)   ; when/unless/cond/case/try*
+(import binding)   ; let/let*/letrec
+(import looping)   ; for/loop/recur/until
+(import threading) ; -> and ->>
+(import error)     ; try/catch/finally
+```
+
+From R, you can create an engine with the stdlib already loaded:
+
+```r
+engine <- Engine$new()                   # all stdlib loaded
+bare <- Engine$new(load_stdlib=FALSE)    # builtins only
+```
+
+## Built-in functions
+
+The following functions are implemented in R
+([`R/engine.R`]({{ github_base }}/R/engine.R)) rather than in Arl source
+modules. They are available even on a bare engine
+(`Engine$new(load_stdlib = FALSE)`).
+
+| Category | Functions |
+|----------|-----------|
+{% for bc in builtin_categories %}
+| {{ bc.cat }} | {{ bc.functions }} |
+{% endfor %}
+
+These builtins are documented alongside the stdlib functions they relate to
+in the individual reference pages above.
+{% for vs in vignette_sections %}
+
+## [{{ vs.heading }}]({{ vs.name }}.html)
+{% if vs.summary %}
+
+{{ vs.summary }}
+{% endif %}
+{% if vs.func_list %}
+
+{{ vs.func_list }}
+{% endif %}
+
+Modules: {{ vs.modules_line }}
+{% endfor %}
+
+## Source files
+
+Built-in functions are defined in
+[`R/engine.R`]({{ github_base }}/R/engine.R). The
+Arl stdlib modules are organized by topic in
+[`inst/arl/`]({{ github_tree }}/inst/arl) (each file
+defines a module). The engine loads these modules in dependency order when
+initializing.
+
+{% for sf in source_files %}
+{{ sf }}
+{% endfor %}
+
+If you're looking for implementation details, these files are the source of
+truth for the stdlib definitions.
