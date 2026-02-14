@@ -253,6 +253,28 @@ test_that("gensym generates unique symbols", {
   expect_true(grepl("^foo", as.character(sym_custom)))
 })
 
+test_that("gensym avoids shadowing existing bindings", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Generate a symbol and note its counter value
+  sym1 <- env$gensym("G")
+  n1 <- as.integer(sub("^G__", "", as.character(sym1)))
+
+  # Define a binding using the next expected gensym name
+  next_name <- paste0("G__", n1 + 1)
+  env$eval(engine$read(paste0("(define ", next_name, " 42)"))[[1]], env = env)
+
+  # gensym should skip the occupied name
+  sym2 <- env$gensym("G")
+  n2 <- as.integer(sub("^G__", "", as.character(sym2)))
+  expect_equal(n2, n1 + 2)
+
+  # The skipped binding should still hold its value
+  result <- env$eval(engine$read(paste0("(+ ", next_name, " 0)"))[[1]], env = env)
+  expect_equal(result, 42)
+})
+
 test_that("read is available as engine builtin without importing io", {
   env <- new.env()
   toplevel_env(engine, env = env)

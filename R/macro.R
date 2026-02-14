@@ -216,8 +216,14 @@ MacroExpander <- R6::R6Class(
       registry[[as.character(name)]]
     },
     gensym_impl = function(prefix = "G") {
-      private$gensym_counter <- private$gensym_counter + 1
-      as.symbol(paste0(prefix, "__", private$gensym_counter))
+      env <- self$context$env
+      repeat {
+        private$gensym_counter <- private$gensym_counter + 1
+        candidate <- paste0(prefix, "__", private$gensym_counter)
+        if (is.null(env) || !exists(candidate, envir = env, inherits = TRUE)) {
+          return(as.symbol(candidate))
+        }
+      }
     },
     hygiene_gensym = function(prefix = "H") {
       private$hygiene_counter <- private$hygiene_counter + 1
