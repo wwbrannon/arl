@@ -136,19 +136,6 @@ Assert:
 Seealso: macroexpand-1, macro?, gensym
 Note: Also available as `macroexpand-all` (alias).
 
-Name: macroexpand-1
-Vignette: stdlib-core
-Section: Macro Utilities
-Description: Expand only the outermost macro call in expr (one step).
-Signature: (macroexpand-1 expr)
-Examples:
-  (defmacro my-when (test body)
-    `(if ,test ,body #nil))
-  (macroexpand-1 '(my-when #t 42))  ; => (if #t 42 #nil)
-Assert:
-  (assert-equal '(if #t 42 #nil) (macroexpand-1 '(my-when #t 42)))
-Seealso: macroexpand, macro?
-
 Name: promise?
 Vignette: stdlib-core
 Section: Promises (Lazy Evaluation)

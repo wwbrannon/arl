@@ -740,27 +740,6 @@ remain.
 
 ---
 
-### macroexpand-1 {#macroexpand-1}
-
-Expand only the outermost macro call in expr (one step).
-
-**Signature:** `(macroexpand-1 expr)`
-
-**Examples:**
-```{arl}
-(defmacro my-when (test body)
-`(if ,test ,body #nil))
-(macroexpand-1 '(my-when #t 42))  ; => (if #t 42 #nil)
-```
-
-```{arl, include=FALSE}
-(assert-equal '(if #t 42 #nil) (macroexpand-1 '(my-when #t 42)))
-```
-
-**See also:** [macroexpand](#macroexpand), [macro?](#macro-p)
-
----
-
 ## Promises (Lazy Evaluation) {#section-promises-lazy-evaluation}
 
 ### promise? {#promise-p}
