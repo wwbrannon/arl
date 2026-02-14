@@ -83,6 +83,10 @@ definition (see
 (double (+ 1 2))  ; => 6
 ```
 
+```{arl, include=FALSE}
+(assert-equal 6 (double (+ 1 2)))
+```
+
 ### Rest parameters
 
 Use `.` to collect remaining arguments into a list:
@@ -92,6 +96,10 @@ Use `.` to collect remaining arguments into a list:
   `(if ,test #nil (begin ,@body)))
 
 (unless (= 1 2) (print "not equal") 42)  ; => 42
+```
+
+```{arl, include=FALSE}
+(assert-equal 42 (unless (= 1 2) 42))
 ```
 
 ### Optional parameters with defaults
@@ -106,6 +114,11 @@ Parameters wrapped in a pair `(name default)` are optional:
 (greet "Alice")  ; => "hello, Alice"
 ```
 
+```{arl, include=FALSE}
+(assert-equal "hello, world" (greet))
+(assert-equal "hello, Alice" (greet "Alice"))
+```
+
 You can mix required and optional parameters, and combine them with rest:
 
 ```{arl}
@@ -114,6 +127,11 @@ You can mix required and optional parameters, and combine them with rest:
 
 (opt-rest)         ; => (1)
 (opt-rest 2 3 4)   ; => (2 3 4)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 1) (opt-rest))
+(assert-equal (list 2 3 4) (opt-rest 2 3 4))
 ```
 
 ### Pattern destructuring in parameters
@@ -126,6 +144,10 @@ Use `(pattern ...)` to destructure a macro argument:
 
 (let-pair (x 10))
 x  ; => 10
+```
+
+```{arl, include=FALSE}
+(assert-equal 10 x)
 ```
 
 Patterns can be nested, have defaults, or be used as rest parameters:
@@ -145,6 +167,12 @@ Patterns can be nested, have defaults, or be used as rest parameters:
 (with-point (3 4))  ; => 7
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3) (deep (1 (2 3))))
+(assert-equal 0 (with-point))
+(assert-equal 7 (with-point (3 4)))
+```
+
 ## Quasiquote, unquote, and splicing
 
 Quasiquote (backtick) is the primary tool for constructing macro output.
@@ -159,11 +187,19 @@ evaluates `expr` (which must produce a list) and splices its elements.
 `(+ ,x 20)      ; => (+ 10 20)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list '+ 10 20) `(+ ,x 20))
+```
+
 ### Splicing lists
 
 ```{arl}
 (define xs (list 2 3))
 `(+ 1 ,@xs 4)   ; => (+ 1 2 3 4)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list '+ 1 2 3 4) `(+ 1 ,@xs 4))
 ```
 
 ### Nested quasiquote
@@ -207,6 +243,12 @@ automatically renamed to a fresh symbol, so caller bindings are safe:
 x     ; => 2
 y     ; => 1
 temp  ; => 999  (unaffected)
+```
+
+```{arl, include=FALSE}
+(assert-equal 2 x)
+(assert-equal 1 y)
+(assert-equal 999 temp)
 ```
 
 ### How it works
@@ -310,6 +352,10 @@ Usage:
 ; => "result is 5"
 ```
 
+```{arl, include=FALSE}
+(assert-equal "result is 5" (aif (+ 2 3) (str "result is " it) "no result"))
+```
+
 Here `capture` is applied to the `then` and `alt` expressions (which
 came from the caller).  It marks every occurrence of `it` inside those
 expressions as "introduced" rather than "call_site", so hygiene does not
@@ -357,6 +403,10 @@ you can perform arbitrary computation before returning the template:
     `(quote ,result)))
 
 (const-multiply 6 7)  ; => 42 (computed at macro-expansion time)
+```
+
+```{arl, include=FALSE}
+(assert-equal 42 (const-multiply 6 7))
 ```
 
 ## Recursive and composing macros
@@ -425,6 +475,11 @@ macro calls in the expression:
 ```{arl}
 (macro? 'when)   ; => #t
 (macro? 'car)    ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (macro? 'when))
+(assert-false (macro? 'car))
 ```
 
 ### From R
@@ -501,6 +556,11 @@ variables, all using `gensym` to avoid conflicts:
     acc
     (recur (- n 1) (* acc n))))
 ; => 120
+```
+
+```{arl, include=FALSE}
+(assert-equal 120 (loop ((n 5) (acc 1))
+  (if (= n 0) acc (recur (- n 1) (* acc n)))))
 ```
 
 ### `try`/`catch`/`finally` -- syntax sugar

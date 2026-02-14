@@ -28,6 +28,10 @@ Functions are created with `lambda` and bound to names with `define`:
 (double 5)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 10 (double 5))
+```
+
 **Important:** Unlike Scheme, `(define (f x) body)` is **not** function
 shorthand in Arl. It is destructuring bind — it tries to bind a
 pattern `(f x)` to `body`. Always use the explicit `define` + `lambda`
@@ -58,6 +62,10 @@ in `defmacro` parameters.
 (add 3 4)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 7 (add 3 4))
+```
+
 ### Optional parameters with defaults
 
 Wrap a parameter in a pair `(name default)`:
@@ -69,6 +77,11 @@ Wrap a parameter in a pair `(name default)`:
 
 (greet)          ; uses default
 (greet "Alice")  ; overrides default
+```
+
+```{arl, include=FALSE}
+(assert-equal "hello, world" (greet))
+(assert-equal "hello, Alice" (greet "Alice"))
 ```
 
 ### Rest parameters
@@ -83,6 +96,10 @@ Use `.` to collect remaining arguments into a list:
 (sum-all 1 2 3 4)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 10 (sum-all 1 2 3 4))
+```
+
 ### Destructuring parameters
 
 Use `(pattern ...)` to destructure an argument:
@@ -93,6 +110,10 @@ Use `(pattern ...)` to destructure an argument:
     a))
 
 (first-of-pair (list 10 20))
+```
+
+```{arl, include=FALSE}
+(assert-equal 10 (first-of-pair (list 10 20)))
 ```
 
 Patterns can be nested, have defaults, or combine with rest parameters:
@@ -106,6 +127,11 @@ Patterns can be nested, have defaults, or combine with rest parameters:
 (point-sum (list 3 4)) ; => 7
 ```
 
+```{arl, include=FALSE}
+(assert-equal 0 (point-sum))
+(assert-equal 7 (point-sum (list 3 4)))
+```
+
 ### Combining parameter styles
 
 You can mix required, optional, destructuring, and rest parameters:
@@ -117,6 +143,11 @@ You can mix required, optional, destructuring, and rest parameters:
 
 (flexible 1)         ; => (1 10 ())
 (flexible 1 2 3 4)   ; => (1 2 (3 4))
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 1 10 (list)) (flexible 1))
+(assert-equal (list 1 2 (list 3 4)) (flexible 1 2 3 4))
 ```
 
 ## Calling Functions
@@ -148,6 +179,10 @@ matched to the parameter name:
 (make-point :y 20 :x 10)
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 10 20) (make-point :y 20 :x 10))
+```
+
 See [R Interop](r-interop.html#keyword-syntax) for details on keyword
 syntax and quoting.
 
@@ -163,6 +198,12 @@ Use `let`, `let*`, and `letrec` to bind functions in local scope.
   (double (inc 3)))
 ```
 
+```{arl, include=FALSE}
+(assert-equal 8 (let ((double (lambda (x) (* x 2)))
+                      (inc    (lambda (x) (+ x 1))))
+                  (double (inc 3))))
+```
+
 ### `letrec` for recursive local functions
 
 `letrec` allows bindings to refer to each other, which is necessary for
@@ -174,6 +215,13 @@ local recursive or mutually-recursive functions:
          (odd?  (lambda (n)
                   (if (= n 0) #f (even? (- n 1))))))
   (list (even? 10) (odd? 7)))
+```
+
+```{arl, include=FALSE}
+(assert-equal (list #t #t)
+  (letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
+           (odd?  (lambda (n) (if (= n 0) #f (even? (- n 1))))))
+    (list (even? 10) (odd? 7))))
 ```
 
 Because `letrec` expands into `set!`, self-recursive `letrec` lambdas
@@ -188,6 +236,11 @@ Arl's standard library provides the usual higher-order toolkit:
 (filter even? (list 1 2 3 4 5 6))
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 4 9 16) (map (lambda (x) (* x x)) (list 1 2 3 4)))
+(assert-equal (list 2 4 6) (filter even? (list 1 2 3 4 5 6)))
+```
+
 ```{arl}
 (define add5 (partial + 5))
 (add5 10)
@@ -195,6 +248,11 @@ Arl's standard library provides the usual higher-order toolkit:
 (define abs-then-double
   (compose (lambda (x) (* x 2)) abs))
 (abs-then-double -3)
+```
+
+```{arl, include=FALSE}
+(assert-equal 15 (add5 10))
+(assert-equal 6 (abs-then-double -3))
 ```
 
 See [Standard Library: Higher-Order Functions](stdlib-functional.html)
@@ -218,6 +276,10 @@ compiler automatically rewrites it as a loop — no stack overflow:
 (factorial 100000 1)  ; no stack overflow
 ```
 
+```{arl, include=FALSE}
+(assert-equal 120 (factorial 5 1))
+```
+
 ### `loop` / `recur`
 
 For explicit looping or patterns where self-TCO does not apply, use
@@ -230,6 +292,11 @@ For explicit looping or patterns where self-TCO does not apply, use
   (if (< i 2)
     acc
     (recur (- i 1) (* acc i))))
+```
+
+```{arl, include=FALSE}
+(assert-equal 120 (loop ((i 5) (acc 1))
+  (if (< i 2) acc (recur (- i 1) (* acc i)))))
 ```
 
 See [Tail Call Optimization](tail-call-optimization.html) for details on

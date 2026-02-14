@@ -76,6 +76,11 @@ you need to branch on these values.
 (is.na (== NaN NaN))   ; => TRUE
 ```
 
+```{arl, include=FALSE}
+(assert-true (is.infinite (/ 1 0)))
+(assert-true (is.na (== NaN NaN)))
+```
+
 ### Numeric Tower Differences
 
 Arl implements a numeric tower similar to Scheme's, but adapted for R's type system:
@@ -109,6 +114,14 @@ inexact? (number? AND NOT is.integer)
 (finite? Inf)     ; => #f
 (real? NaN)       ; => #t
 (finite? NaN)     ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (real? Inf))
+(assert-false (rational? Inf))
+(assert-false (finite? Inf))
+(assert-true (real? NaN))
+(assert-false (finite? NaN))
 ```
 
 ### Keywords and named arguments
@@ -151,6 +164,12 @@ tail-recursive patterns.
       (recur (- i 1) (* acc i))))
 ```
 
+```{arl, include=FALSE}
+(assert-equal 120 (factorial 5 1))
+(assert-equal 3628800 (loop ((i 10) (acc 1))
+  (if (< i 2) acc (recur (- i 1) (* acc i)))))
+```
+
 ### Interop
 
 Arl can call R functions directly:
@@ -158,6 +177,10 @@ Arl can call R functions directly:
 ```{arl}
 (mean (c 1 2 3 4 5))
 (seq :from 1 :to 10 :by 2)
+```
+
+```{arl, include=FALSE}
+(assert-equal 3 (mean (c 1 2 3 4 5)))
 ```
 
 Scheme code typically requires FFI layers for such interop; Arl treats it as

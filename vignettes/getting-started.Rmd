@@ -49,6 +49,11 @@ At the prompt, you can enter Arl expressions:
 (* x 2)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3 (+ 1 2))
+(assert-equal 20 (* x 2))
+```
+
 Type `(quit)` or press Ctrl+C to exit the REPL.
 
 **REPL options:** You can control the REPL with options before calling
@@ -181,6 +186,11 @@ is falsy. See [Troubleshooting](troubleshooting.html) for common pitfalls.
 (factorial 5)
 ```
 
+```{arl, include=FALSE}
+(assert-equal "hello" greeting)
+(assert-equal 120 (factorial 5))
+```
+
 ### Local bindings
 
 ```{arl}
@@ -188,6 +198,10 @@ is falsy. See [Troubleshooting](troubleshooting.html) for common pitfalls.
 (let ((x 10)
       (y 20))
   (+ x y))
+```
+
+```{arl, include=FALSE}
+(assert-equal 30 (let ((x 10) (y 20)) (+ x y)))
 ```
 
 ### Conditionals
@@ -211,6 +225,13 @@ is falsy. See [Troubleshooting](troubleshooting.html) for common pitfalls.
   (display "3 is greater\n"))
 ```
 
+```{arl, include=FALSE}
+(assert-equal "yes" (if (> 3 2) "yes" "no"))
+(assert-equal "positive" (describe 5))
+(assert-equal "negative" (describe -1))
+(assert-equal "zero" (describe 0))
+```
+
 ### Sequencing
 
 ```{arl}
@@ -219,6 +240,10 @@ is falsy. See [Troubleshooting](troubleshooting.html) for common pitfalls.
   (define a 1)
   (define b 2)
   (+ a b))
+```
+
+```{arl, include=FALSE}
+(assert-equal 3 (begin (define a 1) (define b 2) (+ a b)))
 ```
 
 ### Lists and quoting
@@ -236,6 +261,12 @@ is falsy. See [Troubleshooting](troubleshooting.html) for common pitfalls.
 `(list ,x 20 30)   ; => (list 10 20 30) -- x is substituted, rest is literal
 
 ; Comments start with semicolon
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3) (list 1 2 3))
+(assert-equal 1 (car (list 1 2 3)))
+(assert-equal (list 2 3) (cdr (list 1 2 3)))
 ```
 
 For more details on the standard library and macros, see the other vignettes in

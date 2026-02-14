@@ -28,6 +28,12 @@ Unlike many Lisps, Arl treats `0` as falsy (along with `#f`/`FALSE`,
 (when 0 (print "nope"))   ; => #nil
 ```
 
+```{arl, include=FALSE}
+(assert-equal "falsy" (if 0 "truthy" "falsy"))
+(assert-equal "truthy" (if 1 "truthy" "falsy"))
+(assert-equal #nil (when 0 "nope"))
+```
+
 If you need to distinguish zero from false, test explicitly:
 
 ```{arl, eval=FALSE}
@@ -49,6 +55,11 @@ boolean syntax instead:
 ;; Fragile -- T/F can be rebound
 (define T 42)
 (if T "oops" "no")   ; => "oops" (42 is truthy)
+```
+
+```{arl, include=FALSE}
+(assert-equal "yes" (if #t "yes" "no"))
+(assert-equal "oops" (if T "oops" "no"))
 ```
 
 ## `load` vs `import` vs `run`

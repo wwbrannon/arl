@@ -24,6 +24,10 @@ structures are shared between Arl and R.
 (seq :from 1 :to 10 :by 2)
 ```
 
+```{arl, include=FALSE}
+(assert-equal 3 (mean (c 1 2 3 4 5)))
+```
+
 Keywords (`:from`, `:to`) map to named arguments in R.
 
 ### Keyword syntax
@@ -64,6 +68,10 @@ programmatically:
 
 ```{arl}
 (r/call "sum" (list 1 2 3))
+```
+
+```{arl, include=FALSE}
+(assert-equal 6 (r/call "sum" (list 1 2 3)))
 ```
 
 ### Non-standard evaluation
@@ -163,11 +171,21 @@ Use `::` and `:::` to access R packages:
 (::: stats .lm.fit)
 ```
 
+```{arl, include=FALSE}
+(assert-true (is.function (:: stats median)))
+(assert-true (is.function (::: stats .lm.fit)))
+```
+
 R base operators are also available directly:
 
 ```{arl}
 (+ 1 2 3)
 (< 3 5)
+```
+
+```{arl, include=FALSE}
+(assert-equal 6 (+ 1 2 3))
+(assert-true (< 3 5))
 ```
 
 ### Numeric edge cases
@@ -179,6 +197,11 @@ semantics (not Scheme's). For example, division by zero yields `Inf`, and
 ```{arl}
 (/ 1 0)         ; => Inf
 (== NaN NaN)    ; => NA
+```
+
+```{arl, include=FALSE}
+(assert-true (is.infinite (/ 1 0)))
+(assert-true (is.na (== NaN NaN)))
 ```
 
 ## Example workflow
