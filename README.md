@@ -233,7 +233,7 @@ All stdlib modules are loaded automatically. Key areas include:
   more
 
 For the complete function reference, see the [Standard Library
-Reference](articles/stdlib-reference.html).
+Reference](articles/lang-reference.html).
 
 The stdlib is organized into modules under `inst/arl/`. You can import
 them individually in your own modules or when working with a bare engine

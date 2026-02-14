@@ -87,22 +87,22 @@ navbar:
         - text: Overview
           href: articles/lang-reference.html
         - text: "---------"
-        - text: Lists & Sequences
-          href: articles/lang-list-seq.html
-        - text: Functional Programming
-          href: articles/lang-functional.html
+        - text: Core, R Interop & Testing
+          href: articles/lang-core.html
         - text: Types, Equality & Conversions
           href: articles/lang-types.html
-        - text: Math
-          href: articles/lang-math.html
         - text: Control Flow
           href: articles/lang-control.html
+        - text: Lists & Sequences
+          href: articles/lang-list-seq.html
         - text: Strings, Display & I/O
           href: articles/lang-strings-io.html
         - text: Collections
           href: articles/lang-collections.html
-        - text: Core, R Interop & Testing
-          href: articles/lang-core.html
+        - text: Functional Programming
+          href: articles/lang-functional.html
+        - text: Math
+          href: articles/lang-math.html
     reference:
       text: R API Reference
       href: reference/index.html

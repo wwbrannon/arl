@@ -8,30 +8,25 @@
 #   Modules:  Comma-separated list of .arl module names
 #   Preamble: Optional introductory text placed before the first section
 
-Name: lang-list-seq
-Title: Standard Library: Lists and Sequences
-Modules: list, sequences, sort
-Summary: List construction, accessors, association lists, sequence helpers, and sorting.
-
-Name: lang-functional
-Title: Standard Library: Higher-Order Functions
-Modules: functional, logic
-Summary: Mapping, filtering, folding, function composition, and logical combinators.
+Name: lang-core
+Title: Standard Library: Core, R Interop, and Testing
+Modules: core, r-interop, assert
+Summary: Evaluation, macro utilities, R interop helpers, and assertions.
 
 Name: lang-types
 Title: Standard Library: Types, Equality, and Conversions
 Modules: types, equality, conversions
 Summary: Type predicates, numeric type hierarchy, structural and identity equality, S3-style dispatch, and type conversions.
 
-Name: lang-math
-Title: Standard Library: Math and Numeric Functions
-Modules: math
-Summary: Arithmetic, comparison, rounding, trigonometry, number theory, and complex number utilities.
-
 Name: lang-control
 Title: Standard Library: Control Flow and Macros
 Modules: control, binding, looping, threading, error
 Summary: Conditionals, binding forms, looping, threading macros, continuations, and error handling.
+
+Name: lang-list-seq
+Title: Standard Library: Lists and Sequences
+Modules: list, sequences, sort
+Summary: List construction, accessors, association lists, sequence helpers, and sorting.
 
 Name: lang-strings-io
 Title: Standard Library: Strings, Display, and I/O
@@ -43,7 +38,12 @@ Title: Standard Library: Collections and Data Structures
 Modules: dict, set, struct
 Summary: Dictionaries, sets, and struct definitions for structured data.
 
-Name: lang-core
-Title: Standard Library: Core, R Interop, and Testing
-Modules: core, r-interop, assert
-Summary: Evaluation, macro utilities, R interop helpers, and assertions.
+Name: lang-functional
+Title: Standard Library: Higher-Order Functions
+Modules: functional, logic
+Summary: Mapping, filtering, folding, function composition, and logical combinators.
+
+Name: lang-math
+Title: Standard Library: Math and Numeric Functions
+Modules: math
+Summary: Arithmetic, comparison, rounding, trigonometry, number theory, and complex number utilities.

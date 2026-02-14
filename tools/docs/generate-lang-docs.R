@@ -506,36 +506,6 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
   out <- c(out, "```")
   out <- c(out, "")
 
-  # Per-vignette sections with auto-generated function lists
-  for (vname in names(vignettes)) {
-    vconfig <- vignettes[[vname]]
-    # Strip "Standard Library: " prefix for section heading
-    heading <- sub("^Standard Library:\\s*", "", vconfig$title)
-    out <- c(out, paste0("## [", heading, "](", vname, ".html)"))
-    out <- c(out, "")
-    if (nchar(vconfig$summary) > 0) {
-      out <- c(out, vconfig$summary)
-      out <- c(out, "")
-    }
-    exports <- collect_vignette_exports(
-      vconfig, arl_dir, builtins_by_vignette[[vname]]
-    )
-    if (length(exports) > 0) {
-      out <- c(out, format_func_list(exports, func_index))
-      out <- c(out, "")
-    }
-    # List source modules with GitHub links
-    mod_links <- vapply(vconfig$modules, function(mod) {
-      fname <- paste0(mod, ".arl")
-      paste0("[`", fname, "`](", GITHUB_BASE, "/inst/arl/", fname, ")")
-    }, character(1), USE.NAMES = FALSE)
-    has_builtins <- !is.null(builtins_by_vignette[[vname]]) &&
-      length(builtins_by_vignette[[vname]]$functions) > 0
-    if (has_builtins) mod_links <- c(mod_links, "and builtins")
-    out <- c(out, paste0("Modules: ", paste(mod_links, collapse = ", ")))
-    out <- c(out, "")
-  }
-
   # Built-in functions section
   out <- c(out, "## Built-in functions")
   out <- c(out, "")
@@ -577,6 +547,36 @@ generate_reference_rmd <- function(vignettes, arl_dir, builtins_by_vignette,
   out <- c(out, "These builtins are documented alongside the stdlib functions they relate to")
   out <- c(out, "in the individual reference pages above.")
   out <- c(out, "")
+
+  # Per-vignette sections with auto-generated function lists
+  for (vname in names(vignettes)) {
+    vconfig <- vignettes[[vname]]
+    # Strip "Standard Library: " prefix for section heading
+    heading <- sub("^Standard Library:\\s*", "", vconfig$title)
+    out <- c(out, paste0("## [", heading, "](", vname, ".html)"))
+    out <- c(out, "")
+    if (nchar(vconfig$summary) > 0) {
+      out <- c(out, vconfig$summary)
+      out <- c(out, "")
+    }
+    exports <- collect_vignette_exports(
+      vconfig, arl_dir, builtins_by_vignette[[vname]]
+    )
+    if (length(exports) > 0) {
+      out <- c(out, format_func_list(exports, func_index))
+      out <- c(out, "")
+    }
+    # List source modules with GitHub links
+    mod_links <- vapply(vconfig$modules, function(mod) {
+      fname <- paste0(mod, ".arl")
+      paste0("[`", fname, "`](", GITHUB_BASE, "/inst/arl/", fname, ")")
+    }, character(1), USE.NAMES = FALSE)
+    has_builtins <- !is.null(builtins_by_vignette[[vname]]) &&
+      length(builtins_by_vignette[[vname]]$functions) > 0
+    if (has_builtins) mod_links <- c(mod_links, "and builtins")
+    out <- c(out, paste0("Modules: ", paste(mod_links, collapse = ", ")))
+    out <- c(out, "")
+  }
 
   # Source files section
   out <- c(out, "## Source files")
