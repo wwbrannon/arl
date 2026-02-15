@@ -187,16 +187,7 @@ DocParser <- R6::R6Class(
 
         description <- tags$description
         if (is.null(description) || description == "") {
-          line1 <- trimws(lines[def_line])
-          is_direct <- !grepl("\\(lambda", line1) && grepl("^\\(define\\s+\\S+\\s+\\S+\\)$", line1)
-          if (is_direct) {
-            description <- private$find_doc_bang(lines, def_line, n, func_name)
-          } else {
-            description <- private$extract_docstring(lines, def_line, n)
-            if (is.null(description) || description == "") {
-              description <- private$find_doc_bang(lines, def_line, n, func_name)
-            }
-          }
+          description <- private$find_doc_bang(lines, def_line, n, func_name)
         }
 
         signature <- tags$signature
@@ -382,44 +373,6 @@ DocParser <- R6::R6Class(
         }
         return(NULL)
       }
-      NULL
-    },
-
-    extract_docstring = function(lines, def_line, n) {
-      end_line <- min(def_line + 15, n)
-      for (k in (def_line + 1):end_line) {
-        if (grepl("^\\s*;;'", lines[k])) {
-          end_line <- k - 1L
-          break
-        }
-      }
-      if (end_line < def_line) return(NULL)
-
-      chunk <- paste(lines[def_line:end_line], collapse = "\n")
-
-      extract_string_after <- function(text, prefix_re) {
-        m <- regmatches(text, regexpr(
-          paste0(prefix_re, '\\s*\n?\\s*"((?:[^"\\\\]|\\\\.)*)"'),
-          text, perl = TRUE
-        ))
-        if (length(m) == 1 && nchar(m) > 0) {
-          inner <- sub(paste0('.*', prefix_re, '\\s*\n?\\s*"'), "", m, perl = TRUE)
-          inner <- sub('"$', "", inner)
-          inner <- gsub('\\\\"', '"', inner)
-          return(inner)
-        }
-        NULL
-      }
-
-      result <- extract_string_after(chunk, '\\(defmacro\\s+\\S+\\s+\\([^)]*\\)')
-      if (!is.null(result)) return(result)
-
-      result <- extract_string_after(chunk, '\\(lambda\\s+\\([^)]*\\)')
-      if (!is.null(result)) return(result)
-
-      result <- extract_string_after(chunk, '\\(lambda\\s+\\(\\. [^)]+\\)')
-      if (!is.null(result)) return(result)
-
       NULL
     },
 
