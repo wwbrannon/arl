@@ -64,6 +64,7 @@ For boolean settings, the environment variable values `1`, `true`, and
 | CLI quiet (errors) | `arl.cli_quiet` | `ARL_CLI_QUIET` | `FALSE` | Suppress CLI error messages and help text |
 | Macro debug output | `arl.debug_macro` | `ARL_DEBUG_MACRO` | `FALSE` | Print debug info during macro expansion |
 | Disable self-TCO | `arl.disable_tco` | `ARL_DISABLE_TCO` | `FALSE` | Disable self-tail-call optimization (for debugging) |
+| Display line limit | `arl.display.max.lines` | `ARL_DISPLAY_MAX_LINES` | `20` | Max lines for S3 object display (`Inf` to disable) |
 
 ## Shell-only settings
 

@@ -99,20 +99,82 @@ test_that("format-value displays named lists with names", {
   expect_true(grepl(":b", formatted))
 })
 
-test_that("format-value displays S3 objects compactly", {
+test_that("format-value displays S3 objects using R print output", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
   # lm object (S3 class "lm")
   m <- lm(y ~ x, data = data.frame(x = 1:3, y = c(2, 4, 6)))
   formatted <- env$`format-value`(m)
-  # Should be compact R print output (8 lines) or <lm> if too long
-  expect_true(grepl("lm|Coefficients", formatted))
+  # Should show R's print output including Call: and Coefficients
+  expect_true(grepl("Call:", formatted))
+  expect_true(grepl("Coefficients", formatted))
 
   # glm object
   g <- suppressWarnings(glm(y ~ x, data = data.frame(x = 1:3, y = c(0, 1, 1)), family = binomial))
   formatted_g <- env$`format-value`(g)
-  expect_true(grepl("glm|Coefficients", formatted_g))
+  expect_true(grepl("Call:", formatted_g))
+  expect_true(grepl("Coefficients", formatted_g))
+})
+
+test_that("format-value truncates long S3 output with configurable limit", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Create an S3 object with many lines of output
+  obj <- structure(as.list(1:50), class = "verbose_obj")
+  local({
+    print.verbose_obj <<- function(x, ...) {
+      for (i in seq_along(x)) cat(sprintf("line %d: %d\n", i, x[[i]]))
+    }
+  })
+  on.exit(rm("print.verbose_obj", envir = globalenv()), add = TRUE)
+
+  # Default limit (20) should truncate and show message
+  formatted <- env$`format-value`(obj)
+  expect_true(grepl("output truncated at 20 lines", formatted))
+  expect_true(grepl("arl.display.max.lines", formatted))
+
+  # Custom limit
+  old <- options(arl.display.max.lines = 5)
+  on.exit(options(old), add = TRUE)
+  formatted2 <- env$`format-value`(obj)
+  expect_true(grepl("output truncated at 5 lines", formatted2))
+
+  # Inf disables truncation
+  options(arl.display.max.lines = Inf)
+  formatted3 <- env$`format-value`(obj)
+  expect_false(grepl("truncated", formatted3))
+})
+
+test_that("ARL_DISPLAY_MAX_LINES env var controls S3 truncation", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  obj <- structure(as.list(1:50), class = "verbose_obj2")
+  local({
+    print.verbose_obj2 <<- function(x, ...) {
+      for (i in seq_along(x)) cat(sprintf("line %d: %d\n", i, x[[i]]))
+    }
+  })
+  on.exit(rm("print.verbose_obj2", envir = globalenv()), add = TRUE)
+
+  # Env var sets limit when R option is not set
+  withr::local_options(arl.display.max.lines = NULL)
+  withr::local_envvar(ARL_DISPLAY_MAX_LINES = "10")
+  formatted <- env$`format-value`(obj)
+  expect_true(grepl("output truncated at 10 lines", formatted))
+
+  # R option takes precedence over env var
+  withr::local_options(arl.display.max.lines = 5)
+  formatted2 <- env$`format-value`(obj)
+  expect_true(grepl("output truncated at 5 lines", formatted2))
+
+  # Env var Inf disables truncation
+  withr::local_options(arl.display.max.lines = NULL)
+  withr::local_envvar(ARL_DISPLAY_MAX_LINES = "Inf")
+  formatted3 <- env$`format-value`(obj)
+  expect_false(grepl("truncated", formatted3))
 })
 
 test_that("format-value displays call objects from quasiquote as s-expressions", {

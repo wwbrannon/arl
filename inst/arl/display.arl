@@ -80,6 +80,7 @@
     (r/call "eval" (list (r/call "parse" (list :text "function(obj) utils::capture.output(print(obj))")))))
 
   ;; Format S3 objects with non-trivial class using R's print method.
+  ;; Output is truncated at arl.display.max.lines (default 20, Inf to disable).
   (define __format-s3-object
     (lambda (x)
       (define cls (r/call "class" (list x)))
@@ -89,9 +90,22 @@
                (not (r/call "all" (list (r/call "%in%" (list cls (c "list" "data.frame")))))))
         (begin
           (define lines (__capture-print x))
-          (if (<= (length lines) 10)
+          (define max-lines-opt (r/call "getOption" (list "arl.display.max.lines" #nil)))
+          (define max-lines-env (r/call "Sys.getenv" (list "ARL_DISPLAY_MAX_LINES" "")))
+          (define max-lines
+            (if (not (r/call "is.null" (list max-lines-opt)))
+              max-lines-opt
+              (if (!= max-lines-env "")
+                (r/call "as.numeric" (list max-lines-env))
+                20)))
+          (if (or (r/call "is.infinite" (list max-lines))
+                  (<= (length lines) max-lines))
             (string-join lines "\n")
-            (string-join (list "<" (r/call "[[" (list cls 1)) ">") "")))
+            (string-join
+              (c (r/call "head" (list lines max-lines))
+                 (string-join (list "... (output truncated at " (as.character max-lines)
+                                    " lines; set options(arl.display.max.lines=) to change)") ""))
+              "\n")))
         #nil)))
 
   ;;' @description Format value for display.
