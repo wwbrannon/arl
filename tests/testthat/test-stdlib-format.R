@@ -216,3 +216,24 @@ test_that("format_value fallback warns on format-value error", {
   # Fallback should use capture.output(print(x))
   expect_equal(result, "[1] 42")
 })
+
+test_that("format_value does not evaluate call objects passed as values", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+  arl_env <- engine$.__enclos_env__$private$.env
+
+  # Call with too many args for +: would error if evaluated
+  val1 <- quote(`+`(1, 2, 3, 4))
+  expect_no_warning(result1 <- arl_env$format_value(val1))
+  expect_equal(result1, "(+ 1 2 3 4)")
+
+  # Call to nonexistent function: would error if evaluated
+  val2 <- quote(nonexistent_fn(1, 2))
+  expect_no_warning(result2 <- arl_env$format_value(val2))
+  expect_equal(result2, "(nonexistent_fn 1 2)")
+
+  # Nested quasiquote-style call structure
+  val3 <- quote(a(quasiquote(b(10))))
+  expect_no_warning(result3 <- arl_env$format_value(val3))
+  expect_equal(result3, "(a (quasiquote (b 10)))")
+})

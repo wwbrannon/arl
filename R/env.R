@@ -135,7 +135,7 @@ Env <- R6::R6Class(
         return(paste(as.character(value), collapse = " "))
       }
       tryCatch(
-        do.call(formatter, list(value)),
+        do.call(formatter, list(value), quote = TRUE),
         error = function(e) {
           warning("format-value failed, using fallback: ",
                   conditionMessage(e), call. = FALSE)
