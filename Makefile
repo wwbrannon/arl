@@ -138,7 +138,7 @@ bench: clean-cache stdlib-order ## help: Run all benchmarks
 .PHONY: bench-component
 bench-component: clean-cache stdlib-order ## help: Run single component benchmark (usage: make bench-component COMPONENT=tokenizer)
 	@if [ -z "$(COMPONENT)" ]; then \
-		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval, stdlib, e2e"; \
+		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, compile, r-eval, stdlib, e2e"; \
 		exit 1; \
 	fi
 	R -q -e "devtools::load_all(); source('benchmarks/bench-$(COMPONENT).R')"
@@ -150,7 +150,7 @@ profile: clean-cache stdlib-order ## help: Generate profiling reports
 .PHONY: profile-component
 profile-component: clean-cache stdlib-order ## help: Profile single component (usage: make profile-component COMPONENT=tokenizer)
 	@if [ -z "$(COMPONENT)" ]; then \
-		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, eval"; \
+		echo "Error: COMPONENT parameter required. Options: tokenizer, parser, macro, compile, r-eval"; \
 		exit 1; \
 	fi
 	R -q -e "devtools::load_all(); source('benchmarks/profile-$(COMPONENT).R')"

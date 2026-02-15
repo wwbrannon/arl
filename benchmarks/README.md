@@ -27,7 +27,8 @@ library(arl)
 source("benchmarks/profile-tokenizer.R")
 source("benchmarks/profile-parser.R")
 source("benchmarks/profile-macro.R")
-source("benchmarks/profile-eval.R")
+source("benchmarks/profile-compile.R")
+source("benchmarks/profile-r-eval.R")
 ```
 
 ## Files
@@ -41,7 +42,8 @@ source("benchmarks/profile-eval.R")
 - `bench-tokenizer.R` - Lexical analysis benchmarks
 - `bench-parser.R` - S-expression parsing benchmarks
 - `bench-macro.R` - Macro expansion benchmarks
-- `bench-eval.R` - Evaluator/CPS benchmarks
+- `bench-compile.R` - Compiler benchmarks
+- `bench-r-eval.R` - R eval() benchmarks
 - `bench-stdlib.R` - Standard library function benchmarks
 - `bench-interop.R` - R interoperability benchmarks (function calls, object construction)
 - `bench-modules.R` - Module/import and load/run overhead benchmarks
@@ -57,7 +59,8 @@ source("benchmarks/profile-eval.R")
 - `profile-tokenizer.R` - Profile tokenizer with large strings
 - `profile-parser.R` - Profile parser with deep nesting
 - `profile-macro.R` - Profile macro expansion
-- `profile-eval.R` - Profile evaluator with recursive workloads
+- `profile-compile.R` - Profile compiler with various workloads
+- `profile-r-eval.R` - Profile R eval() with recursive workloads
 
 ## Output Directories
 
@@ -89,8 +92,15 @@ Each benchmark script measures different aspects of Arl performance:
 - Hygiene overhead
 - Macro-heavy code
 
-### Evaluator (`bench-eval.R`)
-- Simple arithmetic (CPS overhead)
+### Compiler (`bench-compile.R`)
+- Simple arithmetic compilation
+- Function calls (1, 5, 10 arguments)
+- Special forms (if, define, lambda, begin)
+- Recursive functions (fibonacci, factorial)
+- Closures and environments
+
+### R eval() (`bench-r-eval.R`)
+- Simple arithmetic evaluation
 - Function calls (1, 5, 10 arguments)
 - Special forms (if, define, lambda, begin)
 - Recursive functions (fibonacci, factorial)

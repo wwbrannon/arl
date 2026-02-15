@@ -281,6 +281,46 @@ summarize_benchmark <- function(results) {
   invisible(results)
 }
 
+#' Time compile and R-eval phases separately
+#'
+#' Runs all expressions in a workload but times compile and R-eval separately
+#' per-expression using proc.time(). Returns median compile_ms and eval_ms
+#' over N iterations.
+#'
+#' @param text Arl code as string
+#' @param n Number of iterations (default: 10)
+#' @param setup_modules Character vector of modules to import before timing
+#' @return List with compile_ms and eval_ms (medians)
+split_pipeline_timing <- function(text, n = 10, setup_modules = NULL) {
+  compile_times <- numeric(n)
+  eval_times <- numeric(n)
+  for (i in seq_len(n)) {
+    eng <- Engine$new()
+    if (!is.null(setup_modules)) {
+      for (mod in setup_modules) eng$eval_text(paste0("(import ", mod, ")"))
+    }
+    comp <- engine_field(eng, "compiler")
+    rt <- engine_field(eng, "compiled_runtime")
+    env <- eng$get_env()
+    exprs <- eng$read(text)
+    c_total <- 0
+    e_total <- 0
+    for (e in exprs) {
+      expanded <- eng$macroexpand(e, env = env, preserve_src = TRUE)
+      t1 <- proc.time()[[3]]
+      compiled <- comp$compile(expanded, env, strict = TRUE)
+      t2 <- proc.time()[[3]]
+      rt$eval_compiled(compiled, env)
+      t3 <- proc.time()[[3]]
+      c_total <- c_total + (t2 - t1)
+      e_total <- e_total + (t3 - t2)
+    }
+    compile_times[i] <- c_total * 1000
+    eval_times[i] <- e_total * 1000
+  }
+  list(compile_ms = median(compile_times), eval_ms = median(eval_times))
+}
+
 #' Create a simple timing function for quick measurements
 #'
 #' @param expr Expression to time

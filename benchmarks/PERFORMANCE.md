@@ -361,8 +361,9 @@ arl_strip_src_cached <- function(expr) {
 
 **Test Workload**:
 ```r
-# Profile evaluator
-source("benchmarks/profile-eval.R")
+# Profile compiler and R eval
+source("benchmarks/profile-compile.R")
+source("benchmarks/profile-r-eval.R")
 
 # Look for time in arl_strip_src
 ```
@@ -646,7 +647,8 @@ Run individual benchmarks:
 R -e "source('benchmarks/bench-tokenizer.R')"
 R -e "source('benchmarks/bench-parser.R')"
 R -e "source('benchmarks/bench-macro.R')"
-R -e "source('benchmarks/bench-eval.R')"
+R -e "source('benchmarks/bench-compile.R')"
+R -e "source('benchmarks/bench-r-eval.R')"
 R -e "source('benchmarks/bench-stdlib.R')"
 R -e "source('benchmarks/bench-e2e.R')"
 ```
@@ -663,7 +665,8 @@ Generate profiling reports:
 R -e "source('benchmarks/profile-tokenizer.R')"
 R -e "source('benchmarks/profile-parser.R')"
 R -e "source('benchmarks/profile-macro.R')"
-R -e "source('benchmarks/profile-eval.R')"
+R -e "source('benchmarks/profile-compile.R')"
+R -e "source('benchmarks/profile-r-eval.R')"
 ```
 
 Generate all profiles:

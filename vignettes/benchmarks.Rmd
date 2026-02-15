@@ -44,10 +44,10 @@ in the repository.
 
 ## Pipeline Overview
 
-Every Arl expression passes through four stages:
+Every Arl expression passes through five stages:
 
 ```
-Source → Tokenizer → Parser → Macro Expander → Compiler/Evaluator → Result
+Source → Tokenizer → Parser → Macro Expander → Compiler → R eval() → Result
 ```
 
 The table below shows where time is spent on each of the example programs
@@ -57,8 +57,8 @@ shipped with the package:
 if (has_bench_data) {
   real_names <- c("fibonacci.arl", "quicksort.arl",
                   "graph-paths.arl", "macro-examples.arl")
-  components <- c("tokenizer", "parser", "macro", "eval")
-  comp_labels <- c("Tokenizer", "Parser", "Macro Expander", "Compiler / Evaluator")
+  components <- c("tokenizer", "parser", "macro", "compile", "r-eval")
+  comp_labels <- c("Tokenizer", "Parser", "Macro Expander", "Compiler", "R eval()")
 
   comp_vals <- sapply(components, function(comp) {
     vapply(real_names, function(wl) {
@@ -84,7 +84,8 @@ if (has_bench_data) {
       Tokenizer = cells[1],
       Parser = cells[2],
       `Macro Expander` = cells[3],
-      `Compiler / Evaluator` = cells[4],
+      Compiler = cells[4],
+      `R eval()` = cells[5],
       check.names = FALSE,
       stringsAsFactors = FALSE
     )
@@ -96,7 +97,7 @@ if (has_bench_data) {
 }
 ```
 
-The compiler/evaluator and macro expander together dominate runtime.
+The compiler, R eval(), and macro expander together dominate runtime.
 The tokenizer and parser are fast by comparison.
 
 ## End-to-End Timings
@@ -197,7 +198,7 @@ saves results to `benchmarks/results/`. Individual component benchmarks
 are also available:
 
 ```bash
-# COMPONENT can be tokenizer, parser, macro, eval, stdlib, e2e
+# COMPONENT can be tokenizer, parser, macro, compile, r-eval, stdlib, e2e
 make bench-component COMPONENT=tokenizer
 ```
 

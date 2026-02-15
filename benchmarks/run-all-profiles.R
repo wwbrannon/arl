@@ -25,7 +25,8 @@ scripts <- c(
   "profile-tokenizer.R",
   "profile-parser.R",
   "profile-macro.R",
-  "profile-eval.R"
+  "profile-compile.R",
+  "profile-r-eval.R"
 )
 
 results <- list()
@@ -101,7 +102,8 @@ if (length(html_files) > 0) {
   cat("  source('benchmarks/profile-tokenizer.R')\n")
   cat("  source('benchmarks/profile-parser.R')\n")
   cat("  source('benchmarks/profile-macro.R')\n")
-  cat("  source('benchmarks/profile-eval.R')\n\n")
+  cat("  source('benchmarks/profile-compile.R')\n")
+  cat("  source('benchmarks/profile-r-eval.R')\n\n")
   cat("Or use make bench for automated performance measurement.\n")
 }
 

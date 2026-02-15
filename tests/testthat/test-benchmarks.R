@@ -113,7 +113,8 @@ test_that("benchmark scripts can be sourced", {
     "bench-tokenizer.R",
     "bench-parser.R",
     "bench-macro.R",
-    "bench-eval.R",
+    "bench-compile.R",
+    "bench-r-eval.R",
     "bench-stdlib.R",
     "bench-e2e.R"
   )
@@ -139,7 +140,8 @@ test_that("profiling scripts exist", {
     "profile-tokenizer.R",
     "profile-parser.R",
     "profile-macro.R",
-    "profile-eval.R",
+    "profile-compile.R",
+    "profile-r-eval.R",
     "run-all-profiles.R"
   )
 

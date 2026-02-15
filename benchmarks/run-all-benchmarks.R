@@ -25,7 +25,8 @@ scripts <- c(
   "bench-tokenizer.R",
   "bench-parser.R",
   "bench-macro.R",
-  "bench-eval.R",
+  "bench-compile.R",
+  "bench-r-eval.R",
   "bench-stdlib.R",
   "bench-interop.R",
   "bench-modules.R",
@@ -71,7 +72,7 @@ cat("========================================\n\n")
 
 result_files <- list.files(output_dir, pattern = "\\.csv$", full.names = TRUE)
 
-components <- c("tokenizer", "parser", "macro", "eval", "stdlib", "interop", "modules", "e2e")
+components <- c("tokenizer", "parser", "macro", "compile", "r-eval", "stdlib", "interop", "modules", "e2e")
 all_dfs <- list()
 
 for (component in components) {
