@@ -1,42 +1,20 @@
 o) read Getting Started, macro guide, module guide
 
 o) substantive changes
+    o) should we have stats and datasets on the search path -- `(stats::lm (~ mpg cyl) :data datasets::mtcars)` is annoying to type? comes down to the choice of parent env: baseenv vs globalenv
+    o) probably switch this example to eval=TRUE and fix it / its asserts up
+
     o) more future-proof import syntax a la python
 
-    o) should we have stats and datasets on the search path? parent env choice
-    (stats::lm (~ mpg cyl) :data datasets::mtcars)
-
-    o) is opt-rest behaving correctly in macro vignette? probably yes: but it should be stated clearly that the optional parameters have to be passed with keyword args
-
-o) this doesn't work in macro vignette, __case-clauses DNE
-    (defmacro case (key clause . rest)
-    (define key-sym (gensym "case-key"))
-    `((lambda (,key-sym)
-        ,(__case-clauses key-sym clause rest))
-        ,key))
-
-o) this is a bad example:
-    Macros can also expand into calls to other macros. The expander recursively expands until no macro calls remain:
-
-    ;; cond expands into nested if, which may contain further macro calls
-    (cond
-    ((= x 1) "one")
-    ((= x 2) "two")
-    (else "other"))
+o) eval_string alias for eval_text
 
 o) update macro vignette "rest parameters" and "defining macros" "yes" examples once print bug is fixed
 
 o) what does this mean? "If omitted, the parser falls back to a (doc! ...) call."
 
-o) the arl-vs-scheme vignette needs to talk about the macro differences
-
-o) the "Non-standard evaluation" in r-interop.Rmd is confusing: uses r/eval but that's not discussed, need to discuss it
-
 o) update the r-interop.Rmd vignette with fixes to rendering of lm and maybe search path
 
 o) "R base operators are also available directly": this is a bad example because we wrap these to support > 2 args, note this and also give other examples
-
-o) function vignette should explain what destructuring bind is or link to it
 
 o) getting started: "It also falls through to R’s built-in help for R functions" isn't true?
 
