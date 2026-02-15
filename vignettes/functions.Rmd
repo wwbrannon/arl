@@ -33,9 +33,11 @@ Functions are created with `lambda` and bound to names with `define`:
 ```
 
 **Important:** Unlike Scheme, `(define (f x) body)` is **not** function
-shorthand in Arl. It is destructuring bind — it tries to bind a
-pattern `(f x)` to `body`. Always use the explicit `define` + `lambda`
-form shown above.
+shorthand in Arl. Because `define` supports
+[destructuring](#destructuring), writing `(define (f x) body)` tries to
+destructure the value `body` into the pattern `(f x)` — it does not
+create a function. Always use the explicit `define` + `lambda` form
+shown above.
 
 ```{arl, eval=FALSE}
 ;; WRONG — this is destructuring, not function definition
@@ -50,7 +52,7 @@ form shown above.
 (assert-error (eval '(define (f x) (+ x 1))))
 ```
 
-## Parameter Features
+## Parameter Features {#parameter-features}
 
 Arl's `lambda` supports several parameter styles. These work identically
 in `defmacro` parameters.
@@ -100,7 +102,7 @@ Use `.` to collect remaining arguments into a list:
 (assert-equal 10 (sum-all 1 2 3 4))
 ```
 
-### Destructuring parameters
+### Destructuring parameters {#destructuring-parameters}
 
 Use `(pattern ...)` to destructure an argument:
 
@@ -149,6 +151,77 @@ You can mix required, optional, destructuring, and rest parameters:
 (assert-equal (list 1 10 (list)) (flexible 1))
 (assert-equal (list 1 2 (list 3 4)) (flexible 1 2 3 4))
 ```
+
+## Destructuring {#destructuring}
+
+Destructuring lets you unpack a data structure into individual variables
+in a single `define` statement. Instead of binding a name to a value,
+you provide a **pattern** — a nested list of names — and Arl matches
+each name to the corresponding element of the value:
+
+```{arl}
+(define (x y z) (list 10 20 30))
+(list x y z)
+```
+
+```{arl, include=FALSE}
+(assert-equal 10 x)
+(assert-equal 20 y)
+(assert-equal 30 z)
+```
+
+This works with nested structures too:
+
+```{arl}
+(define (a (b c)) (list 1 (list 2 3)))
+(list a b c)
+```
+
+```{arl, include=FALSE}
+(assert-equal 1 a)
+(assert-equal 2 b)
+(assert-equal 3 c)
+```
+
+### `destructuring-bind`
+
+The `destructuring-bind` macro provides a scoped form of destructuring.
+It binds a pattern to a value and evaluates body forms with those
+bindings in scope:
+
+```{arl}
+(destructuring-bind (first second . rest) (list 1 2 3 4 5)
+  (list first second rest))
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 1 2 (list 3 4 5))
+  (destructuring-bind (first second . rest) (list 1 2 3 4 5)
+    (list first second rest)))
+```
+
+This is what macros like `let*` and `when-let` use under the hood — each
+binding in a `let` form is a destructuring bind, so patterns work anywhere a
+`let` binding does:
+
+```{arl}
+(let (((a b) (list 1 2))
+      ((c d) (list 3 4)))
+  (+ a b c d))
+```
+
+```{arl, include=FALSE}
+(assert-equal 10 (let (((a b) (list 1 2))
+                       ((c d) (list 3 4)))
+                   (+ a b c d)))
+```
+
+### Destructuring in function parameters
+
+As shown in [Parameter Features](#parameter-features) above, `lambda`
+parameters can also destructure their arguments using the
+`(pattern ...)` syntax. See [Destructuring
+parameters](#destructuring-parameters) for examples.
 
 ## Calling Functions
 
