@@ -323,6 +323,57 @@ test_that("call-with-values errors when consumer is not a function", {
 # Coverage: license function
 # ============================================================================
 
+# ============================================================================
+# Coverage: unbind-variable
+# ============================================================================
+
+test_that("unbind-variable removes a binding from current env", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  engine$eval(engine$read("(define ub-test 42)")[[1]], env = env)
+  expect_equal(env$`ub-test`, 42)
+
+  engine$eval(engine$read('(unbind-variable "ub-test" (current-env))')[[1]], env = env)
+  expect_false(exists("ub-test", envir = env, inherits = FALSE))
+})
+
+test_that("unbind-variable accepts symbol name", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  engine$eval(engine$read("(define ub-sym 99)")[[1]], env = env)
+  engine$eval(engine$read("(unbind-variable 'ub-sym (current-env))")[[1]], env = env)
+  expect_false(exists("ub-sym", envir = env, inherits = FALSE))
+})
+
+test_that("unbind-variable makes variable inaccessible", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  result <- engine$eval(engine$read('
+    (begin
+      (define ub-gone 10)
+      (unbind-variable "ub-gone" (current-env))
+      (try ub-gone (catch e "removed")))
+  ')[[1]], env = env)
+  expect_equal(result, "removed")
+})
+
+test_that("unbind-variable warns on nonexistent binding", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  expect_warning(
+    engine$eval(engine$read('(unbind-variable "no-such-var" (current-env))')[[1]], env = env),
+    "not found"
+  )
+})
+
+# ============================================================================
+# Coverage: license function
+# ============================================================================
+
 test_that("license function executes without error", {
   env <- new.env()
   toplevel_env(engine, env = env)

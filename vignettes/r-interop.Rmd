@@ -82,11 +82,15 @@ looks up its character argument in the containing R scopes:
 
 ; r/call can still find it
 (r/call "sum" (list 1 2 3))
+
+; avoid keeping this shadowing binding around (see below)
+(unbind-variable 'sum (current-env))
 ```
 
 ```{arl, include=FALSE}
 (define sum (lambda () (stop "error")))
 (assert-equal 6 (r/call "sum" (list 1 2 3)))
+(unbind-variable 'sum (current-env))
 ```
 
 ### Non-standard evaluation
@@ -215,6 +219,32 @@ R base operators are also available directly:
 ```{arl, include=FALSE}
 (assert-equal 6 (+ 1 2 3))
 (assert-true (< 3 5))
+```
+
+### Managing bindings
+
+Use `get` to retrieve a binding by name and `unbind-variable` to remove one.
+Both accept an optional environment argument (defaulting to `.GlobalEnv` for
+`get` and `(current-env)` for `unbind-variable`):
+
+```{arl}
+(define temp-binding 42)
+(get 'temp-binding (current-env))     ; => 42
+(unbind-variable 'temp-binding (current-env))
+; temp-binding is no longer defined
+```
+
+```{arl, include=FALSE}
+(define ri-ub-test 99)
+(assert-equal 99 (get "ri-ub-test" (current-env)))
+(unbind-variable 'ri-ub-test (current-env))
+(assert-equal "gone" (try ri-ub-test (catch e "gone")))
+```
+
+Names can also be passed as strings:
+
+```{arl, eval=FALSE}
+(unbind-variable "temp-binding" (current-env))
 ```
 
 ### Numeric edge cases

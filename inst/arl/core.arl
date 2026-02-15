@@ -5,7 +5,7 @@
           error warn
           identity values values?
           call-with-values
-          funcall r/call get
+          funcall r/call get unbind-variable
           macroexpand-1 macroexpand-all)
 
   (import _r)
@@ -146,6 +146,24 @@
           (as.character name)
           name))
       (r/call "get" (list name-str :envir envir :inherits inherits))))
+
+  ;;' @description Remove a variable binding from an environment.
+  ;;' @signature (unbind-variable name [envir])
+  ;;' @examples
+  ;;' (begin
+  ;;'   (define tmp-var 42)
+  ;;'   (unbind-variable "tmp-var" (current-env))
+  ;;'   (try tmp-var (catch e "gone")))  ; => "gone"
+  ;;' @assert
+  ;;' (assert-equal "gone" (begin (define ub-test 1) (unbind-variable "ub-test" (current-env)) (try ub-test (catch e "gone"))))
+  ;;' @seealso get, define
+  (define unbind-variable
+    (lambda (name (envir (current-env)))
+      (define name-str
+        (if (is.symbol name)
+          (as.character name)
+          name))
+      (rm :list name-str :envir envir)))
 
 ;;' @section License
 

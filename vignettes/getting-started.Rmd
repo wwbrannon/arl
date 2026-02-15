@@ -191,6 +191,19 @@ is falsy. See [Troubleshooting](troubleshooting.html) for common pitfalls.
 (assert-equal 120 (factorial 5))
 ```
 
+Use `unbind-variable` to remove a binding:
+
+```{arl}
+(define tmp 42)
+(unbind-variable 'tmp (current-env))
+```
+
+```{arl, include=FALSE}
+(define ub-gs-test 1)
+(unbind-variable 'ub-gs-test (current-env))
+(assert-equal "gone" (try ub-gs-test (catch e "gone")))
+```
+
 ### Local bindings
 
 ```{arl}
