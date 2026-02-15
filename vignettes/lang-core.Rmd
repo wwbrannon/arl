@@ -686,6 +686,33 @@ while) or other constructs that Arl normally overrides.
 
 ---
 
+## Modules and Imports {#section-modules-and-imports}
+
+### import-stdlib {#import-stdlib}
+
+Load and attach all standard library modules into the current
+environment. Useful when an engine was initialized with load_stdlib = FALSE.
+
+**Signature:** `(import-stdlib)`
+
+**Examples:**
+```{arl}
+(import-stdlib)
+(map (lambda (x) (+ x 1)) (list 1 2 3)) ; => (2 3 4)
+```
+
+```{arl, include=FALSE}
+(import-stdlib)
+(assert-equal (list 2 3 4) (map (lambda (x) (+ x 1)) (list 1 2 3)))
+```
+
+**Note:** Re-running import-stdlib is safe; already-loaded modules are reused and
+attached into the current scope.
+
+**See also:** import, module, load
+
+---
+
 ## Macro Utilities {#section-macro-utilities}
 
 ### capture {#capture}

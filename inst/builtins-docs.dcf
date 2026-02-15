@@ -73,6 +73,22 @@ Note: Produces output that can be parsed back with read, ensuring the
   round-trip property: (read (write expr)) equals expr for any expression
   produced by read.
 
+Name: import-stdlib
+Vignette: lang-core
+Section: Modules and Imports
+Description: Load and attach all standard library modules into the current
+  environment. Useful when an engine was initialized with load_stdlib = FALSE.
+Signature: (import-stdlib)
+Examples:
+  (import-stdlib)
+  (map (lambda (x) (+ x 1)) (list 1 2 3)) ; => (2 3 4)
+Assert:
+  (import-stdlib)
+  (assert-equal (list 2 3 4) (map (lambda (x) (+ x 1)) (list 1 2 3)))
+Seealso: import, module, load
+Note: Re-running import-stdlib is safe; already-loaded modules are reused and
+  attached into the current scope.
+
 Name: capture
 Vignette: lang-core
 Section: Macro Utilities

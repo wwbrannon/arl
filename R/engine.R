@@ -201,6 +201,15 @@ Engine <- R6::R6Class(
       self$eval_text(text, env = env, source_name = source_name)
     },
 
+    #' @description
+    #' Load and attach all stdlib modules into an environment.
+    #' @param env Target environment. Defaults to the engine top-level environment.
+    import_stdlib = function(env = NULL) {
+      target_env <- private$resolve_env_arg(env)
+      private$.load_stdlib_into_env(target_env)
+      invisible(self)
+    },
+
 
     #' @description
     #' Load and evaluate an Arl source file in an isolated scope. The file runs in a
@@ -566,6 +575,16 @@ Engine <- R6::R6Class(
 
       env$write <- function(expr) {
         private$.parser$write(expr)
+      }
+
+      env$`import-stdlib` <- function() {
+        target_env <- if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
+          get(".__env", envir = parent.frame(), inherits = TRUE)
+        } else {
+          env
+        }
+        private$.load_stdlib_into_env(target_env)
+        invisible(NULL)
       }
 
       env$`toplevel-env` <- function() env
