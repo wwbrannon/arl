@@ -53,6 +53,64 @@ structures:
 - Vectors are R vectors.
 - `#nil` maps to R's `NULL`.
 
+#### Pairlists vs R lists {#pairlists-vs-r-lists}
+
+Scheme usually presents lists as chains of pairs. In Arl, the first distinction
+is **representation**:
+
+- **R list/call representation** (created by `list`, many stdlib ops, and R interop).
+- **`Cons` cell representation** (R6 object), created by dotted-pair syntax / low-level pair construction.
+
+Both can represent sequence-like data, but `list?` and `pair?` are intentionally
+representation-oriented:
+
+- `list?` is true for R lists/calls.
+- `pair?` is true for `Cons` cells.
+- `list-or-pair?` accepts either non-empty representation.
+
+For `Cons` chains, the classic proper/improper distinction still applies:
+
+- A `Cons` chain ending in `()`/`#nil` is **proper**.
+- A `Cons` chain with a non-list tail is **improper** (dotted pair).
+
+`car`/`cdr` work across both representations; for an improper pair, `cdr`
+returns the tail value directly.
+
+```{arl}
+(define rlist (list 1 2 3))
+(define cons-proper (1 . (2 . (3 . ()))))
+(define cons-improper (1 . 2))
+
+(list? rlist)
+(pair? cons-proper)
+(pair? cons-improper)
+(cdr rlist)          ; => (2 3)
+(cdr cons-proper)    ; => (2 3) as a Cons chain
+(cdr cons-improper)  ; => 2
+```
+
+```{arl, include=FALSE}
+(define rlist (list 1 2 3))
+(define cons-proper (1 . (2 . (3 . ()))))
+(define cons-improper (1 . 2))
+
+(assert-true (list? rlist))
+(assert-false (pair? rlist))
+
+(assert-true (pair? cons-proper))
+(assert-false (list? cons-proper))
+(assert-true (pair? cons-improper))
+(assert-false (list? cons-improper))
+
+(assert-equal (list 2 3) (cdr rlist))
+(assert-equal 2 (cdr cons-improper))
+(assert-true (null? (cdr (cdr (cdr cons-proper)))))
+```
+
+In practice, most everyday Arl code should prefer R-list-backed lists. `Cons`
+representation remains useful for Lisp-style data modeling and explicit pair
+work.
+
 ### Truthiness
 
 Scheme typically treats only `#f` as false. Arl treats `#f`/`FALSE`,

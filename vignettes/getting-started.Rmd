@@ -388,7 +388,8 @@ For convenience, an Arl list is also an R list under the hood:
 (assert-true (base::is.list (list 1 2 3)))
 ```
 
-Lisp's traditional pair lists made of cons cells are also supported:
+Lisp's traditional pair lists made of cons cells are also supported, though
+they are implemented differently and less commonly used:
 
 ```{arl}
 (define pl (3 . (4 . 5))) ; this is a dotted-pair list
@@ -401,6 +402,9 @@ Lisp's traditional pair lists made of cons cells are also supported:
 (assert-true (pair? pl))
 (assert-false (list? pl))
 ```
+
+For a concise guide to R-style lists vs dotted pairs and when to use each, see
+[Pairlists vs R lists](arl-vs-scheme.html#pairlists-vs-r-lists).
 
 For more details on the standard library and macros, see the other vignettes in
 this package.
