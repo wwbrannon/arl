@@ -26,7 +26,7 @@ Arl has three mechanisms for loading code:
 
 ## The `load` Special Form
 
-`load` is the simpler mechanism - it reads and evaluates a file in the current environment.
+`load` is the simplest mechanism - it reads and evaluates a file in the current environment.
 
 ### Signature
 

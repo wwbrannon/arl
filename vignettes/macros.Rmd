@@ -17,7 +17,7 @@ arl::register_knitr_engine()
 Macros let you transform code at compile time, before evaluation.  Arl
 provides `defmacro` for defining macros, quasiquote/unquote for building
 output templates, automatic hygiene to prevent accidental variable capture,
-`gensym` for generating fresh symbols, and `capture` for intentionally
+`gensym` for generating unique symbols, and `capture` for intentionally
 breaking hygiene (anaphoric macros).
 
 ## Overview: what kind of macros does Arl support?
@@ -55,8 +55,8 @@ In summary:
 With that macro defined:
 
 ```{arl}
-(when (> 5 3) (print "yes"))
 ;; expands to: (if (> 5 3) (begin (print "yes")) #nil)
+(when (> 5 3) (print "yes"))
 ```
 
 ```{arl, include=FALSE}
@@ -68,9 +68,10 @@ syntax trees (R calls/symbols), not as values.  The macro body constructs
 and returns new syntax, which the compiler then compiles and evaluates in
 place of the original call.
 
-You can document macros with `;;'` annotation comments above the
-definition (see
-[Getting Started -- Documenting functions](getting-started.html#documenting-functions)):
+You can document macros with `;;'` annotation comments above the definition
+(see [Getting Started -- Documenting
+functions](getting-started.html#documenting-functions)), and use `help` to view
+this documentation from the REPL:
 
 ```{arl, eval=FALSE}
 (help "when")
@@ -181,8 +182,11 @@ Patterns can be nested, have defaults, or be used as rest parameters:
 
 Quasiquote (backtick) is the primary tool for constructing macro output.
 Inside a quasiquoted template, `,expr` (unquote) evaluates `expr` and
-splices the result into the template, and `,@expr` (unquote-splicing)
-evaluates `expr` (which must produce a list) and splices its elements.
+inserts the result into the template, and `,@expr` (unquote-splicing)
+evaluates `expr` (which must produce a list) and splices its elements into the
+template on the same level as `,@expr`. (That is, unquote always replaces
+`,expr` with one element, but unquote-splicing, if the list to be spliced has
+length greater than 1, can replace `,@expr` with more than one element.)
 
 ### Quasiquote basics
 
@@ -224,9 +228,9 @@ This is useful for writing macros that generate other macros.
 
 ## Hygiene
 
-Arl macros are **hygienic by default**.  When a macro introduces bindings
-(via `define`, `let`, `lambda`, etc.), those bindings are automatically
-renamed so they cannot collide with names at the call site.
+Arl macros are **hygienic by default**.  When a macro introduces bindings (via
+`define` or other macros that expand into a `define`), those bindings are
+automatically renamed so they cannot collide with names at the call site.
 
 ### Automatic hygiene example
 
@@ -262,15 +266,15 @@ temp  ; => 999  (unaffected)
 ### How it works
 
 After a macro function returns its expansion, the expander runs a
-*hygienization* pass.  This pass walks the expanded code and renames
-any symbols that the macro introduced (i.e. not originating from the
-call site) in binding positions (`define`, `let`, `lambda` params) and
-their corresponding references.  Symbols originating from the caller's
-code are marked as "call_site" and left untouched.
+*hygienization* pass.  This pass walks the expanded code and renames any
+symbols that the macro introduced (i.e. not originating from the call site) in
+binding positions like those of `define` or `lambda` parameters. Symbols
+originating from the caller's code are marked and left untouched.
 
-The quasiquote expander tags each evaluated value with its origin
-(`call_site` for unquoted caller expressions).  The hygienizer then uses
-these tags to decide which symbols to rename.
+The quasiquote expander tags each evaluated value with its origin, marking
+unquoted caller expressions in particular as having originated from the
+containing scope.  The hygienizer then uses these tags to decide which symbols
+to rename.
 
 ## `gensym` -- generating fresh symbols
 
@@ -279,8 +283,8 @@ user-defined name.  Use it when you need to create bindings at
 macro-expansion time that must not conflict:
 
 ```{arl}
-(gensym)          ; => G__1
-(gensym "tmp")    ; => tmp__2
+(gensym)          ; => G__N for some N
+(gensym "tmp")    ; => tmp__N for some N
 ```
 
 ```{arl, include=FALSE}
@@ -288,7 +292,8 @@ macro-expansion time that must not conflict:
 (assert-true (symbol? (gensym "tmp")))
 ```
 
-Each call returns a new symbol with a monotonically increasing counter.
+Each call returns a new symbol with a monotonically increasing counter,
+incrementing further to skip over any symbols which are already defined.
 
 ### When to use `gensym`
 
@@ -313,7 +318,7 @@ not apply.  `gensym` ensures the binding is unique.
 
 Another common pattern is loop macros:
 
-```{arl, eval=FALSE}
+```{arl}
 (defmacro for (binding . body)
   (begin
     (define var (car binding))
@@ -325,13 +330,17 @@ Another common pattern is loop macros:
          (define ,var (car ,remaining))
          ,@body
          (set! ,remaining (cdr ,remaining))))))
+
+(for (x '(1 2 3))
+  (print x))
 ```
 
 ## `capture` -- intentional variable capture (anaphoric macros)
 
 Sometimes you *want* a macro to introduce a binding visible to the
 caller.  The classic example is the **anaphoric if** (`aif`), which
-binds the test result to `it` so the then/else branches can use it.
+binds the test result to the fixed symbol `it` so the then/else branches can
+use it.
 
 Without any special handling, hygiene would rename the macro's `it` to a
 fresh symbol, making it invisible to the caller.  The `capture` builtin
@@ -426,7 +435,7 @@ you can perform arbitrary computation before returning the template:
 
 Macros can call themselves recursively or invoke other macros:
 
-```{arl, eval=FALSE}
+```{arl}
 ;; Thread-first: recursive macro that threads a value through forms
 (defmacro -> (value . forms)
   (if (null? forms)
@@ -437,8 +446,8 @@ Macros can call themselves recursively or invoke other macros:
             `(-> (,(car first-form) ,value ,@(cdr first-form)) ,@rest-forms)
             `(-> (,first-form ,value) ,@rest-forms)))))
 
-(-> 5 (+ 3) (* 2) (- 1))  ; => 15
 ;; expands to (- (* (+ 5 3) 2) 1)
+(-> 5 (+ 3) (* 2) (- 1))  ; => 15
 ```
 
 ```{arl, include=FALSE}

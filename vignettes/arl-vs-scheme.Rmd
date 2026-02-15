@@ -16,10 +16,10 @@ arl::register_knitr_engine()
 
 Arl is a Lisp dialect implemented in and with access to R. It borrows Lisp
 syntax and macro conventions, but its runtime model and interop are rooted in
-R. This vignette highlights key similarities with Scheme and the most important
-differences. (The development of R was [heavily
+R. Because R's development was [heavily
 influenced](https://cran.r-project.org/doc/html/interface98-paper/paper_1.html)
-by Scheme, making the comparison natural.)
+by Scheme, this vignette highlights key similarities with Scheme and the most
+important differences.
 
 ## Common ground
 
