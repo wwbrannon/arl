@@ -130,13 +130,97 @@ test_that("help shows arl_doc attribute on functions", {
   expect_true(any(grepl("\\(documented value\\)", output)))
 })
 
-test_that("help falls back to utils::help for unknown topics", {
+test_that("help shows structured R docs for non-Arl topics", {
   engine <- make_engine()
   env <- engine$get_env()
 
-  # Topic not in specials, macros, or env should fall back to R help
-  # We can't easily test utils::help output, but we can verify no error
-  expect_silent(capture.output(engine$eval_text("(help mean)", env = env)))
+  output <- capture.output(engine$eval_text("(help \"c\")", env = env))
+  expect_true(any(grepl("Topic: c", output)))
+  expect_true(any(grepl("^Usage:", output)))
+  expect_true(any(grepl("^Description:", output)))
+})
+
+test_that("help supports package-qualified R help", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  output <- capture.output(engine$eval_text("(help \"writeLines\" :package \"base\")", env = env))
+  expect_true(any(grepl("Topic: writeLines", output)))
+  expect_true(any(grepl("R package: base", output)))
+  expect_true(any(grepl("^Description:", output)))
+})
+
+test_that("help package-qualified form validates keyword syntax", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  expect_error(
+    engine$eval_text("(help \"writeLines\" :pkg \"base\")", env = env),
+    "help keyword form requires :package"
+  )
+})
+
+test_that("help prints explicit message for unknown topics", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  output <- capture.output(engine$eval_text("(help \"nonexistent_topic_arl_foo\")", env = env))
+  expect_true(any(grepl("No help found for topic: nonexistent_topic_arl_foo", output)))
+})
+
+test_that("help notes other package matches when available", {
+  candidates <- c("lag", "filter", "time", "plot", "window")
+  counts <- vapply(candidates, function(topic) {
+    length(suppressWarnings(utils::help(topic, help_type = "text", try.all.packages = TRUE)))
+  }, integer(1))
+  topic <- candidates[which(counts > 1)[1]]
+  if (is.na(topic) || !nzchar(topic)) {
+    skip("No multi-package help topic available in this R library set")
+  }
+
+  engine <- make_engine()
+  env <- engine$get_env()
+  output <- capture.output(engine$eval_text(sprintf("(help \"%s\")", topic), env = env))
+
+  expect_true(any(grepl("Also found in packages:", output)))
+})
+
+test_that("help R fallback is robust to user bindings named like base helpers", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  engine$eval_text("(define capture.output 123)", env = env)
+  engine$eval_text("(define tail 456)", env = env)
+  output <- capture.output(engine$eval_text("(help \"sum\")", env = env))
+
+  expect_true(any(grepl("Topic: sum", output)))
+  expect_true(any(grepl("^Description:", output)))
+})
+
+test_that("help package argument accepts symbol package names", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  output <- capture.output(engine$eval_text("(help \"sum\" :package base)", env = env))
+  expect_true(any(grepl("Topic: sum", output)))
+  expect_true(any(grepl("R package: base", output)))
+})
+
+test_that("help R doc rendering does not emit warnings", {
+  engine <- make_engine()
+  env <- engine$get_env()
+  warning_count <- 0L
+
+  output <- withCallingHandlers(
+    capture.output(engine$eval_text("(help \"sum\")", env = env)),
+    warning = function(w) {
+      warning_count <<- warning_count + 1L
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_true(any(grepl("Topic: sum", output)))
+  expect_equal(warning_count, 0L)
 })
 
 test_that("help prioritizes specials over macros", {

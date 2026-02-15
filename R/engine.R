@@ -23,6 +23,8 @@
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
 #' @param depth Number of expansion steps (NULL for full expansion).
 #' @param topic Help topic as a single string.
+#' @param package Optional package name (string or symbol) for package-qualified
+#'   R help lookup in \code{$help()}.
 #' @param load_stdlib Logical; if TRUE (the default), load all stdlib modules.
 #' @param disable_tco Logical; if TRUE, disable self-tail-call optimization.
 #' @param value Value to format for display.
@@ -113,7 +115,7 @@ Engine <- R6::R6Class(
         context,
         load_file_fn = function(path, env) self$load_file_in_env(path, env),
         run_file_fn = function(path, env) self$load_file_under_env(path, env),
-        help_fn = function(topic, env) self$help(topic, env),
+        help_fn = function(topic, env, package = NULL) self$help(topic, env, package),
         module_cache = private$.module_cache
       )
       context$compiled_runtime <- private$.compiled_runtime
@@ -359,9 +361,13 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Show help for a topic.
-    help = function(topic, env = NULL) {
+    #' @param topic Help topic as a single string.
+    #' @param env Optional environment/Env to resolve Arl bindings against.
+    #' @param package Optional package name (string or symbol) to force R help
+    #'   lookup in a specific package.
+    help = function(topic, env = NULL, package = NULL) {
       target_env <- private$resolve_env_arg(env)
-      private$.help_system$help_in_env(topic, target_env)
+      private$.help_system$help_in_env(topic, target_env, package = package)
     },
 
     #' @description

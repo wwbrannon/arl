@@ -1,4 +1,5 @@
-# HelpSystem: Dispatches (help topic) to built-in specials, macro docstrings, or R's help().
+# HelpSystem: Dispatches (help topic) to built-in specials, macro docstrings,
+# env docs, or structured R help.
 #
 # @field env Env (for default env in help()).
 # @field macro_expander MacroExpander (for macro docstrings and usage).
@@ -20,15 +21,28 @@ HelpSystem <- R6::R6Class(
     },
     # @description Show help for topic in the default env (self$env$env).
     # @param topic Symbol or string topic name.
-    help = function(topic) {
-      self$help_in_env(topic, self$env$env)
+    # @param package Optional package name for R help lookup.
+    help = function(topic, package = NULL) {
+      self$help_in_env(topic, self$env$env, package = package)
     },
-    # @description Show help for topic in the given env. Tries specials, then macro doc, then env binding, then utils::help.
+    # @description Show help for topic in the given env. Tries Arl docs first,
+    # then falls back to structured R help.
     # @param topic Symbol or string (length 1).
     # @param env Env or R environment.
-    help_in_env = function(topic, env) {
-      if (!is.character(topic) || length(topic) != 1) {
+    # @param package Optional package name for R help lookup.
+    help_in_env = function(topic, env, package = NULL) {
+      if (is.symbol(topic)) {
+        topic <- as.character(topic)
+      }
+      if (!is.character(topic) || length(topic) != 1 || !nzchar(topic)) {
         stop("help requires a symbol or string")
+      }
+      if (is.symbol(package)) {
+        package <- as.character(package)
+      }
+      if (!is.null(package) &&
+          (!is.character(package) || length(package) != 1 || !nzchar(package))) {
+        stop("help package must be a non-empty symbol or string")
       }
 
       if (r6_isinstance(env, "Env")) {
@@ -41,59 +55,79 @@ HelpSystem <- R6::R6Class(
       }
       target_env <- env
 
-      doc <- private$specials_help[[topic]]
-      if (!is.null(doc)) {
-        private$print_doc(topic, doc)
+      fallback_usage <- NULL
+      if (is.null(package)) {
+        doc <- private$specials_help[[topic]]
+        if (!is.null(doc)) {
+          private$print_doc(topic, doc)
+          return(invisible(NULL))
+        }
+
+        macro_symbol <- as.symbol(topic)
+        if (self$macro_expander$is_macro(macro_symbol, env = target_env)) {
+          macro_fn <- self$macro_expander$get_macro(macro_symbol, env = target_env)
+          macro_doc <- attr(macro_fn, "arl_doc", exact = TRUE)
+          usage <- private$usage_from_macro(macro_fn, topic)
+          if (!is.null(macro_doc)) {
+            if (is.character(macro_doc)) {
+              macro_doc <- list(description = paste(macro_doc, collapse = "\n"))
+            }
+            if (is.null(macro_doc$usage) && !is.null(usage)) {
+              macro_doc$usage <- usage
+            }
+            private$print_doc(topic, macro_doc)
+            return(invisible(NULL))
+          }
+          if (!is.null(usage)) {
+            private$print_doc(topic, list(usage = usage))
+            return(invisible(NULL))
+          }
+        }
+
+        if (exists(topic, envir = target_env, inherits = TRUE)) {
+          binding_env <- private$find_binding_env(topic, target_env)
+          obj <- get(topic, envir = target_env, inherits = TRUE)
+          obj_doc <- attr(obj, "arl_doc", exact = TRUE)
+          usage <- NULL
+          if (inherits(obj, "arl_closure")) {
+            usage <- private$usage_from_closure(obj, topic)
+          } else if (is.function(obj)) {
+            usage <- private$usage_from_formals(obj, topic)
+          }
+          if (!is.null(obj_doc)) {
+            if (is.character(obj_doc)) {
+              obj_doc <- list(description = paste(obj_doc, collapse = "\n"))
+            }
+            if (is.null(obj_doc$usage) && !is.null(usage)) {
+              obj_doc$usage <- usage
+            }
+            private$print_doc(topic, obj_doc)
+            return(invisible(NULL))
+          }
+          if (!is.null(usage) && !is.null(binding_env) && identical(binding_env, target_env)) {
+            private$print_doc(topic, list(usage = usage))
+            return(invisible(NULL))
+          }
+          if (inherits(obj, "arl_closure") && !is.null(usage)) {
+            private$print_doc(topic, list(usage = usage))
+            return(invisible(NULL))
+          }
+          if (!is.null(usage)) {
+            fallback_usage <- usage
+          }
+        }
+      }
+
+      r_doc <- private$r_help_doc(topic, package = package)
+      if (!is.null(r_doc)) {
+        private$print_doc(topic, r_doc)
         return(invisible(NULL))
       }
-
-      macro_symbol <- as.symbol(topic)
-      if (self$macro_expander$is_macro(macro_symbol, env = target_env)) {
-        macro_fn <- self$macro_expander$get_macro(macro_symbol, env = target_env)
-        macro_doc <- attr(macro_fn, "arl_doc", exact = TRUE)
-        usage <- private$usage_from_macro(macro_fn, topic)
-        if (!is.null(macro_doc)) {
-          if (is.character(macro_doc)) {
-            macro_doc <- list(description = paste(macro_doc, collapse = "\n"))
-          }
-          if (is.null(macro_doc$usage) && !is.null(usage)) {
-            macro_doc$usage <- usage
-          }
-          private$print_doc(topic, macro_doc)
-          return(invisible(NULL))
-        }
-        if (!is.null(usage)) {
-          private$print_doc(topic, list(usage = usage))
-          return(invisible(NULL))
-        }
+      if (!is.null(fallback_usage)) {
+        private$print_doc(topic, list(usage = fallback_usage))
+        return(invisible(NULL))
       }
-
-      if (exists(topic, envir = target_env, inherits = TRUE)) {
-        obj <- get(topic, envir = target_env, inherits = TRUE)
-        obj_doc <- attr(obj, "arl_doc", exact = TRUE)
-        usage <- NULL
-        if (inherits(obj, "arl_closure")) {
-          usage <- private$usage_from_closure(obj, topic)
-        } else if (is.function(obj)) {
-          usage <- private$usage_from_formals(obj, topic)
-        }
-        if (!is.null(obj_doc)) {
-          if (is.character(obj_doc)) {
-            obj_doc <- list(description = paste(obj_doc, collapse = "\n"))
-          }
-          if (is.null(obj_doc$usage) && !is.null(usage)) {
-            obj_doc$usage <- usage
-          }
-          private$print_doc(topic, obj_doc)
-          return(invisible(NULL))
-        }
-        if (!is.null(usage)) {
-          private$print_doc(topic, list(usage = usage))
-          return(invisible(NULL))
-        }
-      }
-
-      utils::help(topic, help_type = "text")
+      private$print_help_not_found(topic, package = package)
       invisible(NULL)
     }
   ),
@@ -138,8 +172,8 @@ HelpSystem <- R6::R6Class(
           description = "Update an existing binding."
         ),
         help = list(
-          usage = "(help topic)",
-          description = "Show help for a topic without evaluating it."
+          usage = "(help topic) or (help topic :package pkg)",
+          description = "Show help for a topic without evaluating it. Use :package to force R help from a specific package."
         ),
         begin = list(
           usage = "(begin expr...)",
@@ -191,14 +225,35 @@ HelpSystem <- R6::R6Class(
     print_doc = function(topic, doc) {
       lines <- c(paste0("Topic: ", topic))
       if (!is.null(doc$usage) && doc$usage != "") {
-        lines <- c(lines, paste0("Usage: ", doc$usage))
+        usage_lines <- strsplit(doc$usage, "\n", fixed = TRUE)[[1]]
+        usage_lines <- usage_lines[nzchar(trimws(usage_lines))]
+        if (length(usage_lines) <= 1) {
+          lines <- c(lines, paste0("Usage: ", usage_lines))
+        } else {
+          lines <- c(lines, "Usage:")
+          lines <- c(lines, paste0("  ", usage_lines))
+        }
       }
       if (!is.null(doc$description) && doc$description != "") {
-        lines <- c(lines, paste0("Description: ", doc$description))
+        desc_lines <- strsplit(doc$description, "\n", fixed = TRUE)[[1]]
+        desc_lines <- desc_lines[nzchar(trimws(desc_lines))]
+        if (length(desc_lines) <= 1) {
+          lines <- c(lines, paste0("Description: ", desc_lines))
+        } else {
+          lines <- c(lines, "Description:")
+          lines <- c(lines, paste0("  ", desc_lines))
+        }
+      }
+      if (!is.null(doc$arguments) && nchar(doc$arguments) > 0) {
+        lines <- c(lines, "", "Arguments:")
+        arg_lines <- strsplit(doc$arguments, "\n", fixed = TRUE)[[1]]
+        arg_lines <- arg_lines[nzchar(trimws(arg_lines))]
+        lines <- c(lines, paste0("  ", arg_lines))
       }
       if (!is.null(doc$examples) && nchar(doc$examples) > 0) {
         lines <- c(lines, "", "Examples:")
-        example_lines <- strsplit(doc$examples, "\n")[[1]]
+        example_lines <- strsplit(doc$examples, "\n", fixed = TRUE)[[1]]
+        example_lines <- example_lines[nzchar(trimws(example_lines))]
         for (el in example_lines) {
           lines <- c(lines, paste0("  ", el))
         }
@@ -210,6 +265,153 @@ HelpSystem <- R6::R6Class(
         lines <- c(lines, "", paste0("See also: ", doc$seealso))
       }
       cat(paste(lines, collapse = "\n"), "\n")
+    },
+    print_help_not_found = function(topic, package = NULL) {
+      if (is.null(package)) {
+        cat(paste0("No help found for topic: ", topic), "\n")
+      } else {
+        cat(paste0("No help found for topic: ", topic, " in package: ", package), "\n")
+      }
+    },
+    find_binding_env = function(name, env) {
+      current <- env
+      empty <- emptyenv()
+      while (is.environment(current) && !identical(current, empty)) {
+        if (exists(name, envir = current, inherits = FALSE)) {
+          return(current)
+        }
+        current <- parent.env(current)
+      }
+      NULL
+    },
+    trim_empty_lines = function(lines) {
+      if (length(lines) == 0) {
+        return(character(0))
+      }
+      keep <- nzchar(trimws(lines))
+      if (!any(keep)) {
+        return(character(0))
+      }
+      first <- which(keep)[1]
+      last <- utils::tail(which(keep), 1)
+      lines[first:last]
+    },
+    normalize_overstrike = function(lines) {
+      vapply(lines, function(line) {
+        chars <- strsplit(line, "", fixed = TRUE)[[1]]
+        if (length(chars) == 0) {
+          return("")
+        }
+        out <- character(0)
+        for (ch in chars) {
+          if (identical(ch, "\b")) {
+            if (length(out) > 0) {
+              out <- out[-length(out)]
+            }
+          } else {
+            out <- c(out, ch)
+          }
+        }
+        paste(out, collapse = "")
+      }, character(1))
+    },
+    package_from_help_path = function(path) {
+      pkg_dir <- basename(dirname(dirname(path)))
+      if (!nzchar(pkg_dir) || identical(pkg_dir, "help")) {
+        return(NA_character_)
+      }
+      pkg_dir
+    },
+    parse_help_text_sections = function(lines) {
+      sections <- list()
+      current <- "preamble"
+      sections[[current]] <- character(0)
+      for (line in lines) {
+        t <- trimws(line)
+        if (grepl("^[A-Za-z][A-Za-z ]+:$", t)) {
+          current <- tolower(sub(":$", "", t))
+          if (is.null(sections[[current]])) {
+            sections[[current]] <- character(0)
+          }
+        } else {
+          sections[[current]] <- c(sections[[current]], line)
+        }
+      }
+      sections
+    },
+    collapse_section = function(sections, name) {
+      section <- sections[[name]]
+      if (is.null(section)) {
+        return(NULL)
+      }
+      section <- private$trim_empty_lines(section)
+      if (length(section) == 0) {
+        return(NULL)
+      }
+      paste(section, collapse = "\n")
+    },
+    render_r_help_text = function(help_path) {
+      get_help_file <- get(".getHelpFile", envir = asNamespace("utils"), inherits = FALSE)
+      rd <- get_help_file(help_path)
+      utils::capture.output(tools::Rd2txt(rd, options = list(underline_titles = FALSE)))
+    },
+    r_help_doc = function(topic, package = NULL) {
+      help_args <- list(
+        topic = topic,
+        package = package,
+        help_type = "text",
+        try.all.packages = is.null(package)
+      )
+      help_obj <- suppressWarnings(do.call(utils::help, help_args))
+      if (length(help_obj) == 0) {
+        return(NULL)
+      }
+      help_paths <- unclass(help_obj)
+      help_paths <- as.character(help_paths)
+      if (length(help_paths) == 0) {
+        return(NULL)
+      }
+      selected_path <- help_paths[[1]]
+      rendered <- tryCatch(
+        suppressWarnings(private$render_r_help_text(selected_path)),
+        error = function(e) {
+          suppressWarnings(utils::capture.output(base::print(help_obj)))
+        }
+      )
+      rendered <- private$trim_empty_lines(rendered)
+      if (length(rendered) == 0) {
+        return(NULL)
+      }
+      sections <- private$parse_help_text_sections(rendered)
+      doc <- list(
+        usage = private$collapse_section(sections, "usage"),
+        description = private$collapse_section(sections, "description"),
+        arguments = private$collapse_section(sections, "arguments"),
+        seealso = private$collapse_section(sections, "see also"),
+        examples = private$collapse_section(sections, "examples")
+      )
+      notes <- character(0)
+      selected_pkg <- private$package_from_help_path(selected_path)
+      if (!is.na(selected_pkg)) {
+        notes <- c(notes, paste0("R package: ", selected_pkg))
+      }
+      all_pkgs <- unique(stats::na.omit(vapply(help_paths, private$package_from_help_path, character(1))))
+      if (length(all_pkgs) > 1) {
+        other_pkgs <- setdiff(all_pkgs, selected_pkg)
+        if (length(other_pkgs) > 0) {
+          notes <- c(notes, paste0("Also found in packages: ", paste(other_pkgs, collapse = ", ")))
+        }
+      }
+      if (length(notes) > 0) {
+        doc$note <- paste(notes, collapse = "\n")
+      }
+      has_content <- any(vapply(doc[c("usage", "description", "arguments", "seealso", "examples", "note")], function(x) {
+        !is.null(x) && nzchar(x)
+      }, logical(1)))
+      if (!has_content) {
+        return(NULL)
+      }
+      doc
     },
     format_default = function(expr) {
       if (identical(expr, quote(expr = ))) {

@@ -906,14 +906,27 @@ Compiler <- R6::R6Class(
       ))
     },
     compile_help = function(expr) {
-      if (length(expr) != 2) {
-        return(private$fail("help requires exactly 1 argument: (help topic)"))
+      if (!(length(expr) == 2 || length(expr) == 4)) {
+        return(private$fail("help requires (help topic) or (help topic :package pkg)"))
       }
       topic_quoted <- as.call(list(quote(quote), expr[[2]]))
+      if (length(expr) == 2) {
+        return(as.call(list(
+          as.symbol(".__help"),
+          topic_quoted,
+          as.symbol(self$env_var_name)
+        )))
+      }
+      package_kw <- expr[[3]]
+      if (!inherits(package_kw, "arl_keyword") || !identical(as.character(package_kw), "package")) {
+        return(private$fail("help keyword form requires :package: (help topic :package pkg)"))
+      }
+      package_quoted <- as.call(list(quote(quote), expr[[4]]))
       as.call(list(
         as.symbol(".__help"),
         topic_quoted,
-        as.symbol(self$env_var_name)
+        as.symbol(self$env_var_name),
+        package_quoted
       ))
     },
     compile_while = function(expr) {

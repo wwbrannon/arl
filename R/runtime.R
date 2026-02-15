@@ -175,9 +175,10 @@ CompiledRuntime <- R6::R6Class(
       assign_and_lock(".__load", self$load_file_fn, "File loader for load/import.")
       assign_and_lock(".__run", self$run_file_fn, "File runner for run (isolated scope).")
 
-      assign_and_lock(".__help", function(topic, env) {
+      assign_and_lock(".__help", function(topic, env, package = NULL) {
         if (is.symbol(topic)) topic <- as.character(topic)
-        self$help_fn(topic, env)
+        if (is.symbol(package)) package <- as.character(package)
+        self$help_fn(topic, env, package)
       }, "Help system accessor.")
 
       assign_and_lock(".__subscript_call", function(op_name, args, env) {

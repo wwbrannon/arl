@@ -312,7 +312,7 @@ List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr o
 \subsection{Method \code{help()}}{
 Show help for a topic.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$help(topic, env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$help(topic, env = NULL, package = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -320,7 +320,10 @@ Show help for a topic.
 \describe{
 \item{\code{topic}}{Help topic as a single string.}
 
-\item{\code{env}}{Optional environment or Env used as the engine base.}
+\item{\code{env}}{Optional environment/Env to resolve Arl bindings against.}
+
+\item{\code{package}}{Optional package name (string or symbol) to force R help
+lookup in a specific package.}
 }
 \if{html}{\out{</div>}}
 }
