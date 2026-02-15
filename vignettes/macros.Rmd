@@ -299,22 +299,34 @@ incrementing further to skip over any symbols which are already defined.
 
 Because Arl macros are hygienic by default, you usually do *not* need
 `gensym` for simple temporaries in quasiquoted output.  `gensym` is
-useful when you build binding forms *programmatically at expansion time*
--- for example, when a macro computes a list of bindings in a `let`
-expression before constructing the quasiquoted result:
+useful when you build forms *programmatically at expansion time* and
+need a consistent temporary name across all of them -- for example,
+when `map` generates a variable number of forms that must share a
+binding:
 
-```{arl, eval=FALSE}
-(defmacro case (key clause . rest)
-  (define key-sym (gensym "case-key"))
-  `((lambda (,key-sym)
-      ,(__case-clauses key-sym clause rest))
-    ,key))
+```{arl}
+;; bind-all: evaluate expr once, then define each name to the result.
+(defmacro bind-all (expr . names)
+  (define tmp (gensym "val"))
+  `(begin
+     (define ,tmp ,expr)
+     ,@(map (lambda (n) `(define ,n ,tmp)) names)))
+
+(bind-all (+ 1 2) a b c)
+(list a b c)
 ```
 
-Here `key-sym` is used outside quasiquote to thread the fresh symbol
-into a helper function that builds nested `if` forms.  The helper is an
-ordinary function, not a quasiquoted template, so automatic hygiene does
-not apply.  `gensym` ensures the binding is unique.
+```{arl, include=FALSE}
+(assert-equal 3 a)
+(assert-equal 3 b)
+(assert-equal 3 c)
+```
+
+Here `map` builds one `define` per name, and every generated form must
+reference the same temporary.  Because these forms are constructed
+programmatically rather than written directly in a quasiquote template,
+automatic hygiene does not apply and `gensym` ensures the binding is
+unique.
 
 Another common pattern is loop macros:
 
