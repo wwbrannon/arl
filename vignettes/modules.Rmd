@@ -293,7 +293,7 @@ Then import it:
 (import __test-calculator)
 (assert-equal 7 (__calc-add 3 4))
 (assert-equal 1 (__calc-subtract 5 4))
-(assert-error (lambda () (__calc-add "x" 1)))
+(assert-error (__calc-add "x" 1))
 ```
 
 ### Nested Module Loading

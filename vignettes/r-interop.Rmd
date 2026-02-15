@@ -64,7 +64,7 @@ To pass a keyword as a *value* (rather than as named argument syntax), quote it:
 ```{arl, include=FALSE}
 (assert-false (equal? ':foo ':bar))
 (assert-true (equal? ':foo ':foo))
-(assert-error (lambda () (equal? :foo :bar)))
+(assert-error (equal? :foo :bar))
 ```
 
 This design allows keywords to work naturally with R's named arguments while
@@ -175,7 +175,7 @@ to create a unique sentinel:
 ```
 
 ```{arl, include=FALSE}
-(assert-no-error (lm (~ mpg cyl) :data mtcars))
+(assert-no-error (stats::lm (~ mpg cyl) :data datasets::mtcars))
 ```
 
 The `~` special form builds an R formula without evaluating its arguments.
@@ -184,7 +184,7 @@ The `~` special form builds an R formula without evaluating its arguments.
 
 ```{arl}
 (define mylist (list :a 1 :b 2))
-($ mylist a) ; => 1
+($ mylist "a") ; => 1
 
 (define vector (c 1 2 3))
 ([ vector 1) ; => 1
@@ -192,7 +192,7 @@ The `~` special form builds an R formula without evaluating its arguments.
 
 ```{arl, include=FALSE}
 (define mylist (list :a 1 :b 2))
-(assert-equal ($ mylist a) 1)
+(assert-equal ($ mylist "a") 1)
 
 (define vector (c 1 2 3))
 (assert-equal ([ vector 1) 1)

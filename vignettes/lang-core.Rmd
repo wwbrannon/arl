@@ -210,6 +210,28 @@ Get a binding by name, defaulting to .GlobalEnv.
 
 ---
 
+### unbind-variable {#unbind-variable}
+
+Remove a variable binding from an environment.
+
+**Signature:** `(unbind-variable name [envir])`
+
+**Examples:**
+```{arl}
+(begin
+  (define tmp-var 42)
+  (unbind-variable "tmp-var" (current-env))
+  (try tmp-var (catch e "gone")))  ; => "gone"
+```
+
+```{arl, include=FALSE}
+(assert-equal "gone" (begin (define ub-test 1) (unbind-variable "ub-test" (current-env)) (try ub-test (catch e "gone"))))
+```
+
+**See also:** [get](#get), define
+
+---
+
 ## License {#section-license}
 
 ### license {#license}
@@ -415,8 +437,8 @@ Assert condition or raise error.
 ```{arl, include=FALSE}
 (assert-true (assert #t))
 (assert-true (assert (> 3 2)))
-(assert-error (lambda () (assert #f "must be true")))
-(assert-error (lambda () (assert #f)))
+(assert-error (assert #f "must be true"))
+(assert-error (assert #f))
 ```
 
 **See also:** [error](#error)
@@ -439,7 +461,7 @@ Assert expected and actual are equal?.
 ```{arl, include=FALSE}
 (assert-true (assert-equal 3 (+ 1 2)))
 (assert-true (assert-equal "a" "a"))
-(assert-error (lambda () (assert-equal 1 2)))
+(assert-error (assert-equal 1 2))
 ```
 
 **See also:** [assert-eq](#assert-eq), [assert-true](#assert-true)
@@ -462,7 +484,7 @@ Assert value is truthy.
 ```{arl, include=FALSE}
 (assert-true (assert-true #t))
 (assert-true (assert-true 1))
-(assert-error (lambda () (assert-true #f)))
+(assert-error (assert-true #f))
 ```
 
 **See also:** [assert-false](#assert-false), [assert](#assert)
@@ -485,7 +507,7 @@ Assert value is falsy.
 ```{arl, include=FALSE}
 (assert-true (assert-false #f))
 (assert-true (assert-false #nil))
-(assert-error (lambda () (assert-false #t)))
+(assert-error (assert-false #t))
 ```
 
 **See also:** [assert-true](#assert-true), [assert](#assert)
@@ -509,7 +531,7 @@ Assert expected and actual are identical (R's `identical()`).
 ```{arl, include=FALSE}
 (assert-true (assert-eq 42 42))
 (assert-true (assert-eq "abc" "abc"))
-(assert-error (lambda () (assert-eq 1 "1")))
+(assert-error (assert-eq 1 "1"))
 ```
 
 **Note:** Uses R's `identical()`, which checks exact structural identity including type. `1` (double) and `1L` (integer) are not identical. Use `assert-equal` for value comparison with `equal?`.
@@ -520,24 +542,47 @@ Assert expected and actual are identical (R's `identical()`).
 
 ### assert-error {#assert-error}
 
-Assert thunk throws an error.
+Assert expression throws an error.
 
-**Signature:** `(assert-error thunk)`
+**Signature:** `(assert-error expr)`
 
 **Examples:**
 ```{arl, eval=FALSE}
-(assert-error (lambda () (error "boom")))   ; => #t
-(assert-error (lambda () (stop "fail")))    ; => #t
-(assert-error (lambda () 42))                ; signals error
+(assert-error (error "boom"))   ; => #t
+(assert-error (stop "fail"))    ; => #t
+(assert-error 42)               ; signals error
 ```
 
 ```{arl, include=FALSE}
-(assert-true (assert-error (lambda () (error "boom"))))
-(assert-true (assert-error (lambda () (stop "fail"))))
-(assert-error (lambda () (assert-error (lambda () 42))))
+(assert-true (assert-error (error "boom")))
+(assert-true (assert-error (stop "fail")))
+(assert-error (assert-error 42))
 ```
 
 **See also:** [assert](#assert), [error](#error)
+
+---
+
+### assert-no-error {#assert-no-error}
+
+Assert expression does not throw an error.
+
+**Signature:** `(assert-no-error expr)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(assert-no-error 42)                ; => #t
+(assert-no-error (+ 1 2))           ; => #t
+(assert-no-error (error "boom"))    ; signals error
+```
+
+```{arl, include=FALSE}
+(assert-true (assert-no-error 42))
+(assert-true (assert-no-error (+ 1 2)))
+(assert-error (assert-no-error (error "boom")))
+```
+
+**See also:** [assert-error](#assert-error), [assert](#assert)
 
 ---
 

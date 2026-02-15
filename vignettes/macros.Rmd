@@ -411,7 +411,7 @@ Without `capture`, the caller would not be able to refer to `it`:
 (defmacro bad-aif (test then alt)
   `(let ((it ,test))
      (if it ,then ,alt)))
-(assert-error (lambda () (bad-aif (+ 2 3) it 0)))
+(assert-error (bad-aif (+ 2 3) it 0))
 ```
 
 ## Compile-time computation

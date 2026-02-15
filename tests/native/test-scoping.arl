@@ -23,8 +23,8 @@
 
 (define test-set-errors-if-binding-not-found (lambda ()
   ;; set! should error if variable doesn't exist in any parent scope
-  (assert-error (lambda ()
-    (set! nonexistent-variable-xyz 42)))))
+  (assert-error
+    (set! nonexistent-variable-xyz 42))))
 
 ;; Tests for variable lookup through environment chain
 

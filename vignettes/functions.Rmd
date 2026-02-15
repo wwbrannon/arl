@@ -47,7 +47,7 @@ form shown above.
 
 ```{arl, include=FALSE}
 ;; Verify the wrong pattern errors (destructuring bind mismatch)
-(assert-error (lambda () (eval '(define (f x) (+ x 1)))))
+(assert-error (eval '(define (f x) (+ x 1))))
 ```
 
 ## Parameter Features
