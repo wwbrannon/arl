@@ -93,17 +93,47 @@ looks up its character argument in the containing R scopes:
 (unbind-variable 'sum (current-env))
 ```
 
+### r/eval
+
+`r/eval` evaluates an R expression directly via R's `eval()`, bypassing Arl's
+compiler entirely. Where `r/call` looks up a function by name and calls it
+with pre-evaluated arguments, `r/eval` takes an unevaluated call expression
+and hands it to R as-is:
+
+```{arl}
+(r/eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
+```
+
+```{arl, include=FALSE}
+(assert-equal (c 1 2 3 4 5) (r/eval (quote (seq_len 5))))
+```
+
+Use Arl's `call` function to build the expression programmatically, and pass
+`(current-env)` so R can see your local bindings:
+
+```{arl}
+(define n 3)
+(r/eval (call (list 'seq_len 'n)) (current-env))  ; => c(1, 2, 3)
+```
+
+```{arl, include=FALSE}
+(define __re-n 3)
+(assert-equal (c 1 2 3) (r/eval (call (list 'seq_len '__re-n)) (current-env)))
+```
+
+`r/eval` is the escape hatch for R constructs that Arl normally overrides
+(`for`, `while`) or that require non-standard evaluation (see below).
+
 ### Non-standard evaluation
 
-Some R functions use non-standard evaluation (NSE) - they expect expressions
-that they will evaluate in a controlled context, rather than pre-evaluated
-values. Examples include `tryCatch`, `substitute`, `with`, and `eval`.
+Some R functions use non-standard evaluation (NSE) — they capture
+unevaluated expressions and evaluate them in a controlled context.
+Examples include `tryCatch`, `with`, `within`, and `subset`.
 
-When using `r/call` with NSE functions, arguments are evaluated **before**
-being passed to the R function (via `do.call`). This causes issues with
-functions like `tryCatch` that need to control when evaluation happens.
-
-**The solution**: Build an unevaluated call expression and evaluate it with `r/eval`:
+`r/call` can't help here because it evaluates arguments **before** passing
+them to the R function (via `do.call`). `r/eval` avoids this: you build an
+unevaluated call expression and let R evaluate it, so the NSE function
+receives exactly the expression it expects.
 
 ```{arl, eval=FALSE}
 ;; WRONG - thunk is evaluated before tryCatch can catch errors
@@ -135,7 +165,7 @@ functions like `tryCatch` that need to control when evaluation happens.
 3. Use `r/eval` (not `r/call`) to evaluate the constructed expression
 4. Pass `(current-env)` as the evaluation environment
 
-This pattern is used throughout the stdlib - see `try*` in `control.arl` and
+This pattern is used throughout the stdlib — see `try*` in `control.arl` and
 `assert-error` in `assert.arl` for working examples.
 
 #### Detecting errors with a sentinel value
@@ -166,6 +196,44 @@ to create a unique sentinel:
                       :error (lambda (e) __sentinel)))
           (current-env)))
 (assert-true (identical? __sentinel-result __sentinel))
+```
+
+### substitute
+
+R's `substitute(expr)` (the single-argument form) captures the unevaluated
+expression passed to a function. This doesn't work in Arl: Arl evaluates
+arguments before calling functions, so there is no unevaluated expression to
+capture. Use macros instead — a macro's body receives its arguments as
+unevaluated syntax, which is the same thing `substitute` provides in R:
+
+```{arl}
+;; In R you might write:
+;;   log_call <- function(expr) { cat(deparse(substitute(expr))); expr }
+;;
+;; In Arl, use a macro:
+(defmacro log-call (expr)
+  `(begin
+     (cat (deparse ',expr) "\n")
+     ,expr))
+
+(log-call (+ 1 2))
+```
+
+```{arl, include=FALSE}
+(defmacro __log-call-test (expr) `(begin (cat (deparse ',expr) "\n") ,expr))
+(assert-equal 3 (__log-call-test (+ 1 2)))
+```
+
+The two-argument form `(substitute expr env)` **does** work — it performs
+substitution on `expr` using bindings from `env`, which doesn't require
+capturing the caller's expression:
+
+```{arl}
+(substitute '(+ a b) (list :a 1 :b 2))  ; => (+ 1 2)
+```
+
+```{arl, include=FALSE}
+(assert-equal (quote (+ 1 2)) (substitute '(+ a b) (list :a 1 :b 2)))
 ```
 
 ## Working with formulas
