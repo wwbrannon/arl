@@ -186,9 +186,6 @@ DocParser <- R6::R6Class(
         i <- def_line
 
         description <- tags$description
-        if (is.null(description) || description == "") {
-          description <- private$find_doc_bang(lines, def_line, n, func_name)
-        }
 
         signature <- tags$signature
         if (is.null(signature) || signature == "") {
@@ -372,22 +369,6 @@ DocParser <- R6::R6Class(
           return(list(name = name, line = j, type = "defmacro"))
         }
         return(NULL)
-      }
-      NULL
-    },
-
-    find_doc_bang = function(lines, def_line, n, func_name) {
-      for (j in (def_line + 1):min(def_line + 5, n)) {
-        line <- trimws(lines[j])
-        escaped_name <- gsub("([.?*+^${}()|\\[\\]\\\\])", "\\\\\\1", func_name)
-        pattern <- paste0('^\\(doc!\\s+("?', escaped_name, '"?)\\s+"((?:[^"\\\\]|\\\\.)*)"\\)')
-        m <- regmatches(line, regexpr(pattern, line, perl = TRUE))
-        if (length(m) == 1 && nchar(m) > 0) {
-          inner <- sub(paste0('^\\(doc!\\s+"?', escaped_name, '"?\\s+"'), "", m)
-          inner <- sub('"\\)$', "", inner)
-          inner <- gsub('\\\\"', '"', inner)
-          return(inner)
-        }
       }
       NULL
     },

@@ -59,7 +59,7 @@ The same syntax works for macros:
 
 | Tag | Purpose |
 |-----|---------|
-| `@description` | One-line or multi-line description. If omitted, the parser falls back to a `(doc! ...)` call. |
+| `@description` | One-line or multi-line description. If omitted, no description is extracted from `;;'` annotations. |
 | `@examples` | One or more example expressions (one per continuation line). |
 | `@seealso` | Comma-separated list of related function names. |
 | `@note` | Additional notes (caveats, performance, history). |

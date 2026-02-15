@@ -123,6 +123,112 @@ group_builtins_by_vignette <- function(builtins) {
   by_vignette
 }
 
+# Build a docs engine for runtime introspection of stdlib bindings.
+new_docs_engine <- function() {
+  if (exists("Engine", mode = "environment", inherits = TRUE)) {
+    return(get("Engine", mode = "environment", inherits = TRUE)$new())
+  }
+  if (requireNamespace("arl", quietly = TRUE) &&
+      exists("Engine", where = asNamespace("arl"), mode = "environment", inherits = FALSE)) {
+    return(get("Engine", envir = asNamespace("arl"))$new())
+  }
+  stop(
+    "Unable to initialize Arl engine for runtime docs introspection. ",
+    "Run via `make lang-docs` or install/load the package first."
+  )
+}
+
+# Collect runtime arl_doc attributes for exported symbols in each module.
+collect_runtime_module_docs <- function(modules, arl_dir) {
+  engine <- new_docs_engine()
+  base_env <- engine$get_env()
+  by_module <- list()
+
+  for (mod_name in modules) {
+    arl_file <- file.path(arl_dir, paste0(mod_name, ".arl"))
+    if (!file.exists(arl_file)) {
+      by_module[[mod_name]] <- list()
+      next
+    }
+
+    exports <- .doc_parser$get_exports(arl_file)
+    if (length(exports) == 0) {
+      by_module[[mod_name]] <- list()
+      next
+    }
+
+    mod_env <- new.env(parent = base_env)
+    ok <- TRUE
+    tryCatch(
+      engine$eval_text(sprintf("(import %s)", mod_name), env = mod_env),
+      error = function(e) {
+        ok <<- FALSE
+        message(
+          "Warning: could not import module '", mod_name,
+          "' for runtime docs: ", conditionMessage(e)
+        )
+      }
+    )
+    if (!ok) {
+      by_module[[mod_name]] <- list()
+      next
+    }
+
+    docs <- list()
+    for (sym in exports) {
+      if (!exists(sym, envir = mod_env, inherits = FALSE)) next
+      obj <- get(sym, envir = mod_env, inherits = FALSE)
+      doc <- attr(obj, "arl_doc", exact = TRUE)
+      if (!is.null(doc)) docs[[sym]] <- doc
+    }
+    by_module[[mod_name]] <- docs
+  }
+
+  by_module
+}
+
+# Overlay runtime arl_doc fields onto parsed annotation entries.
+merge_runtime_docs <- function(parsed, runtime_docs) {
+  if (is.null(parsed)) parsed <- list(functions = list(), sections = list())
+  if (is.null(parsed$functions)) parsed$functions <- list()
+  if (length(runtime_docs) == 0) return(parsed)
+
+  for (name in names(runtime_docs)) {
+    doc <- runtime_docs[[name]]
+
+    if (is.null(parsed$functions[[name]])) {
+      parsed$functions[[name]] <- list(
+        name = name,
+        description = "",
+        signature = "",
+        examples = NULL,
+        assert = NULL,
+        seealso = NULL,
+        note = NULL,
+        internal = FALSE,
+        noeval = FALSE,
+        section = NULL,
+        section_prose = NULL,
+        source_line = NA_integer_
+      )
+    }
+
+    fn <- parsed$functions[[name]]
+    if (!is.null(doc$description)) fn$description <- doc$description
+    if (!is.null(doc$signature)) fn$signature <- doc$signature
+    if (!is.null(doc$examples)) fn$examples <- doc$examples
+    if (!is.null(doc$assert)) fn$assert <- doc$assert
+    if (!is.null(doc$seealso)) fn$seealso <- doc$seealso
+    if (!is.null(doc$note)) fn$note <- doc$note
+    if (!is.null(doc$internal)) fn$internal <- isTRUE(doc$internal)
+    if (!is.null(doc$noeval)) fn$noeval <- isTRUE(doc$noeval)
+
+    parsed$functions[[name]] <- fn
+  }
+
+  parsed
+}
+
 # ---------------------------------------------------------------------------
 # Topic vignette generator (jinjar-based)
 # ---------------------------------------------------------------------------
@@ -547,6 +653,15 @@ generate_all <- function(
 
   # Check for undocumented exports
   check_undocumented(all_parsed, arl_dir, all_modules)
+
+  # Overlay runtime docs (arl_doc) from imported stdlib modules.
+  runtime_docs_by_module <- collect_runtime_module_docs(all_modules, arl_dir)
+  for (mod_name in all_modules) {
+    all_parsed[[mod_name]] <- merge_runtime_docs(
+      all_parsed[[mod_name]],
+      runtime_docs_by_module[[mod_name]]
+    )
+  }
 
   # Load R-defined builtin documentation
   builtins_path <- file.path("inst", "builtins-docs.dcf")
