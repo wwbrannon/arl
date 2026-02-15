@@ -21,11 +21,11 @@ MacroExpander <- R6::R6Class(
     # @param name Symbol or character macro name.
     # @param params Formal parameter list.
     # @param body Macro body (unevaluated).
-    # @param docstring Optional string for (help name).
+    # @param doc_list Optional documentation list attached as arl_doc.
     # @param env Target environment or NULL for context$env$env.
-    defmacro = function(name, params, body, docstring = NULL, env = NULL) {
+    defmacro = function(name, params, body, doc_list = NULL, env = NULL) {
       target_env <- private$normalize_env(env)
-      private$define_macro(name, params, body, target_env, docstring = docstring)
+      private$define_macro(name, params, body, target_env, doc_list = doc_list)
       invisible(NULL)
     },
     # @description Expand macros in expr.
@@ -799,7 +799,7 @@ MacroExpander <- R6::R6Class(
         rest_param_spec = rest_param_spec
       )
     },
-    define_macro = function(name, params, body, env, docstring = NULL) {
+    define_macro = function(name, params, body, env, doc_list = NULL) {
       # Debug: check body
       if (isTRUE(.pkg_option("debug_macro", FALSE)) && as.character(name) == "empty-pat") {
         message("DEBUG define_macro for ", as.character(name))
@@ -922,8 +922,8 @@ MacroExpander <- R6::R6Class(
         param_defaults = param_defaults,
         rest_param = rest_name
       )
-      if (!is.null(docstring)) {
-        attr(macro_fn, "arl_doc") <- list(description = docstring)
+      if (!is.null(doc_list) && length(doc_list) > 0) {
+        attr(macro_fn, "arl_doc") <- doc_list
       }
 
       registry <- private$macro_registry(env, create = TRUE)

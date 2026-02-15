@@ -492,7 +492,7 @@ test_that("defmacro_compiled() handles non-begin body", {
   expect_true(exists("simple-macro", envir = macro_registry, inherits = FALSE))
 })
 
-test_that("defmacro_compiled() preserves docstring", {
+test_that("defmacro_compiled() preserves doc list", {
   eng <- make_engine()
   test_env <- eng$get_env()
 
@@ -500,7 +500,10 @@ test_that("defmacro_compiled() preserves docstring", {
     "documented-macro",
     list(as.symbol("x")),
     quote(x),
-    "This is a documented macro",
+    list(
+      description = "This is a documented macro",
+      examples = "(documented-macro 1)"
+    ),
     test_env
   )
 
@@ -510,6 +513,7 @@ test_that("defmacro_compiled() preserves docstring", {
   doc <- attr(macro_fn, "arl_doc")
   expect_false(is.null(doc))
   expect_equal(doc$description, "This is a documented macro")
+  expect_equal(doc$examples, "(documented-macro 1)")
 })
 
 # Promise/delay tests

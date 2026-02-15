@@ -519,8 +519,14 @@ Compiler <- R6::R6Class(
         if (!is.null(ann$description) && nchar(ann$description) > 0) {
           doc_list$description <- ann$description
         }
+        if (!is.null(ann$signature) && nchar(ann$signature) > 0) {
+          doc_list$signature <- ann$signature
+        }
         if (!is.null(ann$examples) && nchar(ann$examples) > 0) {
           doc_list$examples <- ann$examples
+        }
+        if (!is.null(ann$assert) && nchar(ann$assert) > 0) {
+          doc_list$assert <- ann$assert
         }
         if (!is.null(ann$seealso) && nchar(ann$seealso) > 0) {
           doc_list$seealso <- ann$seealso
@@ -1008,23 +1014,45 @@ Compiler <- R6::R6Class(
         }
       }
       body_exprs <- as.list(expr)[-(1:3)]
-      docstring <- NULL
-      # Get docstring from ;;' annotations
-      if (is.null(docstring) && !is.null(self$annotations)) {
+      doc_list <- NULL
+      if (!is.null(self$annotations)) {
         macro_name_str <- as.character(name)
         ann <- self$annotations[[macro_name_str]]
-        if (!is.null(ann) && !is.null(ann$description) && nchar(ann$description) > 0) {
-          docstring <- ann$description
+        if (!is.null(ann)) {
+          doc_list <- list()
+          if (!is.null(ann$description) && nchar(ann$description) > 0) {
+            doc_list$description <- ann$description
+          }
+          if (!is.null(ann$signature) && nchar(ann$signature) > 0) {
+            doc_list$signature <- ann$signature
+          }
+          if (!is.null(ann$examples) && nchar(ann$examples) > 0) {
+            doc_list$examples <- ann$examples
+          }
+          if (!is.null(ann$assert) && nchar(ann$assert) > 0) {
+            doc_list$assert <- ann$assert
+          }
+          if (!is.null(ann$seealso) && nchar(ann$seealso) > 0) {
+            doc_list$seealso <- ann$seealso
+          }
+          if (!is.null(ann$note) && nchar(ann$note) > 0) {
+            doc_list$note <- ann$note
+          }
+          if (isTRUE(ann$internal)) doc_list$internal <- TRUE
+          if (isTRUE(ann$noeval)) doc_list$noeval <- TRUE
+          if (length(doc_list) == 0) {
+            doc_list <- NULL
+          }
         }
       }
       body_quoted <- as.call(list(quote(quote), as.call(c(list(quote(begin)), body_exprs))))
-      docstring_arg <- if (is.null(docstring)) private$compiled_nil() else docstring
+      doc_list_arg <- if (is.null(doc_list)) private$compiled_nil() else doc_list
       as.call(list(
         as.symbol(".__defmacro"),
         as.call(list(quote(quote), name)),
         as.call(list(quote(quote), params_expr)),
         body_quoted,
-        docstring_arg,
+        doc_list_arg,
         as.symbol(self$env_var_name)
       ))
     },

@@ -209,8 +209,8 @@ CompiledRuntime <- R6::R6Class(
         self$promise_new_compiled(compiled_expr, env)
       }, "Promise/delay constructor.")
 
-      assign_and_lock(".__defmacro", function(name, params, body_arg, docstring, env) {
-        self$defmacro_compiled(name, params, body_arg, docstring, env)
+      assign_and_lock(".__defmacro", function(name, params, body_arg, doc_list, env) {
+        self$defmacro_compiled(name, params, body_arg, doc_list, env)
       }, "Macro definition handler.")
 
       assign_and_lock(".__macro_quasiquote", function(expr, env) {
@@ -337,13 +337,13 @@ CompiledRuntime <- R6::R6Class(
     promise_new_compiled = function(compiled_expr, env) {
       Promise$new(compiled_expr, env, self$eval_compiled)
     },
-    defmacro_compiled = function(name, params, body_arg, docstring, env) {
+    defmacro_compiled = function(name, params, body_arg, doc_list, env) {
       body_list <- if (is.call(body_arg) && length(body_arg) >= 1 && identical(as.character(body_arg[[1]]), "begin")) {
         as.list(body_arg)[-1]
       } else {
         list(body_arg)
       }
-      self$context$macro_expander$defmacro(name, params, body_list, docstring = docstring, env = env)
+      self$context$macro_expander$defmacro(name, params, body_list, doc_list = doc_list, env = env)
       invisible(NULL)
     },
     module_compiled = function(module_name, exports, export_all, body_exprs, src_file, env) {

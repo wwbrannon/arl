@@ -285,3 +285,60 @@ test_that("doc! keyword args evaluate variable values", {
   result <- engine$eval(engine$read('(doc my-fn)')[[1]], env = env)
   expect_equal(result, "computed description")
 })
+
+test_that("annotation docs attach complete arl_doc for functions and macros", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  code <- '(module doc-complete-mod
+  (export f m)
+
+  ;;\' @description Function docs.
+  ;;\' @signature (f x)
+  ;;\' @examples
+  ;;\' (f 2) ; => 4
+  ;;\' @assert (assert-equal 4 (f 2))
+  ;;\' @seealso m
+  ;;\' @note Function note.
+  ;;\' @internal
+  ;;\' @noeval
+  (define f (lambda (x) (* x 2)))
+
+  ;;\' @description Macro docs.
+  ;;\' @signature (m x)
+  ;;\' @examples
+  ;;\' (m 2) ; => 2
+  ;;\' @assert (assert-equal 2 (m 2))
+  ;;\' @seealso f
+  ;;\' @note Macro note.
+  ;;\' @internal
+  ;;\' @noeval
+  (defmacro m (x) x)
+)'
+
+  child <- new.env(parent = env)
+  engine$eval_text(code, env = child)
+  engine$eval_text("(import doc-complete-mod)", env = child)
+
+  fn <- get("f", envir = child)
+  fn_doc <- attr(fn, "arl_doc", exact = TRUE)
+  expect_equal(fn_doc$description, "Function docs.")
+  expect_equal(fn_doc$signature, "(f x)")
+  expect_match(fn_doc$examples, "\\(f 2\\)")
+  expect_match(fn_doc$assert, "\\(assert-equal 4")
+  expect_equal(fn_doc$seealso, "m")
+  expect_equal(fn_doc$note, "Function note.")
+  expect_true(isTRUE(fn_doc$internal))
+  expect_true(isTRUE(fn_doc$noeval))
+
+  macro <- get("m", envir = child)
+  macro_doc <- attr(macro, "arl_doc", exact = TRUE)
+  expect_equal(macro_doc$description, "Macro docs.")
+  expect_equal(macro_doc$signature, "(m x)")
+  expect_match(macro_doc$examples, "\\(m 2\\)")
+  expect_match(macro_doc$assert, "\\(assert-equal 2")
+  expect_equal(macro_doc$seealso, "f")
+  expect_equal(macro_doc$note, "Macro note.")
+  expect_true(isTRUE(macro_doc$internal))
+  expect_true(isTRUE(macro_doc$noeval))
+})
