@@ -24,6 +24,7 @@
 #' @param depth Number of expansion steps (NULL for full expansion).
 #' @param topic Help topic as a single string.
 #' @param load_stdlib Logical; if TRUE (the default), load all stdlib modules.
+#' @param disable_tco Logical; if TRUE, disable self-tail-call optimization.
 #' @param value Value to format for display.
 #' @param fn A zero-argument function to call with error context.
 #' @param file Connection to print to.
@@ -54,8 +55,12 @@ Engine <- R6::R6Class(
     #' @param load_stdlib Logical. If TRUE (the default), loads all stdlib modules
     #'   during initialization. Set to FALSE to create a bare engine with only
     #'   builtins — useful for testing or when you want to import specific modules.
+    #' @param disable_tco Optional logical. If TRUE, disables self-tail-call optimization
+    #'   in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
+    #'   which inherits from global option `getOption("arl.disable_tco", FALSE)`.
     initialize = function(env = NULL, parent = NULL, use_env_cache = NULL,
-                          coverage_tracker = NULL, load_stdlib = TRUE) {
+                          coverage_tracker = NULL, load_stdlib = TRUE,
+                          disable_tco = NULL) {
       # Priority: explicit parameter > global option > default FALSE
       if (is.null(use_env_cache)) {
         self$use_env_cache <- .pkg_option("use_env_cache", FALSE)
@@ -92,6 +97,14 @@ Engine <- R6::R6Class(
       # via base:: and bypasses Arl function bodies, defeating instrumentation.
       if (!is.null(coverage_tracker)) {
         private$.compiler$enable_constant_folding <- FALSE
+      }
+      # Disable self-TCO when requested (useful for debugging).
+      # Priority: explicit parameter > R option > env var > default FALSE.
+      if (is.null(disable_tco)) {
+        disable_tco <- .pkg_option("disable_tco", FALSE)
+      }
+      if (isTRUE(disable_tco)) {
+        private$.compiler$enable_tco <- FALSE
       }
       context$compiler <- private$.compiler
 

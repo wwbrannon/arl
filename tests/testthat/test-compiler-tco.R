@@ -621,3 +621,85 @@ test_that("TCO: error inside let body includes source location", {
   formatted <- engine_field(engine, "source_tracker")$format_error(err)
   expect_match(formatted, "tco-let\\.arl")
 })
+
+# ==============================================================================
+# disable_tco option
+# ==============================================================================
+
+test_that("TCO is enabled by default", {
+  eng <- make_engine(load_stdlib = FALSE)
+  compiler <- eng$.__enclos_env__$private$.compiler
+  expect_true(compiler$enable_tco)
+})
+
+test_that("disable_tco parameter disables TCO", {
+  eng <- make_engine(disable_tco = TRUE, load_stdlib = FALSE)
+  compiler <- eng$.__enclos_env__$private$.compiler
+  expect_false(compiler$enable_tco)
+})
+
+test_that("disable_tco = FALSE keeps TCO enabled", {
+  eng <- make_engine(disable_tco = FALSE, load_stdlib = FALSE)
+  compiler <- eng$.__enclos_env__$private$.compiler
+  expect_true(compiler$enable_tco)
+})
+
+test_that("R option arl.disable_tco disables TCO", {
+  withr::local_options(arl.disable_tco = TRUE)
+  eng <- make_engine(load_stdlib = FALSE)
+  compiler <- eng$.__enclos_env__$private$.compiler
+  expect_false(compiler$enable_tco)
+})
+
+test_that("disable_tco parameter overrides R option", {
+  # Parameter FALSE overrides option TRUE
+  withr::local_options(arl.disable_tco = TRUE)
+  eng <- make_engine(disable_tco = FALSE, load_stdlib = FALSE)
+  compiler <- eng$.__enclos_env__$private$.compiler
+  expect_true(compiler$enable_tco)
+
+  # Parameter TRUE overrides option FALSE
+  withr::local_options(arl.disable_tco = FALSE)
+  eng2 <- make_engine(disable_tco = TRUE, load_stdlib = FALSE)
+  compiler2 <- eng2$.__enclos_env__$private$.compiler
+  expect_false(compiler2$enable_tco)
+})
+
+test_that("env var ARL_DISABLE_TCO disables TCO", {
+  withr::local_envvar(ARL_DISABLE_TCO = "1")
+  withr::local_options(arl.disable_tco = NULL)
+  eng <- make_engine(load_stdlib = FALSE)
+  compiler <- eng$.__enclos_env__$private$.compiler
+  expect_false(compiler$enable_tco)
+})
+
+test_that("R option overrides env var for disable_tco", {
+  withr::local_envvar(ARL_DISABLE_TCO = "1")
+  withr::local_options(arl.disable_tco = FALSE)
+  eng <- make_engine(load_stdlib = FALSE)
+  compiler <- eng$.__enclos_env__$private$.compiler
+  expect_true(compiler$enable_tco)
+})
+
+test_that("with TCO disabled, self-recursive functions still produce correct results", {
+  eng <- make_engine(disable_tco = TRUE)
+  eng$eval_text("
+    (define fact (lambda (n acc)
+      (if (<= n 1)
+        acc
+        (fact (- n 1) (* acc n)))))
+  ")
+  expect_equal(eng$eval_text("(fact 10 1)"), 3628800)
+})
+
+test_that("with TCO disabled, deep recursion hits stack limit", {
+  eng <- make_engine(disable_tco = TRUE)
+  eng$eval_text("
+    (define count-down (lambda (n)
+      (if (<= n 0) 0 (count-down (- n 1)))))
+  ")
+  # Moderate depth works fine without TCO
+  expect_equal(eng$eval_text("(count-down 100)"), 0)
+  # Deep recursion should hit R's stack limit without TCO
+  expect_error(eng$eval_text("(count-down 100000)"))
+})

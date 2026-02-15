@@ -132,21 +132,37 @@ Self-TCO works with all of Arl's parameter features:
 - **Keyword arguments** — named arguments in the self-call are matched
   to the right parameters
 
-## Debugging Note
+## Disabling TCO for Debugging
 
 Since self-calls become loop iterations, recursive call frames do **not**
-appear in stack traces on error. Only the outermost call is visible. If
-you need to debug a recursive function, you can temporarily rename the
-self-call to force normal recursion:
+appear in stack traces on error. Only the outermost call is visible. To
+preserve natural call stacks for debugging, you can disable self-TCO
+using the `disable_tco` option.
 
-```{arl, eval=FALSE}
-;; Temporarily break TCO for debugging
-(define my-func-debug
-  (lambda (n acc)
-    (if (< n 2)
-      acc
-      (my-func-debug-RENAMED (- n 1) (* acc n)))))  ; won't match, no TCO
+There are three ways to disable it, in order of precedence:
+
+**Engine initialization parameter** (highest priority):
+
+```r
+engine <- arl::Engine$new(disable_tco = TRUE)
 ```
+
+**R option**:
+
+```r
+options(arl.disable_tco = TRUE)
+```
+
+**Environment variable** (lowest priority):
+
+```bash
+export ARL_DISABLE_TCO=1
+```
+
+With TCO disabled, self-recursive functions compile to normal recursive
+calls. This means deep recursion will hit R's stack limit, but error
+stack traces will show the full chain of recursive calls, making it
+easier to identify where things went wrong.
 
 ## loop/recur
 

@@ -63,6 +63,7 @@ For boolean settings, the environment variable values `1`, `true`, and
 | REPL bracketed paste | `arl.repl_bracketed_paste` | `ARL_REPL_BRACKETED_PASTE` | `TRUE` | Enable bracketed-paste mode in the REPL |
 | CLI quiet (errors) | `arl.cli_quiet` | `ARL_CLI_QUIET` | `FALSE` | Suppress CLI error messages and help text |
 | Macro debug output | `arl.debug_macro` | `ARL_DEBUG_MACRO` | `FALSE` | Print debug info during macro expansion |
+| Disable self-TCO | `arl.disable_tco` | `ARL_DISABLE_TCO` | `FALSE` | Disable self-tail-call optimization (for debugging) |
 
 ## Shell-only settings
 

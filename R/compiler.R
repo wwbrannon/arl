@@ -19,6 +19,8 @@ Compiler <- R6::R6Class(
     macro_eval = FALSE,
     # When FALSE, disable constant folding optimization (for preserving expression structure).
     enable_constant_folding = TRUE,
+    # When FALSE, disable self-tail-call optimization (useful for debugging).
+    enable_tco = TRUE,
     # Last compilation error (message) when compile() returns NULL.
     last_error = NULL,
     # Annotation map: name -> annotation data (set by module_compiled before compiling).
@@ -586,7 +588,7 @@ Compiler <- R6::R6Class(
       use_tco <- FALSE
       param_names <- NULL
       rest_param_name <- NULL
-      if (!is.null(self_name)) {
+      if (!is.null(self_name) && self$enable_tco) {
         param_names <- setdiff(names(params$formals_list), "...")
         rest_param_name <- params$rest_param  # NULL if no rest param
         # For pattern rest params, generate a temp name for collection
