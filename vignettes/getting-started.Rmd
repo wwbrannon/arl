@@ -26,20 +26,21 @@ devtools::install_github("wwbrannon/arl")
 ```
 
 Arl is not on CRAN at the time of writing; install from GitHub with `devtools`
-as shown above. Once a CRAN release is available, `install.packages("arl")`
-will work. If you have a local clone of the repository, `devtools::install()`
-from the repo directory also works.
+as shown above. Once a CRAN release is available, the package can also be
+installed with the built-in `install.packages` function. If you have a local
+clone of the repository, `devtools::install()` from the repo directory will
+also work.
 
 ## Start the REPL
 
 ```{r eval=FALSE}
-library(arl)
-engine <- Engine$new()
+engine <- arl::Engine$new()
 engine$repl()
 ```
 
-The engine loads all stdlib modules automatically, so functions like `when`,
-`let`, `map`, and `->` are available immediately.
+The engine loads all stdlib modules automatically (though this [can be
+customized](#loading-stdlib-modules)), so functions like `when`, `let`, `map`,
+and `->` are available immediately.
 
 At the prompt, you can enter Arl expressions:
 
@@ -60,7 +61,8 @@ Type `(quit)` or press Ctrl+C to exit the REPL.
 `engine$repl()`: `arl.repl_quiet` (minimal banner),
 `arl.repl_use_history` (set to `FALSE` to avoid touching R's readline
 history), and `arl.repl_bracketed_paste` (enable/disable bracketed paste
-mode for cleaner multiline pastes).
+mode for cleaner multiline pastes). See the discussion of [runtime
+options](runtime-options.html) for more.
 
 ## Run from the command line
 
@@ -89,7 +91,7 @@ The simplest way to evaluate Arl inside an R script is `eval_text` (or its
 alias `eval_string`), which reads and evaluates in one step:
 
 ```{r eval=FALSE}
-engine <- Engine$new()
+engine <- arl::Engine$new()
 engine$eval_text("(define x 10) (+ x 5)")
 engine$eval_string("(define y 20) (+ y 5)")
 ```
@@ -120,8 +122,8 @@ are not visible to later code):
 (run "script.arl")
 ```
 
-From R, `load_file_in_env` and `load_file_under_env` correspond to
-`load` and `run` respectively:
+From R, `load_file_in_env` and `load_file_under_env` correspond to `load` and
+`run` respectively:
 
 ```{r eval=FALSE}
 engine <- Engine$new()
@@ -132,6 +134,10 @@ engine$load_file_in_env("script.arl")
 # Like (run ...): isolated; definitions not visible
 engine$load_file_under_env("script.arl")
 ```
+
+If you don't specify an environment, the default is the engine's toplevel
+environment for `load_file_in_env` and a new, single-use child environment of
+it for `load_file_under_env`.
 
 ## Loading stdlib modules
 
@@ -147,7 +153,10 @@ or `arl --no-stdlib`:
 (import looping)   ; for/loop/recur/until
 (import threading) ; -> and ->>
 (import error)     ; try/catch/finally
+
+;; etc
 ```
+
 
 ```{arl, include=FALSE}
 ;; Verify key stdlib functions are available (loaded by default engine)
@@ -161,9 +170,10 @@ or `arl --no-stdlib`:
 ```
 
 See [Modules and Imports](modules.html) for details on creating and importing
-modules.
+modules, and the [Language Reference](lang-reference.html) for a list of stdlib
+modules and the full set of functions/macros each provides.
 
-## Core syntax
+## Core syntax and semantics
 
 ### Truthiness
 
@@ -192,7 +202,8 @@ is falsy. See [Troubleshooting](troubleshooting.html) for common pitfalls.
 (assert-equal 120 (factorial 5))
 ```
 
-Use `unbind-variable` to remove a binding:
+Use `unbind-variable` (which ultimately relies on R's `rm`) to remove a
+binding:
 
 ```{arl}
 (define tmp 42)
@@ -225,6 +236,7 @@ Use `unbind-variable` to remove a binding:
 (if (> 3 2) "yes" "no")
 
 ; cond handles multiple branches
+; the fallback #t case is like "else"
 (define describe
   (lambda (n)
     (cond
@@ -249,7 +261,8 @@ Use `unbind-variable` to remove a binding:
 ### Sequencing
 
 ```{arl}
-; begin evaluates expressions in order, returning the last value
+; begin evaluates expressions in order
+; the last value is returned
 (begin
   (define a 1)
   (define b 2)
@@ -262,25 +275,57 @@ Use `unbind-variable` to remove a binding:
 
 ### Lists and quoting
 
+Code and data in Arl, as in Lisp generally, are made of lists. You can define
+and manipulate lists:
 ```{arl}
+; Comments start with semicolon
+
 (list 1 2 3)
-(car (list 1 2 3))
-(cdr (list 1 2 3))
+(car (list 1 2 3))  ; car = first element
+(cdr (list 1 2 3))  ; cdr = rest of list after car
+```
 
-; Quoting prevents evaluation
-'(+ 1 2)           ; => the unevaluated expression (+ 1 2)
+Lists typed in at the prompt are, by default, evaluated. To prevent evaluation,
+use the special form `quote` or its syntactic sugar `'`:
+```{arl}
+(quote (+ 1 2))    ; => the unevaluated expression (+ 1 2), also a list
+'(+ 1 2)           ; simple alias for (quote ...)
 
-; Quasiquote allows selective evaluation with ,
+(list? '(+ 1 2))
+```
+
+You can also perform selective evaluation with the `quasiquote` template syntax
+(written with the backtick `` ` ``), which is widely used in defining
+[macros](macros.html):
+
+```{arl}
+; Quasiquote allows selective evaluation with , and ,@
 (define x 10)
+(define y (list 1 2 3))
+
 `(list ,x 20 30)   ; => (list 10 20 30) -- x is substituted, rest is literal
 
-; Comments start with semicolon
+`(list ,@y 20 30)   ; => (list 1 2 3 20 30) -- y is spliced in at same level
 ```
 
 ```{arl, include=FALSE}
 (assert-equal (list 1 2 3) (list 1 2 3))
 (assert-equal 1 (car (list 1 2 3)))
 (assert-equal (list 2 3) (cdr (list 1 2 3)))
+```
+
+For convenience, an Arl list is also an R list under the hood:
+
+```{arl}
+(base::is.list (list 1 2 3))
+```
+
+Lisp's traditional pair lists made of cons cells are also supported:
+
+```{arl}
+(define pl (3 . (4 . 5))) ; this is a dotted-pair list
+(pair? pl)
+(list? pl) ; pair lists are a different kind of object
 ```
 
 For more details on the standard library and macros, see the other vignettes in
@@ -303,7 +348,7 @@ special form, macro, or function:
 (assert-equal "truthy" (if 1 "truthy" "falsy"))
 ```
 
-For functions with documentation, `help` shows the signature, description,
+For functions or macros with documentation, `help` shows the signature, description,
 examples, and cross-references automatically. It also falls through to R's
 built-in help for R functions.
 
@@ -313,7 +358,7 @@ Arl provides two mechanisms for attaching documentation to functions and
 macros:
 
 - **`;;'` annotation comments** — Place roxygen-like tags (`@description`,
-  `@examples`, `@seealso`, `@note`) immediately before a `define` or
+  `@examples`, `@seealso`, `@note`, etc) immediately before a `define` or
   `defmacro`. The compiler bakes the documentation in at compile time with
   no runtime overhead. This is the recommended approach for source files.
 

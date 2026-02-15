@@ -1,22 +1,80 @@
-o) read Getting Started, macro guide, module guide
+o) read module guide
 
 o) substantive changes
     o) should we have stats and datasets on the search path -- `(stats::lm (~ mpg cyl) :data datasets::mtcars)` is annoying to type? comes down to the choice of parent env: baseenv vs globalenv
     o) probably switch this example to eval=TRUE and fix it / its asserts up
+    o) update the r-interop.Rmd vignette with fixes to rendering of lm and maybe search path
 
     o) more future-proof import syntax a la python
 
-o) eval_string alias for eval_text
+    o) let's have a load-stdlib command
 
-o) update macro vignette "rest parameters" and "defining macros" "yes" examples once print bug is fixed
+    o) fallthrough to R's help for R functions doesn't work
+
+o) macro vignette should mention macroexpansion depth argument
+
+o) docs should discuss dotted pair lists in detail somewhere
+o) in "Lists and quoting" section of getting started, just link to another discussion of them
+
+o) execute the R snippets in getting-started where possible
+
+o) update the silent asserts in getting-started, we've made some changes and coverage is now worse
+
+o) the module system seems to decide what a module is called based on its filename
+
+o) discuss in getting started how this is confusing:
+    arl> (list? '(1 2 3))
+    TRUE
+    arl> (is.list '(1 2 3))
+    FALSE
 
 o) what does this mean? "If omitted, the parser falls back to a (doc! ...) call."
 
-o) update the r-interop.Rmd vignette with fixes to rendering of lm and maybe search path
-
 o) "R base operators are also available directly": this is a bad example because we wrap these to support > 2 args, note this and also give other examples
 
-o) getting started: "It also falls through to R’s built-in help for R functions" isn't true?
+o) is this true? "The import form is primarily useful inside your own modules (which start with an empty scope)"
+o) closely related: scope here doesn't seem to be lexical:
+    will@macbook:~/github/arl$ cat mybinding.arl
+    (module mybinding
+        (export mylet)
+
+        (defmacro mylet (bindings . body)
+        (if (null? bindings)
+            `(begin ,@body)
+            (begin
+            (define temps (map (lambda (b) (gensym "tmp")) bindings))
+            (define patterns (map car bindings))
+            (define values (map (lambda (b) (car (cdr b))) bindings))
+            `((lambda ,temps
+                ,@(map (lambda (pair)
+                        `(define ,(car pair) ,(car (cdr pair))))
+                        (zip patterns temps))
+                (begin ,@body))
+                ,@values))))
+    )
+
+    will@macbook:~/github/arl$ vi mybinding.arl
+    will@macbook:~/github/arl$ arl
+    Arl REPL 0.1.0
+    Type '(license)' w/o quotes for legal information.
+    Type '(quit)' w/o quotes or press Ctrl+C to exit.
+    Builtin readline/libedit: yes
+
+    arl> (import mybinding)
+    arl> (mylet ((x 1) (y 2)) (+ x y))
+    3
+    arl>
+    will@macbook:~/github/arl$ arl --no-stdlib
+    Arl REPL 0.1.0
+    Type '(license)' w/o quotes for legal information.
+    Type '(quit)' w/o quotes or press Ctrl+C to exit.
+    Builtin readline/libedit: yes
+
+    arl> (import mybinding)
+    arl> (mylet ((x 1) (y 2)) (+ x y))
+    Error: could not find function "null?"
+
+o) run the test auditor and doc auditor again
 
 words to write yourself
 o) README: package does not include a citation file, revise wording, actually figure out the citation at all
@@ -28,7 +86,5 @@ o) logo?
 o) enable actions / get non-pkgdown workflows running
 o) figure out how to host the docs
 o) version number bump
-
-o) run the test auditor and doc auditor again
 
 o) run other cran submission steps and submit

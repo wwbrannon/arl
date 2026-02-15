@@ -56,6 +56,8 @@ With that macro defined:
 
 ```{arl}
 ;; expands to: (if (> 5 3) (begin (print "yes")) #nil)
+;; note that the first `[1] "yes"` is the return value,
+;; while the second `"yes"` is the print output
 (when (> 5 3) (print "yes"))
 ```
 
@@ -141,7 +143,8 @@ You can mix required and optional parameters, and combine them with rest:
 
 ### Pattern destructuring in parameters
 
-Use `(pattern ...)` to destructure a macro argument:
+Use `(pattern ...)` to destructure a macro argument (i.e., unpack it into
+multiple variables, as in Python's `x, y = obj`):
 
 ```{arl}
 (defmacro let-pair ((pattern (name value)))
@@ -184,9 +187,7 @@ Quasiquote (backtick) is the primary tool for constructing macro output.
 Inside a quasiquoted template, `,expr` (unquote) evaluates `expr` and
 inserts the result into the template, and `,@expr` (unquote-splicing)
 evaluates `expr` (which must produce a list) and splices its elements into the
-template on the same level as `,@expr`. (That is, unquote always replaces
-`,expr` with one element, but unquote-splicing, if the list to be spliced has
-length greater than 1, can replace `,@expr` with more than one element.)
+template on the same level as `,@expr`.
 
 ### Quasiquote basics
 
@@ -198,6 +199,10 @@ length greater than 1, can replace `,@expr` with more than one element.)
 ```{arl, include=FALSE}
 (assert-equal (list '+ 10 20) `(+ ,x 20))
 ```
+
+Concisely, the difference between `,` and `,@` is that `,` always replaces
+`,expr` with one element, but `,@`, if the list to be spliced has length
+greater than 1, can replace `,@expr` with more than one element.
 
 ### Splicing lists
 
@@ -325,7 +330,7 @@ binding:
 Here `map` builds one `define` per name, and every generated form must
 reference the same temporary.  Because these forms are constructed
 programmatically rather than written directly in a quasiquote template,
-automatic hygiene does not apply and `gensym` ensures the binding is
+automatic hygiene won't save us: we need `gensym` to ensure the binding is
 unique.
 
 Another common pattern is loop macros:
@@ -382,8 +387,7 @@ Usage:
 ```{arl}
 (aif (+ 2 3)
      (str "result is " it)   ; it => 5
-     "no result")
-; => "result is 5"
+     "no result")  ; => "result is 5"
 ```
 
 ```{arl, include=FALSE}
@@ -445,7 +449,7 @@ you can perform arbitrary computation before returning the template:
 
 ## Recursive and composing macros
 
-Macros can call themselves recursively or invoke other macros:
+Macros can call themselves recursively:
 
 ```{arl}
 ;; Thread-first: recursive macro that threads a value through forms
@@ -531,14 +535,14 @@ engine$macroexpand(engine$read("(when #t 1)")[[1]])
 ```
 
 To see the full compilation pipeline (parsed, expanded, compiled R
-code), use `engine$inspect_compilation(text, env)`.  It returns a list
+code), use `engine$inspect_compilation(text)`.  It returns a list
 with `parsed`, `expanded`, `compiled`, and `compiled_deparsed`.  See
 `?Engine` for details.
 
 ## Real-world examples from the standard library
 
-Many of Arl's core forms are implemented as macros.  Here are some
-patterns worth studying:
+As in  most Lisps, many of Arl's core forms are implemented as macros.  Here
+are some patterns worth studying:
 
 ### `let` -- parallel bindings with `gensym`
 
@@ -592,8 +596,7 @@ variables, all using `gensym` to avoid conflicts:
 (loop ((n 5) (acc 1))
   (if (= n 0)
     acc
-    (recur (- n 1) (* acc n))))
-; => 120
+    (recur (- n 1) (* acc n)))) ; => 120
 ```
 
 ```{arl, include=FALSE}
@@ -604,7 +607,8 @@ variables, all using `gensym` to avoid conflicts:
 ### `try`/`catch`/`finally` -- syntax sugar
 
 The `try` macro parses its clause list at expansion time and rewrites
-into calls to the lower-level `try*` function:
+into calls to the lower-level `try*` function (which in turns calls R's
+`tryCatch`):
 
 ```{arl}
 (try (stop "something went wrong")
