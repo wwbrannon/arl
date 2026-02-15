@@ -124,6 +124,11 @@ not erase a previously set `:description`.
 (assert-equal "Double x." (doc double))
 (assert-equal "(double 5) ; => 10" (doc double "examples"))
 (assert-equal "Pure function." (doc double "note"))
+(define all-docs (doc double "all"))
+(assert-equal #t (is.list all-docs))
+(assert-equal "Double x." (r/call "[[" (list all-docs "description")))
+(assert-equal "(double 5) ; => 10" (r/call "[[" (list all-docs "examples")))
+(assert-equal "Pure function." (r/call "[[" (list all-docs "note")))
 ```
 
 ## Which mechanism to use
