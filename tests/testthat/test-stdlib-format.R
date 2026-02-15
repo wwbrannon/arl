@@ -90,7 +90,7 @@ test_that("format-value displays named lists with names", {
 
   # Named list with string values
   named2 <- list(description = "Double x.", note = "Pure function.")
-  expect_equal(env$`format-value`(named2), "(:description Double x. :note Pure function.)")
+  expect_equal(env$`format-value`(named2), '(:description "Double x." :note "Pure function.")')
 
   # Partially named list - names present so format with names
   partial <- list(a = 1, 2, b = 3)

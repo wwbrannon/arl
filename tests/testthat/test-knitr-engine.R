@@ -30,7 +30,7 @@ test_that("evaluate_arl_code suppresses invisible/NULL results", {
 
 test_that("evaluate_arl_code captures side-effect output", {
   out <- arl:::evaluate_arl_code(engine, '(display "hello")')
-  expect_match(out, "#> hello")
+  expect_match(out, '#> "hello"')
 })
 
 test_that("evaluate_arl_code propagates errors by default", {

@@ -11,14 +11,20 @@
   (import set)
 
   ;; Format atomic values to a single string.
+  ;; Character strings are quoted so they are distinguishable from symbols.
   (define __format-atomic
     (lambda (x)
       (define parts (as.character x))
       (if (= (length parts) 0)
         ""
-        (if (= (length parts) 1)
-          (as.character parts)
-          (string-join parts " ")))))
+        (if (is.character x)
+          (if (= (length parts) 1)
+            (string-join (list "\"" (r/call "[[" (list parts 1)) "\"") "")
+            (string-join (lapply (__as-list parts)
+                           (lambda (s) (string-join (list "\"" s "\"") ""))) " "))
+          (if (= (length parts) 1)
+            (as.character parts)
+            (string-join parts " "))))))
 
   ;; Format list/call contents with spaces.
   (define __format-seq
@@ -184,7 +190,8 @@
     (lambda (x)
       (display x)))
 
-  ;;' @description Concatenate formatted values into string.
+  ;;' @description Concatenate values into a string.
+  ;;' Strings are included as-is (unquoted); other values are formatted.
   ;;' @examples
   ;;' (str "hello" " " "world")  ; => "hello world"
   ;;' (str 1 "+" 2)              ; => "1+2"
@@ -194,7 +201,11 @@
   ;;' @seealso string-join, format
   (define str
     (lambda (. args)
-      (define parts (lapply (__as-list args) format-value))
+      (define parts (lapply (__as-list args)
+                      (lambda (x)
+                        (if (is.character x)
+                          (as.character x)
+                          (format-value x)))))
       (if (= (length parts) 0)
         ""
         (string-join parts ""))))

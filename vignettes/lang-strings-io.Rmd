@@ -1065,7 +1065,8 @@ Alias for display.
 
 ### str {#str}
 
-Concatenate formatted values into string.
+Concatenate values into a string.
+Strings are included as-is (unquoted); other values are formatted.
 
 **Signature:** `(str args...)`
 
