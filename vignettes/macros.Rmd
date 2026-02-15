@@ -469,21 +469,17 @@ Macros can call themselves recursively or invoke other macros:
 Macros can also expand into calls to other macros.  The expander
 recursively expands until no macro calls remain:
 
-```{arl, eval=FALSE}
-;; cond expands into nested if, which may contain further macro calls
-(cond
-  ((= x 1) "one")
-  ((= x 2) "two")
-  (else "other"))
+```{arl}
+;; when-not expands into unless, which expands into if
+(defmacro when-not (test . body)
+  `(unless ,test ,@body))
+
+;; two levels of expansion: when-not -> unless -> if
+(when-not (= 1 2) (+ 20 22))  ; => 42
 ```
 
 ```{arl, include=FALSE}
-(define __cond-x 2)
-(assert-equal "two"
-  (cond
-    ((= __cond-x 1) "one")
-    ((= __cond-x 2) "two")
-    (else "other")))
+(assert-equal 42 (when-not (= 1 2) (+ 20 22)))
 ```
 
 ## Inspecting macro expansions
