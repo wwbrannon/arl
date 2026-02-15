@@ -42,22 +42,37 @@ Anything not in this list is either a built-in function or a lang-provided
 function or macro. Unlike special forms, those are ordinary values and can be
 passed around, stored in variables, and so on.
 
+## Built-in functions
+
+Certain **built-in functions** are implemented in R ([`R/engine.R`](https://github.com/wwbrannon/arl/blob/main/R/engine.R)) rather than in Arl source modules. These are
+low-level primitives that need direct access to engine internals — cons-cell
+operations, the macro expander, the evaluator, promise handling, and
+documentation helpers. They are always available, even when the stdlib modules
+are not loaded (`Engine$new(load_stdlib = FALSE)`).
+
+| Category | Functions |
+|----------|-----------|
+| List and Pair Predicates | [`pair?`](lang-types.html#pair-p) |
+| Evaluation | [`eval`](lang-core.html#eval), [`read`](lang-core.html#read), [`write`](lang-core.html#write), [`load`](lang-core.html#load), [`r/eval`](lang-core.html#r-eval) |
+| Documentation | [`help`](lang-core.html#help), [`doc!`](lang-core.html#doc-bang), [`doc`](lang-core.html#doc) |
+| Modules and Imports | [`import-stdlib`](lang-core.html#import-stdlib) |
+| Macro Utilities | [`capture`](lang-core.html#capture), [`gensym`](lang-core.html#gensym), [`macro?`](lang-core.html#macro-p), [`macroexpand`](lang-core.html#macroexpand) |
+| Promises (Lazy Evaluation) | [`promise?`](lang-core.html#promise-p), [`force`](lang-core.html#force), [`promise-expr`](lang-core.html#promise-expr) |
+| Environment Introspection | [`toplevel-env`](lang-core.html#toplevel-env), [`current-env`](lang-core.html#current-env) |
+
+These builtins are documented alongside the stdlib functions they relate to
+in the individual reference pages below.
+
 ## Standard library
 
-Arl's standard library has two layers:
+In addition to built-in functions, Arl has a **standard library** written in
+Arl (`inst/arl/*.arl`). These stdlib modules provide various features: list
+operations, math, strings, control flow, and everything else. Modules are
+loaded in dependency order (each module declares its dependencies with `(import
+...)` and is loaded after the modules it imports).
 
-1. **Built-in functions** defined in R (`R/engine.R`). These are low-level
-   primitives that need direct access to engine internals — cons-cell
-   operations, the macro expander, the evaluator, promise handling, and
-   documentation helpers. They are always available, even when the stdlib
-   modules are not loaded (`Engine$new(load_stdlib = FALSE)`).
-2. **Stdlib modules** written in Arl (`inst/arl/*.arl`). These provide the
-   bulk of the standard library: list operations, math, strings, control flow,
-   and everything else. Modules are loaded in dependency order (each module
-   declares its dependencies with `(import ...)` and is loaded after the
-   modules it imports).
-
-For the full, per-function reference, see the individual stdlib reference pages:
+For the full, per-function reference, see the individual stdlib reference
+pages:
 
 - [Standard Library: Core, R Interop, and Testing](lang-core.html)
 - [Standard Library: Types, Equality, and Conversions](lang-types.html)
@@ -90,25 +105,6 @@ engine <- Engine$new()                   # all stdlib loaded
 bare <- Engine$new(load_stdlib=FALSE)    # builtins only
 ```
 
-## Built-in functions
-
-The following functions are implemented in R
-([`R/engine.R`](https://github.com/wwbrannon/arl/blob/main/R/engine.R)) rather than in Arl source
-modules. They are available even on a bare engine
-(`Engine$new(load_stdlib = FALSE)`).
-
-| Category | Functions |
-|----------|-----------|
-| List and Pair Predicates | [`pair?`](lang-types.html#pair-p) |
-| Evaluation | [`eval`](lang-core.html#eval), [`read`](lang-core.html#read), [`write`](lang-core.html#write), [`load`](lang-core.html#load), [`r/eval`](lang-core.html#r-eval) |
-| Documentation | [`help`](lang-core.html#help), [`doc!`](lang-core.html#doc-bang), [`doc`](lang-core.html#doc) |
-| Modules and Imports | [`import-stdlib`](lang-core.html#import-stdlib) |
-| Macro Utilities | [`capture`](lang-core.html#capture), [`gensym`](lang-core.html#gensym), [`macro?`](lang-core.html#macro-p), [`macroexpand`](lang-core.html#macroexpand) |
-| Promises (Lazy Evaluation) | [`promise?`](lang-core.html#promise-p), [`force`](lang-core.html#force), [`promise-expr`](lang-core.html#promise-expr) |
-| Environment Introspection | [`toplevel-env`](lang-core.html#toplevel-env), [`current-env`](lang-core.html#current-env) |
-
-These builtins are documented alongside the stdlib functions they relate to
-in the individual reference pages above.
 
 ## [Core, R Interop, and Testing](lang-core.html)
 
