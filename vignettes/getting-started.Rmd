@@ -85,12 +85,13 @@ definitions from earlier files are visible to later ones. Use
 
 ## Evaluate Arl from R
 
-The simplest way to evaluate Arl inside an R script is `eval_text`, which
-reads and evaluates in one step:
+The simplest way to evaluate Arl inside an R script is `eval_text` (or its
+alias `eval_string`), which reads and evaluates in one step:
 
 ```{r eval=FALSE}
 engine <- Engine$new()
 engine$eval_text("(define x 10) (+ x 5)")
+engine$eval_string("(define y 20) (+ y 5)")
 ```
 
 For finer control, you can parse and evaluate separately:

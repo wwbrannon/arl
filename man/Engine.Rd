@@ -10,6 +10,7 @@ evaluation, and environment management.
 \examples{
 engine <- Engine$new()
 engine$eval_text("(+ 1 2 3)")
+engine$eval_string("(+ 4 5)")
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -30,6 +31,7 @@ option \code{arl.use_env_cache}.}
 \item \href{#method-Engine-write}{\code{Engine$write()}}
 \item \href{#method-Engine-eval}{\code{Engine$eval()}}
 \item \href{#method-Engine-eval_text}{\code{Engine$eval_text()}}
+\item \href{#method-Engine-eval_string}{\code{Engine$eval_string()}}
 \item \href{#method-Engine-load_file_under_env}{\code{Engine$load_file_under_env()}}
 \item \href{#method-Engine-load_file_in_env}{\code{Engine$load_file_in_env()}}
 \item \href{#method-Engine-macroexpand}{\code{Engine$macroexpand()}}
@@ -157,6 +159,27 @@ Read and evaluate Arl source text. Convenience wrapper around
 \code{read()} and \code{eval()}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$eval_text(text, env = NULL, source_name = "<eval>")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{text}}{Character string of Arl code to read/eval.}
+
+\item{\code{env}}{Optional environment or Env used as the engine base.}
+
+\item{\code{source_name}}{Optional source name for error reporting.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Engine-eval_string"></a>}}
+\if{latex}{\out{\hypertarget{method-Engine-eval_string}{}}}
+\subsection{Method \code{eval_string()}}{
+Alias for \code{eval_text()}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Engine$eval_string(text, env = NULL, source_name = "<eval>")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

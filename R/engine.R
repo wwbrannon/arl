@@ -32,6 +32,7 @@
 #' @examples
 #' engine <- Engine$new()
 #' engine$eval_text("(+ 1 2 3)")
+#' engine$eval_string("(+ 4 5)")
 #' @export
 Engine <- R6::R6Class(
   "Engine",
@@ -192,6 +193,12 @@ Engine <- R6::R6Class(
       private$.compiled_runtime$context$compiler$source_text <- text
       on.exit(private$.compiled_runtime$context$compiler$source_text <- NULL)
       do.call(self$eval, c(exprs, list(env = env)), quote = TRUE)
+    },
+
+    #' @description
+    #' Alias for \code{eval_text()}.
+    eval_string = function(text, env = NULL, source_name = "<eval>") {
+      self$eval_text(text, env = env, source_name = source_name)
     },
 
 

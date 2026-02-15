@@ -1,3 +1,11 @@
+test_that("eval_string is an alias for eval_text", {
+  engine <- make_engine()
+
+  result <- engine$eval_string("(+ 2 3)")
+
+  expect_equal(result, 5)
+})
+
 test_that("Promise uses private fields", {
   engine <- make_engine()
 
