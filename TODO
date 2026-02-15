@@ -1,9 +1,4 @@
 minor doc updates:
-    o) docs should discuss dotted pair lists in detail somewhere
-    o) in "Lists and quoting" section of getting started, just link to another discussion of them
-
-    o) "R base operators are also available directly": this is a bad example because we wrap these to support > 2 args, note this and also give other examples
-
     o) discuss in getting started how this is confusing:
         arl> (list? '(1 2 3))
         TRUE

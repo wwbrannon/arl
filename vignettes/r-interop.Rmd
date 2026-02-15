@@ -280,13 +280,13 @@ Use `::` and `:::` to access R packages:
 R base operators are also available directly:
 
 ```{arl}
-(+ 1 2 3)
-(< 3 5)
+(^ 2 3)
+(%/% 7 3)
 ```
 
 ```{arl, include=FALSE}
-(assert-equal 6 (+ 1 2 3))
-(assert-true (< 3 5))
+(assert-equal 8 (^ 2 3))
+(assert-equal 2 (%/% 7 3))
 ```
 
 ### Managing bindings
