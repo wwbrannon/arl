@@ -38,6 +38,11 @@ engine <- arl::Engine$new()
 engine$repl()
 ```
 
+```{r, include=FALSE}
+engine <- arl::Engine$new()
+stopifnot(is.function(engine$repl))
+```
+
 The engine loads all stdlib modules automatically (though this [can be
 customized](#loading-stdlib-modules)), so functions like `when`, `let`, `map`,
 and `->` are available immediately.
@@ -103,6 +108,16 @@ exprs <- engine$read("(define x 10) (+ x 5)")
 engine$eval(exprs[[1]], exprs[[2]])
 ```
 
+```{r, include=FALSE}
+engine <- arl::Engine$new()
+stopifnot(identical(engine$eval_text("(define x 10) (+ x 5)"), 15))
+stopifnot(identical(engine$eval_string("(define y 20) (+ y 5)"), 25))
+
+exprs <- engine$read("(define z 10) (+ z 5)")
+stopifnot(length(exprs) == 2L)
+stopifnot(identical(engine$eval(exprs[[1]], exprs[[2]]), 15))
+```
+
 `eval()` accepts multiple expressions and evaluates them sequentially,
 returning the last value.
 
@@ -122,6 +137,21 @@ are not visible to later code):
 (run "script.arl")
 ```
 
+```{arl, include=FALSE}
+(define gs-load-path (tempfile :fileext ".arl"))
+(writeLines (c "(define gs-load-visible 99)") gs-load-path)
+(load gs-load-path)
+(assert-equal 99 gs-load-visible)
+
+(define gs-run-path (tempfile :fileext ".arl"))
+(writeLines (c "(define gs-run-only 123)") gs-run-path)
+(run gs-run-path)
+(assert-equal "missing" (try gs-run-only (catch e "missing")))
+
+(unlink gs-load-path)
+(unlink gs-run-path)
+```
+
 From R, `load_file_in_env` and `load_file_under_env` correspond to `load` and
 `run` respectively:
 
@@ -133,6 +163,22 @@ engine$load_file_in_env("script.arl")
 
 # Like (run ...): isolated; definitions not visible
 engine$load_file_under_env("script.arl")
+```
+
+```{r, include=FALSE}
+engine <- arl::Engine$new()
+script_path <- tempfile(fileext = ".arl")
+writeLines("(define gs-file-value 99)", script_path)
+script_path <- normalizePath(script_path, winslash = "/", mustWork = TRUE)
+
+engine$load_file_in_env(script_path)
+stopifnot(identical(engine$eval_text("gs-file-value"), 99))
+
+engine2 <- arl::Engine$new()
+engine2$load_file_under_env(script_path)
+stopifnot(inherits(try(engine2$eval_text("gs-file-value"), silent = TRUE), "try-error"))
+
+unlink(script_path)
 ```
 
 If you don't specify an environment, the default is the engine's toplevel
@@ -159,7 +205,12 @@ or `arl --no-stdlib`:
 
 
 ```{arl, include=FALSE}
-;; Verify key stdlib functions are available (loaded by default engine)
+(import control)
+(import binding)
+(import looping)
+(import threading)
+(import error)
+
 (assert-true (macro? 'when))
 (assert-true (macro? 'unless))
 (assert-true (macro? 'cond))
@@ -285,6 +336,12 @@ and manipulate lists:
 (cdr (list 1 2 3))  ; cdr = rest of list after car
 ```
 
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3) (list 1 2 3))
+(assert-equal 1 (car (list 1 2 3)))
+(assert-equal (list 2 3) (cdr (list 1 2 3)))
+```
+
 Lists typed in at the prompt are, by default, evaluated. To prevent evaluation,
 use the special form `quote` or its syntactic sugar `'`:
 ```{arl}
@@ -292,6 +349,12 @@ use the special form `quote` or its syntactic sugar `'`:
 '(+ 1 2)           ; simple alias for (quote ...)
 
 (list? '(+ 1 2))
+```
+
+```{arl, include=FALSE}
+(assert-equal '(+ 1 2) (quote (+ 1 2)))
+(assert-equal '(+ 1 2) '(+ 1 2))
+(assert-true (list? '(+ 1 2)))
 ```
 
 You can also perform selective evaluation with the `quasiquote` template syntax
@@ -309,9 +372,10 @@ You can also perform selective evaluation with the `quasiquote` template syntax
 ```
 
 ```{arl, include=FALSE}
-(assert-equal (list 1 2 3) (list 1 2 3))
-(assert-equal 1 (car (list 1 2 3)))
-(assert-equal (list 2 3) (cdr (list 1 2 3)))
+(define x 10)
+(define y (list 1 2 3))
+(assert-equal '(list 10 20 30) `(list ,x 20 30))
+(assert-equal '(list 1 2 3 20 30) `(list ,@y 20 30))
 ```
 
 For convenience, an Arl list is also an R list under the hood:
@@ -320,12 +384,22 @@ For convenience, an Arl list is also an R list under the hood:
 (base::is.list (list 1 2 3))
 ```
 
+```{arl, include=FALSE}
+(assert-true (base::is.list (list 1 2 3)))
+```
+
 Lisp's traditional pair lists made of cons cells are also supported:
 
 ```{arl}
 (define pl (3 . (4 . 5))) ; this is a dotted-pair list
 (pair? pl)
 (list? pl) ; pair lists are a different kind of object
+```
+
+```{arl, include=FALSE}
+(define pl (3 . (4 . 5)))
+(assert-true (pair? pl))
+(assert-false (list? pl))
 ```
 
 For more details on the standard library and macros, see the other vignettes in
@@ -343,9 +417,9 @@ special form, macro, or function:
 ```
 
 ```{arl, include=FALSE}
-;; Verify zero-is-falsy block from above
-(assert-equal "falsy" (if 0 "truthy" "falsy"))
-(assert-equal "truthy" (if 1 "truthy" "falsy"))
+(assert-equal "ok" (try (begin (help "define") "ok") (catch e "bad")))
+(assert-equal "ok" (try (begin (help "when") "ok") (catch e "bad")))
+(assert-equal "ok" (try (begin (help "map") "ok") (catch e "bad")))
 ```
 
 For functions or macros with documentation, `help` shows the signature, description,

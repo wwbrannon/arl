@@ -490,19 +490,32 @@ recursively expands until no macro calls remain:
 
 ### From Arl
 
-`macroexpand-1` expands only the outermost macro call (one step):
+Use the `macroexpand` function to perform macro expansion on an expression at
+execution time. `macroexpand` supports an optional `depth` argument:
+
+- no depth: fully and recursively expands all macro calls
+- `depth = 1` (or `:depth 1`): one expansion step at the outermost call
+- `depth = N`: exactly `N` expansion steps
+
+`macroexpand-1` is a convenience alias for one-step expansion, equivalent
+to `(macroexpand expr 1)` and `(macroexpand expr :depth 1)`:
 
 ```{arl}
-(macroexpand-1 '(when #t 1))
-; => (if #t (begin 1) #nil)
+(macroexpand '(when #t 1) 1) ; => (if #t (begin 1) #nil)
+
+(macroexpand '(when #t 1) :depth 1) ; => (if #t (begin 1) #nil)
+
+(macroexpand-1 '(when #t 1)) ; => (if #t (begin 1) #nil)
 ```
 
 ```{arl, include=FALSE}
+(assert-equal '(if #t (begin 1) #nil) (macroexpand '(when #t 1) 1))
+(assert-equal '(if #t (begin 1) #nil) (macroexpand '(when #t 1) :depth 1))
 (assert-equal '(if #t (begin 1) #nil) (macroexpand-1 '(when #t 1)))
 ```
 
-`macroexpand` (or its alias `macroexpand-all`) recursively expands all
-macro calls in the expression:
+For full recursive expansion, use `macroexpand` with no depth (or its
+alias `macroexpand-all`):
 
 ```{arl}
 (macroexpand '(when #t (unless #f 42)))
@@ -526,7 +539,8 @@ macro calls in the expression:
 
 ### From R
 
-Use `engine$macroexpand()` to expand from R:
+Use `engine$macroexpand()`, which takes the same `depth` argument, to expand
+from R:
 
 ```{r eval=FALSE}
 engine <- Engine$new()

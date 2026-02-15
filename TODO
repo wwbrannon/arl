@@ -1,3 +1,15 @@
+minor doc updates:
+    o) docs should discuss dotted pair lists in detail somewhere
+    o) in "Lists and quoting" section of getting started, just link to another discussion of them
+
+    o) "R base operators are also available directly": this is a bad example because we wrap these to support > 2 args, note this and also give other examples
+
+    o) discuss in getting started how this is confusing:
+        arl> (list? '(1 2 3))
+        TRUE
+        arl> (is.list '(1 2 3))
+        FALSE
+
 o) read module guide
 
 o) substantive changes
@@ -7,30 +19,7 @@ o) substantive changes
 
     o) more future-proof import syntax a la python
 
-    o) let's have a load-stdlib command
-
-    o) fallthrough to R's help for R functions doesn't work
-
-o) macro vignette should mention macroexpansion depth argument
-
-o) docs should discuss dotted pair lists in detail somewhere
-o) in "Lists and quoting" section of getting started, just link to another discussion of them
-
-o) execute the R snippets in getting-started where possible
-
-o) update the silent asserts in getting-started, we've made some changes and coverage is now worse
-
 o) the module system seems to decide what a module is called based on its filename
-
-o) discuss in getting started how this is confusing:
-    arl> (list? '(1 2 3))
-    TRUE
-    arl> (is.list '(1 2 3))
-    FALSE
-
-o) what does this mean? "If omitted, the parser falls back to a (doc! ...) call."
-
-o) "R base operators are also available directly": this is a bad example because we wrap these to support > 2 args, note this and also give other examples
 
 o) is this true? "The import form is primarily useful inside your own modules (which start with an empty scope)"
 o) closely related: scope here doesn't seem to be lexical:
