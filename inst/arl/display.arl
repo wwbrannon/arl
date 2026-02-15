@@ -1,7 +1,8 @@
 ;;; Arl Standard Library - Display Helpers
 
 (module display
-  (export __format-atomic __format-seq format-value display println str trace)
+  (export __format-atomic __format-seq __format-named-list __format-s3-object
+          format-value display println str trace)
 
   (import list)
   (import strings)
@@ -53,6 +54,46 @@
           (string-join (list "<" class-str ">") ""))
         #nil)))
 
+  ;; Format named lists with keyword-style keys: (:key1 val1 :key2 val2).
+  (define __format-named-list
+    (lambda (x)
+      (define nms (r/call "names" (list x)))
+      (if (or (r/call "is.null" (list nms))
+              (r/call "all" (list (r/call "==" (list nms "")))))
+        #nil
+        (begin
+          (define parts (list))
+          (define i 1)
+          (while (<= i (length x))
+            (begin
+              (define nm (r/call "[[" (list nms i)))
+              (define val (r/call "[[" (list x i)))
+              (if (!= nm "")
+                (set! parts (c parts (list (string-join (list ":" nm) "")
+                                           (format-value val))))
+                (set! parts (c parts (list (format-value val)))))
+              (set! i (+ i 1))))
+          (string-join (list "(" (string-join parts " ") ")") "")))))
+
+  ;; Helper: capture R print output as character vector.
+  (define __capture-print
+    (r/call "eval" (list (r/call "parse" (list :text "function(obj) utils::capture.output(print(obj))")))))
+
+  ;; Format S3 objects with non-trivial class using R's print method.
+  (define __format-s3-object
+    (lambda (x)
+      (define cls (r/call "class" (list x)))
+      ;; Only apply to lists with real S3 classes (not just "list" or "data.frame")
+      (if (and (is.list x)
+               (not (r/call "is.null" (list cls)))
+               (not (r/call "all" (list (r/call "%in%" (list cls (c "list" "data.frame")))))))
+        (begin
+          (define lines (__capture-print x))
+          (if (<= (length lines) 10)
+            (string-join lines "\n")
+            (string-join (list "<" (r/call "[[" (list cls 1)) ">") "")))
+        #nil)))
+
   ;;' @description Format value for display.
   (define format-value
     (lambda (x)
@@ -93,9 +134,18 @@
                       "<promise>"
                       (if (is.symbol x)
                         (as.character x)
-                        (if (or (is.call x) (is.list x))
-                          (string-join (list "(" (__format-seq x) ")") "")
-                          (__format-atomic x))))))))))))))
+                        (begin
+                          ;; Check S3 object before named-list before generic list
+                          (define s3-tag (__format-s3-object x))
+                          (if (not (is.null s3-tag))
+                            s3-tag
+                            (begin
+                              (define named-tag (__format-named-list x))
+                              (if (not (is.null named-tag))
+                                named-tag
+                                (if (or (is.call x) (is.list x))
+                                  (string-join (list "(" (__format-seq x) ")") "")
+                                  (__format-atomic x))))))))))))))))))
 
   ;;' @section Display and Output
   ;;' Functions for formatting and printing values.

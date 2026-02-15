@@ -136,7 +136,11 @@ Env <- R6::R6Class(
       }
       tryCatch(
         do.call(formatter, list(value)),
-        error = function(e) paste(as.character(value), collapse = " ")
+        error = function(e) {
+          warning("format-value failed, using fallback: ",
+                  conditionMessage(e), call. = FALSE)
+          paste(utils::capture.output(print(value)), collapse = "\n")
+        }
       )
     },
     # @description Coerce value to a single string (symbol or length-1 character). Errors with message otherwise.

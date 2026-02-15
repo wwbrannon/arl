@@ -100,7 +100,7 @@ Use `.` to collect remaining arguments into a list:
 (defmacro unless (test . body)
   `(if ,test #nil (begin ,@body)))
 
-(unless (= 1 2) (print "not equal") 42)  ; => 42
+(unless (= 1 2) (+ 20 22))  ; => 42
 ```
 
 ```{arl, include=FALSE}

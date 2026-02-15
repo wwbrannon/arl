@@ -79,3 +79,78 @@ test_that("format-value for improper list shows dotted tail", {
   expect_true(grepl("b", formatted))
   expect_true(grepl("c", formatted))
 })
+
+test_that("format-value displays named lists with names", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Named list with keyword-style keys
+  named <- list(a = 1, b = 2)
+  expect_equal(env$`format-value`(named), "(:a 1 :b 2)")
+
+  # Named list with string values
+  named2 <- list(description = "Double x.", note = "Pure function.")
+  expect_equal(env$`format-value`(named2), "(:description Double x. :note Pure function.)")
+
+  # Partially named list - names present so format with names
+  partial <- list(a = 1, 2, b = 3)
+  formatted <- env$`format-value`(partial)
+  expect_true(grepl(":a", formatted))
+  expect_true(grepl(":b", formatted))
+})
+
+test_that("format-value displays S3 objects compactly", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # lm object (S3 class "lm")
+  m <- lm(y ~ x, data = data.frame(x = 1:3, y = c(2, 4, 6)))
+  formatted <- env$`format-value`(m)
+  # Should be compact R print output (8 lines) or <lm> if too long
+  expect_true(grepl("lm|Coefficients", formatted))
+
+  # glm object
+  g <- suppressWarnings(glm(y ~ x, data = data.frame(x = 1:3, y = c(0, 1, 1)), family = binomial))
+  formatted_g <- env$`format-value`(g)
+  expect_true(grepl("glm|Coefficients", formatted_g))
+})
+
+test_that("format-value displays call objects from quasiquote as s-expressions", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Call object: quote(+(10, 20)) -> (+ 10 20)
+  expect_equal(env$`format-value`(quote(`+`(10, 20))), "(+ 10 20)")
+
+  # quasiquote result via engine
+  engine$eval_text("(define x 10)")
+  result <- engine$eval_text("(format-value `(+ ,x 20))")
+  expect_equal(result, "(+ 10 20)")
+})
+
+test_that("format-value displays lists containing symbols with parens", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # List with a symbol
+  sym_list <- list(as.symbol("+"), 10, 20)
+  expect_equal(env$`format-value`(sym_list), "(+ 10 20)")
+
+  # List with nested structure
+  nested <- list(as.symbol("if"), TRUE, 1, 2)
+  expect_equal(env$`format-value`(nested), "(if TRUE 1 2)")
+})
+
+test_that("format_value fallback warns on format-value error", {
+  # Create an env with a broken format-value to test the fallback
+  test_env <- new.env(parent = baseenv())
+  test_env$`format-value` <- function(x) stop("intentional test error")
+  arl_env <- Env$new(env = test_env)
+
+  expect_warning(
+    result <- arl_env$format_value(42),
+    "format-value failed, using fallback: intentional test error"
+  )
+  # Fallback should use capture.output(print(x))
+  expect_equal(result, "[1] 42")
+})

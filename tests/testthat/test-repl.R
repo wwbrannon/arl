@@ -239,7 +239,7 @@ test_that("REPL print_value handles calls with str", {
   env <- make_engine()
   repl <- arl:::REPL$new(engine = env)
   call_obj <- quote(f(a, b))
-  output <- capture.output(val <- repl$print_value(call_obj))
+  output <- capture.output(val <- suppressWarnings(repl$print_value(call_obj)))
   expect_true(length(output) > 0)
   expect_equal(val, call_obj)
 })
