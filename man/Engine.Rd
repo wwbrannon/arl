@@ -57,7 +57,8 @@ Initialize engine components and base environment.
   parent = NULL,
   use_env_cache = NULL,
   coverage_tracker = NULL,
-  load_stdlib = TRUE
+  load_stdlib = TRUE,
+  disable_tco = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -80,6 +81,10 @@ loading. Intended for internal development use.}
 \item{\code{load_stdlib}}{Logical. If TRUE (the default), loads all stdlib modules
 during initialization. Set to FALSE to create a bare engine with only
 builtins — useful for testing or when you want to import specific modules.}
+
+\item{\code{disable_tco}}{Optional logical. If TRUE, disables self-tail-call optimization
+in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
+which inherits from global option \code{getOption("arl.disable_tco", FALSE)}.}
 }
 \if{html}{\out{</div>}}
 }
