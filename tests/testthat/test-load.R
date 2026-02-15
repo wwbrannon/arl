@@ -27,6 +27,24 @@ test_that("(load ...) evaluates file in current environment", {
   expect_equal(get("foo", envir = env), 7)
 })
 
+test_that("(load path env) evaluates file in the provided environment", {
+  engine <- make_engine()
+  caller_env <- engine$get_env()
+  target_env <- new.env(parent = caller_env)
+
+  path <- tempfile(fileext = ".arl")
+  writeLines("(define scoped-value 11)", path)
+  on.exit(unlink(path), add = TRUE)
+
+  path_for_arl <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  exprs <- engine$read(paste0("(load \"", path_for_arl, "\" target-env)"))
+  caller_env$`target-env` <- target_env
+  engine$eval(exprs[[1]], env = caller_env)
+
+  expect_equal(get("scoped-value", envir = target_env), 11)
+  expect_false(exists("scoped-value", envir = caller_env, inherits = FALSE))
+})
+
 test_that("(load ...) resolves stdlib entries by name", {
   engine <- make_engine()
   env <- engine$get_env()

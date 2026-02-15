@@ -89,16 +89,17 @@ These three forms load code differently:
 | Form | Scope | Definitions visible? | Use case |
 |------|-------|---------------------|----------|
 | `(load "file.arl")` | Current env | Yes | Source a script into REPL |
+| `(load "file.arl" env)` | `env` | Yes | Source into a chosen environment |
 | `(import module)` | Current scope | Exports only | Use a module's public API |
 | `(run "file.arl")` | Isolated child | No | Execute a script without binding side effects |
 
 From R:
 
-- `engine$load_file_under_env(path)` -- isolated scope (like `run`)
 - `engine$load_file_in_env(path)` -- definitions visible (like `load`)
+- `engine$load_file_in_env(path, new.env(parent = env))` -- isolated scope (like `run`)
 
 If you get "symbol not found" after loading a file, you may have used
-`run` or `engine$load_file_under_env()` when you needed `load` or
+`run` or an isolated child environment when you needed `load` or
 `engine$load_file_in_env()`.
 
 ## Self-TCO limitations

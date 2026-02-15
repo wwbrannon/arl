@@ -9,7 +9,7 @@ test_that("install_helpers() creates all required helpers", {
   # Check all documented helpers exist
   expected_helpers <- c(
     ".__env", ".__quote", ".__true_p", ".__assign_pattern",
-    ".__load", ".__help", ".__subscript_call", "quasiquote",
+    ".__help", ".__subscript_call", "quasiquote",
     ".__delay", ".__defmacro", ".__macro_quasiquote",
     ".__module", ".__import", ".__pkg_access"
   )

@@ -151,8 +151,6 @@ passed as values.
 - `and`, `or` - Short-circuit boolean operators
 - `while` - Loop with condition
 - `delay` - Lazy promise creation
-- `load` - Load and evaluate a file
-- `run` - Run a file in an isolated environment
 - `import` - Import a module’s exports
 - `module` - Define a module with exports
 - `~` - Formula (for R modeling)
@@ -162,10 +160,10 @@ passed as values.
 In addition to special forms, Arl provides a small set of **built-in
 functions** implemented in R and available before any stdlib modules
 load (and if stdlib loading is disabled): `eval`, `read`, `write`,
-`gensym`, `capture`, `macro?`, `macroexpand`, `pair?`, `promise?`,
-`force`, `promise-expr`, `toplevel-env`, `current-env`, `r/eval`, `doc`,
-and `doc!`. Unlike special forms, these are ordinary functions and can
-be passed as values.
+`load`, `gensym`, `capture`, `macro?`, `macroexpand`, `pair?`,
+`promise?`, `force`, `promise-expr`, `toplevel-env`, `current-env`,
+`r/eval`, `doc`, and `doc!`. Unlike special forms, these are ordinary
+functions and can be passed as values.
 
 ### Continuations
 
@@ -251,14 +249,15 @@ them individually in your own modules or when working with a bare engine
 
 - `(load "file.arl")` – run a file in the current environment
   (definitions visible)
+- `(load "file.arl" env)` – run a file in the specified environment
 - `(run "file.arl")` – run a file in an isolated child environment
 - `(import M)` – load module M and attach its exports to the current
   scope
 
 From R: `engine$load_file_in_env(path)` corresponds to `load`;
-`engine$load_file_under_env(path)` corresponds to `run`. See the
-[Modules and Imports](articles/modules.html) guide for defining your own
-modules.
+`engine$load_file_in_env(path, new.env(parent = engine$get_env()))`
+corresponds to `run`. See the [Modules and
+Imports](articles/modules.html) guide for defining your own modules.
 
 ### Semantics
 

@@ -1268,7 +1268,7 @@ test_that("Engine tracks coverage for executed code", {
   engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
   tracker$discover_files()
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   summary <- tracker$get_summary()
 
@@ -1289,7 +1289,7 @@ test_that("disabled coverage tracker doesn't track", {
   engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
 
   tracker$discover_files()
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   summary <- tracker$get_summary()
 
@@ -1311,9 +1311,9 @@ test_that("coverage tracking persists across multiple evaluations", {
   tracker$discover_files()
 
   # Load file multiple times
-  engine$load_file_under_env(tmp)
-  engine$load_file_under_env(tmp)
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
+  engine$load_file_in_env(tmp)
+  engine$load_file_in_env(tmp)
 
   summary <- tracker$get_summary()
 
@@ -1338,7 +1338,7 @@ test_that("Engine$get_coverage() returns data frame with correct structure", {
   engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   result <- engine$get_coverage()
 
@@ -1360,7 +1360,7 @@ test_that("Engine$get_coverage() reports correct coverage stats", {
   engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   result <- engine$get_coverage()
   row <- result[result$file == tmp, ]
@@ -1507,7 +1507,7 @@ test_that("uncalled function body is NOT covered", {
   tracker$discover_files()
 
   # Load file but do NOT call f
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   summary <- tracker$get_summary()
 
@@ -1534,7 +1534,7 @@ test_that("called function body IS covered", {
   engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   summary <- tracker$get_summary()
 
@@ -1570,7 +1570,7 @@ test_that("module loading does not mark entire file as covered", {
   tracker$discover_files()
 
   # Load the module - defines f, g, h but doesn't call them
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   summary <- tracker$get_summary()
 
@@ -1602,7 +1602,7 @@ test_that("if expression only covers taken then-branch", {
   engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   summary <- tracker$get_summary()
 
@@ -1629,7 +1629,7 @@ test_that("if expression only covers taken else-branch", {
   engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   summary <- tracker$get_summary()
 
@@ -1657,7 +1657,7 @@ test_that("if expression covers both branches when both are taken", {
   engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
   tracker$discover_files()
 
-  engine$load_file_under_env(tmp)
+  engine$load_file_in_env(tmp)
 
   summary <- tracker$get_summary()
 

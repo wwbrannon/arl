@@ -21,6 +21,15 @@ test_that("help shows Arl stdlib docs via attributes", {
   expect_true(any(grepl("\\(funcall fn args\\)", output)))
 })
 
+test_that("help shows builtin load docs via attributes", {
+  engine <- make_engine()
+  env <- engine$get_env()
+  output <- capture.output(engine$eval_text("(help load)", env = env))
+  expect_true(any(grepl("Topic: load", output)))
+  expect_true(any(grepl("Usage: (load path env = NULL)", output, fixed = TRUE)))
+  expect_true(any(grepl("Defaults to the current environment.", output, fixed = TRUE)))
+})
+
 test_that("help shows Arl macro docs from stdlib files", {
   engine <- make_engine()
   env <- engine$get_env()

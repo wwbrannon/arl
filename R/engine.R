@@ -114,7 +114,6 @@ Engine <- R6::R6Class(
       private$.compiled_runtime <- CompiledRuntime$new(
         context,
         load_file_fn = function(path, env) self$load_file_in_env(path, env),
-        run_file_fn = function(path, env) self$load_file_under_env(path, env),
         help_fn = function(topic, env, package = NULL) self$help(topic, env, package),
         module_cache = private$.module_cache
       )
@@ -212,21 +211,11 @@ Engine <- R6::R6Class(
       invisible(self)
     },
 
-
-    #' @description
-    #' Load and evaluate an Arl source file in an isolated scope. The file runs in a
-    #' child of \code{env}, so definitions and imports in the file are not visible
-    #' in \code{env} or to subsequent code. For source-like behavior (definitions
-    #' visible in the engine), use \code{load_file_in_env(path, env)}.
-    load_file_under_env = function(path, env = NULL) {
-      resolved <- private$resolve_env_arg(env)
-      self$load_file_in_env(path, new.env(parent = resolved))
-    },
-
     #' @description
     #' Load and evaluate an Arl source file in the given environment. Definitions
-    #' and imports in the file are visible in \code{env}. For isolated execution
-    #' (definitions not visible), use \code{load_file_under_env(path, env)}.
+    #' and imports in the file are visible in \code{env}. To evaluate in an
+    #' isolated child scope, create one explicitly:
+    #' \code{load_file_in_env(path, new.env(parent = env))}.
     load_file_in_env = function(path, env = NULL) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
@@ -582,6 +571,20 @@ Engine <- R6::R6Class(
       env$write <- function(expr) {
         private$.parser$write(expr)
       }
+
+      load_fn <- function(path, env = NULL) {
+        target_env <- if (is.null(env)) {
+          if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
+            get(".__env", envir = parent.frame(), inherits = TRUE)
+          } else {
+            private$.env$current_env()
+          }
+        } else {
+          private$resolve_env_arg(env)
+        }
+        self$load_file_in_env(path, target_env)
+      }
+      env$load <- load_fn
 
       env$`import-stdlib` <- function() {
         target_env <- if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {

@@ -1,9 +1,10 @@
 # Import scoping, load (source-like), and run (isolated) tests.
 # Written first (TDD); implementation follows.
 
-test_that("imports are not visible in a different file (two load_file_under_env calls)", {
-  # Each engine$load_file_under_env runs in its own scope; file B must not see file A's imports.
+test_that("imports are not visible across distinct child environments", {
+  # Each load runs in a fresh child env; file B must not see file A's imports.
   engine <- make_engine()
+  parent_env <- engine$get_env()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()
@@ -29,12 +30,13 @@ test_that("imports are not visible in a different file (two load_file_under_env 
   file_b <- file.path(tmp_dir, "file_b.arl")
   writeLines("(myfn 5)", file_b)
 
-  engine$load_file_under_env(file_a)
-  expect_error(engine$load_file_under_env(file_b), regexp = "myfn|not found|object")
+  engine$load_file_in_env(file_a, env = new.env(parent = parent_env))
+  expect_error(engine$load_file_in_env(file_b, env = new.env(parent = parent_env)), regexp = "myfn|not found|object")
 })
 
 test_that("imports are visible in the same file", {
   engine <- make_engine()
+  parent_env <- engine$get_env()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()
@@ -47,7 +49,7 @@ test_that("imports are visible in the same file", {
   # Use stdlib 'list' so we don't need a temp module
   path <- file.path(tmp_dir, "single.arl")
   writeLines(c("(import list)", "(cadr (list 1 2 3))"), path)
-  result <- engine$load_file_under_env(path)
+  result <- engine$load_file_in_env(path, env = new.env(parent = parent_env))
   expect_equal(result, 2)
 })
 
@@ -137,10 +139,36 @@ test_that("(run path) runs in child env - imports not visible in caller", {
   expect_error(engine$eval(exprs[[1]], env = env), regexp = "uniquefn|not found|object")
 })
 
-test_that("global module cache: same module loaded once per engine, shared across files", {
+test_that("(run path parent) uses parent for lookup and stays isolated", {
+  engine <- make_engine()
+  caller_env <- engine$get_env()
+  parent_env <- new.env(parent = caller_env)
+  parent_env$parent_value <- 7
+  caller_env$custom_parent <- parent_env
+
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  old_dir <- getwd()
+  setwd(tmp_dir)
+  on.exit({
+    setwd(old_dir)
+    unlink(tmp_dir, recursive = TRUE)
+  }, add = TRUE)
+
+  defs_path <- file.path(tmp_dir, "parent_lookup.arl")
+  writeLines(c("(define from-run (+ parent_value 1))", "from-run"), defs_path)
+  main_code <- sprintf('(run "%s" custom_parent)', normalizePath(defs_path, winslash = "/"))
+  exprs <- engine$read(main_code)
+  expect_equal(engine$eval(exprs[[1]], env = caller_env), 8)
+  expect_false(exists("from-run", envir = caller_env, inherits = FALSE))
+  expect_false(exists("from-run", envir = parent_env, inherits = FALSE))
+})
+
+test_that("global module cache: same module loaded once per engine, shared across child envs", {
   # Module with side effect (counter); two files each import it and call tick.
   # With global cache, module runs once so counter is shared: file_a returns 1, file_b returns 2.
   engine <- make_engine()
+  parent_env <- engine$get_env()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   old_dir <- getwd()
@@ -164,6 +192,6 @@ test_that("global module cache: same module loaded once per engine, shared acros
   file_b <- file.path(tmp_dir, "file_b.arl")
   writeLines(c(sprintf("(import %s)", mod_name), "(tick)"), file_b)
 
-  expect_equal(engine$load_file_under_env(file_a), 1)
-  expect_equal(engine$load_file_under_env(file_b), 2)
+  expect_equal(engine$load_file_in_env(file_a, env = new.env(parent = parent_env)), 1)
+  expect_equal(engine$load_file_in_env(file_b, env = new.env(parent = parent_env)), 2)
 })

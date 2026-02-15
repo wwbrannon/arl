@@ -35,8 +35,6 @@ directly by the compiler and cannot be redefined or passed as values.
 - `and`, `or` -- short-circuit boolean operators
 - `while` -- loop with condition
 - `delay` -- lazy promise creation
-- `load` -- load and evaluate a file
-- `run` -- run a file in an isolated environment
 - `import` -- import a module's exports
 - `module` -- define a module with exports
 - `~` -- formula (for R modeling)
@@ -106,7 +104,7 @@ modules. They are available even on a bare engine
 |----------|-----------|
 | Cons cells | [`pair?`](lang-types.html#pair-p) |
 | Macros | [`gensym`](lang-core.html#gensym), [`capture`](lang-core.html#capture), [`macro?`](lang-core.html#macro-p), [`macroexpand`](lang-core.html#macroexpand) |
-| Evaluation | [`eval`](lang-core.html#eval), [`read`](lang-core.html#read), [`write`](lang-core.html#write), [`r/eval`](lang-core.html#r-eval) |
+| Evaluation | [`eval`](lang-core.html#eval), [`read`](lang-core.html#read), [`write`](lang-core.html#write), [`load`](lang-core.html#load), [`r/eval`](lang-core.html#r-eval) |
 | Environments | [`toplevel-env`](lang-core.html#toplevel-env), [`current-env`](lang-core.html#current-env) |
 | Promises | [`promise?`](lang-core.html#promise-p), [`force`](lang-core.html#force), [`promise-expr`](lang-core.html#promise-expr) |
 | Documentation | [`doc!`](lang-core.html#doc-bang), [`doc`](lang-core.html#doc) |
@@ -125,7 +123,7 @@ Evaluation, macro utilities, R interop helpers, and assertions.
 [`funcall`](lang-core.html#funcall), [`r/call`](lang-core.html#r-call),
 [`get`](lang-core.html#get),
 [`unbind-variable`](lang-core.html#unbind-variable),
-[`macroexpand-1`](lang-core.html#macroexpand-1),
+[`run`](lang-core.html#run), [`macroexpand-1`](lang-core.html#macroexpand-1),
 [`macroexpand-all`](lang-core.html#macroexpand-all),
 [`suppressWarnings`](lang-core.html#suppresswarnings),
 [`suppressMessages`](lang-core.html#suppressmessages),
@@ -139,7 +137,7 @@ Evaluation, macro utilities, R interop helpers, and assertions.
 [`assert-error`](lang-core.html#assert-error),
 [`assert-no-error`](lang-core.html#assert-no-error),
 [`eval`](lang-core.html#eval), [`read`](lang-core.html#read),
-[`write`](lang-core.html#write),
+[`write`](lang-core.html#write), [`load`](lang-core.html#load),
 [`import-stdlib`](lang-core.html#import-stdlib),
 [`capture`](lang-core.html#capture), [`gensym`](lang-core.html#gensym),
 [`macro?`](lang-core.html#macro-p),

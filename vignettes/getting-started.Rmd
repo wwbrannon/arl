@@ -152,8 +152,7 @@ are not visible to later code):
 (unlink gs-run-path)
 ```
 
-From R, `load_file_in_env` and `load_file_under_env` correspond to `load` and
-`run` respectively:
+From R, you can mirror the two forms with `load_file_in_env`:
 
 ```{r eval=FALSE}
 engine <- Engine$new()
@@ -162,7 +161,7 @@ engine <- Engine$new()
 engine$load_file_in_env("script.arl")
 
 # Like (run ...): isolated; definitions not visible
-engine$load_file_under_env("script.arl")
+engine$load_file_in_env("script.arl", new.env(parent = engine$get_env()))
 ```
 
 ```{r, include=FALSE}
@@ -175,15 +174,14 @@ engine$load_file_in_env(script_path)
 stopifnot(identical(engine$eval_text("gs-file-value"), 99))
 
 engine2 <- arl::Engine$new()
-engine2$load_file_under_env(script_path)
+engine2$load_file_in_env(script_path, new.env(parent = engine2$get_env()))
 stopifnot(inherits(try(engine2$eval_text("gs-file-value"), silent = TRUE), "try-error"))
 
 unlink(script_path)
 ```
 
-If you don't specify an environment, the default is the engine's toplevel
-environment for `load_file_in_env` and a new, single-use child environment of
-it for `load_file_under_env`.
+If you don't specify an environment, `load_file_in_env` uses the engine's
+toplevel environment.
 
 ## Loading stdlib modules
 

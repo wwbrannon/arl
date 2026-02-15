@@ -82,7 +82,7 @@ Arl leverages R's existing eval/quote/environment system rather than reimplement
 
 5. **Runtime** (`runtime.R`) - Runtime helpers used by compiled code: truthiness predicate (`.__true_p`), pattern assignment, stdlib functions (list ops, higher-order functions, predicates, etc.)
 
-6. **Standard Library** (`runtime.R`, `inst/arl/*.arl`) - Core library in R (runtime helpers); modular extensions in Arl. **Module system**: `(import M)` attaches M's exports only in the scope where import was evaluated; each module is loaded once per engine (shared cache). `(load path)` runs a file in the current env; `(run path)` runs it in an isolated child env. From R, `load_file_under_env(path)` uses an isolated scope; use `load_file_in_env(path)` for source-like visibility.
+6. **Standard Library** (`runtime.R`, `inst/arl/*.arl`) - Core library in R (runtime helpers); modular extensions in Arl. **Module system**: `(import M)` attaches M's exports only in the scope where import was evaluated; each module is loaded once per engine (shared cache). `(load path)` / `(load path env)` is a built-in function that evaluates a file in the target env. `(run path [parent])` is a stdlib convenience that evaluates in `new.env(parent = parent)`. From R, use `load_file_in_env(path)` for source-like visibility, or pass an explicit child env for isolation.
 
 7. **R Bridge** - Direct access to all R functions; keywords (`:name`) become named arguments; R operators and data structures work naturally
 
@@ -96,7 +96,7 @@ Arl leverages R's existing eval/quote/environment system rather than reimplement
 - **Truthiness**: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsey
 - **Lists**: Backed by R calls/lists; `car` returns head, `cdr` returns tail
 - **Keywords**: `:kw` tokens self-evaluate and become named arguments
-- **Special forms**: `quote`, `quasiquote`, `if`, `begin`, `define`, `set!`, `lambda`, `defmacro`, `and`, `or`, `while`, `delay`, `load`, `run`, `import`, `module`, `help`, `~`, `::`, `:::`
+- **Special forms**: `quote`, `quasiquote`, `if`, `begin`, `define`, `set!`, `lambda`, `defmacro`, `and`, `or`, `while`, `delay`, `import`, `module`, `help`, `~`, `::`, `:::`
 - **Scoping**: Lexical scoping via R environments
 - **Macros**: Compile-time code transformation with quasiquote/unquote
 - **Tail call optimization**: Self-TCO is implemented by the compiler for `(define name (lambda ...))` patterns -- self-tail-calls through `if`/`begin`/`cond`/`let`/`let*`/`letrec` are rewritten as loops. `loop`/`recur` is still useful for mutual recursion.

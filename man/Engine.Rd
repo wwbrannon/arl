@@ -33,7 +33,6 @@ option \code{arl.use_env_cache}.}
 \item \href{#method-Engine-eval_text}{\code{Engine$eval_text()}}
 \item \href{#method-Engine-eval_string}{\code{Engine$eval_string()}}
 \item \href{#method-Engine-import_stdlib}{\code{Engine$import_stdlib()}}
-\item \href{#method-Engine-load_file_under_env}{\code{Engine$load_file_under_env()}}
 \item \href{#method-Engine-load_file_in_env}{\code{Engine$load_file_in_env()}}
 \item \href{#method-Engine-macroexpand}{\code{Engine$macroexpand()}}
 \item \href{#method-Engine-inspect_compilation}{\code{Engine$inspect_compilation()}}
@@ -213,34 +212,13 @@ Load and attach all stdlib modules into an environment.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-load_file_under_env"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-load_file_under_env}{}}}
-\subsection{Method \code{load_file_under_env()}}{
-Load and evaluate an Arl source file in an isolated scope. The file runs in a
-child of \code{env}, so definitions and imports in the file are not visible
-in \code{env} or to subsequent code. For source-like behavior (definitions
-visible in the engine), use \code{load_file_in_env(path, env)}.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_under_env(path, env = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{File path to load.}
-
-\item{\code{env}}{Optional environment or Env used as the engine base.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Engine-load_file_in_env"></a>}}
 \if{latex}{\out{\hypertarget{method-Engine-load_file_in_env}{}}}
 \subsection{Method \code{load_file_in_env()}}{
 Load and evaluate an Arl source file in the given environment. Definitions
-and imports in the file are visible in \code{env}. For isolated execution
-(definitions not visible), use \code{load_file_under_env(path, env)}.
+and imports in the file are visible in \code{env}. To evaluate in an
+isolated child scope, create one explicitly:
+\code{load_file_in_env(path, new.env(parent = env))}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_in_env(path, env = NULL)}\if{html}{\out{</div>}}
 }

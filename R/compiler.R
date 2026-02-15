@@ -228,8 +228,6 @@ Compiler <- R6::R6Class(
           define = private$compile_define(expr),
           `set!` = private$compile_set(expr),
           lambda = private$compile_lambda(expr),
-          load = private$compile_load(expr),
-          run = private$compile_run(expr),
           import = private$compile_import(expr),
           help = private$compile_help(expr),
           `while` = private$compile_while(expr),
@@ -864,34 +862,6 @@ Compiler <- R6::R6Class(
         rest_param_spec = rest_param_spec,
         param_bindings = param_bindings
       )
-    },
-    compile_load = function(expr) {
-      if (length(expr) != 2) {
-        return(private$fail("load requires exactly 1 argument: (load \"path\")"))
-      }
-      path <- private$compile_impl(expr[[2]])
-      if (is.null(path)) {
-        return(private$fail("load path could not be compiled"))
-      }
-      as.call(list(
-        as.symbol(".__load"),
-        path,
-        as.symbol(self$env_var_name)
-      ))
-    },
-    compile_run = function(expr) {
-      if (length(expr) != 2) {
-        return(private$fail("run requires exactly 1 argument: (run \"path\")"))
-      }
-      path <- private$compile_impl(expr[[2]])
-      if (is.null(path)) {
-        return(private$fail("run path could not be compiled"))
-      }
-      as.call(list(
-        as.symbol(".__run"),
-        path,
-        as.symbol(self$env_var_name)
-      ))
     },
     compile_import = function(expr) {
       if (length(expr) != 2) {

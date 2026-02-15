@@ -232,6 +232,27 @@ Remove a variable binding from an environment.
 
 ---
 
+### run {#run}
+
+Evaluate a file in an isolated child environment.
+Uses `parent` as the child environment parent. Definitions/imports in
+the loaded file remain in the child and are not visible in `parent`.
+
+**Signature:** `(run path [parent])`
+
+**Examples:**
+```{arl}
+(define run-demo-path (tempfile :fileext ".arl"))
+(writeLines (c "(define run-demo-val 1)") run-demo-path)
+(run run-demo-path)
+(assert-equal "missing" (try run-demo-val (catch e "missing")))
+(unlink run-demo-path)
+```
+
+**See also:** [load](#load), [current-env](#current-env)
+
+---
+
 ## License {#section-license}
 
 ### license {#license}
@@ -663,6 +684,40 @@ produced by read.
 
 ---
 
+### load {#load}
+
+Load and evaluate an Arl source file in the target environment.
+Defaults to the current environment.
+
+**Signature:** `(load path [env])`
+
+**Examples:**
+```{arl}
+(define __load_demo_path (tempfile :fileext ".arl"))
+(writeLines (c "(define __load_demo_value 42)") __load_demo_path)
+(load __load_demo_path)
+__load_demo_value
+(define __load_demo_env (new.env :parent (current-env)))
+(load __load_demo_path __load_demo_env)
+(get "__load_demo_value" __load_demo_env)
+(unlink __load_demo_path)
+```
+
+```{arl, include=FALSE}
+(define __load_test_path (tempfile :fileext ".arl"))
+(writeLines (c "(define __load_test_value 7)") __load_test_path)
+(load __load_test_path)
+(assert-equal 7 __load_test_value)
+(define __load_test_env (new.env :parent (current-env)))
+(load __load_test_path __load_test_env)
+(assert-equal 7 (get "__load_test_value" __load_test_env))
+(unlink __load_test_path)
+```
+
+**See also:** [eval](#eval), [read](#read), [run](#run), [current-env](#current-env)
+
+---
+
 ### r/eval {#r-eval}
 
 Evaluate an R expression directly via R's eval(), bypassing
@@ -709,7 +764,7 @@ environment. Useful when an engine was initialized with load_stdlib = FALSE.
 **Note:** Re-running import-stdlib is safe; already-loaded modules are reused and
 attached into the current scope.
 
-**See also:** import, module, load
+**See also:** import, module, [load](#load)
 
 ---
 

@@ -5,7 +5,7 @@
           error warn
           identity values values?
           call-with-values
-          funcall r/call get unbind-variable
+          funcall r/call get unbind-variable run
           macroexpand-1 macroexpand-all)
 
   (import _r)
@@ -164,6 +164,21 @@
           (as.character name)
           name))
       (rm :list name-str :envir envir)))
+
+  ;;' @description Evaluate a file in an isolated child environment.
+  ;;' Uses `parent` as the child environment parent. Definitions/imports in
+  ;;' the loaded file remain in the child and are not visible in `parent`.
+  ;;' @signature (run path [parent])
+  ;;' @examples
+  ;;' (define run-demo-path (tempfile :fileext ".arl"))
+  ;;' (writeLines (c "(define run-demo-val 1)") run-demo-path)
+  ;;' (run run-demo-path)
+  ;;' (assert-equal "missing" (try run-demo-val (catch e "missing")))
+  ;;' (unlink run-demo-path)
+  ;;' @seealso load, current-env
+  (define run
+    (lambda (path (parent (current-env)))
+      (load path (new.env :parent parent))))
 
 ;;' @section License
 

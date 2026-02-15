@@ -73,6 +73,32 @@ Note: Produces output that can be parsed back with read, ensuring the
   round-trip property: (read (write expr)) equals expr for any expression
   produced by read.
 
+Name: load
+Vignette: lang-core
+Section: Evaluation
+Description: Load and evaluate an Arl source file in the target environment.
+  Defaults to the current environment.
+Signature: (load path [env])
+Examples:
+  (define __load_demo_path (tempfile :fileext ".arl"))
+  (writeLines (c "(define __load_demo_value 42)") __load_demo_path)
+  (load __load_demo_path)
+  __load_demo_value
+  (define __load_demo_env (new.env :parent (current-env)))
+  (load __load_demo_path __load_demo_env)
+  (get "__load_demo_value" __load_demo_env)
+  (unlink __load_demo_path)
+Assert:
+  (define __load_test_path (tempfile :fileext ".arl"))
+  (writeLines (c "(define __load_test_value 7)") __load_test_path)
+  (load __load_test_path)
+  (assert-equal 7 __load_test_value)
+  (define __load_test_env (new.env :parent (current-env)))
+  (load __load_test_path __load_test_env)
+  (assert-equal 7 (get "__load_test_value" __load_test_env))
+  (unlink __load_test_path)
+Seealso: eval, read, run, current-env
+
 Name: import-stdlib
 Vignette: lang-core
 Section: Modules and Imports

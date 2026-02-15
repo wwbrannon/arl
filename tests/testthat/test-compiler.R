@@ -67,6 +67,7 @@ test_that("define/set! reject reserved .__* names", {
 
 test_that("compiled eval validates load arguments and missing files", {
   expect_error(engine$eval(engine$read("(load 1)")[[1]]), "load requires a single file path string")
+  expect_error(engine$eval(engine$read('(load "a" 1 2)')[[1]]), "unused argument|argument")
   expect_error(engine$eval(engine$read('(load "missing-file.arl")')[[1]]), "File not found")
 })
 

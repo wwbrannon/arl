@@ -515,7 +515,7 @@ build_reference_context <- function(vignettes, arl_dir, builtins_by_vignette,
   builtin_categories_raw <- list(
     list(cat = "Cons cells",     fns = c("pair?")),
     list(cat = "Macros",         fns = c("gensym", "capture", "macro?", "macroexpand")),
-    list(cat = "Evaluation",     fns = c("eval", "read", "write", "r/eval")),
+    list(cat = "Evaluation",     fns = c("eval", "read", "write", "load", "r/eval")),
     list(cat = "Environments",   fns = c("toplevel-env", "current-env")),
     list(cat = "Promises",       fns = c("promise?", "force", "promise-expr")),
     list(cat = "Documentation",  fns = c("doc!", "doc"))

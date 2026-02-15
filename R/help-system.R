@@ -179,14 +179,6 @@ HelpSystem <- R6::R6Class(
           usage = "(begin expr...)",
           description = "Evaluate expressions in sequence, returning the last."
         ),
-        load = list(
-          usage = "(load \"path\")",
-          description = "Load and evaluate an Arl source file in the current environment (source-like). Definitions and imports in the file are visible in the caller."
-        ),
-        run = list(
-          usage = "(run \"path\")",
-          description = "Run an Arl source file in an isolated child environment. Definitions and imports in the file are not visible in the caller."
-        ),
         defmacro = list(
           usage = "(defmacro name (params...) body...)",
           description = "Define a macro."

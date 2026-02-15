@@ -92,7 +92,6 @@ EvalContext <- R6::R6Class(
 #
 # @field context EvalContext (env, source_tracker, macro_expander, compiler).
 # @field load_file_fn Function(path, env) for load/import (evaluate in env).
-# @field run_file_fn Function(path, env) for run (evaluate in child of env).
 # @field help_fn Function(topic, env) for (help topic).
 #
 #' @keywords internal
@@ -102,23 +101,20 @@ CompiledRuntime <- R6::R6Class(
   public = list(
     context = NULL,
     load_file_fn = NULL,
-    run_file_fn = NULL,
     help_fn = NULL,
     module_cache = NULL,
     # @description Create compiled runtime.
     # @param context EvalContext instance.
     # @param load_file_fn Optional; required for load/import (evaluate in env).
-    # @param run_file_fn Optional; required for run (evaluate in child of env).
     # @param help_fn Optional; required for (help topic).
     # @param module_cache Optional ModuleCache instance.
-    initialize = function(context, load_file_fn = NULL, run_file_fn = NULL,
+    initialize = function(context, load_file_fn = NULL,
                           help_fn = NULL, module_cache = NULL) {
       if (!r6_isinstance(context, "EvalContext")) {
         stop("CompiledRuntime requires an EvalContext")
       }
       self$context <- context
       self$load_file_fn <- load_file_fn
-      self$run_file_fn <- run_file_fn
       self$help_fn <- help_fn
       self$module_cache <- module_cache
     },
@@ -171,9 +167,6 @@ CompiledRuntime <- R6::R6Class(
       assign_and_lock(".__assign_pattern", function(env, pattern, value, mode) {
         .__assign_pattern(env, pattern, value, mode)
       }, "Pattern assignment for define/set!.")
-
-      assign_and_lock(".__load", self$load_file_fn, "File loader for load/import.")
-      assign_and_lock(".__run", self$run_file_fn, "File runner for run (isolated scope).")
 
       assign_and_lock(".__help", function(topic, env, package = NULL) {
         if (is.symbol(topic)) topic <- as.character(topic)

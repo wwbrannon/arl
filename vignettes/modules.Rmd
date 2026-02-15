@@ -24,14 +24,16 @@ Arl has three mechanisms for loading code:
 - **`run`**: Evaluates a file in an isolated child environment (definitions and imports in the file are not visible in the caller)
 - **`import`**: Loads a module and attaches only its exported symbols into the current environment
 
-## The `load` Special Form
+## The `load` Function
 
-`load` is the simplest mechanism - it reads and evaluates a file in the current environment.
+`load` is the simplest mechanism - it reads and evaluates a file in a target
+environment (defaulting to the current environment).
 
 ### Signature
 
 ```{arl, eval=FALSE}
 (load "path")
+(load "path" env)
 ```
 
 ### Examples
@@ -68,7 +70,7 @@ When you call `(load "name")`, Arl resolves the path in this order:
 - Files with path separators are cached by their full path
 - Files without separators (potential stdlib modules) are cached by name if found in stdlib
 
-## The `run` Special Form
+## The `run` Function
 
 `run` reads and evaluates a file in a *child* of the current environment. Definitions and imports in that file stay in the child environment and are not visible in the caller. Use `run` when you want to execute a script without polluting the current scope (e.g. running a one-off task or a file that should not affect the caller's bindings).
 
@@ -76,6 +78,7 @@ When you call `(load "name")`, Arl resolves the path in this order:
 
 ```{arl, eval=FALSE}
 (run "path")
+(run "path" parent-env)
 ```
 
 ### Examples
@@ -88,7 +91,8 @@ When you call `(load "name")`, Arl resolves the path in this order:
 (run "control")
 ```
 
-Path resolution is the same as for `load`. Unlike `load`, `run` does not make the file's definitions or imports visible in the current environment.
+`run` is defined in stdlib `core` and implemented in terms of `load`:
+it creates `new.env(parent = parent-env)` and evaluates the file there.
 
 ## The `module` Special Form
 

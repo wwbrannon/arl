@@ -341,7 +341,7 @@ from Arl that uses `data.frame`, `mean`, and `lm`. You can run it with:
 
 ```{r eval=FALSE}
 engine <- Engine$new()
-engine$load_file_under_env(system.file("examples", "data-analysis.arl", package = "arl"))
+engine$load_file_in_env(system.file("examples", "data-analysis.arl", package = "arl"))
 ```
 
 ## Standard library helpers
