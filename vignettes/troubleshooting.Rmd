@@ -41,6 +41,26 @@ If you need to distinguish zero from false, test explicitly:
 (if (number? x) ...)      ; check for any number
 ```
 
+## `list?` vs `base::is.list` on quoted forms
+
+Under the hood, quoted forms are R [language/call
+objects](https://cran.r-project.org/doc/manuals/r-devel/R-lang.html#Computing-on-the-language),
+not R lists. Arl still treats calls as list-like for Lisp semantics, so these
+can disagree:
+
+```{arl}
+(list? '(1 2 3))           ; => #t
+(base::is.list '(1 2 3))   ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (list? '(1 2 3)))
+(assert-false (base::is.list '(1 2 3)))
+```
+
+Use `list?` when writing Arl code that follows Lisp list semantics.
+Use `base::is.list` only when you specifically need R's underlying object type.
+
 ## Use `#t` / `#f`, not `T` / `F`
 
 In R, `T` and `F` are ordinary variables (not reserved words) that happen

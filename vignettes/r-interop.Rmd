@@ -108,6 +108,9 @@ and hands it to R as-is:
 (assert-equal (c 1 2 3 4 5) (r/eval (quote (seq_len 5))))
 ```
 
+Note: these quoted forms are R language/call objects. Arl's `list?` treats
+them as lists for Lisp semantics, while R's `base::is.list` reports `FALSE`.
+
 Use Arl's `call` function to build the expression programmatically, and pass
 `(current-env)` so R can see your local bindings:
 

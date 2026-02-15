@@ -345,17 +345,25 @@ and manipulate lists:
 Lists typed in at the prompt are, by default, evaluated. To prevent evaluation,
 use the special form `quote` or its syntactic sugar `'`:
 ```{arl}
-(quote (+ 1 2))    ; => the unevaluated expression (+ 1 2), also a list
+(quote (+ 1 2))    ; => unevaluated expression (R language object / call)
 '(+ 1 2)           ; simple alias for (quote ...)
 
 (list? '(+ 1 2))
+(base::is.list '(+ 1 2))
 ```
 
 ```{arl, include=FALSE}
 (assert-equal '(+ 1 2) (quote (+ 1 2)))
 (assert-equal '(+ 1 2) '(+ 1 2))
 (assert-true (list? '(+ 1 2)))
+(assert-false (base::is.list '(+ 1 2)))
 ```
+
+This is an important Arl-vs-R distinction: `list?` follows Arl's Lisp-style
+semantics and treats quoted forms (which are [R call/language
+objects](https://cran.r-project.org/doc/manuals/r-devel/R-lang.html#Computing-on-the-language))
+as lists, while R's `base::is.list` reports the underlying R object type and
+returns `FALSE` for calls.
 
 You can also perform selective evaluation with the `quasiquote` template syntax
 (written with the backtick `` ` ``), which is widely used in defining
@@ -405,6 +413,9 @@ they are implemented differently and less commonly used:
 
 For a concise guide to R-style lists vs dotted pairs and when to use each, see
 [Pairlists vs R lists](arl-vs-scheme.html#pairlists-vs-r-lists).
+For more on quoted forms as Arl lists but R language objects, see
+[Pairlists vs R lists](arl-vs-scheme.html#pairlists-vs-r-lists) and
+[R eval and calls](r-interop.html#r-eval).
 
 For more details on the standard library and macros, see the other vignettes in
 this package.

@@ -18,8 +18,10 @@ Arl is a Lisp dialect implemented in and with access to R. It borrows Lisp
 syntax and macro conventions, but its runtime model and interop are rooted in
 R. Because R's development was [heavily
 influenced](https://cran.r-project.org/doc/html/interface98-paper/paper_1.html)
-by Scheme, this vignette highlights key similarities with Scheme and the most
-important differences.
+by Scheme and has [similar underlying
+architecture](https://cran.r-project.org/doc/manuals/r-devel/R-lang.html#Computing-on-the-language),
+this vignette highlights key similarities with Scheme and the most important
+differences.
 
 ## Common ground
 
@@ -67,6 +69,16 @@ representation-oriented:
 - `list?` is true for R lists/calls.
 - `pair?` is true for `Cons` cells.
 - `list-or-pair?` accepts either non-empty representation.
+
+Because quoted forms are R calls, you may see:
+
+```{arl}
+(list? '(1 2 3))          ; => #t
+(base::is.list '(1 2 3))  ; => #f
+```
+
+This is expected: Arl predicates express Lisp semantics; R predicates report
+R object types.
 
 For `Cons` chains, the classic proper/improper distinction still applies:
 
