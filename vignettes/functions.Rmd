@@ -173,14 +173,14 @@ each name to the corresponding element of the value:
 This works with nested structures too:
 
 ```{arl}
-(define (a (b c)) (list 1 (list 2 3)))
-(list a b c)
+(define (p (q r)) (list 1 (list 2 3)))
+(list p q r)
 ```
 
 ```{arl, include=FALSE}
-(assert-equal 1 a)
-(assert-equal 2 b)
-(assert-equal 3 c)
+(assert-equal 1 p)
+(assert-equal 2 q)
+(assert-equal 3 r)
 ```
 
 ### `destructuring-bind`
