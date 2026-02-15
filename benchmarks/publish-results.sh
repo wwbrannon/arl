@@ -64,38 +64,10 @@ if [ -f "$TMPDIR/$DATA_FILE" ]; then
   # We need to insert ",\n<new_entry>" before the final closing of the array.
   #
   # Strategy: find the last "]" that closes the Benchmark array and insert before it.
-  Rscript --vanilla -e '
-    args <- commandArgs(TRUE)
-    lines <- readLines(args[1], warn = FALSE)
-    text <- paste(lines, collapse = "\n")
-
-    # Strip JS prefix
-    json_text <- sub("^window\\.BENCHMARK_DATA = ", "", text)
-    new_entry <- paste(readLines(args[2], warn = FALSE), collapse = "\n")
-
-    # Find the last occurrence of the closing bracket for the Benchmark array.
-    # The structure is: ... "Benchmark": [ {entry}, {entry} ] } }
-    # We insert before the final "]\n  }\n}" sequence.
-    # Use a simple approach: find the last "]" that is followed only by
-    # closing braces and whitespace.
-    pattern <- "\\]\\s*\\}\\s*\\}\\s*$"
-    m <- regexpr(pattern, json_text)
-    if (m == -1) stop("Could not find end of Benchmark array in data.js")
-
-    before <- substr(json_text, 1, m - 1)
-    after <- substr(json_text, m, nchar(json_text))
-
-    updated <- paste0(before, ",\n", new_entry, "\n", after)
-
-    # Update lastUpdate timestamp
-    updated <- sub(
-      "\"lastUpdate\": *[0-9.]+",
-      sprintf("\"lastUpdate\": %.2f", as.numeric(Sys.time()) * 1000),
-      updated
-    )
-
-    writeLines(paste0("window.BENCHMARK_DATA = ", updated), args[3])
-  ' "$TMPDIR/$DATA_FILE" <(echo "$NEW_ENTRY") "$TMPDIR/$DATA_FILE"
+  # Find the script relative to this shell script's location
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  Rscript --vanilla "$SCRIPT_DIR/append-bench-entry.R" \
+    "$TMPDIR/$DATA_FILE" <(echo "$NEW_ENTRY") "$TMPDIR/$DATA_FILE"
 else
   # First entry — create the file from scratch
   REPO_URL=$(git remote get-url origin | sed 's/\.git$//' | sed 's|git@github.com:|https://github.com/|')
