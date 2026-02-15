@@ -246,6 +246,43 @@ test_that("assert-error fails when function doesn't throw", {
     "Expected an error to be thrown")
 })
 
+test_that("assert-no-error passes when function doesn't throw", {
+  env <- new.env(parent = baseenv())
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("assert"), env = env)
+
+  # Simple value
+  result <- engine$eval(
+    engine$read("(assert-no-error (lambda () 42))")[[1]], env = env)
+  expect_true(result)
+
+  # Expression
+  result <- engine$eval(
+    engine$read("(assert-no-error (lambda () (+ 1 2)))")[[1]], env = env)
+  expect_true(result)
+
+  # Returns #t
+  result <- engine$eval(
+    engine$read("(assert-no-error (lambda () #t))")[[1]], env = env)
+  expect_true(result)
+})
+
+test_that("assert-no-error fails when function throws error", {
+  env <- new.env(parent = baseenv())
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("assert"), env = env)
+
+  expect_error(
+    engine$eval(
+      engine$read('(assert-no-error (lambda () (error "boom")))')[[1]], env = env),
+    "Expected no error to be thrown")
+
+  expect_error(
+    engine$eval(
+      engine$read('(assert-no-error (lambda () (stop "fail")))')[[1]], env = env),
+    "Expected no error to be thrown")
+})
+
 test_that("assert functions work with expressions", {
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)

@@ -1,7 +1,7 @@
 ;;; Arl Standard Library - Assertion Helpers
 
 (module assert
-  (export assert assert-equal assert-true assert-false assert-eq assert-error)
+  (export assert assert-equal assert-true assert-false assert-eq assert-error assert-no-error)
 
   (import core)
   (import equality)
@@ -131,5 +131,28 @@
                 (current-env)))
       (if (not (identical? result error-caught))
         (error "Expected an error to be thrown, but none was")
+        #t)))
+
+  ;;' @description Assert thunk does not throw an error.
+  ;;' @noeval
+  ;;' @examples
+  ;;' (assert-no-error (lambda () 42))                ; => #t
+  ;;' (assert-no-error (lambda () (+ 1 2)))           ; => #t
+  ;;' (assert-no-error (lambda () (error "boom")))    ; signals error
+  ;;' @assert
+  ;;' (assert-true (assert-no-error (lambda () 42)))
+  ;;' (assert-true (assert-no-error (lambda () (+ 1 2))))
+  ;;' (assert-error (lambda () (assert-no-error (lambda () (error "boom")))))
+  ;;' @seealso assert-error, assert
+  (define assert-no-error
+    (lambda (thunk)
+      (define error-caught (gensym "error-caught"))
+      (define thunk-expr (call (list thunk)))
+      (define result
+        (r/eval (call (list 'tryCatch thunk-expr
+                            :error (lambda (e) error-caught)))
+                (current-env)))
+      (if (identical? result error-caught)
+        (error "Expected no error to be thrown, but one was")
         #t)))
 )
