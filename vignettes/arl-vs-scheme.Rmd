@@ -188,7 +188,117 @@ Arl can call R functions directly:
 Scheme code typically requires FFI layers for such interop; Arl treats it as
 normal function application.
 
-## Special forms and macros
+## Macro systems
+
+This is one of the most significant design differences between Arl and
+Scheme.
+
+### Scheme: pattern-based `syntax-rules`
+
+Standard Scheme (R5RS and later) provides `syntax-rules`, a
+pattern-matching macro system.  You write a set of patterns and
+corresponding templates; the expander matches the input against the
+patterns and substitutes into the template:
+
+```scheme
+;; Scheme syntax-rules (not valid Arl)
+(define-syntax my-when
+  (syntax-rules ()
+    ((my-when test body ...)
+     (if test (begin body ...) (void)))))
+```
+
+`syntax-rules` is **hygienic by construction**: because the expander
+controls how names are substituted, macro-introduced bindings can never
+accidentally shadow the caller's variables.  The trade-off is that macros
+are limited to pattern-template rewriting -- they cannot perform
+arbitrary computation at expansion time.  (Scheme also has
+`syntax-case`, `er-macro-transformer`, and other lower-level systems,
+but `syntax-rules` is the standard portable mechanism.)
+
+### Arl: procedural `defmacro` with automatic hygiene
+
+Arl uses **procedural `defmacro`-style** macros, closer to the model in
+Common Lisp and Clojure.  Each macro is an ordinary function that
+receives its arguments as unevaluated syntax trees and returns new
+syntax.  Quasiquote, unquote, and unquote-splicing are the primary tools
+for building the output.
+
+```{arl}
+(defmacro my-when (test . body)
+  `(if ,test (begin ,@body) #nil))
+
+(my-when (> 5 3) (+ 1 1))
+```
+
+```{arl, include=FALSE}
+(assert-equal 2 (my-when (> 5 3) (+ 1 1)))
+```
+
+Because the macro body is ordinary Arl code, macros can do arbitrary
+computation at expansion time -- loops, conditionals, list manipulation,
+even calling R functions -- before returning the final syntax.  This is
+more flexible than `syntax-rules`, which is restricted to pattern
+matching and template substitution.
+
+### Hygiene: different approaches to the same goal
+
+Traditional `defmacro` (Common Lisp-style) is **unhygienic**: the macro
+author must manually use `gensym` to avoid name collisions.  Scheme's
+`syntax-rules` is hygienic by construction.
+
+Arl splits the difference.  Its `defmacro` is **hygienic by default**:
+bindings the macro introduces (via `define`, `let`, `lambda`, etc.) are
+automatically renamed so they cannot collide with caller names.
+
+```{arl}
+(defmacro swap (a b)
+  `(let ((temp ,a))
+     (set! ,a ,b)
+     (set! ,b temp)))
+
+(define temp 999)
+(define p 1)
+(define q 2)
+(swap p q)
+(list p q temp)  ; temp is unaffected
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 2 1 999) (list p q temp))
+```
+
+When you *want* to introduce a binding visible to the caller (an
+anaphoric macro), you use `capture` to opt out of hygiene for specific
+symbols.  This is something `syntax-rules` cannot express at all without
+dropping down to a lower-level system.
+
+```{arl}
+(defmacro aif2 (test then alt)
+  `(let ((it ,test))
+     (if it ,(capture 'it then) ,(capture 'it alt))))
+
+(aif2 (+ 10 20) (str "got " it) "none")
+```
+
+```{arl, include=FALSE}
+(assert-equal "got 30" (aif2 (+ 10 20) (str "got " it) "none"))
+```
+
+### Summary of differences
+
+| | Scheme `syntax-rules` | Arl `defmacro` |
+|---|---|---|
+| **Style** | Pattern-template rewriting | Procedural (arbitrary code) |
+| **Hygiene** | By construction | Automatic, opt-out via `capture` |
+| **Expansion-time computation** | Not supported | Full language available |
+| **Anaphoric macros** | Requires `syntax-case` or lower-level system | `capture` built in |
+| **Quasiquote** | Not used in macros (template syntax instead) | Primary code-building tool |
+
+For more on writing macros in Arl, see the [Macros and
+Quasiquote](macros.html) vignette.
+
+## Special forms
 
 Many familiar special forms exist (`quote`, `if`, `define`, `lambda`, `begin`),
 but there are Arl-specific forms (`~`, `::`, `:::` for R formula definition and
