@@ -89,7 +89,7 @@ if [ -f "$TMPDIR/$DATA_FILE" ]; then
 
     # Update lastUpdate timestamp
     updated <- sub(
-      "\"lastUpdate\":\\s*[0-9.]+",
+      "\"lastUpdate\": *[0-9.]+",
       sprintf("\"lastUpdate\": %.2f", as.numeric(Sys.time()) * 1000),
       updated
     )
