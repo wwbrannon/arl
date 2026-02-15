@@ -249,7 +249,7 @@ capturing the caller's expression:
 (assert-no-error (stats::lm (~ mpg cyl) :data datasets::mtcars))
 ```
 
-The `~` special form builds an R formula without evaluating its arguments.
+The `~` operator builds an R formula without evaluating its arguments.
 
 ## Accessing R objects
 

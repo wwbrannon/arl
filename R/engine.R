@@ -572,6 +572,34 @@ Engine <- R6::R6Class(
         private$.parser$write(expr)
       }
 
+      env$help <- function(topic, package = NULL) {
+        target_env <- if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
+          get(".__env", envir = parent.frame(), inherits = TRUE)
+        } else {
+          private$.env$current_env()
+        }
+
+        topic_expr <- substitute(topic)
+        if (is.symbol(topic_expr)) {
+          topic <- as.character(topic_expr)
+        } else {
+          topic <- topic_expr
+        }
+
+        if (missing(package)) {
+          package <- NULL
+        } else {
+          package_expr <- substitute(package)
+          if (is.symbol(package_expr)) {
+            package <- as.character(package_expr)
+          } else {
+            package <- package_expr
+          }
+        }
+
+        self$help(topic, env = target_env, package = package)
+      }
+
       load_fn <- function(path, env = NULL) {
         target_env <- if (is.null(env)) {
           if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {

@@ -229,16 +229,12 @@ Compiler <- R6::R6Class(
           `set!` = private$compile_set(expr),
           lambda = private$compile_lambda(expr),
           import = private$compile_import(expr),
-          help = private$compile_help(expr),
           `while` = private$compile_while(expr),
           and = private$compile_and(expr),
           or = private$compile_or(expr),
           delay = private$compile_delay(expr),
           defmacro = private$compile_defmacro(expr),
           module = private$compile_module(expr),
-          `~` = private$compile_formula(expr),
-          `::` = private$compile_package_access(expr),
-          `:::` = private$compile_package_access(expr),
           private$compile_application(expr)
         )
         if (!is.null(out)) {

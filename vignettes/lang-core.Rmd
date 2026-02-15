@@ -684,6 +684,30 @@ produced by read.
 
 ---
 
+### help {#help}
+
+Show help for a topic. Topic may be a symbol or string.
+Use :package to force R help lookup from a specific package.
+
+**Signature:** `(help topic [:package pkg])`
+
+**Examples:**
+```{arl}
+(help if)
+(help "sum")
+(help "writeLines" :package "base")
+```
+
+```{arl, include=FALSE}
+(assert-no-error (help if))
+(assert-no-error (help "sum"))
+(assert-no-error (help "writeLines" :package "base"))
+```
+
+**See also:** [doc](#doc), [macroexpand](#macroexpand), [import-stdlib](#import-stdlib)
+
+---
+
 ### load {#load}
 
 Load and evaluate an Arl source file in the target environment.
@@ -1005,7 +1029,7 @@ arguments, sets specific fields and merges with existing documentation.
 (assert-equal "(my-fn 3) ; => 6" (doc __doc-test-fn "examples"))
 ```
 
-**See also:** [doc](#doc), help
+**See also:** [doc](#doc), [help](#help)
 
 ---
 
@@ -1032,7 +1056,7 @@ or "all" to get the full documentation list.
 (assert-equal "Simple function." (doc __doc-get-fn "note"))
 ```
 
-**See also:** [doc!](#doc-bang), help
+**See also:** [doc!](#doc-bang), [help](#help)
 
 ---
 

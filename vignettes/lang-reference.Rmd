@@ -37,13 +37,12 @@ directly by the compiler and cannot be redefined or passed as values.
 - `delay` -- lazy promise creation
 - `import` -- import a module's exports
 - `module` -- define a module with exports
-- `~` -- formula (for R modeling)
-- `::`, `:::` -- R package namespace access
-- `help` -- look up documentation
 
 Anything not in this list is either a built-in function or a lang-provided
 function or macro. Unlike special forms, those are ordinary values and can be
 passed around, stored in variables, and so on.
+
+Common non-special builtins/operators include `help`, `~`, `::`, and `:::`.
 
 ## Standard library
 
@@ -137,8 +136,8 @@ Evaluation, macro utilities, R interop helpers, and assertions.
 [`assert-error`](lang-core.html#assert-error),
 [`assert-no-error`](lang-core.html#assert-no-error),
 [`eval`](lang-core.html#eval), [`read`](lang-core.html#read),
-[`write`](lang-core.html#write), [`load`](lang-core.html#load),
-[`import-stdlib`](lang-core.html#import-stdlib),
+[`write`](lang-core.html#write), [`help`](lang-core.html#help),
+[`load`](lang-core.html#load), [`import-stdlib`](lang-core.html#import-stdlib),
 [`capture`](lang-core.html#capture), [`gensym`](lang-core.html#gensym),
 [`macro?`](lang-core.html#macro-p),
 [`macroexpand`](lang-core.html#macroexpand),

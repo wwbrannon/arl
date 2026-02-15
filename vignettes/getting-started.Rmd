@@ -421,7 +421,7 @@ this package.
 ## Getting help
 
 Arl has a built-in help system. Use `help` with a string to look up any
-special form, macro, or function:
+special form, macro, built-in, or stdlib function:
 
 ```{arl, eval=FALSE}
 (help "define")   ; special form

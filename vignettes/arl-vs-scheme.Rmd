@@ -371,8 +371,8 @@ Quasiquote](macros.html) vignette.
 ## Special forms
 
 Many familiar special forms exist (`quote`, `if`, `define`, `lambda`, `begin`),
-but there are Arl-specific forms (`~`, `::`, `:::` for R formula definition and
-package access) and macro helpers tuned for R interop. See the [language
+and there are Arl-specific R interop operators (`~`, `::`, `:::` for formula
+definition and package access) plus macro helpers tuned for R interop. See the [language
 reference](lang-reference.html) for more details.
 
 ## When to think "Scheme" vs "R"

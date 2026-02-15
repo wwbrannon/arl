@@ -81,9 +81,14 @@ test_that("compiled eval builds formulas without evaluating arguments", {
 })
 
 test_that("compiled eval validates package accessor arguments", {
-  expect_error(engine$eval(engine$read("(:: base mean extra)")[[1]]), "requires exactly 2 arguments")
-  expect_error(engine$eval(engine$read("(:: 1 mean)")[[1]]), "Package name must be a symbol or string")
-  expect_error(engine$eval(engine$read("(:: base 1)")[[1]]), "Function/object name must be a symbol or string")
+  expect_error(engine$eval(engine$read("(:: base mean extra)")[[1]]), "requires 2")
+  expect_error(engine$eval(engine$read("(:: 1 mean)")[[1]]))
+  expect_error(engine$eval(engine$read("(:: base 1)")[[1]]))
+})
+
+test_that("compiled eval handles ::: explicit form", {
+  result <- engine$eval(engine$read("(::: base .deparseOpts)")[[1]])
+  expect_true(is.function(result))
 })
 
 test_that("compiled eval validates keyword usage", {

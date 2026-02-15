@@ -73,6 +73,22 @@ Note: Produces output that can be parsed back with read, ensuring the
   round-trip property: (read (write expr)) equals expr for any expression
   produced by read.
 
+Name: help
+Vignette: lang-core
+Section: Evaluation
+Description: Show help for a topic. Topic may be a symbol or string.
+  Use :package to force R help lookup from a specific package.
+Signature: (help topic [:package pkg])
+Examples:
+  (help if)
+  (help "sum")
+  (help "writeLines" :package "base")
+Assert:
+  (assert-no-error (help if))
+  (assert-no-error (help "sum"))
+  (assert-no-error (help "writeLines" :package "base"))
+Seealso: doc, macroexpand, import-stdlib
+
 Name: load
 Vignette: lang-core
 Section: Evaluation

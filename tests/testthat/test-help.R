@@ -165,7 +165,7 @@ test_that("help package-qualified form validates keyword syntax", {
 
   expect_error(
     engine$eval_text("(help \"writeLines\" :pkg \"base\")", env = env),
-    "help keyword form requires :package"
+    "unused argument"
   )
 })
 
