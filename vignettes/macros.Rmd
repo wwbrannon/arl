@@ -221,7 +221,7 @@ evaluated:
 ```
 
 ```{arl, include=FALSE}
-(assert-true (list? `(a `(b ,,x))))
+(assert-equal '(a (quasiquote (b (unquote 10)))) `(a `(b ,,x)))
 ```
 
 This is useful for writing macros that generate other macros.

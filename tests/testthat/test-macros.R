@@ -134,12 +134,24 @@ test_that("nested quasiquote works", {
   env <- new.env()
   env$x <- 5
 
-  # Nested quasiquote
+  # Nested quasiquote: outer unquote evaluates x, inner stays quoted
   result <- engine$eval(engine$read("``(+ 1 ,,x)")[[1]], env = env)
 
-  # Should be `(+ 1 ,5)
+  # Should be (quasiquote (+ 1 (unquote 5)))
   expect_true(is.call(result))
   expect_equal(as.character(result[[1]]), "quasiquote")
+  inner <- result[[2]]
+  expect_true(is.call(inner))
+  # The third element should be (unquote 5), not (unquote (unquote x))
+  unq <- inner[[3]]
+  expect_equal(as.character(unq[[1]]), "unquote")
+  expect_equal(unq[[2]], 5)
+
+  # Same pattern from the vignette: `(a `(b ,,x))
+  env$x <- 10
+  result2 <- engine$eval(engine$read("`(a `(b ,,x))")[[1]], env = env)
+  expected <- quote(a(quasiquote(b(unquote(10)))))
+  expect_identical(result2, expected)
 })
 
 test_that("macros can compose", {

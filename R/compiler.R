@@ -274,6 +274,17 @@ Compiler <- R6::R6Class(
         as.symbol(self$env_var_name)
       ))
     },
+    # Wrap an inner compiled expression in a quasiquote form (unquote, quasiquote, etc.)
+    # When inner is static (quote(...)), wraps statically. Otherwise builds at runtime.
+    wrap_qq_form = function(form_name, inner) {
+      sym <- as.symbol(form_name)
+      if (is.call(inner) && length(inner) == 2L && identical(inner[[1]], quote(quote))) {
+        # Inner is a quoted constant — wrap statically
+        return(as.call(list(quote(quote), as.call(list(sym, inner[[2]])))))
+      }
+      # Inner has code that needs evaluation — build (form_name <inner>) at runtime
+      as.call(list(quote(as.call), as.call(list(quote(list), as.call(list(quote(quote), sym)), inner))))
+    },
     compile_quasiquote_impl = function(template, depth) {
       env_sym <- as.symbol(self$env_var_name)
       eval_in_env <- function(compiled) {
@@ -293,9 +304,12 @@ Compiler <- R6::R6Class(
           if (d == 1L && (op_char == "unquote" || op_char == "unquote-splicing")) {
             return(TRUE)
           }
-          # Nested quasiquote increases depth
+          # Nested quasiquote increases depth; unquote/splicing at depth>1 decreases it
           if (op_char == "quasiquote") {
             return(has_unquotes(tmpl[[2]], d + 1L))
+          }
+          if (d > 1L && (op_char == "unquote" || op_char == "unquote-splicing")) {
+            return(has_unquotes(tmpl[[2]], d - 1L))
           }
         }
 
@@ -328,7 +342,7 @@ Compiler <- R6::R6Class(
           return(eval_in_env(inner))
         }
         inner <- private$compile_quasiquote_impl(template[[2]], depth - 1L)
-        return(as.call(list(quote(quote), as.call(list(as.symbol("unquote"), inner)))))
+        return(private$wrap_qq_form("unquote", inner))
       }
       if (op_char == "unquote-splicing") {
         if (depth == 1L) {
@@ -338,12 +352,12 @@ Compiler <- R6::R6Class(
           return(private$fail("unquote-splicing requires exactly 1 argument"))
         }
         inner <- private$compile_quasiquote_impl(template[[2]], depth - 1L)
-        return(as.call(list(quote(quote), as.call(list(as.symbol("unquote-splicing"), inner)))))
+        return(private$wrap_qq_form("unquote-splicing", inner))
       }
       if (op_char == "quasiquote") {
         if (length(template) != 2) return(private$fail("quasiquote requires exactly 1 argument"))
         inner <- private$compile_quasiquote_impl(template[[2]], depth + 1L)
-        return(as.call(list(quote(quote), as.call(list(as.symbol("quasiquote"), inner)))))
+        return(private$wrap_qq_form("quasiquote", inner))
       }
       if (length(template) == 0) {
         return(as.call(list(quote(quote), template)))

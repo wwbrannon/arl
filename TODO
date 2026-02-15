@@ -7,30 +7,6 @@ o) substantive changes
     o) should we have stats and datasets on the search path? parent env choice
     (stats::lm (~ mpg cyl) :data datasets::mtcars)
 
-    o) this doesn't render correctly:
-    arl> (doc double "all")        ; => named list of all fields
-    #> (Double x. (double 5) ; => 10 Pure function.)
-
-    o) add check in the vignette that it is actually a named list of these fields
-
-    o) this shouldn't be printing (in macro vignette)
-    arl> (unless (= 1 2) (print "not equal") 42)  ; => 42
-    #> [1] "not equal"
-    #> 42
-
-    o) this looks like it's being evaluated, but it's not, the equal assert passes, what it actually is is another display bug
-        arl> `(+ ,x 20)      ; => (+ 10 20)
-        #> 30
-    should produce (+ 10 20) as in scheme
-
-    o) this is also formatted wrong
-        arl> (list '+ 10 20)
-        + 10 20
-
-    o) similarly formatted wrong
-    arl> `(+ 1 ,@xs 4)   ; => (+ 1 2 3 4)
-    #> + 1 2 3 4
-
     o) this is also formatted wrong
     arl> `(a `(b ,,x))   ; => (a (quasiquote (b (unquote 10))))
     #> a quasiquote(b(unquote(unquote(x))))
