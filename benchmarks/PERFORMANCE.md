@@ -50,7 +50,7 @@ Result
 
 **Compiler / Evaluator (R/compiler.R, R/engine.R)**
 - Compiles Arl AST to R code; R's native `eval()` executes the result
-- Handles all special forms (quote, if, define, lambda, begin, defmacro, quasiquote, ~)
+- Handles all special forms (quote, if, define, lambda, begin, defmacro, quasiquote, while, set!)
 - Implements self-tail-call optimisation
 - ~1200 lines of code across both files
 

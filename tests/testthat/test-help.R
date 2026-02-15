@@ -11,7 +11,7 @@ test_that("help shows Arl special-form docs", {
   output <- capture.output(engine$eval_text("(help if)", env = env))
   expect_true(any(grepl("Topic: if", output)))
   expect_true(any(grepl("Usage: (if test", output, fixed = TRUE)))
-
+  expect_true(any(grepl("^Examples:", output)))
 })
 
 test_that("help shows Arl stdlib docs via attributes", {
@@ -241,7 +241,7 @@ test_that("help prioritizes specials over macros", {
   output <- capture.output(engine$eval_text("(help quote)", env = env))
 
   # Should show special form help
-  expect_true(any(grepl("Return expr without evaluation", output)))
+  expect_true(any(grepl("Return expr without evaluat", output)))
 })
 
 test_that("help handles arl_closure with param_specs", {

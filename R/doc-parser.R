@@ -59,6 +59,8 @@ DocParser <- R6::R6Class(
 
       # Arrow conversions (must come before single-char replacements)
       s <- gsub("->", "-to-", s, fixed = TRUE)
+      s <- gsub(":::", "-ns-internal-", s, fixed = TRUE)
+      s <- gsub("::", "-ns-", s, fixed = TRUE)
 
       # Comparison operators in names (longer patterns first)
       s <- gsub("<=", "-lte", s, fixed = TRUE)
@@ -72,6 +74,7 @@ DocParser <- R6::R6Class(
       s <- gsub("!",  "-bang", s, fixed = TRUE)
       s <- gsub("?",  "-p",    s, fixed = TRUE)
       s <- gsub("*",  "-star", s, fixed = TRUE)
+      s <- gsub("~",  "-tilde-", s, fixed = TRUE)
       s <- gsub("/",  "-",     s, fixed = TRUE)
       s <- gsub(".",  "-",     s, fixed = TRUE)
 
@@ -81,12 +84,13 @@ DocParser <- R6::R6Class(
       tolower(s)
     },
 
-    #' @description Load documentation for R-defined builtins from a DCF file.
-    #' @param path Path to builtins-docs.dcf.
+    #' @description Load reference documentation entries from a DCF file.
+    #' @param path Path to reference docs DCF file.
+    #' @param kind Optional kind filter (e.g., "builtin", "special-form").
     #' @return A named list of function doc entries. Each entry has name,
     #'   description, signature, examples, seealso, note, section,
-    #'   section_prose, and vignette fields.
-    load_builtins = function(path = "inst/builtins-docs.dcf") {
+    #'   section_prose, vignette, and kind fields.
+    load_reference_docs = function(path = "inst/reference-docs.dcf", kind = NULL) {
       if (!file.exists(path)) return(list())
 
       lines <- readLines(path, warn = FALSE)
@@ -115,8 +119,26 @@ DocParser <- R6::R6Class(
         assert_val <- dcf_field("Assert")
         if (!is.null(assert_val)) assert_val <- sub("\\s+$", "", assert_val)
 
+        kind_val <- dcf_field("Kind")
+        if (is.null(kind_val) || !nzchar(trimws(kind_val))) {
+          kind_val <- "builtin"
+        } else {
+          kind_val <- tolower(trimws(kind_val))
+        }
+        kind_val <- unname(kind_val)
+        # Special forms are language constructs, not callable objects; their
+        # examples are primarily illustrative and often context-dependent.
+        # Default them to non-evaluated vignette examples unless explicitly set.
+        if (kind_val == "special-form" && is.null(noeval_val)) {
+          noeval <- TRUE
+        }
+        if (!is.null(kind) && kind_val != tolower(trimws(kind))) {
+          next
+        }
+
         entries[[func_name]] <- list(
           name         = func_name,
+          kind         = unname(kind_val),
           description  = if (is.null(dcf_field("Description"))) "" else dcf_field("Description"),
           signature    = if (is.null(dcf_field("Signature"))) "" else dcf_field("Signature"),
           examples     = examples,
@@ -131,6 +153,13 @@ DocParser <- R6::R6Class(
       }
 
       entries
+    },
+
+    #' @description Load documentation for R-defined builtins from a DCF file.
+    #' @param path Path to reference docs DCF file.
+    #' @return A named list of builtin doc entries.
+    load_builtins = function(path = "inst/reference-docs.dcf") {
+      self$load_reference_docs(path = path, kind = "builtin")
     }
   ),
   private = list(

@@ -19,28 +19,19 @@ arl::register_knitr_engine()
 
 ## Special forms
 
-Special forms are expressions with evaluation rules that differ from normal
+**Special forms** are expressions with evaluation rules that differ from normal
 function calls -- for example, `if` does not evaluate all its arguments, and
 `define` binds a name rather than passing it as a value. They are handled
 directly by the compiler and cannot be redefined or passed as values.
 
-- `quote` / `'` -- return unevaluated expression
-- `if` -- conditional evaluation
-- `define` -- variable/function definition
-- `set!` -- mutation of existing bindings
-- `lambda` -- anonymous functions
-- `begin` -- sequence of expressions
-- `defmacro` -- define macros
-- `quasiquote` / `` ` `` -- template with selective evaluation
-- `and`, `or` -- short-circuit boolean operators
-- `while` -- loop with condition
-- `delay` -- lazy promise creation
-- `import` -- import a module's exports
-- `module` -- define a module with exports
+{% for sf in special_forms %}
+- {{ sf.name_link }} -- {{ sf.description }}
+{% endfor %}
 
-Anything not in this list is either a built-in function or a lang-provided
-function or macro. Unlike special forms, those are ordinary values and can be
-passed around, stored in variables, and so on.
+Anything not in this list is a function or macro, whether
+[built-in](#built-in-functions), [standard library](#standard-library),
+user-defined, or inherited from R. Unlike special forms, these are ordinary
+values and can be passed around, stored in variables, and so on.
 
 ## Built-in functions
 

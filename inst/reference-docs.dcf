@@ -1,13 +1,253 @@
-# Documentation for R-defined builtins (injected by ArlEngine$initialize_environment).
-# These functions are defined in R code (R/engine.R) rather than .arl source files,
-# so they need a separate documentation source for the stdlib vignette generator and
-# the runtime help system.
+# Reference docs for non-.arl language topics.
+# Includes:
+# - R-defined builtins (injected by ArlEngine$initialize_environment)
+# - compiler special forms (no object to attach arl_doc to)
 #
 # Format: Debian Control File (DCF), read by base R's read.dcf().
-# Fields: Name, Vignette, Section, Description, Signature, Examples, Assert, Seealso, Note.
+# Fields: Name, Kind, Vignette, Section, Description, Signature, Examples,
+# Assert, Seealso, Note.
+# Kind values:
+# - builtin (default when omitted)
+# - special-form
 # Multi-line values use leading whitespace on continuation lines.
 
+Name: quote
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Return expr without evaluating it. The shorthand `'expr` is
+  equivalent.
+Signature: (quote expr)
+Examples:
+  (quote (+ 1 2))  ; => (+ 1 2)
+  '(a b c)         ; => (a b c)
+Assert:
+  (assert-equal '(+ 1 2) (quote (+ 1 2)))
+  (assert-equal '(a b c) '(a b c))
+Seealso: quasiquote, eval
+
+Name: if
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Evaluate then or else based on test truthiness.
+Signature: (if test then [else])
+Examples:
+  (if (> 3 2) "yes" "no") ; => "yes"
+  (if #f 1)               ; => #nil
+Assert:
+  (assert-equal "yes" (if (> 3 2) "yes" "no"))
+  (assert-equal #nil (if #f 1))
+Seealso: and, or
+
+Name: define
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Bind a name in the current lexical environment.
+Signature: (define name value)
+Examples:
+  (define x 42)
+  (define add (lambda (a b) (+ a b)))
+Assert:
+  (define sf-define-x 42)
+  (assert-equal 42 sf-define-x)
+  (define sf-add (lambda (a b) (+ a b)))
+  (assert-equal 5 (sf-add 2 3))
+Seealso: set!, lambda
+
+Name: set!
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Update an existing binding in the current environment chain.
+Signature: (set! name value)
+Examples:
+  (define x 1)
+  (set! x (+ x 1)) ; x => 2
+Assert:
+  (define sf-set-x 1)
+  (set! sf-set-x (+ sf-set-x 1))
+  (assert-equal 2 sf-set-x)
+Seealso: define
+
+Name: lambda
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Create an anonymous function with lexical scope.
+Signature: (lambda (params...) body...)
+Examples:
+  ((lambda (x) (+ x 1)) 41) ; => 42
+Assert:
+  (assert-equal 42 ((lambda (x) (+ x 1)) 41))
+Seealso: define
+
+Name: begin
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Evaluate expressions in sequence and return the final result.
+Signature: (begin expr...)
+Examples:
+  (begin (define x 1) (set! x (+ x 1)) x) ; => 2
+Assert:
+  (assert-equal 2 (begin (define sf-begin-x 1) (set! sf-begin-x (+ sf-begin-x 1)) sf-begin-x))
+Seealso: if
+
+Name: defmacro
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Define a macro that transforms code before evaluation.
+Signature: (defmacro name (params...) body...)
+Examples:
+  (defmacro when (test . body)
+    `(if ,test (begin ,@body) #nil))
+Assert:
+  (defmacro sf-when (test . body)
+    `(if ,test (begin ,@body) #nil))
+  (assert-equal 3 (sf-when #t (+ 1 2)))
+Seealso: macroexpand, macroexpand-1, quasiquote
+
+Name: quasiquote
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Build code/data templates with selective evaluation. The shorthand
+  `` `expr `` is equivalent.
+Signature: (quasiquote expr)
+Examples:
+  (define x 10)
+  `(a ,x c) ; => (a 10 c)
+Assert:
+  (define sf-qq-x 10)
+  (assert-equal '(a 10 c) `(a ,sf-qq-x c))
+Seealso: quote, unquote, unquote-splicing
+
+Name: unquote
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Evaluate expr inside a quasiquote template. Within a template, the
+  shorthand `,expr` is equivalent.
+Signature: (unquote expr)
+Examples:
+  (define x 10)
+  `(a ,x c) ; => (a 10 c)
+Assert:
+  (define sf-uq-x 10)
+  (assert-equal '(a 10 c) `(a ,sf-uq-x c))
+Seealso: quasiquote, unquote-splicing
+
+Name: unquote-splicing
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Splice list elements into a quasiquoted list. Within a quasiquote
+  template, the shorthand `,@expr` is equivalent.
+Signature: (unquote-splicing expr)
+Examples:
+  (define xs '(2 3))
+  `(1 ,@xs 4) ; => (1 2 3 4)
+Assert:
+  (define sf-uqs-xs '(2 3))
+  (assert-equal '(1 2 3 4) `(1 ,@sf-uqs-xs 4))
+Seealso: quasiquote, unquote
+
+Name: and
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Short-circuit logical conjunction.
+Signature: (and expr...)
+Examples:
+  (and #t 1 2) ; => 2
+  (and #f (stop "error")) ; => #f (second form not evaluated)
+Assert:
+  (assert-equal 2 (and #t 1 2))
+  (assert-equal #f (and #f (stop "error")))
+Seealso: or, if
+
+Name: or
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Short-circuit logical disjunction.
+Signature: (or expr...)
+Examples:
+  (or #f #nil 0 7) ; => 7
+  (or #t (stop "error")) ; => #t (second form not evaluated)
+Assert:
+  (assert-equal 7 (or #f #nil 0 7))
+  (assert-equal #t (or #t (stop "error")))
+Seealso: and, if
+
+Name: while
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Repeatedly evaluate body while condition remains truthy.
+Signature: (while test body...)
+Examples:
+  (define i 0)
+  (while (< i 3) (set! i (+ i 1)))
+  i ; => 3
+Assert:
+  (define sf-while-i 0)
+  (while (< sf-while-i 3) (set! sf-while-i (+ sf-while-i 1)))
+  (assert-equal 3 sf-while-i)
+Seealso: begin
+
+Name: delay
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Create a promise that delays evaluation of expr until forced.
+Signature: (delay expr)
+Examples:
+  (define p (delay (+ 1 2)))
+  (force p) ; => 3
+Assert:
+  (define sf-delay-p (delay (+ 1 2)))
+  (assert-true (promise? sf-delay-p))
+  (assert-equal 3 (force sf-delay-p))
+Seealso: force, promise?, promise-expr
+
+Name: import
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Load a module and attach its exports into the current scope.
+Signature: (import name) or (import "path")
+Examples:
+  (import control)
+  (import "lib/helpers.arl")
+Assert:
+  (assert-no-error (import control))
+  (assert-true (macro? 'when))
+Seealso: module, import-stdlib, load
+
+Name: module
+Kind: special-form
+Vignette: lang-core
+Section: Special Forms
+Description: Define a named module with explicit exports.
+Signature: (module name (export ...) body...)
+Examples:
+  (module demo
+    (export answer)
+    (define answer 42))
+Assert:
+  (module sf-demo
+    (export sf-answer)
+    (define sf-answer 42))
+  (import sf-demo)
+  (assert-equal 42 sf-answer)
+Seealso: import
+
 Name: pair?
+Kind: builtin
 Vignette: lang-types
 Section: List and Pair Predicates
 Description: Return #t if x is a cons cell (dotted pair).
@@ -25,6 +265,7 @@ Assert:
 Seealso: list?, null?, atom?
 
 Name: eval
+Kind: builtin
 Vignette: lang-core
 Section: Evaluation
 Description: Evaluate a Arl expression in the current environment.
@@ -38,6 +279,7 @@ Assert:
 Seealso: r/eval, read, macroexpand
 
 Name: read
+Kind: builtin
 Vignette: lang-core
 Section: Evaluation
 Description: Parse a string into a Arl expression without evaluating it.
@@ -55,6 +297,7 @@ Note: Returns the first expression from the source string, or #nil if
   S-expressions.
 
 Name: write
+Kind: builtin
 Vignette: lang-core
 Section: Evaluation
 Description: Convert a Arl expression to its string representation.
@@ -74,6 +317,7 @@ Note: Produces output that can be parsed back with read, ensuring the
   produced by read.
 
 Name: help
+Kind: builtin
 Vignette: lang-core
 Section: Documentation
 Description: Show help for a topic. Topic may be a symbol or string.
@@ -90,6 +334,7 @@ Assert:
 Seealso: doc, macroexpand, import-stdlib
 
 Name: load
+Kind: builtin
 Vignette: lang-core
 Section: Evaluation
 Description: Load and evaluate an Arl source file in the target environment.
@@ -116,6 +361,7 @@ Assert:
 Seealso: eval, read, run, current-env
 
 Name: import-stdlib
+Kind: builtin
 Vignette: lang-core
 Section: Modules and Imports
 Description: Load and attach all standard library modules into the current
@@ -132,6 +378,7 @@ Note: Re-running import-stdlib is safe; already-loaded modules are reused and
   attached into the current scope.
 
 Name: capture
+Kind: builtin
 Vignette: lang-core
 Section: Macro Utilities
 Description: Mark a symbol for intentional capture in a macro body,
@@ -151,6 +398,7 @@ Note: Use capture when writing anaphoric macros or other macros that
   prevent accidental capture.
 
 Name: gensym
+Kind: builtin
 Vignette: lang-core
 Section: Macro Utilities
 Description: Generate a unique uninterned symbol, useful for writing
@@ -167,6 +415,7 @@ Note: Each call returns a fresh symbol guaranteed not to conflict with
   user-defined names. The optional prefix defaults to "G".
 
 Name: macro?
+Kind: builtin
 Vignette: lang-core
 Section: Macro Utilities
 Description: Return #t if the symbol names a currently-defined macro.
@@ -180,6 +429,7 @@ Assert:
   (assert-false (macro? 'car))
 
 Name: macroexpand
+Kind: builtin
 Vignette: lang-core
 Section: Macro Utilities
 Description: Recursively expand all macros in expr until no macro calls
@@ -195,6 +445,7 @@ Seealso: macroexpand-1, macro?, gensym
 Note: Also available as `macroexpand-all` (alias).
 
 Name: promise?
+Kind: builtin
 Vignette: lang-core
 Section: Promises (Lazy Evaluation)
 Description: Return #t if x is a promise (created with `delay`).
@@ -210,6 +461,7 @@ Assert:
 Seealso: force, promise-expr
 
 Name: force
+Kind: builtin
 Vignette: lang-core
 Section: Promises (Lazy Evaluation)
 Description: Force a promise, evaluating its delayed expression and
@@ -226,6 +478,7 @@ Assert:
 Seealso: promise?, promise-expr, delay
 
 Name: promise-expr
+Kind: builtin
 Vignette: lang-core
 Section: Promises (Lazy Evaluation)
 Description: Extract the unevaluated expression from a promise.
@@ -240,6 +493,7 @@ Seealso: promise?, force, delay
 Note: Signals an error if p is not a promise.
 
 Name: r/eval
+Kind: builtin
 Vignette: lang-core
 Section: Evaluation
 Description: Evaluate an R expression directly via R's eval(), bypassing
@@ -254,6 +508,7 @@ Note: Useful for evaluating raw R calls that use R control flow (for,
   while) or other constructs that Arl normally overrides.
 
 Name: toplevel-env
+Kind: builtin
 Vignette: lang-core
 Section: Environment Introspection
 Description: Return the top-level environment (the environment where all
@@ -266,6 +521,7 @@ Assert:
 Seealso: current-env
 
 Name: current-env
+Kind: builtin
 Vignette: lang-core
 Section: Environment Introspection
 Description: Return the current Arl evaluation environment.
@@ -277,6 +533,7 @@ Assert:
 Seealso: toplevel-env
 
 Name: doc!
+Kind: builtin
 Vignette: lang-core
 Section: Documentation
 Description: Attach documentation fields to a function. With a single
@@ -297,6 +554,7 @@ Assert:
 Seealso: doc, help
 
 Name: doc
+Kind: builtin
 Vignette: lang-core
 Section: Documentation
 Description: Retrieve documentation from a function. With no field argument,

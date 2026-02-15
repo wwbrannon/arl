@@ -789,7 +789,7 @@ Engine <- R6::R6Class(
           eval(expr, envir = env)
         }
       }
-      # Load arl_doc attributes from builtins-docs.dcf (single source of truth
+      # Load arl_doc attributes from reference-docs.dcf (single source of truth
       # shared with the vignette generator)
       private$load_builtin_docs(env)
 
@@ -845,11 +845,16 @@ Engine <- R6::R6Class(
     },
 
     load_builtin_docs = function(env) {
-      dcf_path <- system.file("builtins-docs.dcf", package = "arl")
+      dcf_path <- system.file("reference-docs.dcf", package = "arl")
       if (!nzchar(dcf_path) || !file.exists(dcf_path)) return(invisible(NULL))
       m <- read_dcf_with_comments(dcf_path)
       doc_fields <- c("Description", "Signature", "Examples", "Seealso", "Note")
       for (i in seq_len(nrow(m))) {
+        kind <- if ("Kind" %in% colnames(m)) m[i, "Kind"] else NA
+        if (!is.na(kind) && nzchar(kind) &&
+            tolower(trimws(kind)) == "special-form") {
+          next
+        }
         name <- m[i, "Name"]
         obj <- tryCatch(get(name, envir = env, inherits = FALSE), error = function(e) NULL)
         if (is.null(obj)) next

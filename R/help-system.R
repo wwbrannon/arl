@@ -1,4 +1,4 @@
-# HelpSystem: Dispatches (help topic) to built-in specials, macro docstrings,
+# HelpSystem: Dispatches (help topic) to language special-form docs, macro docstrings,
 # env docs, or structured R help.
 #
 # @field env Env (for default env in help()).
@@ -133,8 +133,49 @@ HelpSystem <- R6::R6Class(
   ),
   private = list(
     specials_help = NULL,
+    load_special_form_docs = function() {
+      dcf_path <- system.file("reference-docs.dcf", package = "arl")
+      if (!nzchar(dcf_path) || !file.exists(dcf_path)) {
+        return(list())
+      }
+      m <- tryCatch(read_dcf_with_comments(dcf_path), error = function(e) NULL)
+      if (is.null(m) || nrow(m) == 0) {
+        return(list())
+      }
+
+      docs <- list()
+      for (i in seq_len(nrow(m))) {
+        kind <- if ("Kind" %in% colnames(m)) m[i, "Kind"] else NA
+        if (is.na(kind) || !nzchar(kind) || tolower(trimws(kind)) != "special-form") {
+          next
+        }
+        topic <- m[i, "Name"]
+        if (is.na(topic) || !nzchar(topic)) next
+
+        read_field <- function(field) {
+          if (!field %in% colnames(m)) return(NULL)
+          val <- m[i, field]
+          if (is.na(val) || !nzchar(val)) NULL else val
+        }
+
+        doc <- list()
+        sig <- read_field("Signature")
+        if (!is.null(sig)) doc$usage <- sig
+        desc <- read_field("Description")
+        if (!is.null(desc)) doc$description <- desc
+        examples <- read_field("Examples")
+        if (!is.null(examples)) doc$examples <- sub("\\s+$", "", examples)
+        seealso <- read_field("Seealso")
+        if (!is.null(seealso)) doc$seealso <- seealso
+        note <- read_field("Note")
+        if (!is.null(note)) doc$note <- note
+
+        docs[[topic]] <- doc
+      }
+      docs
+    },
     build_specials_help = function() {
-      list(
+      fallback <- list(
         quote = list(
           usage = "(quote expr)",
           description = "Return expr without evaluation."
@@ -191,18 +232,6 @@ HelpSystem <- R6::R6Class(
           usage = "(import name) or (import \"path\")",
           description = "Load a module and attach its exports. Symbol: module name (stdlib, then CWD). String: file path (path-only resolution, normalized to absolute)."
         ),
-        `::` = list(
-          usage = "(:: pkg name)",
-          description = "Access an exported object from an R package."
-        ),
-        `:::` = list(
-          usage = "(::: pkg name)",
-          description = "Access a non-exported object from an R package."
-        ),
-        `~` = list(
-          usage = "(~ lhs rhs)",
-          description = "Build an R formula without evaluating arguments."
-        ),
         macroexpand = list(
           description = "Recursively expand macros in expr."
         ),
@@ -213,6 +242,15 @@ HelpSystem <- R6::R6Class(
           description = "Recursively expand macros in expr."
         )
       )
+      loaded <- private$load_special_form_docs()
+      if (length(loaded) == 0) {
+        return(fallback)
+      }
+      missing <- setdiff(names(fallback), names(loaded))
+      if (length(missing) > 0) {
+        loaded[missing] <- fallback[missing]
+      }
+      loaded
     },
     print_doc = function(topic, doc) {
       lines <- c(paste0("Topic: ", topic))

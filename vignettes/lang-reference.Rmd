@@ -19,28 +19,36 @@ arl::register_knitr_engine()
 
 ## Special forms
 
-Special forms are expressions with evaluation rules that differ from normal
+**Special forms** are expressions with evaluation rules that differ from normal
 function calls -- for example, `if` does not evaluate all its arguments, and
 `define` binds a name rather than passing it as a value. They are handled
 directly by the compiler and cannot be redefined or passed as values.
 
-- `quote` / `'` -- return unevaluated expression
-- `if` -- conditional evaluation
-- `define` -- variable/function definition
-- `set!` -- mutation of existing bindings
-- `lambda` -- anonymous functions
-- `begin` -- sequence of expressions
-- `defmacro` -- define macros
-- `quasiquote` / `` ` `` -- template with selective evaluation
-- `and`, `or` -- short-circuit boolean operators
-- `while` -- loop with condition
-- `delay` -- lazy promise creation
-- `import` -- import a module's exports
-- `module` -- define a module with exports
+- [`quote`](lang-core.html#quote) -- Return expr without evaluating it. The shorthand `'expr` is
+equivalent.
+- [`if`](lang-core.html#if) -- Evaluate then or else based on test truthiness.
+- [`define`](lang-core.html#define) -- Bind a name in the current lexical environment.
+- [`set!`](lang-core.html#set-bang) -- Update an existing binding in the current environment chain.
+- [`lambda`](lang-core.html#lambda) -- Create an anonymous function with lexical scope.
+- [`begin`](lang-core.html#begin) -- Evaluate expressions in sequence and return the final result.
+- [`defmacro`](lang-core.html#defmacro) -- Define a macro that transforms code before evaluation.
+- [`quasiquote`](lang-core.html#quasiquote) -- Build code/data templates with selective evaluation. The shorthand
+`` `expr `` is equivalent.
+- [`unquote`](lang-core.html#unquote) -- Evaluate expr inside a quasiquote template. Within a template, the
+shorthand `,expr` is equivalent.
+- [`unquote-splicing`](lang-core.html#unquote-splicing) -- Splice list elements into a quasiquoted list. Within a quasiquote
+template, the shorthand `,@expr` is equivalent.
+- [`and`](lang-core.html#and) -- Short-circuit logical conjunction.
+- [`or`](lang-core.html#or) -- Short-circuit logical disjunction.
+- [`while`](lang-core.html#while) -- Repeatedly evaluate body while condition remains truthy.
+- [`delay`](lang-core.html#delay) -- Create a promise that delays evaluation of expr until forced.
+- [`import`](lang-core.html#import) -- Load a module and attach its exports into the current scope.
+- [`module`](lang-core.html#module) -- Define a named module with explicit exports.
 
-Anything not in this list is either a built-in function or a lang-provided
-function or macro. Unlike special forms, those are ordinary values and can be
-passed around, stored in variables, and so on.
+Anything not in this list is a function or macro, whether
+[built-in](#built-in-functions), [standard library](#standard-library),
+user-defined, or inherited from R. Unlike special forms, these are ordinary
+values and can be passed around, stored in variables, and so on.
 
 ## Built-in functions
 

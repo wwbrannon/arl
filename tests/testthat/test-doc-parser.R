@@ -262,3 +262,19 @@ test_that("annotation-based docs are available via compiler", {
   expect_match(doc$examples, "add 1 2")
   expect_equal(doc$seealso, "sub")
 })
+
+test_that("DocParser loads reference docs and filters by kind", {
+  parser <- DocParser$new()
+  docs_path <- system.file("reference-docs.dcf", package = "arl")
+  expect_true(nzchar(docs_path))
+  all_docs <- parser$load_reference_docs(docs_path)
+
+  expect_true(length(all_docs) > 0)
+  expect_true("if" %in% names(all_docs))
+  expect_true("eval" %in% names(all_docs))
+  expect_equal(all_docs[["if"]]$kind, "special-form")
+
+  builtins <- parser$load_builtins(docs_path)
+  expect_true("eval" %in% names(builtins))
+  expect_false("if" %in% names(builtins))
+})

@@ -153,9 +153,12 @@ passed as values.
 - `delay` - Lazy promise creation
 - `import` - Import a module’s exports
 - `module` - Define a module with exports
-- `~` - Formula (for R modeling)
-- `::`, `:::` - R package namespace access
-- `help` - Look up documentation
+
+R formula syntax (`~`) and package namespace access (`::`, `:::`) are
+available via R interop, but are not Arl special forms.
+
+`help` (along with `doc`/`doc!`) is a built-in function, not a special
+form.
 
 In addition to special forms, Arl provides a small set of **built-in
 functions** implemented in R and available before any stdlib modules

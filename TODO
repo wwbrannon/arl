@@ -1,5 +1,3 @@
-o) docs for special forms?
-
 o) read module guide
 
 o) substantive changes
@@ -18,19 +16,19 @@ o) closely related: scope here doesn't seem to be lexical:
         (export mylet)
 
         (defmacro mylet (bindings . body)
-        (if (null? bindings)
+          (if (null? bindings)
             `(begin ,@body)
-            (begin
-            (define temps (map (lambda (b) (gensym "tmp")) bindings))
-            (define patterns (map car bindings))
-            (define values (map (lambda (b) (car (cdr b))) bindings))
-            `((lambda ,temps
-                ,@(map (lambda (pair)
-                        `(define ,(car pair) ,(car (cdr pair))))
-                        (zip patterns temps))
-                (begin ,@body))
-                ,@values))))
-    )
+              (begin
+                (define temps (map (lambda (b) (gensym "tmp")) bindings))
+                (define patterns (map car bindings))
+                (define values (map (lambda (b) (car (cdr b))) bindings))
+                `((lambda ,temps
+                    ,@(map (lambda (pair)
+                            `(define ,(car pair) ,(car (cdr pair))))
+                            (zip patterns temps))
+                    (begin ,@body))
+                    ,@values))))
+     )
 
     will@macbook:~/github/arl$ vi mybinding.arl
     will@macbook:~/github/arl$ arl

@@ -88,17 +88,23 @@ linkify_seealso <- function(seealso, func_index, current_vignette) {
 }
 
 # ---------------------------------------------------------------------------
-# Builtins grouping
+# Supplemental docs grouping (builtins + special forms)
 # ---------------------------------------------------------------------------
 
-#' Group flat builtin entries (from DocParser$load_builtins) by vignette.
+#' Group flat reference doc entries (from DocParser$load_reference_docs) by vignette.
 #'
-#' Returns a list keyed by vignette name.  Each entry has:
+#' @param docs Flat list of doc entries.
+#' @param kinds Optional character vector of kinds to include.
+#' @return List keyed by vignette name. Each entry has:
 #'   $functions — named list of function doc entries
 #'   $sections  — list of unique section entries in order: list(name, prose)
-group_builtins_by_vignette <- function(builtins) {
+group_docs_by_vignette <- function(docs, kinds = NULL) {
   by_vignette <- list()
-  for (fn in builtins) {
+  for (fn in docs) {
+    fn_kind <- if (is.null(fn$kind) || !nzchar(fn$kind)) "builtin" else fn$kind
+    if (!is.null(kinds) && !tolower(fn_kind) %in% tolower(kinds)) {
+      next
+    }
     vname <- fn$vignette
     if (is.null(vname)) next
 
@@ -121,6 +127,32 @@ group_builtins_by_vignette <- function(builtins) {
     by_vignette[[vname]]$functions[[fn$name]] <- fn
   }
   by_vignette
+}
+
+#' Merge two vignette-grouped supplemental docs maps.
+merge_grouped_docs <- function(lhs, rhs) {
+  out <- lhs
+  for (vname in names(rhs)) {
+    if (is.null(out[[vname]])) {
+      out[[vname]] <- rhs[[vname]]
+      next
+    }
+    lhs_entry <- out[[vname]]
+    rhs_entry <- rhs[[vname]]
+
+    existing_sec_names <- vapply(lhs_entry$sections, function(s) s$name, character(1))
+    for (sec in rhs_entry$sections) {
+      if (!sec$name %in% existing_sec_names) {
+        lhs_entry$sections[[length(lhs_entry$sections) + 1L]] <- sec
+        existing_sec_names <- c(existing_sec_names, sec$name)
+      }
+    }
+    for (fname in names(rhs_entry$functions)) {
+      lhs_entry$functions[[fname]] <- rhs_entry$functions[[fname]]
+    }
+    out[[vname]] <- lhs_entry
+  }
+  out
 }
 
 # Build a docs engine for runtime introspection of stdlib bindings.
@@ -239,10 +271,10 @@ merge_runtime_docs <- function(parsed, runtime_docs) {
 #' @param config Config entry with title, modules, preamble
 #' @param all_parsed List of parse results from parse_arl_annotations(), keyed by module name
 #' @param func_index Global function index for cross-linking
-#' @param builtin_funcs R-defined builtin entries for this vignette
+#' @param supplemental_funcs Supplemental doc entries for this vignette
 #' @return Named list suitable for passing to jinjar::render()
 build_topic_context <- function(vignette_name, config, all_parsed,
-                                func_index = list(), builtin_funcs = NULL) {
+                                func_index = list(), supplemental_funcs = NULL) {
   title <- config$title
   preamble <- config$preamble
   if (is.null(preamble)) preamble <- ""
@@ -267,16 +299,18 @@ build_topic_context <- function(vignette_name, config, all_parsed,
     }
   }
 
-  # Merge R-defined builtin entries into the appropriate sections
-  if (!is.null(builtin_funcs) && length(builtin_funcs$functions) > 0) {
+  # Merge supplemental doc entries (R-defined builtins, special forms, etc.)
+  # into the appropriate sections.
+  if (!is.null(supplemental_funcs) && length(supplemental_funcs$functions) > 0) {
     existing_sec_names <- vapply(all_sections, function(s) s$name, character(1))
-    for (bsec in builtin_funcs$sections) {
+    for (bsec in supplemental_funcs$sections) {
       if (!bsec$name %in% existing_sec_names) {
         all_sections[[length(all_sections) + 1L]] <- bsec
       }
     }
-    for (bfn in builtin_funcs$functions) {
-      insert_pos <- length(all_funcs) + 1L
+    for (bfn in supplemental_funcs$functions) {
+      # Keep "Special Forms" at the top of topic pages (notably lang-core).
+      insert_pos <- if (!is.null(bfn$section) && bfn$section == "Special Forms") 1L else length(all_funcs) + 1L
       for (idx in rev(seq_along(all_funcs))) {
         if (identical(all_funcs[[idx]]$section, bfn$section)) {
           insert_pos <- idx + 1L
@@ -484,8 +518,8 @@ format_func_list <- function(func_names, func_index = list()) {
   paste(lines, collapse = "\n")
 }
 
-#' Turn a vector of function names into linked backtick items.
-link_builtins <- function(fns, func_index) {
+#' Turn a vector of topic names into linked backtick items.
+link_topics <- function(fns, func_index) {
   items <- vapply(fns, function(fn) {
     entry <- func_index[[fn]]
     if (!is.null(entry)) {
@@ -497,38 +531,56 @@ link_builtins <- function(fns, func_index) {
   paste(items, collapse = ", ")
 }
 
+#' Build category rows from flat reference doc entries.
+build_categories_from_entries <- function(entries, func_index) {
+  section_order <- character(0)
+  section_to_names <- list()
+
+  for (entry in entries) {
+    sec <- if (is.null(entry$section) || !nzchar(entry$section)) "Other" else entry$section
+    if (!sec %in% section_order) {
+      section_order <- c(section_order, sec)
+      section_to_names[[sec]] <- character(0)
+    }
+    section_to_names[[sec]] <- c(section_to_names[[sec]], entry$name)
+  }
+
+  unname(lapply(section_order, function(sec) {
+    fns <- unique(section_to_names[[sec]])
+    list(cat = sec, functions = link_topics(fns, func_index))
+  }))
+}
+
 #' Build template context for the lang-reference.Rmd overview page.
 #'
 #' @param vignettes Named list of vignette configs
 #' @param arl_dir Path to inst/arl/ directory
 #' @param builtins_by_vignette Builtins grouped by vignette name
 #' @param all_builtins Flat list of all builtin doc entries
+#' @param all_special_forms Flat list of all special-form doc entries
 #' @param func_index Global function index for cross-linking
 #' @return Named list suitable for passing to jinjar::render()
 build_reference_context <- function(vignettes, arl_dir, builtins_by_vignette,
-                                    all_builtins = list(), func_index = list()) {
+                                    all_builtins = list(), all_special_forms = list(),
+                                    func_index = list()) {
   # Vignette links
   vignette_links <- lapply(names(vignettes), function(vname) {
     list(title = vignettes[[vname]]$title, name = vname)
   })
 
-  # Builtin categories with linked function names, derived directly from
-  # DCF Section values in first-seen order.
-  section_order <- character(0)
-  section_to_fns <- list()
-
-  for (fn in all_builtins) {
-    sec <- if (is.null(fn$section) || !nzchar(fn$section)) "Other" else fn$section
-    if (!sec %in% section_order) {
-      section_order <- c(section_order, sec)
-      section_to_fns[[sec]] <- character(0)
+  # Categories with linked names, derived from DCF Section values.
+  builtin_categories <- build_categories_from_entries(all_builtins, func_index)
+  special_forms <- unname(lapply(all_special_forms, function(sf) {
+    entry <- func_index[[sf$name]]
+    link <- if (!is.null(entry)) {
+      paste0("[`", sf$name, "`](", entry$vignette, ".html#", entry$slug, ")")
+    } else {
+      paste0("`", sf$name, "`")
     }
-    section_to_fns[[sec]] <- c(section_to_fns[[sec]], fn$name)
-  }
-
-  builtin_categories <- unname(lapply(section_order, function(sec) {
-    fns <- unique(section_to_fns[[sec]])
-    list(cat = sec, functions = link_builtins(fns, func_index))
+    list(
+      name_link = link,
+      description = if (!is.null(sf$description) && nzchar(sf$description)) sf$description else ""
+    )
   }))
 
   # Per-vignette sections
@@ -573,6 +625,7 @@ build_reference_context <- function(vignettes, arl_dir, builtins_by_vignette,
     github_base = GITHUB_BASE,
     github_tree = gsub("/blob/", "/tree/", GITHUB_BASE),
     vignette_links = vignette_links,
+    special_forms = special_forms,
     builtin_categories = builtin_categories,
     vignette_sections = vignette_sections,
     source_files = source_files
@@ -669,18 +722,28 @@ generate_all <- function(
     )
   }
 
-  # Load R-defined builtin documentation
-  builtins_path <- file.path("inst", "builtins-docs.dcf")
-  all_builtins <- .doc_parser$load_builtins(builtins_path)
-  if (length(all_builtins) > 0) {
-    message("Loaded ", length(all_builtins), " R-defined builtin entries from ", builtins_path)
+  # Load supplemental reference docs (R-defined builtins + special forms)
+  ref_docs_path <- file.path("inst", "reference-docs.dcf")
+  all_ref_docs <- .doc_parser$load_reference_docs(ref_docs_path)
+  if (length(all_ref_docs) > 0) {
+    message("Loaded ", length(all_ref_docs), " supplemental reference entries from ", ref_docs_path)
   }
-  builtins_by_vignette <- group_builtins_by_vignette(all_builtins)
+  all_builtins <- all_ref_docs[vapply(all_ref_docs, function(x) x$kind == "builtin", logical(1))]
+  all_special_forms <- all_ref_docs[vapply(all_ref_docs, function(x) x$kind == "special-form", logical(1))]
+  builtins_by_vignette <- group_docs_by_vignette(all_ref_docs, kinds = "builtin")
+  specials_by_vignette <- group_docs_by_vignette(all_ref_docs, kinds = "special-form")
+  supplemental_by_vignette <- merge_grouped_docs(builtins_by_vignette, specials_by_vignette)
 
   # Build global function index for cross-vignette links
   func_index <- build_func_index(vignettes, all_parsed)
   # Add builtins to the func index
   for (fn in all_builtins) {
+    func_index[[fn$name]] <- list(
+      vignette = fn$vignette,
+      slug     = .doc_parser$slugify(fn$name)
+    )
+  }
+  for (fn in all_special_forms) {
     func_index[[fn$name]] <- list(
       vignette = fn$vignette,
       slug     = .doc_parser$slugify(fn$name)
@@ -693,7 +756,7 @@ generate_all <- function(
     vconfig <- vignettes[[vname]]
     message("Generating: ", vname, ".Rmd")
     ctx <- build_topic_context(vname, vconfig, all_parsed, func_index,
-                               builtin_funcs = builtins_by_vignette[[vname]])
+                               supplemental_funcs = supplemental_by_vignette[[vname]])
     rmd <- render_topic_rmd(ctx)
     output_file <- file.path(output_dir, paste0(vname, ".Rmd"))
     writeLines(rmd, output_file, useBytes = TRUE)
@@ -703,7 +766,9 @@ generate_all <- function(
   # Generate the overview page (lang-reference.Rmd)
   message("Generating: lang-reference.Rmd")
   ctx <- build_reference_context(vignettes, arl_dir, builtins_by_vignette,
-                                 all_builtins = all_builtins, func_index = func_index)
+                                 all_builtins = all_builtins,
+                                 all_special_forms = all_special_forms,
+                                 func_index = func_index)
   ref_rmd <- render_reference_rmd(ctx)
   ref_file <- file.path(output_dir, "lang-reference.Rmd")
   writeLines(ref_rmd, ref_file, useBytes = TRUE)

@@ -38,7 +38,7 @@ Evaluate body forms when test is truthy.
 (assert-equal 2 (when (> 3 2) (+ 1 1)))
 ```
 
-**See also:** [unless](#unless), if, [cond](#cond)
+**See also:** [unless](#unless), [if](lang-core.html#if), [cond](#cond)
 
 ---
 
@@ -61,7 +61,7 @@ Evaluate body forms when test is falsy.
 (assert-equal "nope" (unless (= 1 2) "nope"))
 ```
 
-**See also:** [when](#when), if
+**See also:** [when](#when), [if](lang-core.html#if)
 
 ---
 
@@ -90,7 +90,7 @@ Multi-branch conditional.
 (assert-equal "small" (cond ((> 10 20) "big") (else "small")))
 ```
 
-**See also:** [case](#case), if, [when](#when)
+**See also:** [case](#case), [if](lang-core.html#if), [when](#when)
 
 ---
 
@@ -123,7 +123,7 @@ Key expression is evaluated only once.
 
 **Note:** The key expression is evaluated only once. Each clause datum list can contain multiple values.
 
-**See also:** [cond](#cond), if
+**See also:** [cond](#cond), [if](lang-core.html#if)
 
 ---
 
@@ -318,7 +318,7 @@ Bind pattern to value and choose branch based on its truthiness.
 (assert-equal "falsy" (if-let (x #f) "truthy" "falsy"))
 ```
 
-**See also:** [when-let](#when-let), if, [let](#let)
+**See also:** [when-let](#when-let), [if](lang-core.html#if), [let](#let)
 
 ---
 
@@ -351,7 +351,7 @@ result                      ; => ("a" "b" "c")
 
 **Note:** Expands to a `while` loop over the sequence converted to a list.
 
-**See also:** while, [map](lang-functional.html#map), [loop](#loop)
+**See also:** [while](lang-core.html#while), [map](lang-functional.html#map), [loop](#loop)
 
 ---
 
@@ -393,7 +393,7 @@ Clojure-style loop/recur that expands to an R while loop.
 
 **Note:** The compiler auto-optimizes self-tail-calls in `(define name (lambda ...))` patterns, so `loop`/`recur` is primarily useful for anonymous iteration and mutual recursion patterns. Expands to an R `while` loop internally.
 
-**See also:** [recur](#recur), while, [for](#for)
+**See also:** [recur](#recur), [while](lang-core.html#while), [for](#for)
 
 ---
 
@@ -417,7 +417,7 @@ i                          ; => 5
 (assert-equal 5 __test-i)
 ```
 
-**See also:** while
+**See also:** [while](lang-core.html#while)
 
 ---
 

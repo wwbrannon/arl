@@ -78,7 +78,7 @@ Arl leverages R's existing eval/quote/environment system rather than reimplement
 
 3. **Macro Expander** (`macro.R`) - Processes `defmacro` definitions; supports quasiquote with unquote/unquote-splicing; provides `macroexpand` and `macroexpand-1`
 
-4. **Compiler** (`compiler.R`) - Compiles Arl AST to R code; handles all special forms (`quote`, `if`, `define`, `lambda`, `begin`, `defmacro`, `quasiquote`, `~`, `while`, `set!`, etc.); implements self-tail-call optimization. The compiled R code is then evaluated via R's native `eval()`
+4. **Compiler** (`compiler.R`) - Compiles Arl AST to R code; handles all special forms (`quote`, `if`, `define`, `lambda`, `begin`, `defmacro`, `quasiquote`, `while`, `set!`, etc.); implements self-tail-call optimization. The compiled R code is then evaluated via R's native `eval()`
 
 5. **Runtime** (`runtime.R`) - Runtime helpers used by compiled code: truthiness predicate (`.__true_p`), pattern assignment, stdlib functions (list ops, higher-order functions, predicates, etc.)
 
@@ -96,7 +96,7 @@ Arl leverages R's existing eval/quote/environment system rather than reimplement
 - **Truthiness**: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsey
 - **Lists**: Backed by R calls/lists; `car` returns head, `cdr` returns tail
 - **Keywords**: `:kw` tokens self-evaluate and become named arguments
-- **Special forms**: `quote`, `quasiquote`, `if`, `begin`, `define`, `set!`, `lambda`, `defmacro`, `and`, `or`, `while`, `delay`, `import`, `module`, `help`, `~`, `::`, `:::`
+- **Special forms**: `quote`, `quasiquote`, `if`, `begin`, `define`, `set!`, `lambda`, `defmacro`, `and`, `or`, `while`, `delay`, `import`, `module`
 - **Scoping**: Lexical scoping via R environments
 - **Macros**: Compile-time code transformation with quasiquote/unquote
 - **Tail call optimization**: Self-TCO is implemented by the compiler for `(define name (lambda ...))` patterns -- self-tail-calls through `if`/`begin`/`cond`/`let`/`let*`/`letrec` are rewritten as loops. `loop`/`recur` is still useful for mutual recursion.

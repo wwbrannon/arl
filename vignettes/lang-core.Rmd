@@ -17,6 +17,355 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
 
+## Special Forms {#section-special-forms}
+
+### quote {#quote}
+
+Return expr without evaluating it. The shorthand `'expr` is
+equivalent.
+
+**Signature:** `(quote expr)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(quote (+ 1 2))  ; => (+ 1 2)
+'(a b c)         ; => (a b c)
+```
+
+```{arl, include=FALSE}
+(assert-equal '(+ 1 2) (quote (+ 1 2)))
+(assert-equal '(a b c) '(a b c))
+```
+
+**See also:** [quasiquote](#quasiquote), [eval](#eval)
+
+---
+
+### if {#if}
+
+Evaluate then or else based on test truthiness.
+
+**Signature:** `(if test then [else])`
+
+**Examples:**
+```{arl, eval=FALSE}
+(if (> 3 2) "yes" "no") ; => "yes"
+(if #f 1)               ; => #nil
+```
+
+```{arl, include=FALSE}
+(assert-equal "yes" (if (> 3 2) "yes" "no"))
+(assert-equal #nil (if #f 1))
+```
+
+**See also:** [and](#and), [or](#or)
+
+---
+
+### define {#define}
+
+Bind a name in the current lexical environment.
+
+**Signature:** `(define name value)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(define x 42)
+(define add (lambda (a b) (+ a b)))
+```
+
+```{arl, include=FALSE}
+(define sf-define-x 42)
+(assert-equal 42 sf-define-x)
+(define sf-add (lambda (a b) (+ a b)))
+(assert-equal 5 (sf-add 2 3))
+```
+
+**See also:** [set!](#set-bang), [lambda](#lambda)
+
+---
+
+### set! {#set-bang}
+
+Update an existing binding in the current environment chain.
+
+**Signature:** `(set! name value)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(define x 1)
+(set! x (+ x 1)) ; x => 2
+```
+
+```{arl, include=FALSE}
+(define sf-set-x 1)
+(set! sf-set-x (+ sf-set-x 1))
+(assert-equal 2 sf-set-x)
+```
+
+**See also:** [define](#define)
+
+---
+
+### lambda {#lambda}
+
+Create an anonymous function with lexical scope.
+
+**Signature:** `(lambda (params...) body...)`
+
+**Examples:**
+```{arl, eval=FALSE}
+((lambda (x) (+ x 1)) 41) ; => 42
+```
+
+```{arl, include=FALSE}
+(assert-equal 42 ((lambda (x) (+ x 1)) 41))
+```
+
+**See also:** [define](#define)
+
+---
+
+### begin {#begin}
+
+Evaluate expressions in sequence and return the final result.
+
+**Signature:** `(begin expr...)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(begin (define x 1) (set! x (+ x 1)) x) ; => 2
+```
+
+```{arl, include=FALSE}
+(assert-equal 2 (begin (define sf-begin-x 1) (set! sf-begin-x (+ sf-begin-x 1)) sf-begin-x))
+```
+
+**See also:** [if](#if)
+
+---
+
+### defmacro {#defmacro}
+
+Define a macro that transforms code before evaluation.
+
+**Signature:** `(defmacro name (params...) body...)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(defmacro when (test . body)
+`(if ,test (begin ,@body) #nil))
+```
+
+```{arl, include=FALSE}
+(defmacro sf-when (test . body)
+`(if ,test (begin ,@body) #nil))
+(assert-equal 3 (sf-when #t (+ 1 2)))
+```
+
+**See also:** [macroexpand](#macroexpand), [macroexpand-1](#macroexpand-1), [quasiquote](#quasiquote)
+
+---
+
+### quasiquote {#quasiquote}
+
+Build code/data templates with selective evaluation. The shorthand
+`` `expr `` is equivalent.
+
+**Signature:** `(quasiquote expr)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(define x 10)
+`(a ,x c) ; => (a 10 c)
+```
+
+```{arl, include=FALSE}
+(define sf-qq-x 10)
+(assert-equal '(a 10 c) `(a ,sf-qq-x c))
+```
+
+**See also:** [quote](#quote), [unquote](#unquote), [unquote-splicing](#unquote-splicing)
+
+---
+
+### unquote {#unquote}
+
+Evaluate expr inside a quasiquote template. Within a template, the
+shorthand `,expr` is equivalent.
+
+**Signature:** `(unquote expr)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(define x 10)
+`(a ,x c) ; => (a 10 c)
+```
+
+```{arl, include=FALSE}
+(define sf-uq-x 10)
+(assert-equal '(a 10 c) `(a ,sf-uq-x c))
+```
+
+**See also:** [quasiquote](#quasiquote), [unquote-splicing](#unquote-splicing)
+
+---
+
+### unquote-splicing {#unquote-splicing}
+
+Splice list elements into a quasiquoted list. Within a quasiquote
+template, the shorthand `,@expr` is equivalent.
+
+**Signature:** `(unquote-splicing expr)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(define xs '(2 3))
+`(1 ,@xs 4) ; => (1 2 3 4)
+```
+
+```{arl, include=FALSE}
+(define sf-uqs-xs '(2 3))
+(assert-equal '(1 2 3 4) `(1 ,@sf-uqs-xs 4))
+```
+
+**See also:** [quasiquote](#quasiquote), [unquote](#unquote)
+
+---
+
+### and {#and}
+
+Short-circuit logical conjunction.
+
+**Signature:** `(and expr...)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(and #t 1 2) ; => 2
+(and #f (stop "error")) ; => #f (second form not evaluated)
+```
+
+```{arl, include=FALSE}
+(assert-equal 2 (and #t 1 2))
+(assert-equal #f (and #f (stop "error")))
+```
+
+**See also:** [or](#or), [if](#if)
+
+---
+
+### or {#or}
+
+Short-circuit logical disjunction.
+
+**Signature:** `(or expr...)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(or #f #nil 0 7) ; => 7
+(or #t (stop "error")) ; => #t (second form not evaluated)
+```
+
+```{arl, include=FALSE}
+(assert-equal 7 (or #f #nil 0 7))
+(assert-equal #t (or #t (stop "error")))
+```
+
+**See also:** [and](#and), [if](#if)
+
+---
+
+### while {#while}
+
+Repeatedly evaluate body while condition remains truthy.
+
+**Signature:** `(while test body...)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(define i 0)
+(while (< i 3) (set! i (+ i 1)))
+i ; => 3
+```
+
+```{arl, include=FALSE}
+(define sf-while-i 0)
+(while (< sf-while-i 3) (set! sf-while-i (+ sf-while-i 1)))
+(assert-equal 3 sf-while-i)
+```
+
+**See also:** [begin](#begin)
+
+---
+
+### delay {#delay}
+
+Create a promise that delays evaluation of expr until forced.
+
+**Signature:** `(delay expr)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(define p (delay (+ 1 2)))
+(force p) ; => 3
+```
+
+```{arl, include=FALSE}
+(define sf-delay-p (delay (+ 1 2)))
+(assert-true (promise? sf-delay-p))
+(assert-equal 3 (force sf-delay-p))
+```
+
+**See also:** [force](#force), [promise?](#promise-p), [promise-expr](#promise-expr)
+
+---
+
+### import {#import}
+
+Load a module and attach its exports into the current scope.
+
+**Signature:** `(import name) or (import "path")`
+
+**Examples:**
+```{arl, eval=FALSE}
+(import control)
+(import "lib/helpers.arl")
+```
+
+```{arl, include=FALSE}
+(assert-no-error (import control))
+(assert-true (macro? 'when))
+```
+
+**See also:** [module](#module), [import-stdlib](#import-stdlib), [load](#load)
+
+---
+
+### module {#module}
+
+Define a named module with explicit exports.
+
+**Signature:** `(module name (export ...) body...)`
+
+**Examples:**
+```{arl, eval=FALSE}
+(module demo
+(export answer)
+(define answer 42))
+```
+
+```{arl, include=FALSE}
+(module sf-demo
+(export sf-answer)
+(define sf-answer 42))
+(import sf-demo)
+(assert-equal 42 sf-answer)
+```
+
+**See also:** [import](#import)
+
+---
+
 ## Error and Warning {#section-error-and-warning}
 
 ### error {#error}
@@ -228,7 +577,7 @@ Remove a variable binding from an environment.
 (assert-equal "gone" (begin (define ub-test 1) (unbind-variable "ub-test" (current-env)) (try ub-test (catch e "gone"))))
 ```
 
-**See also:** [get](#get), define
+**See also:** [get](#get), [define](#define)
 
 ---
 
@@ -432,7 +781,7 @@ Perform substitution in an expression, or error if called with 1 arg.
 
 **Note:** Single-argument `substitute` does not work in Arl due to eager evaluation. Use macros or explicit quoting instead. Two-argument form works normally.
 
-**See also:** defmacro
+**See also:** [defmacro](#defmacro)
 
 ---
 
@@ -844,7 +1193,7 @@ environment. Useful when an engine was initialized with load_stdlib = FALSE.
 **Note:** Re-running import-stdlib is safe; already-loaded modules are reused and
 attached into the current scope.
 
-**See also:** import, module, [load](#load)
+**See also:** [import](#import), [module](#module), [load](#load)
 
 ---
 
@@ -874,7 +1223,7 @@ intentionally introduce a binding visible to the caller. Without
 capture, Arl's automatic hygiene renames macro-introduced symbols to
 prevent accidental capture.
 
-**See also:** [gensym](#gensym), [macroexpand](#macroexpand), defmacro
+**See also:** [gensym](#gensym), [macroexpand](#macroexpand), [defmacro](#defmacro)
 
 ---
 
@@ -992,7 +1341,7 @@ returning the result. If x is not a promise, returns x unchanged.
 (assert-equal 42 (force 42))
 ```
 
-**See also:** [promise?](#promise-p), [promise-expr](#promise-expr), delay
+**See also:** [promise?](#promise-p), [promise-expr](#promise-expr), [delay](#delay)
 
 ---
 
@@ -1015,7 +1364,7 @@ Extract the unevaluated expression from a promise.
 
 **Note:** Signals an error if p is not a promise.
 
-**See also:** [promise?](#promise-p), [force](#force), delay
+**See also:** [promise?](#promise-p), [force](#force), [delay](#delay)
 
 ---
 

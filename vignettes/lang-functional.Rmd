@@ -462,7 +462,7 @@ Logical negation with Arl truthiness.
 
 **Note:** Arl follows Scheme-like truthiness: #f/FALSE, #nil/NULL, and 0 are falsy. Everything else is truthy. This differs from R where only FALSE and NULL are falsy.
 
-**See also:** [xor](#xor), and, or (special forms)
+**See also:** [xor](#xor), [and](lang-core.html#and), [or](lang-core.html#or) (special forms)
 
 ---
 
@@ -493,7 +493,7 @@ Logical exclusive OR with Arl truthiness.
 
 **Note:** Exclusive OR: returns #t when exactly one argument is truthy, #f when both are truthy or both are falsy.
 
-**See also:** [not](#not), and, or (special forms)
+**See also:** [not](#not), [and](lang-core.html#and), [or](lang-core.html#or) (special forms)
 
 ---
 
