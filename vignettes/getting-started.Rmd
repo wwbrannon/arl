@@ -126,7 +126,7 @@ From R, `load_file_in_env` and `load_file_under_env` correspond to
 engine <- Engine$new()
 
 # Like (load ...): definitions visible in the engine
-engine$load_file_in_env("script.arl", engine$get_env())
+engine$load_file_in_env("script.arl")
 
 # Like (run ...): isolated; definitions not visible
 engine$load_file_under_env("script.arl")

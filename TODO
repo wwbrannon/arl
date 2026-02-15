@@ -1,15 +1,10 @@
 o) read Getting Started, macro guide, module guide
 
 o) substantive changes
-    o) should load_file_in_env default to env = NULL (and update troubleshooting.Rmd)
     o) more future-proof import syntax a la python
 
     o) should we have stats and datasets on the search path? parent env choice
     (stats::lm (~ mpg cyl) :data datasets::mtcars)
-
-    o) this is also formatted wrong
-    arl> `(a `(b ,,x))   ; => (a (quasiquote (b (unquote 10))))
-    #> a quasiquote(b(unquote(unquote(x))))
 
     o) is opt-rest behaving correctly in macro vignette? probably yes: but it should be stated clearly that the optional parameters have to be passed with keyword args
 

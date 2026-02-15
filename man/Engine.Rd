@@ -201,7 +201,7 @@ Load and evaluate an Arl source file in the given environment. Definitions
 and imports in the file are visible in \code{env}. For isolated execution
 (definitions not visible), use \code{load_file_under_env(path, env)}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_in_env(path, env)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_in_env(path, env = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

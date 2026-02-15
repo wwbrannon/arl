@@ -82,7 +82,7 @@ Arl leverages R's existing eval/quote/environment system rather than reimplement
 
 5. **Runtime** (`runtime.R`) - Runtime helpers used by compiled code: truthiness predicate (`.__true_p`), pattern assignment, stdlib functions (list ops, higher-order functions, predicates, etc.)
 
-6. **Standard Library** (`runtime.R`, `inst/arl/*.arl`) - Core library in R (runtime helpers); modular extensions in Arl. **Module system**: `(import M)` attaches M's exports only in the scope where import was evaluated; each module is loaded once per engine (shared cache). `(load path)` runs a file in the current env; `(run path)` runs it in an isolated child env. From R, `load_file_under_env(path)` uses an isolated scope; use `load_file_in_env(path, env)` for source-like visibility.
+6. **Standard Library** (`runtime.R`, `inst/arl/*.arl`) - Core library in R (runtime helpers); modular extensions in Arl. **Module system**: `(import M)` attaches M's exports only in the scope where import was evaluated; each module is loaded once per engine (shared cache). `(load path)` runs a file in the current env; `(run path)` runs it in an isolated child env. From R, `load_file_under_env(path)` uses an isolated scope; use `load_file_in_env(path)` for source-like visibility.
 
 7. **R Bridge** - Direct access to all R functions; keywords (`:name`) become named arguments; R operators and data structures work naturally
 

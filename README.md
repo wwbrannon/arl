@@ -255,8 +255,8 @@ them individually in your own modules or when working with a bare engine
 - `(import M)` – load module M and attach its exports to the current
   scope
 
-From R: `engine$load_file_in_env(path, engine$get_env())` corresponds to
-`load`; `engine$load_file_under_env(path)` corresponds to `run`. See the
+From R: `engine$load_file_in_env(path)` corresponds to `load`;
+`engine$load_file_under_env(path)` corresponds to `run`. See the
 [Modules and Imports](articles/modules.html) guide for defining your own
 modules.
 

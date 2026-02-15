@@ -75,8 +75,7 @@ These three forms load code differently:
 From R:
 
 - `engine$load_file_under_env(path)` -- isolated scope (like `run`)
-- `engine$load_file_in_env(path, engine$get_env())` -- definitions visible
-  (like `load`)
+- `engine$load_file_in_env(path)` -- definitions visible (like `load`)
 
 If you get "symbol not found" after loading a file, you may have used
 `run` or `engine$load_file_under_env()` when you needed `load` or

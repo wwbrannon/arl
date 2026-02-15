@@ -209,7 +209,7 @@ Engine <- R6::R6Class(
     #' Load and evaluate an Arl source file in the given environment. Definitions
     #' and imports in the file are visible in \code{env}. For isolated execution
     #' (definitions not visible), use \code{load_file_under_env(path, env)}.
-    load_file_in_env = function(path, env) {
+    load_file_in_env = function(path, env = NULL) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
       }

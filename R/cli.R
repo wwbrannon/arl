@@ -272,7 +272,7 @@ CLI <- R6::R6Class(
       # Run all files in the same engine env so definitions in one file are visible in the next
       for (path in parsed$files) {
         self$cli_eval_with_engine(engine, function() {
-          engine$load_file_in_env(path, engine$get_env())
+          engine$load_file_in_env(path)
         })
       }
       invisible(NULL)

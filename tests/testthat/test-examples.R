@@ -11,7 +11,7 @@ run_example <- function(example_name) {
 
   engine <- Engine$new(env = new.env())
   toplevel_env(engine) # nolint: object_usage_linter.
-  capture.output(engine$load_file_in_env(example_path, engine$get_env()))
+  capture.output(engine$load_file_in_env(example_path))
   invisible(TRUE)
 }
 

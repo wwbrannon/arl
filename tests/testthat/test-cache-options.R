@@ -50,7 +50,7 @@ test_that("env cache disabled prevents .env.rds writing", {
   engine <- Engine$new(use_env_cache = FALSE)
 
   # Load module (should be safe to cache)
-  engine$load_file_in_env(module_file, engine$get_env())
+  engine$load_file_in_env(module_file)
 
   # Verify: .code.rds written, .env.rds NOT written
   cache_dir <- file.path(temp_dir, ".arl_cache")
@@ -79,7 +79,7 @@ test_that("env cache enabled writes .env.rds when safe", {
   engine <- Engine$new(use_env_cache = TRUE)
 
   # Load safe module
-  engine$load_file_in_env(module_file, engine$get_env())
+  engine$load_file_in_env(module_file)
 
   # Verify: both .code.rds AND .env.rds written
   cache_dir <- file.path(temp_dir, ".arl_cache")
