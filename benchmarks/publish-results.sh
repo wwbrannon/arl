@@ -13,6 +13,7 @@ RESULTS_FILE="benchmarks/results/benchmark-results.json"
 DATA_DIR="dev/bench"
 DATA_FILE="$DATA_DIR/data.js"
 BRANCH="gh-pages"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 if [ ! -f "$RESULTS_FILE" ]; then
   echo "Error: $RESULTS_FILE not found. Run 'make bench' first." >&2
@@ -47,10 +48,19 @@ EOF
 
 # Work in a temporary worktree so we don't disturb the current checkout
 TMPDIR=$(mktemp -d)
-trap 'rm -rf "$TMPDIR"' EXIT
+WORKTREE_ADDED=false
+
+cleanup() {
+  if [ "$WORKTREE_ADDED" = true ]; then
+    git worktree remove --force "$TMPDIR" 2>/dev/null || true
+  fi
+  rm -rf "$TMPDIR"
+}
+trap cleanup EXIT
 
 if git rev-parse --verify "$BRANCH" >/dev/null 2>&1; then
   git worktree add --quiet "$TMPDIR" "$BRANCH"
+  WORKTREE_ADDED=true
 else
   echo "Error: branch '$BRANCH' does not exist." >&2
   exit 1
@@ -60,14 +70,14 @@ mkdir -p "$TMPDIR/$DATA_DIR"
 
 if [ -f "$TMPDIR/$DATA_FILE" ]; then
   # Append the new entry to the existing Benchmark array.
-  # The file ends with: ... } \n    ] \n  } \n}
-  # We need to insert ",\n<new_entry>" before the final closing of the array.
-  #
-  # Strategy: find the last "]" that closes the Benchmark array and insert before it.
-  # Find the script relative to this shell script's location
-  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  # Write new entry to a temp file so R doesn't have to read from a pipe.
+  ENTRY_FILE="$TMPDIR/.new-entry.json"
+  echo "$NEW_ENTRY" > "$ENTRY_FILE"
+
   Rscript --vanilla "$SCRIPT_DIR/append-bench-entry.R" \
-    "$TMPDIR/$DATA_FILE" <(echo "$NEW_ENTRY") "$TMPDIR/$DATA_FILE"
+    "$TMPDIR/$DATA_FILE" "$ENTRY_FILE" "$TMPDIR/$DATA_FILE"
+
+  rm -f "$ENTRY_FILE"
 else
   # First entry — create the file from scratch
   REPO_URL=$(git remote get-url origin | sed 's/\.git$//' | sed 's|git@github.com:|https://github.com/|')
@@ -89,9 +99,6 @@ cd "$TMPDIR"
 git add "$DATA_FILE"
 git commit -m "Add benchmark results for $COMMIT_ID"
 cd - >/dev/null
-
-git worktree remove --force "$TMPDIR" 2>/dev/null || true
-trap - EXIT
 
 echo "Benchmark results committed to $BRANCH branch."
 echo "Run 'git push origin $BRANCH' to publish."
