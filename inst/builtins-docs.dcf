@@ -75,7 +75,7 @@ Note: Produces output that can be parsed back with read, ensuring the
 
 Name: help
 Vignette: lang-core
-Section: Evaluation
+Section: Documentation
 Description: Show help for a topic. Topic may be a symbol or string.
   Use :package to force R help lookup from a specific package.
 Signature: (help topic [:package pkg])
@@ -278,7 +278,7 @@ Seealso: toplevel-env
 
 Name: doc!
 Vignette: lang-core
-Section: Documentation Helpers
+Section: Documentation
 Description: Attach documentation fields to a function. With a single
   string argument, sets the description (backward compatible). With keyword
   arguments, sets specific fields and merges with existing documentation.
@@ -298,7 +298,7 @@ Seealso: doc, help
 
 Name: doc
 Vignette: lang-core
-Section: Documentation Helpers
+Section: Documentation
 Description: Retrieve documentation from a function. With no field argument,
   returns the description. Pass a field name string to get a specific field,
   or "all" to get the full documentation list.

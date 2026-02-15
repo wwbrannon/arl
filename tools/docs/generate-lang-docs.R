@@ -502,28 +502,34 @@ link_builtins <- function(fns, func_index) {
 #' @param vignettes Named list of vignette configs
 #' @param arl_dir Path to inst/arl/ directory
 #' @param builtins_by_vignette Builtins grouped by vignette name
+#' @param all_builtins Flat list of all builtin doc entries
 #' @param func_index Global function index for cross-linking
 #' @return Named list suitable for passing to jinjar::render()
 build_reference_context <- function(vignettes, arl_dir, builtins_by_vignette,
-                                    func_index = list()) {
+                                    all_builtins = list(), func_index = list()) {
   # Vignette links
   vignette_links <- lapply(names(vignettes), function(vname) {
     list(title = vignettes[[vname]]$title, name = vname)
   })
 
-  # Builtin categories with linked function names
-  builtin_categories_raw <- list(
-    list(cat = "Cons cells",     fns = c("pair?")),
-    list(cat = "Macros",         fns = c("gensym", "capture", "macro?", "macroexpand")),
-    list(cat = "Evaluation",     fns = c("eval", "read", "write", "load", "r/eval")),
-    list(cat = "Environments",   fns = c("toplevel-env", "current-env")),
-    list(cat = "Promises",       fns = c("promise?", "force", "promise-expr")),
-    list(cat = "Documentation",  fns = c("doc!", "doc"))
-  )
+  # Builtin categories with linked function names, derived directly from
+  # DCF Section values in first-seen order.
+  section_order <- character(0)
+  section_to_fns <- list()
 
-  builtin_categories <- lapply(builtin_categories_raw, function(bc) {
-    list(cat = bc$cat, functions = link_builtins(bc$fns, func_index))
-  })
+  for (fn in all_builtins) {
+    sec <- if (is.null(fn$section) || !nzchar(fn$section)) "Other" else fn$section
+    if (!sec %in% section_order) {
+      section_order <- c(section_order, sec)
+      section_to_fns[[sec]] <- character(0)
+    }
+    section_to_fns[[sec]] <- c(section_to_fns[[sec]], fn$name)
+  }
+
+  builtin_categories <- unname(lapply(section_order, function(sec) {
+    fns <- unique(section_to_fns[[sec]])
+    list(cat = sec, functions = link_builtins(fns, func_index))
+  }))
 
   # Per-vignette sections
   vignette_sections <- lapply(names(vignettes), function(vname) {
@@ -697,7 +703,7 @@ generate_all <- function(
   # Generate the overview page (lang-reference.Rmd)
   message("Generating: lang-reference.Rmd")
   ctx <- build_reference_context(vignettes, arl_dir, builtins_by_vignette,
-                                 func_index = func_index)
+                                 all_builtins = all_builtins, func_index = func_index)
   ref_rmd <- render_reference_rmd(ctx)
   ref_file <- file.path(output_dir, "lang-reference.Rmd")
   writeLines(ref_rmd, ref_file, useBytes = TRUE)

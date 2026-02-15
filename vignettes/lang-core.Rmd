@@ -684,30 +684,6 @@ produced by read.
 
 ---
 
-### help {#help}
-
-Show help for a topic. Topic may be a symbol or string.
-Use :package to force R help lookup from a specific package.
-
-**Signature:** `(help topic [:package pkg])`
-
-**Examples:**
-```{arl}
-(help if)
-(help "sum")
-(help "writeLines" :package "base")
-```
-
-```{arl, include=FALSE}
-(assert-no-error (help if))
-(assert-no-error (help "sum"))
-(assert-no-error (help "writeLines" :package "base"))
-```
-
-**See also:** [doc](#doc), [macroexpand](#macroexpand), [import-stdlib](#import-stdlib)
-
----
-
 ### load {#load}
 
 Load and evaluate an Arl source file in the target environment.
@@ -762,6 +738,86 @@ Arl's compiler.
 while) or other constructs that Arl normally overrides.
 
 **See also:** [eval](#eval), [r/call](#r-call)
+
+---
+
+## Documentation {#section-documentation}
+
+### help {#help}
+
+Show help for a topic. Topic may be a symbol or string.
+Use :package to force R help lookup from a specific package.
+
+**Signature:** `(help topic [:package pkg])`
+
+**Examples:**
+```{arl}
+(help if)
+(help "sum")
+(help "writeLines" :package "base")
+```
+
+```{arl, include=FALSE}
+(assert-no-error (help if))
+(assert-no-error (help "sum"))
+(assert-no-error (help "writeLines" :package "base"))
+```
+
+**See also:** [doc](#doc), [macroexpand](#macroexpand), [import-stdlib](#import-stdlib)
+
+---
+
+### doc! {#doc-bang}
+
+Attach documentation fields to a function. With a single
+string argument, sets the description (backward compatible). With keyword
+arguments, sets specific fields and merges with existing documentation.
+
+**Signature:** `(doc! fn "docstring") or (doc! fn :description "..." :examples "...")`
+
+**Examples:**
+```{arl, eval=FALSE}
+(doc! my-fn "Doubles the input.")
+(doc! my-fn :examples "(my-fn 3) ; => 6")
+(doc! my-fn :description "Doubles." :note "Fast path.")
+```
+
+```{arl, include=FALSE}
+(define __doc-test-fn (lambda (x) (* x 2)))
+(doc! __doc-test-fn "Doubles the input.")
+(assert-equal "Doubles the input." (doc __doc-test-fn))
+(doc! __doc-test-fn :examples "(my-fn 3) ; => 6")
+(assert-equal "(my-fn 3) ; => 6" (doc __doc-test-fn "examples"))
+```
+
+**See also:** [doc](#doc), [help](#help)
+
+---
+
+### doc {#doc}
+
+Retrieve documentation from a function. With no field argument,
+returns the description. Pass a field name string to get a specific field,
+or "all" to get the full documentation list.
+
+**Signature:** `(doc fn) or (doc fn "field")`
+
+**Examples:**
+```{arl, eval=FALSE}
+(doc my-fn)              ; => "Doubles the input."
+(doc my-fn "examples")   ; => "(my-fn 3) ; => 6"
+(doc my-fn "all")        ; => named list of all fields
+```
+
+```{arl, include=FALSE}
+(define __doc-get-fn (lambda (x) (+ x 1)))
+(doc! __doc-get-fn "Increments input.")
+(assert-equal "Increments input." (doc __doc-get-fn))
+(doc! __doc-get-fn :note "Simple function.")
+(assert-equal "Simple function." (doc __doc-get-fn "note"))
+```
+
+**See also:** [doc!](#doc-bang), [help](#help)
 
 ---
 
@@ -1001,62 +1057,6 @@ Return the current Arl evaluation environment.
 ```
 
 **See also:** [toplevel-env](#toplevel-env)
-
----
-
-## Documentation Helpers {#section-documentation-helpers}
-
-### doc! {#doc-bang}
-
-Attach documentation fields to a function. With a single
-string argument, sets the description (backward compatible). With keyword
-arguments, sets specific fields and merges with existing documentation.
-
-**Signature:** `(doc! fn "docstring") or (doc! fn :description "..." :examples "...")`
-
-**Examples:**
-```{arl, eval=FALSE}
-(doc! my-fn "Doubles the input.")
-(doc! my-fn :examples "(my-fn 3) ; => 6")
-(doc! my-fn :description "Doubles." :note "Fast path.")
-```
-
-```{arl, include=FALSE}
-(define __doc-test-fn (lambda (x) (* x 2)))
-(doc! __doc-test-fn "Doubles the input.")
-(assert-equal "Doubles the input." (doc __doc-test-fn))
-(doc! __doc-test-fn :examples "(my-fn 3) ; => 6")
-(assert-equal "(my-fn 3) ; => 6" (doc __doc-test-fn "examples"))
-```
-
-**See also:** [doc](#doc), [help](#help)
-
----
-
-### doc {#doc}
-
-Retrieve documentation from a function. With no field argument,
-returns the description. Pass a field name string to get a specific field,
-or "all" to get the full documentation list.
-
-**Signature:** `(doc fn) or (doc fn "field")`
-
-**Examples:**
-```{arl, eval=FALSE}
-(doc my-fn)              ; => "Doubles the input."
-(doc my-fn "examples")   ; => "(my-fn 3) ; => 6"
-(doc my-fn "all")        ; => named list of all fields
-```
-
-```{arl, include=FALSE}
-(define __doc-get-fn (lambda (x) (+ x 1)))
-(doc! __doc-get-fn "Increments input.")
-(assert-equal "Increments input." (doc __doc-get-fn))
-(doc! __doc-get-fn :note "Simple function.")
-(assert-equal "Simple function." (doc __doc-get-fn "note"))
-```
-
-**See also:** [doc!](#doc-bang), [help](#help)
 
 ---
 

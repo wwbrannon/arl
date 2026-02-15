@@ -42,8 +42,6 @@ Anything not in this list is either a built-in function or a lang-provided
 function or macro. Unlike special forms, those are ordinary values and can be
 passed around, stored in variables, and so on.
 
-Common non-special builtins/operators include `help`, `~`, `::`, and `:::`.
-
 ## Standard library
 
 Arl's standard library has two layers:
@@ -101,12 +99,13 @@ modules. They are available even on a bare engine
 
 | Category | Functions |
 |----------|-----------|
-| Cons cells | [`pair?`](lang-types.html#pair-p) |
-| Macros | [`gensym`](lang-core.html#gensym), [`capture`](lang-core.html#capture), [`macro?`](lang-core.html#macro-p), [`macroexpand`](lang-core.html#macroexpand) |
+| List and Pair Predicates | [`pair?`](lang-types.html#pair-p) |
 | Evaluation | [`eval`](lang-core.html#eval), [`read`](lang-core.html#read), [`write`](lang-core.html#write), [`load`](lang-core.html#load), [`r/eval`](lang-core.html#r-eval) |
-| Environments | [`toplevel-env`](lang-core.html#toplevel-env), [`current-env`](lang-core.html#current-env) |
-| Promises | [`promise?`](lang-core.html#promise-p), [`force`](lang-core.html#force), [`promise-expr`](lang-core.html#promise-expr) |
-| Documentation | [`doc!`](lang-core.html#doc-bang), [`doc`](lang-core.html#doc) |
+| Documentation | [`help`](lang-core.html#help), [`doc!`](lang-core.html#doc-bang), [`doc`](lang-core.html#doc) |
+| Modules and Imports | [`import-stdlib`](lang-core.html#import-stdlib) |
+| Macro Utilities | [`capture`](lang-core.html#capture), [`gensym`](lang-core.html#gensym), [`macro?`](lang-core.html#macro-p), [`macroexpand`](lang-core.html#macroexpand) |
+| Promises (Lazy Evaluation) | [`promise?`](lang-core.html#promise-p), [`force`](lang-core.html#force), [`promise-expr`](lang-core.html#promise-expr) |
+| Environment Introspection | [`toplevel-env`](lang-core.html#toplevel-env), [`current-env`](lang-core.html#current-env) |
 
 These builtins are documented alongside the stdlib functions they relate to
 in the individual reference pages above.
