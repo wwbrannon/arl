@@ -285,6 +285,7 @@ Then import it:
 ```{arl, include=FALSE}
 (module __test-calculator
   (export __calc-add __calc-subtract)
+  (import types)
   (define __validate-number
     (lambda (x)
       (if (number? x) x (error "Not a number"))))

@@ -239,7 +239,7 @@ Negate predicate.
 (assert-false ((complement even?) 4))
 ```
 
-**See also:** [not](#not), [filter](#filter)
+**See also:** [not](lang-core.html#not), [filter](#filter)
 
 ---
 
@@ -493,7 +493,7 @@ Logical exclusive OR with Arl truthiness.
 
 **Note:** Exclusive OR: returns #t when exactly one argument is truthy, #f when both are truthy or both are falsy.
 
-**See also:** [not](#not), [and](lang-core.html#and), [or](lang-core.html#or) (special forms)
+**See also:** [not](lang-core.html#not), [and](lang-core.html#and), [or](lang-core.html#or) (special forms)
 
 ---
 

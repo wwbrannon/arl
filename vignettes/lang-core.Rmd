@@ -956,6 +956,316 @@ Assert expression does not throw an error.
 
 ---
 
+## Arithmetic {#section-arithmetic}
+
+### + {#plus}
+
+Variadic addition. With no arguments returns 0 (additive
+identity). With one argument returns it unchanged. With two or more,
+returns their sum left-to-right.
+
+**Signature:** `(+ a ...)`
+
+**Examples:**
+```{arl}
+(+)           ; => 0
+(+ 5)         ; => 5
+(+ 1 2 3)     ; => 6
+```
+
+```{arl, include=FALSE}
+(assert-equal 0 (+))
+(assert-equal 5 (+ 5))
+(assert-equal 6 (+ 1 2 3))
+```
+
+**See also:** [-](#minus), [*](#star), [/](#div)
+
+---
+
+### * {#star}
+
+Variadic multiplication. With no arguments returns 1
+(multiplicative identity). With one argument returns it unchanged.
+With two or more, returns their product left-to-right.
+
+**Signature:** `(* a ...)`
+
+**Examples:**
+```{arl}
+(*)           ; => 1
+(* 5)         ; => 5
+(* 2 3 4)     ; => 24
+```
+
+```{arl, include=FALSE}
+(assert-equal 1 (*))
+(assert-equal 5 (* 5))
+(assert-equal 24 (* 2 3 4))
+```
+
+**See also:** [+](#plus), [-](#minus), [/](#div)
+
+---
+
+### - {#minus}
+
+Variadic subtraction. Requires at least one argument.
+With one argument returns its negation. With two or more, subtracts
+subsequent arguments from the first left-to-right.
+
+**Signature:** `(- a ...)`
+
+**Examples:**
+```{arl}
+(- 5)         ; => -5
+(- 10 3)      ; => 7
+(- 10 3 2)    ; => 5
+```
+
+```{arl, include=FALSE}
+(assert-equal -5 (- 5))
+(assert-equal 7 (- 10 3))
+(assert-equal 5 (- 10 3 2))
+```
+
+**See also:** [+](#plus), [*](#star), [/](#div)
+
+---
+
+### / {#div}
+
+Variadic division. Requires at least one argument.
+With one argument returns its reciprocal. With two or more, divides
+the first argument by subsequent arguments left-to-right.
+
+**Signature:** `(/ a ...)`
+
+**Examples:**
+```{arl}
+(/ 5)         ; => 0.2
+(/ 10 2)      ; => 5
+(/ 100 5 2)   ; => 10
+```
+
+```{arl, include=FALSE}
+(assert-equal 0.2 (/ 5))
+(assert-equal 5 (/ 10 2))
+(assert-equal 10 (/ 100 5 2))
+```
+
+**See also:** [+](#plus), [-](#minus), [*](#star)
+
+---
+
+## Comparison {#section-comparison}
+
+### < {#lt}
+
+Variadic less-than. With fewer than two arguments returns #t
+(vacuously true). With two or more, checks that each argument is strictly
+less than the next (chained pairwise comparison).
+
+**Signature:** `(< a b ...)`
+
+**Examples:**
+```{arl}
+(< 1 2)       ; => #t
+(< 1 2 3)     ; => #t
+(< 1 3 2)     ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (< 1 2))
+(assert-true (< 1 2 3))
+(assert-false (< 1 3 2))
+```
+
+**See also:** [<=](#lte), [>](#gt), [>=](#gte), [=](#num-eq)
+
+---
+
+### <= {#lte}
+
+Variadic less-than-or-equal. With fewer than two arguments
+returns #t. With two or more, checks that each argument is less than or
+equal to the next.
+
+**Signature:** `(<= a b ...)`
+
+**Examples:**
+```{arl}
+(<= 1 2)      ; => #t
+(<= 1 1 2)    ; => #t
+(<= 2 1)      ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (<= 1 2))
+(assert-true (<= 1 1 2))
+(assert-false (<= 2 1))
+```
+
+**See also:** [<](#lt), [>](#gt), [>=](#gte), [=](#num-eq)
+
+---
+
+### > {#gt}
+
+Variadic greater-than. With fewer than two arguments returns #t.
+With two or more, checks that each argument is strictly greater than the next.
+
+**Signature:** `(> a b ...)`
+
+**Examples:**
+```{arl}
+(> 3 2)       ; => #t
+(> 3 2 1)     ; => #t
+(> 3 1 2)     ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (> 3 2))
+(assert-true (> 3 2 1))
+(assert-false (> 3 1 2))
+```
+
+**See also:** [>=](#gte), [<](#lt), [<=](#lte), [=](#num-eq)
+
+---
+
+### >= {#gte}
+
+Variadic greater-than-or-equal. With fewer than two arguments
+returns #t. With two or more, checks that each argument is greater than or
+equal to the next.
+
+**Signature:** `(>= a b ...)`
+
+**Examples:**
+```{arl}
+(>= 3 2)      ; => #t
+(>= 2 2 1)    ; => #t
+(>= 1 2)      ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (>= 3 2))
+(assert-true (>= 2 2 1))
+(assert-false (>= 1 2))
+```
+
+**See also:** [>](#gt), [<](#lt), [<=](#lte), [=](#num-eq)
+
+---
+
+### = {#num-eq}
+
+Variadic equality comparison (NULL-safe). With fewer than two
+arguments returns #t. With two or more, checks that all adjacent pairs are
+equal. NULL comparisons follow Scheme semantics: (= #nil #nil) is #t,
+(= #nil x) is #f.
+
+**Signature:** `(= a b ...)`
+
+**Examples:**
+```{arl}
+(= 1 1)       ; => #t
+(= 1 1 1)     ; => #t
+(= 1 2)       ; => #f
+(= "a" "a")   ; => #t
+```
+
+```{arl, include=FALSE}
+(assert-true (= 1 1))
+(assert-true (= 1 1 1))
+(assert-false (= 1 2))
+(assert-true (= "a" "a"))
+```
+
+**Note:** Alias for ==. Both = and == are NULL-safe variadic equality.
+
+**See also:** [==](#num-eq-eq), [!=](#bang-eq), [<](#lt), [>](#gt)
+
+---
+
+### == {#num-eq-eq}
+
+Variadic equality comparison (NULL-safe). Identical to =.
+With fewer than two arguments returns #t. With two or more, checks that
+all adjacent pairs are equal.
+
+**Signature:** `(== a b ...)`
+
+**Examples:**
+```{arl}
+(== 1 1)      ; => #t
+(== 1 1 1)    ; => #t
+(== 1 2)      ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (== 1 1))
+(assert-true (== 1 1 1))
+(assert-false (== 1 2))
+```
+
+**See also:** [=](#num-eq), [!=](#bang-eq), [<](#lt), [>](#gt)
+
+---
+
+### != {#bang-eq}
+
+Inequality comparison (NULL-safe). Returns #t if a and b are
+not equal.
+
+**Signature:** `(!= a b)`
+
+**Examples:**
+```{arl}
+(!= 1 2)      ; => #t
+(!= 1 1)      ; => #f
+(!= #nil #nil) ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (!= 1 2))
+(assert-false (!= 1 1))
+(assert-false (!= #nil #nil))
+```
+
+**See also:** [=](#num-eq), [==](#num-eq-eq)
+
+---
+
+### not {#not}
+
+Logical negation using Arl truthiness. Returns #t if x is falsy
+(0, #f, or #nil), #f otherwise.
+
+**Signature:** `(not x)`
+
+**Examples:**
+```{arl}
+(not #f)      ; => #t
+(not #nil)    ; => #t
+(not 0)       ; => #t
+(not 1)       ; => #f
+(not "hi")    ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (not #f))
+(assert-true (not #nil))
+(assert-true (not 0))
+(assert-false (not 1))
+(assert-false (not "hi"))
+```
+
+**See also:** [and](#and), [or](#or)
+
+---
+
 ## Evaluation {#section-evaluation}
 
 ### eval {#eval}

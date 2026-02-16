@@ -381,7 +381,7 @@ friends search by key; `rassoc` searches by value.
 
 ### assoc {#assoc}
 
-Find first alist entry (list or dotted pair) with matching key (uses equal?).
+Find first alist entry (list or dotted pair) with matching key (uses ==).
 
 **Signature:** `(assoc key alist)`
 
@@ -402,9 +402,8 @@ Find first alist entry (list or dotted pair) with matching key (uses equal?).
 
 ### assoc-by-equal? {#assoc-by-equal-p}
 
-Alias for assoc: find first alist entry with key matching under equal?.
-
-**Signature:** `(assoc-by-equal? key alist)`
+Find first alist entry with key matching under equal? (deep structural comparison).
+Requires `(import equality)` for `equal?`.
 
 **See also:** [assoc](#assoc)
 

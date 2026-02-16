@@ -60,6 +60,8 @@ are not loaded (`Engine$new(load_stdlib = FALSE)`).
 
 | Category | Functions |
 |----------|-----------|
+| Arithmetic | [`+`](lang-core.html#plus), [`*`](lang-core.html#star), [`-`](lang-core.html#minus), [`/`](lang-core.html#div) |
+| Comparison | [`<`](lang-core.html#lt), [`<=`](lang-core.html#lte), [`>`](lang-core.html#gt), [`>=`](lang-core.html#gte), [`=`](lang-core.html#num-eq), [`==`](lang-core.html#num-eq-eq), [`!=`](lang-core.html#bang-eq), [`not`](lang-core.html#not) |
 | List and Pair Predicates | [`pair?`](lang-types.html#pair-p) |
 | Evaluation | [`eval`](lang-core.html#eval), [`read`](lang-core.html#read), [`write`](lang-core.html#write), [`load`](lang-core.html#load), [`r/eval`](lang-core.html#r-eval) |
 | Documentation | [`help`](lang-core.html#help), [`doc!`](lang-core.html#doc-bang), [`doc`](lang-core.html#doc) |
@@ -138,9 +140,15 @@ Evaluation, macro utilities, R interop helpers, and assertions.
 [`assert-eq`](lang-core.html#assert-eq),
 [`assert-error`](lang-core.html#assert-error),
 [`assert-no-error`](lang-core.html#assert-no-error),
-[`eval`](lang-core.html#eval), [`read`](lang-core.html#read),
-[`write`](lang-core.html#write), [`help`](lang-core.html#help),
-[`load`](lang-core.html#load), [`import-stdlib`](lang-core.html#import-stdlib),
+[`+`](lang-core.html#plus), [`*`](lang-core.html#star),
+[`-`](lang-core.html#minus), [`/`](lang-core.html#div),
+[`<`](lang-core.html#lt), [`<=`](lang-core.html#lte), [`>`](lang-core.html#gt),
+[`>=`](lang-core.html#gte), [`=`](lang-core.html#num-eq),
+[`==`](lang-core.html#num-eq-eq), [`!=`](lang-core.html#bang-eq),
+[`not`](lang-core.html#not), [`eval`](lang-core.html#eval),
+[`read`](lang-core.html#read), [`write`](lang-core.html#write),
+[`help`](lang-core.html#help), [`load`](lang-core.html#load),
+[`import-stdlib`](lang-core.html#import-stdlib),
 [`capture`](lang-core.html#capture), [`gensym`](lang-core.html#gensym),
 [`macro?`](lang-core.html#macro-p),
 [`macroexpand`](lang-core.html#macroexpand),
@@ -371,7 +379,7 @@ Mapping, filtering, folding, function composition, and logical combinators.
 [`constantly`](lang-functional.html#constantly),
 [`iterate`](lang-functional.html#iterate),
 [`iterate-until`](lang-functional.html#iterate-until),
-[`memoize`](lang-functional.html#memoize), [`not`](lang-functional.html#not),
+[`memoize`](lang-functional.html#memoize), [`not`](lang-core.html#not),
 [`xor`](lang-functional.html#xor)
 
 Modules: [`functional.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/functional.arl), [`logic.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/logic.arl)
@@ -380,13 +388,7 @@ Modules: [`functional.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/
 
 Arithmetic, comparison, rounding, trigonometry, number theory, and complex number utilities.
 
-[`%`](lang-math.html#percent), [`+`](lang-math.html#plus),
-[`*`](lang-math.html#star), [`-`](lang-math.html#minus),
-[`/`](lang-math.html#div), [`min`](lang-math.html#min),
-[`max`](lang-math.html#max), [`<`](lang-math.html#lt),
-[`>`](lang-math.html#gt), [`<=`](lang-math.html#lte),
-[`>=`](lang-math.html#gte), [`==`](lang-math.html#num-eq-eq),
-[`=`](lang-math.html#num-eq), [`inc`](lang-math.html#inc),
+[`%`](lang-math.html#percent), [`inc`](lang-math.html#inc),
 [`dec`](lang-math.html#dec), [`clamp`](lang-math.html#clamp),
 [`within?`](lang-math.html#within-p), [`abs`](lang-math.html#abs),
 [`floor`](lang-math.html#floor), [`ceiling`](lang-math.html#ceiling),
