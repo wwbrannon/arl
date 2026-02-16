@@ -865,10 +865,16 @@ Engine <- R6::R6Class(
 
         attr(fn, "arl_doc") <- doc
 
-        # Assign back into the environment where the binding lives
+        # Assign back into the environment where the binding lives.
+        # Stop at builtins_env — never walk into base R package environments.
+        boundary <- parent.env(builtins_env)
         target <- arl_env
-        while (!exists(name, envir = target, inherits = FALSE)) {
+        while (!identical(target, boundary) &&
+               !exists(name, envir = target, inherits = FALSE)) {
           target <- parent.env(target)
+        }
+        if (identical(target, boundary)) {
+          stop(sprintf("doc!: '%s' is not defined in an Arl environment", name), call. = FALSE)
         }
         base::assign(name, fn, envir = target)
         invisible(fn)

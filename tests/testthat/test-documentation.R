@@ -235,6 +235,17 @@ test_that("doc! works on primitives", {
   expect_equal(result, 6)
 })
 
+test_that("doc! errors when targeting a base R function not defined in Arl", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  # `paste` lives in base R, not in any Arl environment — doc! must refuse
+  expect_error(
+    engine$eval_text('(doc! paste "Should not work")'),
+    "not defined in an Arl environment"
+  )
+})
+
 test_that("@internal flag is present in arl_doc at runtime", {
   engine <- make_engine()
   env <- engine$get_env()
