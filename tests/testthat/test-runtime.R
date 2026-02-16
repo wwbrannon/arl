@@ -150,6 +150,43 @@ test_that("module_compiled() handles export_all flag", {
   expect_false(".__module" %in% exports)  # Should be excluded
 })
 
+test_that("export-all excludes symbols imported from other modules", {
+  eng <- make_engine()
+
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  # Provider module
+  writeLines(c(
+    "(module provider-mod",
+    "  (export provided-fn)",
+    "  (define provided-fn (lambda () 42)))"
+  ), file.path(tmp_dir, "provider-mod.arl"))
+
+  # Consumer module using export-all that imports provider-mod
+  writeLines(c(
+    "(module consumer",
+    "  (export-all)",
+    "  (import provider-mod)",
+    "  (define own-fn (lambda () (provided-fn))))"
+  ), file.path(tmp_dir, "consumer.arl"))
+
+  old_wd <- getwd()
+  setwd(tmp_dir)
+  on.exit(setwd(old_wd), add = TRUE)
+
+  eng$load_file_in_env(file.path(tmp_dir, "consumer.arl"))
+
+  entry <- engine_field(eng, "env")$module_registry$get("consumer")
+  exports <- entry$exports
+
+  # own-fn should be exported (defined in the module body)
+  expect_true("own-fn" %in% exports)
+  # provided-fn should NOT be re-exported (came from import)
+  expect_false("provided-fn" %in% exports)
+})
+
 test_that("module_compiled() marks module environment", {
   eng <- make_engine()
   engine_field(eng, "compiled_runtime")$module_compiled(

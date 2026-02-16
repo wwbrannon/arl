@@ -71,6 +71,8 @@ EvalContext <- R6::R6Class(
     use_env_cache = NULL,
     coverage_tracker = NULL,
     builtins_env = NULL,
+    current_source_file = NULL,
+    loading_modules = NULL,
     # @description Create context. macro_expander and compiler are assigned by the engine.
     # @param env Env instance.
     # @param source_tracker SourceTracker instance.
@@ -84,6 +86,7 @@ EvalContext <- R6::R6Class(
       self$source_tracker <- source_tracker
       self$use_env_cache <- isTRUE(use_env_cache)
       self$coverage_tracker <- coverage_tracker
+      self$loading_modules <- character(0L)
     }
   )
 )
@@ -270,7 +273,23 @@ CompiledRuntime <- R6::R6Class(
         registry_key <- module_name
       }
       shared_registry <- self$context$env$module_registry
+
+      # Cycle detection: check before registry lookup because modules register
+      # themselves early (before body finishes evaluating)
+      loading <- self$context$loading_modules
+      if (registry_key %in% loading) {
+        cycle <- c(loading[match(registry_key, loading):length(loading)], registry_key)
+        stop(sprintf("Circular dependency detected: %s", paste(cycle, collapse = " -> ")),
+             call. = FALSE)
+      }
+
       if (!shared_registry$exists(registry_key)) {
+        self$context$loading_modules <- c(loading, registry_key)
+        on.exit({
+          ctx_loading <- self$context$loading_modules
+          self$context$loading_modules <- ctx_loading[ctx_loading != registry_key]
+        }, add = TRUE)
+
         if (is_path) {
           if (is.null(self$load_file_fn)) {
             stop("import requires a load_file function")
@@ -290,7 +309,15 @@ CompiledRuntime <- R6::R6Class(
           stop(sprintf("Module '%s' did not register itself", registry_key))
         }
       }
+      # Track symbols before attach so export-all can exclude imported names
+      pre_attach <- ls(env, all.names = FALSE)
       shared_registry$attach_into(registry_key, env)
+      post_attach <- ls(env, all.names = FALSE)
+      imported_names <- setdiff(post_attach, pre_attach)
+      if (length(imported_names) > 0L) {
+        prev <- get0(".__imported_symbols", envir = env, inherits = FALSE)
+        assign(".__imported_symbols", unique(c(prev, imported_names)), envir = env)
+      }
       invisible(NULL)
     },
     # Package access (:: / :::) for compiled code. pkg and name are strings from the compiler.
@@ -411,8 +438,15 @@ CompiledRuntime <- R6::R6Class(
       }
 
       if (export_all) {
-        exports <- setdiff(ls(module_env, all.names = TRUE), ".__module")
-        self$context$env$module_registry$update_exports(module_name, exports)
+        all_symbols <- ls(module_env, all.names = TRUE)
+        # Exclude .__* internals
+        all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
+        # Exclude symbols injected by (import ...)
+        imported <- get0(".__imported_symbols", envir = module_env, inherits = FALSE)
+        if (!is.null(imported)) {
+          all_symbols <- setdiff(all_symbols, imported)
+        }
+        self$context$env$module_registry$update_exports(module_name, all_symbols)
       }
 
       # Write caches after successful module load (skip when coverage is active
@@ -502,9 +536,22 @@ CompiledRuntime <- R6::R6Class(
     },
     # Path-only resolution: find file at path or path.arl (no stdlib lookup).
     # Used when import argument is a string (path). Returns NULL if not found.
+    # Relative paths resolve from current_source_file's directory if available,
+    # otherwise from CWD.
     resolve_path_only = function(path) {
       if (!is.character(path) || length(path) != 1) {
         return(NULL)
+      }
+      # If relative and we have a source file context, resolve from its directory
+      if (!grepl("^[/~]", path) && !grepl("^[A-Za-z]:", path)) {
+        src_file <- self$context$current_source_file
+        if (!is.null(src_file)) {
+          base_dir <- dirname(src_file)
+          resolved <- file.path(base_dir, path)
+          if (file.exists(resolved)) return(resolved)
+          resolved_ext <- paste0(resolved, ".arl")
+          if (file.exists(resolved_ext)) return(resolved_ext)
+        }
       }
       if (file.exists(path)) {
         return(path)

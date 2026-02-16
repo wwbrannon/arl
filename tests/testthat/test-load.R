@@ -45,15 +45,36 @@ test_that("(load path env) evaluates file in the provided environment", {
   expect_false(exists("scoped-value", envir = caller_env, inherits = FALSE))
 })
 
-test_that("(load ...) resolves stdlib entries by name", {
+test_that("(load ...) does not resolve stdlib by name", {
   engine <- make_engine()
   env <- engine$get_env()
 
-  exprs <- engine$read("(load \"control\")")
+  # load should NOT do stdlib lookup; that's import's job
+  expect_error(
+    engine$eval(engine$read("(load \"control\")")[[1]], env = env),
+    "File not found"
+  )
+})
 
-  expect_silent(engine$eval(exprs[[1]], env = env))
-  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("when"), env = env))
-  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("unless"), env = env))
+test_that("(load ...) re-evaluates on each call", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  path <- tempfile(fileext = ".arl")
+  writeLines("(set! counter (+ counter 1))", path)
+  on.exit(unlink(path), add = TRUE)
+
+  # Initialize counter
+  assign("counter", 0L, envir = env)
+
+  path_for_arl <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  expr <- engine$read(paste0("(load \"", path_for_arl, "\")"))[[1]]
+
+  engine$eval(expr, env = env)
+  expect_equal(get("counter", envir = env), 1L)
+
+  engine$eval(expr, env = env)
+  expect_equal(get("counter", envir = env), 2L)
 })
 
 test_that("stdlib modules register macros", {
@@ -213,6 +234,36 @@ test_that("second (import \"path\") does not reload module", {
 
   engine$eval(engine$read(sprintf('(import "%s")', path_abs))[[1]], env = env)
   expect_equal(engine$eval(engine$read("(getn)")[[1]], env = env), 2)
+})
+
+test_that("relative import paths resolve from importing file's directory", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  # Create nested directory structure
+  tmp_dir <- tempfile()
+  dir.create(file.path(tmp_dir, "lib"), recursive = TRUE)
+
+  # lib/helper.arl - a module in a subdirectory
+  writeLines(c(
+    "(module helper",
+    "  (export helper-fn)",
+    "  (define helper-fn (lambda () 99)))"
+  ), file.path(tmp_dir, "lib", "helper.arl"))
+
+  # lib/main.arl - imports sibling via relative path
+  writeLines(c(
+    '(import "helper.arl")',
+    "(define main-val (helper-fn))"
+  ), file.path(tmp_dir, "lib", "main.arl"))
+
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  # CWD is NOT the lib directory — relative path must resolve from file, not CWD
+  main_path <- normalizePath(file.path(tmp_dir, "lib", "main.arl"),
+                             winslash = "/", mustWork = TRUE)
+  engine$load_file_in_env(main_path)
+  expect_equal(get("main-val", envir = env), 99)
 })
 
 test_that("(import symbol) is module name, (import \"string\") is path", {

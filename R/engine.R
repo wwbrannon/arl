@@ -213,30 +213,26 @@ Engine <- R6::R6Class(
     #' and imports in the file are visible in \code{env}. To evaluate in an
     #' isolated child scope, create one explicitly:
     #' \code{load_file_in_env(path, new.env(parent = env))}.
-    load_file_in_env = function(path, env = NULL) {
+    load_file_in_env = function(path, env = NULL, cache = TRUE) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
       }
       resolved <- private$resolve_env_arg(env)
-      module_registry <- private$.env$module_registry
-      if (!grepl("[/\\\\]", path)) {
-        if (module_registry$exists(path)) {
-          return(invisible(NULL))
-        }
-        stdlib_path <- resolve_stdlib_path(path)
-        if (!is.null(stdlib_path)) {
-          path <- stdlib_path
-        }
-      }
       if (!file.exists(path)) {
         stop(sprintf("File not found: %s", path))
       }
 
+      # Set current_source_file for relative import resolution
+      ctx <- private$.compiled_runtime$context
+      old_source_file <- ctx$current_source_file
+      ctx$current_source_file <- normalizePath(path, mustWork = TRUE)
+      on.exit(ctx$current_source_file <- old_source_file, add = TRUE)
+
       # Try cache loading for module files
       # Skip cache when coverage is enabled — cached expressions lack source info for instrumentation
-      coverage_active <- !is.null(private$.compiled_runtime$context$coverage_tracker) &&
-                         private$.compiled_runtime$context$coverage_tracker$enabled
-      if (!coverage_active) {
+      coverage_active <- !is.null(ctx$coverage_tracker) && ctx$coverage_tracker$enabled
+      if (isTRUE(cache) && !coverage_active) {
+        module_registry <- private$.env$module_registry
         cache_paths <- private$.module_cache$get_paths(path)
         if (!is.null(cache_paths)) {
           target_env <- resolved
@@ -297,8 +293,13 @@ Engine <- R6::R6Class(
 
               # Handle export_all
               if (export_all) {
-                exports <- setdiff(ls(module_env, all.names = TRUE), ".__module")
-                module_registry$update_exports(module_name, exports)
+                all_symbols <- ls(module_env, all.names = TRUE)
+                all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
+                imported <- get0(".__imported_symbols", envir = module_env, inherits = FALSE)
+                if (!is.null(imported)) {
+                  all_symbols <- setdiff(all_symbols, imported)
+                }
+                module_registry$update_exports(module_name, all_symbols)
               }
 
               return(invisible(result))
@@ -775,7 +776,7 @@ Engine <- R6::R6Class(
         } else {
           private$resolve_env_arg(env)
         }
-        self$load_file_in_env(path, target_env)
+        self$load_file_in_env(path, target_env, cache = FALSE)
       }
       builtins_env$load <- load_fn
 

@@ -42,9 +42,6 @@ environment (defaulting to the current environment).
 ; Load a file from the current directory
 (load "utils.arl")
 
-; Load a stdlib module by name
-(load "control")
-
 ; Load with an absolute path
 (load "/path/to/my/script.arl")
 
@@ -54,21 +51,17 @@ environment (defaulting to the current environment).
 
 ### Path Resolution
 
-When you call `(load "name")`, Arl resolves the path in this order:
+`load` treats its argument as a file path. It does **not** search the stdlib
+directory — use `(import name)` for stdlib modules.
 
-1. **Path separator check**: If the name contains `/` or `\`, it's treated as a file path and checked directly
-2. **Stdlib lookup**: If no path separator, checks the stdlib directory (`inst/arl/`) for:
-   - `<name>` (exact match)
-   - `<name>.arl` (with extension)
-3. **Current directory lookup**: If not in stdlib, checks the current working directory for:
-   - `<name>` (exact match)
-   - `<name>.arl` (with extension)
+The path is resolved as-is: if the file exists at the given path, it's loaded;
+otherwise an error is raised.
 
-### Caching Behavior
+### Re-evaluation
 
-`load` includes simple caching to prevent re-evaluation:
-- Files with path separators are cached by their full path
-- Files without separators (potential stdlib modules) are cached by name if found in stdlib
+`load` always re-evaluates the file on each call. If you call `(load "script.arl")`
+twice, the file is read and evaluated twice. This is intentional — `load` is for
+sourcing scripts, not for module loading (use `import` for that).
 
 ## The `run` Function
 
@@ -86,9 +79,6 @@ When you call `(load "name")`, Arl resolves the path in this order:
 ```{arl, eval=FALSE}
 ; Run a script in isolation; its definitions are not visible here
 (run "scripts/one-off.arl")
-
-; Run a stdlib module by name (same path resolution as load)
-(run "control")
 ```
 
 `run` is defined in stdlib `core` and implemented in terms of `load`:
@@ -192,7 +182,7 @@ The `import` special form loads a module and makes its exports available in the 
 ### Path Resolution
 
 - **`(import name)`** (symbol): resolve by **module name** — stdlib (`inst/arl/`), then current directory. The file must register itself with `(module name ...)`.
-- **`(import "path")`** (string): resolve by **path only** — the string is a file path (existing file or `path.arl`). No stdlib lookup. The path is normalized to absolute for caching, so re-importing the same file with a different path string does not reload it.
+- **`(import "path")`** (string): resolve by **path only** — the string is a file path (existing file or `path.arl`). No stdlib lookup. Relative paths are resolved from the directory of the file containing the `import`, not from the current working directory. This means `(import "helper.arl")` inside `lib/main.arl` looks for `lib/helper.arl`. When no source file is known (e.g. at the REPL), relative paths fall back to CWD. The path is normalized to absolute for caching, so re-importing the same file with a different path string does not reload it.
 
 ### Module Registration and Scoping
 
@@ -419,7 +409,7 @@ Use `;;'` annotation comments to document your modules:
 
 ### 4. Avoid Circular Dependencies
 
-Circular module imports will cause infinite recursion errors:
+Circular module imports are detected at import time with a clear error message:
 
 ```{arl, eval=FALSE}
 ; File: a.arl
@@ -433,6 +423,8 @@ Circular module imports will cause infinite recursion errors:
   (export fn-b)
   (import a)  ; Depends on a - circular!
   ...)
+
+; (import a) => Error: Circular dependency detected: a -> b -> a
 ```
 
 ### 5. Use Load Path Conventions
@@ -477,9 +469,9 @@ Then load with relative paths:
 
 ## Summary
 
-- **`load`**: Evaluates a file in the current environment (definitions and imports visible in the caller)
+- **`load`**: Evaluates a file in the current environment; always re-evaluates (no caching, no stdlib lookup)
 - **`run`**: Evaluates a file in an isolated child environment (definitions and imports not visible in the caller)
-- **`module`**: Defines a module with explicit exports
-- **`import`**: Loads a module and attaches its exports into the current scope only; each module is loaded once per engine
-- Path resolution: path separators → stdlib → current directory
+- **`module`**: Defines a module with explicit exports; `(export-all)` exports only symbols defined in the module, not imported ones
+- **`import`**: Loads a module and attaches its exports into the current scope only; each module is loaded once per engine; relative paths resolve from the importing file's directory
+- Circular imports are detected with a clear error message
 - Use explicit exports for maintainable module interfaces

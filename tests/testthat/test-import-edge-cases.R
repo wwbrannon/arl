@@ -211,31 +211,34 @@ test_that("nested module loads", {
   unlink(module_b_path)
 })
 
-test_that("circular module dependency detection", {
-  # This test checks if circular dependencies are detected
-  # The behavior depends on implementation - it might error or handle gracefully
+test_that("circular import dependency produces clear error", {
+  temp_dir <- tempfile()
+  dir.create(temp_dir)
+  on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
+  old_wd <- getwd()
+  setwd(temp_dir)
+  on.exit(setwd(old_wd), add = TRUE)
 
-  temp_dir <- tempdir()
+  # Module A imports B, Module B imports A
+  writeLines(c(
+    "(module circ-a",
+    "  (export a-fn)",
+    "  (import circ-b)",
+    "  (define a-fn (lambda () 1)))"
+  ), file.path(temp_dir, "circ-a.arl"))
 
-  # Create module A that loads B
-  module_a_path <- file.path(temp_dir, "test_circular_a.arl")
-  module_b_path <- file.path(temp_dir, "test_circular_b.arl")
-
-  writeLines(sprintf('(load "%s")', module_b_path), module_a_path)
-  writeLines(sprintf('(load "%s")', module_a_path), module_b_path)
+  writeLines(c(
+    "(module circ-b",
+    "  (export b-fn)",
+    "  (import circ-a)",
+    "  (define b-fn (lambda () 2)))"
+  ), file.path(temp_dir, "circ-b.arl"))
 
   engine <- make_engine()
-  env <- toplevel_env(engine)
-
-  # Circular dependencies should error (recursion limit or C stack limit on older R)
   expect_error(
-    engine$eval_text(sprintf('(load "%s")', module_a_path)),
-    "nested too deeply|infinite recursion|expressions|stack.*limit|too close to the limit"
+    engine$eval_text("(import circ-a)"),
+    "Circular dependency detected: circ-a -> circ-b -> circ-a"
   )
-
-  # Clean up
-  unlink(module_a_path)
-  unlink(module_b_path)
 })
 
 test_that("load with relative path", {
