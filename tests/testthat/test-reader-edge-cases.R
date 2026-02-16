@@ -311,7 +311,8 @@ test_that("symbols with special characters", {
   expect_equal(result, 42)
 
   # Symbols can have question marks
-  engine$eval_text("(define even? (lambda (x) (= (% x 2) 0)))")
+  engine$eval_text("(import math :only (%))
+                    (define even? (lambda (x) (= (% x 2) 0)))")
   result <- engine$eval_text("(even? 4)")
   expect_equal(result, TRUE)
 

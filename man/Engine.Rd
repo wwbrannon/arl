@@ -32,7 +32,6 @@ option \code{arl.use_env_cache}.}
 \item \href{#method-Engine-eval}{\code{Engine$eval()}}
 \item \href{#method-Engine-eval_text}{\code{Engine$eval_text()}}
 \item \href{#method-Engine-eval_string}{\code{Engine$eval_string()}}
-\item \href{#method-Engine-import_stdlib}{\code{Engine$import_stdlib()}}
 \item \href{#method-Engine-load_file_in_env}{\code{Engine$load_file_in_env()}}
 \item \href{#method-Engine-macroexpand}{\code{Engine$macroexpand()}}
 \item \href{#method-Engine-inspect_compilation}{\code{Engine$inspect_compilation()}}
@@ -58,7 +57,7 @@ Initialize engine components and base environment.
 \if{html}{\out{<div class="r">}}\preformatted{Engine$new(
   use_env_cache = NULL,
   coverage_tracker = NULL,
-  load_stdlib = TRUE,
+  load_prelude = TRUE,
   disable_tco = NULL
 )}\if{html}{\out{</div>}}
 }
@@ -74,7 +73,7 @@ inherits from global option \code{getOption("arl.use_env_cache", FALSE)}.}
 from the start. If provided, coverage will be tracked during stdlib
 loading. Intended for internal development use.}
 
-\item{\code{load_stdlib}}{Logical. If TRUE (the default), loads all stdlib modules
+\item{\code{load_prelude}}{Logical. If TRUE (the default), loads all stdlib modules
 during initialization. Set to FALSE to create a bare engine with only
 builtins — useful for testing or when you want to import specific modules.}
 
@@ -184,23 +183,6 @@ Alias for \code{eval_text()}.
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 
 \item{\code{source_name}}{Optional source name for error reporting.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-import_stdlib"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-import_stdlib}{}}}
-\subsection{Method \code{import_stdlib()}}{
-Load and attach all stdlib modules into an environment.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$import_stdlib(env = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{env}}{Target environment. Defaults to the engine top-level environment.}
 }
 \if{html}{\out{</div>}}
 }

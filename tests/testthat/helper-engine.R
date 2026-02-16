@@ -12,18 +12,51 @@ engine_field <- function(engine, name) {
 
 toplevel_env <- function(engine, env = NULL) {
   if (is.null(env)) {
-    return(engine$get_env())
+    env <- engine$get_env()
+  } else {
+    if (!is.environment(env)) {
+      stop("Expected an environment")
+    }
+    parent.env(env) <- engine$get_env()
   }
-  if (!is.environment(env)) {
-    stop("Expected an environment")
+
+  # Load all stdlib modules: first ensure they're all registered,
+  # then attach each into the target env.
+  load_order_path <- system.file("arl", "load-order.txt", package = "arl")
+  if (nzchar(load_order_path) && file.exists(load_order_path)) {
+    all_modules <- readLines(load_order_path, warn = FALSE)
+    all_modules <- all_modules[nzchar(all_modules)]
+  } else {
+    stop("load-order.txt not found")
   }
-  parent.env(env) <- engine$get_env()
-  # Access private .load_stdlib_into_env via R6 enclosure
-  engine$.__enclos_env__$private$.load_stdlib_into_env(env)
+
+  # Use the Env wrapper to access the shared module registry
+  arl_env <- arl:::Env$new(engine$get_env())
+  registry <- arl_env$module_registry
+
+  # Ensure all modules are loaded (registered). The engine with prelude=TRUE
+  # already has prelude modules loaded. Load any remaining via eval.
+  for (mod in all_modules) {
+    if (!registry$exists(mod)) {
+      path <- arl:::resolve_stdlib_path(mod)
+      if (!is.null(path)) {
+        engine$load_file_in_env(path, engine$get_env())
+      }
+    }
+  }
+
+  # Attach all module exports into env (using direct registry API)
+  for (mod in all_modules) {
+    if (registry$exists(mod)) {
+      registry$attach_into(mod, env)
+    }
+  }
+
   core_env <- engine$get_env()
-  # Copy bindings from both engine_env and builtins_env (its parent)
-  builtins_env <- parent.env(core_env)
-  for (src_env in list(core_env, builtins_env)) {
+  # Copy bindings from engine_env, prelude_env, and builtins_env
+  prelude_env <- parent.env(core_env)
+  builtins_env <- parent.env(prelude_env)
+  for (src_env in list(core_env, prelude_env, builtins_env)) {
     for (name in ls(src_env, all.names = TRUE)) {
       if (!exists(name, envir = env, inherits = FALSE)) {
         assign(name, get(name, envir = src_env, inherits = FALSE), envir = env)

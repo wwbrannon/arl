@@ -71,6 +71,7 @@ EvalContext <- R6::R6Class(
     use_env_cache = NULL,
     coverage_tracker = NULL,
     builtins_env = NULL,
+    prelude_env = NULL,
     current_source_file = NULL,
     loading_modules = NULL,
     # @description Create context. macro_expander and compiler are assigned by the engine.
@@ -369,9 +370,11 @@ CompiledRuntime <- R6::R6Class(
       invisible(NULL)
     },
     module_compiled = function(module_name, exports, export_all, body_exprs, src_file, env) {
-      # Module environments inherit from builtins_env (not the engine env
-      # with all stdlib), enforcing proper lexical scoping via imports.
-      module_parent <- self$context$builtins_env
+      # Module environments inherit from prelude_env (not the engine env
+      # with all stdlib), so prelude bindings are visible but other stdlib
+      # requires explicit import. Falls back to builtins_env then env.
+      module_parent <- self$context$prelude_env
+      if (is.null(module_parent)) module_parent <- self$context$builtins_env
       if (is.null(module_parent)) module_parent <- env
       module_env <- new.env(parent = module_parent)
       assign(".__module", TRUE, envir = module_env)

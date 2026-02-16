@@ -7,7 +7,7 @@
 
   (import types :only (symbol? null?))
   (import list :only (car cdr call))
-  (import functional :only (map))
+
 
 ;;' @section Control Flow Macros
 
@@ -80,7 +80,7 @@
             (define test-expr
               (if (= (length datums) 1)
                 `(= ,key-sym (quote ,(car datums)))
-                `(or ,@(map (lambda (d) `(= ,key-sym (quote ,d))) datums))))
+                `(or ,@(lapply datums (lambda (d) `(= ,key-sym (quote ,d)))))))
             (if (null? rest)
               `(if ,test-expr (begin ,@body) #nil)
               `(if ,test-expr (begin ,@body)

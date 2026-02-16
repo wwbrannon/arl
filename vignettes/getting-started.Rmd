@@ -43,7 +43,7 @@ engine <- arl::Engine$new()
 stopifnot(is.function(engine$repl))
 ```
 
-The engine loads all stdlib modules automatically (though this [can be
+The engine loads the prelude automatically (though this [can be
 customized](#loading-stdlib-modules)), so functions like `when`, `let`, `map`,
 and `->` are available immediately.
 
@@ -220,10 +220,10 @@ toplevel environment.
 
 ## Loading stdlib modules
 
-The engine loads all stdlib modules automatically, so functions like `when`,
+The engine loads the prelude automatically, so functions like `when`,
 `let`, `for`, `->`, and `try` are available immediately. The `import` form is
 primarily useful inside your own modules (which start with an empty scope) and
-when working with a bare engine created via `Engine$new(load_stdlib = FALSE)`
+when working with a bare engine created via `Engine$new(load_prelude = FALSE)`
 or `arl --no-stdlib`:
 
 ```{arl, eval=FALSE}

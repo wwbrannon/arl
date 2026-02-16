@@ -372,11 +372,11 @@ Modules can load other modules:
 
 ## Standard Library Modules
 
-Arl's standard library is organized into modules. All modules are loaded
+Arl's standard library is organized into modules. All prelude modules are loaded
 automatically when creating an engine, so everything is available by default.
 The module structure is relevant when writing your own modules (which must
 explicitly import their dependencies) or when creating a bare engine with
-`Engine$new(load_stdlib = FALSE)`:
+`Engine$new(load_prelude = FALSE)`:
 
 ```{arl, eval=FALSE}
 ; Control flow macros
@@ -410,11 +410,11 @@ explicitly import their dependencies) or when creating a bare engine with
 (import set)        ; set operations
 ```
 
-All stdlib modules are loaded automatically when the engine starts. Core
+All prelude modules are loaded automatically when the engine starts. Core
 functions (`car`, `cdr`, `cons`, `list`, arithmetic, predicates) come from the
 R runtime layer; the Arl modules above add macros and higher-level functions.
-To create an engine without stdlib modules, use
-`Engine$new(load_stdlib = FALSE)` — builtins like `gensym`, `eval`, `read`,
+To create an engine without prelude modules, use
+`Engine$new(load_prelude = FALSE)` — builtins like `gensym`, `eval`, `read`,
 and `cons` are still available.
 
 ## Best Practices

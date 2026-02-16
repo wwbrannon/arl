@@ -84,6 +84,11 @@ run_native_tests <- function(dir = "tests/native") {
     # Create a fresh engine for this test file
     # This ensures complete test isolation - no state leaks between files
     engine <- make_engine() # nolint: object_usage_linter.
+    # Load all stdlib modules (native tests may use non-prelude modules)
+    load_order_path <- system.file("arl", "load-order.txt", package = "arl")
+    all_modules <- readLines(load_order_path, warn = FALSE)
+    all_modules <- all_modules[nzchar(all_modules)]
+    engine$.__enclos_env__$private$.load_modules(all_modules, engine$get_env())
     env <- engine$get_env()
 
     # Load test-specific helpers (like skip function)

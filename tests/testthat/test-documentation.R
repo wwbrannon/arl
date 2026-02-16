@@ -267,7 +267,7 @@ test_that("@noeval flag round-trips through doc/doc!", {
 
 test_that("stdlib @noeval functions carry the flag at runtime", {
   engine <- make_engine()
-  env <- engine$get_env()
+  env <- toplevel_env(engine)
 
   rf <- get("read-file", envir = env)
   doc <- attr(rf, "arl_doc", exact = TRUE)

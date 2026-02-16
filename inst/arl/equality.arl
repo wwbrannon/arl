@@ -206,7 +206,7 @@
         (define env (toplevel-env))
         (define class-name (s3-type obj))
         (define method-name (paste0 (as.character generic-name) "." class-name))
-        (define method (get0 method-name :envir env :inherits #f))
+        (define method (get0 method-name :envir env :inherits #t))
         (if (nil? method)
           (set! method (get (paste0 (as.character generic-name) ".default") :envir env)))
         (funcall method args))))

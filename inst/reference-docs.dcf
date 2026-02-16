@@ -226,7 +226,7 @@ Examples:
 Assert:
   (assert-no-error (import control))
   (assert-true (macro? 'when))
-Seealso: module, import-stdlib, load
+Seealso: module, load
 
 Name: module
 Kind: special-form
@@ -552,7 +552,7 @@ Assert:
   (assert-no-error (help if))
   (assert-no-error (help "sum"))
   (assert-no-error (help "writeLines" :package "base"))
-Seealso: doc, macroexpand, import-stdlib
+Seealso: doc, macroexpand
 
 Name: load
 Kind: builtin
@@ -580,23 +580,6 @@ Assert:
   (assert-equal 7 (get "__load_test_value" __load_test_env))
   (unlink __load_test_path)
 Seealso: eval, read, run, current-env
-
-Name: import-stdlib
-Kind: builtin
-Vignette: lang-core
-Section: Modules and Imports
-Description: Load and attach all standard library modules into the current
-  environment. Useful when an engine was initialized with load_stdlib = FALSE.
-Signature: (import-stdlib)
-Examples:
-  (import-stdlib)
-  (map (lambda (x) (+ x 1)) (list 1 2 3)) ; => (2 3 4)
-Assert:
-  (import-stdlib)
-  (assert-equal (list 2 3 4) (map (lambda (x) (+ x 1)) (list 1 2 3)))
-Seealso: import, module, load
-Note: Re-running import-stdlib is safe; already-loaded modules are reused and
-  attached into the current scope.
 
 Name: capture
 Kind: builtin

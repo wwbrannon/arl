@@ -3,7 +3,6 @@
 (module threading
   (export -> ->>)
 
-  (import functional :only (reduce))
   (import list :only (car cdr cons append call))
   (import types :only (list?))
 
@@ -22,7 +21,7 @@
 ;;' @note Threads the value as the FIRST argument to each successive form. If a form is a bare symbol, it is called as a one-argument function.
 ;;' @seealso ->>
 (defmacro -> (value . forms)
-  (reduce
+  (Reduce
     (lambda (acc form)
       (if (list? form)
         (call (cons (car form) (cons acc (cdr form))))
@@ -44,7 +43,7 @@
 ;;' @note Threads the value as the LAST argument to each successive form. Compare with `->` which threads as the first argument.
 ;;' @seealso ->
 (defmacro ->> (value . forms)
-  (reduce
+  (Reduce
     (lambda (acc form)
       (if (list? form)
         (call (cons (car form) (append (cdr form) (list acc))))

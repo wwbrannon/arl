@@ -31,7 +31,7 @@ Standard R package layout:
   - `source-tracker.R` - Source location tracking
   - `utils.R` - Utilities
 - `inst/` - Installed package files
-  - `arl/` - Modular stdlib (~25 modules: core, control, functional, binding, looping, threading, error, struct, assert, r-interop, list, sequences, strings, math, logic, io, conversions, types, dict, display, equality, set, sort, _r); each module declares `(import ...)` and is loaded in dependency order by the engine (StdlibDeps + load_stdlib_into_env)
+  - `arl/` - Modular stdlib (~25 modules: core, control, functional, binding, looping, threading, error, struct, assert, r-interop, list, sequences, strings, math, logic, io, conversions, types, dict, display, equality, set, sort, _r); 11 "prelude" modules are loaded at startup (see `prelude-modules.txt`), others require explicit `(import ...)`
   - `examples/` - Complete working programs (fibonacci, quicksort, data-analysis, macros, fizzbuzz, graph-paths, log-parser, pipeline-macros, sales-report, task-runner)
   - `design-docs/` - Design documentation for internal subsystems
 - `exec/arl` - Command-line executable (shell script wrapper)

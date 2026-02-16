@@ -40,7 +40,7 @@ github_base }}/R/engine.R)) rather than in Arl source modules. These are
 low-level primitives that need direct access to engine internals — cons-cell
 operations, the macro expander, the evaluator, promise handling, and
 documentation helpers. They are always available, even when the stdlib modules
-are not loaded (`Engine$new(load_stdlib = FALSE)`).
+are not loaded (`Engine$new(load_prelude = FALSE)`).
 
 | Category | Functions |
 |----------|-----------|
@@ -176,7 +176,7 @@ pages:
 
 All stdlib modules are loaded automatically by `Engine$new()`. The `import`
 form is useful inside your own modules (where you start with an empty scope)
-and when working with a bare engine (`Engine$new(load_stdlib = FALSE)`):
+and when working with a bare engine (`Engine$new(load_prelude = FALSE)`):
 
 ```{arl, eval=FALSE}
 ; Import focused modules
@@ -190,8 +190,8 @@ and when working with a bare engine (`Engine$new(load_stdlib = FALSE)`):
 From R, you can create an engine with the stdlib already loaded:
 
 ```r
-engine <- Engine$new()                   # all stdlib loaded
-bare <- Engine$new(load_stdlib=FALSE)    # builtins only
+engine <- Engine$new()                   # prelude loaded
+bare <- Engine$new(load_prelude=FALSE)    # builtins only
 ```
 
 {% for vs in vignette_sections %}

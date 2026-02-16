@@ -157,15 +157,3 @@ test_that("load_file_in_env evaluates a file in the engine env", {
   engine$load_file_in_env(path)
   expect_equal(engine$eval_text("lf-test-val"), 77)
 })
-
-# =============================================================================
-# import_stdlib()
-# =============================================================================
-
-test_that("import_stdlib loads stdlib into a bare engine", {
-  engine <- Engine$new(load_stdlib = FALSE)
-  # map should not be available yet
-  expect_error(engine$eval_text("(map car (list (list 1 2)))"))
-  engine$import_stdlib()
-  expect_equal(engine$eval_text("(map car (list (list 1 2)))"), list(1))
-})

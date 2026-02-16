@@ -5,7 +5,7 @@
 # These tests ensure those fixes don't regress.
 
 test_that("variadic arithmetic operators are present as builtins without stdlib", {
-  engine <- Engine$new(load_stdlib = FALSE)
+  engine <- Engine$new(load_prelude = FALSE)
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
   for (op in c("+", "*", "-", "/")) {
@@ -21,7 +21,7 @@ test_that("variadic arithmetic operators are present as builtins without stdlib"
 })
 
 test_that("variadic comparison operators are present as builtins without stdlib", {
-  engine <- Engine$new(load_stdlib = FALSE)
+  engine <- Engine$new(load_prelude = FALSE)
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
   for (op in c("<", "<=", ">", ">=")) {
@@ -36,16 +36,17 @@ test_that("variadic comparison operators are present as builtins without stdlib"
   expect_true(engine$eval_text("(>= 3 2 1)"))
 })
 
-test_that("modules cannot use stdlib functions without importing them", {
+test_that("modules cannot use non-prelude stdlib functions without importing them", {
   engine <- make_engine()
+  # dict is non-prelude — modules should not have it without explicit import
   expect_error(
     engine$eval_text("
       (module __scoping_bad
         (export foo)
-        (define foo (lambda (xs) (map car xs))))
+        (define foo (lambda () (dict :a 1))))
       (import __scoping_bad)
-      (foo (list (list 1 2) (list 3 4)))"),
-    "map|not found|object"
+      (foo)"),
+    "dict|not found|object"
   )
 })
 
@@ -61,7 +62,7 @@ test_that("macros from imported modules are available in subsequent module body 
   expect_equal(result, 10)
 })
 
-test_that("module env chain is module_env -> builtins_env -> baseenv()", {
+test_that("module env chain is module_env -> prelude_env -> builtins_env -> baseenv()", {
   engine <- make_engine()
   engine$eval_text("
     (module __scoping_chain
@@ -69,17 +70,17 @@ test_that("module env chain is module_env -> builtins_env -> baseenv()", {
       (define x 1))")
 
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+  prelude_env <- engine$.__enclos_env__$private$.compiled_runtime$context$prelude_env
   engine_env <- engine$get_env()
   registry <- get(".__module_registry", envir = builtins_env)
   entry <- get("__scoping_chain", envir = registry)
 
-  # module_env -> builtins_env (not engine_env)
-  expect_identical(parent.env(entry$env), builtins_env)
+  # module_env -> prelude_env (not engine_env)
+  expect_identical(parent.env(entry$env), prelude_env)
   expect_false(identical(parent.env(entry$env), engine_env))
 
-  # builtins_env -> default-packages chain -> baseenv()
-  # (not engine_env — otherwise modules would transitively see all stdlib,
-  # defeating import enforcement)
+  # prelude_env -> builtins_env -> default-packages chain -> baseenv()
+  expect_identical(parent.env(prelude_env), builtins_env)
   e <- parent.env(builtins_env)
   while (!identical(e, baseenv())) {
     e <- parent.env(e)
@@ -105,12 +106,14 @@ test_that("builtins-env returns builtins_env", {
   engine <- make_engine()
   be <- engine$eval_text("(builtins-env)")
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+  prelude_env <- engine$.__enclos_env__$private$.compiled_runtime$context$prelude_env
   engine_env <- engine$get_env()
 
   expect_identical(be, builtins_env)
   expect_false(identical(be, engine_env))
-  # builtins_env is parent of engine_env
-  expect_identical(parent.env(engine_env), be)
+  # engine_env -> prelude_env -> builtins_env
+  expect_identical(parent.env(engine_env), prelude_env)
+  expect_identical(parent.env(prelude_env), be)
 })
 
 test_that("builtins-env is accessible from inside a module", {
@@ -187,7 +190,7 @@ test_that("empty defaultPackages skips the package chain", {
   old <- options(defaultPackages = character(0))
   on.exit(options(old))
 
-  engine <- Engine$new(load_stdlib = FALSE)
+  engine <- Engine$new(load_prelude = FALSE)
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
   # builtins_env should parent directly to baseenv() with no packages in between
@@ -198,7 +201,7 @@ test_that("custom defaultPackages changes which packages are in the chain", {
   old <- options(defaultPackages = c("stats"))
   on.exit(options(old))
 
-  engine <- Engine$new(load_stdlib = FALSE)
+  engine <- Engine$new(load_prelude = FALSE)
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
   # Should have exactly one package env (stats) between builtins_env and baseenv()

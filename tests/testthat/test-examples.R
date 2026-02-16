@@ -10,7 +10,11 @@ run_example <- function(example_name) {
   testthat::skip_if_not(file.exists(example_path), "Example file not found")
 
   engine <- Engine$new()
-  toplevel_env(engine) # nolint: object_usage_linter.
+  # Load all stdlib modules (examples may use non-prelude modules)
+  load_order_path <- system.file("arl", "load-order.txt", package = "arl")
+  all_modules <- readLines(load_order_path, warn = FALSE)
+  all_modules <- all_modules[nzchar(all_modules)]
+  engine$.__enclos_env__$private$.load_modules(all_modules, engine$get_env())
   capture.output(engine$load_file_in_env(example_path))
   invisible(TRUE)
 }

@@ -26,7 +26,7 @@
 #' @param topic Help topic as a single string.
 #' @param package Optional package name (string or symbol) for package-qualified
 #'   R help lookup in \code{$help()}.
-#' @param load_stdlib Logical; if TRUE (the default), load all stdlib modules.
+#' @param load_prelude Logical; if TRUE (the default), load prelude modules.
 #' @param disable_tco Logical; if TRUE, disable self-tail-call optimization.
 #' @param value Value to format for display.
 #' @param fn A zero-argument function to call with error context.
@@ -53,14 +53,14 @@ Engine <- R6::R6Class(
     #' @param coverage_tracker Optional CoverageTracker instance to enable coverage tracking
     #'   from the start. If provided, coverage will be tracked during stdlib
     #'   loading. Intended for internal development use.
-    #' @param load_stdlib Logical. If TRUE (the default), loads all stdlib modules
+    #' @param load_prelude Logical. If TRUE (the default), loads prelude modules
     #'   during initialization. Set to FALSE to create a bare engine with only
     #'   builtins — useful for testing or when you want to import specific modules.
     #' @param disable_tco Optional logical. If TRUE, disables self-tail-call optimization
     #'   in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
     #'   which inherits from global option `getOption("arl.disable_tco", FALSE)`.
     initialize = function(use_env_cache = NULL,
-                          coverage_tracker = NULL, load_stdlib = TRUE,
+                          coverage_tracker = NULL, load_prelude = TRUE,
                           disable_tco = NULL) {
       # Priority: explicit parameter > global option > default FALSE
       if (is.null(use_env_cache)) {
@@ -118,7 +118,7 @@ Engine <- R6::R6Class(
       context$compiled_runtime <- private$.compiled_runtime
       private$.help_system <- HelpSystem$new(private$.env, private$.macro_expander)
 
-      private$.initialize_environment(load_stdlib = isTRUE(load_stdlib))
+      private$.initialize_environment(load_prelude = isTRUE(load_prelude))
     },
 
     #' @description
@@ -201,15 +201,6 @@ Engine <- R6::R6Class(
     },
 
     #' @description
-    #' Load and attach all stdlib modules into an environment.
-    #' @param env Target environment. Defaults to the engine top-level environment.
-    import_stdlib = function(env = NULL) {
-      target_env <- private$resolve_env_arg(env)
-      private$.load_stdlib_into_env(target_env)
-      invisible(self)
-    },
-
-    #' @description
     #' Load and evaluate an Arl source file in the given environment. Definitions
     #' and imports in the file are visible in \code{env}. To evaluate in an
     #' isolated child scope, create one explicitly:
@@ -241,7 +232,11 @@ Engine <- R6::R6Class(
           # Try env cache first (fastest - full serialized environment)
           # ONLY if use_env_cache is enabled
           if (isTRUE(self$use_env_cache) && file.exists(cache_paths$env_cache)) {
-            cache_data <- private$.module_cache$load_env(cache_paths$env_cache, target_env, path)
+            # Re-parent cached module to prelude_env (not engine_env)
+            cache_parent <- private$.compiled_runtime$context$prelude_env
+            if (is.null(cache_parent)) cache_parent <- private$.compiled_runtime$context$builtins_env
+            if (is.null(cache_parent)) cache_parent <- target_env
+            cache_data <- private$.module_cache$load_env(cache_paths$env_cache, cache_parent, path)
             if (!is.null(cache_data)) {
               # Register the cached module
               module_env <- cache_data$module_env
@@ -267,10 +262,13 @@ Engine <- R6::R6Class(
               exports <- cache_data$exports
               export_all <- cache_data$export_all
 
-              # Module environments inherit from builtins_env (not the
+              # Module environments inherit from prelude_env (not the
               # engine env with all stdlib) for proper lexical scoping.
+              prelude_env <- private$.compiled_runtime$context$prelude_env
               builtins_env <- private$.compiled_runtime$context$builtins_env
-              module_parent <- if (!is.null(builtins_env)) builtins_env else target_env
+              module_parent <- if (!is.null(prelude_env)) prelude_env
+                               else if (!is.null(builtins_env)) builtins_env
+                               else target_env
               module_env <- new.env(parent = module_parent)
               assign(".__module", TRUE, envir = module_env)
               lockBinding(".__module", module_env)
@@ -494,6 +492,14 @@ Engine <- R6::R6Class(
     #' @param value Value to format.
     #' @return Character string.
     format_value = function(value) {
+      # Lazily load display module if format-value isn't available yet
+      env <- private$.env$env
+      if (!is.function(get0("format-value", envir = env, inherits = TRUE))) {
+        tryCatch(
+          self$eval_text("(import display)", env = env),
+          error = function(e) NULL
+        )
+      }
       private$.env$format_value(value)
     },
 
@@ -559,7 +565,7 @@ Engine <- R6::R6Class(
       parent
     },
 
-    .initialize_environment = function(load_stdlib = TRUE) {
+    .initialize_environment = function(load_prelude = TRUE) {
       env <- private$.env$env
 
       # Create builtins environment: modules inherit from this (not from
@@ -569,7 +575,8 @@ Engine <- R6::R6Class(
       # with a different parent.
       top_pkg_env <- private$.build_default_pkgs_chain(baseenv())
       builtins_env <- new.env(parent = top_pkg_env)
-      parent.env(env) <- builtins_env
+      prelude_env <- new.env(parent = builtins_env)
+      parent.env(env) <- prelude_env
 
       # Move registries from engine_env to builtins_env so module envs
       # (which parent to builtins_env) can find them via inherits = TRUE.
@@ -584,9 +591,10 @@ Engine <- R6::R6Class(
       assign(".__macros", macro_reg, envir = builtins_env)
       assign(".__module_registry", module_reg, envir = builtins_env)
 
-      # Store builtins_env on the eval context so runtime can use it
-      # as the parent for module environments.
+      # Store builtins_env and prelude_env on the eval context so runtime
+      # can use them as parents for module environments.
       private$.compiled_runtime$context$builtins_env <- builtins_env
+      private$.compiled_runtime$context$prelude_env <- prelude_env
 
       #
       # Equality operators — R's = is assignment, not comparison. Arl's
@@ -786,18 +794,9 @@ Engine <- R6::R6Class(
       }
       builtins_env$load <- load_fn
 
-      builtins_env$`import-stdlib` <- function() {
-        target_env <- if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
-          get(".__env", envir = parent.frame(), inherits = TRUE)
-        } else {
-          env
-        }
-        private$.load_stdlib_into_env(target_env)
-        invisible(NULL)
-      }
-
       builtins_env$`toplevel-env` <- function() env
       builtins_env$`builtins-env` <- function() builtins_env
+      builtins_env$`prelude-env` <- function() prelude_env
       builtins_env$`current-env` <- function() {
         if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
           return(get(".__env", envir = parent.frame(), inherits = TRUE))
@@ -966,51 +965,31 @@ Engine <- R6::R6Class(
       # shared with the vignette generator)
       private$load_builtin_docs(builtins_env)
 
-      if (load_stdlib) {
-        private$.load_stdlib_into_env(env)
+      if (load_prelude) {
+        # Load prelude modules into prelude_env
+        prelude_path <- system.file("arl", "prelude-modules.txt", package = "arl")
+        if (nzchar(prelude_path) && file.exists(prelude_path)) {
+          prelude_modules <- readLines(prelude_path, warn = FALSE)
+          prelude_modules <- prelude_modules[nzchar(prelude_modules)]
+        } else {
+          stop("prelude-modules.txt not found")
+        }
+        private$.load_modules(prelude_modules, prelude_env)
       }
 
       env
     },
 
-    .load_stdlib_into_env = function(env) {
-      resolved <- private$resolve_env_arg(env)
-      stdlib_dir <- system.file("arl", package = "arl")
-      if (!dir.exists(stdlib_dir)) {
-        stop("stdlib directory not found")
-      }
-      cache_path <- system.file("arl", "load-order.txt", package = "arl")
-      if (nzchar(cache_path) && file.exists(cache_path)) {
-        load_order <- readLines(cache_path, warn = FALSE)
-        load_order <- load_order[nzchar(load_order)]
-        if (length(load_order) == 0L) {
-          load_order <- NULL
-        }
-      } else {
-        load_order <- NULL
-      }
-      if (is.null(load_order)) {
-        deps <- FileDeps$new(dir = stdlib_dir)
-        load_order <- deps$get_load_order()
-      }
-      target_arl <- Env$new(resolved)
-      for (name in load_order) {
-        if (!target_arl$module_registry$exists(name)) {
-          path <- resolve_stdlib_path(name)
-          if (is.null(path)) {
-            stop("stdlib module not found: ", name)
-          }
-          tryCatch(
-            self$load_file_in_env(path, resolved),
-            error = function(e) {
-              stop(sprintf("Failed to load stdlib module '%s': %s", name, conditionMessage(e)), call. = FALSE)
-            }
-          )
-        }
+    # Load and attach modules into a target environment using (import ...).
+    # module_names should be in topological order for efficiency (avoids
+    # redundant registry lookups), but correctness doesn't depend on it
+    # since the import system resolves dependencies transitively.
+    .load_modules = function(module_names, env) {
+      for (name in module_names) {
         tryCatch(
-          target_arl$module_registry$attach_into(name, resolved),
+          self$eval_text(sprintf("(import %s)", name), env = env),
           error = function(e) {
-            stop(sprintf("Failed to attach stdlib module '%s': %s", name, conditionMessage(e)), call. = FALSE)
+            stop(sprintf("Failed to load module '%s': %s", name, conditionMessage(e)), call. = FALSE)
           }
         )
       }

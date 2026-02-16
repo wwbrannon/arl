@@ -184,9 +184,9 @@ test_that("format-value displays call objects from quasiquote as s-expressions",
   # Call object: quote(+(10, 20)) -> (+ 10 20)
   expect_equal(env$`format-value`(quote(`+`(10, 20))), "(+ 10 20)")
 
-  # quasiquote result via engine
-  engine$eval_text("(define x 10)")
-  result <- engine$eval_text("(format-value `(+ ,x 20))")
+  # quasiquote result via engine (use env with display loaded)
+  engine$eval_text("(define x 10)", env = env)
+  result <- engine$eval_text("(format-value `(+ ,x 20))", env = env)
   expect_equal(result, "(+ 10 20)")
 })
 
@@ -218,22 +218,18 @@ test_that("format_value fallback warns on format-value error", {
 })
 
 test_that("format_value does not evaluate call objects passed as values", {
-  env <- new.env()
-  toplevel_env(engine, env = env)
-  arl_env <- engine$.__enclos_env__$private$.env
-
   # Call with too many args for +: would error if evaluated
   val1 <- quote(`+`(1, 2, 3, 4))
-  expect_no_warning(result1 <- arl_env$format_value(val1))
+  expect_no_warning(result1 <- engine$format_value(val1))
   expect_equal(result1, "(+ 1 2 3 4)")
 
   # Call to nonexistent function: would error if evaluated
   val2 <- quote(nonexistent_fn(1, 2))
-  expect_no_warning(result2 <- arl_env$format_value(val2))
+  expect_no_warning(result2 <- engine$format_value(val2))
   expect_equal(result2, "(nonexistent_fn 1 2)")
 
   # Nested quasiquote-style call structure
   val3 <- quote(a(quasiquote(b(10))))
-  expect_no_warning(result3 <- arl_env$format_value(val3))
+  expect_no_warning(result3 <- engine$format_value(val3))
   expect_equal(result3, "(a (quasiquote (b 10)))")
 })

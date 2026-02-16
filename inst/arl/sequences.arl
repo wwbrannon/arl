@@ -10,7 +10,7 @@
   (import types :only (list?))
   (import core :only (r/call))
   (import equality :only (equal?))
-  (import control :only (when))
+
 
   ;;' @section Sequence Helpers
   ;;' Higher-level operations for slicing, chunking, and transforming
@@ -193,10 +193,11 @@
       (define remaining items)
       (while (and (> (length remaining) 0) (not result))
         (begin
-          (when (if use-identical
+          (if (if use-identical
                   (identical (car remaining) x)
                   (equal? (car remaining) x))
-            (set! result remaining))
+            (set! result remaining)
+            #nil)
           (set! remaining (cdr remaining))))
       result))
 

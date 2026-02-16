@@ -62,8 +62,9 @@ engine <- Engine$new()
 engine$repl()
 ```
 
-The engine loads all stdlib modules automatically. (If needed, you can disable
-stdlib loading with the `load_stdlib=FALSE` option to `Engine$new`.) Type
+The engine loads prelude modules (core, list, functional, control, etc.) automatically.
+Non-prelude modules like `sort`, `dict`, and `strings` require explicit `(import ...)`.
+(You can also disable prelude loading with `load_prelude=FALSE` for a bare engine.) Type
 `(quit)` or press Ctrl+C to exit the REPL.
 
 Arithmetic and variables work as you'd expect:
@@ -230,9 +231,9 @@ All stdlib modules are loaded automatically. Key areas include:
 
 For the complete function reference, see the [Standard Library Reference](articles/lang-reference.html).
 
-The stdlib is organized into modules under `inst/arl/`. You can import them
-individually in your own modules or when working with a bare engine
-(`Engine$new(load_stdlib = FALSE)`):
+The stdlib is organized into modules under `inst/arl/`. Prelude modules are
+always available; non-prelude modules require explicit import (or use
+`Engine$new(load_prelude = FALSE)` for a completely bare engine):
 
 ```lisp
 (import control)   ; when/unless/cond/case/try*

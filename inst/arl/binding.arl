@@ -5,7 +5,6 @@
 
   (import types :only (symbol? list-or-pair? null?))
   (import list :only (car cdr append))
-  (import functional :only (map mapcat))
   (import sequences :only (zip))
 
 ;;' @section Binding Macros
@@ -53,13 +52,13 @@
   (if (null? bindings)
     `(begin ,@body)
     (begin
-      (define temps (map (lambda (b) (gensym "tmp")) bindings))
-      (define patterns (map car bindings))
-      (define values (map (lambda (b) (car (cdr b))) bindings))
+      (define temps (lapply bindings (lambda (b) (gensym "tmp"))))
+      (define patterns (lapply bindings car))
+      (define values (lapply bindings (lambda (b) (car (cdr b)))))
       `((lambda ,temps
-          ,@(map (lambda (pair)
-                   `(define ,(car pair) ,(car (cdr pair))))
-                 (zip patterns temps))
+          ,@(lapply (zip patterns temps)
+                    (lambda (pair)
+                      `(define ,(car pair) ,(car (cdr pair)))))
           (begin ,@body))
         ,@values))))
 
@@ -95,9 +94,9 @@
 ;;' @note All bindings are visible to all init expressions, enabling mutual recursion. Init values are assigned via `set!` into pre-allocated slots.
 ;;' @seealso let, let*
 (defmacro letrec (bindings . body)
-  (define names (mapcat (lambda (b) (pattern-symbols (car b))) bindings))
-  `(let ,(map (lambda (n) `(,n (list))) names)
-     ,@(map (lambda (b) `(set! ,(car b) ,(car (cdr b)))) bindings)
+  (define names (do.call c (lapply bindings (lambda (b) (pattern-symbols (car b))))))
+  `(let ,(lapply names (lambda (n) `(,n (list))))
+     ,@(lapply bindings (lambda (b) `(set! ,(car b) ,(car (cdr b)))))
      (begin ,@body)))
 
 ;;' @description Bind pattern to value and evaluate body when value is truthy.
