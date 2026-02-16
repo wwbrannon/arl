@@ -21,6 +21,8 @@ Compiler <- R6::R6Class(
     enable_constant_folding = TRUE,
     # When FALSE, disable self-tail-call optimization (useful for debugging).
     enable_tco = TRUE,
+    # Nesting depth: 0 means top-level. Incremented inside lambda, if, while, etc.
+    nesting_depth = 0L,
     # Last compilation error (message) when compile() returns NULL.
     last_error = NULL,
     # Annotation map: name -> annotation data (set by module_compiled before compiling).
@@ -428,23 +430,31 @@ Compiler <- R6::R6Class(
       if (length(expr) < 3 || length(expr) > 4) {
         return(private$fail("if requires 2 or 3 arguments: (if test then [else])"))
       }
+      self$nesting_depth <- self$nesting_depth + 1L
+      on.exit(self$nesting_depth <- self$nesting_depth - 1L, add = TRUE)
       test <- private$compile_impl(expr[[2]])
       if (is.null(test)) {
         return(private$fail("if test could not be compiled"))
       }
 
-      # Dead code elimination: if test is a compile-time constant, return only the taken branch
+      # Dead code elimination: if test is a compile-time constant, return only the taken branch.
+      # Both branches are still compiled to catch structural errors (e.g., import in non-top-level
+      # position) even in dead code.
       constant_test <- private$eval_constant_test(test)
       if (!is.null(constant_test)) {
         if (isTRUE(constant_test)) {
-          # Test is TRUE - return then-branch
+          # Test is TRUE - return then-branch, but still compile else for validation
           then_expr <- private$compile_impl(expr[[3]])
           if (is.null(then_expr)) {
             return(private$fail("if then-branch could not be compiled"))
           }
+          if (length(expr) == 4) {
+            private$compile_impl(expr[[4]])
+          }
           return(then_expr)
         } else {
-          # Test is FALSE or NULL - return else-branch (or NULL if no else)
+          # Test is FALSE or NULL - return else-branch, but still compile then for validation
+          private$compile_impl(expr[[3]])
           if (length(expr) == 4) {
             else_expr <- private$compile_impl(expr[[4]])
             if (is.null(else_expr)) {
@@ -522,11 +532,13 @@ Compiler <- R6::R6Class(
           is.symbol(val_expr[[1]]) && identical(as.character(val_expr[[1]]), "lambda")) {
         self_name <- as.character(name)
       }
+      self$nesting_depth <- self$nesting_depth + 1L
       val <- if (!is.null(self_name)) {
         private$compile_lambda(val_expr, self_name = self_name)
       } else {
         private$compile_impl(expr[[3]])
       }
+      self$nesting_depth <- self$nesting_depth - 1L
       if (is.null(val)) {
         return(private$fail("define value could not be compiled"))
       }
@@ -606,11 +618,13 @@ Compiler <- R6::R6Class(
           is.symbol(val_expr[[1]]) && identical(as.character(val_expr[[1]]), "lambda")) {
         self_name <- as.character(name)
       }
+      self$nesting_depth <- self$nesting_depth + 1L
       val <- if (!is.null(self_name)) {
         private$compile_lambda(val_expr, self_name = self_name)
       } else {
         private$compile_impl(expr[[3]])
       }
+      self$nesting_depth <- self$nesting_depth - 1L
       if (is.null(val)) {
         return(private$fail("set! value could not be compiled"))
       }
@@ -633,6 +647,8 @@ Compiler <- R6::R6Class(
       if (is.null(params)) {
         return(private$fail("lambda arguments must be a list"))
       }
+      self$nesting_depth <- self$nesting_depth + 1L
+      on.exit(self$nesting_depth <- self$nesting_depth - 1L, add = TRUE)
       body_exprs <- if (length(expr) >= 3) {
         as.list(expr)[-(1:2)]
       } else {
@@ -903,6 +919,9 @@ Compiler <- R6::R6Class(
       )
     },
     compile_import = function(expr) {
+      if (self$nesting_depth > 0L) {
+        return(private$fail("import is only allowed at the top level of a program or module body"))
+      }
       if (length(expr) < 2) {
         return(private$fail("import requires at least 1 argument: (import name)"))
       }
@@ -1036,6 +1055,8 @@ Compiler <- R6::R6Class(
       if (length(expr) < 3) {
         return(private$fail("while requires at least 2 arguments: (while test body...)"))
       }
+      self$nesting_depth <- self$nesting_depth + 1L
+      on.exit(self$nesting_depth <- self$nesting_depth - 1L, add = TRUE)
       test <- private$compile_impl(expr[[2]])
       if (is.null(test)) {
         return(private$fail("while test could not be compiled"))
@@ -1052,11 +1073,13 @@ Compiler <- R6::R6Class(
       if (length(expr) != 2) {
         return(private$fail("delay requires exactly 1 argument"))
       }
+      self$nesting_depth <- self$nesting_depth + 1L
       # Disable constant folding to preserve expression structure for promise-expr
       old_folding <- self$enable_constant_folding
       self$enable_constant_folding <- FALSE
       compiled <- private$compile_impl(expr[[2]])
       self$enable_constant_folding <- old_folding
+      self$nesting_depth <- self$nesting_depth - 1L
 
       if (is.null(compiled)) {
         return(private$fail("delay expression could not be compiled"))

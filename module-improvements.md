@@ -64,13 +64,18 @@ bundles several others, you must manually import and re-define each binding.
 `export-all` actively filters out imported symbols, preventing even the obvious
 workaround.
 
-### 9. Macro Hygiene Across Modules
+### 9. Macro Scoping Across Modules
 
-`defmacro` is Lisp-style unhygienic: expansion is template-based and evaluates
-in the caller's environment. Module boundaries make this trickier because the
-macro might expand to code referencing symbols that the caller doesn't have
-imported. Closures sidestep this (they close over the defining module), but pure
-template macros don't.
+Arl's `defmacro` is Julia-style with a post-expansion hygienization pass that
+renames macro-introduced local bindings with gensyms to avoid accidental capture.
+This handles the classic hygiene problem (introduced locals shadowing user
+bindings), but does *not* handle the cross-module scoping problem: when a macro's
+expansion references free variables (helper functions, constants) from the
+macro's defining module, those symbols don't exist in the caller's environment.
+
+Closures sidestep this (they close over the defining module), but the expanded
+*syntax* is just bare symbols that will be compiled and evaluated in the caller's
+scope.
 
 ### 10. Import Side Effects / Ordering
 
@@ -175,7 +180,7 @@ Every mature language does some form of lazy/on-demand loading.
 
 All three support it.
 
-### Macro Hygiene
+### Macro Scoping Across Modules
 
 - **Scheme:** Hygienic macros (`syntax-rules`, `syntax-case`) are the crown
   jewel. Identifiers in expansions refer to bindings from where the macro was
@@ -183,6 +188,9 @@ All three support it.
   integrated.
 - **R:** No macro system. Tidy evaluation / quosures are the closest analog.
 - **Python:** No macro system.
+- **Clojure:** Syntax-quote (backtick) resolves symbols to their
+  namespace-qualified values at read time, so macro expansions automatically
+  reference the defining namespace's bindings regardless of use site.
 
 ### Conditional / Non-Top-Level Imports
 
@@ -212,7 +220,7 @@ All three support it.
 | Private default        | Yes      | Yes        | Convention   | No           |
 | Lazy stdlib            | Per-lib  | lazyLoad   | Per-import   | Eager all    |
 | Re-export              | Yes      | Yes        | Yes          | No           |
-| Macro hygiene          | Built-in | N/A        | N/A          | None         |
+| Macro cross-mod scope  | Built-in | N/A        | N/A          | Partial      |
 | Conditional import     | No       | Yes        | Yes          | Not enforced |
 | Qualified access       | Via pfx  | `::`       | Default      | Via `:prefix`|
 
@@ -247,24 +255,83 @@ strictness.
 
 ### Tier 2: Medium Value, Moderate Effort
 
-**5. Re-export.** Let `(export ...)` include imported symbols (the explicit-export
+**5. Macro cross-module scoping via value splicing.** When a macro's expansion
+references free variables from the defining module (unexported helpers, constants),
+those symbols don't exist at the use site. Rather than implementing a full
+hygienic expander (`syntax-rules` / `syntax-case`), this can be solved by
+extending the existing hygienization pass to resolve introduced free-variable
+references at expansion time.
+
+The approach is a form of Bawden & Rees's "syntactic closures" (1988), similar to
+what Clojure's syntax-quote does: for each symbol in the expansion that is
+(a) macro-introduced (not from user arguments), (b) free (not locally bound
+within the expansion), and (c) exists in the defining env — replace the bare
+symbol with the actual R value (closure or constant) from the defining env.
+
+R supports embedding actual function objects in call trees:
+`eval(as.call(list(fn, 42)))` works when `fn` is a closure. The closure carries
+its defining environment, so all its own free variables resolve correctly. No
+wrapper lambda is needed, so evaluation order, control flow (`return`, `break`),
+and conditional evaluation are all preserved — unlike the alternative of wrapping
+the entire expansion in a closure, which forces eager evaluation of all arguments
+and breaks control flow across the boundary.
+
+Three practical concerns and their solutions:
+
+1. **Debugging readability.** Spliced values make `macroexpand` output opaque.
+   Fix: wrap spliced values in a thin S3 class (`arl_resolved_ref`) with an
+   `arl_source_symbol` attribute recording the original name. A `print` method
+   on this class restores readable output.
+
+2. **Serialization/caching.** R's `saveRDS` has no customization hooks; it will
+   try to serialize the entire environment chain of any embedded closure. Fix:
+   the caching layer (which already does custom pre/post processing) deflates
+   `arl_resolved_ref` objects to symbolic placeholders `(module_name,
+   symbol_name)` before writing, and reinflates them against the module registry
+   on cache load.
+
+3. **Constants.** Non-function values (constants, data) can simply be spliced
+   directly as literal values in the expansion.
+
+This fits naturally into the existing architecture: the hygienization pass already
+distinguishes "introduced" vs "call_site" symbols via `arl_syntax` wrappers and
+already walks the expansion to rename introduced locals. Resolving introduced
+free variables is a small extension to the same walk, not a new mechanism.
+
+Note that eager value splicing and deferred env lookup are points on a continuum,
+not fundamentally different approaches. Both replace a bare symbol with
+"something that knows where to find the value" — they differ only in when the
+lookup happens:
+
+- **Eager (expansion-time):** resolve the value at expansion time, carry it in
+  `arl_resolved_ref`. Faster at runtime (no lookup), but needs deflate/inflate
+  for serialization.
+- **Deferred (runtime):** carry `(module_name, symbol_name)` in the syntax,
+  resolve at runtime via the module registry. Slower at runtime (one `get()` per
+  reference per call), but caching is trivial since you're just storing strings.
+- **Hybrid:** resolve eagerly for the in-memory representation (fast runtime),
+  but have `arl_resolved_ref` also carry the symbolic name so it can deflate to
+  the deferred representation on demand for caching. This is the recommended
+  approach.
+
+**6. Re-export.** Let `(export ...)` include imported symbols (the explicit-export
 path probably already works since it checks `exists(name, envir = module_env)`).
 The fix for `export-all` is adding a `:re-export` modifier or a separate
 `(re-export-from mod sym ...)` form. Enables facade/convenience modules.
 
-**6. Hierarchical module names.** `(module (mylib utils) ...)` with names as
+**7. Hierarchical module names.** `(module (mylib utils) ...)` with names as
 lists, mapped to directory paths. Registry keys become structured (e.g.,
 `"mylib/utils"`). The main design question is path resolution conventions. Not
 urgent while the only modules are the stdlib, but important as soon as users
 write libraries.
 
-**7. Private-by-default for `export-all`.** Add a naming convention (e.g., `_`
+**8. Private-by-default for `export-all`.** Add a naming convention (e.g., `_`
 prefix) or a `(private ...)` declaration that `export-all` respects. Low effort,
 reduces accidental exports.
 
 ### Tier 3: High Value, High Effort (Architectural)
 
-**8. Reference-based imports.** Instead of copying values with `mget`/`list2env`,
+**9. Reference-based imports.** Instead of copying values with `mget`/`list2env`,
 make the module env accessible and resolve bindings through it. Options range
 from lightweight (`makeActiveBinding` to create forwarding bindings) to
 heavyweight (make module environments part of the parent chain). This is the
@@ -273,18 +340,10 @@ work for consumers, softens circular dependency issues, and enables true
 qualified access. But it touches the core binding model and has performance
 implications.
 
-**9. Circular dependency support.** Given reference-based imports, you could allow
-cycles by registering a partially-initialized module env early (Python's
+**10. Circular dependency support.** Given reference-based imports, you could
+allow cycles by registering a partially-initialized module env early (Python's
 approach). Without reference-based imports, forward declarations or a two-phase
-loading scheme would be needed. Not worth tackling before #8.
-
-**10. Macro hygiene across modules.** The real fix is a hygienic expander
-(`syntax-rules` or `syntax-case`). That's a major undertaking that would change
-the macro system's fundamental character. The pragmatic alternative is
-documenting the Common Lisp-style approach: macros should expand to calls to
-exported functions, keeping the expanded code simple and the real logic in
-closures (which close over the defining module's env). This sidesteps the
-problem without solving it.
+loading scheme would be needed. Not worth tackling before #9.
 
 ### Tier 4: Low Priority / Wait-and-See
 
@@ -299,9 +358,13 @@ already works via `eval_text`.
 
 ### Architectural Note
 
-Items 1, 2, 3, and 8 are connected: lazy loading, reloading, qualified access,
+Items 1, 2, 3, and 9 are connected: lazy loading, reloading, qualified access,
 and reference-based imports all push toward **modules as first-class environment
 objects that persist and are accessed directly**, rather than the current model of
-**modules as bags of values that get copied into consumers**. If #8 is on the
+**modules as bags of values that get copied into consumers**. If #9 is on the
 horizon, it makes sense to implement 1–3 in a way that is compatible with that
-future, even before tackling #8 itself.
+future, even before tackling #9 itself.
+
+# Already addressed
+
+#4: import position restrictions
