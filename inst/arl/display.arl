@@ -86,7 +86,7 @@
 
   ;; Helper: capture R print output as character vector.
   (define __capture-print
-    (r/call "eval" (list (r/call "parse" (list :text "function(obj) utils::capture.output(print(obj))")))))
+    (r/call "eval" (list (r/call "parse" (list :text "function(obj) capture.output(print(obj))")))))
 
   ;; Format S3 objects with non-trivial class using R's print method.
   ;; Output is truncated at arl.display.max.lines (default 20, Inf to disable).

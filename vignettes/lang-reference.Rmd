@@ -145,39 +145,36 @@ When you need R's original, use the `base::` namespace prefix:
 (base::identity (list 1 2))  ; R's identity, not Arl's
 ```
 
-### What `baseenv()` does and does not contain
+### Beyond base: R's default packages
 
-An important subtlety: Arl's environment chain parents to R's `baseenv()`,
-**not** to R's `.GlobalEnv`. This means only functions from R's **base**
-package are inherited automatically.
+Arl's environment chain parents to R's `baseenv()`, **not** to
+`.GlobalEnv`. But R's default packages — `stats`, `utils`, `grDevices`,
+`graphics`, `datasets`, and `methods` — are also attached at engine
+startup. Their exports are copied into a chain of environments between
+`builtins_env` and `baseenv()`, mirroring how R itself structures its
+search path.
 
-In a normal R session, several other packages are attached to the search
-path by default — `stats`, `utils`, `grDevices`, `graphics`, `datasets`,
-and `methods`. Functions from these packages feel like they are part of
-"base R" because you never have to load them explicitly in R. But they
-are not in `baseenv()`, so they are **not** automatically visible in Arl.
-
-Some commonly used functions that require an explicit package prefix:
-
-| Package | Examples |
-|---------|----------|
-| `stats` | `median`, `sd`, `var`, `cor`, `lm`, `glm`, `t.test`, `predict`, `dnorm`, `pnorm`, `rnorm` |
-| `utils` | `head`, `tail`, `str`, `read.csv`, `write.csv`, `read.table` |
-| `grDevices` | `pdf`, `png`, `dev.off`, `rgb`, `colorRamp` |
-| `graphics` | `plot`, `lines`, `points`, `hist`, `barplot`, `legend` |
-
-To use these in Arl, prefix with the package name:
+This means functions like `median`, `head`, `lm`, `plot`, `rgb`, and
+data like `iris` and `mtcars` work without any prefix:
 
 ```{arl, eval=FALSE}
-(stats::median (c 1 2 3 4 5))   ; not just (median ...)
-(utils::head mtcars)
-(graphics::hist (rnorm 100))
+(median (c 1 2 3 4 5))
+(head mtcars 3)
+(lm (~ mpg cyl) :data mtcars)
 ```
 
-This is a deliberate choice: depending on whatever happens to be attached
-to the user's `.GlobalEnv` would make Arl code fragile and
-non-reproducible. The explicit prefix makes dependencies clear and
-ensures code works the same way regardless of the R session's search path.
+The set of attached packages is controlled by R's `defaultPackages`
+option (see `?options`). Users can customize it by setting the
+`R_DEFAULT_PACKAGES` environment variable before starting R — for
+example, `R_DEFAULT_PACKAGES=""` disables all default packages, leaving
+only `baseenv()`.
+
+For packages **not** in the default set, use the `::` prefix:
+
+```{arl, eval=FALSE}
+(jsonlite::fromJSON "{\"a\": 1}")
+(httr::GET "https://example.com")
+```
 
 See [R Interop and Data Workflows](r-interop.html) for more on calling R
 functions, using keyword arguments, formulas, and `r/eval`.

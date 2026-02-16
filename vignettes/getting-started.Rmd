@@ -242,9 +242,10 @@ and hundreds of others work as-is:
 ```
 
 Arl shadows some R names with its own versions (arithmetic operators are
-variadic, comparisons chain, `=` is equality not assignment), and functions
-from other R packages like `stats` and `utils` need an explicit `::` prefix
-(e.g. `(stats::median (c 1 2 3))`). See
+variadic, comparisons chain, `=` is equality not assignment). R's default
+packages (`stats`, `utils`, `grDevices`, `graphics`, `datasets`, `methods`)
+are also attached automatically, so functions like `median`, `head`, `lm`,
+and data like `iris` work without a prefix. See
 [Inherited R Functions](lang-reference.html#inherited-r-functions) in the
 Language Reference for details, and
 [R Interop and Data Workflows](r-interop.html) for calling R packages,

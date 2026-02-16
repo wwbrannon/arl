@@ -15,9 +15,10 @@ arl::register_knitr_engine()
 ```
 
 Arl can call any R function directly. Because Arl code is compiled to R and
-the environment chain parents to R's `baseenv()`, every base R function is
-available without imports — `max`, `min`, `sum`, `c`, `length`, `paste`,
-`lapply`, and hundreds more work as-is. See
+the environment chain includes R's `baseenv()` and exports from R's default
+packages (`stats`, `utils`, `grDevices`, `graphics`, `datasets`, `methods`),
+functions like `max`, `sum`, `median`, `head`, `lm`, and data like `iris`
+all work without imports or package prefixes. See
 [Inherited R Functions](lang-reference.html#inherited-r-functions) in the
 Language Reference for a survey of commonly used inherited functions and
 details on which names Arl shadows with its own versions.
@@ -250,7 +251,7 @@ capturing the caller's expression:
 ```
 
 ```{arl, include=FALSE}
-(assert-no-error (stats::lm (~ mpg cyl) :data datasets::mtcars))
+(assert-no-error (lm (~ mpg cyl) :data mtcars))
 ```
 
 The `~` operator builds an R formula without evaluating its arguments.
