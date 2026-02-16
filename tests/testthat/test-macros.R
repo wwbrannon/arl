@@ -808,6 +808,16 @@ test_that("defmacro error pattern rest arity", {
 # F. Backward Compatibility (2 tests)
 # ==============================================================================
 
+test_that("defmacro with empty parameter list", {
+  env <- new.env()
+  engine$eval(
+    engine$read("(defmacro always-42 () 42)")[[1]],
+    env = env
+  )
+  result <- engine$eval(engine$read("(always-42)")[[1]], env = env)
+  expect_equal(result, 42)
+})
+
 test_that("defmacro backward compatible simple symbols", {
   env <- new.env()
   engine$eval(

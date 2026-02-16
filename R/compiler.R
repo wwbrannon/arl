@@ -1087,6 +1087,10 @@ Compiler <- R6::R6Class(
         parts <- params_expr$parts()
         params_expr <- as.call(c(parts$prefix, list(as.symbol(".")), list(parts$tail)))
       }
+      # Accept empty parameter list: parser represents () as list() (not a call)
+      if (is.list(params_expr) && length(params_expr) == 0L) {
+        params_expr <- NULL
+      }
       if (!is.call(params_expr) && !is.null(params_expr)) {
         return(private$fail("defmacro parameters must be a list"))
       }
