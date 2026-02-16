@@ -302,6 +302,7 @@ Create a hash-backed set of unique items.
 (assert-true (set-contains? (set 1 2 3) 2))
 (assert-false (set-contains? (set 1 2 3) 99))
 (assert-true (set? (set)))
+(assert-true (set-contains? (set '(a b c)) 'b))
 ```
 
 ---

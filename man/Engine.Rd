@@ -214,7 +214,7 @@ and imports in the file are visible in \code{env}. To evaluate in an
 isolated child scope, create one explicitly:
 \code{load_file_in_env(path, new.env(parent = env))}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_in_env(path, env = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$load_file_in_env(path, env = NULL, cache = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -223,6 +223,8 @@ isolated child scope, create one explicitly:
 \item{\code{path}}{File path to load.}
 
 \item{\code{env}}{Optional environment or Env used as the engine base.}
+
+\item{\code{cache}}{Logical; if TRUE (the default), use the module cache.}
 }
 \if{html}{\out{</div>}}
 }

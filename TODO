@@ -1,55 +1,14 @@
 o) read module guide
 
-o) substantive changes
-    o) should we have stats and datasets on the search path -- `(stats::lm (~ mpg cyl) :data datasets::mtcars)` is annoying to type? comes down to the choice of parent env: baseenv vs globalenv
-    o) probably switch this example to eval=TRUE and fix it / its asserts up
-    o) update the r-interop.Rmd vignette with fixes to rendering of lm and maybe search path
+o) load and run should not check the stdlib modules
 
-    o) more future-proof import syntax a la python
+o) we probably honestly don't want load, and thus run, doing any caching at all
+
+o) there's no "import ____ from"
+
+o) more future-proof import syntax a la python
 
 o) the module system seems to decide what a module is called based on its filename
-
-o) is this true? "The import form is primarily useful inside your own modules (which start with an empty scope)"
-o) closely related: scope here doesn't seem to be lexical:
-    will@macbook:~/github/arl$ cat mybinding.arl
-    (module mybinding
-        (export mylet)
-
-        (defmacro mylet (bindings . body)
-          (if (null? bindings)
-            `(begin ,@body)
-              (begin
-                (define temps (map (lambda (b) (gensym "tmp")) bindings))
-                (define patterns (map car bindings))
-                (define values (map (lambda (b) (car (cdr b))) bindings))
-                `((lambda ,temps
-                    ,@(map (lambda (pair)
-                            `(define ,(car pair) ,(car (cdr pair))))
-                            (zip patterns temps))
-                    (begin ,@body))
-                    ,@values))))
-     )
-
-    will@macbook:~/github/arl$ vi mybinding.arl
-    will@macbook:~/github/arl$ arl
-    Arl REPL 0.1.0
-    Type '(license)' w/o quotes for legal information.
-    Type '(quit)' w/o quotes or press Ctrl+C to exit.
-    Builtin readline/libedit: yes
-
-    arl> (import mybinding)
-    arl> (mylet ((x 1) (y 2)) (+ x y))
-    3
-    arl>
-    will@macbook:~/github/arl$ arl --no-stdlib
-    Arl REPL 0.1.0
-    Type '(license)' w/o quotes for legal information.
-    Type '(quit)' w/o quotes or press Ctrl+C to exit.
-    Builtin readline/libedit: yes
-
-    arl> (import mybinding)
-    arl> (mylet ((x 1) (y 2)) (+ x y))
-    Error: could not find function "null?"
 
 o) run the test auditor and doc auditor again
 
