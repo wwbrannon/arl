@@ -4,14 +4,11 @@
   (export __format-atomic __format-seq __format-named-list __format-s3-object
           format-value display println str trace)
 
-  (import list)
-  (import strings)
-  (import control)
-  (import dict)
-  (import set)
-  (import core)     ; r/call
-  (import types)    ; predicates
-  (import logic)    ; not
+  (import list :only (__as-list car cdr))
+  (import strings :only (string-join))
+  (import dict :only (dict? dict-keys dict-get))
+  (import set :only (set?))
+  (import core :only (r/call values?))
 
   ;; Format atomic values to a single string.
   ;; Character strings are quoted so they are distinguishable from symbols.

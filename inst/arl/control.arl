@@ -5,9 +5,9 @@
           call/cc call-with-current-continuation)
   ;; Note: 'and' and 'or' removed from exports - now compiler special forms
 
-  (import types)
-  (import list)
-  (import functional) ; map
+  (import types :only (symbol? null?))
+  (import list :only (car cdr call))
+  (import functional :only (map))
 
 ;;' @section Control Flow Macros
 

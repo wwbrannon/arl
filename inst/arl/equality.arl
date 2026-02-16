@@ -7,10 +7,10 @@
           env-equal? list-equal?
           s3-type check-s3-type-match use-method set-method!)
 
-  (import _r)
-  (import core)
-  (import types)  ; for environment?, list?, nil?
-  (import list)   ; for car, cdr, null?
+  (import _r :only (__r! __ridentical __rclass __r[[ __runique __rlapply __rlength __r== __r> __r!=))
+  (import core :only (r/call funcall get error))
+  (import types :only (environment? list? nil? null?))
+  (import list :only (car cdr __as-list))
 
   ;;' @section Equality Predicates
   ;;' Arl provides `equal?` for deep structural equality with S3-style dispatch,

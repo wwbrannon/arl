@@ -5,11 +5,10 @@
           assert-error assert-no-error
           __assert-error-impl __assert-no-error-impl)
 
-  (import core)
-  (import equality)
-  (import strings)
-  (import dict)
-  (import list)     ; call
+  (import core :only (error))
+  (import equality :only (equal? identical?))
+  (import strings :only (string-append ->string))
+  (import list :only (call))
 
 ;;' @section Assertion Helpers
 ;;' These functions provide test-style assertions that signal errors on failure

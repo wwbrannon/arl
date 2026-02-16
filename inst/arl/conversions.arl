@@ -6,9 +6,7 @@
           ->integer ->double ->complex
           exact->inexact inexact->exact)
 
-  (import _r)
-  (import core)
-  (import types)  ; for symbol?, number?, string?, list?, vector?
+  (import types :only (symbol? number? string? list? vector?))
 
   ;;' @section Symbol Conversions
 

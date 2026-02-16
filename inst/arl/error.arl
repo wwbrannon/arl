@@ -3,9 +3,9 @@
 (module error
   (export try)
 
-  (import types)
-  (import list)
-  (import control)
+  (import types :only (symbol? list? null?))
+  (import list :only (car cdr))
+  (import control :only (try*))
 
 ;;' @section Error Handling
 

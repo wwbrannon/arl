@@ -3,9 +3,9 @@
 (module threading
   (export -> ->>)
 
-  (import functional)
-  (import list)
-  (import types)
+  (import functional :only (reduce))
+  (import list :only (car cdr cons append call))
+  (import types :only (list?))
 
 ;;' @section Threading Macros
 

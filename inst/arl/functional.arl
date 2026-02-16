@@ -4,10 +4,9 @@
   (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial
           curry juxt constantly iterate iterate-until memoize)
 
-  (import list)
-  (import logic)
-  (import types)    ; null?
-  (import core)     ; r/call
+  (import list :only (__as-list car append))
+  (import types :only (null?))
+  (import core :only (r/call))
 
   ;;' @section Core Higher-Order Functions
   ;;' The fundamental building blocks for functional programming in Arl.

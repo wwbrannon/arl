@@ -10,9 +10,9 @@
           string->list list->string
           number->string string->number)
 
-  (import list)
-  (import math)
-  (import core)     ; r/call
+  (import list :only (__as-list car cons))
+  (import math :only (quotient))
+  (import core :only (r/call))
 
   ;;' @section String Operations
   ;;' Core string manipulation functions: joining, splitting, searching,

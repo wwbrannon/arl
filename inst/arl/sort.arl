@@ -8,10 +8,10 @@
 (module sort
   (export sort sort-by merge stable-sort)
 
-  (import list)
-  (import _r)       ; __rlength, __r<=
-  (import types)    ; null?
-  (import core)     ; r/call
+  (import list :only (__as-list car cdr cadr cons append reverse))
+  (import _r :only (__rlength __r<=))
+  (import types :only (null?))
+  (import core :only (r/call))
 
   ;;' @section Sorting
   ;;' General-purpose sorting with user-supplied comparator functions.

@@ -3,11 +3,10 @@
 (module binding
   (export pattern-symbols destructuring-bind let let* letrec when-let if-let)
 
-  (import types)
-  (import list)
-  (import functional)
-  (import sequences)
-  (import control)
+  (import types :only (symbol? list-or-pair? null?))
+  (import list :only (car cdr append))
+  (import functional :only (map mapcat))
+  (import sequences :only (zip))
 
 ;;' @section Binding Macros
 

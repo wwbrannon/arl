@@ -3,9 +3,9 @@
 (module struct
   (export defstruct)
 
-  (import functional)
-  (import display)  ; str
-  (import core)     ; r/call
+  (import functional :only (map mapcat))
+  (import display :only (str))
+  (import core :only (r/call))
 
 ;;' @section Struct Definition
 

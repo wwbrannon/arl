@@ -15,9 +15,9 @@
           range iota make-list
           list-ref list-tail)
 
-  (import _r)
-  (import core)     ; r/call
-  (import types)    ; null?
+  (import _r :only (__r[[ __rlength __r> __r== __r- __r<=))
+  (import core :only (r/call error))
+  (import types :only (null? list?))
 
   ;;' @section List Operations
   ;;' Core list constructors and accessors, following Scheme conventions.

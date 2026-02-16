@@ -4,10 +4,7 @@
   (export set set? set-add set-remove set-contains? set-union set-intersection
           set-difference)
 
-  (import types)
-  (import list)
-  (import looping)
-  (import core)     ; r/call
+  (import core :only (r/call error))
 
 ;;' @section Set (Hash-Backed)
 ;;' Sets are mutable collections of unique items backed by R environments.

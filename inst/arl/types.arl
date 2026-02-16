@@ -13,8 +13,8 @@
           even? odd? zero?
           positive? negative? non-negative? non-positive?)
 
-  (import _r)
-  (import core)     ; r/call
+  (import _r :only (__r> __rlength __r== __r[[ __r>= __r<= __r< __ras.integer))
+  (import core :only (r/call))
 
   ;;' @section List and Pair Predicates
 

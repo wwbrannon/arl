@@ -3,11 +3,10 @@
 (module looping
   (export until for loop recur)
 
-  (import functional)
-  (import list)
-  (import types)
-  (import sequences)
-  (import logic)    ; not
+  (import functional :only (map every?))
+  (import list :only (car cdr __as-list call cons))
+  (import types :only (symbol? list-or-pair? list? null?))
+  (import sequences :only (zip))
 
   ;;' @section Looping Macros
 

@@ -6,11 +6,11 @@
           member contains?
           length= length> length<)
 
-  (import list)
-  (import types)
-  (import core)     ; r/call
-  (import equality) ; equal?
-  (import control)  ; when
+  (import list :only (__as-list car cdr))
+  (import types :only (list?))
+  (import core :only (r/call))
+  (import equality :only (equal?))
+  (import control :only (when))
 
   ;;' @section Sequence Helpers
   ;;' Higher-level operations for slicing, chunking, and transforming

@@ -11,7 +11,7 @@
           getenv setenv
           system system-output exit)
 
-  (import core)     ; r/call
+  (import core :only (r/call get))
 
   ;; Normalize content to character vector.
   (define __normalize-line-vector

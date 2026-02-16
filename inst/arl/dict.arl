@@ -4,11 +4,9 @@
   (export dict hash dict? dict-get dict-set dict-remove dict-keys dict-values
           dict-has? dict-merge)
 
-  (import types)
-  (import list)
-  (import looping)
-  (import core)     ; r/call
-  (import functional) ; filter
+  (import list :only (car cdr __as-list))
+  (import core :only (r/call error))
+  (import functional :only (filter))
 
 ;;' @section Dictionary (Hash Table)
 ;;' Dictionaries are mutable key-value stores backed by R environments.

@@ -8,9 +8,9 @@
   (export suppressWarnings suppressMessages with within subset
           transform substitute)
 
-  (import core)
-  (import strings)  ; string-append
-  (import list)     ; car, cdr
+  (import core :only (get error))
+  (import strings :only (string-append))
+  (import list :only (car cdr call))
 
 ;;' @section R Nonstandard Evaluation Wrappers
 ;;' These macros provide Arl-friendly interfaces to R functions that use

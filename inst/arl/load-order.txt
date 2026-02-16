@@ -3,6 +3,7 @@ logic
 core
 math
 io
+set
 types
 conversions
 list
@@ -11,14 +12,13 @@ functional
 sort
 strings
 control
+dict
 threading
+assert
 r-interop
 error
 sequences
+display
 binding
 looping
-dict
-set
-assert
-display
 struct

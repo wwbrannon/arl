@@ -8,7 +8,7 @@
           funcall r/call get unbind-variable run
           macroexpand-1 macroexpand-all)
 
-  (import _r)
+  (import _r :only (__rget))
 
 ;;' @section Error and Warning
 
