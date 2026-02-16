@@ -233,7 +233,9 @@ or `arl --no-stdlib`:
 (import threading) ; -> and ->>
 (import error)     ; try/catch/finally
 
-;; etc
+;; imports can be selective
+(import control :only (when unless))
+(import strings :prefix str/)
 ```
 
 
