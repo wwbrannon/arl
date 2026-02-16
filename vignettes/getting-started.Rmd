@@ -121,6 +121,41 @@ stopifnot(identical(engine$eval(exprs[[1]], exprs[[2]]), 15))
 `eval()` accepts multiple expressions and evaluates them sequentially,
 returning the last value.
 
+## Passing R data to the engine
+
+Use `$define()` to inject R objects into the engine so Arl code can use them:
+
+```{r eval=FALSE}
+engine <- arl::Engine$new()
+engine$define("my_data", mtcars)
+engine$eval_text("(head my_data 3)")
+```
+
+```{r, include=FALSE}
+engine <- arl::Engine$new()
+engine$define("my_data", mtcars)
+stopifnot(identical(
+  engine$eval_text("(nrow my_data)"),
+  nrow(mtcars)
+))
+```
+
+Calls to `$define()` return the engine invisibly, so they can be chained:
+
+```{r eval=FALSE}
+engine$define("x", 10)$define("y", 20)$eval_text("(+ x y)")
+```
+
+```{r, include=FALSE}
+stopifnot(identical(
+  engine$define("x", 10)$define("y", 20)$eval_text("(+ x y)"),
+  30
+))
+```
+
+To read results back into R, use `$eval_text()` (which returns the last
+value) or `$get_env()` to access the engine's environment directly.
+
 ## Run Arl files
 
 From the REPL, use `load` to run a file in the current environment so that

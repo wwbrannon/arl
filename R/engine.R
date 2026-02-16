@@ -474,6 +474,20 @@ Engine <- R6::R6Class(
     },
 
     #' @description
+    #' Define a binding in the engine's top-level environment. This is the
+    #' supported way to inject R objects for use in Arl code.
+    #' @param name Character string; the binding name.
+    #' @param value The value to bind.
+    #' @return Invisible self (for chaining).
+    define = function(name, value) {
+      if (!is.character(name) || length(name) != 1L || !nzchar(name)) {
+        stop("define() requires a single non-empty character string as name")
+      }
+      assign(name, value, envir = private$.env$env)
+      invisible(self)
+    },
+
+    #' @description
     #' Format a value for display using the engine's formatter.
     #' @param value Value to format.
     #' @return Character string.

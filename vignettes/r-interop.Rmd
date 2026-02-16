@@ -339,6 +339,37 @@ semantics (not Scheme's). For example, division by zero yields `Inf`, and
 (assert-true (is.na (== NaN NaN)))
 ```
 
+## Passing data between R and Arl
+
+Use `$define()` to inject R objects into the engine:
+
+```{r eval=FALSE}
+engine <- Engine$new()
+engine$define("my_data", mtcars)
+engine$eval_text("(nrow my_data)")  # => 32
+```
+
+```{r, include=FALSE}
+engine <- Engine$new()
+engine$define("my_data", mtcars)
+stopifnot(identical(engine$eval_text("(nrow my_data)"), nrow(mtcars)))
+```
+
+To read results back into R, use `$eval_text()` (returns the last value)
+or access the engine's environment with `$get_env()`:
+
+```{r eval=FALSE}
+result <- engine$eval_text("(median ($ my_data \"mpg\"))")
+
+env <- engine$get_env()
+ls(env)  # see all bindings
+```
+
+```{r, include=FALSE}
+result <- engine$eval_text("(median ($ my_data \"mpg\"))")
+stopifnot(identical(result, median(mtcars$mpg)))
+```
+
 ## Example workflow
 
 The [data analysis example](examples.html#data-analysis) shows a small analysis pipeline

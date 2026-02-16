@@ -43,6 +43,7 @@ option \code{arl.use_env_cache}.}
 \item \href{#method-Engine-get_coverage}{\code{Engine$get_coverage()}}
 \item \href{#method-Engine-reset_coverage}{\code{Engine$reset_coverage()}}
 \item \href{#method-Engine-get_env}{\code{Engine$get_env()}}
+\item \href{#method-Engine-define}{\code{Engine$define()}}
 \item \href{#method-Engine-format_value}{\code{Engine$format_value()}}
 \item \href{#method-Engine-with_error_context}{\code{Engine$with_error_context()}}
 \item \href{#method-Engine-print_error}{\code{Engine$print_error()}}
@@ -369,6 +370,29 @@ Get the top-level R environment backing this engine.
 
 \subsection{Returns}{
 An R environment.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Engine-define"></a>}}
+\if{latex}{\out{\hypertarget{method-Engine-define}{}}}
+\subsection{Method \code{define()}}{
+Define a binding in the engine's top-level environment. This is the
+supported way to inject R objects for use in Arl code.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Engine$define(name, value)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{Character string; the binding name.}
+
+\item{\code{value}}{The value to bind.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Invisible self (for chaining).
 }
 }
 \if{html}{\out{<hr>}}
