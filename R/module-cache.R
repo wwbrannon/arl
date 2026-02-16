@@ -113,7 +113,7 @@ ModuleCache <- R6::R6Class(
     #' @param exports Export list
     #' @param src_file Source file path
     #' @param file_hash File hash
-    write_env = function(module_name, module_env, exports, src_file, file_hash) {
+    write_env = function(module_name, module_env, exports, src_file, file_hash, coverage = FALSE) {
       paths <- self$get_paths(src_file)
       if (is.null(paths)) return(FALSE)
 
@@ -130,6 +130,7 @@ ModuleCache <- R6::R6Class(
         cache_data <- list(
           version = as.character(utils::packageVersion("arl")),
           file_hash = file_hash,
+          coverage = coverage,
           module_name = module_name,
           module_env = module_env,
           exports = exports
@@ -158,7 +159,7 @@ ModuleCache <- R6::R6Class(
     #' @param export_all Export all flag
     #' @param src_file Source file path
     #' @param file_hash File hash
-    write_code = function(module_name, compiled_body, exports, export_all, src_file, file_hash) {
+    write_code = function(module_name, compiled_body, exports, export_all, src_file, file_hash, coverage = FALSE) {
       paths <- self$get_paths(src_file)
       if (is.null(paths)) return(FALSE)
 
@@ -171,6 +172,7 @@ ModuleCache <- R6::R6Class(
         cache_data <- list(
           version = as.character(utils::packageVersion("arl")),
           file_hash = file_hash,
+          coverage = coverage,
           module_name = module_name,
           exports = exports,
           export_all = export_all,
@@ -220,7 +222,7 @@ ModuleCache <- R6::R6Class(
     #' @param engine_env Engine environment to relink as parent
     #' @param src_file Source file for validation
     #' @return Cache data (module_env, module_name, exports) or NULL if invalid
-    load_env = function(cache_file, engine_env, src_file) {
+    load_env = function(cache_file, engine_env, src_file, coverage = FALSE) {
       if (!file.exists(cache_file)) {
         return(NULL)
       }
@@ -238,7 +240,7 @@ ModuleCache <- R6::R6Class(
       }
 
       # Validate cache
-      if (!private$is_valid(cache_data, src_file)) {
+      if (!private$is_valid(cache_data, src_file, coverage = coverage)) {
         # Invalid cache, delete all related cache files
         paths <- self$get_paths(src_file)
         if (!is.null(paths)) {
@@ -262,7 +264,7 @@ ModuleCache <- R6::R6Class(
     #' @param cache_file Path to .code.rds cache file
     #' @param src_file Source file for validation
     #' @return Cache data or NULL if invalid
-    load_code = function(cache_file, src_file) {
+    load_code = function(cache_file, src_file, coverage = FALSE) {
       if (!file.exists(cache_file)) {
         return(NULL)
       }
@@ -280,7 +282,7 @@ ModuleCache <- R6::R6Class(
       }
 
       # Validate cache
-      if (!private$is_valid(cache_data, src_file)) {
+      if (!private$is_valid(cache_data, src_file, coverage = coverage)) {
         # Invalid cache, delete all related cache files
         paths <- self$get_paths(src_file)
         if (!is.null(paths)) {
@@ -300,7 +302,7 @@ ModuleCache <- R6::R6Class(
     #' @param cache_data Deserialized cache data
     #' @param src_file Source file path
     #' @return TRUE if valid, FALSE otherwise
-    is_valid = function(cache_data, src_file) {
+    is_valid = function(cache_data, src_file, coverage = FALSE) {
       if (!is.list(cache_data)) return(FALSE)
 
       # Check version
@@ -315,6 +317,15 @@ ModuleCache <- R6::R6Class(
         return(FALSE)
       }
       if (cache_data$file_hash != paths$file_hash) {
+        return(FALSE)
+      }
+
+      # Reject caches compiled with a different coverage state — coverage-
+      # instrumented code contains .__coverage_track calls that don't exist
+      # when coverage is off, and non-instrumented code lacks the tracking
+      # calls that coverage needs.  The field must be present (not NULL);
+      # caches from before this field was added are invalidated.
+      if (is.null(cache_data$coverage) || !identical(cache_data$coverage, coverage)) {
         return(FALSE)
       }
 

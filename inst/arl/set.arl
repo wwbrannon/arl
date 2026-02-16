@@ -5,6 +5,7 @@
           set-difference)
 
   (import core :only (r/call error))
+  (import list :only (car))
 
 ;;' @section Set (Hash-Backed)
 ;;' Sets are mutable collections of unique items backed by R environments.
@@ -38,6 +39,7 @@
 ;;' (assert-true (set-contains? (set 1 2 3) 2))
 ;;' (assert-false (set-contains? (set 1 2 3) 99))
 ;;' (assert-true (set? (set)))
+;;' (assert-true (set-contains? (set '(a b c)) 'b))
 (define set
   (lambda (. args)
     (define set-obj (set-new))

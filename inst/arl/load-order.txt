@@ -3,12 +3,12 @@ logic
 core
 math
 io
-set
 types
 conversions
 list
 equality
 functional
+set
 sort
 strings
 control

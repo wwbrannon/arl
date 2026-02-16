@@ -19,6 +19,7 @@
 #' @param ... Additional Arl expressions to evaluate (variadic).
 #' @param text Character string of Arl code to read/eval.
 #' @param path File path to load.
+#' @param cache Logical; if TRUE (the default), use the module cache.
 
 #' @param preserve_src Logical; keep source metadata when macroexpanding.
 #' @param depth Number of expansion steps (NULL for full expansion).

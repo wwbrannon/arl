@@ -524,6 +524,52 @@ test_that("load_code() returns NULL for version mismatch", {
   # Cache invalidation deletes files (implementation detail, not tested here)
 })
 
+test_that("load_code() returns NULL for coverage mismatch", {
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
+  writeLines("(module test (export foo))", tmp_file)
+
+  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
+  on.exit({
+    unlink(tmp_file)
+    unlink(cache_dir, recursive = TRUE)
+  }, add = TRUE)
+
+  compiled_body <- list(quote(foo <- 42))
+  paths <- cache$get_paths(tmp_file)
+
+  # Write cache with coverage = TRUE
+  cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths$file_hash, coverage = TRUE)
+
+  # Loading without coverage should reject it
+  result <- cache$load_code(paths$code_cache, tmp_file, coverage = FALSE)
+  expect_null(result)
+})
+
+test_that("load_code() returns NULL for missing coverage field (pre-upgrade cache)", {
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
+  writeLines("(module test (export foo))", tmp_file)
+
+  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
+  on.exit({
+    unlink(tmp_file)
+    unlink(cache_dir, recursive = TRUE)
+  }, add = TRUE)
+
+  compiled_body <- list(quote(foo <- 42))
+  paths <- cache$get_paths(tmp_file)
+
+  # Write a cache, then strip the coverage field to simulate old format
+  cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths$file_hash)
+  cache_data <- readRDS(paths$code_cache)
+  cache_data$coverage <- NULL
+  saveRDS(cache_data, paths$code_cache)
+
+  result <- cache$load_code(paths$code_cache, tmp_file)
+  expect_null(result)
+})
+
 test_that("load_code() returns NULL for hash mismatch", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
