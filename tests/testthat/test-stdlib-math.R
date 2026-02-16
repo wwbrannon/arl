@@ -116,8 +116,15 @@ test_that("variadic arithmetic operators error with 0 arguments", {
 
   expect_error(engine$eval(engine$read("(-)")[[1]], env = env), "requires at least one argument")
   expect_error(engine$eval(engine$read("(/)")[[1]], env = env), "requires at least one argument")
-  expect_error(engine$eval(engine$read("(min)")[[1]], env = env), "requires at least one argument")
-  expect_error(engine$eval(engine$read("(max)")[[1]], env = env), "requires at least one argument")
+  # min/max with 0 args now fall through to R's native min/max (Inf/-Inf with warning)
+  expect_warning(
+    expect_equal(engine$eval(engine$read("(min)")[[1]], env = env), Inf),
+    "no non-missing arguments"
+  )
+  expect_warning(
+    expect_equal(engine$eval(engine$read("(max)")[[1]], env = env), -Inf),
+    "no non-missing arguments"
+  )
   # gcd with 0 args returns 0 (identity element)
   expect_equal(engine$eval(engine$read("(gcd)")[[1]], env = env), 0)
   # lcm with 0 args returns 1 (identity element)

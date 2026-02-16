@@ -571,6 +571,66 @@ Engine <- R6::R6Class(
       }
 
       #
+      # Variadic arithmetic operators — the compiler folds these at compile time
+      # for statically-known call sites, but runtime variadic versions are needed
+      # for funcall/apply and higher-order usage.
+      #
+
+      builtins_env$`+` <- function(...) {
+        args <- list(...)
+        n <- length(args)
+        if (n == 0L) return(0)
+        if (n == 1L) return(args[[1L]])
+        Reduce(`+`, args)
+      }
+      builtins_env$`*` <- function(...) {
+        args <- list(...)
+        n <- length(args)
+        if (n == 0L) return(1)
+        if (n == 1L) return(args[[1L]])
+        Reduce(`*`, args)
+      }
+      builtins_env$`-` <- function(...) {
+        args <- list(...)
+        n <- length(args)
+        if (n == 0L) stop("- requires at least one argument")
+        if (n == 1L) return(-args[[1L]])
+        Reduce(`-`, args)
+      }
+      builtins_env$`/` <- function(...) {
+        args <- list(...)
+        n <- length(args)
+        if (n == 0L) stop("/ requires at least one argument")
+        if (n == 1L) return(1 / args[[1L]])
+        Reduce(`/`, args)
+      }
+
+      #
+      # Variadic comparison operators — chained pairwise comparison.
+      #
+
+      make_variadic_cmp <- function(op) {
+        force(op)
+        function(...) {
+          args <- list(...)
+          n <- length(args)
+          if (n < 2L) return(TRUE)
+          # 2-arg case: return base R's element-wise result directly
+          # (needed for NSE contexts like subset where vectors are expected)
+          if (n == 2L) return(op(args[[1L]], args[[2L]]))
+          # 3+ args: chained pairwise scalar comparison
+          for (i in seq_len(n - 1L)) {
+            if (!isTRUE(op(args[[i]], args[[i + 1L]]))) return(FALSE)
+          }
+          TRUE
+        }
+      }
+      builtins_env$`<`  <- make_variadic_cmp(`<`)
+      builtins_env$`<=` <- make_variadic_cmp(`<=`)
+      builtins_env$`>`  <- make_variadic_cmp(`>`)
+      builtins_env$`>=` <- make_variadic_cmp(`>=`)
+
+      #
       # Logical negation — Arl truthiness (0, #f, #nil are falsy).
       # R's ! works on logical/numeric but not on arbitrary values.
       #

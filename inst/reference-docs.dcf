@@ -246,6 +246,227 @@ Assert:
   (assert-equal 42 sf-answer)
 Seealso: import
 
+Name: +
+Kind: builtin
+Vignette: lang-core
+Section: Arithmetic
+Description: Variadic addition. With no arguments returns 0 (additive
+  identity). With one argument returns it unchanged. With two or more,
+  returns their sum left-to-right.
+Signature: (+ a ...)
+Examples:
+  (+)           ; => 0
+  (+ 5)         ; => 5
+  (+ 1 2 3)     ; => 6
+Assert:
+  (assert-equal 0 (+))
+  (assert-equal 5 (+ 5))
+  (assert-equal 6 (+ 1 2 3))
+Seealso: -, *, /
+
+Name: *
+Kind: builtin
+Vignette: lang-core
+Section: Arithmetic
+Description: Variadic multiplication. With no arguments returns 1
+  (multiplicative identity). With one argument returns it unchanged.
+  With two or more, returns their product left-to-right.
+Signature: (* a ...)
+Examples:
+  (*)           ; => 1
+  (* 5)         ; => 5
+  (* 2 3 4)     ; => 24
+Assert:
+  (assert-equal 1 (*))
+  (assert-equal 5 (* 5))
+  (assert-equal 24 (* 2 3 4))
+Seealso: +, -, /
+
+Name: -
+Kind: builtin
+Vignette: lang-core
+Section: Arithmetic
+Description: Variadic subtraction. Requires at least one argument.
+  With one argument returns its negation. With two or more, subtracts
+  subsequent arguments from the first left-to-right.
+Signature: (- a ...)
+Examples:
+  (- 5)         ; => -5
+  (- 10 3)      ; => 7
+  (- 10 3 2)    ; => 5
+Assert:
+  (assert-equal -5 (- 5))
+  (assert-equal 7 (- 10 3))
+  (assert-equal 5 (- 10 3 2))
+Seealso: +, *, /
+
+Name: /
+Kind: builtin
+Vignette: lang-core
+Section: Arithmetic
+Description: Variadic division. Requires at least one argument.
+  With one argument returns its reciprocal. With two or more, divides
+  the first argument by subsequent arguments left-to-right.
+Signature: (/ a ...)
+Examples:
+  (/ 5)         ; => 0.2
+  (/ 10 2)      ; => 5
+  (/ 100 5 2)   ; => 10
+Assert:
+  (assert-equal 0.2 (/ 5))
+  (assert-equal 5 (/ 10 2))
+  (assert-equal 10 (/ 100 5 2))
+Seealso: +, -, *
+
+Name: <
+Kind: builtin
+Vignette: lang-core
+Section: Comparison
+Description: Variadic less-than. With fewer than two arguments returns #t
+  (vacuously true). With two or more, checks that each argument is strictly
+  less than the next (chained pairwise comparison).
+Signature: (< a b ...)
+Examples:
+  (< 1 2)       ; => #t
+  (< 1 2 3)     ; => #t
+  (< 1 3 2)     ; => #f
+Assert:
+  (assert-true (< 1 2))
+  (assert-true (< 1 2 3))
+  (assert-false (< 1 3 2))
+Seealso: <=, >, >=, =
+
+Name: <=
+Kind: builtin
+Vignette: lang-core
+Section: Comparison
+Description: Variadic less-than-or-equal. With fewer than two arguments
+  returns #t. With two or more, checks that each argument is less than or
+  equal to the next.
+Signature: (<= a b ...)
+Examples:
+  (<= 1 2)      ; => #t
+  (<= 1 1 2)    ; => #t
+  (<= 2 1)      ; => #f
+Assert:
+  (assert-true (<= 1 2))
+  (assert-true (<= 1 1 2))
+  (assert-false (<= 2 1))
+Seealso: <, >, >=, =
+
+Name: >
+Kind: builtin
+Vignette: lang-core
+Section: Comparison
+Description: Variadic greater-than. With fewer than two arguments returns #t.
+  With two or more, checks that each argument is strictly greater than the next.
+Signature: (> a b ...)
+Examples:
+  (> 3 2)       ; => #t
+  (> 3 2 1)     ; => #t
+  (> 3 1 2)     ; => #f
+Assert:
+  (assert-true (> 3 2))
+  (assert-true (> 3 2 1))
+  (assert-false (> 3 1 2))
+Seealso: >=, <, <=, =
+
+Name: >=
+Kind: builtin
+Vignette: lang-core
+Section: Comparison
+Description: Variadic greater-than-or-equal. With fewer than two arguments
+  returns #t. With two or more, checks that each argument is greater than or
+  equal to the next.
+Signature: (>= a b ...)
+Examples:
+  (>= 3 2)      ; => #t
+  (>= 2 2 1)    ; => #t
+  (>= 1 2)      ; => #f
+Assert:
+  (assert-true (>= 3 2))
+  (assert-true (>= 2 2 1))
+  (assert-false (>= 1 2))
+Seealso: >, <, <=, =
+
+Name: =
+Kind: builtin
+Vignette: lang-core
+Section: Comparison
+Description: Variadic equality comparison (NULL-safe). With fewer than two
+  arguments returns #t. With two or more, checks that all adjacent pairs are
+  equal. NULL comparisons follow Scheme semantics: (= #nil #nil) is #t,
+  (= #nil x) is #f.
+Signature: (= a b ...)
+Examples:
+  (= 1 1)       ; => #t
+  (= 1 1 1)     ; => #t
+  (= 1 2)       ; => #f
+  (= "a" "a")   ; => #t
+Assert:
+  (assert-true (= 1 1))
+  (assert-true (= 1 1 1))
+  (assert-false (= 1 2))
+  (assert-true (= "a" "a"))
+Seealso: ==, !=, <, >
+Note: Alias for ==. Both = and == are NULL-safe variadic equality.
+
+Name: ==
+Kind: builtin
+Vignette: lang-core
+Section: Comparison
+Description: Variadic equality comparison (NULL-safe). Identical to =.
+  With fewer than two arguments returns #t. With two or more, checks that
+  all adjacent pairs are equal.
+Signature: (== a b ...)
+Examples:
+  (== 1 1)      ; => #t
+  (== 1 1 1)    ; => #t
+  (== 1 2)      ; => #f
+Assert:
+  (assert-true (== 1 1))
+  (assert-true (== 1 1 1))
+  (assert-false (== 1 2))
+Seealso: =, !=, <, >
+
+Name: !=
+Kind: builtin
+Vignette: lang-core
+Section: Comparison
+Description: Inequality comparison (NULL-safe). Returns #t if a and b are
+  not equal.
+Signature: (!= a b)
+Examples:
+  (!= 1 2)      ; => #t
+  (!= 1 1)      ; => #f
+  (!= #nil #nil) ; => #f
+Assert:
+  (assert-true (!= 1 2))
+  (assert-false (!= 1 1))
+  (assert-false (!= #nil #nil))
+Seealso: =, ==
+
+Name: not
+Kind: builtin
+Vignette: lang-core
+Section: Comparison
+Description: Logical negation using Arl truthiness. Returns #t if x is falsy
+  (0, #f, or #nil), #f otherwise.
+Signature: (not x)
+Examples:
+  (not #f)      ; => #t
+  (not #nil)    ; => #t
+  (not 0)       ; => #t
+  (not 1)       ; => #f
+  (not "hi")    ; => #f
+Assert:
+  (assert-true (not #f))
+  (assert-true (not #nil))
+  (assert-true (not 0))
+  (assert-false (not 1))
+  (assert-false (not "hi"))
+Seealso: and, or
+
 Name: pair?
 Kind: builtin
 Vignette: lang-types
