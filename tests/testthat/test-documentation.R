@@ -112,6 +112,46 @@ test_that("optimized string functions have docstrings", {
   expect_match(to_string_doc, "string", ignore.case = TRUE)
 })
 
+# Regression tests: nested imports must not clobber the outer module's
+# doc annotations. Modules that import other modules should still have
+# their own ;;' doc comments attached to their exported functions.
+
+test_that("docstrings survive nested imports (strings imports list, math, core)", {
+  engine <- make_engine()
+  env <- engine$get_env()
+  engine$eval(engine$read('(import strings)')[[1]], env = env)
+
+  # trim is defined after (import list), (import math), (import core)
+  # so its ;;' annotation must survive those nested module loads
+  trim_fn <- get("trim", envir = env, inherits = TRUE)
+  expect_false(is.null(attr(trim_fn, "arl_doc", exact = TRUE)))
+  expect_match(attr(trim_fn, "arl_doc")$description, "whitespace", ignore.case = TRUE)
+
+  # format is defined later in the file — also after all imports
+  fmt_fn <- get("format", envir = env, inherits = TRUE)
+  expect_false(is.null(attr(fmt_fn, "arl_doc", exact = TRUE)))
+  expect_match(attr(fmt_fn, "arl_doc")$description, "sprintf|format", ignore.case = TRUE)
+})
+
+test_that("docstrings survive nested imports across multiple modules", {
+  engine <- make_engine()
+  env <- engine$get_env()
+
+  # Import several non-prelude modules that each have nested imports
+  for (mod in c("strings", "sort", "dict")) {
+    engine$eval(engine$read(sprintf('(import %s)', mod))[[1]], env = env)
+  }
+
+  # strings: trim (after 3 nested imports)
+  expect_false(is.null(attr(get("trim", envir = env, inherits = TRUE), "arl_doc")))
+  # sort: sort (imports list, types, core)
+  sort_fn <- get("sort", envir = env, inherits = TRUE)
+  expect_false(is.null(attr(sort_fn, "arl_doc", exact = TRUE)))
+  # dict: dict (imports list, types, core, equality)
+  dict_fn <- get("dict", envir = env, inherits = TRUE)
+  expect_false(is.null(attr(dict_fn, "arl_doc", exact = TRUE)))
+})
+
 # --- New tests for expanded doc!/doc API ---
 
 test_that("doc! sets specific fields with keyword args", {

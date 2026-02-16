@@ -389,15 +389,16 @@ CompiledRuntime <- R6::R6Class(
       self$install_helpers(module_env)
 
       # Parse ;;' annotations from source file (or raw text fallback)
+      my_annotations <- NULL
       if (!is.null(src_file) && is.character(src_file) &&
           length(src_file) == 1L && nzchar(src_file) && file.exists(src_file)) {
         doc_parser <- DocParser$new()
         parsed_annotations <- doc_parser$parse_file(src_file)
-        self$context$compiler$annotations <- parsed_annotations$functions
+        my_annotations <- parsed_annotations$functions
       } else if (!is.null(self$context$compiler$source_text)) {
         doc_parser <- DocParser$new()
         parsed_annotations <- doc_parser$parse_text(self$context$compiler$source_text)
-        self$context$compiler$annotations <- parsed_annotations$functions
+        my_annotations <- parsed_annotations$functions
       }
 
       # Compile body expressions (for caching)
@@ -434,6 +435,9 @@ CompiledRuntime <- R6::R6Class(
           }
         }
 
+        # Restore this module's annotations before each compile, because nested
+        # module loads (triggered by import eval) overwrite compiler$annotations.
+        self$context$compiler$annotations <- my_annotations
         expanded <- self$context$macro_expander$macroexpand(body_exprs[[i]], env = module_env, preserve_src = TRUE)
         compiled <- self$context$compiler$compile(expanded, module_env, strict = TRUE)
         if (!is.null(compiled_body)) compiled_body[[i]] <- compiled
