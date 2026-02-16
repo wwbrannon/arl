@@ -709,12 +709,17 @@ Engine <- R6::R6Class(
         private$.macro_expander$capture(symbol, expr)
       }
 
-      builtins_env$`macro?` <- function(x) {
-        is.symbol(x) && private$.macro_expander$is_macro(x, env = env)
+      builtins_env$`macro?` <- function(x, .env = NULL) {
+        # Use provided env, or current Arl eval env (from env stack), fallback to engine env
+        lookup_env <- if (!is.null(.env)) .env
+          else { e <- private$.env$current_env(); if (identical(e, globalenv())) env else e }
+        is.symbol(x) && private$.macro_expander$is_macro(x, env = lookup_env)
       }
 
-      builtins_env$macroexpand <- function(expr, depth = NULL, preserve_src = FALSE) {
-        private$.macro_expander$macroexpand(expr, env = env,
+      builtins_env$macroexpand <- function(expr, depth = NULL, preserve_src = FALSE, .env = NULL) {
+        lookup_env <- if (!is.null(.env)) .env
+          else { e <- private$.env$current_env(); if (identical(e, globalenv())) env else e }
+        private$.macro_expander$macroexpand(expr, env = lookup_env,
                                             preserve_src = preserve_src, depth = depth)
       }
 

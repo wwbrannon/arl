@@ -160,6 +160,13 @@ The `import` special form loads a module and makes its exports available in the 
 ```{arl, eval=FALSE}
 (import name)      ; name is a symbol: module name (stdlib, then CWD)
 (import "path")    ; path is a string: file path (path-only resolution)
+
+; With import modifiers:
+(import name :only (sym1 sym2))          ; only these names
+(import name :except (sym1))             ; all except these
+(import name :prefix pfx/)              ; all names prefixed
+(import name :rename ((old new)))        ; rename specific names
+(import name :only (sym1) :prefix pfx/) ; composable
 ```
 
 - **Symbol** (e.g. `control`): treated as a **module name**. Resolution looks in the stdlib, then the current working directory (same as `load` by name).
@@ -178,6 +185,52 @@ The `import` special form loads a module and makes its exports available in the 
 (import "lib/my-module.arl")
 (import "/absolute/path/to/module.arl")
 ```
+
+### Import Modifiers
+
+Import modifiers let you control which names are imported and how they appear
+in the current scope. This avoids namespace pollution and name collisions.
+
+**`:only`** — import only the listed names:
+
+```{arl, eval=FALSE}
+(import list :only (map filter reduce))
+```
+
+**`:except`** — import everything except the listed names:
+
+```{arl, eval=FALSE}
+(import list :except (last))
+```
+
+**`:prefix`** — add a prefix to all imported names:
+
+```{arl, eval=FALSE}
+(import list :prefix list/)
+(list/map square '(1 2 3))  ; => (1 4 9)
+```
+
+**`:rename`** — rename specific names:
+
+```{arl, eval=FALSE}
+(import control :rename ((when my-when) (unless my-unless)))
+(my-when #t 42)  ; => 42
+```
+
+**Composition** — modifiers can be combined. They apply in order: `:only`/`:except` filter first, then `:rename`, then `:prefix`:
+
+```{arl, eval=FALSE}
+(import list :only (map filter) :prefix l/)
+; Only l/map and l/filter are imported
+
+(import control :only (when unless) :rename ((when w)) :prefix c/)
+; Imports c/w and c/unless
+```
+
+`:only` and `:except` are mutually exclusive — using both is a compile error.
+
+Modifiers work with both symbol and string imports, and apply to both regular
+values and macros.
 
 ### Path Resolution
 
@@ -458,14 +511,14 @@ Then load with relative paths:
 ### vs. Scheme
 
 - Arl's `module` is similar to R6RS libraries but simpler
-- No renaming or prefix imports
+- Arl supports `:only`, `:except`, `:prefix`, and `:rename` modifiers (similar to R7RS)
 - Path resolution is more straightforward
 
 ### vs. Clojure
 
-- No namespace aliases (`require [module :as alias]`)
-- No selective imports (`require [module :refer [fn1 fn2]]`)
-- Simpler import mechanism - all exports are imported
+- Arl uses `:only`/`:except`/`:prefix`/`:rename` keywords (similar to Clojure's `:refer`, `:exclude`, `:as`)
+- No namespace-qualified access (`ns/symbol`) without explicit `:prefix`
+- Simpler syntax — all modifiers go directly in the `import` form
 
 ## Summary
 

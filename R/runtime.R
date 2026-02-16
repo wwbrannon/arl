@@ -222,8 +222,8 @@ CompiledRuntime <- R6::R6Class(
         self$module_compiled(module_name, exports, export_all, body_exprs, src_file, env)
       }, "Module definition handler.")
 
-      assign_and_lock(".__import", function(arg_value, env) {
-        self$import_compiled(arg_value, env)
+      assign_and_lock(".__import", function(arg_value, env, only = NULL, except = NULL, prefix = NULL, rename = NULL) {
+        self$import_compiled(arg_value, env, only = only, except = except, prefix = prefix, rename = rename)
       }, "Module import handler.")
 
       assign_and_lock(".__pkg_access", function(op_name, pkg, name, env) {
@@ -259,7 +259,7 @@ CompiledRuntime <- R6::R6Class(
       eval(compiled_expr, envir = env)
     },
     # Import logic for compiled (import x): same semantics as import special form.
-    import_compiled = function(arg_value, env) {
+    import_compiled = function(arg_value, env, only = NULL, except = NULL, prefix = NULL, rename = NULL) {
       is_path <- is.character(arg_value) && length(arg_value) == 1
       if (is_path) {
         path_str <- arg_value
@@ -311,7 +311,7 @@ CompiledRuntime <- R6::R6Class(
       }
       # Track symbols before attach so export-all can exclude imported names
       pre_attach <- ls(env, all.names = FALSE)
-      shared_registry$attach_into(registry_key, env)
+      shared_registry$attach_into(registry_key, env, only = only, except = except, prefix = prefix, rename = rename)
       post_attach <- ls(env, all.names = FALSE)
       imported_names <- setdiff(post_attach, pre_attach)
       if (length(imported_names) > 0L) {

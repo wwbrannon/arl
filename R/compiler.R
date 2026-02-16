@@ -83,6 +83,49 @@ Compiler <- R6::R6Class(
     }
   ),
   private = list(
+    # Parse a list of symbols from an import modifier value.
+    # Returns a character vector of symbol names, or "ERROR:..." on failure.
+    parse_symbol_list = function(val, modifier_name) {
+      # val is a parsed list form like (sym1 sym2 ...) — an R call object
+      if (is.call(val)) {
+        syms <- as.list(val)
+        result <- character(length(syms))
+        for (j in seq_along(syms)) {
+          if (!is.symbol(syms[[j]])) {
+            return(paste0("ERROR:import: ", modifier_name, " elements must be symbols"))
+          }
+          result[j] <- as.character(syms[[j]])
+        }
+        return(result)
+      }
+      # Empty list case: NULL from parser or list() from parser for ()
+      if (is.null(val) || (is.list(val) && length(val) == 0L)) {
+        return(character(0))
+      }
+      paste0("ERROR:import: ", modifier_name, " requires a list of symbols")
+    },
+    # Parse a rename list: ((old new) ...) → named character vector (names=old, values=new)
+    parse_rename_list = function(val) {
+      if (!is.call(val)) {
+        return("ERROR:import: :rename requires a list of (old new) pairs")
+      }
+      pairs <- as.list(val)
+      old_names <- character(length(pairs))
+      new_names <- character(length(pairs))
+      for (j in seq_along(pairs)) {
+        pair <- pairs[[j]]
+        if (!is.call(pair) || length(pair) != 2) {
+          return("ERROR:import: :rename entries must be (old-name new-name) pairs")
+        }
+        if (!is.symbol(pair[[1]]) || !is.symbol(pair[[2]])) {
+          return("ERROR:import: :rename entries must contain symbols")
+        }
+        old_names[j] <- as.character(pair[[1]])
+        new_names[j] <- as.character(pair[[2]])
+      }
+      names(new_names) <- old_names
+      new_names
+    },
     # Shared implementation for compile_and / compile_or.
     # identity: value when no args (TRUE for and, FALSE for or)
     # op_sym: quoted symbol to flatten (quote(and) or quote(or))
@@ -860,16 +903,110 @@ Compiler <- R6::R6Class(
       )
     },
     compile_import = function(expr) {
-      if (length(expr) != 2) {
-        return(private$fail("import requires exactly 1 argument: (import name)"))
+      if (length(expr) < 2) {
+        return(private$fail("import requires at least 1 argument: (import name)"))
       }
       # Pass argument unevaluated (module name is a symbol/string, not a variable lookup)
       arg_quoted <- as.call(list(quote(quote), expr[[2]]))
-      as.call(list(
+
+      # Parse optional keyword modifiers: :only, :except, :prefix, :rename
+      only <- NULL
+      except <- NULL
+      prefix <- NULL
+      rename <- NULL
+
+      if (length(expr) > 2) {
+        rest <- as.list(expr)[-(1:2)]
+        i <- 1
+        while (i <= length(rest)) {
+          kw <- rest[[i]]
+          if (!inherits(kw, "arl_keyword")) {
+            return(private$fail(sprintf(
+              "import: expected keyword modifier, got %s",
+              deparse(kw)
+            )))
+          }
+          kw_name <- as.character(kw)
+          if (i + 1 > length(rest)) {
+            return(private$fail(sprintf(
+              "import: keyword :%s requires a value", kw_name
+            )))
+          }
+          val <- rest[[i + 1]]
+          i <- i + 2
+
+          if (kw_name == "only") {
+            if (!is.null(only)) {
+              return(private$fail("import: duplicate :only modifier"))
+            }
+            if (!is.null(except)) {
+              return(private$fail("import: :only and :except are mutually exclusive"))
+            }
+            # val should be a list of symbols (parsed as a call)
+            syms <- private$parse_symbol_list(val, ":only")
+            if (is.character(syms) && length(syms) == 1 && startsWith(syms, "ERROR:")) {
+              return(private$fail(substring(syms, 7)))
+            }
+            only <- syms
+          } else if (kw_name == "except") {
+            if (!is.null(except)) {
+              return(private$fail("import: duplicate :except modifier"))
+            }
+            if (!is.null(only)) {
+              return(private$fail("import: :only and :except are mutually exclusive"))
+            }
+            syms <- private$parse_symbol_list(val, ":except")
+            if (is.character(syms) && length(syms) == 1 && startsWith(syms, "ERROR:")) {
+              return(private$fail(substring(syms, 7)))
+            }
+            except <- syms
+          } else if (kw_name == "prefix") {
+            if (!is.null(prefix)) {
+              return(private$fail("import: duplicate :prefix modifier"))
+            }
+            if (!is.symbol(val)) {
+              return(private$fail("import: :prefix requires a symbol"))
+            }
+            prefix <- as.character(val)
+          } else if (kw_name == "rename") {
+            if (!is.null(rename)) {
+              return(private$fail("import: duplicate :rename modifier"))
+            }
+            # val should be a list of 2-element lists: ((old new) ...)
+            rename_map <- private$parse_rename_list(val)
+            if (is.character(rename_map) && length(rename_map) == 1 && startsWith(rename_map, "ERROR:")) {
+              return(private$fail(substring(rename_map, 7)))
+            }
+            rename <- rename_map
+          } else {
+            return(private$fail(sprintf(
+              "import: unknown modifier :%s (expected :only, :except, :prefix, or :rename)",
+              kw_name
+            )))
+          }
+        }
+      }
+
+      # Build the call: .__import(quote(name), env, only, except, prefix, rename)
+      call_args <- list(
         as.symbol(".__import"),
         arg_quoted,
         as.symbol(self$env_var_name)
-      ))
+      )
+      # Pass non-NULL modifiers as literal R values
+      if (!is.null(only)) {
+        call_args$only <- only
+      }
+      if (!is.null(except)) {
+        call_args$except <- except
+      }
+      if (!is.null(prefix)) {
+        call_args$prefix <- prefix
+      }
+      if (!is.null(rename)) {
+        call_args$rename <- rename
+      }
+      as.call(call_args)
     },
     compile_help = function(expr) {
       if (!(length(expr) == 2 || length(expr) == 4)) {

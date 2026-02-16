@@ -11,7 +11,7 @@ test_that("macroexpand with depth=1 expands macros one level", {
 
   # Expand once via Arl-level macroexpand with depth
   expr <- engine$read("(my-when #t 42)")[[1]]
-  expanded <- env$macroexpand(expr, 1)
+  expanded <- env$macroexpand(expr, 1, .env = env)
 
   # Should be an if expression
   expect_true(is.call(expanded))
@@ -28,7 +28,7 @@ test_that("macroexpand fully expands nested macros", {
 
   # Fully expand
   expr <- engine$read("(outer 5)")[[1]]
-  expanded <- env$macroexpand(expr)
+  expanded <- env$macroexpand(expr, .env = env)
 
   # Should be fully expanded to arithmetic
   expect_true(is.call(expanded))
@@ -132,7 +132,7 @@ test_that("macro? predicate identifies macros", {
   engine$eval(engine$read("(defmacro test-macro (x) x)")[[1]], env = env)
 
   # Test predicate
-  expect_true(env$`macro?`(quote(`test-macro`)))
-  expect_false(env$`macro?`(quote(`not-a-macro`)))
-  expect_false(env$`macro?`(42))
+  expect_true(env$`macro?`(quote(`test-macro`), .env = env))
+  expect_false(env$`macro?`(quote(`not-a-macro`), .env = env))
+  expect_false(env$`macro?`(42, .env = env))
 })

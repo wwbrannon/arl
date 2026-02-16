@@ -135,27 +135,41 @@ ModuleRegistry <- R6::R6Class(
       exports <- entry$exports
       module_env <- entry$env
       target_env <- self$arl_env$env
-      target_macro_registry <- self$arl_env$macro_registry_env(create = TRUE)
-      module_macro_registry <- self$arl_env$macro_registry_env(module_env, create = FALSE)
+      target_macro_registry <- get0(".__macros", envir = target_env, inherits = FALSE)
+      if (is.null(target_macro_registry)) {
+        target_macro_registry <- new.env(parent = emptyenv())
+        base::assign(".__macros", target_macro_registry, envir = target_env)
+        lockBinding(".__macros", target_env)
+      }
+      module_macro_registry <- get0(".__macros", envir = module_env, inherits = FALSE)
 
       for (export_name in exports) {
-        if (!exists(export_name, envir = module_env, inherits = FALSE)) {
-          if (!is.null(module_macro_registry) && exists(export_name, envir = module_macro_registry, inherits = FALSE)) {
-            macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
-            assign(export_name, macro_fn, envir = target_macro_registry)
-            lockBinding(export_name, target_macro_registry)
-            next
+        is_macro <- !is.null(module_macro_registry) &&
+          exists(export_name, envir = module_macro_registry, inherits = FALSE)
+        if (is_macro) {
+          macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
+          if (exists(export_name, envir = target_macro_registry, inherits = FALSE)) {
+            unlock_binding(export_name, target_macro_registry)
           }
+          assign(export_name, macro_fn, envir = target_macro_registry)
+          lockBinding(export_name, target_macro_registry)
+        }
+        if (exists(export_name, envir = module_env, inherits = FALSE)) {
+          assign(export_name, get(export_name, envir = module_env, inherits = FALSE), envir = target_env)
+        } else if (!is_macro) {
           stop(sprintf("module '%s' does not export '%s'", name, export_name))
         }
-        assign(export_name, get(export_name, envir = module_env, inherits = FALSE), envir = target_env)
       }
       invisible(NULL)
     },
     # @description Attach a module's exports into an arbitrary target environment.
     # @param name Module name (single string).
     # @param target_env Environment to attach exports into.
-    attach_into = function(name, target_env) {
+    # @param only Character vector of names to import (NULL = all). Mutually exclusive with except.
+    # @param except Character vector of names to exclude (NULL = none). Mutually exclusive with only.
+    # @param prefix String to prepend to all imported names (NULL = no prefix).
+    # @param rename Named character vector: names are original, values are new names (NULL = no rename).
+    attach_into = function(name, target_env, only = NULL, except = NULL, prefix = NULL, rename = NULL) {
       entry <- self$get(name)
       if (is.null(entry)) {
         stop(sprintf("module '%s' is not loaded", name))
@@ -163,33 +177,80 @@ ModuleRegistry <- R6::R6Class(
       exports <- entry$exports
       module_env <- entry$env
 
-      # Inline macro registry lookup to avoid Env$new() allocation
-      target_macro_registry <- get0(".__macros", envir = target_env, inherits = TRUE)
+      # Apply filtering: only/except
+      if (!is.null(only)) {
+        bad <- setdiff(only, exports)
+        if (length(bad) > 0L) {
+          stop(sprintf("module '%s' does not export '%s'", name, bad[1L]), call. = FALSE)
+        }
+        exports <- intersect(exports, only)
+      } else if (!is.null(except)) {
+        bad <- setdiff(except, exports)
+        if (length(bad) > 0L) {
+          stop(sprintf("module '%s' does not export '%s'", name, bad[1L]), call. = FALSE)
+        }
+        exports <- setdiff(exports, except)
+      }
+
+      # Build name mapping: original_name -> target_name
+      # Apply rename first, then prefix
+      target_names <- exports
+      if (!is.null(rename)) {
+        bad <- setdiff(names(rename), exports)
+        if (length(bad) > 0L) {
+          stop(sprintf("module '%s' does not export '%s'", name, bad[1L]), call. = FALSE)
+        }
+        idx <- match(names(rename), exports)
+        valid <- !is.na(idx)
+        target_names[idx[valid]] <- unname(rename[valid])
+      }
+      if (!is.null(prefix)) {
+        target_names <- paste0(prefix, target_names)
+      }
+
+      # Get or create a LOCAL macro registry in the target env (not inherited)
+      target_macro_registry <- get0(".__macros", envir = target_env, inherits = FALSE)
       if (is.null(target_macro_registry)) {
         target_macro_registry <- new.env(parent = emptyenv())
         base::assign(".__macros", target_macro_registry, envir = target_env)
         lockBinding(".__macros", target_env)
       }
-      module_macro_registry <- self$arl_env$macro_registry_env(module_env, create = FALSE)
+      module_macro_registry <- get0(".__macros", envir = module_env, inherits = FALSE)
 
-      # Partition into regular vs macro-only exports
-      regular <- character(0)
-      for (export_name in exports) {
-        if (exists(export_name, envir = module_env, inherits = FALSE)) {
-          regular <- c(regular, export_name)
-        } else if (!is.null(module_macro_registry) &&
-                   exists(export_name, envir = module_macro_registry, inherits = FALSE)) {
+      # Copy exports with mapped names; macros go to macro registry AND as regular bindings
+      regular_orig <- character(0)
+      regular_target <- character(0)
+      for (j in seq_along(exports)) {
+        export_name <- exports[j]
+        mapped_name <- target_names[j]
+        is_macro <- !is.null(module_macro_registry) &&
+          exists(export_name, envir = module_macro_registry, inherits = FALSE)
+        if (is_macro) {
+          # Copy macro to target macro registry
           macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
-          base::assign(export_name, macro_fn, envir = target_macro_registry)
-          lockBinding(export_name, target_macro_registry)
+          if (exists(mapped_name, envir = target_macro_registry, inherits = FALSE)) {
+            unlock_binding(mapped_name, target_macro_registry)
+          }
+          base::assign(mapped_name, macro_fn, envir = target_macro_registry)
+          lockBinding(mapped_name, target_macro_registry)
+          # Also copy as regular binding (macros are callable values too)
+          if (exists(export_name, envir = module_env, inherits = FALSE)) {
+            regular_orig <- c(regular_orig, export_name)
+            regular_target <- c(regular_target, mapped_name)
+          }
+        } else if (exists(export_name, envir = module_env, inherits = FALSE)) {
+          regular_orig <- c(regular_orig, export_name)
+          regular_target <- c(regular_target, mapped_name)
         } else {
           stop(sprintf("module '%s' does not export '%s'", name, export_name))
         }
       }
 
-      # Bulk copy regular exports
-      if (length(regular) > 0L) {
-        list2env(mget(regular, envir = module_env, inherits = FALSE), envir = target_env)
+      # Bulk copy regular exports with mapped names
+      if (length(regular_orig) > 0L) {
+        vals <- mget(regular_orig, envir = module_env, inherits = FALSE)
+        names(vals) <- regular_target
+        list2env(vals, envir = target_env)
       }
       invisible(NULL)
     }

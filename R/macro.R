@@ -38,9 +38,8 @@ MacroExpander <- R6::R6Class(
       target_env <- private$normalize_env(env)
       if (is.null(depth)) {
         # Full expansion (walk into subexpressions)
-        registry <- private$macro_registry(target_env, create = FALSE)
-        # Use cached macro names (optimization 1.3)
-        macro_names <- private$get_macro_names(registry)
+        # Collect macro names across the entire env chain
+        macro_names <- private$get_all_macro_names(target_env)
         if (length(macro_names) == 0 || !private$contains_macro_head(expr, macro_names)) {
           if (isTRUE(preserve_src)) {
             return(expr)
@@ -129,32 +128,45 @@ MacroExpander <- R6::R6Class(
     normalize_env = function(env) {
       resolve_env(env, self$context$env$env)
     },
-    macro_registry = function(env, create = TRUE) {
-      registry <- self$context$env$get_registry(".__macros", env, create = create)
-      # Invalidate cache if registry changed (optimization 1.3)
-      if (!identical(registry, private$macro_names_cache_env)) {
-        private$macro_names_cache <- NULL
-        private$macro_names_cache_env <- NULL
-        private$macro_names_set <- NULL
+    # Get or create a LOCAL macro registry for env (inherits = FALSE).
+    # Used when defining macros — ensures each env owns its own registry.
+    local_macro_registry = function(env) {
+      registry <- get0(".__macros", envir = env, inherits = FALSE)
+      if (is.null(registry)) {
+        registry <- new.env(parent = emptyenv())
+        assign(".__macros", registry, envir = env)
+        lockBinding(".__macros", env)
       }
+      # Invalidate cache — a new local registry changes the visible set
+      private$macro_names_cache_env <- NULL
+      private$macro_names_cache <- NULL
+      private$macro_names_set <- NULL
       registry
     },
-    get_macro_names = function(registry) {
-      # Check cache (optimization 1.3)
+    # Collect ALL macro names visible from env by walking the env chain.
+    # Each env may have its own .__macros registry; we aggregate names from all of them.
+    get_all_macro_names = function(env) {
+      # Cache: keyed on the env itself (identity)
       if (!is.null(private$macro_names_cache) &&
-          identical(registry, private$macro_names_cache_env)) {
+          identical(env, private$macro_names_cache_env)) {
         return(private$macro_names_cache)
       }
-      # Cache miss - recompute
-      if (!is.null(registry)) {
-        macro_names <- ls(registry, all.names = TRUE)
-      } else {
-        macro_names <- character(0)
+      names_acc <- character(0)
+      e <- env
+      base <- baseenv()
+      empty <- emptyenv()
+      while (!identical(e, empty) && !identical(e, base)) {
+        reg <- get0(".__macros", envir = e, inherits = FALSE)
+        if (!is.null(reg)) {
+          names_acc <- c(names_acc, ls(reg, all.names = TRUE))
+        }
+        e <- parent.env(e)
       }
+      macro_names <- unique(names_acc)
       # Update cache
       private$macro_names_cache <- macro_names
-      private$macro_names_cache_env <- registry
-      # Build hash set for O(1) lookup (optimization 1.4)
+      private$macro_names_cache_env <- env
+      # Build hash set for O(1) lookup
       if (length(macro_names) > 0) {
         set_list <- as.list(rep(TRUE, length(macro_names)))
         names(set_list) <- macro_names
@@ -205,15 +217,32 @@ MacroExpander <- R6::R6Class(
       if (!is.symbol(name)) {
         return(FALSE)
       }
-      registry <- private$macro_registry(env, create = FALSE)
-      !is.null(registry) && exists(as.character(name), envir = registry, inherits = FALSE)
+      name_str <- as.character(name)
+      e <- env
+      base <- baseenv()
+      empty <- emptyenv()
+      while (!identical(e, empty) && !identical(e, base)) {
+        reg <- get0(".__macros", envir = e, inherits = FALSE)
+        if (!is.null(reg) && exists(name_str, envir = reg, inherits = FALSE)) {
+          return(TRUE)
+        }
+        e <- parent.env(e)
+      }
+      FALSE
     },
     get_macro_impl = function(name, env) {
-      registry <- private$macro_registry(env, create = FALSE)
-      if (is.null(registry)) {
-        return(NULL)
+      name_str <- as.character(name)
+      e <- env
+      base <- baseenv()
+      empty <- emptyenv()
+      while (!identical(e, empty) && !identical(e, base)) {
+        reg <- get0(".__macros", envir = e, inherits = FALSE)
+        if (!is.null(reg) && exists(name_str, envir = reg, inherits = FALSE)) {
+          return(reg[[name_str]])
+        }
+        e <- parent.env(e)
       }
-      registry[[as.character(name)]]
+      NULL
     },
     gensym_impl = function(prefix = "G") {
       env <- self$context$env
@@ -926,7 +955,7 @@ MacroExpander <- R6::R6Class(
         attr(macro_fn, "arl_doc") <- doc_list
       }
 
-      registry <- private$macro_registry(env, create = TRUE)
+      registry <- private$local_macro_registry(env)
       name_str <- as.character(name)
       if (exists(name_str, envir = registry, inherits = FALSE)) {
         unlock_binding(name_str, registry)
@@ -1013,7 +1042,7 @@ MacroExpander <- R6::R6Class(
           }
           return(self$context$source_tracker$strip_src(out))
         }
-        if (op_name %in% c("quote", "defmacro")) {
+        if (op_name %in% c("quote", "defmacro", "import")) {
           if (isTRUE(preserve_src)) {
             return(expr)
           }
