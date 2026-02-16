@@ -246,12 +246,14 @@ capturing the caller's expression:
 
 ## Working with formulas
 
-```{arl, eval=FALSE}
+```{arl}
 (lm (~ mpg cyl) :data mtcars)
 ```
 
 ```{arl, include=FALSE}
-(assert-no-error (lm (~ mpg cyl) :data mtcars))
+(define lm-result (lm (~ mpg cyl) :data mtcars))
+(assert-true (inherits lm-result "lm"))
+(assert-equal (round ([[ ($ lm-result "coef") "cyl") 2) -2.88)
 ```
 
 The `~` operator builds an R formula without evaluating its arguments.
@@ -350,7 +352,7 @@ engine$eval_text("(nrow my_data)")  # => 32
 ```
 
 ```{r, include=FALSE}
-engine <- Engine$new()
+engine <- arl::Engine$new()
 engine$define("my_data", mtcars)
 stopifnot(identical(engine$eval_text("(nrow my_data)"), nrow(mtcars)))
 ```
