@@ -135,7 +135,10 @@ ModuleCache <- R6::R6Class(
           exports = exports
         )
 
-        saveRDS(cache_data, paths$env_cache, compress = FALSE)
+        # Suppress "may not be available when loading" warnings from saveRDS —
+        # closures in the module env reference the full parent chain, but we
+        # restore the correct parent after deserialization ourselves.
+        suppressWarnings(saveRDS(cache_data, paths$env_cache, compress = FALSE))
 
         # Restore parent for current session
         parent.env(module_env) <- old_parent
