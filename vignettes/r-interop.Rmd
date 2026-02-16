@@ -14,9 +14,13 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
 
-Arl can call any R function directly. Because Arl code is compiled to R code
-before being execute, function names, operators, and data structures are shared
-between Arl and R.
+Arl can call any R function directly. Because Arl code is compiled to R and
+the environment chain parents to R's `baseenv()`, every base R function is
+available without imports — `max`, `min`, `sum`, `c`, `length`, `paste`,
+`lapply`, and hundreds more work as-is. See
+[Inherited R Functions](lang-reference.html#inherited-r-functions) in the
+Language Reference for a survey of commonly used inherited functions and
+details on which names Arl shadows with its own versions.
 
 ## Calling R functions
 

@@ -68,10 +68,119 @@ are not loaded (`Engine$new(load_stdlib = FALSE)`).
 | Modules and Imports | [`import-stdlib`](lang-core.html#import-stdlib) |
 | Macro Utilities | [`capture`](lang-core.html#capture), [`gensym`](lang-core.html#gensym), [`macro?`](lang-core.html#macro-p), [`macroexpand`](lang-core.html#macroexpand) |
 | Promises (Lazy Evaluation) | [`promise?`](lang-core.html#promise-p), [`force`](lang-core.html#force), [`promise-expr`](lang-core.html#promise-expr) |
-| Environment Introspection | [`toplevel-env`](lang-core.html#toplevel-env), [`current-env`](lang-core.html#current-env) |
+| Environment Introspection | [`toplevel-env`](lang-core.html#toplevel-env), [`builtins-env`](lang-core.html#builtins-env), [`current-env`](lang-core.html#current-env) |
 
 These builtins are documented alongside the stdlib functions they relate to
 in the individual reference pages below.
+
+## Inherited R functions
+
+Because Arl compiles to R and its environment chain ultimately parents to
+R's `baseenv()`, every function in base R is available in Arl without any
+import or special syntax. This is not just interop glue — many common
+operations you will use day-to-day come directly from R rather than from Arl's
+own builtins or stdlib.
+
+### What "inherited" means
+
+When you write `(max 1 2 3)` in Arl, the compiler emits an R call to `max()`.
+There is no Arl wrapper — R's own `max` function runs directly. The same is
+true for hundreds of base R functions. They work because R's `baseenv()` sits
+at the bottom of the environment chain, so any name not shadowed by an Arl
+builtin, stdlib export, or user definition resolves to R's version.
+
+### Examples of commonly used inherited functions
+
+Here are some examples of base R functions that are used routinely in Arl
+code and are **not** redefined — R's own implementations run directly:
+
+| Category | Examples |
+|----------|----------|
+| Math | `max`, `min`, `sum`, `prod` |
+| Vectors | `c`, `length`, `seq`, `seq_len`, `seq_along`, `rep`, `rev`, `unique`, `which` |
+| Predicates | `is.null`, `is.na`, `is.numeric`, `is.character`, `is.logical`, `is.function`, `is.list`, `is.environment` |
+| Coercion | `as.numeric`, `as.character`, `as.logical`, `as.integer`, `as.double`, `as.list` |
+| Strings | `paste`, `paste0`, `sprintf`, `nchar`, `substr`, `sub`, `gsub`, `grepl`, `toupper`, `tolower`, `trimws`, `strsplit` |
+| Data structures | `list`, `vector`, `matrix`, `data.frame`, `names`, `attr`, `attributes` |
+| Accessors | `$`, `[`, `[[`, `@` |
+| Apply family | `lapply`, `sapply`, `vapply`, `mapply`, `tapply`, `do.call` |
+| I/O | `cat`, `message`, `warning`, `stop`, `readLines`, `writeLines`, `readRDS`, `saveRDS` |
+| Environment | `environment`, `new.env`, `parent.env`, `exists`, `assign`, `ls`, `rm` |
+
+This is far from exhaustive — any function in R's base package works in
+Arl the same way.
+
+### When Arl shadows R
+
+Arl intentionally redefines some R names with its own versions. The most
+important are the **operators**:
+
+- **Arithmetic** (`+`, `-`, `*`, `/`): Arl's versions are variadic, so
+  `(+ 1 2 3 4)` works. R's `+` is binary.
+- **Comparison** (`<`, `<=`, `>`, `>=`): Arl's versions chain, so
+  `(< 1 2 3)` means "1 < 2 and 2 < 3". R's `<` compares two vectors.
+- **Equality** (`=`, `==`, `!=`): Arl's versions are NULL-safe and variadic.
+  R's `=` is assignment, not comparison.
+- **Logical** (`!`): Arl uses `not` and the special forms `and`/`or`.
+- **Control flow** (`if`, `while`, `for`): These are Arl special forms or
+  macros with Lisp-style syntax.
+
+The stdlib also shadows some base R function names with Lisp-flavored
+versions:
+
+- **Math wrappers** (`abs`, `sqrt`, `exp`, `log`, `floor`, `ceiling`,
+  `round`): Arl's versions are thin wrappers that add documentation and
+  integrate with the help system; behavior is the same.
+- **List operations** (`append`, `sort`, `reverse`): Arl's versions work on
+  both R lists and cons-cell pair lists, with Lisp-style semantics.
+- **I/O and display** (`print`, `format`, `system`): Arl's versions add
+  Lisp-style formatting or Arl-specific behavior.
+- **Other** (`get`, `identity`, `subset`, `transform`, `try`): Arl provides
+  its own implementations of these with Arl-specific semantics.
+
+When you need R's original, use the `base::` namespace prefix:
+
+```{arl, eval=FALSE}
+(base::sort (c 3 1 2))      ; R's vector sort, not Arl's list sort
+(base::identity (list 1 2))  ; R's identity, not Arl's
+```
+
+### What `baseenv()` does and does not contain
+
+An important subtlety: Arl's environment chain parents to R's `baseenv()`,
+**not** to R's `.GlobalEnv`. This means only functions from R's **base**
+package are inherited automatically.
+
+In a normal R session, several other packages are attached to the search
+path by default — `stats`, `utils`, `grDevices`, `graphics`, `datasets`,
+and `methods`. Functions from these packages feel like they are part of
+"base R" because you never have to load them explicitly in R. But they
+are not in `baseenv()`, so they are **not** automatically visible in Arl.
+
+Some commonly used functions that require an explicit package prefix:
+
+| Package | Examples |
+|---------|----------|
+| `stats` | `median`, `sd`, `var`, `cor`, `lm`, `glm`, `t.test`, `predict`, `dnorm`, `pnorm`, `rnorm` |
+| `utils` | `head`, `tail`, `str`, `read.csv`, `write.csv`, `read.table` |
+| `grDevices` | `pdf`, `png`, `dev.off`, `rgb`, `colorRamp` |
+| `graphics` | `plot`, `lines`, `points`, `hist`, `barplot`, `legend` |
+
+To use these in Arl, prefix with the package name:
+
+```{arl, eval=FALSE}
+(stats::median (c 1 2 3 4 5))   ; not just (median ...)
+(utils::head mtcars)
+(graphics::hist (rnorm 100))
+```
+
+This is a deliberate choice: depending on whatever happens to be attached
+to the user's `.GlobalEnv` would make Arl code fragile and
+non-reproducible. The explicit prefix makes dependencies clear and
+ensures code works the same way regardless of the R session's search path.
+
+See [R Interop and Data Workflows](r-interop.html) for more on calling R
+functions, using keyword arguments, formulas, and `r/eval`.
 
 ## Standard library
 
@@ -156,6 +265,7 @@ Evaluation, macro utilities, R interop helpers, and assertions.
 [`promise-expr`](lang-core.html#promise-expr),
 [`r/eval`](lang-core.html#r-eval),
 [`toplevel-env`](lang-core.html#toplevel-env),
+[`builtins-env`](lang-core.html#builtins-env),
 [`current-env`](lang-core.html#current-env), [`doc!`](lang-core.html#doc-bang),
 [`doc`](lang-core.html#doc)
 

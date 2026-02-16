@@ -222,6 +222,34 @@ See [Modules and Imports](modules.html) for details on creating and importing
 modules, and the [Language Reference](lang-reference.html) for a list of stdlib
 modules and the full set of functions/macros each provides.
 
+## R functions are available directly
+
+Because Arl compiles to R and its environment chain parents to R's
+`baseenv()`, every function in R's base package is available without any
+import. Functions like `max`, `min`, `sum`, `c`, `length`, `paste`, `lapply`,
+and hundreds of others work as-is:
+
+```{arl}
+(max 1 5 3)
+(length (c 10 20 30))
+(paste "hello" "world" :sep ", ")
+```
+
+```{arl, include=FALSE}
+(assert-equal 5 (max 1 5 3))
+(assert-equal 3 (length (c 10 20 30)))
+(assert-equal "hello, world" (paste "hello" "world" :sep ", "))
+```
+
+Arl shadows some R names with its own versions (arithmetic operators are
+variadic, comparisons chain, `=` is equality not assignment), and functions
+from other R packages like `stats` and `utils` need an explicit `::` prefix
+(e.g. `(stats::median (c 1 2 3))`). See
+[Inherited R Functions](lang-reference.html#inherited-r-functions) in the
+Language Reference for details, and
+[R Interop and Data Workflows](r-interop.html) for calling R packages,
+using keyword arguments, and `r/eval`.
+
 ## Core syntax and semantics
 
 ### Truthiness

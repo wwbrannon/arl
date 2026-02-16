@@ -1682,8 +1682,10 @@ Extract the unevaluated expression from a promise.
 
 ### toplevel-env {#toplevel-env}
 
-Return the top-level environment (the environment where all
-standard library bindings live).
+Return the top-level engine environment where user definitions
+and standard library exports live. This is the environment used by
+eval_text and the REPL. Note that builtins-env sits between this
+environment and R's baseenv() in the parent chain.
 
 **Signature:** `(toplevel-env)`
 
@@ -1696,7 +1698,31 @@ standard library bindings live).
 (assert-true (environment? (toplevel-env)))
 ```
 
-**See also:** [current-env](#current-env)
+**See also:** [current-env](#current-env), [builtins-env](#builtins-env)
+
+---
+
+### builtins-env {#builtins-env}
+
+Return the builtins environment that sits between the
+top-level engine environment and R's baseenv(). Contains core
+operators (=, +, *, <, etc.), module/macro registries, and
+environment commands. Module environments parent to this
+environment rather than to toplevel-env, which enforces that
+modules must explicitly import stdlib functions.
+
+**Signature:** `(builtins-env)`
+
+**Examples:**
+```{arl}
+(environment? (builtins-env))  ; => #t
+```
+
+```{arl, include=FALSE}
+(assert-true (environment? (builtins-env)))
+```
+
+**See also:** [toplevel-env](#toplevel-env), [current-env](#current-env)
 
 ---
 
@@ -1715,7 +1741,7 @@ Return the current Arl evaluation environment.
 (assert-true (environment? (current-env)))
 ```
 
-**See also:** [toplevel-env](#toplevel-env)
+**See also:** [toplevel-env](#toplevel-env), [builtins-env](#builtins-env)
 
 ---
 
