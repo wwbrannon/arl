@@ -81,3 +81,53 @@ test_that("module env chain is module_env -> builtins_env -> baseenv()", {
   # would transitively see all stdlib, defeating import enforcement)
   expect_identical(parent.env(builtins_env), baseenv())
 })
+
+# =============================================================================
+# Environment command helpers
+# =============================================================================
+
+test_that("toplevel-env returns engine_env, not builtins_env", {
+  engine <- make_engine()
+  tl <- engine$eval_text("(toplevel-env)")
+  engine_env <- engine$get_env()
+  builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+
+  expect_identical(tl, engine_env)
+  expect_false(identical(tl, builtins_env))
+})
+
+test_that("builtins-env returns builtins_env", {
+  engine <- make_engine()
+  be <- engine$eval_text("(builtins-env)")
+  builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+  engine_env <- engine$get_env()
+
+  expect_identical(be, builtins_env)
+  expect_false(identical(be, engine_env))
+  # builtins_env is parent of engine_env
+  expect_identical(parent.env(engine_env), be)
+})
+
+test_that("builtins-env is accessible from inside a module", {
+  engine <- make_engine()
+  result <- engine$eval_text("
+    (module __be_test
+      (export get-be)
+      (define get-be (lambda () (builtins-env))))
+    (import __be_test)
+    (environment? (get-be))")
+  expect_true(result)
+})
+
+test_that("r/eval works correctly inside a module function", {
+  engine <- make_engine()
+  # r/eval in a module should see the module's local bindings
+  result <- engine$eval_text("
+    (module __reval_mod
+      (export test-fn)
+      (define y 42)
+      (define test-fn (lambda () (r/eval (quote y)))))
+    (import __reval_mod)
+    (test-fn)")
+  expect_equal(result, 42)
+})

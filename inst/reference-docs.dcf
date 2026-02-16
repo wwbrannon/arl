@@ -732,14 +732,33 @@ Name: toplevel-env
 Kind: builtin
 Vignette: lang-core
 Section: Environment Introspection
-Description: Return the top-level environment (the environment where all
-  standard library bindings live).
+Description: Return the top-level engine environment where user definitions
+  and standard library exports live. This is the environment used by
+  eval_text and the REPL. Note that builtins-env sits between this
+  environment and R's baseenv() in the parent chain.
 Signature: (toplevel-env)
 Examples:
   (environment? (toplevel-env))  ; => #t
 Assert:
   (assert-true (environment? (toplevel-env)))
-Seealso: current-env
+Seealso: current-env, builtins-env
+
+Name: builtins-env
+Kind: builtin
+Vignette: lang-core
+Section: Environment Introspection
+Description: Return the builtins environment that sits between the
+  top-level engine environment and R's baseenv(). Contains core
+  operators (=, +, *, <, etc.), module/macro registries, and
+  environment commands. Module environments parent to this
+  environment rather than to toplevel-env, which enforces that
+  modules must explicitly import stdlib functions.
+Signature: (builtins-env)
+Examples:
+  (environment? (builtins-env))  ; => #t
+Assert:
+  (assert-true (environment? (builtins-env)))
+Seealso: toplevel-env, current-env
 
 Name: current-env
 Kind: builtin
@@ -751,7 +770,7 @@ Examples:
   (environment? (current-env))  ; => #t
 Assert:
   (assert-true (environment? (current-env)))
-Seealso: toplevel-env
+Seealso: toplevel-env, builtins-env
 
 Name: doc!
 Kind: builtin

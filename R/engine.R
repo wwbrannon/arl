@@ -746,6 +746,7 @@ Engine <- R6::R6Class(
       }
 
       builtins_env$`toplevel-env` <- function() env
+      builtins_env$`builtins-env` <- function() builtins_env
       builtins_env$`current-env` <- function() {
         if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
           return(get(".__env", envir = parent.frame(), inherits = TRUE))
