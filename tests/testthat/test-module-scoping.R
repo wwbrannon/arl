@@ -77,9 +77,14 @@ test_that("module env chain is module_env -> builtins_env -> baseenv()", {
   expect_identical(parent.env(entry$env), builtins_env)
   expect_false(identical(parent.env(entry$env), engine_env))
 
-  # builtins_env -> baseenv() (not engine_env — otherwise modules
-  # would transitively see all stdlib, defeating import enforcement)
-  expect_identical(parent.env(builtins_env), baseenv())
+  # builtins_env -> default-packages chain -> baseenv()
+  # (not engine_env — otherwise modules would transitively see all stdlib,
+  # defeating import enforcement)
+  e <- parent.env(builtins_env)
+  while (!identical(e, baseenv())) {
+    e <- parent.env(e)
+  }
+  expect_identical(e, baseenv())
 })
 
 # =============================================================================
@@ -130,4 +135,90 @@ test_that("r/eval works correctly inside a module function", {
     (import __reval_mod)
     (test-fn)")
   expect_equal(result, 42)
+})
+
+# =============================================================================
+# Default packages visibility
+# =============================================================================
+
+test_that("R default package functions are visible without qualification", {
+  engine <- make_engine()
+  # One export from each of the 6 default packages:
+  # datasets, utils, grDevices, graphics, stats, methods
+
+  # datasets: iris (lazy data)
+  expect_true(engine$eval_text("(is.data.frame iris)"))
+  # utils: head
+  expect_equal(engine$eval_text("(head (c 1 2 3 4 5) 3)"), c(1, 2, 3))
+  # grDevices: rgb
+  expect_equal(engine$eval_text("(rgb 1 0 0)"), "#FF0000")
+  # graphics: xy.coords (a utility that doesn't draw)
+  expect_true(engine$eval_text("(is.list (xy.coords (c 1 2 3) (c 4 5 6)))"))
+  # stats: median
+  expect_equal(engine$eval_text("(median (c 1 2 3 4 5))"), 3)
+  # methods: is
+  expect_true(engine$eval_text("(is 1 \"numeric\")"))
+})
+
+test_that("Arl builtins still shadow R default package functions", {
+  engine <- make_engine()
+  # Arl's + is variadic (not base R's binary +)
+  expect_equal(engine$eval_text("(+ 1 2 3)"), 6)
+})
+
+test_that("default-packages chain structure between builtins_env and baseenv()", {
+  engine <- make_engine()
+  builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+
+  # Walk from builtins_env down to baseenv(), collecting package names
+  e <- parent.env(builtins_env)
+  seen_names <- character()
+  while (!identical(e, baseenv())) {
+    nm <- attr(e, "name")
+    if (!is.null(nm)) seen_names <- c(seen_names, nm)
+    e <- parent.env(e)
+  }
+  # Should have package: entries for the default packages
+  expect_true(length(seen_names) > 0)
+  expect_true(any(grepl("^package:", seen_names)))
+})
+
+test_that("empty defaultPackages skips the package chain", {
+  old <- options(defaultPackages = character(0))
+  on.exit(options(old))
+
+  engine <- Engine$new(load_stdlib = FALSE)
+  builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+
+  # builtins_env should parent directly to baseenv() with no packages in between
+  expect_identical(parent.env(builtins_env), baseenv())
+})
+
+test_that("custom defaultPackages changes which packages are in the chain", {
+  old <- options(defaultPackages = c("stats"))
+  on.exit(options(old))
+
+  engine <- Engine$new(load_stdlib = FALSE)
+  builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+
+  # Should have exactly one package env (stats) between builtins_env and baseenv()
+  e <- parent.env(builtins_env)
+  seen_names <- character()
+  while (!identical(e, baseenv())) {
+    nm <- attr(e, "name")
+    if (!is.null(nm)) seen_names <- c(seen_names, nm)
+    e <- parent.env(e)
+  }
+  expect_equal(seen_names, "package:stats")
+})
+
+test_that("modules can use default package functions without importing them", {
+  engine <- make_engine()
+  result <- engine$eval_text("
+    (module __dpkg_test
+      (export med)
+      (define med (lambda (xs) (median xs))))
+    (import __dpkg_test)
+    (med (c 1 2 3 4 5))")
+  expect_equal(result, 3)
 })

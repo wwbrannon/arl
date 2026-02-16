@@ -516,13 +516,45 @@ Engine <- R6::R6Class(
       resolve_env(env, private$.env$env)
     },
 
+    .build_default_pkgs_chain = function(base_env) {
+      pkg_names <- getOption("defaultPackages")
+      if (is.null(pkg_names) || length(pkg_names) == 0L) return(base_env)
+
+      # R's search path has defaultPackages in reverse order
+      # (last listed = closest to base). We build bottom-up.
+      parent <- base_env
+      for (pkg in rev(pkg_names)) {
+        ns <- tryCatch(asNamespace(pkg), error = function(e) NULL)
+        if (is.null(ns)) next
+        pkg_env <- new.env(parent = parent)
+        exports <- getNamespaceExports(ns)
+        # Also include lazy data (e.g. datasets package uses this mechanism)
+        nsinfo <- get(".__NAMESPACE__.", envir = ns)
+        if (exists("lazydata", envir = nsinfo)) {
+          ld <- get("lazydata", envir = nsinfo)
+          exports <- unique(c(exports, ls(ld)))
+        }
+        for (name in exports) {
+          tryCatch(
+            assign(name, getExportedValue(pkg, name), envir = pkg_env),
+            error = function(e) NULL
+          )
+        }
+        attr(pkg_env, "name") <- paste0("package:", pkg)
+        parent <- pkg_env
+      }
+      parent
+    },
+
     .initialize_environment = function(load_stdlib = TRUE) {
       env <- private$.env$env
 
       # Create builtins environment: modules inherit from this (not from
       # engine_env which has all stdlib attached).
-      # Chain: engine_env (stdlib) -> builtins_env (builtins) -> baseenv()
-      builtins_env <- new.env(parent = parent.env(env))
+      # Chain: engine_env -> builtins_env -> pkg:stats -> ... -> pkg:methods -> baseenv()
+      base <- parent.env(env)  # baseenv()
+      top_pkg_env <- private$.build_default_pkgs_chain(base)
+      builtins_env <- new.env(parent = top_pkg_env)
       parent.env(env) <- builtins_env
 
       # Move registries from engine_env to builtins_env so module envs
