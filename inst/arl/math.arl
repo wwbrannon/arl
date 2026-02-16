@@ -107,13 +107,14 @@
           (__r< (__r[[ args 1) (__r[[ args 2))
           (begin
             (define result #t)
-            (define remaining args)
-            (while (and (__r> (__rlength remaining) 1) result)
+            (define i 1)
+            (define n (__rlength args))
+            (while (and (__r< i n) result)
               (begin
-                (if (not (__r< (car remaining) (car (cdr remaining))))
+                (if (__r! (__r< (__r[[ args i) (__r[[ args (__r+ i 1))))
                   (set! result #f)
                   #nil)
-                (set! remaining (cdr remaining))))
+                (set! i (__r+ i 1))))
             result)))))
 
   ;;' @description Variadic greater-than comparison. Checks all adjacent pairs.
@@ -134,13 +135,14 @@
           (__r> (__r[[ args 1) (__r[[ args 2))
           (begin
             (define result #t)
-            (define remaining args)
-            (while (and (__r> (__rlength remaining) 1) result)
+            (define i 1)
+            (define n (__rlength args))
+            (while (and (__r< i n) result)
               (begin
-                (if (not (__r> (car remaining) (car (cdr remaining))))
+                (if (__r! (__r> (__r[[ args i) (__r[[ args (__r+ i 1))))
                   (set! result #f)
                   #nil)
-                (set! remaining (cdr remaining))))
+                (set! i (__r+ i 1))))
             result)))))
 
   ;;' @description Variadic less-than-or-equal comparison. Checks all adjacent pairs.
@@ -161,13 +163,14 @@
           (__r<= (__r[[ args 1) (__r[[ args 2))
           (begin
             (define result #t)
-            (define remaining args)
-            (while (and (__r> (__rlength remaining) 1) result)
+            (define i 1)
+            (define n (__rlength args))
+            (while (and (__r< i n) result)
               (begin
-                (if (not (__r<= (car remaining) (car (cdr remaining))))
+                (if (__r! (__r<= (__r[[ args i) (__r[[ args (__r+ i 1))))
                   (set! result #f)
                   #nil)
-                (set! remaining (cdr remaining))))
+                (set! i (__r+ i 1))))
             result)))))
 
   ;;' @description Variadic greater-than-or-equal comparison. Checks all adjacent pairs.
@@ -188,13 +191,14 @@
           (__r>= (__r[[ args 1) (__r[[ args 2))
           (begin
             (define result #t)
-            (define remaining args)
-            (while (and (__r> (__rlength remaining) 1) result)
+            (define i 1)
+            (define n (__rlength args))
+            (while (and (__r< i n) result)
               (begin
-                (if (not (__r>= (car remaining) (car (cdr remaining))))
+                (if (__r! (__r>= (__r[[ args i) (__r[[ args (__r+ i 1))))
                   (set! result #f)
                   #nil)
-                (set! remaining (cdr remaining))))
+                (set! i (__r+ i 1))))
             result)))))
 
   ;; NULL-safe equality: R's == returns logical(0) for NULL arguments,
@@ -228,13 +232,14 @@
           (__null_safe_eq (__r[[ args 1) (__r[[ args 2))
           (begin
             (define result #t)
-            (define remaining args)
-            (while (and (__r> (__rlength remaining) 1) result)
+            (define i 1)
+            (define n (__rlength args))
+            (while (and (__r< i n) result)
               (begin
-                (if (not (__null_safe_eq (car remaining) (car (cdr remaining))))
+                (if (__r! (__null_safe_eq (__r[[ args i) (__r[[ args (__r+ i 1))))
                   (set! result #f)
                   #nil)
-                (set! remaining (cdr remaining))))
+                (set! i (__r+ i 1))))
             result)))))
 
   ;;' @signature (= a b ...)

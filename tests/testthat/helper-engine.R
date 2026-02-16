@@ -21,9 +21,13 @@ toplevel_env <- function(engine, env = NULL) {
   # Access private .load_stdlib_into_env via R6 enclosure
   engine$.__enclos_env__$private$.load_stdlib_into_env(env)
   core_env <- engine$get_env()
-  for (name in ls(core_env, all.names = TRUE)) {
-    if (!exists(name, envir = env, inherits = FALSE)) {
-      assign(name, get(name, envir = core_env, inherits = FALSE), envir = env)
+  # Copy bindings from both engine_env and builtins_env (its parent)
+  builtins_env <- parent.env(core_env)
+  for (src_env in list(core_env, builtins_env)) {
+    for (name in ls(src_env, all.names = TRUE)) {
+      if (!exists(name, envir = env, inherits = FALSE)) {
+        assign(name, get(name, envir = src_env, inherits = FALSE), envir = env)
+      }
     }
   }
   last_fn <- get0("last", envir = core_env, inherits = FALSE)

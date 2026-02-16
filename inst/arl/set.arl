@@ -7,6 +7,7 @@
   (import types)
   (import list)
   (import looping)
+  (import core)     ; r/call
 
 ;;' @section Set (Hash-Backed)
 ;;' Sets are mutable collections of unique items backed by R environments.

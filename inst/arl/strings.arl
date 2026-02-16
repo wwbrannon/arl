@@ -12,6 +12,7 @@
 
   (import list)
   (import math)
+  (import core)     ; r/call
 
   ;;' @section String Operations
   ;;' Core string manipulation functions: joining, splitting, searching,

@@ -14,6 +14,7 @@
           positive? negative? non-negative? non-positive?)
 
   (import _r)
+  (import core)     ; r/call
 
   ;;' @section List and Pair Predicates
 

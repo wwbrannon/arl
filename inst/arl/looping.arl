@@ -7,6 +7,7 @@
   (import list)
   (import types)
   (import sequences)
+  (import logic)    ; not
 
   ;;' @section Looping Macros
 

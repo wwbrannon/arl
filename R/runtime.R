@@ -70,6 +70,7 @@ EvalContext <- R6::R6Class(
     compiler = NULL,
     use_env_cache = NULL,
     coverage_tracker = NULL,
+    builtins_env = NULL,
     # @description Create context. macro_expander and compiler are assigned by the engine.
     # @param env Env instance.
     # @param source_tracker SourceTracker instance.
@@ -341,7 +342,11 @@ CompiledRuntime <- R6::R6Class(
       invisible(NULL)
     },
     module_compiled = function(module_name, exports, export_all, body_exprs, src_file, env) {
-      module_env <- new.env(parent = env)
+      # Module environments inherit from builtins_env (not the engine env
+      # with all stdlib), enforcing proper lexical scoping via imports.
+      module_parent <- self$context$builtins_env
+      if (is.null(module_parent)) module_parent <- env
+      module_env <- new.env(parent = module_parent)
       assign(".__module", TRUE, envir = module_env)
       lockBinding(".__module", module_env)
       self$context$env$module_registry$register(module_name, module_env, exports)
@@ -370,60 +375,39 @@ CompiledRuntime <- R6::R6Class(
                       length(src_file) == 1L && nzchar(src_file) &&
                       file.exists(src_file)
 
-      compiled_body <- NULL
-      if (should_cache) {
-        compiled_body <- lapply(body_exprs, function(expr) {
-          expanded <- self$context$macro_expander$macroexpand(expr, env = module_env, preserve_src = TRUE)
-          self$context$compiler$compile(expanded, module_env, strict = TRUE)
-        })
-      }
-
-      # Build evaluation body: interleave coverage calls if coverage is enabled
       coverage_tracker <- self$context$coverage_tracker
       coverage_active <- !is.null(coverage_tracker) && coverage_tracker$enabled
-      eval_body <- compiled_body
-      if (!is.null(eval_body) && coverage_active) {
-        source_tracker <- self$context$source_tracker
-        instrumented <- vector("list", length(eval_body) * 2L)
-        idx <- 1L
-        for (i in seq_along(eval_body)) {
-          if (!is.null(source_tracker) && i <= length(body_exprs)) {
-            arl_src <- source_tracker$src_get(body_exprs[[i]])
-            if (!is.null(arl_src) && !is.null(arl_src$file) && !is.null(arl_src$start_line)) {
-              # Narrow to start_line for forms whose sub-expressions are
-              # instrumented separately (if, define/defmacro wrapping lambda).
-              # For everything else, use full source span.
-              end_line <- arl_src$start_line
-              narrow <- should_narrow_coverage(body_exprs[[i]])
-              if (!narrow && !is.null(arl_src$end_line)) {
-                end_line <- arl_src$end_line
-              }
-              coverage_tracker$register_coverable(arl_src$file, arl_src$start_line, end_line)
-              instrumented[[idx]] <- as.call(list(
-                as.symbol(".__coverage_track"),
-                arl_src$file,
-                arl_src$start_line,
-                end_line
-              ))
-              idx <- idx + 1L
-            }
-          }
-          instrumented[[idx]] <- eval_body[[i]]
-          idx <- idx + 1L
-        }
-        eval_body <- instrumented[seq_len(idx - 1L)]
-      }
 
-      # Evaluate (use compiled version if we made it, otherwise compile on-the-fly)
-      if (!is.null(eval_body)) {
-        if (length(eval_body) == 1L) {
-          result <- self$eval_compiled(eval_body[[1L]], module_env)
-        } else {
-          block <- as.call(c(list(quote(`{`)), eval_body))
-          result <- self$eval_compiled(block, module_env)
+      # Interleaved compile/eval: each expression is macro-expanded, compiled,
+      # and evaluated before the next one is processed. This ensures that
+      # (import X) runs before subsequent expressions try to use X's macros.
+      # compiled_body is accumulated for caching.
+      compiled_body <- if (should_cache) vector("list", length(body_exprs)) else NULL
+      result <- NULL
+      source_tracker <- self$context$source_tracker
+      for (i in seq_along(body_exprs)) {
+        # Coverage instrumentation for this expression
+        if (coverage_active && !is.null(source_tracker)) {
+          arl_src <- source_tracker$src_get(body_exprs[[i]])
+          if (!is.null(arl_src) && !is.null(arl_src$file) && !is.null(arl_src$start_line)) {
+            end_line <- arl_src$start_line
+            narrow <- should_narrow_coverage(body_exprs[[i]])
+            if (!narrow && !is.null(arl_src$end_line)) {
+              end_line <- arl_src$end_line
+            }
+            coverage_tracker$register_coverable(arl_src$file, arl_src$start_line, end_line)
+            coverage_tracker$track(list(
+              file = arl_src$file,
+              start_line = arl_src$start_line,
+              end_line = end_line
+            ))
+          }
         }
-      } else {
-        result <- private$eval_seq(body_exprs, module_env)
+
+        expanded <- self$context$macro_expander$macroexpand(body_exprs[[i]], env = module_env, preserve_src = TRUE)
+        compiled <- self$context$compiler$compile(expanded, module_env, strict = TRUE)
+        if (!is.null(compiled_body)) compiled_body[[i]] <- compiled
+        result <- self$eval_compiled(compiled, module_env)
       }
 
       if (export_all) {

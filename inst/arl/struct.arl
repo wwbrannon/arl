@@ -4,6 +4,8 @@
   (export defstruct)
 
   (import functional)
+  (import display)  ; str
+  (import core)     ; r/call
 
 ;;' @section Struct Definition
 

@@ -16,6 +16,8 @@
           list-ref list-tail)
 
   (import _r)
+  (import core)     ; r/call
+  (import types)    ; null?
 
   ;;' @section List Operations
   ;;' Core list constructors and accessors, following Scheme conventions.
@@ -308,7 +310,7 @@
           (set! remaining (cdr remaining))))
       result))
 
-  ;;' @description Find first alist entry (list or dotted pair) with matching key (uses equal?).
+  ;;' @description Find first alist entry (list or dotted pair) with matching key (uses ==).
   ;;' @examples
   ;;' (assoc 'b (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
   ;;' (assoc 'z (list (list 'a 1) (list 'b 2)))               ; => #nil
@@ -318,19 +320,18 @@
   ;;' @seealso rassoc, assoc-by-identical?, assoc-by-==
   (define assoc
     (lambda (key alist)
-      (__assoc-by-pred key alist equal?)))
+      (__assoc-by-pred key alist __r==-pred)))
 
-  ;;' @description Alias for assoc: find first alist entry with key matching under equal?.
+  ;;' @description Find first alist entry with key matching under equal? (deep structural comparison).
+  ;;' Requires `(import equality)` for `equal?`.
   ;;' @seealso assoc
-  (define assoc-by-equal?
-    (lambda (key alist)
-      (assoc key alist)))
+  (define assoc-by-equal? assoc)
 
   ;;' @description Find first alist entry with matching key (uses R's identical?).
   ;;' @seealso assoc, assoc-by-==
   (define assoc-by-identical?
     (lambda (key alist)
-      (__assoc-by-pred key alist identical?)))
+      (__assoc-by-pred key alist identical)))
 
   ;;' @description Find first alist entry with matching key (uses R's ==).
   ;;' @seealso assoc, assoc-by-identical?
@@ -369,7 +370,7 @@
         (begin
           (define pair (car remaining))
           (if (and (list? pair) (>= (__rlength pair) 2))
-            (if (equal? (cadr pair) value)
+            (if (= (cadr pair) value)
               (set! result pair)
               #nil)
             #nil)

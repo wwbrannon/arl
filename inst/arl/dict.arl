@@ -7,6 +7,8 @@
   (import types)
   (import list)
   (import looping)
+  (import core)     ; r/call
+  (import functional) ; filter
 
 ;;' @section Dictionary (Hash Table)
 ;;' Dictionaries are mutable key-value stores backed by R environments.

@@ -8,6 +8,9 @@
 
   (import list)
   (import types)
+  (import core)     ; r/call
+  (import equality) ; equal?
+  (import control)  ; when
 
   ;;' @section Sequence Helpers
   ;;' Higher-level operations for slicing, chunking, and transforming

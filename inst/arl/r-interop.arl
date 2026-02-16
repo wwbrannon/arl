@@ -9,6 +9,8 @@
           transform substitute)
 
   (import core)
+  (import strings)  ; string-append
+  (import list)     ; car, cdr
 
 ;;' @section R Nonstandard Evaluation Wrappers
 ;;' These macros provide Arl-friendly interfaces to R functions that use

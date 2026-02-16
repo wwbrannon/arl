@@ -273,7 +273,11 @@ Engine <- R6::R6Class(
               exports <- cache_data$exports
               export_all <- cache_data$export_all
 
-              module_env <- new.env(parent = target_env)
+              # Module environments inherit from builtins_env (not the
+              # engine env with all stdlib) for proper lexical scoping.
+              builtins_env <- private$.compiled_runtime$context$builtins_env
+              module_parent <- if (!is.null(builtins_env)) builtins_env else target_env
+              module_env <- new.env(parent = module_parent)
               assign(".__module", TRUE, envir = module_env)
               lockBinding(".__module", module_env)
 
@@ -515,18 +519,75 @@ Engine <- R6::R6Class(
     .initialize_environment = function(load_stdlib = TRUE) {
       env <- private$.env$env
 
-      private$.env$get_registry(".__module_registry", create = TRUE)
-      private$.env$get_registry(".__macros", create = TRUE)
+      # Create builtins environment: modules inherit from this (not from
+      # engine_env which has all stdlib attached).
+      # Chain: engine_env (stdlib) -> builtins_env (builtins) -> baseenv()
+      builtins_env <- new.env(parent = parent.env(env))
+      parent.env(env) <- builtins_env
+
+      # Move registries from engine_env to builtins_env so module envs
+      # (which parent to builtins_env) can find them via inherits = TRUE.
+      macro_reg <- private$.env$get_registry(".__macros", create = TRUE)
+      module_reg <- private$.env$get_registry(".__module_registry", create = TRUE)
+      if (exists(".__macros", envir = env, inherits = FALSE)) {
+        rm(".__macros", envir = env)
+      }
+      if (exists(".__module_registry", envir = env, inherits = FALSE)) {
+        rm(".__module_registry", envir = env)
+      }
+      assign(".__macros", macro_reg, envir = builtins_env)
+      assign(".__module_registry", module_reg, envir = builtins_env)
+
+      # Store builtins_env on the eval context so runtime can use it
+      # as the parent for module environments.
+      private$.compiled_runtime$context$builtins_env <- builtins_env
 
       #
-      # Cons-cell primitives (bound in top-level env so no globalenv/package lookup)
+      # Equality operators — R's = is assignment, not comparison. Arl's
+      # = and == are NULL-safe variadic comparison. These must be builtins
+      # because every module needs them and R's baseenv semantics conflict.
       #
 
-      env$`.__cons` <- function(car, cdr) Cons$new(car, cdr)
-      env$`.__cons-as-list` <- function(x) if (r6_isinstance(x, "Cons")) x$as_list() else list()
-      env$`.__cons-parts` <- function(x) if (r6_isinstance(x, "Cons")) x$parts() else list(prefix = list(), tail = x)
+      null_safe_eq <- function(a, b) {
+        if (is.null(a)) return(is.null(b))
+        if (is.null(b)) return(FALSE)
+        a == b
+      }
+      variadic_eq <- function(...) {
+        args <- list(...)
+        n <- length(args)
+        if (n < 2L) return(TRUE)
+        for (i in seq_len(n - 1L)) {
+          if (!isTRUE(null_safe_eq(args[[i]], args[[i + 1L]]))) return(FALSE)
+        }
+        TRUE
+      }
+      builtins_env$`=` <- variadic_eq
+      builtins_env$`==` <- variadic_eq
+      builtins_env$`!=` <- function(a, b) {
+        if (is.null(a)) return(!is.null(b))
+        if (is.null(b)) return(TRUE)
+        a != b
+      }
 
-      env$`pair?` <- function(x) r6_isinstance(x, "Cons")
+      #
+      # Logical negation — Arl truthiness (0, #f, #nil are falsy).
+      # R's ! works on logical/numeric but not on arbitrary values.
+      #
+
+      builtins_env$`not` <- function(x) {
+        if (.__true_p(x)) FALSE else TRUE
+      }
+
+      #
+      # Cons-cell primitives — installed into builtins_env
+      #
+
+      builtins_env$`.__cons` <- function(car, cdr) Cons$new(car, cdr)
+      builtins_env$`.__cons-as-list` <- function(x) if (r6_isinstance(x, "Cons")) x$as_list() else list()
+      builtins_env$`.__cons-parts` <- function(x) if (r6_isinstance(x, "Cons")) x$parts() else list(prefix = list(), tail = x)
+
+      builtins_env$`pair?` <- function(x) r6_isinstance(x, "Cons")
 
       #
       # Macro builtins
@@ -535,19 +596,19 @@ Engine <- R6::R6Class(
       # these depend on internal state and mostly just wrap the macro
       # expander's functionality for users to call
 
-      env$gensym <- function(prefix = "G") {
+      builtins_env$gensym <- function(prefix = "G") {
         private$.macro_expander$gensym(prefix = prefix)
       }
 
-      env$capture <- function(symbol, expr) {
+      builtins_env$capture <- function(symbol, expr) {
         private$.macro_expander$capture(symbol, expr)
       }
 
-      env$`macro?` <- function(x) {
+      builtins_env$`macro?` <- function(x) {
         is.symbol(x) && private$.macro_expander$is_macro(x, env = env)
       }
 
-      env$macroexpand <- function(expr, depth = NULL, preserve_src = FALSE) {
+      builtins_env$macroexpand <- function(expr, depth = NULL, preserve_src = FALSE) {
         private$.macro_expander$macroexpand(expr, env = env,
                                             preserve_src = preserve_src, depth = depth)
       }
@@ -559,20 +620,20 @@ Engine <- R6::R6Class(
       # these need to either expose the compile functionality or close over the
       # engine environment
 
-      env$eval <- function(expr, env = parent.frame()) {
+      builtins_env$eval <- function(expr, env = parent.frame()) {
         self$eval(expr, env = env)
       }
 
-      env$read <- function(source) {
+      builtins_env$read <- function(source) {
         exprs <- self$read(source)
         if (length(exprs) > 0L) exprs[[1L]] else NULL
       }
 
-      env$write <- function(expr) {
+      builtins_env$write <- function(expr) {
         private$.parser$write(expr)
       }
 
-      env$help <- function(topic, package = NULL) {
+      builtins_env$help <- function(topic, package = NULL) {
         target_env <- if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
           get(".__env", envir = parent.frame(), inherits = TRUE)
         } else {
@@ -612,9 +673,9 @@ Engine <- R6::R6Class(
         }
         self$load_file_in_env(path, target_env)
       }
-      env$load <- load_fn
+      builtins_env$load <- load_fn
 
-      env$`import-stdlib` <- function() {
+      builtins_env$`import-stdlib` <- function() {
         target_env <- if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
           get(".__env", envir = parent.frame(), inherits = TRUE)
         } else {
@@ -624,8 +685,8 @@ Engine <- R6::R6Class(
         invisible(NULL)
       }
 
-      env$`toplevel-env` <- function() env
-      env$`current-env` <- function() {
+      builtins_env$`toplevel-env` <- function() env
+      builtins_env$`current-env` <- function() {
         if (exists(".__env", envir = parent.frame(), inherits = TRUE)) {
           return(get(".__env", envir = parent.frame(), inherits = TRUE))
         }
@@ -638,17 +699,17 @@ Engine <- R6::R6Class(
 
       # delay is a compiler special form, but these can be defined here
 
-      env$`promise?` <- function(x) {
+      builtins_env$`promise?` <- function(x) {
         r6_isinstance(x, "Promise")
       }
-      env$force <- function(x) {
+      builtins_env$force <- function(x) {
         if (!r6_isinstance(x, "Promise")) {
           return(x)
         }
         x$value()
       }
 
-      env$`promise-expr` <- function(p) {
+      builtins_env$`promise-expr` <- function(p) {
         if (!r6_isinstance(p, "Promise")) {
           stop("promise-expr requires a promise (created with delay)")
         }
@@ -663,7 +724,7 @@ Engine <- R6::R6Class(
       # Uses substitute() to capture the first arg (symbol name) unevaluated.
       # Keyword args set specific fields and merge with existing documentation.
       # Positional string sets the description (backward compatible).
-      env$`doc!` <- function(sym, ...) {
+      builtins_env$`doc!` <- function(sym, ...) {
         arl_env <- parent.frame()
         name <- as.character(substitute(sym))
         fn <- get(name, envir = arl_env, inherits = TRUE)
@@ -706,7 +767,7 @@ Engine <- R6::R6Class(
       # With no field argument, returns the description.
       # Pass a field name string to get a specific field, or "all" for the
       # full documentation list.
-      env$doc <- function(fn, field = "description") {
+      builtins_env$doc <- function(fn, field = "description") {
         doc_attr <- attr(fn, "arl_doc", exact = TRUE)
         if (is.null(doc_attr)) return(NULL)
         if (identical(field, "all")) return(doc_attr)
@@ -752,7 +813,7 @@ Engine <- R6::R6Class(
       # suppressMessages, withCallingHandlers, signal, the do looping macro,
       # and anywhere stdlib needs to build and evaluate raw R calls.
 
-      env$`r/eval` <- function(expr, env = NULL) {
+      builtins_env$`r/eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
           # Use caller's environment directly (no .__env needed)
           env <- parent.frame()
@@ -791,7 +852,7 @@ Engine <- R6::R6Class(
       }
       # Load arl_doc attributes from reference-docs.dcf (single source of truth
       # shared with the vignette generator)
-      private$load_builtin_docs(env)
+      private$load_builtin_docs(builtins_env)
 
       if (load_stdlib) {
         private$.load_stdlib_into_env(env)

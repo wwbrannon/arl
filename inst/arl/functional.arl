@@ -6,6 +6,8 @@
 
   (import list)
   (import logic)
+  (import types)    ; null?
+  (import core)     ; r/call
 
   ;;' @section Core Higher-Order Functions
   ;;' The fundamental building blocks for functional programming in Arl.

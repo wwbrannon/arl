@@ -9,6 +9,7 @@
   (import equality)
   (import strings)
   (import dict)
+  (import list)     ; call
 
 ;;' @section Assertion Helpers
 ;;' These functions provide test-style assertions that signal errors on failure
