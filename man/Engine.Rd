@@ -55,8 +55,6 @@ option \code{arl.use_env_cache}.}
 Initialize engine components and base environment.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Engine$new(
-  env = NULL,
-  parent = NULL,
   use_env_cache = NULL,
   coverage_tracker = NULL,
   load_stdlib = TRUE,
@@ -67,11 +65,6 @@ Initialize engine components and base environment.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{env}}{Optional existing environment to use. If NULL, creates a new environment.}
-
-\item{\code{parent}}{Optional parent environment for the new environment. Only used if env is NULL.
-Defaults to baseenv(). Cannot be specified together with env.}
-
 \item{\code{use_env_cache}}{Optional logical. If TRUE, enables the env cache for 4x faster
 module loading. Only safe when dependencies don't change. Defaults to NULL, which
 inherits from global option \code{getOption("arl.use_env_cache", FALSE)}.}

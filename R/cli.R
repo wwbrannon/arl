@@ -248,22 +248,21 @@ CLI <- R6::R6Class(
     do_repl = function() {
       load_stdlib <- !isTRUE(self$parsed$no_stdlib)
       if (!self$cli_isatty()) {
-        engine <- Engine$new(env = new.env(parent = .GlobalEnv), load_stdlib = load_stdlib)
+        engine <- Engine$new(load_stdlib = load_stdlib)
         text <- paste(self$cli_read_stdin(), collapse = "\n")
         if (trimws(text) != "") {
           self$cli_eval_text(text, engine, source_name = "<stdin>")
         }
         return(invisible(NULL))
       }
-      engine <- Engine$new(env = new.env(parent = .GlobalEnv), load_stdlib = load_stdlib)
+      engine <- Engine$new(load_stdlib = load_stdlib)
       engine$repl()
       invisible(NULL)
     },
     # @description Evaluate files from parsed (--file and positional). Uses shared engine env.
     # @param parsed Result of parse().
     do_file = function(parsed) {
-      engine <- Engine$new(env = new.env(parent = .GlobalEnv),
-                           load_stdlib = !isTRUE(self$parsed$no_stdlib))
+      engine <- Engine$new(load_stdlib = !isTRUE(self$parsed$no_stdlib))
       for (path in parsed$files) {
         if (!file.exists(path)) {
           self$cli_exit_with_error(paste0("File not found: ", path), show_help = TRUE)
@@ -280,8 +279,7 @@ CLI <- R6::R6Class(
     # @description Evaluate --eval expression(s) and exit.
     # @param parsed Result of parse().
     do_eval = function(parsed) {
-      engine <- Engine$new(env = new.env(parent = .GlobalEnv),
-                           load_stdlib = !isTRUE(self$parsed$no_stdlib))
+      engine <- Engine$new(load_stdlib = !isTRUE(self$parsed$no_stdlib))
       self$cli_eval_text(parsed$expr, engine, source_name = "<cli>")
       invisible(NULL)
     },

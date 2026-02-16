@@ -46,9 +46,6 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Initialize engine components and base environment.
-    #' @param env Optional existing environment to use. If NULL, creates a new environment.
-    #' @param parent Optional parent environment for the new environment. Only used if env is NULL.
-    #'   Defaults to baseenv(). Cannot be specified together with env.
     #' @param use_env_cache Optional logical. If TRUE, enables the env cache for 4x faster
     #'   module loading. Only safe when dependencies don't change. Defaults to NULL, which
     #'   inherits from global option `getOption("arl.use_env_cache", FALSE)`.
@@ -61,7 +58,7 @@ Engine <- R6::R6Class(
     #' @param disable_tco Optional logical. If TRUE, disables self-tail-call optimization
     #'   in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
     #'   which inherits from global option `getOption("arl.disable_tco", FALSE)`.
-    initialize = function(env = NULL, parent = NULL, use_env_cache = NULL,
+    initialize = function(use_env_cache = NULL,
                           coverage_tracker = NULL, load_stdlib = TRUE,
                           disable_tco = NULL) {
       # Priority: explicit parameter > global option > default FALSE
@@ -81,7 +78,7 @@ Engine <- R6::R6Class(
         .set_pkg_option("env_cache_warning_shown", TRUE)
       }
 
-      private$.env <- Env$new(env = env, parent = parent)
+      private$.env <- Env$new()
       private$.source_tracker <- SourceTracker$new()
       private$.tokenizer <- Tokenizer$new()
       private$.parser <- Parser$new(private$.source_tracker)
@@ -552,8 +549,9 @@ Engine <- R6::R6Class(
       # Create builtins environment: modules inherit from this (not from
       # engine_env which has all stdlib attached).
       # Chain: engine_env -> builtins_env -> pkg:stats -> ... -> pkg:methods -> baseenv()
-      base <- parent.env(env)  # baseenv()
-      top_pkg_env <- private$.build_default_pkgs_chain(base)
+      # Always build on baseenv(), even if the user passed an explicit env
+      # with a different parent.
+      top_pkg_env <- private$.build_default_pkgs_chain(baseenv())
       builtins_env <- new.env(parent = top_pkg_env)
       parent.env(env) <- builtins_env
 

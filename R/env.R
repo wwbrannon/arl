@@ -44,18 +44,12 @@ Env <- R6::R6Class(
     }
   ),
   public = list(
-    # @description Create a Env from an existing environment or a new one with optional parent.
-    # @param env Optional existing environment. If NULL, a new environment is created.
-    # @param parent Optional parent for the new environment when env is NULL. Cannot be used with env.
-    initialize = function(env = NULL, parent = NULL) {
-      if (!is.null(env) && !is.null(parent)) {
-        stop("Cannot specify both 'env' and 'parent' arguments")
-      }
+    # @description Create an Env from an existing environment or a new one.
+    # @param env Optional existing environment. If NULL, creates a new environment
+    #   with baseenv() as parent.
+    initialize = function(env = NULL) {
       if (is.null(env)) {
-        if (is.null(parent)) {
-          parent <- baseenv()
-        }
-        env <- new.env(parent = parent)
+        env <- new.env(parent = baseenv())
       }
       if (!is.environment(env)) {
         stop("Env requires an environment")
