@@ -96,6 +96,14 @@ Env <- R6::R6Class(
     # @param value Value to assign.
     assign = function(name, value) {
       target <- self$find_define_env(name)
+      # Active bindings (from proxy imports) are read-only zero-arg functions;
+      # base::assign on them triggers the binding function with the value as arg,
+      # causing "unused argument" errors. Remove the active binding first.
+      if (exists(name, envir = target, inherits = FALSE) &&
+          bindingIsActive(name, target)) {
+        if (bindingIsLocked(name, target)) unlock_binding(name, target)
+        rm(list = name, envir = target)
+      }
       assign(name, value, envir = target)
       invisible(NULL)
     },
@@ -104,7 +112,20 @@ Env <- R6::R6Class(
     # @param value Value to assign.
     assign_existing = function(name, value) {
       target_env <- self$find_existing_env(name)
-      assign(name, value, envir = target_env)
+      if (bindingIsActive(name, target_env)) {
+        # If the binding lives in a proxy env, create a local shadow
+        # in self$env rather than mutating the proxy.
+        if (isTRUE(get0(".__import_proxy", envir = target_env, inherits = FALSE))) {
+          assign(name, value, envir = self$env)
+        } else {
+          # Active binding in same env (squash mode) — remove and replace
+          if (bindingIsLocked(name, target_env)) unlock_binding(name, target_env)
+          rm(list = name, envir = target_env)
+          assign(name, value, envir = target_env)
+        }
+      } else {
+        assign(name, value, envir = target_env)
+      }
       invisible(NULL)
     },
     # @description Get a module's registry entry (env, exports, path) by name.

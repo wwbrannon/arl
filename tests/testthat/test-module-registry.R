@@ -354,8 +354,8 @@ test_that("attach() fails for missing module", {
   )
 })
 
-test_that("attach() copies exports to Env", {
-  test_env <- new.env()
+test_that("attach() makes exports accessible via proxy", {
+  test_env <- new.env(parent = emptyenv())
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
@@ -365,27 +365,30 @@ test_that("attach() copies exports to Env", {
   registry$register("test-mod", mod_env, c("foo", "bar"))
   registry$attach("test-mod")
 
-  expect_equal(arl_env$env$foo, 42)
-  expect_equal(arl_env$env$bar, "test")
+  # Proxy-based: values accessible via get() with inherits
+  expect_equal(get("foo", envir = arl_env$env), 42)
+  expect_equal(get("bar", envir = arl_env$env), "test")
 })
 
-test_that("attach() handles macro exports", {
-  test_env <- new.env()
+test_that("attach() handles macro exports via proxy", {
+  test_env <- new.env(parent = emptyenv())
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
-  mod_env <- new.env()
+  mod_env <- new.env(parent = emptyenv())
 
-  # Create a macro in the module's macro registry
+  # Create a macro in the module's macro registry and as regular binding
   mod_macro_registry <- arl_env$macro_registry_env(mod_env, create = TRUE)
   mod_macro_registry$my_macro <- function(x) x
+  mod_env$my_macro <- function(x) x
 
   registry$register("test-mod", mod_env, c("my_macro"))
   registry$attach("test-mod")
 
-  # Macro should be in target macro registry
-  target_macro_registry <- arl_env$macro_registry_env(create = FALSE)
-  expect_true(exists("my_macro", envir = target_macro_registry, inherits = FALSE))
-  expect_true(bindingIsLocked("my_macro", target_macro_registry))
+  # Macro should be accessible in the proxy's macro registry
+  proxy <- parent.env(arl_env$env)
+  proxy_macro_registry <- get0(".__macros", envir = proxy, inherits = FALSE)
+  expect_true(!is.null(proxy_macro_registry))
+  expect_true(is.function(get("my_macro", envir = proxy_macro_registry)))
 })
 
 test_that("attach() errors on missing export", {
@@ -415,40 +418,69 @@ test_that("attach_into() fails for missing module", {
   )
 })
 
-test_that("attach_into() copies exports to target environment", {
+test_that("attach_into() makes exports accessible via proxy", {
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
   mod_env <- new.env()
   mod_env$foo <- 42
   mod_env$bar <- "test"
-  target <- new.env()
+  target <- new.env(parent = emptyenv())
 
   registry$register("test-mod", mod_env, c("foo", "bar"))
   registry$attach_into("test-mod", target)
 
-  expect_equal(target$foo, 42)
-  expect_equal(target$bar, "test")
+  # Proxy-based: values accessible via get() with inherits
+  expect_equal(get("foo", envir = target), 42)
+  expect_equal(get("bar", envir = target), "test")
 })
 
-test_that("attach_into() handles macros to target's macro registry", {
+test_that("attach_into() handles macros via proxy's macro registry", {
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
-  mod_env <- new.env()
-  target <- new.env()
+  mod_env <- new.env(parent = emptyenv())
+  target <- new.env(parent = emptyenv())
 
-  # Create a macro in the module's macro registry
+  # Create a macro in the module's macro registry and also as regular binding
   mod_macro_registry <- arl_env$macro_registry_env(mod_env, create = TRUE)
   mod_macro_registry$my_macro <- function(x) x
+  mod_env$my_macro <- function(x) x
 
   registry$register("test-mod", mod_env, c("my_macro"))
   registry$attach_into("test-mod", target)
 
-  # Macro should be in target's macro registry
-  target_arl <- arl:::Env$new(target)
-  target_macro_registry <- target_arl$macro_registry_env(create = FALSE)
-  expect_true(exists("my_macro", envir = target_macro_registry, inherits = FALSE))
+  # Macro should be accessible in proxy's macro registry
+  proxy <- parent.env(target)
+  proxy_macro_registry <- get0(".__macros", envir = proxy, inherits = FALSE)
+  expect_true(!is.null(proxy_macro_registry))
+  # Active binding in proxy macro registry should return the macro
+  expect_true(is.function(get("my_macro", envir = proxy_macro_registry)))
+})
+
+test_that("attach_into() is idempotent for same module", {
+  test_env <- new.env()
+  arl_env <- arl:::Env$new(test_env)
+  registry <- arl:::ModuleRegistry$new(arl_env)
+  mod_env <- new.env(parent = emptyenv())
+  mod_env$foo <- 42
+  target <- new.env(parent = emptyenv())
+
+  registry$register("test-mod", mod_env, c("foo"))
+  registry$attach_into("test-mod", target)
+  # Second call should be a no-op (no duplicate proxy)
+  registry$attach_into("test-mod", target)
+
+  # Count proxies in chain
+  proxy_count <- 0L
+  p <- parent.env(target)
+  while (!identical(p, emptyenv())) {
+    if (isTRUE(get0(".__import_proxy", envir = p, inherits = FALSE))) {
+      proxy_count <- proxy_count + 1L
+    }
+    p <- parent.env(p)
+  }
+  expect_equal(proxy_count, 1L)
 })
 
 test_that("attach_into() errors on missing export", {

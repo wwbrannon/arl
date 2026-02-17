@@ -1,9 +1,9 @@
 # Package identity -- change this single value when renaming the package.
-# Used to derive option names (e.g. "arl.use_env_cache") and filesystem
+# Used to derive option names (e.g. "arl.disable_tco") and filesystem
 # paths (e.g. ".arl_cache", "~/.arl_history").
 .pkg_name <- "arl"
 
-# Convert an option name to its env var form: "use_env_cache" -> "ARL_USE_ENV_CACHE"
+# Convert an option name to its env var form: "disable_tco" -> "ARL_DISABLE_TCO"
 .option_to_envvar <- function(name) {
   toupper(paste0(.pkg_name, "_", name))
 }

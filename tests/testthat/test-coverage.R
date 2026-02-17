@@ -1251,7 +1251,7 @@ test_that("report_json() shows 0 for uncovered code lines", {
 
 test_that("Engine accepts coverage_tracker parameter", {
   tracker <- CoverageTracker$new()
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
 
   expect_s3_class(engine, "Engine")
 })
@@ -1265,7 +1265,7 @@ test_that("Engine tracks coverage for executed code", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
 
   tracker$discover_files()
   engine$load_file_in_env(tmp)
@@ -1286,7 +1286,7 @@ test_that("disabled coverage tracker doesn't track", {
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   tracker$set_enabled(FALSE)
 
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
 
   tracker$discover_files()
   engine$load_file_in_env(tmp)
@@ -1306,7 +1306,7 @@ test_that("coverage tracking persists across multiple evaluations", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
 
   tracker$discover_files()
 
@@ -1335,7 +1335,7 @@ test_that("Engine$get_coverage() returns data frame with correct structure", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file_in_env(tmp)
@@ -1357,7 +1357,7 @@ test_that("Engine$get_coverage() reports correct coverage stats", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file_in_env(tmp)
@@ -1503,7 +1503,7 @@ test_that("uncalled function body is NOT covered", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
   tracker$discover_files()
 
   # Load file but do NOT call f
@@ -1531,7 +1531,7 @@ test_that("called function body IS covered", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file_in_env(tmp)
@@ -1566,7 +1566,7 @@ test_that("module loading does not mark entire file as covered", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
   tracker$discover_files()
 
   # Load the module - defines f, g, h but doesn't call them
@@ -1599,7 +1599,7 @@ test_that("if expression only covers taken then-branch", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file_in_env(tmp)
@@ -1626,7 +1626,7 @@ test_that("if expression only covers taken else-branch", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file_in_env(tmp)
@@ -1654,7 +1654,7 @@ test_that("if expression covers both branches when both are taken", {
   on.exit(unlink(tmp))
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
-  engine <- Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- Engine$new(coverage_tracker = tracker)
   tracker$discover_files()
 
   engine$load_file_in_env(tmp)

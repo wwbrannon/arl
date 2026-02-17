@@ -56,7 +56,7 @@ arl_coverage_report <- function(
   # Create engine with coverage tracker
   # This ensures stdlib loading is tracked from the start
   message("Initializing Arl engine with coverage tracking...")
-  engine <- arl::Engine$new(use_env_cache = FALSE, coverage_tracker = tracker)
+  engine <- arl::Engine$new(coverage_tracker = tracker)
 
   # Discover files to track
   message("Discovering .arl files (stdlib only, not tests)...")

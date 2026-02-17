@@ -45,10 +45,11 @@ toplevel_env <- function(engine, env = NULL) {
     }
   }
 
-  # Attach all module exports into env (using direct registry API)
+  # Attach all module exports into env using squash mode (active bindings
+  # directly in env, maintaining flat-env behavior tests expect)
   for (mod in all_modules) {
     if (registry$exists(mod)) {
-      registry$attach_into(mod, env)
+      registry$attach_into(mod, env, squash = TRUE)
     }
   }
 

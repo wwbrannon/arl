@@ -5,11 +5,6 @@
 #' evaluation, and environment management.
 #'
 #' @importFrom R6 R6Class
-#' @field use_env_cache Logical. If TRUE, enables the env cache (full serialized
-#'   environment) which is faster but only safe when dependencies don't change.
-#'   If FALSE (default), only the expr cache (compiled expressions) is used, which
-#'   is always safe. Can be set via engine initialization parameter or global
-#'   option `arl.use_env_cache`.
 #' @param env Optional environment or Env used as the engine base.
 #' @param parent Optional parent environment for the new environment.
 #' @param source Character string containing Arl source.
@@ -43,13 +38,9 @@ Engine <- R6::R6Class(
   cloneable = FALSE,
 
   public = list(
-    use_env_cache = NULL,
 
     #' @description
     #' Initialize engine components and base environment.
-    #' @param use_env_cache Optional logical. If TRUE, enables the env cache for 4x faster
-    #'   module loading. Only safe when dependencies don't change. Defaults to NULL, which
-    #'   inherits from global option `getOption("arl.use_env_cache", FALSE)`.
     #' @param coverage_tracker Optional CoverageTracker instance to enable coverage tracking
     #'   from the start. If provided, coverage will be tracked during stdlib
     #'   loading. Intended for internal development use.
@@ -59,26 +50,8 @@ Engine <- R6::R6Class(
     #' @param disable_tco Optional logical. If TRUE, disables self-tail-call optimization
     #'   in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
     #'   which inherits from global option `getOption("arl.disable_tco", FALSE)`.
-    initialize = function(use_env_cache = NULL,
-                          coverage_tracker = NULL, load_prelude = TRUE,
-                          disable_tco = NULL) {
-      # Priority: explicit parameter > global option > default FALSE
-      if (is.null(use_env_cache)) {
-        self$use_env_cache <- .pkg_option("use_env_cache", FALSE)
-      } else {
-        self$use_env_cache <- isTRUE(use_env_cache)
-      }
-
-      # Show one-time warning if enabled
-      if (self$use_env_cache && !.pkg_option("env_cache_warning_shown", FALSE)) {
-        message(
-          "Note: Environment cache is enabled. ",
-          "This provides 4x speedup but is only safe when dependencies don't change. ",
-          paste0("Disable with options(", .pkg_name, ".use_env_cache = FALSE) if working with changing code.")
-        )
-        .set_pkg_option("env_cache_warning_shown", TRUE)
-      }
-
+    initialize = function(coverage_tracker = NULL, load_prelude = TRUE,
+                          disable_tco = NULL, ...) {
       private$.env <- Env$new()
       private$.source_tracker <- SourceTracker$new()
       private$.tokenizer <- Tokenizer$new()
@@ -86,7 +59,7 @@ Engine <- R6::R6Class(
       private$.module_cache <- ModuleCache$new()
 
       # Create shared evaluation context
-      context <- EvalContext$new(private$.env, private$.source_tracker, self$use_env_cache, coverage_tracker)
+      context <- EvalContext$new(private$.env, private$.source_tracker, coverage_tracker = coverage_tracker)
 
       # Create components with context
       private$.macro_expander <- MacroExpander$new(context)
@@ -229,31 +202,11 @@ Engine <- R6::R6Class(
         if (!is.null(cache_paths)) {
           target_env <- resolved
 
-          # Try env cache first (fastest - full serialized environment)
-          # ONLY if use_env_cache is enabled
-          if (isTRUE(self$use_env_cache) && file.exists(cache_paths$env_cache)) {
-            # Re-parent cached module to prelude_env (not engine_env)
-            cache_parent <- private$.compiled_runtime$context$prelude_env
-            if (is.null(cache_parent)) cache_parent <- private$.compiled_runtime$context$builtins_env
-            if (is.null(cache_parent)) cache_parent <- target_env
-            cache_data <- private$.module_cache$load_env(cache_paths$env_cache, cache_parent, path)
-            if (!is.null(cache_data)) {
-              # Register the cached module
-              module_env <- cache_data$module_env
-              module_name <- cache_data$module_name
-              exports <- cache_data$exports
+          # Env cache disabled: proxy-based imports use active bindings
+          # in the parent chain which can't survive serialization/deserialization.
+          # Code cache continues to work since it re-evaluates .__import() calls.
 
-              module_registry$register(module_name, module_env, exports)
-
-              # Also register by absolute path
-              absolute_path <- normalize_path_absolute(path)
-              module_registry$alias(absolute_path, module_name)
-
-              return(invisible(NULL))
-            }
-          }
-
-          # Fallback to expr cache (compiled expressions)
+          # Expr cache (compiled expressions)
           if (file.exists(cache_paths$code_cache)) {
             cache_data <- private$.module_cache$load_code(cache_paths$code_cache, path)
             if (!is.null(cache_data)) {
@@ -292,12 +245,10 @@ Engine <- R6::R6Class(
 
               # Handle export_all
               if (export_all) {
+                # ls() only returns immediate bindings — proxy-based imports
+                # live in parent chain proxies, so they're naturally excluded.
                 all_symbols <- ls(module_env, all.names = TRUE)
                 all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
-                imported <- get0(".__imported_symbols", envir = module_env, inherits = FALSE)
-                if (!is.null(imported)) {
-                  all_symbols <- setdiff(all_symbols, imported)
-                }
                 module_registry$update_exports(module_name, all_symbols)
               }
 
@@ -876,6 +827,11 @@ Engine <- R6::R6Class(
         if (identical(target, boundary)) {
           stop(sprintf("doc!: '%s' is not defined in an Arl environment", name), call. = FALSE)
         }
+        # Handle active bindings (from proxy imports)
+        if (bindingIsActive(name, target)) {
+          if (bindingIsLocked(name, target)) unlock_binding(name, target)
+          rm(list = name, envir = target)
+        }
         base::assign(name, fn, envir = target)
         invisible(fn)
       }
@@ -972,7 +928,9 @@ Engine <- R6::R6Class(
       private$load_builtin_docs(builtins_env)
 
       if (load_prelude) {
-        # Load prelude modules into prelude_env
+        # Load prelude modules into prelude_env with squash mode: active
+        # bindings are created directly in prelude_env instead of inserting
+        # proxy environments into the parent chain.
         prelude_path <- system.file("arl", "prelude-modules.txt", package = "arl")
         if (nzchar(prelude_path) && file.exists(prelude_path)) {
           prelude_modules <- readLines(prelude_path, warn = FALSE)
@@ -980,7 +938,10 @@ Engine <- R6::R6Class(
         } else {
           stop("prelude-modules.txt not found")
         }
+        private$.compiled_runtime$context$squash_imports <- TRUE
+        on.exit(private$.compiled_runtime$context$squash_imports <- FALSE, add = TRUE)
         private$.load_modules(prelude_modules, prelude_env)
+        private$.compiled_runtime$context$squash_imports <- FALSE
       }
 
       env

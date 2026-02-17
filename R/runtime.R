@@ -31,6 +31,14 @@ missing_default <- function() {
                    mode, name), call. = FALSE)
     }
     if (identical(mode, "define")) {
+      # Active bindings (from proxy imports) are read-only zero-arg functions;
+      # base::assign on them triggers the binding function with the value as arg.
+      # Remove active binding first to allow regular assignment.
+      if (exists(name, envir = env, inherits = FALSE) &&
+          bindingIsActive(name, env)) {
+        if (bindingIsLocked(name, env)) unlock_binding(name, env)
+        rm(list = name, envir = env)
+      }
       base::assign(name, value, envir = env)
     } else {
       # set! — walk parent chain (replicates Env$find_existing_env)
@@ -41,7 +49,19 @@ missing_default <- function() {
       while (!exists(name, envir = target, inherits = FALSE)) {
         target <- parent.env(target)
       }
-      base::assign(name, value, envir = target)
+      # If the binding lives in a proxy env (active binding from import),
+      # create a local shadow in the current env rather than mutating the proxy.
+      if (bindingIsActive(name, target) &&
+          isTRUE(get0(".__import_proxy", envir = target, inherits = FALSE))) {
+        base::assign(name, value, envir = env)
+      } else if (bindingIsActive(name, target)) {
+        # Active binding in same env (squash mode) — remove and replace
+        if (bindingIsLocked(name, target)) unlock_binding(name, target)
+        rm(list = name, envir = target)
+        base::assign(name, value, envir = target)
+      } else {
+        base::assign(name, value, envir = target)
+      }
     }
     return(invisible(NULL))
   }
@@ -68,24 +88,22 @@ EvalContext <- R6::R6Class(
     macro_expander = NULL,
     compiled_runtime = NULL,
     compiler = NULL,
-    use_env_cache = NULL,
     coverage_tracker = NULL,
     builtins_env = NULL,
     prelude_env = NULL,
     current_source_file = NULL,
     loading_modules = NULL,
+    squash_imports = FALSE,
     # @description Create context. macro_expander and compiler are assigned by the engine.
     # @param env Env instance.
     # @param source_tracker SourceTracker instance.
-    # @param use_env_cache Logical. If TRUE, enables the env cache.
     # @param coverage_tracker Optional CoverageTracker instance.
-    initialize = function(env, source_tracker, use_env_cache = FALSE, coverage_tracker = NULL) {
+    initialize = function(env, source_tracker, coverage_tracker = NULL) {
       if (!r6_isinstance(env, "Env")) {
         stop("EvalContext requires a Env")
       }
       self$env <- env
       self$source_tracker <- source_tracker
-      self$use_env_cache <- isTRUE(use_env_cache)
       self$coverage_tracker <- coverage_tracker
       self$loading_modules <- character(0L)
     }
@@ -128,8 +146,7 @@ CompiledRuntime <- R6::R6Class(
       # Fast path: skip if already installed
       if (exists(".__helpers_installed", envir = env, inherits = FALSE)) {
         # .__env may point to the wrong environment when helpers were
-        # copied from a module sub-environment during stdlib loading
-        # (e.g. with use_env_cache = FALSE under coverage).
+        # copied from a module sub-environment during stdlib loading.
         if (!identical(get0(".__env", envir = env, inherits = FALSE), env)) {
           if (exists(".__env", envir = env, inherits = FALSE)) {
             unlock_binding(".__env", env)
@@ -310,15 +327,9 @@ CompiledRuntime <- R6::R6Class(
           stop(sprintf("Module '%s' did not register itself", registry_key))
         }
       }
-      # Track symbols before attach so export-all can exclude imported names
-      pre_attach <- ls(env, all.names = FALSE)
-      shared_registry$attach_into(registry_key, env, only = only, except = except, prefix = prefix, rename = rename)
-      post_attach <- ls(env, all.names = FALSE)
-      imported_names <- setdiff(post_attach, pre_attach)
-      if (length(imported_names) > 0L) {
-        prev <- get0(".__imported_symbols", envir = env, inherits = FALSE)
-        assign(".__imported_symbols", unique(c(prev, imported_names)), envir = env)
-      }
+      shared_registry$attach_into(registry_key, env, only = only, except = except,
+                                   prefix = prefix, rename = rename,
+                                   squash = isTRUE(self$context$squash_imports))
       invisible(NULL)
     },
     # Package access (:: / :::) for compiled code. pkg and name are strings from the compiler.
@@ -445,14 +456,11 @@ CompiledRuntime <- R6::R6Class(
       }
 
       if (export_all) {
+        # ls() only returns immediate bindings — proxy-based imports live in
+        # parent chain proxies, so they're naturally excluded.
         all_symbols <- ls(module_env, all.names = TRUE)
         # Exclude .__* internals
         all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
-        # Exclude symbols injected by (import ...)
-        imported <- get0(".__imported_symbols", envir = module_env, inherits = FALSE)
-        if (!is.null(imported)) {
-          all_symbols <- setdiff(all_symbols, imported)
-        }
         self$context$env$module_registry$update_exports(module_name, all_symbols)
       }
 
@@ -464,13 +472,8 @@ CompiledRuntime <- R6::R6Class(
           # Always write expr cache (safe fallback)
           self$module_cache$write_code(module_name, compiled_body, exports, export_all, src_file, cache_paths$file_hash)
 
-          # Write env cache ONLY if enabled AND safe
-          if (isTRUE(self$context$use_env_cache)) {
-            safety <- self$module_cache$is_safe_to_cache(module_env, env)
-            if (safety$safe) {
-              self$module_cache$write_env(module_name, module_env, exports, src_file, cache_paths$file_hash)
-            }
-          }
+          # Env cache disabled: proxy-based imports use active bindings in
+          # the parent chain which can't survive serialization/deserialization.
         }
       }
 

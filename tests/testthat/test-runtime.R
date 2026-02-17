@@ -252,10 +252,10 @@ test_that("import_compiled() by module name loads stdlib module", {
   # Module names are passed as symbols in compiled code
   engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("types"), test_env)
 
-  # Check that some exported functions from math are now available
-  expect_true(exists("even?", envir = test_env, inherits = FALSE))
-  expect_true(exists("odd?", envir = test_env, inherits = FALSE))
-  expect_true(is.function(test_env$`even?`))
+  # Check that some exported functions are now accessible (via proxy in parent chain)
+  expect_true(exists("even?", envir = test_env, inherits = TRUE))
+  expect_true(exists("odd?", envir = test_env, inherits = TRUE))
+  expect_true(is.function(get("even?", envir = test_env)))
 })
 
 test_that("import_compiled() by module name as symbol", {
@@ -266,9 +266,9 @@ test_that("import_compiled() by module name as symbol", {
   module_name_sym <- as.symbol("display")
   engine_field(eng, "compiled_runtime")$import_compiled(module_name_sym, test_env)
 
-  # Check that some exported functions from display are now available
-  expect_true(exists("string-concat", envir = test_env, inherits = FALSE))
-  expect_true(is.function(test_env$`string-concat`))
+  # Check that some exported functions from display are now accessible
+  expect_true(exists("string-concat", envir = test_env, inherits = TRUE))
+  expect_true(is.function(get("string-concat", envir = test_env)))
 })
 
 test_that("import_compiled() errors on missing module", {
@@ -290,12 +290,13 @@ test_that("import_compiled() loads module only once", {
   engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("functional"), test_env1)
   engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("functional"), test_env2)
 
-  # Both should get the same module (same function objects)
-  expect_true(exists("map", envir = test_env1, inherits = FALSE))
-  expect_true(exists("map", envir = test_env2, inherits = FALSE))
+  # Both should get the same module (accessible via proxy)
+  expect_true(exists("map", envir = test_env1, inherits = TRUE))
+  expect_true(exists("map", envir = test_env2, inherits = TRUE))
 
-  # The functions should be identical (same object from the shared registry)
-  expect_identical(test_env1$map, test_env2$map)
+  # The functions should be identical (same object from the shared registry,
+  # accessed through active bindings that forward to the same module env)
+  expect_identical(get("map", envir = test_env1), get("map", envir = test_env2))
 })
 
 test_that("import_compiled() by path loads and attaches exports", {
@@ -314,34 +315,28 @@ test_that("import_compiled() by path loads and attaches exports", {
   test_env <- new.env(parent = eng$get_env())
   engine_field(eng, "compiled_runtime")$import_compiled(tmp_file, test_env)
 
-  # Check that the exported value is now in test_env
-  expect_true(exists("test-value", envir = test_env, inherits = FALSE))
-  expect_equal(test_env$`test-value`, 123)
+  # Check that the exported value is accessible via proxy
+  expect_true(exists("test-value", envir = test_env, inherits = TRUE))
+  expect_equal(get("test-value", envir = test_env), 123)
 })
 
 test_that("import_compiled() attaches exports to target environment", {
   eng <- make_engine()
   test_env <- new.env(parent = eng$get_env())
 
-  # Before import, the environment should be empty
-  expect_equal(length(ls(test_env, all.names = TRUE)), 0)
-
   # Import a module (using symbol)
   engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("types"), test_env)
 
-  # After import, exported functions should be in the environment
-  exports <- ls(test_env, all.names = TRUE)
-  expect_true(length(exports) > 0)
-
+  # Proxy-based imports are accessible via inheritance, not in ls()
   # Check specific exports from types module
-  expect_true(exists("number?", envir = test_env, inherits = FALSE))
-  expect_true(exists("string?", envir = test_env, inherits = FALSE))
-  expect_true(exists("list?", envir = test_env, inherits = FALSE))
+  expect_true(exists("number?", envir = test_env, inherits = TRUE))
+  expect_true(exists("string?", envir = test_env, inherits = TRUE))
+  expect_true(exists("list?", envir = test_env, inherits = TRUE))
 
   # Verify these are actually functions
-  expect_true(is.function(test_env$`number?`))
-  expect_true(is.function(test_env$`string?`))
-  expect_true(is.function(test_env$`list?`))
+  expect_true(is.function(get("number?", envir = test_env)))
+  expect_true(is.function(get("string?", envir = test_env)))
+  expect_true(is.function(get("list?", envir = test_env)))
 })
 
 # Package access tests

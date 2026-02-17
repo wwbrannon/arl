@@ -1,7 +1,5 @@
 # Module caching system for Arl
-# Implements dual-cache strategy:
-# - env cache (.env.rds): Full module environment (fast, requires safety check)
-# - expr cache (.code.rds): Compiled expressions (safe fallback)
+# Caches compiled expressions (.code.rds) for faster module loading.
 
 #' @title ModuleCache
 #' @description R6 class for managing module caching
@@ -17,7 +15,7 @@ ModuleCache <- R6::R6Class(
 
     #' @description Get cache file paths for a source file
     #' @param src_file Path to source .arl file
-    #' @return List with cache_dir, env_cache, code_cache, code_r, file_hash
+    #' @return List with cache_dir, code_cache, code_r, file_hash
     get_paths = function(src_file) {
       if (!file.exists(src_file)) {
         return(NULL)
@@ -31,125 +29,10 @@ ModuleCache <- R6::R6Class(
 
       list(
         cache_dir = cache_dir,
-        env_cache = file.path(cache_dir, paste0(base_name, ".", file_hash, ".env.rds")),
         code_cache = file.path(cache_dir, paste0(base_name, ".", file_hash, ".code.rds")),
         code_r = file.path(cache_dir, paste0(base_name, ".", file_hash, ".code.R")),
         file_hash = file_hash
       )
-    },
-
-    #' @description Check if a module environment is safe to cache
-    #' @param module_env Module environment
-    #' @param engine_env Engine environment
-    #' @return List with safe (logical) and issues (character vector)
-    is_safe_to_cache = function(module_env, engine_env) {
-      issues <- character(0)
-
-      for (name in ls(module_env, all.names = TRUE)) {
-        # Skip special internal names that are safe
-        if (name %in% c(".__module", ".__exports")) next
-
-        # Skip compiler-generated intermediate values (safe)
-        if (grepl("^\\.__define_value__", name)) next
-
-        # Skip R interop wrappers (safe - they're from other modules)
-        if (grepl("^__r", name)) next
-
-        # Skip Arl helper functions installed by runtime (safe)
-        if (grepl("^\\.__", name)) next
-
-        # Skip macro helpers (safe)
-        if (name %in% c("quasiquote", "unquote", "unquote-splicing")) next
-
-        obj <- tryCatch(
-          get(name, envir = module_env),
-          error = function(e) NULL
-        )
-        if (is.null(obj)) next
-
-        # Check 1: External pointers (would be invalid after deserialization)
-        if (typeof(obj) == "externalptr") {
-          issues <- c(issues, paste0("External pointer: ", name))
-        }
-
-        # Check 2: Connections (would be invalid)
-        if (inherits(obj, "connection")) {
-          issues <- c(issues, paste0("Connection: ", name))
-        }
-
-        # Check 3: Functions with non-module environment
-        if (is.function(obj)) {
-          fn_env <- environment(obj)
-          # Allow module_env, standard R envs, namespace envs, or other module envs
-          is_safe_env <- identical(fn_env, module_env) ||
-                         identical(fn_env, baseenv()) ||
-                         identical(fn_env, emptyenv()) ||
-                         (is.environment(fn_env) && isNamespace(fn_env)) ||
-                         (is.environment(fn_env) && isTRUE(get0(".__module", envir = fn_env, inherits = FALSE)))
-
-          if (!is_safe_env) {
-            # Function captured from elsewhere (might be old engine_env)
-            issues <- c(issues, paste0("Captured function: ", name))
-          }
-        }
-
-        # Check 4: Sub-environments with non-module parent
-        if (is.environment(obj) && !identical(obj, module_env)) {
-          parent <- parent.env(obj)
-          if (!identical(parent, module_env) &&
-              !identical(parent, emptyenv()) &&
-              !identical(parent, baseenv())) {
-            issues <- c(issues, paste0("Sub-environment with non-module parent: ", name))
-          }
-        }
-      }
-
-      list(safe = length(issues) == 0, issues = issues)
-    },
-
-    #' @description Write env cache (full module environment)
-    #' @param module_name Module name
-    #' @param module_env Module environment
-    #' @param exports Export list
-    #' @param src_file Source file path
-    #' @param file_hash File hash
-    write_env = function(module_name, module_env, exports, src_file, file_hash, coverage = FALSE) {
-      paths <- self$get_paths(src_file)
-      if (is.null(paths)) return(FALSE)
-
-      # Create cache directory if needed
-      if (!dir.exists(paths$cache_dir)) {
-        dir.create(paths$cache_dir, recursive = TRUE)
-      }
-
-      # Sever parent link before serialization (use emptyenv for safety)
-      old_parent <- parent.env(module_env)
-      parent.env(module_env) <- emptyenv()
-
-      tryCatch({
-        cache_data <- list(
-          version = as.character(utils::packageVersion("arl")),
-          file_hash = file_hash,
-          coverage = coverage,
-          module_name = module_name,
-          module_env = module_env,
-          exports = exports
-        )
-
-        # Suppress "may not be available when loading" warnings from saveRDS —
-        # closures in the module env reference the full parent chain, but we
-        # restore the correct parent after deserialization ourselves.
-        suppressWarnings(saveRDS(cache_data, paths$env_cache, compress = FALSE))
-
-        # Restore parent for current session
-        parent.env(module_env) <- old_parent
-        TRUE
-      }, error = function(e) {
-        # Restore parent even on error
-        parent.env(module_env) <- old_parent
-        warning(sprintf("Failed to write env cache for %s: %s", module_name, conditionMessage(e)))
-        FALSE
-      })
     },
 
     #' @description Write expr cache (compiled expressions)
@@ -217,49 +100,6 @@ ModuleCache <- R6::R6Class(
       })
     },
 
-    #' @description Load env cache (full module environment)
-    #' @param cache_file Path to .env.rds cache file
-    #' @param engine_env Engine environment to relink as parent
-    #' @param src_file Source file for validation
-    #' @return Cache data (module_env, module_name, exports) or NULL if invalid
-    load_env = function(cache_file, engine_env, src_file, coverage = FALSE) {
-      if (!file.exists(cache_file)) {
-        return(NULL)
-      }
-
-      cache_data <- tryCatch(
-        readRDS(cache_file),
-        error = function(e) {
-          warning(sprintf("Failed to read env cache %s: %s", cache_file, conditionMessage(e)))
-          NULL
-        }
-      )
-
-      if (is.null(cache_data)) {
-        return(NULL)
-      }
-
-      # Validate cache
-      if (!private$is_valid(cache_data, src_file, coverage = coverage)) {
-        # Invalid cache, delete all related cache files
-        paths <- self$get_paths(src_file)
-        if (!is.null(paths)) {
-          unlink(paths$env_cache)
-          unlink(paths$code_cache)
-          unlink(paths$code_r)
-        }
-        return(NULL)
-      }
-
-      module_env <- cache_data$module_env
-
-      # Relink to current engine environment
-      parent.env(module_env) <- engine_env
-
-      # Return full cache data so caller can register module
-      cache_data
-    },
-
     #' @description Load expr cache (compiled expressions)
     #' @param cache_file Path to .code.rds cache file
     #' @param src_file Source file for validation
@@ -286,7 +126,6 @@ ModuleCache <- R6::R6Class(
         # Invalid cache, delete all related cache files
         paths <- self$get_paths(src_file)
         if (!is.null(paths)) {
-          unlink(paths$env_cache)
           unlink(paths$code_cache)
           unlink(paths$code_r)
         }

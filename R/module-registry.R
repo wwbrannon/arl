@@ -1,6 +1,104 @@
 # Module registry for Arl modules. Tracks loaded modules (name -> list(env, exports, path))
 # and supports attach into a target environment. Used by compiled runtime for (import ...).
-#
+
+# Create a proxy environment with active bindings forwarding to module_env,
+# and splice it into target_env's parent chain.
+# orig_names: names in module_env to bind from
+# target_names: names to bind as in the proxy (after rename/prefix)
+# module_macro_registry: the module's .__macros env (or NULL)
+# target_env: the importing environment
+# module_name: name of the module (for idempotency markers)
+create_import_proxy <- function(module_env, orig_names, target_names,
+                                module_macro_registry, target_env, module_name) {
+  proxy <- new.env(parent = parent.env(target_env))
+  assign(".__import_proxy", TRUE, envir = proxy)
+  lockBinding(".__import_proxy", proxy)
+  assign(".__import_module_name", module_name, envir = proxy)
+  lockBinding(".__import_module_name", proxy)
+
+  # Create active bindings for regular exports
+  for (i in seq_along(orig_names)) {
+    local({
+      oname <- orig_names[i]
+      tname <- target_names[i]
+      makeActiveBinding(tname, function() {
+        get(oname, envir = module_env, inherits = FALSE)
+      }, env = proxy)
+    })
+  }
+
+  # Create macro registry in proxy for exported macros
+  if (!is.null(module_macro_registry)) {
+    proxy_macro_registry <- new.env(parent = emptyenv())
+    has_macros <- FALSE
+    for (i in seq_along(orig_names)) {
+      local({
+        oname <- orig_names[i]
+        tname <- target_names[i]
+        if (exists(oname, envir = module_macro_registry, inherits = FALSE)) {
+          makeActiveBinding(tname, function() {
+            get(oname, envir = module_macro_registry, inherits = FALSE)
+          }, env = proxy_macro_registry)
+          has_macros <<- TRUE
+        }
+      })
+    }
+    if (has_macros) {
+      assign(".__macros", proxy_macro_registry, envir = proxy)
+      lockBinding(".__macros", proxy)
+    }
+  }
+
+  # Splice proxy into parent chain
+  parent.env(target_env) <- proxy
+  invisible(proxy)
+}
+
+# Create active bindings directly in target_env (no proxy, no chain modification).
+# Used for prelude squash loading and toplevel_env test helper.
+squash_active_bindings <- function(module_env, orig_names, target_names,
+                                   module_macro_registry, target_env) {
+  for (i in seq_along(orig_names)) {
+    local({
+      oname <- orig_names[i]
+      tname <- target_names[i]
+      # Remove existing binding if present (may be locked from previous squash)
+      if (exists(tname, envir = target_env, inherits = FALSE)) {
+        if (bindingIsLocked(tname, target_env)) {
+          unlock_binding(tname, target_env)
+        }
+        rm(list = tname, envir = target_env)
+      }
+      makeActiveBinding(tname, function() {
+        get(oname, envir = module_env, inherits = FALSE)
+      }, env = target_env)
+    })
+  }
+
+  # Handle macros: copy to target's macro registry
+  if (!is.null(module_macro_registry)) {
+    target_macro_registry <- get0(".__macros", envir = target_env, inherits = FALSE)
+    if (is.null(target_macro_registry)) {
+      target_macro_registry <- new.env(parent = emptyenv())
+      base::assign(".__macros", target_macro_registry, envir = target_env)
+      lockBinding(".__macros", target_env)
+    }
+    for (i in seq_along(orig_names)) {
+      oname <- orig_names[i]
+      tname <- target_names[i]
+      if (exists(oname, envir = module_macro_registry, inherits = FALSE)) {
+        macro_fn <- get(oname, envir = module_macro_registry, inherits = FALSE)
+        if (exists(tname, envir = target_macro_registry, inherits = FALSE)) {
+          unlock_binding(tname, target_macro_registry)
+        }
+        base::assign(tname, macro_fn, envir = target_macro_registry)
+        lockBinding(tname, target_macro_registry)
+      }
+    }
+  }
+  invisible(NULL)
+}
+
 #' @keywords internal
 #' @noRd
 ModuleRegistry <- R6::R6Class(
@@ -127,7 +225,8 @@ ModuleRegistry <- R6::R6Class(
     },
     # @description Attach a module's exports into the registry's Env.
     # @param name Module name (single string).
-    attach = function(name) {
+    # @param squash If TRUE, create active bindings directly in target (no proxy).
+    attach = function(name, squash = FALSE) {
       entry <- self$get(name)
       if (is.null(entry)) {
         stop(sprintf("module '%s' is not loaded", name))
@@ -135,30 +234,37 @@ ModuleRegistry <- R6::R6Class(
       exports <- entry$exports
       module_env <- entry$env
       target_env <- self$arl_env$env
-      target_macro_registry <- get0(".__macros", envir = target_env, inherits = FALSE)
-      if (is.null(target_macro_registry)) {
-        target_macro_registry <- new.env(parent = emptyenv())
-        base::assign(".__macros", target_macro_registry, envir = target_env)
-        lockBinding(".__macros", target_env)
-      }
       module_macro_registry <- get0(".__macros", envir = module_env, inherits = FALSE)
 
+      # Filter to names that exist as regular bindings or macros
+      orig_names <- character(0)
+      target_names <- character(0)
       for (export_name in exports) {
         is_macro <- !is.null(module_macro_registry) &&
           exists(export_name, envir = module_macro_registry, inherits = FALSE)
-        if (is_macro) {
-          macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
-          if (exists(export_name, envir = target_macro_registry, inherits = FALSE)) {
-            unlock_binding(export_name, target_macro_registry)
-          }
-          assign(export_name, macro_fn, envir = target_macro_registry)
-          lockBinding(export_name, target_macro_registry)
-        }
         if (exists(export_name, envir = module_env, inherits = FALSE)) {
-          assign(export_name, get(export_name, envir = module_env, inherits = FALSE), envir = target_env)
+          orig_names <- c(orig_names, export_name)
+          target_names <- c(target_names, export_name)
         } else if (!is_macro) {
           stop(sprintf("module '%s' does not export '%s'", name, export_name))
         }
+      }
+
+      if (isTRUE(squash)) {
+        squash_active_bindings(module_env, orig_names, target_names,
+                               module_macro_registry, target_env)
+      } else {
+        # Idempotency: check if proxy for this module already exists
+        p <- parent.env(target_env)
+        while (!identical(p, emptyenv())) {
+          if (isTRUE(get0(".__import_proxy", envir = p, inherits = FALSE)) &&
+              identical(get0(".__import_module_name", envir = p, inherits = FALSE), name)) {
+            return(invisible(NULL))
+          }
+          p <- parent.env(p)
+        }
+        create_import_proxy(module_env, orig_names, target_names,
+                            module_macro_registry, target_env, name)
       }
       invisible(NULL)
     },
@@ -169,7 +275,8 @@ ModuleRegistry <- R6::R6Class(
     # @param except Character vector of names to exclude (NULL = none). Mutually exclusive with only.
     # @param prefix String to prepend to all imported names (NULL = no prefix).
     # @param rename Named character vector: names are original, values are new names (NULL = no rename).
-    attach_into = function(name, target_env, only = NULL, except = NULL, prefix = NULL, rename = NULL) {
+    # @param squash If TRUE, create active bindings directly in target_env (no proxy).
+    attach_into = function(name, target_env, only = NULL, except = NULL, prefix = NULL, rename = NULL, squash = FALSE) {
       entry <- self$get(name)
       if (is.null(entry)) {
         stop(sprintf("module '%s' is not loaded", name))
@@ -208,16 +315,9 @@ ModuleRegistry <- R6::R6Class(
         target_names <- paste0(prefix, target_names)
       }
 
-      # Get or create a LOCAL macro registry in the target env (not inherited)
-      target_macro_registry <- get0(".__macros", envir = target_env, inherits = FALSE)
-      if (is.null(target_macro_registry)) {
-        target_macro_registry <- new.env(parent = emptyenv())
-        base::assign(".__macros", target_macro_registry, envir = target_env)
-        lockBinding(".__macros", target_env)
-      }
       module_macro_registry <- get0(".__macros", envir = module_env, inherits = FALSE)
 
-      # Copy exports with mapped names; macros go to macro registry AND as regular bindings
+      # Separate regular bindings from macro-only exports
       regular_orig <- character(0)
       regular_target <- character(0)
       for (j in seq_along(exports)) {
@@ -225,32 +325,56 @@ ModuleRegistry <- R6::R6Class(
         mapped_name <- target_names[j]
         is_macro <- !is.null(module_macro_registry) &&
           exists(export_name, envir = module_macro_registry, inherits = FALSE)
-        if (is_macro) {
-          # Copy macro to target macro registry
-          macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
-          if (exists(mapped_name, envir = target_macro_registry, inherits = FALSE)) {
-            unlock_binding(mapped_name, target_macro_registry)
-          }
-          base::assign(mapped_name, macro_fn, envir = target_macro_registry)
-          lockBinding(mapped_name, target_macro_registry)
-          # Also copy as regular binding (macros are callable values too)
-          if (exists(export_name, envir = module_env, inherits = FALSE)) {
-            regular_orig <- c(regular_orig, export_name)
-            regular_target <- c(regular_target, mapped_name)
-          }
-        } else if (exists(export_name, envir = module_env, inherits = FALSE)) {
+        if (exists(export_name, envir = module_env, inherits = FALSE)) {
           regular_orig <- c(regular_orig, export_name)
           regular_target <- c(regular_target, mapped_name)
-        } else {
+        } else if (!is_macro) {
           stop(sprintf("module '%s' does not export '%s'", name, export_name))
         }
       }
 
-      # Bulk copy regular exports with mapped names
-      if (length(regular_orig) > 0L) {
-        vals <- mget(regular_orig, envir = module_env, inherits = FALSE)
-        names(vals) <- regular_target
-        list2env(vals, envir = target_env)
+      if (isTRUE(squash)) {
+        squash_active_bindings(module_env, regular_orig, regular_target,
+                               module_macro_registry, target_env)
+      } else {
+        # Idempotency: check if proxy for this module already exists
+        p <- parent.env(target_env)
+        while (!identical(p, emptyenv())) {
+          if (isTRUE(get0(".__import_proxy", envir = p, inherits = FALSE)) &&
+              identical(get0(".__import_module_name", envir = p, inherits = FALSE), name)) {
+            return(invisible(NULL))
+          }
+          p <- parent.env(p)
+        }
+
+        # Ensure target has a macro registry for macro-only exports
+        # (create_import_proxy handles macros that also have regular bindings)
+        create_import_proxy(module_env, regular_orig, regular_target,
+                            module_macro_registry, target_env, name)
+
+        # Handle macro-only exports (exist in macro registry but not as regular bindings)
+        # These need to go into the target's own macro registry
+        target_macro_registry <- get0(".__macros", envir = target_env, inherits = FALSE)
+        if (is.null(target_macro_registry)) {
+          target_macro_registry <- new.env(parent = emptyenv())
+          base::assign(".__macros", target_macro_registry, envir = target_env)
+          lockBinding(".__macros", target_env)
+        }
+        if (!is.null(module_macro_registry)) {
+          for (j in seq_along(exports)) {
+            export_name <- exports[j]
+            mapped_name <- target_names[j]
+            if (!exists(export_name, envir = module_env, inherits = FALSE) &&
+                exists(export_name, envir = module_macro_registry, inherits = FALSE)) {
+              macro_fn <- get(export_name, envir = module_macro_registry, inherits = FALSE)
+              if (exists(mapped_name, envir = target_macro_registry, inherits = FALSE)) {
+                unlock_binding(mapped_name, target_macro_registry)
+              }
+              base::assign(mapped_name, macro_fn, envir = target_macro_registry)
+              lockBinding(mapped_name, target_macro_registry)
+            }
+          }
+        }
       }
       invisible(NULL)
     }

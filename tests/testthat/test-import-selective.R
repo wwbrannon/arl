@@ -274,7 +274,7 @@ test_that("import with path string supports modifiers", {
   expect_error(engine$eval_text("(cube 3)"), "not found|could not find|object .* not found")
 })
 
-test_that("selective import tracks .__imported_symbols correctly", {
+test_that("proxy-based imports are accessible via scoping but not in ls(env)", {
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -284,12 +284,13 @@ test_that("selective import tracks .__imported_symbols correctly", {
 
   engine$eval_text("(import testmod :only (square))")
   env <- engine$get_env()
-  imported <- get0(".__imported_symbols", envir = env, inherits = FALSE)
-  expect_true("square" %in% imported)
-  expect_false("cube" %in% imported)
+  # Proxy-based imports live in parent chain, not in the env itself
+  expect_false("square" %in% ls(env, all.names = FALSE))
+  # But they're accessible via get with inherits
+  expect_equal(get("square", envir = env)(5L), 25L)
 })
 
-test_that("selective import with prefix tracks prefixed names in .__imported_symbols", {
+test_that("reference semantics: changes in module visible through proxy", {
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -297,12 +298,19 @@ test_that("selective import with prefix tracks prefixed names in .__imported_sym
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import testmod :prefix t/)")
-  env <- engine$get_env()
-  imported <- get0(".__imported_symbols", envir = env, inherits = FALSE)
-  expect_true("t/square" %in% imported)
-  expect_true("t/cube" %in% imported)
-  expect_false("square" %in% imported)
+  engine$eval_text("(import testmod :only (square))")
+
+  # Get the module env and modify the binding
+  arl_env <- arl:::Env$new(engine$get_env())
+  registry <- arl_env$module_registry
+  entry <- registry$get("testmod")
+  module_env <- entry$env
+
+  # Replace square with a doubling function
+  assign("square", function(x) x * 2L, envir = module_env)
+
+  # The proxy should reflect the new value
+  expect_equal(engine$eval_text("(square 5)"), 10L)
 })
 
 # --- Compile-time errors ---
