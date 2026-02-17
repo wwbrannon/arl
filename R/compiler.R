@@ -940,11 +940,12 @@ Compiler <- R6::R6Class(
       # Pass argument unevaluated (module name is a symbol/string, not a variable lookup)
       arg_quoted <- as.call(list(quote(quote), expr[[2]]))
 
-      # Parse optional keyword modifiers: :only, :except, :prefix, :rename
+      # Parse optional keyword modifiers: :only, :except, :prefix, :rename, :reload
       only <- NULL
       except <- NULL
       prefix <- NULL
       rename <- NULL
+      reload <- FALSE
 
       if (length(expr) > 2) {
         rest <- as.list(expr)[-(1:2)]
@@ -958,6 +959,15 @@ Compiler <- R6::R6Class(
             )))
           }
           kw_name <- as.character(kw)
+
+          # :reload is a bare flag (no value)
+          if (kw_name == "reload") {
+            if (reload) return(private$fail("import: duplicate :reload modifier"))
+            reload <- TRUE
+            i <- i + 1
+            next
+          }
+
           if (i + 1 > length(rest)) {
             return(private$fail(sprintf(
               "import: keyword :%s requires a value", kw_name
@@ -1011,7 +1021,7 @@ Compiler <- R6::R6Class(
             rename <- rename_map
           } else {
             return(private$fail(sprintf(
-              "import: unknown modifier :%s (expected :only, :except, :prefix, or :rename)",
+              "import: unknown modifier :%s (expected :only, :except, :prefix, :rename, or :reload)",
               kw_name
             )))
           }
@@ -1036,6 +1046,9 @@ Compiler <- R6::R6Class(
       }
       if (!is.null(rename)) {
         call_args$rename <- rename
+      }
+      if (isTRUE(reload)) {
+        call_args$reload <- TRUE
       }
       as.call(call_args)
     },

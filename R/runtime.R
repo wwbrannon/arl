@@ -94,6 +94,7 @@ EvalContext <- R6::R6Class(
     current_source_file = NULL,
     loading_modules = NULL,
     squash_imports = FALSE,
+    reload_env = NULL,
     # @description Create context. macro_expander and compiler are assigned by the engine.
     # @param env Env instance.
     # @param source_tracker SourceTracker instance.
@@ -240,8 +241,8 @@ CompiledRuntime <- R6::R6Class(
         self$module_compiled(module_name, exports, export_all, body_exprs, src_file, env)
       }, "Module definition handler.")
 
-      assign_and_lock(".__import", function(arg_value, env, only = NULL, except = NULL, prefix = NULL, rename = NULL) {
-        self$import_compiled(arg_value, env, only = only, except = except, prefix = prefix, rename = rename)
+      assign_and_lock(".__import", function(arg_value, env, only = NULL, except = NULL, prefix = NULL, rename = NULL, reload = FALSE) {
+        self$import_compiled(arg_value, env, only = only, except = except, prefix = prefix, rename = rename, reload = reload)
       }, "Module import handler.")
 
       assign_and_lock(".__pkg_access", function(op_name, pkg, name, env) {
@@ -277,7 +278,7 @@ CompiledRuntime <- R6::R6Class(
       eval(compiled_expr, envir = env)
     },
     # Import logic for compiled (import x): same semantics as import special form.
-    import_compiled = function(arg_value, env, only = NULL, except = NULL, prefix = NULL, rename = NULL) {
+    import_compiled = function(arg_value, env, only = NULL, except = NULL, prefix = NULL, rename = NULL, reload = FALSE) {
       is_path <- is.character(arg_value) && length(arg_value) == 1
       if (is_path) {
         path_str <- arg_value
@@ -292,41 +293,118 @@ CompiledRuntime <- R6::R6Class(
       }
       shared_registry <- self$context$env$module_registry
 
-      # Cycle detection: check before registry lookup because modules register
-      # themselves early (before body finishes evaluating)
-      loading <- self$context$loading_modules
-      if (registry_key %in% loading) {
-        cycle <- c(loading[match(registry_key, loading):length(loading)], registry_key)
-        stop(sprintf("Circular dependency detected: %s", paste(cycle, collapse = " -> ")),
-             call. = FALSE)
-      }
-
-      if (!shared_registry$exists(registry_key)) {
-        self$context$loading_modules <- c(loading, registry_key)
-        on.exit({
-          ctx_loading <- self$context$loading_modules
-          self$context$loading_modules <- ctx_loading[ctx_loading != registry_key]
-        }, add = TRUE)
-
-        if (is_path) {
-          if (is.null(self$load_file_fn)) {
-            stop("import requires a load_file function")
-          }
-          self$load_file_fn(module_path, self$context$env$env)
-        } else {
-          module_path <- private$resolve_module_path(registry_key)
-          if (is.null(module_path)) {
-            stop(sprintf("Module not found: %s", registry_key))
-          }
-          if (is.null(self$load_file_fn)) {
-            stop("import requires a load_file function")
-          }
-          self$load_file_fn(module_path, self$context$env$env)
-        }
+      if (isTRUE(reload)) {
+        # Reload: module must already be registered
         if (!shared_registry$exists(registry_key)) {
-          stop(sprintf("Module '%s' did not register itself", registry_key))
+          stop(sprintf("cannot reload: module '%s' has not been loaded", registry_key),
+               call. = FALSE)
+        }
+        entry <- shared_registry$get(registry_key)
+        if (is.null(entry$path)) {
+          stop(sprintf("cannot reload: module '%s' has no source file", registry_key),
+               call. = FALSE)
+        }
+        reload_path <- entry$path
+        if (!file.exists(reload_path)) {
+          stop(sprintf("cannot reload: file '%s' not found", reload_path),
+               call. = FALSE)
+        }
+        old_env <- entry$env
+
+        # Unregister all keys (name + path aliases)
+        all_keys <- shared_registry$find_keys(registry_key)
+        for (k in all_keys) {
+          shared_registry$unregister(k)
+        }
+
+        # Clear module env (preserves env identity)
+        clear_module_env(old_env)
+
+        # Set reload context so module_compiled reuses old_env
+        self$context$reload_env <- list(expected_env = old_env, active = TRUE)
+        on.exit(self$context$reload_env <- NULL, add = TRUE)
+
+        # Reload from file with cache bypass
+        if (is.null(self$load_file_fn)) {
+          stop("import requires a load_file function")
+        }
+        self$load_file_fn(reload_path, self$context$env$env, cache = FALSE)
+
+        if (!shared_registry$exists(registry_key)) {
+          stop(sprintf("Module '%s' did not register itself after reload", registry_key))
+        }
+
+        # Rebuild all existing proxies to reflect new exports
+        reloaded_entry <- shared_registry$get(registry_key)
+        rebuild_proxies_for_module(registry_key, reloaded_entry$env,
+                                    shared_registry, self$context$env$env)
+
+        # Also update squash-mode bindings in prelude_env if applicable
+        prelude_env <- self$context$prelude_env
+        if (!is.null(prelude_env)) {
+          new_exports <- reloaded_entry$exports
+          module_macro_registry <- get0(".__macros", envir = reloaded_entry$env, inherits = FALSE)
+          # Check if this module has squash bindings in prelude_env
+          # (squash bindings are active bindings directly in the env, not in proxies)
+          has_squash <- any(vapply(new_exports, function(nm) {
+            exists(nm, envir = prelude_env, inherits = FALSE) &&
+              tryCatch(bindingIsActive(nm, prelude_env), error = function(e) FALSE)
+          }, logical(1)))
+          if (has_squash) {
+            # Filter to names that exist as regular bindings or macros
+            orig_names <- character(0)
+            target_names <- character(0)
+            for (export_name in new_exports) {
+              is_macro <- !is.null(module_macro_registry) &&
+                exists(export_name, envir = module_macro_registry, inherits = FALSE)
+              if (exists(export_name, envir = reloaded_entry$env, inherits = FALSE) || is_macro) {
+                orig_names <- c(orig_names, export_name)
+                target_names <- c(target_names, export_name)
+              }
+            }
+            squash_active_bindings(reloaded_entry$env, orig_names, target_names,
+                                   module_macro_registry, prelude_env)
+          }
+        }
+      } else {
+        # Normal import (non-reload)
+        # Cycle detection: check before registry lookup because modules register
+        # themselves early (before body finishes evaluating)
+        loading <- self$context$loading_modules
+        if (registry_key %in% loading) {
+          cycle <- c(loading[match(registry_key, loading):length(loading)], registry_key)
+          stop(sprintf("Circular dependency detected: %s", paste(cycle, collapse = " -> ")),
+               call. = FALSE)
+        }
+
+        if (!shared_registry$exists(registry_key)) {
+          self$context$loading_modules <- c(loading, registry_key)
+          on.exit({
+            ctx_loading <- self$context$loading_modules
+            self$context$loading_modules <- ctx_loading[ctx_loading != registry_key]
+          }, add = TRUE)
+
+          if (is_path) {
+            if (is.null(self$load_file_fn)) {
+              stop("import requires a load_file function")
+            }
+            self$load_file_fn(module_path, self$context$env$env)
+          } else {
+            module_path <- private$resolve_module_path(registry_key)
+            if (is.null(module_path)) {
+              stop(sprintf("Module not found: %s", registry_key))
+            }
+            if (is.null(self$load_file_fn)) {
+              stop("import requires a load_file function")
+            }
+            self$load_file_fn(module_path, self$context$env$env)
+          }
+          if (!shared_registry$exists(registry_key)) {
+            stop(sprintf("Module '%s' did not register itself", registry_key))
+          }
         }
       }
+
       shared_registry$attach_into(registry_key, env, only = only, except = except,
                                    prefix = prefix, rename = rename,
                                    squash = isTRUE(self$context$squash_imports))
@@ -391,15 +469,27 @@ CompiledRuntime <- R6::R6Class(
       module_parent <- self$context$prelude_env
       if (is.null(module_parent)) module_parent <- self$context$builtins_env
       if (is.null(module_parent)) module_parent <- env
-      module_env <- new.env(parent = module_parent)
-      assign(".__module", TRUE, envir = module_env)
-      lockBinding(".__module", module_env)
-      self$context$env$module_registry$register(module_name, module_env, exports)
+
+      # Check for reload: reuse existing env if reload_env is set
+      reload_ctx <- self$context$reload_env
+      if (!is.null(reload_ctx) && isTRUE(reload_ctx$active)) {
+        module_env <- reload_ctx$expected_env
+        reload_ctx$active <- FALSE
+        parent.env(module_env) <- module_parent
+        # Re-assign .__module marker (was cleared)
+        assign(".__module", TRUE, envir = module_env)
+        lockBinding(".__module", module_env)
+      } else {
+        module_env <- new.env(parent = module_parent)
+        assign(".__module", TRUE, envir = module_env)
+        lockBinding(".__module", module_env)
+      }
       has_file_path <- !is.null(src_file) && is.character(src_file) &&
         length(src_file) == 1L && nzchar(src_file) && grepl("[/\\\\]", src_file)
+      register_path <- if (has_file_path) normalize_path_absolute(src_file) else NULL
+      self$context$env$module_registry$register(module_name, module_env, exports, path = register_path)
       if (has_file_path) {
-        absolute_path <- normalize_path_absolute(src_file)
-        self$context$env$module_registry$alias(absolute_path, module_name)
+        self$context$env$module_registry$alias(register_path, module_name)
       }
       self$install_helpers(module_env)
 

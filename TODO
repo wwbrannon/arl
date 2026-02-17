@@ -1,5 +1,7 @@
 o) read module guide
 
+o) rather than defaultPackages, should we use the whole R search path at the time of startup? possibly controllable by engine option
+
 o) update docs with fix to import permissible positioning
 
 o) load and run should not check the stdlib modules

@@ -367,4 +367,43 @@ future, even before tackling #9 itself.
 
 # Already addressed
 
-#4: import position restrictions
+o) prelude loading: refactor stdlib into prelude loaded by default always and a
+broader set loaded only explicitly by import.
+
+o) #1: prelude loading obviates the need for lazy stdlib loading because we're
+not loading all of it by default anymore. startup cost is small enough now
+
+o) #4: import position restrictions
+
+o) #5: completed. cross-module macro scoping fixed so that macro expansions can
+refer at execution time to objects contained in the lexical scope (i.e., the
+defining module) of the macro
+
+o) #9: reference-based imports via proxy environments with active bindings.
+
+o) #10: circular dependency support — decided against. Arl imports have
+compile-time effects (macro availability), so Python-style partial-module
+imports don't generalize: macros from a partially-loaded module aren't available
+during compilation of the importing module. Error messages would also degrade
+(mysterious "object not found" instead of clear cycle detection errors), and the
+only real cycle (list ↔ equality) is already cleanly resolved by having list use
+raw R operators. If future cycles arise, a targeted mechanism (forward
+declarations or extracting shared definitions into a third module) is preferred.
+
+o) #12: skip. one module per file is a fine convention
+
+## Remaining
+
+#2: module reloading
+
+#3: qualified access / prefixed access convention syntax
+
+#6: reexport
+
+#7: hierarchical module names
+
+#8: private by default for export-all
+
+#11: let's not actually do this now, but we should pick a name for the special
+form doing this, or a designated syntax for import, set it up, and have it error
+with "not implemented, reserved for future use" or something like that

@@ -84,7 +84,7 @@ Engine <- R6::R6Class(
 
       private$.compiled_runtime <- CompiledRuntime$new(
         context,
-        load_file_fn = function(path, env) self$load_file_in_env(path, env),
+        load_file_fn = function(path, env, cache = TRUE) self$load_file_in_env(path, env, cache = cache),
         help_fn = function(topic, env, package = NULL) self$help(topic, env, package),
         module_cache = private$.module_cache
       )
