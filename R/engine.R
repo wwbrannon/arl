@@ -51,7 +51,7 @@ Engine <- R6::R6Class(
     #'   in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
     #'   which inherits from global option `getOption("arl.disable_tco", FALSE)`.
     initialize = function(coverage_tracker = NULL, load_prelude = TRUE,
-                          disable_tco = NULL, ...) {
+                          disable_tco = NULL) {
       private$.env <- Env$new()
       private$.source_tracker <- SourceTracker$new()
       private$.tokenizer <- Tokenizer$new()

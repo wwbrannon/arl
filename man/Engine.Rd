@@ -12,17 +12,6 @@ engine <- Engine$new()
 engine$eval_text("(+ 1 2 3)")
 engine$eval_string("(+ 4 5)")
 }
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{use_env_cache}}{Logical. If TRUE, enables the env cache (full serialized
-environment) which is faster but only safe when dependencies don't change.
-If FALSE (default), only the expr cache (compiled expressions) is used, which
-is always safe. Can be set via engine initialization parameter or global
-option \code{arl.use_env_cache}.}
-}
-\if{html}{\out{</div>}}
-}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -54,26 +43,17 @@ option \code{arl.use_env_cache}.}
 \subsection{Method \code{new()}}{
 Initialize engine components and base environment.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$new(
-  use_env_cache = NULL,
-  coverage_tracker = NULL,
-  load_prelude = TRUE,
-  disable_tco = NULL
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$new(coverage_tracker = NULL, load_prelude = TRUE, disable_tco = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{use_env_cache}}{Optional logical. If TRUE, enables the env cache for 4x faster
-module loading. Only safe when dependencies don't change. Defaults to NULL, which
-inherits from global option \code{getOption("arl.use_env_cache", FALSE)}.}
-
 \item{\code{coverage_tracker}}{Optional CoverageTracker instance to enable coverage tracking
 from the start. If provided, coverage will be tracked during stdlib
 loading. Intended for internal development use.}
 
-\item{\code{load_prelude}}{Logical. If TRUE (the default), loads all stdlib modules
+\item{\code{load_prelude}}{Logical. If TRUE (the default), loads prelude modules
 during initialization. Set to FALSE to create a bare engine with only
 builtins — useful for testing or when you want to import specific modules.}
 
