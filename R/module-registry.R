@@ -1,64 +1,6 @@
 # Module registry for Arl modules. Tracks loaded modules (name -> list(env, exports, path))
 # and supports attach into a target environment. Used by compiled runtime for (import ...).
 
-# Create a proxy environment with active bindings forwarding to module_env,
-# and splice it into target_env's parent chain.
-# orig_names: names in module_env to bind from
-# target_names: names to bind as in the proxy (after rename/prefix)
-# module_macro_registry: the module's .__macros env (or NULL)
-# target_env: the importing environment
-# module_name: name of the module (for idempotency markers)
-create_import_proxy <- function(module_env, orig_names, target_names,
-                                module_macro_registry, target_env, module_name) {
-  proxy <- new.env(parent = parent.env(target_env))
-  assign(".__import_proxy", TRUE, envir = proxy)
-  lockBinding(".__import_proxy", proxy)
-  assign(".__import_module_name", module_name, envir = proxy)
-  lockBinding(".__import_module_name", proxy)
-  # Store name mappings for proxy rebuild on reload
-  assign(".__import_orig_names", orig_names, envir = proxy)
-  lockBinding(".__import_orig_names", proxy)
-  assign(".__import_target_names", target_names, envir = proxy)
-  lockBinding(".__import_target_names", proxy)
-
-  # Create active bindings for regular exports
-  for (i in seq_along(orig_names)) {
-    local({
-      oname <- orig_names[i]
-      tname <- target_names[i]
-      makeActiveBinding(tname, function() {
-        get(oname, envir = module_env, inherits = FALSE)
-      }, env = proxy)
-    })
-  }
-
-  # Create macro registry in proxy for exported macros
-  if (!is.null(module_macro_registry)) {
-    proxy_macro_registry <- new.env(parent = emptyenv())
-    has_macros <- FALSE
-    for (i in seq_along(orig_names)) {
-      local({
-        oname <- orig_names[i]
-        tname <- target_names[i]
-        if (exists(oname, envir = module_macro_registry, inherits = FALSE)) {
-          makeActiveBinding(tname, function() {
-            get(oname, envir = module_macro_registry, inherits = FALSE)
-          }, env = proxy_macro_registry)
-          has_macros <<- TRUE
-        }
-      })
-    }
-    if (has_macros) {
-      assign(".__macros", proxy_macro_registry, envir = proxy)
-      lockBinding(".__macros", proxy)
-    }
-  }
-
-  # Splice proxy into parent chain
-  parent.env(target_env) <- proxy
-  invisible(proxy)
-}
-
 # Create active bindings directly in target_env (no proxy, no chain modification).
 # Used for prelude squash loading and toplevel_env test helper.
 squash_active_bindings <- function(module_env, orig_names, target_names,
@@ -128,149 +70,6 @@ clear_module_env <- function(module_env) {
     if (identical(nm, ".__macros") && !is.null(macro_reg)) next
     if (bindingIsLocked(nm, module_env)) unlock_binding(nm, module_env)
     rm(list = nm, envir = module_env)
-  }
-  invisible(NULL)
-}
-
-# Update a proxy environment to reflect new exports after module reload.
-# Adds bindings for new exports, removes bindings for removed exports.
-update_proxy <- function(proxy, module_env, module_macro_registry) {
-  old_orig <- get0(".__import_orig_names", envir = proxy, inherits = FALSE)
-  old_target <- get0(".__import_target_names", envir = proxy, inherits = FALSE)
-  if (is.null(old_orig)) return(invisible(NULL))
-
-  # Determine which old orig_names are still valid exports in module_env
-  still_exported <- vapply(old_orig, function(nm) {
-    exists(nm, envir = module_env, inherits = FALSE) ||
-      (!is.null(module_macro_registry) &&
-       exists(nm, envir = module_macro_registry, inherits = FALSE))
-  }, logical(1))
-
-  # Remove bindings for names no longer exported
-  removed_idx <- which(!still_exported)
-  for (j in removed_idx) {
-    tname <- old_target[j]
-    if (exists(tname, envir = proxy, inherits = FALSE)) {
-      if (bindingIsLocked(tname, proxy)) unlock_binding(tname, proxy)
-      rm(list = tname, envir = proxy)
-    }
-  }
-
-  # For names still exported, the active bindings already point to module_env
-  # and will pick up new values automatically. No action needed.
-
-  # Now check for NEW exports: names in module_env not in old_orig.
-  # These need new active bindings. Since we don't know the importer's
-  # prefix/rename, we can only add bindings for new exports that weren't
-  # previously imported. Use identity mapping (orig == target) for new ones.
-  all_module_names <- ls(module_env, all.names = TRUE)
-  all_module_names <- all_module_names[!grepl("^\\.__", all_module_names)]
-  new_names <- setdiff(all_module_names, old_orig)
-  new_target <- new_names  # identity mapping for new exports
-
-  for (i in seq_along(new_names)) {
-    local({
-      oname <- new_names[i]
-      tname <- new_target[i]
-      if (!exists(tname, envir = proxy, inherits = FALSE)) {
-        makeActiveBinding(tname, function() {
-          get(oname, envir = module_env, inherits = FALSE)
-        }, env = proxy)
-      }
-    })
-  }
-
-  # Update stored name mappings
-  kept_orig <- old_orig[still_exported]
-  kept_target <- old_target[still_exported]
-  updated_orig <- c(kept_orig, new_names)
-  updated_target <- c(kept_target, new_target)
-  unlock_binding(".__import_orig_names", proxy)
-  assign(".__import_orig_names", updated_orig, envir = proxy)
-  lockBinding(".__import_orig_names", proxy)
-  unlock_binding(".__import_target_names", proxy)
-  assign(".__import_target_names", updated_target, envir = proxy)
-  lockBinding(".__import_target_names", proxy)
-
-  # Update proxy macro registry
-  proxy_macro_reg <- get0(".__macros", envir = proxy, inherits = FALSE)
-  if (!is.null(module_macro_registry)) {
-    if (is.null(proxy_macro_reg)) {
-      proxy_macro_reg <- new.env(parent = emptyenv())
-      assign(".__macros", proxy_macro_reg, envir = proxy)
-      lockBinding(".__macros", proxy)
-    }
-    # Remove stale macro bindings
-    old_macro_names <- ls(proxy_macro_reg, all.names = TRUE)
-    for (nm in old_macro_names) {
-      if (!exists(nm, envir = module_macro_registry, inherits = FALSE)) {
-        if (bindingIsLocked(nm, proxy_macro_reg)) unlock_binding(nm, proxy_macro_reg)
-        rm(list = nm, envir = proxy_macro_reg)
-      }
-    }
-    # Add/update macro bindings for all current exports
-    for (i in seq_along(updated_orig)) {
-      local({
-        oname <- updated_orig[i]
-        tname <- updated_target[i]
-        if (exists(oname, envir = module_macro_registry, inherits = FALSE)) {
-          if (exists(tname, envir = proxy_macro_reg, inherits = FALSE)) {
-            if (bindingIsLocked(tname, proxy_macro_reg)) unlock_binding(tname, proxy_macro_reg)
-            rm(list = tname, envir = proxy_macro_reg)
-          }
-          makeActiveBinding(tname, function() {
-            get(oname, envir = module_macro_registry, inherits = FALSE)
-          }, env = proxy_macro_reg)
-        }
-      })
-    }
-  } else if (!is.null(proxy_macro_reg)) {
-    # Module no longer has macros — clear proxy macro registry
-    macro_names <- ls(proxy_macro_reg, all.names = TRUE)
-    for (nm in macro_names) {
-      if (bindingIsLocked(nm, proxy_macro_reg)) unlock_binding(nm, proxy_macro_reg)
-      rm(list = nm, envir = proxy_macro_reg)
-    }
-  }
-
-  invisible(NULL)
-}
-
-# Walk parent chain of env looking for a proxy tagged with module_name.
-# Returns the proxy env or NULL.
-find_proxy_for_module <- function(env, module_name) {
-  p <- parent.env(env)
-  while (!identical(p, emptyenv())) {
-    if (isTRUE(get0(".__import_proxy", envir = p, inherits = FALSE)) &&
-        identical(get0(".__import_module_name", envir = p, inherits = FALSE), module_name)) {
-      return(p)
-    }
-    p <- parent.env(p)
-  }
-  NULL
-}
-
-# Rebuild all existing proxies for a reloaded module across all known envs.
-rebuild_proxies_for_module <- function(name, module_env, registry, engine_env) {
-  module_macro_registry <- get0(".__macros", envir = module_env, inherits = FALSE)
-
-  # Collect all envs to scan: engine_env + all module envs from registry
-  envs_to_scan <- list(engine_env)
-  registry_env <- registry$arl_env$module_registry_env(create = FALSE)
-  if (!is.null(registry_env)) {
-    for (key in ls(registry_env, all.names = TRUE)) {
-      entry <- get(key, envir = registry_env, inherits = FALSE)
-      if (!is.null(entry$env) && !identical(entry$env, module_env)) {
-        envs_to_scan[[length(envs_to_scan) + 1L]] <- entry$env
-      }
-    }
-  }
-
-  for (env in envs_to_scan) {
-    proxy <- find_proxy_for_module(env, name)
-    if (!is.null(proxy)) {
-      update_proxy(proxy, module_env, module_macro_registry)
-    }
   }
   invisible(NULL)
 }
@@ -462,7 +261,7 @@ ModuleRegistry <- R6::R6Class(
           }
           p <- parent.env(p)
         }
-        create_import_proxy(module_env, orig_names, target_names,
+        private$create_import_proxy(module_env, orig_names, target_names,
                             module_macro_registry, target_env, name)
       }
       invisible(NULL)
@@ -548,7 +347,7 @@ ModuleRegistry <- R6::R6Class(
 
         # Ensure target has a macro registry for macro-only exports
         # (create_import_proxy handles macros that also have regular bindings)
-        create_import_proxy(module_env, regular_orig, regular_target,
+        private$create_import_proxy(module_env, regular_orig, regular_target,
                             module_macro_registry, target_env, name)
 
         # Handle macro-only exports (exist in macro registry but not as regular bindings)
@@ -575,6 +374,205 @@ ModuleRegistry <- R6::R6Class(
           }
         }
       }
+      invisible(NULL)
+    },
+    # @description Rebuild all existing proxies for a reloaded module across all known envs.
+    # @param name Module name (single string).
+    # @param engine_env The engine environment.
+    rebuild_proxies = function(name, engine_env) {
+      entry <- self$get(name)
+      if (is.null(entry)) return(invisible(NULL))
+      module_env <- entry$env
+      module_macro_registry <- get0(".__macros", envir = module_env, inherits = FALSE)
+
+      # Collect all envs to scan: engine_env + all module envs from registry
+      envs_to_scan <- list(engine_env)
+      registry_env <- self$arl_env$module_registry_env(create = FALSE)
+      if (!is.null(registry_env)) {
+        for (key in ls(registry_env, all.names = TRUE)) {
+          reg_entry <- get(key, envir = registry_env, inherits = FALSE)
+          if (!is.null(reg_entry$env) && !identical(reg_entry$env, module_env)) {
+            envs_to_scan[[length(envs_to_scan) + 1L]] <- reg_entry$env
+          }
+        }
+      }
+
+      for (env in envs_to_scan) {
+        proxy <- private$find_proxy_for_module(env, name)
+        if (!is.null(proxy)) {
+          private$update_proxy(proxy, module_env, module_macro_registry)
+        }
+      }
+      invisible(NULL)
+    }
+  ),
+  private = list(
+    # Create a proxy environment with active bindings forwarding to module_env,
+    # and splice it into target_env's parent chain.
+    create_import_proxy = function(module_env, orig_names, target_names,
+                                   module_macro_registry, target_env, module_name) {
+      proxy <- new.env(parent = parent.env(target_env))
+      assign(".__import_proxy", TRUE, envir = proxy)
+      lockBinding(".__import_proxy", proxy)
+      assign(".__import_module_name", module_name, envir = proxy)
+      lockBinding(".__import_module_name", proxy)
+      # Store name mappings for proxy rebuild on reload
+      assign(".__import_orig_names", orig_names, envir = proxy)
+      lockBinding(".__import_orig_names", proxy)
+      assign(".__import_target_names", target_names, envir = proxy)
+      lockBinding(".__import_target_names", proxy)
+
+      # Create active bindings for regular exports
+      for (i in seq_along(orig_names)) {
+        local({
+          oname <- orig_names[i]
+          tname <- target_names[i]
+          makeActiveBinding(tname, function() {
+            get(oname, envir = module_env, inherits = FALSE)
+          }, env = proxy)
+        })
+      }
+
+      # Create macro registry in proxy for exported macros
+      if (!is.null(module_macro_registry)) {
+        proxy_macro_registry <- new.env(parent = emptyenv())
+        has_macros <- FALSE
+        for (i in seq_along(orig_names)) {
+          local({
+            oname <- orig_names[i]
+            tname <- target_names[i]
+            if (exists(oname, envir = module_macro_registry, inherits = FALSE)) {
+              makeActiveBinding(tname, function() {
+                get(oname, envir = module_macro_registry, inherits = FALSE)
+              }, env = proxy_macro_registry)
+              has_macros <<- TRUE
+            }
+          })
+        }
+        if (has_macros) {
+          assign(".__macros", proxy_macro_registry, envir = proxy)
+          lockBinding(".__macros", proxy)
+        }
+      }
+
+      # Splice proxy into parent chain
+      parent.env(target_env) <- proxy
+      invisible(proxy)
+    },
+    # Walk parent chain of env looking for a proxy tagged with module_name.
+    # Returns the proxy env or NULL.
+    find_proxy_for_module = function(env, module_name) {
+      p <- parent.env(env)
+      while (!identical(p, emptyenv())) {
+        if (isTRUE(get0(".__import_proxy", envir = p, inherits = FALSE)) &&
+            identical(get0(".__import_module_name", envir = p, inherits = FALSE), module_name)) {
+          return(p)
+        }
+        p <- parent.env(p)
+      }
+      NULL
+    },
+    # Update a proxy environment to reflect new exports after module reload.
+    # Adds bindings for new exports, removes bindings for removed exports.
+    update_proxy = function(proxy, module_env, module_macro_registry) {
+      old_orig <- get0(".__import_orig_names", envir = proxy, inherits = FALSE)
+      old_target <- get0(".__import_target_names", envir = proxy, inherits = FALSE)
+      if (is.null(old_orig)) return(invisible(NULL))
+
+      # Determine which old orig_names are still valid exports in module_env
+      still_exported <- vapply(old_orig, function(nm) {
+        exists(nm, envir = module_env, inherits = FALSE) ||
+          (!is.null(module_macro_registry) &&
+           exists(nm, envir = module_macro_registry, inherits = FALSE))
+      }, logical(1))
+
+      # Remove bindings for names no longer exported
+      removed_idx <- which(!still_exported)
+      for (j in removed_idx) {
+        tname <- old_target[j]
+        if (exists(tname, envir = proxy, inherits = FALSE)) {
+          if (bindingIsLocked(tname, proxy)) unlock_binding(tname, proxy)
+          rm(list = tname, envir = proxy)
+        }
+      }
+
+      # For names still exported, the active bindings already point to module_env
+      # and will pick up new values automatically. No action needed.
+
+      # Now check for NEW exports: names in module_env not in old_orig.
+      # These need new active bindings. Since we don't know the importer's
+      # prefix/rename, we can only add bindings for new exports that weren't
+      # previously imported. Use identity mapping (orig == target) for new ones.
+      all_module_names <- ls(module_env, all.names = TRUE)
+      all_module_names <- all_module_names[!grepl("^\\.__", all_module_names)]
+      new_names <- setdiff(all_module_names, old_orig)
+      new_target <- new_names  # identity mapping for new exports
+
+      for (i in seq_along(new_names)) {
+        local({
+          oname <- new_names[i]
+          tname <- new_target[i]
+          if (!exists(tname, envir = proxy, inherits = FALSE)) {
+            makeActiveBinding(tname, function() {
+              get(oname, envir = module_env, inherits = FALSE)
+            }, env = proxy)
+          }
+        })
+      }
+
+      # Update stored name mappings
+      kept_orig <- old_orig[still_exported]
+      kept_target <- old_target[still_exported]
+      updated_orig <- c(kept_orig, new_names)
+      updated_target <- c(kept_target, new_target)
+      unlock_binding(".__import_orig_names", proxy)
+      assign(".__import_orig_names", updated_orig, envir = proxy)
+      lockBinding(".__import_orig_names", proxy)
+      unlock_binding(".__import_target_names", proxy)
+      assign(".__import_target_names", updated_target, envir = proxy)
+      lockBinding(".__import_target_names", proxy)
+
+      # Update proxy macro registry
+      proxy_macro_reg <- get0(".__macros", envir = proxy, inherits = FALSE)
+      if (!is.null(module_macro_registry)) {
+        if (is.null(proxy_macro_reg)) {
+          proxy_macro_reg <- new.env(parent = emptyenv())
+          assign(".__macros", proxy_macro_reg, envir = proxy)
+          lockBinding(".__macros", proxy)
+        }
+        # Remove stale macro bindings
+        old_macro_names <- ls(proxy_macro_reg, all.names = TRUE)
+        for (nm in old_macro_names) {
+          if (!exists(nm, envir = module_macro_registry, inherits = FALSE)) {
+            if (bindingIsLocked(nm, proxy_macro_reg)) unlock_binding(nm, proxy_macro_reg)
+            rm(list = nm, envir = proxy_macro_reg)
+          }
+        }
+        # Add/update macro bindings for all current exports
+        for (i in seq_along(updated_orig)) {
+          local({
+            oname <- updated_orig[i]
+            tname <- updated_target[i]
+            if (exists(oname, envir = module_macro_registry, inherits = FALSE)) {
+              if (exists(tname, envir = proxy_macro_reg, inherits = FALSE)) {
+                if (bindingIsLocked(tname, proxy_macro_reg)) unlock_binding(tname, proxy_macro_reg)
+                rm(list = tname, envir = proxy_macro_reg)
+              }
+              makeActiveBinding(tname, function() {
+                get(oname, envir = module_macro_registry, inherits = FALSE)
+              }, env = proxy_macro_reg)
+            }
+          })
+        }
+      } else if (!is.null(proxy_macro_reg)) {
+        # Module no longer has macros — clear proxy macro registry
+        macro_names <- ls(proxy_macro_reg, all.names = TRUE)
+        for (nm in macro_names) {
+          if (bindingIsLocked(nm, proxy_macro_reg)) unlock_binding(nm, proxy_macro_reg)
+          rm(list = nm, envir = proxy_macro_reg)
+        }
+      }
+
       invisible(NULL)
     }
   )

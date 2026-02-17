@@ -336,8 +336,7 @@ CompiledRuntime <- R6::R6Class(
 
         # Rebuild all existing proxies to reflect new exports
         reloaded_entry <- shared_registry$get(registry_key)
-        rebuild_proxies_for_module(registry_key, reloaded_entry$env,
-                                    shared_registry, self$context$env$env)
+        shared_registry$rebuild_proxies(registry_key, self$context$env$env)
 
         # Also update squash-mode bindings in prelude_env if applicable
         prelude_env <- self$context$prelude_env

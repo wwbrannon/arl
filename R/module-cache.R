@@ -53,7 +53,7 @@ ModuleCache <- R6::R6Class(
 
       tryCatch({
         # Deflate resolved refs (replace tagged closures with symbolic placeholders)
-        compiled_body <- lapply(compiled_body, deflate_resolved_refs)
+        compiled_body <- lapply(compiled_body, private$deflate_resolved_refs)
 
         cache_data <- list(
           version = as.character(utils::packageVersion("arl")),
@@ -141,6 +141,28 @@ ModuleCache <- R6::R6Class(
   ),
 
   private = list(
+    #' @description Walk compiled expression tree, replace tagged closures with
+    #' symbolic placeholders so they can be serialized without capturing entire
+    #' environments.
+    #' @param expr A compiled R expression (call, list, or atomic).
+    #' @return The deflated expression.
+    deflate_resolved_refs = function(expr) {
+      if (is.function(expr) && !is.null(attr(expr, "arl_resolved_from"))) {
+        info <- attr(expr, "arl_resolved_from")
+        return(as.call(list(
+          as.symbol(".__resolve_ref"),
+          info$module_name,
+          info$source_symbol
+        )))
+      }
+      if (is.call(expr)) {
+        return(as.call(lapply(as.list(expr), private$deflate_resolved_refs)))
+      }
+      if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
+        return(lapply(expr, private$deflate_resolved_refs))
+      }
+      expr
+    },
     #' @description Check if a cache file is valid
     #' @param cache_data Deserialized cache data
     #' @param src_file Source file path
@@ -183,26 +205,6 @@ ModuleCache <- R6::R6Class(
     }
   )
 )
-
-# Walk compiled expression tree, replace tagged closures with symbolic placeholders
-# so they can be serialized without capturing entire environments.
-deflate_resolved_refs <- function(expr) {
-  if (is.function(expr) && !is.null(attr(expr, "arl_resolved_from"))) {
-    info <- attr(expr, "arl_resolved_from")
-    return(as.call(list(
-      as.symbol(".__resolve_ref"),
-      info$module_name,
-      info$source_symbol
-    )))
-  }
-  if (is.call(expr)) {
-    return(as.call(lapply(as.list(expr), deflate_resolved_refs)))
-  }
-  if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
-    return(lapply(expr, deflate_resolved_refs))
-  }
-  expr
-}
 
 # Walk compiled expression tree, replace .__resolve_ref placeholders with
 # actual values looked up from the module registry.
