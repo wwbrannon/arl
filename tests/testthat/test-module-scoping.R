@@ -190,7 +190,7 @@ test_that("empty defaultPackages skips the package chain", {
   old <- options(defaultPackages = character(0))
   on.exit(options(old))
 
-  engine <- Engine$new(load_prelude = FALSE)
+  engine <- Engine$new(load_prelude = FALSE, r_packages = getOption("defaultPackages"))
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
   # builtins_env should parent directly to baseenv() with no packages in between
@@ -201,7 +201,7 @@ test_that("custom defaultPackages changes which packages are in the chain", {
   old <- options(defaultPackages = c("stats"))
   on.exit(options(old))
 
-  engine <- Engine$new(load_prelude = FALSE)
+  engine <- Engine$new(load_prelude = FALSE, r_packages = getOption("defaultPackages"))
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
   # Should have exactly one package env (stats) between builtins_env and baseenv()
@@ -322,4 +322,73 @@ test_that("cross-module macro works with lambda reference", {
     (import __xmacro_lambda)
     (apply-twice (lambda (x) (+ x 1)) 0)")
   expect_equal(result, 2)
+})
+
+# =============================================================================
+# r_packages parameter
+# =============================================================================
+
+test_that("r_packages = NULL exposes only baseenv()", {
+  engine <- Engine$new(load_prelude = FALSE, r_packages = NULL)
+  builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+
+  # builtins_env should parent directly to baseenv()
+  expect_identical(parent.env(builtins_env), baseenv())
+
+  # base functions still work
+  expect_equal(engine$eval_text("(+ 1 2)"), 3)
+  expect_equal(engine$eval_text("(length (c 1 2 3))"), 3L)
+})
+
+test_that("r_packages = c('stats') gives exactly one package env", {
+  engine <- Engine$new(load_prelude = FALSE, r_packages = c("stats"))
+  builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+
+  # Should have exactly one package env (stats) between builtins_env and baseenv()
+  e <- parent.env(builtins_env)
+  seen_names <- character()
+  while (!identical(e, baseenv())) {
+    nm <- attr(e, "name")
+    if (!is.null(nm)) seen_names <- c(seen_names, nm)
+    e <- parent.env(e)
+  }
+  expect_equal(seen_names, "package:stats")
+
+  # stats::median is visible
+  expect_equal(engine$eval_text("(median (c 1 2 3 4 5))"), 3)
+})
+
+test_that("r_packages = 'search_path' picks up current search path", {
+  engine <- Engine$new(load_prelude = FALSE, r_packages = "search_path")
+  builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
+
+  # Should have package envs matching the current search() packages
+  e <- parent.env(builtins_env)
+  seen_names <- character()
+  while (!identical(e, baseenv())) {
+    nm <- attr(e, "name")
+    if (!is.null(nm)) seen_names <- c(seen_names, nm)
+    e <- parent.env(e)
+  }
+  expect_true(length(seen_names) > 0)
+  expect_true(all(grepl("^package:", seen_names)))
+})
+
+test_that("search_path mode dynamically tracks library() calls", {
+  engine <- Engine$new(load_prelude = FALSE, r_packages = "search_path")
+
+  # tools is not typically in defaultPackages; ensure it's not loaded
+  if ("package:tools" %in% search()) {
+    skip("tools package already attached")
+  }
+
+  # Before loading tools, file_ext should not be found
+  expect_error(engine$eval_text("(file_ext \"foo.R\")"), "file_ext|not found|object")
+
+  # Attach tools
+  library(tools)
+  on.exit(detach("package:tools", unload = FALSE), add = TRUE)
+
+  # Now file_ext should be visible (search path changed, chain rebuilt on eval)
+  expect_equal(engine$eval_text("(file_ext \"foo.R\")"), "R")
 })

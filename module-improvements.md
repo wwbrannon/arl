@@ -410,8 +410,6 @@ with "not implemented, reserved for future use" or something like that
 o) are we using the "_" and ".__" prefixes correctly in the stdlib? any
 ambiguity to rename?
 
-o) what happens if the R search path changes at runtime? should we update ours?
-
 =============
 
 these are all aspects of the same problem:

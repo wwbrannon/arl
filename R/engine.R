@@ -50,8 +50,11 @@ Engine <- R6::R6Class(
     #' @param disable_tco Optional logical. If TRUE, disables self-tail-call optimization
     #'   in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
     #'   which inherits from global option `getOption("arl.disable_tco", FALSE)`.
+    #' @param r_packages Controls which R packages are visible to Arl code.
+    #'   `"search_path"` (default) tracks R's `search()` dynamically;
+    #'   a character vector pins a fixed set; `NULL` exposes only `baseenv()`.
     initialize = function(coverage_tracker = NULL, load_prelude = TRUE,
-                          disable_tco = NULL) {
+                          disable_tco = NULL, r_packages = "search_path") {
       private$.env <- Env$new()
       private$.source_tracker <- SourceTracker$new()
       private$.tokenizer <- Tokenizer$new()
@@ -91,6 +94,8 @@ Engine <- R6::R6Class(
       context$compiled_runtime <- private$.compiled_runtime
       private$.help_system <- HelpSystem$new(private$.env, private$.macro_expander)
 
+      private$.r_packages_mode <- r_packages
+
       private$.initialize_environment(load_prelude = isTRUE(load_prelude))
     },
 
@@ -113,6 +118,7 @@ Engine <- R6::R6Class(
     #' @description
     #' Evaluate one or more expressions.
     eval = function(expr, ..., env = NULL) {
+      private$.refresh_pkg_chain_if_needed()
       target_env <- private$resolve_env_arg(env)
       exprs <- c(list(expr), list(...))
       private$.source_tracker$with_error_context(function() {
@@ -503,18 +509,18 @@ Engine <- R6::R6Class(
     .env = NULL,
     .source_tracker = NULL,
     .module_cache = NULL,
+    .r_packages_mode = NULL,
+    .r_pkg_names = NULL,
 
     resolve_env_arg = function(env) {
       resolve_env(env, private$.env$env)
     },
 
-    .build_default_pkgs_chain = function(base_env) {
-      pkg_names <- getOption("defaultPackages")
-      if (is.null(pkg_names) || length(pkg_names) == 0L) return(base_env)
+    .build_pkgs_chain = function(pkg_names) {
+      if (is.null(pkg_names) || length(pkg_names) == 0L) return(baseenv())
 
-      # R's search path has defaultPackages in reverse order
-      # (last listed = closest to base). We build bottom-up.
-      parent <- base_env
+      # Build bottom-up: last package is closest to baseenv().
+      parent <- baseenv()
       for (pkg in rev(pkg_names)) {
         ns <- tryCatch(asNamespace(pkg), error = function(e) NULL)
         if (is.null(ns)) next
@@ -538,6 +544,27 @@ Engine <- R6::R6Class(
       parent
     },
 
+    .resolve_r_packages = function() {
+      mode <- private$.r_packages_mode
+      if (is.null(mode)) return(character(0))
+      if (identical(mode, "search_path")) {
+        raw <- search()
+        raw <- raw[startsWith(raw, "package:")]
+        raw <- sub("^package:", "", raw)
+        return(setdiff(raw, "base"))
+      }
+      mode  # character vector
+    },
+
+    .refresh_pkg_chain_if_needed = function() {
+      if (!identical(private$.r_packages_mode, "search_path")) return(invisible(NULL))
+      current <- private$.resolve_r_packages()
+      if (identical(current, private$.r_pkg_names)) return(invisible(NULL))
+      private$.r_pkg_names <- current
+      builtins_env <- private$.compiled_runtime$context$builtins_env
+      parent.env(builtins_env) <- private$.build_pkgs_chain(private$.r_pkg_names)
+    },
+
     .initialize_environment = function(load_prelude = TRUE) {
       env <- private$.env$env
 
@@ -546,8 +573,8 @@ Engine <- R6::R6Class(
       # Chain: engine_env -> builtins_env -> pkg:stats -> ... -> pkg:methods -> baseenv()
       # Always build on baseenv(), even if the user passed an explicit env
       # with a different parent.
-      top_pkg_env <- private$.build_default_pkgs_chain(baseenv())
-      builtins_env <- new.env(parent = top_pkg_env)
+      private$.r_pkg_names <- private$.resolve_r_packages()
+      builtins_env <- new.env(parent = private$.build_pkgs_chain(private$.r_pkg_names))
       prelude_env <- new.env(parent = builtins_env)
       parent.env(env) <- prelude_env
 
