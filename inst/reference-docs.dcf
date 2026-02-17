@@ -857,7 +857,8 @@ Description: Return #t if x is a namespace node (created by importing a
   hierarchical module name like `a/b`).
 Signature: (namespace? x)
 Examples:
-  (namespace? x)  ; => #f for most values
+  (namespace? 42)      ; => #f
+  (namespace? "hello") ; => #f
 Assert:
   (assert-false (namespace? 42))
   (assert-false (namespace? "hello"))

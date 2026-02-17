@@ -1793,7 +1793,8 @@ hierarchical module name like `a/b`).
 
 **Examples:**
 ```{arl}
-(namespace? x)  ; => #f for most values
+(namespace? 42)      ; => #f
+(namespace? "hello") ; => #f
 ```
 
 ```{arl, include=FALSE}
