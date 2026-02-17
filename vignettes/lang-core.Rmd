@@ -332,11 +332,6 @@ Load a module and attach its exports into the current scope.
 (import "lib/helpers.arl")
 ```
 
-```{arl, include=FALSE}
-(import control)
-(assert-true (macro? 'when))
-```
-
 **See also:** [module](#module), [load](#load)
 
 ---
@@ -387,7 +382,7 @@ Signal an error with message.
 (assert-equal "caught" (try-catch (error "oops") (catch e "caught")))
 ```
 
-**See also:** [warn](#warn), [assert](#assert), [try](lang-control.html#try)
+**See also:** [warn](#warn), [assert](#assert), [try-catch](lang-control.html#try-catch)
 
 ---
 

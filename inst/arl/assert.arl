@@ -2,8 +2,7 @@
 
 (module assert
   (export assert assert-equal assert-true assert-false assert-eq
-          assert-error assert-no-error
-          _assert-error-impl _assert-no-error-impl)
+          assert-error assert-no-error)
 
   (import core :only (error))
   (import equality :only (equal? identical?))

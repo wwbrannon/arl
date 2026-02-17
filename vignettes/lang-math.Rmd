@@ -126,7 +126,7 @@ Compute the angle (argument) of a complex number.
 ```
 
 ```{arl, include=FALSE}
-(assert-true (< (__rabs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
+(assert-true (< (abs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
 ```
 
 **See also:** [magnitude](#magnitude), [make-polar](#make-polar)
@@ -260,8 +260,6 @@ Return sign of x: -1, 0, or 1.
 (assert-equal -1 (signum -5))
 (assert-equal 0 (signum 0))
 ```
-
----
 
 ---
 

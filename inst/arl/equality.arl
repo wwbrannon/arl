@@ -261,11 +261,11 @@
   ;;' (assign "x" 1 :envir e2)
   ;;' (equal?.environment e1 e2)       ; => #t
   ;;' @assert
-  ;;' (define __e1 (new.env :parent (emptyenv)))
-  ;;' (define __e2 (new.env :parent (emptyenv)))
-  ;;' (assign "x" 1 :envir __e1)
-  ;;' (assign "x" 1 :envir __e2)
-  ;;' (assert-true (equal?.environment __e1 __e2))
+  ;;' (define _e1 (new.env :parent (emptyenv)))
+  ;;' (define _e2 (new.env :parent (emptyenv)))
+  ;;' (assign "x" 1 :envir _e1)
+  ;;' (assign "x" 1 :envir _e2)
+  ;;' (assert-true (equal?.environment _e1 _e2))
   (define equal?.environment
     (lambda (a b (strict #f))
       (if (not (environment? b))

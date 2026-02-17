@@ -128,9 +128,9 @@
 ;;' (dict-set d "x" 42)        ; => d (mutated, x=42)
 ;;' (dict-get d "x")           ; => 42
 ;;' @assert
-;;' (define __test-d (dict))
-;;' (dict-set __test-d "x" 42)
-;;' (assert-equal 42 (dict-get __test-d "x"))
+;;' (define _test-d (dict))
+;;' (dict-set _test-d "x" 42)
+;;' (assert-equal 42 (dict-get _test-d "x"))
 ;;' @seealso dict-get, dict-remove
 (define dict-set
   (lambda (dict key value)
@@ -152,9 +152,9 @@
 ;;' (dict-remove d "x")        ; => d (mutated, x removed)
 ;;' (dict-has? d "x")          ; => #f
 ;;' @assert
-;;' (define __test-dr (dict :x 1 :y 2))
-;;' (dict-remove __test-dr "x")
-;;' (assert-false (dict-has? __test-dr "x"))
+;;' (define _test-dr (dict :x 1 :y 2))
+;;' (dict-remove _test-dr "x")
+;;' (assert-false (dict-has? _test-dr "x"))
 ;;' @seealso dict-set
 (define dict-remove
   (lambda (dict key)
@@ -230,11 +230,11 @@
 ;;' (dict-get m "y")           ; => 99  (b overrides a)
 ;;' (dict-get m "z")           ; => 3
 ;;' @assert
-;;' (define __test-ma (dict :x 1 :y 2))
-;;' (define __test-mb (dict :y 99 :z 3))
-;;' (define __test-mm (dict-merge __test-ma __test-mb))
-;;' (assert-equal 99 (dict-get __test-mm "y"))
-;;' (assert-equal 3 (dict-get __test-mm "z"))
+;;' (define _test-ma (dict :x 1 :y 2))
+;;' (define _test-mb (dict :y 99 :z 3))
+;;' (define _test-mm (dict-merge _test-ma _test-mb))
+;;' (assert-equal 99 (dict-get _test-mm "y"))
+;;' (assert-equal 3 (dict-get _test-mm "z"))
 ;;' @seealso dict, dict-set
 (define dict-merge
   (lambda (. dicts)

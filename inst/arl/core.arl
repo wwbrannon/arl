@@ -13,14 +13,14 @@
 
   ;;' @description Signal an error with message.
   ;;' @examples
-  ;;' (try (error "something went wrong")
+  ;;' (try-catch (error "something went wrong")
   ;;'   (catch e ($ e "message")))     ; => "something went wrong"
-  ;;' (try (error "oops")
+  ;;' (try-catch (error "oops")
   ;;'   (catch e "caught"))            ; => "caught"
   ;;' @assert
-  ;;' (assert-equal "something went wrong" (try (error "something went wrong") (catch e ($ e "message"))))
-  ;;' (assert-equal "caught" (try (error "oops") (catch e "caught")))
-  ;;' @seealso warn, assert, try
+  ;;' (assert-equal "something went wrong" (try-catch (error "something went wrong") (catch e ($ e "message"))))
+  ;;' (assert-equal "caught" (try-catch (error "oops") (catch e "caught")))
+  ;;' @seealso warn, assert, try-catch
   (define error
     (lambda (msg)
       (stop msg :call. #f)))
@@ -107,6 +107,10 @@
     (lambda (fn args)
       (do.call fn args :quote #t)))
 
+  ; for use in r/call below: we need R's get, not the get defined below
+  ; in terms of r/call itself
+  (define _rget base::get)
+
   ;;' @description Call an R function with optional environment.
   ;;' Searches from .GlobalEnv by default, finding base and loaded
   ;;' package functions.
@@ -120,8 +124,6 @@
   ;;' @seealso funcall, r/eval
   ;; Private binding to R's base `get` — needed to bootstrap r/call without
   ;; circular dependency (r/call uses _rget; everything else uses r/call).
-  (define _rget (get "get" :envir (baseenv)))
-
   (define r/call
     (lambda (fn (args (list)) (envir (globalenv)))
       (define fn-name
@@ -156,9 +158,9 @@
   ;;' (begin
   ;;'   (define tmp-var 42)
   ;;'   (unbind-variable "tmp-var" (current-env))
-  ;;'   (try tmp-var (catch e "gone")))  ; => "gone"
+  ;;'   (try-catch tmp-var (catch e "gone")))  ; => "gone"
   ;;' @assert
-  ;;' (assert-equal "gone" (begin (define ub-test 1) (unbind-variable "ub-test" (current-env)) (try ub-test (catch e "gone"))))
+  ;;' (assert-equal "gone" (begin (define ub-test 1) (unbind-variable "ub-test" (current-env)) (try-catch ub-test (catch e "gone"))))
   ;;' @seealso get, define
   (define unbind-variable
     (lambda (name (envir (current-env)))
@@ -176,7 +178,7 @@
   ;;' (define run-demo-path (tempfile :fileext ".arl"))
   ;;' (writeLines (c "(define run-demo-val 1)") run-demo-path)
   ;;' (run run-demo-path)
-  ;;' (assert-equal "missing" (try run-demo-val (catch e "missing")))
+  ;;' (assert-equal "missing" (try-catch run-demo-val (catch e "missing")))
   ;;' (unlink run-demo-path)
   ;;' @seealso load, current-env
   (define run

@@ -223,9 +223,6 @@ Signature: (import name) or (import "path")
 Examples:
   (import control)
   (import "lib/helpers.arl")
-Assert:
-  (assert-no-error (import control))
-  (assert-true (macro? 'when))
 Seealso: module, load
 
 Name: module

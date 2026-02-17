@@ -79,9 +79,9 @@
 ;;' (set-add s 3)              ; => s (mutated, now {1, 2, 3})
 ;;' (set-contains? s 3)        ; => #t
 ;;' @assert
-;;' (define __test-sa (set 1 2))
-;;' (set-add __test-sa 3)
-;;' (assert-true (set-contains? __test-sa 3))
+;;' (define _test-sa (set 1 2))
+;;' (set-add _test-sa 3)
+;;' (assert-true (set-contains? _test-sa 3))
 ;;' @seealso set-remove
 (define set-add
   (lambda (set item)
@@ -99,9 +99,9 @@
 ;;' (set-remove s 2)           ; => s (mutated, now {1, 3})
 ;;' (set-contains? s 2)        ; => #f
 ;;' @assert
-;;' (define __test-sr (set 1 2 3))
-;;' (set-remove __test-sr 2)
-;;' (assert-false (set-contains? __test-sr 2))
+;;' (define _test-sr (set 1 2 3))
+;;' (set-remove _test-sr 2)
+;;' (assert-false (set-contains? _test-sr 2))
 ;;' @seealso set-add
 (define set-remove
   (lambda (set item)
@@ -137,9 +137,9 @@
 ;;' (set-contains? u 1)        ; => #t
 ;;' (set-contains? u 5)        ; => #t
 ;;' @assert
-;;' (define __test-su (set-union (set 1 2 3) (set 3 4 5)))
-;;' (assert-true (set-contains? __test-su 1))
-;;' (assert-true (set-contains? __test-su 5))
+;;' (define _test-su (set-union (set 1 2 3) (set 3 4 5)))
+;;' (assert-true (set-contains? _test-su 1))
+;;' (assert-true (set-contains? _test-su 5))
 ;;' @seealso set-intersection, set-difference
 (define set-union
   (lambda (a b)
@@ -156,9 +156,9 @@
 ;;' (set-contains? i 2)        ; => #t
 ;;' (set-contains? i 1)        ; => #f
 ;;' @assert
-;;' (define __test-si (set-intersection (set 1 2 3) (set 2 3 4)))
-;;' (assert-true (set-contains? __test-si 2))
-;;' (assert-false (set-contains? __test-si 1))
+;;' (define _test-si (set-intersection (set 1 2 3) (set 2 3 4)))
+;;' (assert-true (set-contains? _test-si 2))
+;;' (assert-false (set-contains? _test-si 1))
 ;;' @seealso set-union, set-difference
 (define set-intersection
   (lambda (a b)
@@ -184,9 +184,9 @@
 ;;' (set-contains? d 1)        ; => #t
 ;;' (set-contains? d 2)        ; => #f
 ;;' @assert
-;;' (define __test-sd (set-difference (set 1 2 3) (set 2 3 4)))
-;;' (assert-true (set-contains? __test-sd 1))
-;;' (assert-false (set-contains? __test-sd 2))
+;;' (define _test-sd (set-difference (set 1 2 3) (set 2 3 4)))
+;;' (assert-true (set-contains? _test-sd 1))
+;;' (assert-false (set-contains? _test-sd 2))
 ;;' @seealso set-union, set-intersection
 (define set-difference
   (lambda (a b)

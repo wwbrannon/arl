@@ -139,9 +139,9 @@ Set key to value in dict and return dict.
 ```
 
 ```{arl, include=FALSE}
-(define __test-d (dict))
-(dict-set __test-d "x" 42)
-(assert-equal 42 (dict-get __test-d "x"))
+(define _test-d (dict))
+(dict-set _test-d "x" 42)
+(assert-equal 42 (dict-get _test-d "x"))
 ```
 
 **See also:** [dict-get](#dict-get), [dict-remove](#dict-remove)
@@ -162,9 +162,9 @@ Remove key from dict and return dict.
 ```
 
 ```{arl, include=FALSE}
-(define __test-dr (dict :x 1 :y 2))
-(dict-remove __test-dr "x")
-(assert-false (dict-has? __test-dr "x"))
+(define _test-dr (dict :x 1 :y 2))
+(dict-remove _test-dr "x")
+(assert-false (dict-has? _test-dr "x"))
 ```
 
 **See also:** [dict-set](#dict-set)
@@ -251,11 +251,11 @@ Merge dicts, later values override earlier.
 ```
 
 ```{arl, include=FALSE}
-(define __test-ma (dict :x 1 :y 2))
-(define __test-mb (dict :y 99 :z 3))
-(define __test-mm (dict-merge __test-ma __test-mb))
-(assert-equal 99 (dict-get __test-mm "y"))
-(assert-equal 3 (dict-get __test-mm "z"))
+(define _test-ma (dict :x 1 :y 2))
+(define _test-mb (dict :y 99 :z 3))
+(define _test-mm (dict-merge _test-ma _test-mb))
+(assert-equal 99 (dict-get _test-mm "y"))
+(assert-equal 3 (dict-get _test-mm "z"))
 ```
 
 **See also:** [dict](#dict), [dict-set](#dict-set)
@@ -342,9 +342,9 @@ Add item to set and return set.
 ```
 
 ```{arl, include=FALSE}
-(define __test-sa (set 1 2))
-(set-add __test-sa 3)
-(assert-true (set-contains? __test-sa 3))
+(define _test-sa (set 1 2))
+(set-add _test-sa 3)
+(assert-true (set-contains? _test-sa 3))
 ```
 
 **See also:** [set-remove](#set-remove)
@@ -365,9 +365,9 @@ Remove item from set and return set.
 ```
 
 ```{arl, include=FALSE}
-(define __test-sr (set 1 2 3))
-(set-remove __test-sr 2)
-(assert-false (set-contains? __test-sr 2))
+(define _test-sr (set 1 2 3))
+(set-remove _test-sr 2)
+(assert-false (set-contains? _test-sr 2))
 ```
 
 **See also:** [set-add](#set-add)
@@ -410,9 +410,9 @@ Return union of two sets.
 ```
 
 ```{arl, include=FALSE}
-(define __test-su (set-union (set 1 2 3) (set 3 4 5)))
-(assert-true (set-contains? __test-su 1))
-(assert-true (set-contains? __test-su 5))
+(define _test-su (set-union (set 1 2 3) (set 3 4 5)))
+(assert-true (set-contains? _test-su 1))
+(assert-true (set-contains? _test-su 5))
 ```
 
 **See also:** [set-intersection](#set-intersection), [set-difference](#set-difference)
@@ -435,9 +435,9 @@ Return intersection of two sets.
 ```
 
 ```{arl, include=FALSE}
-(define __test-si (set-intersection (set 1 2 3) (set 2 3 4)))
-(assert-true (set-contains? __test-si 2))
-(assert-false (set-contains? __test-si 1))
+(define _test-si (set-intersection (set 1 2 3) (set 2 3 4)))
+(assert-true (set-contains? _test-si 2))
+(assert-false (set-contains? _test-si 1))
 ```
 
 **See also:** [set-union](#set-union), [set-difference](#set-difference)
@@ -460,9 +460,9 @@ Return items in a that are not in b.
 ```
 
 ```{arl, include=FALSE}
-(define __test-sd (set-difference (set 1 2 3) (set 2 3 4)))
-(assert-true (set-contains? __test-sd 1))
-(assert-false (set-contains? __test-sd 2))
+(define _test-sd (set-difference (set 1 2 3) (set 2 3 4)))
+(assert-true (set-contains? _test-sd 1))
+(assert-false (set-contains? _test-sd 2))
 ```
 
 **See also:** [set-union](#set-union), [set-intersection](#set-intersection)
@@ -503,12 +503,12 @@ Define a struct constructor, predicate, and accessors.
 ```
 
 ```{arl, include=FALSE}
-(defstruct __TestPt (x y))
-(define __test-pt (make-__TestPt 3 4))
-(assert-true (__TestPt? __test-pt))
-(assert-false (__TestPt? 42))
-(assert-equal 3 (__TestPt-x __test-pt))
-(assert-equal 4 (__TestPt-y __test-pt))
+(defstruct _TestPt (x y))
+(define _test-pt (make-_TestPt 3 4))
+(assert-true (_TestPt? _test-pt))
+(assert-false (_TestPt? 42))
+(assert-equal 3 (_TestPt-x _test-pt))
+(assert-equal 4 (_TestPt-y _test-pt))
 ```
 
 **Note:** `defstruct` generates a constructor (`make-Name`), a type predicate (`Name?`), and field accessors (`Name-field`) for each field. The struct is backed by an R named list with an S3 class.

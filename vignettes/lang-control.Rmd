@@ -380,9 +380,9 @@ result                      ; => ("a" "b" "c")
 ```
 
 ```{arl, include=FALSE}
-(define __test-total 0)
-(do-list (__x '(1 2 3)) (set! __test-total (+ __test-total __x)))
-(assert-equal 6 __test-total)
+(define _test-total 0)
+(do-list (_x '(1 2 3)) (set! _test-total (+ _test-total _x)))
+(assert-equal 6 _test-total)
 ```
 
 **Note:** Expands to a `while` loop over the sequence converted to a list.
@@ -448,9 +448,9 @@ i                          ; => 5
 ```
 
 ```{arl, include=FALSE}
-(define __test-i 0)
-(until (= __test-i 5) (set! __test-i (+ __test-i 1)))
-(assert-equal 5 __test-i)
+(define _test-i 0)
+(until (= _test-i 5) (set! _test-i (+ _test-i 1)))
+(assert-equal 5 _test-i)
 ```
 
 **See also:** [while](lang-core.html#while)

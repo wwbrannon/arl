@@ -342,7 +342,7 @@ Another common pattern is loop macros:
     (define seq (car (cdr binding)))
     (define remaining (gensym "do_list_remaining"))
     `(begin
-       (define ,remaining (__as-list ,seq))
+       (define ,remaining (_as-list ,seq))
        (while (not (null? ,remaining))
          (define ,var (car ,remaining))
          ,@body
