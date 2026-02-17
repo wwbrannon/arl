@@ -177,7 +177,7 @@ test_that("(import ...) errors on missing modules and exports", {
   ), module_file)
 
   exprs <- engine$read(sprintf("(import %s)", module_name))
-  expect_error(engine$eval(exprs[[1]], env = env), "does not export")
+  expect_error(engine$eval(exprs[[1]], env = env), "not defined or imported")
 })
 
 test_that("(import \"path\") loads module by path and attaches exports", {

@@ -104,6 +104,7 @@ test_that("module_compiled() creates and registers module", {
     "test-mod",
     c("foo"),
     FALSE,
+    FALSE,
     list(quote(foo <- 42)),
     NULL,
     eng$get_env()
@@ -119,6 +120,7 @@ test_that("module_compiled() evaluates body expressions", {
   engine_field(eng, "compiled_runtime")$module_compiled(
     "test-mod",
     c("foo", "bar"),
+    FALSE,
     FALSE,
     list(quote(foo <- 42), quote(bar <- "test")),
     NULL,
@@ -136,6 +138,7 @@ test_that("module_compiled() handles export_all flag", {
     "test-mod",
     character(0),
     TRUE,
+    FALSE,
     list(quote(foo <- 42), quote(bar <- "test"), quote(baz <- 99)),
     NULL,
     eng$get_env()
@@ -193,6 +196,7 @@ test_that("module_compiled() marks module environment", {
     "test-mod",
     c("foo"),
     FALSE,
+    FALSE,
     list(quote(foo <- 42)),
     NULL,
     eng$get_env()
@@ -213,6 +217,7 @@ test_that("module_compiled() creates path alias when src_file provided", {
     "test-mod",
     c("foo"),
     FALSE,
+    FALSE,
     list(quote(foo <- 42)),
     tmp_file,
     eng$get_env()
@@ -229,6 +234,7 @@ test_that("module_compiled() installs helpers in module environment", {
   engine_field(eng, "compiled_runtime")$module_compiled(
     "test-mod",
     c("foo"),
+    FALSE,
     FALSE,
     list(quote(foo <- 42)),
     NULL,

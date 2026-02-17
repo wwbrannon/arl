@@ -237,8 +237,8 @@ CompiledRuntime <- R6::R6Class(
         self$context$macro_expander$quasiquote(expr, env)
       }, "Quasiquote for macro expansion.")
 
-      assign_and_lock(".__module", function(module_name, exports, export_all, body_exprs, src_file, env) {
-        self$module_compiled(module_name, exports, export_all, body_exprs, src_file, env)
+      assign_and_lock(".__module", function(module_name, exports, export_all, re_export, body_exprs, src_file, env) {
+        self$module_compiled(module_name, exports, export_all, re_export, body_exprs, src_file, env)
       }, "Module definition handler.")
 
       assign_and_lock(".__import", function(arg_value, env, only = NULL, except = NULL, prefix = NULL, rename = NULL, reload = FALSE) {
@@ -461,7 +461,7 @@ CompiledRuntime <- R6::R6Class(
       self$context$macro_expander$defmacro(name, params, body_list, doc_list = doc_list, env = env)
       invisible(NULL)
     },
-    module_compiled = function(module_name, exports, export_all, body_exprs, src_file, env) {
+    module_compiled = function(module_name, exports, export_all, re_export, body_exprs, src_file, env) {
       # Module environments inherit from prelude_env (not the engine env
       # with all stdlib), so prelude bindings are visible but other stdlib
       # requires explicit import. Falls back to builtins_env then env.
@@ -548,12 +548,30 @@ CompiledRuntime <- R6::R6Class(
         result <- self$eval_compiled(compiled, module_env)
       }
 
+      # Re-export forwarding: create active bindings for explicitly exported
+      # names that are imported (not own bindings) so they become visible via
+      # inherits=FALSE lookup in attach_into.
+      if (!export_all && length(exports) > 0) {
+        create_reexport_forwardings(module_env, exports, module_name)
+      }
+
       if (export_all) {
         # ls() only returns immediate bindings — proxy-based imports live in
         # parent chain proxies, so they're naturally excluded.
         all_symbols <- ls(module_env, all.names = TRUE)
         # Exclude .__* internals
         all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
+
+        if (isTRUE(re_export)) {
+          # Collect imported names from proxy envs in the parent chain
+          imported_names <- collect_proxy_imported_names(module_env)
+          new_names <- setdiff(imported_names, all_symbols)
+          if (length(new_names) > 0) {
+            create_reexport_forwardings(module_env, new_names, module_name)
+            all_symbols <- c(all_symbols, new_names)
+          }
+        }
+
         self$context$env$module_registry$update_exports(module_name, all_symbols)
       }
 
@@ -563,7 +581,7 @@ CompiledRuntime <- R6::R6Class(
         cache_paths <- self$module_cache$get_paths(src_file)
         if (!is.null(cache_paths)) {
           # Always write expr cache (safe fallback)
-          self$module_cache$write_code(module_name, compiled_body, exports, export_all, src_file, cache_paths$file_hash)
+          self$module_cache$write_code(module_name, compiled_body, exports, export_all, re_export, src_file, cache_paths$file_hash)
 
           # Env cache disabled: proxy-based imports use active bindings in
           # the parent chain which can't survive serialization/deserialization.
@@ -667,3 +685,74 @@ CompiledRuntime <- R6::R6Class(
     }
   )
 )
+
+# Collect imported symbol names from proxy environments in the parent chain.
+# Walks from parent.env(module_env) upward, collecting .__import_target_names
+# from each import proxy.
+collect_proxy_imported_names <- function(module_env) {
+  names <- character(0)
+  p <- parent.env(module_env)
+  while (!identical(p, emptyenv())) {
+    if (isTRUE(get0(".__import_proxy", envir = p, inherits = FALSE))) {
+      target_names <- get0(".__import_target_names", envir = p, inherits = FALSE)
+      if (!is.null(target_names)) {
+        names <- c(names, target_names)
+      }
+    }
+    p <- parent.env(p)
+  }
+  unique(names)
+}
+
+# Create forwarding active bindings in module_env for re-exported names.
+# For each name that is not an own binding in module_env but is accessible
+# via the parent chain (import proxies), create a forwarding active binding
+# so attach_into's inherits=FALSE lookup can find it.
+# Also forwards macros from proxy .__macros registries.
+create_reexport_forwardings <- function(module_env, names, module_name) {
+  parent <- parent.env(module_env)
+  for (nm in names) {
+    if (!exists(nm, envir = module_env, inherits = FALSE)) {
+      if (exists(nm, envir = parent, inherits = TRUE)) {
+        # Create forwarding active binding that looks up from parent chain
+        local({
+          sym <- nm
+          par <- parent
+          makeActiveBinding(sym, function() get(sym, envir = par, inherits = TRUE), module_env)
+        })
+      } else {
+        stop(sprintf("module '%s' exports '%s' but it is not defined or imported",
+                      module_name, nm), call. = FALSE)
+      }
+    }
+  }
+  # Forward macros from proxy .__macros registries
+  module_macro_registry <- get0(".__macros", envir = module_env, inherits = FALSE)
+  p <- parent
+  while (!identical(p, emptyenv())) {
+    if (isTRUE(get0(".__import_proxy", envir = p, inherits = FALSE))) {
+      proxy_macros <- get0(".__macros", envir = p, inherits = FALSE)
+      if (!is.null(proxy_macros)) {
+        for (nm in names) {
+          if (exists(nm, envir = proxy_macros, inherits = FALSE)) {
+            # Ensure module has its own macro registry
+            if (is.null(module_macro_registry)) {
+              module_macro_registry <- new.env(parent = emptyenv())
+              base::assign(".__macros", module_macro_registry, envir = module_env)
+              lockBinding(".__macros", module_env)
+            }
+            if (!exists(nm, envir = module_macro_registry, inherits = FALSE)) {
+              local({
+                sym <- nm
+                src_macros <- proxy_macros
+                makeActiveBinding(sym, function() get(sym, envir = src_macros, inherits = FALSE), module_macro_registry)
+              })
+            }
+          }
+        }
+      }
+    }
+    p <- parent.env(p)
+  }
+  invisible(NULL)
+}

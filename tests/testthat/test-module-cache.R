@@ -53,7 +53,7 @@ test_that("write_code() creates cache files", {
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
 
-  result <- cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths$file_hash)
+  result <- cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash)
 
   expect_true(result)
   expect_true(file.exists(paths$code_cache))
@@ -72,7 +72,7 @@ test_that("write_code() creates human-readable .code.R file", {
   compiled_body <- list(quote(foo <- 42), quote(bar <- "test"))
   paths <- cache$get_paths(tmp_file)
 
-  cache$write_code("test", compiled_body, c("foo", "bar"), TRUE, tmp_file, paths$file_hash)
+  cache$write_code("test", compiled_body, c("foo", "bar"), TRUE, FALSE, tmp_file, paths$file_hash)
 
   r_code <- readLines(paths$code_r)
   expect_true(any(grepl("module: test", r_code)))
@@ -92,7 +92,7 @@ test_that("write_code() includes metadata", {
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
 
-  cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths$file_hash)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash)
 
   cache_data <- readRDS(paths$code_cache)
   expect_equal(cache_data$version, as.character(utils::packageVersion("arl")))
@@ -126,7 +126,7 @@ test_that("load_code() loads cache data", {
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
 
-  cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths$file_hash)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash)
 
   loaded <- cache$load_code(paths$code_cache, tmp_file)
 
@@ -151,7 +151,7 @@ test_that("load_code() returns NULL for version mismatch", {
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
 
-  cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths$file_hash)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash)
 
   # Modify version in cache
   cache_data <- readRDS(paths$code_cache)
@@ -178,7 +178,7 @@ test_that("load_code() returns NULL for coverage mismatch", {
   paths <- cache$get_paths(tmp_file)
 
   # Write cache with coverage = TRUE
-  cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths$file_hash, coverage = TRUE)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, coverage = TRUE)
 
   # Loading without coverage should reject it
   result <- cache$load_code(paths$code_cache, tmp_file, coverage = FALSE)
@@ -200,7 +200,7 @@ test_that("load_code() returns NULL for missing coverage field (pre-upgrade cach
   paths <- cache$get_paths(tmp_file)
 
   # Write a cache, then strip the coverage field to simulate old format
-  cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths$file_hash)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash)
   cache_data <- readRDS(paths$code_cache)
   cache_data$coverage <- NULL
   saveRDS(cache_data, paths$code_cache)
@@ -223,7 +223,7 @@ test_that("load_code() returns NULL for hash mismatch", {
   compiled_body <- list(quote(foo <- 42))
   paths1 <- cache$get_paths(tmp_file)
 
-  cache$write_code("test", compiled_body, c("foo"), FALSE, tmp_file, paths1$file_hash)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths1$file_hash)
 
   # Modify file content - changes hash
   writeLines("(module test (export foo bar))", tmp_file)

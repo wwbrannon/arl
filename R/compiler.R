@@ -1239,6 +1239,7 @@ Compiler <- R6::R6Class(
       }
       export_tag <- as.character(exports_expr[[1]])
       export_all <- FALSE
+      re_export <- FALSE
       exports <- character(0)
       if (identical(export_tag, "export")) {
         if (length(exports_expr) > 1) {
@@ -1252,7 +1253,14 @@ Compiler <- R6::R6Class(
         }
       } else if (identical(export_tag, "export-all")) {
         if (length(exports_expr) > 1) {
-          return(private$fail("export-all does not take any arguments"))
+          for (i in 2:length(exports_expr)) {
+            item <- exports_expr[[i]]
+            if (inherits(item, "arl_keyword") && identical(as.character(item), "re-export")) {
+              re_export <- TRUE
+            } else {
+              return(private$fail("export-all only accepts :re-export modifier"))
+            }
+          }
         }
         export_all <- TRUE
       } else {
@@ -1273,6 +1281,7 @@ Compiler <- R6::R6Class(
         name_str,
         exports,
         export_all,
+        re_export,
         compiled_body_quoted,
         src_file,
         as.symbol(self$env_var_name)

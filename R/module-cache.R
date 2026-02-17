@@ -42,7 +42,7 @@ ModuleCache <- R6::R6Class(
     #' @param export_all Export all flag
     #' @param src_file Source file path
     #' @param file_hash File hash
-    write_code = function(module_name, compiled_body, exports, export_all, src_file, file_hash, coverage = FALSE) {
+    write_code = function(module_name, compiled_body, exports, export_all, re_export, src_file, file_hash, coverage = FALSE) {
       paths <- self$get_paths(src_file)
       if (is.null(paths)) return(FALSE)
 
@@ -63,6 +63,7 @@ ModuleCache <- R6::R6Class(
           module_name = module_name,
           exports = exports,
           export_all = export_all,
+          re_export = re_export,
           compiled_body = compiled_body
         )
 
