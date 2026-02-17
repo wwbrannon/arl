@@ -333,7 +333,7 @@ Load a module and attach its exports into the current scope.
 ```
 
 ```{arl, include=FALSE}
-(assert-no-error (import control))
+(import control)
 (assert-true (macro? 'when))
 ```
 
@@ -376,15 +376,15 @@ Signal an error with message.
 
 **Examples:**
 ```{arl}
-(try (error "something went wrong")
+(try-catch (error "something went wrong")
   (catch e ($ e "message")))     ; => "something went wrong"
-(try (error "oops")
+(try-catch (error "oops")
   (catch e "caught"))            ; => "caught"
 ```
 
 ```{arl, include=FALSE}
-(assert-equal "something went wrong" (try (error "something went wrong") (catch e ($ e "message"))))
-(assert-equal "caught" (try (error "oops") (catch e "caught")))
+(assert-equal "something went wrong" (try-catch (error "something went wrong") (catch e ($ e "message"))))
+(assert-equal "caught" (try-catch (error "oops") (catch e "caught")))
 ```
 
 **See also:** [warn](#warn), [assert](#assert), [try](lang-control.html#try)
@@ -570,11 +570,11 @@ Remove a variable binding from an environment.
 (begin
   (define tmp-var 42)
   (unbind-variable "tmp-var" (current-env))
-  (try tmp-var (catch e "gone")))  ; => "gone"
+  (try-catch tmp-var (catch e "gone")))  ; => "gone"
 ```
 
 ```{arl, include=FALSE}
-(assert-equal "gone" (begin (define ub-test 1) (unbind-variable "ub-test" (current-env)) (try ub-test (catch e "gone"))))
+(assert-equal "gone" (begin (define ub-test 1) (unbind-variable "ub-test" (current-env)) (try-catch ub-test (catch e "gone"))))
 ```
 
 **See also:** [get](#get), [define](#define)
@@ -594,7 +594,7 @@ the loaded file remain in the child and are not visible in `parent`.
 (define run-demo-path (tempfile :fileext ".arl"))
 (writeLines (c "(define run-demo-val 1)") run-demo-path)
 (run run-demo-path)
-(assert-equal "missing" (try run-demo-val (catch e "missing")))
+(assert-equal "missing" (try-catch run-demo-val (catch e "missing")))
 (unlink run-demo-path)
 ```
 

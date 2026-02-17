@@ -28,7 +28,32 @@ get_arl_engine <- function() {
   }
 
   if (is.null(.knitr_state$engine)) {
-    .knitr_state$engine <- Engine$new()
+    eng <- Engine$new()
+
+    # Load all stdlib modules so vignette code can use the full language
+    # without explicit (import ...) for every module.
+    load_order_path <- system.file("arl", "load-order.txt", package = "arl")
+    if (nzchar(load_order_path) && file.exists(load_order_path)) {
+      all_modules <- readLines(load_order_path, warn = FALSE)
+      all_modules <- all_modules[nzchar(all_modules)]
+      arl_env <- Env$new(eng$get_env())
+      registry <- arl_env$module_registry
+      for (mod in all_modules) {
+        if (!registry$exists(mod)) {
+          path <- resolve_stdlib_path(mod)
+          if (!is.null(path)) {
+            eng$load_file_in_env(path, eng$get_env())
+          }
+        }
+      }
+      for (mod in all_modules) {
+        if (registry$exists(mod)) {
+          registry$attach_into(mod, eng$get_env())
+        }
+      }
+    }
+
+    .knitr_state$engine <- eng
   }
 
   .knitr_state$engine

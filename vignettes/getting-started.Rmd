@@ -181,7 +181,7 @@ are not visible to later code):
 (define gs-run-path (tempfile :fileext ".arl"))
 (writeLines (c "(define gs-run-only 123)") gs-run-path)
 (run gs-run-path)
-(assert-equal "missing" (try gs-run-only (catch e "missing")))
+(assert-equal "missing" (try-catch gs-run-only (catch e "missing")))
 
 (unlink gs-load-path)
 (unlink gs-run-path)
@@ -250,7 +250,7 @@ or `arl --no-stdlib`:
 (assert-true (macro? 'let))
 (assert-true (macro? 'loop))
 (assert-true (macro? '->))
-(assert-true (macro? 'try))
+(assert-true (macro? 'try-catch))
 ```
 
 See [Modules and Imports](modules.html) for details on creating and importing
@@ -326,7 +326,7 @@ binding:
 ```{arl, include=FALSE}
 (define ub-gs-test 1)
 (unbind-variable 'ub-gs-test (current-env))
-(assert-equal "gone" (try ub-gs-test (catch e "gone")))
+(assert-equal "gone" (try-catch ub-gs-test (catch e "gone")))
 ```
 
 ### Local bindings
@@ -494,9 +494,9 @@ special form, macro, built-in, or stdlib function:
 ```
 
 ```{arl, include=FALSE}
-(assert-equal "ok" (try (begin (help "define") "ok") (catch e "bad")))
-(assert-equal "ok" (try (begin (help "when") "ok") (catch e "bad")))
-(assert-equal "ok" (try (begin (help "map") "ok") (catch e "bad")))
+(assert-equal "ok" (try-catch (begin (help "define") "ok") (catch e "bad")))
+(assert-equal "ok" (try-catch (begin (help "when") "ok") (catch e "bad")))
+(assert-equal "ok" (try-catch (begin (help "map") "ok") (catch e "bad")))
 ```
 
 For functions or macros with documentation, `help` shows the signature, description,

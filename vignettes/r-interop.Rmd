@@ -316,7 +316,7 @@ Both accept an optional environment argument (defaulting to `.GlobalEnv` for
 (define ri-ub-test 99)
 (assert-equal 99 (get "ri-ub-test" (current-env)))
 (unbind-variable 'ri-ub-test (current-env))
-(assert-equal "gone" (try ri-ub-test (catch e "gone")))
+(assert-equal "gone" (try-catch ri-ub-test (catch e "gone")))
 ```
 
 Names can also be passed as strings:

@@ -625,13 +625,13 @@ into calls to the lower-level `try` function (which in turn calls R's
 `tryCatch`):
 
 ```{arl}
-(try (stop "something went wrong")
+(try-catch (stop "something went wrong")
   (catch e (string-concat "caught: " ($ e "message")))
   (finally (display "cleanup")))
 ```
 
 ```{arl, include=FALSE}
-(assert-true (string? (try (stop "test error") (catch e (string-concat "caught: " ($ e "message"))))))
+(assert-true (string? (try-catch (stop "test error") (catch e (string-concat "caught: " ($ e "message"))))))
 ```
 
 ## Related guides

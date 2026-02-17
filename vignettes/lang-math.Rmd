@@ -263,25 +263,6 @@ Return sign of x: -1, 0, or 1.
 
 ---
 
-### truncate {#truncate}
-
-Return truncated (towards zero) value of x.
-
-**Signature:** `(truncate x)`
-
-**Examples:**
-```{arl}
-(truncate 3.7)  ; => 3
-(truncate -3.7) ; => -3
-```
-
-```{arl, include=FALSE}
-(assert-equal 3 (truncate 3.7))
-(assert-equal -3 (truncate -3.7))
-```
-
-**See also:** floor, ceiling, round
-
 ---
 
 ## Power and Roots {#section-power-and-roots}
