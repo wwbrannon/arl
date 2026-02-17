@@ -242,6 +242,18 @@ Compiler <- R6::R6Class(
       if (is.null(expr)) {
         return(private$compiled_nil())
       }
+      # Resolved cross-module reference: extract the captured value
+      if (is_resolved_ref(expr)) {
+        val <- expr$value
+        # Tag functions so cache writer can deflate them
+        if (is.function(val)) {
+          attr(val, "arl_resolved_from") <- list(
+            module_name = expr$module_name,
+            source_symbol = expr$source_symbol
+          )
+        }
+        return(val)
+      }
       # Atoms (self-evaluating)
       if (!is.call(expr) && !is.symbol(expr)) {
         return(private$strip_src(expr))

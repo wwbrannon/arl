@@ -235,6 +235,12 @@ Engine <- R6::R6Class(
               # Install helpers and setup
               private$.compiled_runtime$install_helpers(module_env)
 
+              # Inflate resolved ref placeholders back to live values
+              reg_env <- module_registry$arl_env$module_registry_env(create = FALSE)
+              if (!is.null(reg_env)) {
+                cache_data$compiled_body <- lapply(cache_data$compiled_body, inflate_resolved_refs, reg_env)
+              }
+
               # Evaluate cached compiled expressions in module environment
               if (length(cache_data$compiled_body) == 1L) {
                 result <- private$.compiled_runtime$eval_compiled(cache_data$compiled_body[[1L]], module_env)

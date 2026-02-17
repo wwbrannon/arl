@@ -52,10 +52,14 @@ ModuleCache <- R6::R6Class(
       }
 
       tryCatch({
+        # Deflate resolved refs (replace tagged closures with symbolic placeholders)
+        compiled_body <- lapply(compiled_body, deflate_resolved_refs)
+
         cache_data <- list(
           version = as.character(utils::packageVersion("arl")),
           file_hash = file_hash,
           coverage = coverage,
+          default_packages = sort(getOption("defaultPackages", character(0))),
           module_name = module_name,
           exports = exports,
           export_all = export_all,
@@ -159,6 +163,13 @@ ModuleCache <- R6::R6Class(
         return(FALSE)
       }
 
+      # Check defaultPackages (affects which symbols are resolved vs left bare)
+      current_pkgs <- sort(getOption("defaultPackages", character(0)))
+      if (!is.null(cache_data$default_packages) &&
+          !identical(cache_data$default_packages, current_pkgs)) {
+        return(FALSE)
+      }
+
       # Reject caches compiled with a different coverage state — coverage-
       # instrumented code contains .__coverage_track calls that don't exist
       # when coverage is off, and non-instrumented code lacks the tracking
@@ -172,3 +183,54 @@ ModuleCache <- R6::R6Class(
     }
   )
 )
+
+# Walk compiled expression tree, replace tagged closures with symbolic placeholders
+# so they can be serialized without capturing entire environments.
+deflate_resolved_refs <- function(expr) {
+  if (is.function(expr) && !is.null(attr(expr, "arl_resolved_from"))) {
+    info <- attr(expr, "arl_resolved_from")
+    return(as.call(list(
+      as.symbol(".__resolve_ref"),
+      info$module_name,
+      info$source_symbol
+    )))
+  }
+  if (is.call(expr)) {
+    return(as.call(lapply(as.list(expr), deflate_resolved_refs)))
+  }
+  if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
+    return(lapply(expr, deflate_resolved_refs))
+  }
+  expr
+}
+
+# Walk compiled expression tree, replace .__resolve_ref placeholders with
+# actual values looked up from the module registry.
+inflate_resolved_refs <- function(expr, registry_env) {
+  if (is.call(expr) && length(expr) == 3L && is.symbol(expr[[1]]) &&
+      identical(as.character(expr[[1]]), ".__resolve_ref")) {
+    mod_name <- expr[[2]]
+    sym_name <- expr[[3]]
+    if (is.character(mod_name) && is.character(sym_name) &&
+        exists(mod_name, envir = registry_env, inherits = FALSE)) {
+      entry <- get(mod_name, envir = registry_env, inherits = FALSE)
+      if (exists(sym_name, envir = entry$env, inherits = TRUE)) {
+        val <- get(sym_name, envir = entry$env, inherits = TRUE)
+        if (is.function(val)) {
+          attr(val, "arl_resolved_from") <- list(
+            module_name = mod_name, source_symbol = sym_name
+          )
+        }
+        return(val)
+      }
+    }
+    return(expr)  # module not loaded yet, keep placeholder
+  }
+  if (is.call(expr)) {
+    return(as.call(lapply(as.list(expr), inflate_resolved_refs, registry_env)))
+  }
+  if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
+    return(lapply(expr, inflate_resolved_refs, registry_env))
+  }
+  expr
+}

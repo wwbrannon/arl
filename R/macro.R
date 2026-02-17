@@ -2,7 +2,27 @@
 # macroexpand_1, quasiquote/unquote, gensym, hygiene. Shares EvalContext with compiled runtime.
 #
 # @field context EvalContext (env, source_tracker).
-#
+
+# S3 class for resolved cross-module references.
+# When a macro introduces a free variable from its defining module,
+# we capture the actual value at expansion time so it doesn't need
+# to be in scope at the use site.
+arl_resolved_ref <- function(value, source_symbol, module_name = NULL) {
+  structure(
+    list(value = value, source_symbol = source_symbol, module_name = module_name),
+    class = "arl_resolved_ref"
+  )
+}
+
+#' @exportS3Method
+print.arl_resolved_ref <- function(x, ...) {
+  label <- x$source_symbol
+  if (!is.null(x$module_name)) label <- paste0(x$module_name, "/", label)
+  cat(sprintf("<resolved:%s>", label), "\n")
+}
+
+is_resolved_ref <- function(x) inherits(x, "arl_resolved_ref")
+
 #' @keywords internal
 #' @noRd
 MacroExpander <- R6::R6Class(
@@ -86,6 +106,12 @@ MacroExpander <- R6::R6Class(
     # @return New symbol.
     gensym = function(prefix = "G") {
       private$gensym_impl(prefix = prefix)
+    },
+    # @description Invalidate the macro names cache. Call after imports modify the env parent chain.
+    invalidate_macro_cache = function() {
+      private$macro_names_cache <- NULL
+      private$macro_names_cache_env <- NULL
+      private$macro_names_set <- NULL
     },
     # @description Expand quasiquote (backtick) with unquote (comma) in expr.
     # @param expr Quasiquoted expression.
@@ -196,6 +222,11 @@ MacroExpander <- R6::R6Class(
           if (!is.null(private$macro_names_set) && exists(op_name, envir = private$macro_names_set, inherits = FALSE)) {
             return(TRUE)
           }
+        }
+        # Check for resolved ref wrapping a macro function in call position
+        if (length(expr) > 0 && is_resolved_ref(expr[[1]]) &&
+            is.function(expr[[1]]$value) && !is.null(attr(expr[[1]]$value, "arl_macro"))) {
+          return(TRUE)
         }
         for (i in seq_along(expr)) {
           if (private$contains_macro_head(expr[[i]], macro_names)) {
@@ -319,20 +350,20 @@ MacroExpander <- R6::R6Class(
       }
       private$map_expr(expr, private$capture_mark, name = name)
     },
-    hygienize = function(expr) {
-      private$hygienize_expr(expr, env = list(), protected = FALSE)
+    hygienize = function(expr, defining_env = NULL, use_site_env = NULL) {
+      private$hygienize_expr(expr, env = list(), protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
     },
-    hygienize_expr = function(expr, env, protected) {
+    hygienize_expr = function(expr, env, protected, defining_env = NULL, use_site_env = NULL) {
       if (private$hygiene_is(expr)) {
         origin <- private$hygiene_origin(expr)
         inner <- private$hygiene_expr(expr)
         if (identical(origin, "call_site")) {
-          return(private$hygienize_expr(inner, env, protected = TRUE))
+          return(private$hygienize_expr(inner, env, protected = TRUE, defining_env = defining_env, use_site_env = use_site_env))
         }
         if (identical(origin, "introduced")) {
-          return(private$hygienize_expr(inner, env, protected = FALSE))
+          return(private$hygienize_expr(inner, env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env))
         }
-        return(private$hygienize_expr(inner, env, protected = protected))
+        return(private$hygienize_expr(inner, env, protected = protected, defining_env = defining_env, use_site_env = use_site_env))
       }
 
       if (is.symbol(expr)) {
@@ -343,12 +374,35 @@ MacroExpander <- R6::R6Class(
         if (!is.null(env[[name]])) {
           return(env[[name]])
         }
+
+        # Resolve introduced free variables from defining module.
+        # Only resolve if the symbol exists in the defining env but NOT in
+        # the shared prelude/builtins chain. Skip if the use-site env
+        # resolves to the identical value (same binding, no shadowing risk).
+        if (!is.null(defining_env)) {
+          prelude_env <- self$context$prelude_env
+          if (exists(name, envir = defining_env, inherits = TRUE) &&
+              (is.null(prelude_env) || !exists(name, envir = prelude_env, inherits = TRUE))) {
+            value <- get(name, envir = defining_env, inherits = TRUE)
+            # Skip if the use-site has the exact same binding
+            if (!is.null(use_site_env) && exists(name, envir = use_site_env, inherits = TRUE) &&
+                identical(value, get(name, envir = use_site_env, inherits = TRUE))) {
+              return(expr)
+            }
+            module_name <- tryCatch(
+              get(".__module_name", envir = defining_env, inherits = FALSE),
+              error = function(e) NULL
+            )
+            return(arl_resolved_ref(value, name, module_name))
+          }
+        }
+
         return(expr)
       }
 
       if (!is.call(expr)) {
         if (is.list(expr) && is.null(attr(expr, "class", exact = TRUE))) {
-          updated <- lapply(expr, private$hygienize_expr, env = env, protected = protected)
+          updated <- lapply(expr, private$hygienize_expr, env = env, protected = protected, defining_env = defining_env, use_site_env = use_site_env)
           if (!is.null(names(expr))) {
             names(updated) <- names(expr)
           }
@@ -366,30 +420,30 @@ MacroExpander <- R6::R6Class(
       }
 
       if (isTRUE(protected)) {
-        updated <- lapply(as.list(expr), private$hygienize_expr, env = env, protected = TRUE)
+        updated <- lapply(as.list(expr), private$hygienize_expr, env = env, protected = TRUE, defining_env = defining_env, use_site_env = use_site_env)
         return(as.call(updated))
       }
 
       if (is.symbol(op)) {
         op_name <- as.character(op)
         if (op_name == "begin") {
-          return(private$hygienize_begin(expr, env))
+          return(private$hygienize_begin(expr, env, defining_env = defining_env, use_site_env = use_site_env))
         }
         if (op_name == "define") {
-          return(private$hygienize_define(expr, env)$expr)
+          return(private$hygienize_define(expr, env, defining_env = defining_env, use_site_env = use_site_env)$expr)
         }
         if (op_name == "lambda") {
-          return(private$hygienize_lambda(expr, env))
+          return(private$hygienize_lambda(expr, env, defining_env = defining_env, use_site_env = use_site_env))
         }
         if (op_name %in% c("let", "let*", "letrec")) {
-          return(private$hygienize_let(expr, env, op_name))
+          return(private$hygienize_let(expr, env, op_name, defining_env = defining_env, use_site_env = use_site_env))
         }
       }
 
-      updated <- lapply(as.list(expr), private$hygienize_expr, env = env, protected = FALSE)
+      updated <- lapply(as.list(expr), private$hygienize_expr, env = env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
       as.call(updated)
     },
-    hygienize_begin = function(expr, env) {
+    hygienize_begin = function(expr, env, defining_env = NULL, use_site_env = NULL) {
       result <- list(expr[[1]])
       current_env <- env
       if (length(expr) > 1) {
@@ -397,17 +451,17 @@ MacroExpander <- R6::R6Class(
           form <- expr[[i]]
           if (is.call(form) && length(form) >= 2 && is.symbol(form[[1]]) &&
               as.character(form[[1]]) == "define") {
-            out <- private$hygienize_define(form, current_env)
+            out <- private$hygienize_define(form, current_env, defining_env = defining_env, use_site_env = use_site_env)
             result[[i]] <- out$expr
             current_env <- out$env
           } else {
-            result[[i]] <- private$hygienize_expr(form, current_env, protected = FALSE)
+            result[[i]] <- private$hygienize_expr(form, current_env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
           }
         }
       }
       as.call(result)
     },
-    hygienize_define = function(expr, env) {
+    hygienize_define = function(expr, env, defining_env = NULL, use_site_env = NULL) {
       result <- list(expr[[1]])
       name_expr <- expr[[2]]
       name_origin <- private$hygiene_origin(name_expr)
@@ -423,10 +477,10 @@ MacroExpander <- R6::R6Class(
         result[[2]] <- pattern_out$expr
         new_env <- pattern_out$env
       } else {
-        result[[2]] <- private$hygienize_expr(expr[[2]], env, protected = FALSE)
+        result[[2]] <- private$hygienize_expr(expr[[2]], env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
       }
       if (length(expr) >= 3) {
-        result[[3]] <- private$hygienize_expr(expr[[3]], env, protected = FALSE)
+        result[[3]] <- private$hygienize_expr(expr[[3]], env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
       }
       list(expr = as.call(result), env = new_env)
     },
@@ -478,16 +532,16 @@ MacroExpander <- R6::R6Class(
       }
       list(expr = pattern, env = env)
     },
-    hygienize_lambda = function(expr, env) {
+    hygienize_lambda = function(expr, env, defining_env = NULL, use_site_env = NULL) {
       if (length(expr) < 3) {
         return(expr)
       }
       args_expr <- expr[[2]]
       if (!is.call(args_expr)) {
-        result <- list(expr[[1]], private$hygienize_expr(args_expr, env, protected = TRUE))
+        result <- list(expr[[1]], private$hygienize_expr(args_expr, env, protected = TRUE, defining_env = defining_env, use_site_env = use_site_env))
         if (length(expr) > 2) {
           for (i in 3:length(expr)) {
-            result[[i]] <- private$hygienize_expr(expr[[i]], env, protected = FALSE)
+            result[[i]] <- private$hygienize_expr(expr[[i]], env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
           }
         }
         return(as.call(result))
@@ -507,7 +561,7 @@ MacroExpander <- R6::R6Class(
             new_env[[name]] <- fresh
             new_args[[i]] <- fresh
           } else {
-            new_args[[i]] <- private$hygienize_expr(arg, env, protected = TRUE)
+            new_args[[i]] <- private$hygienize_expr(arg, env, protected = TRUE, defining_env = defining_env, use_site_env = use_site_env)
           }
         }
       }
@@ -515,7 +569,7 @@ MacroExpander <- R6::R6Class(
       result <- list(expr[[1]], args_out)
       if (length(expr) > 2) {
         for (i in 3:length(expr)) {
-          result[[i]] <- private$hygienize_expr(expr[[i]], new_env, protected = FALSE)
+          result[[i]] <- private$hygienize_expr(expr[[i]], new_env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
         }
       }
       as.call(result)
@@ -526,13 +580,13 @@ MacroExpander <- R6::R6Class(
       name_expr <- if (length(parts) >= 1) private$hygiene_expr(parts[[1]]) else NULL
       list(parts = parts, name_origin = name_origin, name_expr = name_expr)
     },
-    hygienize_binding_value = function(parts, env) {
+    hygienize_binding_value = function(parts, env, defining_env = NULL, use_site_env = NULL) {
       if (length(parts) >= 2) {
-        return(private$hygienize_expr(parts[[2]], env, protected = FALSE))
+        return(private$hygienize_expr(parts[[2]], env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env))
       }
       NULL
     },
-    hygienize_let = function(expr, env, op_name) {
+    hygienize_let = function(expr, env, op_name, defining_env = NULL, use_site_env = NULL) {
       if (length(expr) < 3) {
         return(expr)
       }
@@ -572,10 +626,10 @@ MacroExpander <- R6::R6Class(
             if (is.symbol(name_expr) && !identical(name_origin, "call_site") &&
                 !is.null(body_env[[as.character(name_expr)]])) {
               renamed <- body_env[[as.character(name_expr)]]
-              value <- private$hygienize_binding_value(parts, body_env)
+              value <- private$hygienize_binding_value(parts, body_env, defining_env = defining_env, use_site_env = use_site_env)
               new_bindings[[i]] <- as.call(list(renamed, value))
             } else {
-              value <- private$hygienize_binding_value(parts, value_env)
+              value <- private$hygienize_binding_value(parts, value_env, defining_env = defining_env, use_site_env = use_site_env)
               new_bindings[[i]] <- as.call(c(list(parts[[1]]), list(value)))
             }
           }
@@ -584,7 +638,7 @@ MacroExpander <- R6::R6Class(
         body <- list(expr[[1]], bindings_out)
         if (length(expr) > 2) {
           for (i in 3:length(expr)) {
-            body[[i]] <- private$hygienize_expr(expr[[i]], body_env, protected = FALSE)
+            body[[i]] <- private$hygienize_expr(expr[[i]], body_env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
           }
         }
         return(as.call(body))
@@ -603,7 +657,7 @@ MacroExpander <- R6::R6Class(
             }
             name_origin <- info$name_origin
             name_expr <- info$name_expr
-            value <- private$hygienize_binding_value(parts, current_env)
+            value <- private$hygienize_binding_value(parts, current_env, defining_env = defining_env, use_site_env = use_site_env)
             if (is.symbol(name_expr) && !identical(name_origin, "call_site")) {
               name <- as.character(name_expr)
               fresh <- private$hygiene_gensym(name)
@@ -618,7 +672,7 @@ MacroExpander <- R6::R6Class(
         body <- list(expr[[1]], bindings_out)
         if (length(expr) > 2) {
           for (i in 3:length(expr)) {
-            body[[i]] <- private$hygienize_expr(expr[[i]], current_env, protected = FALSE)
+            body[[i]] <- private$hygienize_expr(expr[[i]], current_env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
           }
         }
         return(as.call(body))
@@ -655,10 +709,10 @@ MacroExpander <- R6::R6Class(
           if (is.symbol(name_expr) && !identical(name_origin, "call_site") &&
               !is.null(body_env[[as.character(name_expr)]])) {
             renamed <- body_env[[as.character(name_expr)]]
-            value <- private$hygienize_binding_value(parts, env)
+            value <- private$hygienize_binding_value(parts, env, defining_env = defining_env, use_site_env = use_site_env)
             new_bindings[[i]] <- as.call(list(renamed, value))
           } else {
-            value <- private$hygienize_binding_value(parts, env)
+            value <- private$hygienize_binding_value(parts, env, defining_env = defining_env, use_site_env = use_site_env)
             new_bindings[[i]] <- as.call(c(list(parts[[1]]), list(value)))
           }
         }
@@ -667,7 +721,7 @@ MacroExpander <- R6::R6Class(
       body <- list(expr[[1]], bindings_out)
       if (length(expr) > 2) {
         for (i in 3:length(expr)) {
-          body[[i]] <- private$hygienize_expr(expr[[i]], body_env, protected = FALSE)
+          body[[i]] <- private$hygienize_expr(expr[[i]], body_env, protected = FALSE, defining_env = defining_env, use_site_env = use_site_env)
         }
       }
       as.call(body)
@@ -978,8 +1032,15 @@ MacroExpander <- R6::R6Class(
 
       op <- expr[[1]]
 
-      if (private$is_macro_impl(op, env) && max_depth > 0) {
-        macro_fn <- private$get_macro_impl(op, env)
+      # Check if the operator is a resolved ref wrapping a macro function
+      resolved_macro_fn <- NULL
+      if (is_resolved_ref(op) && is.function(op$value) &&
+          !is.null(attr(op$value, "arl_macro"))) {
+        resolved_macro_fn <- op$value
+      }
+
+      if ((private$is_macro_impl(op, env) || !is.null(resolved_macro_fn)) && max_depth > 0) {
+        macro_fn <- if (!is.null(resolved_macro_fn)) resolved_macro_fn else private$get_macro_impl(op, env)
         args <- as.list(expr[-1])
         expanded <- tryCatch(
           do.call(macro_fn, args),
@@ -991,7 +1052,8 @@ MacroExpander <- R6::R6Class(
             stop(e)
           }
         )
-        expanded <- private$hygienize(expanded)
+        defining_env <- environment(macro_fn)$env  # macro_fn closes over `env` from define_macro
+        expanded <- private$hygienize(expanded, defining_env, use_site_env = env)
         expanded <- private$hygiene_unwrap_impl(expanded)
         expanded <- self$context$source_tracker$src_inherit(expanded, expr)
 

@@ -225,3 +225,101 @@ test_that("modules can use default package functions without importing them", {
     (med (c 1 2 3 4 5))")
   expect_equal(result, 3)
 })
+
+# =============================================================================
+# Cross-module macro scoping via value splicing
+# =============================================================================
+
+test_that("cross-module macro with private helper function", {
+  engine <- make_engine()
+  result <- engine$eval_text("
+    (module __xmacro_helper
+      (export my-double-macro)
+      (define private-double (lambda (x) (* x 2)))
+      (defmacro my-double-macro (val)
+        `(private-double ,val)))
+    (import __xmacro_helper)
+    (my-double-macro 21)")
+  expect_equal(result, 42)
+})
+
+test_that("cross-module macro with private constant", {
+  engine <- make_engine()
+  result <- engine$eval_text("
+    (module __xmacro_const
+      (export scale-macro)
+      (define scale-factor 10)
+      (defmacro scale-macro (val)
+        `(* scale-factor ,val)))
+    (import __xmacro_const)
+    (scale-macro 5)")
+  expect_equal(result, 50)
+})
+
+test_that("prelude symbols are NOT resolved as refs (they're universally available)", {
+  engine <- make_engine()
+  # A macro that uses prelude symbols like car, + should NOT create resolved refs
+  # because those are available everywhere via the prelude chain
+  result <- engine$eval_text("
+    (module __xmacro_prelude
+      (export inc-macro)
+      (defmacro inc-macro (val)
+        `(+ ,val 1)))
+    (import __xmacro_prelude)
+    (inc-macro 41)")
+  expect_equal(result, 42)
+})
+
+test_that("hygiene still works alongside resolved refs", {
+  engine <- make_engine()
+  # Macro introduces both a local binding (should be gensym'd)
+  # and a free reference to a private helper (should be resolved)
+  result <- engine$eval_text("
+    (module __xmacro_hygiene
+      (export safe-compute)
+      (define private-transform (lambda (x) (* x 3)))
+      (defmacro safe-compute (val)
+        (let ((tmp (gensym \"tmp\")))
+          `(let ((,tmp ,val))
+             (private-transform ,tmp)))))
+    (import __xmacro_hygiene)
+    (define private-transform (lambda (x) (+ x 1)))
+    (safe-compute 10)")
+  # Should use the module's private-transform (* 3), not the caller's (+ 1)
+  expect_equal(result, 30)
+})
+
+test_that("nested macros across modules resolve correctly", {
+  engine <- make_engine()
+  result <- engine$eval_text("
+    (module __xmacro_inner
+      (export inner-macro)
+      (define inner-helper (lambda (x) (+ x 100)))
+      (defmacro inner-macro (val)
+        `(inner-helper ,val)))
+    (module __xmacro_outer
+      (export outer-macro)
+      (import __xmacro_inner)
+      (define outer-helper (lambda (x) (* x 2)))
+      (defmacro outer-macro (val)
+        `(outer-helper (inner-macro ,val))))
+    (import __xmacro_outer)
+    (outer-macro 5)")
+  # inner-macro expands: (inner-helper 5) -> 105
+  # outer-macro expands: (outer-helper (inner-macro 5)) -> (* 105 2) -> 210
+  expect_equal(result, 210)
+})
+
+test_that("cross-module macro works with lambda reference", {
+  engine <- make_engine()
+  # Macro references a private lambda directly (not via define)
+  result <- engine$eval_text("
+    (module __xmacro_lambda
+      (export apply-twice)
+      (define do-twice (lambda (f x) (f (f x))))
+      (defmacro apply-twice (f val)
+        `(do-twice ,f ,val)))
+    (import __xmacro_lambda)
+    (apply-twice (lambda (x) (+ x 1)) 0)")
+  expect_equal(result, 2)
+})

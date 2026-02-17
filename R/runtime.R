@@ -330,6 +330,10 @@ CompiledRuntime <- R6::R6Class(
       shared_registry$attach_into(registry_key, env, only = only, except = except,
                                    prefix = prefix, rename = rename,
                                    squash = isTRUE(self$context$squash_imports))
+      # Invalidate macro names cache — import may add proxy envs with new macro registries
+      if (!is.null(self$context$macro_expander)) {
+        self$context$macro_expander$invalidate_macro_cache()
+      }
       invisible(NULL)
     },
     # Package access (:: / :::) for compiled code. pkg and name are strings from the compiler.
