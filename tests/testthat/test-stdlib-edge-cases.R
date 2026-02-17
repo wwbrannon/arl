@@ -26,21 +26,21 @@ test_that("stdlib handles large lists efficiently", {
   large_list <- as.list(1:1000)
 
   # map should handle large lists
-  result <- env$map(function(x) x * 2, large_list)
+  result <- get("map", envir = env)(function(x) x * 2, large_list)
   expect_equal(length(result), 1000)
   expect_equal(result[[1]], 2)
   expect_equal(result[[1000]], 2000)
 
   # filter should handle large lists
-  result <- env$filter(function(x) x %% 2 == 0, large_list)
+  result <- get("filter", envir = env)(function(x) x %% 2 == 0, large_list)
   expect_equal(length(result), 500)
 
   # reduce should handle large lists
-  result <- env$reduce(`+`, large_list)
+  result <- get("reduce", envir = env)(`+`, large_list)
   expect_equal(result, sum(1:1000))
 
   # reverse should handle large lists
-  result <- env$reverse(large_list)
+  result <- get("reverse", envir = env)(large_list)
   expect_equal(result[[1]], 1000)
   expect_equal(result[[1000]], 1)
 })
@@ -56,15 +56,15 @@ test_that("stdlib handles mixed types correctly", {
   mixed <- list(1, "two", 3.0, TRUE, NULL, list(5))
 
   # map should work with mixed types
-  result <- env$map(function(x) is.null(x), mixed)
+  result <- get("map", envir = env)(function(x) is.null(x), mixed)
   expect_equal(result[[5]], TRUE)
 
   # filter should work with mixed types
-  result <- env$filter(function(x) is.numeric(x), mixed)
+  result <- get("filter", envir = env)(function(x) is.numeric(x), mixed)
   expect_equal(length(result), 2)  # 1 and 3.0
 
   # string-concat should convert all types
-  result <- env$`string-concat`(1, "two", TRUE, NULL)
+  result <- get("string-concat", envir = env)(1, "two", TRUE, NULL)
   expect_true(is.character(result))
 })
 

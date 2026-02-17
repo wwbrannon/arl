@@ -7,7 +7,7 @@ test_that("map applies function to list", {
   toplevel_env(engine, env = env)
 
   double <- function(x) x * 2
-  result <- env$map(double, list(1, 2, 3))
+  result <- get("map", envir = env)(double, list(1, 2, 3))
 
   expect_equal(result[[1]], 2)
   expect_equal(result[[2]], 4)
@@ -34,7 +34,7 @@ test_that("filter selects matching elements", {
   toplevel_env(engine, env = env)
 
   is_even <- function(x) x %% 2 == 0
-  result <- env$filter(is_even, list(1, 2, 3, 4, 5, 6))
+  result <- get("filter", envir = env)(is_even, list(1, 2, 3, 4, 5, 6))
 
   expect_equal(length(result), 3)
   expect_equal(result[[1]], 2)
@@ -59,10 +59,10 @@ test_that("reduce combines list elements", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  result <- env$reduce(`+`, list(1, 2, 3, 4))
+  result <- get("reduce", envir = env)(`+`, list(1, 2, 3, 4))
   expect_equal(result, 10)
 
-  result <- env$reduce(`*`, list(1, 2, 3, 4))
+  result <- get("reduce", envir = env)(`*`, list(1, 2, 3, 4))
   expect_equal(result, 24)
 })
 
@@ -70,31 +70,31 @@ test_that("foldl and foldr work", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$foldl(`-`, list(1, 2, 3)), -4)
-  expect_equal(env$foldr(`-`, list(1, 2, 3)), 2)
+  expect_equal(get("foldl", envir = env)(`-`, list(1, 2, 3)), -4)
+  expect_equal(get("foldr", envir = env)(`-`, list(1, 2, 3)), 2)
 })
 
 test_that("every? checks all elements match predicate", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_true(env$`every?`(function(x) x > 0, list(1, 2, 3)))
-  expect_false(env$`every?`(function(x) x > 1, list(1, 2, 3)))
+  expect_true(get("every?", envir = env)(function(x) x > 0, list(1, 2, 3)))
+  expect_false(get("every?", envir = env)(function(x) x > 1, list(1, 2, 3)))
 })
 
 test_that("any? checks if any element matches predicate", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_true(env$`any?`(function(x) x > 2, list(1, 2, 3)))
-  expect_false(env$`any?`(function(x) x > 5, list(1, 2, 3)))
+  expect_true(get("any?", envir = env)(function(x) x > 2, list(1, 2, 3)))
+  expect_false(get("any?", envir = env)(function(x) x > 5, list(1, 2, 3)))
 })
 
 test_that("mapcat maps and concatenates results", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  result <- env$mapcat(function(x) list(x, x + 10), list(1, 2))
+  result <- get("mapcat", envir = env)(function(x) list(x, x + 10), list(1, 2))
   expect_equal(result, list(1, 11, 2, 12))
 })
 
@@ -102,7 +102,7 @@ test_that("remove filters out matching elements", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  result <- env$remove(function(x) x %% 2 == 0, list(1, 2, 3, 4))
+  result <- get("remove", envir = env)(function(x) x %% 2 == 0, list(1, 2, 3, 4))
   expect_equal(result, list(1, 3))
 })
 
@@ -111,7 +111,7 @@ test_that("complement negates predicate", {
   toplevel_env(engine, env = env)
 
   is_even <- function(x) x %% 2 == 0
-  is_odd <- env$complement(is_even)
+  is_odd <- get("complement", envir = env)(is_even)
 
   expect_true(is_odd(1))
   expect_false(is_odd(2))
@@ -119,7 +119,7 @@ test_that("complement negates predicate", {
   expect_false(is_odd(4))
 
   # Use with filter
-  result <- env$filter(is_odd, list(1, 2, 3, 4, 5, 6))
+  result <- get("filter", envir = env)(is_odd, list(1, 2, 3, 4, 5, 6))
   expect_equal(result, list(1, 3, 5))
 })
 
@@ -131,12 +131,12 @@ test_that("compose combines functions", {
   add_one <- function(x) x + 1
 
   # compose applies right-to-left: f(g(x))
-  double_then_add_one <- env$compose(add_one, double)
+  double_then_add_one <- get("compose", envir = env)(add_one, double)
   expect_equal(double_then_add_one(5), 11)  # (5 * 2) + 1
 
   # Multiple compositions
   add_ten <- function(x) x + 10
-  complex_fn <- env$compose(double, env$compose(add_one, add_ten))
+  complex_fn <- get("compose", envir = env)(double, get("compose", envir = env)(add_one, add_ten))
   expect_equal(complex_fn(5), 32)  # ((5 + 10) + 1) * 2
 })
 
@@ -146,14 +146,14 @@ test_that("partial applies arguments partially", {
 
   # Partial application
   add <- function(a, b) a + b
-  add_five <- env$partial(add, 5)
+  add_five <- get("partial", envir = env)(add, 5)
 
   expect_equal(add_five(3), 8)
   expect_equal(add_five(10), 15)
 
   # Multiple arguments
   multiply <- function(a, b, c) a * b * c
-  multiply_by_2_3 <- env$partial(multiply, 2, 3)
+  multiply_by_2_3 <- get("partial", envir = env)(multiply, 2, 3)
 
   expect_equal(multiply_by_2_3(4), 24)  # 2 * 3 * 4
   expect_equal(multiply_by_2_3(5), 30)  # 2 * 3 * 5
@@ -163,17 +163,17 @@ test_that("repeat creates list with repeated value", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  result <- env$`repeat`(5, "x")
+  result <- get("repeat", envir = env)(5, "x")
   expect_equal(length(result), 5)
   expect_equal(result[[1]], "x")
   expect_equal(result[[5]], "x")
 
   # With number
-  result <- env$`repeat`(3, 42)
+  result <- get("repeat", envir = env)(3, 42)
   expect_equal(result, list(42, 42, 42))
 
   # With NULL
-  result <- env$`repeat`(2, NULL)
+  result <- get("repeat", envir = env)(2, NULL)
   expect_equal(length(result), 2)
   expect_null(result[[1]])
 })
@@ -183,24 +183,24 @@ test_that("zip combines lists element-wise", {
   toplevel_env(engine, env = env)
 
   # Two lists
-  result <- env$zip(list(1, 2, 3), list("a", "b", "c"))
+  result <- get("zip", envir = env)(list(1, 2, 3), list("a", "b", "c"))
   expect_equal(length(result), 3)
   expect_equal(result[[1]], list(1, "a"))
   expect_equal(result[[2]], list(2, "b"))
   expect_equal(result[[3]], list(3, "c"))
 
   # Three lists
-  result <- env$zip(list(1, 2), list("a", "b"), list(TRUE, FALSE))
+  result <- get("zip", envir = env)(list(1, 2), list("a", "b"), list(TRUE, FALSE))
   expect_equal(length(result), 2)
   expect_equal(result[[1]], list(1, "a", TRUE))
   expect_equal(result[[2]], list(2, "b", FALSE))
 
   # Different lengths (zip to shortest)
-  result <- env$zip(list(1, 2, 3, 4), list("a", "b"))
+  result <- get("zip", envir = env)(list(1, 2, 3, 4), list("a", "b"))
   expect_equal(length(result), 2)
 
   # Empty list
-  result <- env$zip(list(), list(1, 2))
+  result <- get("zip", envir = env)(list(), list(1, 2))
   expect_equal(length(result), 0)
 })
 

@@ -7,11 +7,11 @@ test_that("car returns first element", {
   toplevel_env(engine, env = env)
 
   # Test with R list
-  expect_equal(env$car(list(1, 2, 3)), 1)
+  expect_equal(get("car", envir = env)(list(1, 2, 3)), 1)
 
   # Test with parsed expression
   expr <- engine$read("(+ 1 2)")[[1]]
-  expect_equal(as.character(env$car(expr)), "+")
+  expect_equal(as.character(get("car", envir = env)(expr)), "+")
 })
 
 test_that("cdr returns rest of list", {
@@ -19,7 +19,7 @@ test_that("cdr returns rest of list", {
   toplevel_env(engine, env = env)
 
   # Test with R list
-  result <- env$cdr(list(1, 2, 3))
+  result <- get("cdr", envir = env)(list(1, 2, 3))
   expect_equal(length(result), 2)
   expect_equal(result[[1]], 2)
   expect_equal(result[[2]], 3)
@@ -64,41 +64,41 @@ test_that("ordinal list accessors work (second, third, fourth)", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$second(list(1, 2, 3)), 2)
-  expect_equal(env$third(list(1, 2, 3, 4)), 3)
-  expect_equal(env$fourth(list(1, 2, 3, 4)), 4)
+  expect_equal(get("second", envir = env)(list(1, 2, 3)), 2)
+  expect_equal(get("third", envir = env)(list(1, 2, 3, 4)), 3)
+  expect_equal(get("fourth", envir = env)(list(1, 2, 3, 4)), 4)
 
-  expect_null(env$second(list(1)))
-  expect_null(env$third(list(1, 2)))
-  expect_null(env$fourth(list(1, 2, 3)))
+  expect_null(get("second", envir = env)(list(1)))
+  expect_null(get("third", envir = env)(list(1, 2)))
+  expect_null(get("fourth", envir = env)(list(1, 2, 3)))
 })
 
 test_that("first is an alias for car", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$first(list(1, 2, 3)), 1)
-  expect_null(env$first(list()))
-  expect_equal(env$first(list("a", "b")), "a")
+  expect_equal(get("first", envir = env)(list(1, 2, 3)), 1)
+  expect_null(get("first", envir = env)(list()))
+  expect_equal(get("first", envir = env)(list("a", "b")), "a")
 })
 
 test_that("rest is an alias for cdr", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$rest(list(1, 2, 3)), list(2, 3))
-  expect_equal(env$rest(list(1)), list())
-  expect_equal(env$rest(list()), list())
+  expect_equal(get("rest", envir = env)(list(1, 2, 3)), list(2, 3))
+  expect_equal(get("rest", envir = env)(list(1)), list())
+  expect_equal(get("rest", envir = env)(list()), list())
 })
 
 test_that("last returns last element", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$last(list(1, 2, 3)), 3)
-  expect_equal(env$last(list(42)), 42)
-  expect_null(env$last(list()))
-  expect_equal(env$last(list("a", "b", "c")), "c")
+  expect_equal(get("last", envir = env)(list(1, 2, 3)), 3)
+  expect_equal(get("last", envir = env)(list(42)), 42)
+  expect_null(get("last", envir = env)(list()))
+  expect_equal(get("last", envir = env)(list("a", "b", "c")), "c")
 })
 
 test_that("nth returns element at index", {
@@ -108,14 +108,14 @@ test_that("nth returns element at index", {
   lst <- list(10, 20, 30, 40)
 
   # 0-indexed
-  expect_equal(env$nth(lst, 0), 10)
-  expect_equal(env$nth(lst, 1), 20)
-  expect_equal(env$nth(lst, 2), 30)
-  expect_equal(env$nth(lst, 3), 40)
+  expect_equal(get("nth", envir = env)(lst, 0), 10)
+  expect_equal(get("nth", envir = env)(lst, 1), 20)
+  expect_equal(get("nth", envir = env)(lst, 2), 30)
+  expect_equal(get("nth", envir = env)(lst, 3), 40)
 
   # Out of bounds
-  expect_error(env$nth(lst, -1), "out of bounds")
-  expect_error(env$nth(lst, 4), "out of bounds")
+  expect_error(get("nth", envir = env)(lst, -1), "out of bounds")
+  expect_error(get("nth", envir = env)(lst, 4), "out of bounds")
 })
 
 test_that("assoc family: assoc, assoc-by-equal?, assoc-by-identical?, assoc-by-==, rassoc, rassoc-by-equal?", {
@@ -123,22 +123,22 @@ test_that("assoc family: assoc, assoc-by-equal?, assoc-by-identical?, assoc-by-=
 
   # assoc (equal?) and assoc-by-equal? (alias)
   alist <- list(list(quote(a), 1), list(quote(b), 2), list(quote(c), 3))
-  expect_equal(env$assoc(quote(b), alist), list(quote(b), 2))
-  expect_equal(env$`assoc-by-equal?`(quote(b), alist), list(quote(b), 2))
+  expect_equal(get("assoc", envir = env)(quote(b), alist), list(quote(b), 2))
+  expect_equal(get("assoc-by-equal?", envir = env)(quote(b), alist), list(quote(b), 2))
 
   # assoc-by-identical? uses R's identical()
   key <- quote(k)
   alist_id <- list(list(key, 1))
-  expect_equal(env$`assoc-by-identical?`(key, alist_id), list(quote(k), 1))
+  expect_equal(get("assoc-by-identical?", envir = env)(key, alist_id), list(quote(k), 1))
 
   # assoc-by-== uses R's == (e.g. 1 and 1L match)
   alist_num <- list(list(1, "one"), list(2, "two"), list(3, "three"))
-  expect_equal(env$`assoc-by-==`(1, alist_num), list(1, "one"))
-  expect_equal(env$`assoc-by-==`(1L, alist_num), list(1, "one"))
+  expect_equal(get("assoc-by-==", envir = env)(1, alist_num), list(1, "one"))
+  expect_equal(get("assoc-by-==", envir = env)(1L, alist_num), list(1, "one"))
 
   # rassoc and rassoc-by-equal? (alias)
-  expect_equal(env$rassoc(2, alist), list(quote(b), 2))
-  expect_equal(env$`rassoc-by-equal?`(2, alist), list(quote(b), 2))
+  expect_equal(get("rassoc", envir = env)(2, alist), list(quote(b), 2))
+  expect_equal(get("rassoc-by-equal?", envir = env)(2, alist), list(quote(b), 2))
 })
 
 test_that("assq and assv error (cannot implement eq?/eqv? in R)", {
@@ -157,7 +157,7 @@ test_that("cons adds element to front", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  result <- env$cons(1, list(2, 3))
+  result <- get("cons", envir = env)(1, list(2, 3))
   expect_equal(result[[1]], 1)
   expect_equal(result[[2]], 2)
   expect_equal(result[[3]], 3)
@@ -174,22 +174,22 @@ test_that("cons with non-list cdr produces dotted pair (arl_cons)", {
 test_that("car and cdr on dotted pair", {
   env <- toplevel_env(engine, new.env())
   pair <- engine$eval(engine$read("'(a . 42)")[[1]], env = env)
-  expect_equal(as.character(env$car(pair)), "a")
-  expect_equal(env$cdr(pair), 42)
+  expect_equal(as.character(get("car", envir = env)(pair)), "a")
+  expect_equal(get("cdr", envir = env)(pair), 42)
 })
 
 test_that("list? is false but pair? is true for dotted pair (Cons)", {
   env <- toplevel_env(engine, new.env())
   pair <- engine$eval(engine$read("(cons 1 2)")[[1]], env = env)
-  expect_false(env$`list?`(pair))
-  expect_true(env$`pair?`(pair))  # pair? = dotted pair (Cons)
+  expect_false(get("list?", envir = env)(pair))
+  expect_true(get("pair?", envir = env)(pair))  # pair? = dotted pair (Cons)
 })
 
 test_that("__as-list on improper list returns proper prefix only", {
   env <- toplevel_env(engine, new.env())
   pl <- engine$read("'(a b . c)")[[1]][[2]]
   expect_true(r6_isinstance(pl, "Cons"))
-  prefix <- env$`__as-list`(pl)
+  prefix <- get("__as-list", envir = env)(pl)
   expect_equal(length(prefix), 2)
   expect_equal(as.character(prefix[[1]]), "a")
   expect_equal(as.character(prefix[[2]]), "b")
@@ -199,21 +199,21 @@ test_that("append combines lists", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$append(list(1, 2), list(3)), list(1, 2, 3))
+  expect_equal(get("append", envir = env)(list(1, 2), list(3)), list(1, 2, 3))
 })
 
 test_that("reverse reverses list order", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$reverse(list(1, 2, 3)), list(3, 2, 1))
+  expect_equal(get("reverse", envir = env)(list(1, 2, 3)), list(3, 2, 1))
 })
 
 test_that("list* constructs list with final element as tail", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$`list*`(1, list(2, 3)), list(1, 2, 3))
+  expect_equal(get("list*", envir = env)(1, list(2, 3)), list(1, 2, 3))
 })
 
 # ============================================================================
@@ -366,5 +366,5 @@ test_that("nth errors on negative index", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_error(env$nth(list(1, 2, 3), -1), "out of bounds")
+  expect_error(get("nth", envir = env)(list(1, 2, 3), -1), "out of bounds")
 })

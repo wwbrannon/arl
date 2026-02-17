@@ -7,38 +7,38 @@ test_that("equal? dispatches on class of first argument", {
   toplevel_env(engine, env = env)
 
   # Built-in methods: list and environment
-  expect_true(env$`equal?`(list(1, 2, 3), list(1, 2, 3)))
-  expect_false(env$`equal?`(list(1, 2), list(1, 3)))
+  expect_true(get("equal?", envir = env)(list(1, 2, 3), list(1, 2, 3)))
+  expect_false(get("equal?", envir = env)(list(1, 2), list(1, 3)))
   e1 <- new.env()
   e2 <- new.env()
   assign("x", 1, envir = e1)
   assign("x", 1, envir = e2)
-  expect_true(env$`equal?`(e1, e2))
+  expect_true(get("equal?", envir = env)(e1, e2))
 
   # With a custom method (registered in set-method! test below), list/env still work
   my_a <- structure(list(42), class = "my_thing")
   my_b <- structure(list(42), class = "my_thing")
-  env$`set-method!`(as.symbol("equal?"), as.symbol("my_thing"), function(a, b, strict) {
+  get("set-method!", envir = env)(as.symbol("equal?"), as.symbol("my_thing"), function(a, b, strict) {
     identical(a[[1]], b[[1]])
   })
-  expect_true(env$`equal?`(my_a, my_b))
+  expect_true(get("equal?", envir = env)(my_a, my_b))
 
   # Recursion: equal? on list of custom objects dispatches to custom method for elements
-  expect_true(env$`equal?`(list(my_a), list(my_b)))
+  expect_true(get("equal?", envir = env)(list(my_a), list(my_b)))
 
   # Fallback: class with no method uses equal?.default (no error, returns boolean)
   x <- structure(1, class = "no_method_yet")
   y <- structure(1, class = "no_method_yet")
-  expect_true(is.logical(env$`equal?`(x, y)))
+  expect_true(is.logical(get("equal?", envir = env)(x, y)))
 
   # strict is passed through to the method (use two distinct objects to avoid identical? fast path)
-  env$`set-method!`(as.symbol("equal?"), as.symbol("strict_thing"), function(a, b, strict) {
+  get("set-method!", envir = env)(as.symbol("equal?"), as.symbol("strict_thing"), function(a, b, strict) {
     strict
   })
   s1 <- structure(1, class = "strict_thing")
   s2 <- structure(2, class = "strict_thing")
-  expect_true(env$`equal?`(s1, s2, strict = TRUE))
-  expect_false(env$`equal?`(s1, s2, strict = FALSE))
+  expect_true(get("equal?", envir = env)(s1, s2, strict = TRUE))
+  expect_false(get("equal?", envir = env)(s1, s2, strict = FALSE))
 })
 
 test_that("use-method dispatches using generic-name parameter (not hardcoded to equal?)", {
@@ -74,11 +74,11 @@ test_that("set-method! registers and overwrites methods", {
   my_a <- structure(list(42), class = "my_thing")
   my_b <- structure(list(42), class = "my_thing")
   my_c <- structure(list(99), class = "my_thing")
-  env$`set-method!`(as.symbol("equal?"), as.symbol("my_thing"), function(a, b, strict) {
+  get("set-method!", envir = env)(as.symbol("equal?"), as.symbol("my_thing"), function(a, b, strict) {
     identical(a[[1]], b[[1]])
   })
-  expect_true(env$`equal?`(my_a, my_b))
-  expect_false(env$`equal?`(my_a, my_c))
+  expect_true(get("equal?", envir = env)(my_a, my_b))
+  expect_false(get("equal?", envir = env)(my_a, my_c))
 
   # Overwrite: second registration for same generic.class wins.
   # Run entirely in Arl so equal? and set-method! use the same env (no R->Arl closure env subtlety).

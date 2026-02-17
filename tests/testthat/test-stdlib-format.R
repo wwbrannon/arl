@@ -8,32 +8,32 @@ test_that("format-value handles environments correctly", {
 
   # Plain environment should format as <environment>
   plain_env <- new.env(hash = TRUE)
-  expect_equal(env$`format-value`(plain_env), "<environment>")
+  expect_equal(get("format-value", envir = env)(plain_env), "<environment>")
 
   # Environment with class should show class name
   classed_env <- new.env()
   class(classed_env) <- c("MyClass", "environment")
-  expect_equal(env$`format-value`(classed_env), "<MyClass, environment>")
+  expect_equal(get("format-value", envir = env)(classed_env), "<MyClass, environment>")
 
   # Dict should still format as values (regression test)
-  dict <- env$dict(a = 1, b = 2)
-  formatted_dict <- env$`format-value`(dict)
+  dict <- get("dict", envir = env)(a = 1, b = 2)
+  formatted_dict <- get("format-value", envir = env)(dict)
   expect_true(grepl("1", formatted_dict))
   expect_true(grepl("2", formatted_dict))
 
   # Set should still format as values (regression test)
-  set_obj <- env$set(1, 2, 3)
-  formatted_set <- env$`format-value`(set_obj)
+  set_obj <- get("set", envir = env)(1, 2, 3)
+  formatted_set <- get("format-value", envir = env)(set_obj)
   expect_true(grepl("[123]", formatted_set))
 
   # Promise should still format as <promise> (regression test)
   promise_obj <- engine$eval_text("(delay 42)")
-  expect_equal(env$`format-value`(promise_obj), "<promise>")
+  expect_equal(get("format-value", envir = env)(promise_obj), "<promise>")
 
   # R6 class if available
   if (requireNamespace("R6", quietly = TRUE)) {
     r6_class <- R6::R6Class("TestClass")
-    expect_true(grepl("R6ClassGenerator", env$`format-value`(r6_class)))
+    expect_true(grepl("R6ClassGenerator", get("format-value", envir = env)(r6_class)))
   }
 })
 
@@ -42,19 +42,19 @@ test_that("format-value wraps lists and calls in parentheses", {
   toplevel_env(engine, env = env)
 
   # Simple list
-  expect_equal(env$`format-value`(list(1, 2, 3)), "(1 2 3)")
+  expect_equal(get("format-value", envir = env)(list(1, 2, 3)), "(1 2 3)")
 
   # Nested list
-  expect_equal(env$`format-value`(list(1, 2, list(3, 4))), "(1 2 (3 4))")
+  expect_equal(get("format-value", envir = env)(list(1, 2, list(3, 4))), "(1 2 (3 4))")
 
   # Empty list
-  expect_equal(env$`format-value`(list()), "()")
+  expect_equal(get("format-value", envir = env)(list()), "()")
 
   # List with empty inner list (the flexible function case)
-  expect_equal(env$`format-value`(list(1, 10, list())), "(1 10 ())")
+  expect_equal(get("format-value", envir = env)(list(1, 10, list())), "(1 10 ())")
 
   # Call/quote
-  expect_equal(env$`format-value`(quote(f(a, b))), "(f a b)")
+  expect_equal(get("format-value", envir = env)(quote(f(a, b))), "(f a b)")
 })
 
 test_that("format-value for dotted pair (arl_cons) shows dotted form", {
@@ -62,7 +62,7 @@ test_that("format-value for dotted pair (arl_cons) shows dotted form", {
   toplevel_env(engine, env = env)
   pair <- engine$read("'(a . b)")[[1]][[2]]
   expect_true(r6_isinstance(pair, "Cons"))
-  formatted <- env$`format-value`(pair)
+  formatted <- get("format-value", envir = env)(pair)
   expect_true(grepl(" \\. ", formatted))
   expect_true(grepl("a", formatted))
   expect_true(grepl("b", formatted))
@@ -73,7 +73,7 @@ test_that("format-value for improper list shows dotted tail", {
   toplevel_env(engine, env = env)
   improper <- engine$read("'(a b . c)")[[1]][[2]]
   expect_true(r6_isinstance(improper, "Cons"))
-  formatted <- env$`format-value`(improper)
+  formatted <- get("format-value", envir = env)(improper)
   expect_true(grepl(" \\. ", formatted))
   expect_true(grepl("a", formatted))
   expect_true(grepl("b", formatted))
@@ -86,15 +86,15 @@ test_that("format-value displays named lists with names", {
 
   # Named list with keyword-style keys
   named <- list(a = 1, b = 2)
-  expect_equal(env$`format-value`(named), "(:a 1 :b 2)")
+  expect_equal(get("format-value", envir = env)(named), "(:a 1 :b 2)")
 
   # Named list with string values
   named2 <- list(description = "Double x.", note = "Pure function.")
-  expect_equal(env$`format-value`(named2), '(:description "Double x." :note "Pure function.")')
+  expect_equal(get("format-value", envir = env)(named2), '(:description "Double x." :note "Pure function.")')
 
   # Partially named list - names present so format with names
   partial <- list(a = 1, 2, b = 3)
-  formatted <- env$`format-value`(partial)
+  formatted <- get("format-value", envir = env)(partial)
   expect_true(grepl(":a", formatted))
   expect_true(grepl(":b", formatted))
 })
@@ -105,14 +105,14 @@ test_that("format-value displays S3 objects using R print output", {
 
   # lm object (S3 class "lm")
   m <- lm(y ~ x, data = data.frame(x = 1:3, y = c(2, 4, 6)))
-  formatted <- env$`format-value`(m)
+  formatted <- get("format-value", envir = env)(m)
   # Should show R's print output including Call: and Coefficients
   expect_true(grepl("Call:", formatted))
   expect_true(grepl("Coefficients", formatted))
 
   # glm object
   g <- suppressWarnings(glm(y ~ x, data = data.frame(x = 1:3, y = c(0, 1, 1)), family = binomial))
-  formatted_g <- env$`format-value`(g)
+  formatted_g <- get("format-value", envir = env)(g)
   expect_true(grepl("Call:", formatted_g))
   expect_true(grepl("Coefficients", formatted_g))
 })
@@ -131,19 +131,19 @@ test_that("format-value truncates long S3 output with configurable limit", {
   on.exit(rm("print.verbose_obj", envir = globalenv()), add = TRUE)
 
   # Default limit (20) should truncate and show message
-  formatted <- env$`format-value`(obj)
+  formatted <- get("format-value", envir = env)(obj)
   expect_true(grepl("output truncated at 20 lines", formatted))
   expect_true(grepl("arl.display.max.lines", formatted))
 
   # Custom limit
   old <- options(arl.display.max.lines = 5)
   on.exit(options(old), add = TRUE)
-  formatted2 <- env$`format-value`(obj)
+  formatted2 <- get("format-value", envir = env)(obj)
   expect_true(grepl("output truncated at 5 lines", formatted2))
 
   # Inf disables truncation
   options(arl.display.max.lines = Inf)
-  formatted3 <- env$`format-value`(obj)
+  formatted3 <- get("format-value", envir = env)(obj)
   expect_false(grepl("truncated", formatted3))
 })
 
@@ -162,18 +162,18 @@ test_that("ARL_DISPLAY_MAX_LINES env var controls S3 truncation", {
   # Env var sets limit when R option is not set
   withr::local_options(arl.display.max.lines = NULL)
   withr::local_envvar(ARL_DISPLAY_MAX_LINES = "10")
-  formatted <- env$`format-value`(obj)
+  formatted <- get("format-value", envir = env)(obj)
   expect_true(grepl("output truncated at 10 lines", formatted))
 
   # R option takes precedence over env var
   withr::local_options(arl.display.max.lines = 5)
-  formatted2 <- env$`format-value`(obj)
+  formatted2 <- get("format-value", envir = env)(obj)
   expect_true(grepl("output truncated at 5 lines", formatted2))
 
   # Env var Inf disables truncation
   withr::local_options(arl.display.max.lines = NULL)
   withr::local_envvar(ARL_DISPLAY_MAX_LINES = "Inf")
-  formatted3 <- env$`format-value`(obj)
+  formatted3 <- get("format-value", envir = env)(obj)
   expect_false(grepl("truncated", formatted3))
 })
 
@@ -182,7 +182,7 @@ test_that("format-value displays call objects from quasiquote as s-expressions",
   toplevel_env(engine, env = env)
 
   # Call object: quote(+(10, 20)) -> (+ 10 20)
-  expect_equal(env$`format-value`(quote(`+`(10, 20))), "(+ 10 20)")
+  expect_equal(get("format-value", envir = env)(quote(`+`(10, 20))), "(+ 10 20)")
 
   # quasiquote result via engine (use env with display loaded)
   engine$eval_text("(define x 10)", env = env)
@@ -196,11 +196,11 @@ test_that("format-value displays lists containing symbols with parens", {
 
   # List with a symbol
   sym_list <- list(as.symbol("+"), 10, 20)
-  expect_equal(env$`format-value`(sym_list), "(+ 10 20)")
+  expect_equal(get("format-value", envir = env)(sym_list), "(+ 10 20)")
 
   # List with nested structure
   nested <- list(as.symbol("if"), TRUE, 1, 2)
-  expect_equal(env$`format-value`(nested), "(if TRUE 1 2)")
+  expect_equal(get("format-value", envir = env)(nested), "(if TRUE 1 2)")
 })
 
 test_that("format_value fallback warns on format-value error", {

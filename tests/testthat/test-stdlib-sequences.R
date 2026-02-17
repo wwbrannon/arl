@@ -6,32 +6,32 @@ test_that("sequence helpers work", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$take(2, list(1, 2, 3)), list(1, 2))
-  expect_equal(env$drop(2, list(1, 2, 3)), list(3))
-  expect_equal(env$`take-while`(function(x) x < 3, list(1, 2, 3, 1)), list(1, 2))
-  expect_equal(env$`drop-while`(function(x) x < 3, list(1, 2, 3, 1)), list(3, 1))
-  expect_equal(env$partition(2, list(1, 2, 3, 4)), list(list(1, 2), list(3, 4)))
-  expect_equal(env$flatten(list(1, list(2, list(3)), 4)), list(1, 2, 3, 4))
+  expect_equal(get("take", envir = env)(2, list(1, 2, 3)), list(1, 2))
+  expect_equal(get("drop", envir = env)(2, list(1, 2, 3)), list(3))
+  expect_equal(get("take-while", envir = env)(function(x) x < 3, list(1, 2, 3, 1)), list(1, 2))
+  expect_equal(get("drop-while", envir = env)(function(x) x < 3, list(1, 2, 3, 1)), list(3, 1))
+  expect_equal(get("partition", envir = env)(2, list(1, 2, 3, 4)), list(list(1, 2), list(3, 4)))
+  expect_equal(get("flatten", envir = env)(list(1, list(2, list(3)), 4)), list(1, 2, 3, 4))
 })
 
 test_that("member and contains? sequence helpers work", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$member(2, list(1, 2, 3)), list(2, 3))
-  expect_false(env$member(5, list(1, 2, 3)))
+  expect_equal(get("member", envir = env)(2, list(1, 2, 3)), list(2, 3))
+  expect_false(get("member", envir = env)(5, list(1, 2, 3)))
 
   # member uses equal? by default (structural equality)
-  expect_equal(env$member(list(1, 2), list(list(3, 4), list(1, 2), list(5, 6))),
+  expect_equal(get("member", envir = env)(list(1, 2), list(list(3, 4), list(1, 2), list(5, 6))),
                list(list(1, 2), list(5, 6)))
 
   # use-identical keyword for identity comparison (2 is double, identical match)
-  expect_equal(env$member(2, list(1, 2, 3), `use-identical` = TRUE), list(2, 3))
+  expect_equal(get("member", envir = env)(2, list(1, 2, 3), `use-identical` = TRUE), list(2, 3))
   # 2L (integer) is not identical to 2 (double) in R
-  expect_false(env$member(2L, list(1, 2, 3), `use-identical` = TRUE))
+  expect_false(get("member", envir = env)(2L, list(1, 2, 3), `use-identical` = TRUE))
 
-  expect_true(env$`contains?`(2, list(1, 2, 3)))
-  expect_false(env$`contains?`(5, list(1, 2, 3)))
+  expect_true(get("contains?", envir = env)(2, list(1, 2, 3)))
+  expect_false(get("contains?", envir = env)(5, list(1, 2, 3)))
 })
 
 test_that("length= checks exact length", {

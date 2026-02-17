@@ -45,31 +45,12 @@ toplevel_env <- function(engine, env = NULL) {
     }
   }
 
-  # Attach all module exports into env using squash mode (active bindings
-  # directly in env, maintaining flat-env behavior tests expect)
+  # Attach all module exports into env using proxy mode (parent chain)
   for (mod in all_modules) {
     if (registry$exists(mod)) {
-      registry$attach_into(mod, env, squash = TRUE)
+      registry$attach_into(mod, env)
     }
   }
 
-  core_env <- engine$get_env()
-  # Copy bindings from engine_env, prelude_env, and builtins_env
-  prelude_env <- parent.env(core_env)
-  builtins_env <- parent.env(prelude_env)
-  for (src_env in list(core_env, prelude_env, builtins_env)) {
-    for (name in ls(src_env, all.names = TRUE)) {
-      if (!exists(name, envir = env, inherits = FALSE)) {
-        assign(name, get(name, envir = src_env, inherits = FALSE), envir = env)
-      }
-    }
-  }
-  last_fn <- get0("last", envir = core_env, inherits = FALSE)
-  if (is.function(last_fn)) {
-    current_last <- get0("last", envir = env, inherits = FALSE)
-    if (!is.function(current_last)) {
-      assign("last", last_fn, envir = env)
-    }
-  }
   env
 }

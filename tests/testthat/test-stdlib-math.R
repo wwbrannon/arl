@@ -10,18 +10,18 @@ test_that("numeric helpers inc/dec/clamp/within? work", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$inc(5), 6)
-  expect_equal(env$inc(5, 2), 7)
-  expect_equal(env$dec(5), 4)
-  expect_equal(env$dec(5, 2), 3)
+  expect_equal(get("inc", envir = env)(5), 6)
+  expect_equal(get("inc", envir = env)(5, 2), 7)
+  expect_equal(get("dec", envir = env)(5), 4)
+  expect_equal(get("dec", envir = env)(5, 2), 3)
 
-  expect_equal(env$clamp(5, 1, 10), 5)
-  expect_equal(env$clamp(-1, 0, 10), 0)
-  expect_equal(env$clamp(11, 0, 10), 10)
+  expect_equal(get("clamp", envir = env)(5, 1, 10), 5)
+  expect_equal(get("clamp", envir = env)(-1, 0, 10), 0)
+  expect_equal(get("clamp", envir = env)(11, 0, 10), 10)
 
-  expect_true(env$`within?`(5, 1, 10))
-  expect_false(env$`within?`(0, 1, 10))
-  expect_false(env$`within?`(11, 1, 10))
+  expect_true(get("within?", envir = env)(5, 1, 10))
+  expect_false(get("within?", envir = env)(0, 1, 10))
+  expect_false(get("within?", envir = env)(11, 1, 10))
 })
 
 # ============================================================================
@@ -61,17 +61,17 @@ test_that("numeric operations handle boundary conditions", {
 
   # Large numbers
   large <- 1e100
-  expect_equal(env$`=`(large, large), TRUE)
+  expect_equal(get("=", envir = env)(large, large), TRUE)
 
   # Negative numbers
-  expect_equal(env$`%`(-10, 3), -10 %% 3)
+  expect_equal(get("%", envir = env)(-10, 3), -10 %% 3)
 
   # Zero
-  expect_equal(env$`%`(0, 5), 0)
+  expect_equal(get("%", envir = env)(0, 5), 0)
 
   # Floating point (uses exact equality, not all.equal)
-  expect_false(env$`=`(0.1 + 0.2, 0.3))  # floating point precision issues
-  expect_true(env$`=`(1.0, 1.0))
+  expect_false(get("=", envir = env)(0.1 + 0.2, 0.3))  # floating point precision issues
+  expect_true(get("=", envir = env)(1.0, 1.0))
 })
 
 test_that("division by zero returns Inf", {

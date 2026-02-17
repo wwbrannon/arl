@@ -26,12 +26,12 @@ test_that("when evaluates body when test is truthy", {
   # With side effects
   engine$eval(engine$read("(define x 0)")[[1]], env = env)
   engine$eval(engine$read("(when #t (set! x 10))")[[1]], env = env)
-  expect_equal(env$x, 10)
+  expect_equal(get("x", envir = env), 10)
 
   # False condition - no side effects
   engine$eval(engine$read("(set! x 0)")[[1]], env = env)
   engine$eval(engine$read("(when #f (set! x 20))")[[1]], env = env)
-  expect_equal(env$x, 0)
+  expect_equal(get("x", envir = env), 0)
 
   # Multiple body forms
   result <- engine$eval(
@@ -59,12 +59,12 @@ test_that("unless evaluates body when test is falsy", {
   # With side effects
   engine$eval(engine$read("(define x 0)")[[1]], env = env)
   engine$eval(engine$read("(unless #f (set! x 10))")[[1]], env = env)
-  expect_equal(env$x, 10)
+  expect_equal(get("x", envir = env), 10)
 
   # True condition - no side effects
   engine$eval(engine$read("(set! x 0)")[[1]], env = env)
   engine$eval(engine$read("(unless #t (set! x 20))")[[1]], env = env)
-  expect_equal(env$x, 0)
+  expect_equal(get("x", envir = env), 0)
 
   # Multiple body forms
   result <- engine$eval(
@@ -166,7 +166,7 @@ test_that("case branches on key equality (Scheme syntax)", {
     engine$read("(case (begin (set! counter (+ counter 1)) 2)
                    ((1) 'one) ((2) 'two) ((3) 'three))")[[1]], env = env)
   expect_equal(as.character(result), "two")
-  expect_equal(env$counter, 1)  # key evaluated exactly once
+  expect_equal(get("counter", envir = env), 1)  # key evaluated exactly once
 })
 
 # ============================================================================
@@ -231,11 +231,11 @@ test_that("variadic and/or short-circuit correctly", {
   engine$eval(engine$read("(define x 0)")[[1]], env = env)
   result <- engine$eval(engine$read("(and #f (begin (set! x 1) x))")[[1]], env = env)
   expect_false(result)
-  expect_equal(env$x, 0)
+  expect_equal(get("x", envir = env), 0)
 
   result <- engine$eval(engine$read("(or #t (begin (set! x 2) x))")[[1]], env = env)
   expect_true(result)
-  expect_equal(env$x, 0)
+  expect_equal(get("x", envir = env), 0)
 })
 
 test_that("not function works", {
@@ -252,14 +252,14 @@ test_that("try with only error handler works", {
   toplevel_env(engine, env = env)
 
   # Success case
-  result <- env$`try`(
+  result <- get("try", envir = env)(
     function() 42,
     function(e) "error"
   )
   expect_equal(result, 42)
 
   # Error case
-  result <- env$`try`(
+  result <- get("try", envir = env)(
     function() stop("boom"),
     function(e) "caught"
   )
@@ -274,7 +274,7 @@ test_that("try with only finally handler works", {
   finally_ran <- FALSE
 
   # Success case
-  result <- env$`try`(
+  result <- get("try", envir = env)(
     function() 42,
     NULL,
     function() finally_ran <<- TRUE
@@ -285,7 +285,7 @@ test_that("try with only finally handler works", {
   # Error case (finally should run but error should propagate)
   finally_ran <- FALSE
   expect_error({
-    env$`try`(
+    get("try", envir = env)(
       function() stop("boom"),
       NULL,
       function() finally_ran <<- TRUE
@@ -302,7 +302,7 @@ test_that("try with both handlers works", {
   finally_ran <- FALSE
 
   # Error caught and finally runs
-  result <- env$`try`(
+  result <- get("try", envir = env)(
     function() stop("boom"),
     function(e) "caught",
     function() finally_ran <<- TRUE
@@ -312,7 +312,7 @@ test_that("try with both handlers works", {
 
   # Success and finally runs
   finally_ran <- FALSE
-  result <- env$`try`(
+  result <- get("try", envir = env)(
     function() 99,
     function(e) "error",
     function() finally_ran <<- TRUE
@@ -330,7 +330,7 @@ test_that("try with no handlers (thunk only)", {
   toplevel_env(engine, env = env)
 
   # Just thunk, no error or finally handler
-  result <- env$`try`(function() 99)
+  result <- get("try", envir = env)(function() 99)
   expect_equal(result, 99)
 })
 
@@ -338,19 +338,19 @@ test_that("try errors when thunk is not a function", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_error(env$`try`(42), "expects a function as first argument")
+  expect_error(get("try", envir = env)(42), "expects a function as first argument")
 })
 
 test_that("try errors when error handler is not a function", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_error(env$`try`(function() 1, 42), "error handler must be a function")
+  expect_error(get("try", envir = env)(function() 1, 42), "error handler must be a function")
 })
 
 test_that("try errors when finally handler is not a function", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_error(env$`try`(function() 1, NULL, 42), "finally handler must be a function")
+  expect_error(get("try", envir = env)(function() 1, NULL, 42), "finally handler must be a function")
 })

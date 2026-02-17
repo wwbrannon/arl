@@ -26,7 +26,7 @@ test_that("force memoizes delayed expressions", {
     engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  (force p)\n  (force p)\n  counter)")[[1]],
     env = env
   )
-  expect_equal(env$counter, 1)
+  expect_equal(get("counter", envir = env), 1)
 })
 
 test_that("force returns non-promises unchanged", {
@@ -145,7 +145,7 @@ test_that("funcall applies function to list of arguments", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$funcall(sum, list(1, 2, 3)), 6)
+  expect_equal(get("funcall", envir = env)(sum, list(1, 2, 3)), 6)
 })
 
 test_that("values and call-with-values work", {
@@ -169,10 +169,10 @@ test_that("identity returns its argument", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$identity(42), 42)
-  expect_equal(env$identity("hello"), "hello")
-  expect_equal(env$identity(list(1, 2, 3)), list(1, 2, 3))
-  expect_null(env$identity(NULL))
+  expect_equal(get("identity", envir = env)(42), 42)
+  expect_equal(get("identity", envir = env)("hello"), "hello")
+  expect_equal(get("identity", envir = env)(list(1, 2, 3)), list(1, 2, 3))
+  expect_null(get("identity", envir = env)(NULL))
 })
 
 test_that("r/call invokes R functions with arguments", {
@@ -180,19 +180,19 @@ test_that("r/call invokes R functions with arguments", {
   toplevel_env(engine, env = env)
 
   # Call R function by name (string)
-  result <- env$`r/call`("sum", list(1, 2, 3, 4))
+  result <- get("r/call", envir = env)("sum", list(1, 2, 3, 4))
   expect_equal(result, 10)
 
   # Call R function by symbol
-  result <- env$`r/call`(quote(prod), list(2, 3, 4))
+  result <- get("r/call", envir = env)(quote(prod), list(2, 3, 4))
   expect_equal(result, 24)
 
   # Call with single argument
-  result <- env$`r/call`("sqrt", list(16))
+  result <- get("r/call", envir = env)("sqrt", list(16))
   expect_equal(result, 4)
 
   # Call with no arguments
-  result <- env$`r/call`("ls", list())
+  result <- get("r/call", envir = env)("ls", list())
   expect_true(is.character(result))
 })
 
@@ -202,7 +202,7 @@ test_that("call function converts lists to calls", {
 
   # Convert list to call
   lst <- list(quote(`+`), 1, 2)
-  result <- env$call(lst)
+  result <- get("call", envir = env)(lst)
   expect_true(is.call(result))
   expect_equal(result[[1]], quote(`+`))
   expect_equal(result[[2]], 1)
@@ -211,7 +211,7 @@ test_that("call function converts lists to calls", {
   # Already a call should be returned as-is
   call_obj <- engine$read("(+ 1 2)")[[1]]
   expect_equal(
-    engine_field(engine, "source_tracker")$strip_src(env$call(call_obj)),
+    engine_field(engine, "source_tracker")$strip_src(get("call", envir = env)(call_obj)),
     engine_field(engine, "source_tracker")$strip_src(call_obj)
   )
 })
@@ -221,17 +221,17 @@ test_that("eval function evaluates Arl expressions", {
   toplevel_env(engine, env = env)
 
   # Eval simple arithmetic
-  result <- env$eval(engine$read("(+ 1 2)")[[1]], env = env)
+  result <- get("eval", envir = env)(engine$read("(+ 1 2)")[[1]], env = env)
   expect_equal(result, 3)
 
   # Eval with variables
   env$x <- 10
-  result <- env$eval(engine$read("(* x 5)")[[1]], env = env)
+  result <- get("eval", envir = env)(engine$read("(* x 5)")[[1]], env = env)
   expect_equal(result, 50)
 
   # Eval function definition and call
-  env$eval(engine$read("(define double (lambda (n) (* n 2)))")[[1]], env = env)
-  result <- env$eval(engine$read("(double 21)")[[1]], env = env)
+  get("eval", envir = env)(engine$read("(define double (lambda (n) (* n 2)))")[[1]], env = env)
+  result <- get("eval", envir = env)(engine$read("(double 21)")[[1]], env = env)
   expect_equal(result, 42)
 })
 
@@ -240,15 +240,15 @@ test_that("gensym generates unique symbols", {
   toplevel_env(engine, env = env)
 
   # Generate unique symbols
-  sym1 <- env$gensym()
-  sym2 <- env$gensym()
+  sym1 <- get("gensym", envir = env)()
+  sym2 <- get("gensym", envir = env)()
 
   expect_true(is.symbol(sym1))
   expect_true(is.symbol(sym2))
   expect_false(identical(sym1, sym2))
 
   # Custom prefix
-  sym_custom <- env$gensym("foo")
+  sym_custom <- get("gensym", envir = env)("foo")
   expect_true(is.symbol(sym_custom))
   expect_true(grepl("^foo", as.character(sym_custom)))
 })
@@ -258,20 +258,20 @@ test_that("gensym avoids shadowing existing bindings", {
   toplevel_env(engine, env = env)
 
   # Generate a symbol and note its counter value
-  sym1 <- env$gensym("G")
+  sym1 <- get("gensym", envir = env)("G")
   n1 <- as.integer(sub("^G__", "", as.character(sym1)))
 
   # Define a binding using the next expected gensym name
   next_name <- paste0("G__", n1 + 1)
-  env$eval(engine$read(paste0("(define ", next_name, " 42)"))[[1]], env = env)
+  get("eval", envir = env)(engine$read(paste0("(define ", next_name, " 42)"))[[1]], env = env)
 
   # gensym should skip the occupied name
-  sym2 <- env$gensym("G")
+  sym2 <- get("gensym", envir = env)("G")
   n2 <- as.integer(sub("^G__", "", as.character(sym2)))
   expect_equal(n2, n1 + 2)
 
   # The skipped binding should still hold its value
-  result <- env$eval(engine$read(paste0("(+ ", next_name, " 0)"))[[1]], env = env)
+  result <- get("eval", envir = env)(engine$read(paste0("(+ ", next_name, " 0)"))[[1]], env = env)
   expect_equal(result, 42)
 })
 
@@ -332,7 +332,7 @@ test_that("unbind-variable removes a binding from current env", {
   toplevel_env(engine, env = env)
 
   engine$eval(engine$read("(define ub-test 42)")[[1]], env = env)
-  expect_equal(env$`ub-test`, 42)
+  expect_equal(get("ub-test", envir = env), 42)
 
   engine$eval(engine$read('(unbind-variable "ub-test" (current-env))')[[1]], env = env)
   expect_false(exists("ub-test", envir = env, inherits = FALSE))

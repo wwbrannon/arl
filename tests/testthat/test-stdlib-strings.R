@@ -6,26 +6,26 @@ test_that("string-slice extracts string portions", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$`string-slice`("hello", 1, 4), "ell")
-  expect_equal(env$`string-slice`("world", 0, 3), "wor")
+  expect_equal(get("string-slice", envir = env)("hello", 1, 4), "ell")
+  expect_equal(get("string-slice", envir = env)("world", 0, 3), "wor")
 
   # Full string
-  expect_equal(env$`string-slice`("test", 0, 4), "test")
+  expect_equal(get("string-slice", envir = env)("test", 0, 4), "test")
 })
 
 test_that("string case conversion works", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$`string-upcase`("hello"), "HELLO")
-  expect_equal(env$`string-downcase`("HELLO"), "hello")
+  expect_equal(get("string-upcase", envir = env)("hello"), "HELLO")
+  expect_equal(get("string-downcase", envir = env)("HELLO"), "hello")
 
   # Mixed case
-  expect_equal(env$`string-upcase`("HeLLo"), "HELLO")
-  expect_equal(env$`string-downcase`("HeLLo"), "hello")
+  expect_equal(get("string-upcase", envir = env)("HeLLo"), "HELLO")
+  expect_equal(get("string-downcase", envir = env)("HeLLo"), "hello")
 
   # Empty string
-  expect_equal(env$`string-upcase`(""), "")
+  expect_equal(get("string-upcase", envir = env)(""), "")
 })
 
 test_that("char-at and string-ref access characters", {
@@ -33,20 +33,20 @@ test_that("char-at and string-ref access characters", {
   toplevel_env(engine, env = env)
 
   # char-at (0-indexed)
-  expect_equal(env$`char-at`("hello", 0), "h")
-  expect_equal(env$`char-at`("hello", 4), "o")
+  expect_equal(get("char-at", envir = env)("hello", 0), "h")
+  expect_equal(get("char-at", envir = env)("hello", 4), "o")
 
   # Out of bounds
-  expect_error(env$`char-at`("hi", 5), "out of bounds")
+  expect_error(get("char-at", envir = env)("hi", 5), "out of bounds")
 })
 
 test_that("string-length returns character count", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$`string-length`("hello"), 5)
-  expect_equal(env$`string-length`(""), 0)
-  expect_equal(env$`string-length`("a"), 1)
+  expect_equal(get("string-length", envir = env)("hello"), 5)
+  expect_equal(get("string-length", envir = env)(""), 0)
+  expect_equal(get("string-length", envir = env)("a"), 1)
 })
 
 test_that("number->string converts with bases", {
@@ -54,28 +54,28 @@ test_that("number->string converts with bases", {
   toplevel_env(engine, env = env)
 
   # Decimal (default)
-  expect_equal(env$`number->string`(42), "42")
+  expect_equal(get("number->string", envir = env)(42), "42")
 
   # Hexadecimal
-  expect_equal(env$`number->string`(42, 16), "2a")
+  expect_equal(get("number->string", envir = env)(42, 16), "2a")
 
   # Binary
-  expect_equal(env$`number->string`(8, 2), "1000")
+  expect_equal(get("number->string", envir = env)(8, 2), "1000")
 
   # Octal
-  expect_equal(env$`number->string`(64, 8), "100")
+  expect_equal(get("number->string", envir = env)(64, 8), "100")
 })
 
 test_that("string->number parses numbers", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$`string->number`("42"), 42)
-  expect_equal(env$`string->number`("3.14"), 3.14)
-  expect_equal(env$`string->number`("-10"), -10)
+  expect_equal(get("string->number", envir = env)("42"), 42)
+  expect_equal(get("string->number", envir = env)("3.14"), 3.14)
+  expect_equal(get("string->number", envir = env)("-10"), -10)
 
   # Invalid string returns #f
-  expect_false(env$`string->number`("not-a-number"))
+  expect_false(get("string->number", envir = env)("not-a-number"))
 })
 
 test_that("string comparison operators work", {
@@ -83,24 +83,24 @@ test_that("string comparison operators work", {
   toplevel_env(engine, env = env)
 
   # string=?
-  expect_true(env$`string=?`("hello", "hello"))
-  expect_false(env$`string=?`("hello", "world"))
+  expect_true(get("string=?", envir = env)("hello", "hello"))
+  expect_false(get("string=?", envir = env)("hello", "world"))
 
   # string<?
-  expect_true(env$`string<?`("apple", "banana"))
-  expect_false(env$`string<?`("banana", "apple"))
+  expect_true(get("string<?", envir = env)("apple", "banana"))
+  expect_false(get("string<?", envir = env)("banana", "apple"))
 
   # string>?
-  expect_true(env$`string>?`("banana", "apple"))
-  expect_false(env$`string>?`("apple", "banana"))
+  expect_true(get("string>?", envir = env)("banana", "apple"))
+  expect_false(get("string>?", envir = env)("apple", "banana"))
 
   # string<=?
-  expect_true(env$`string<=?`("apple", "apple"))
-  expect_true(env$`string<=?`("apple", "banana"))
+  expect_true(get("string<=?", envir = env)("apple", "apple"))
+  expect_true(get("string<=?", envir = env)("apple", "banana"))
 
   # string>=?
-  expect_true(env$`string>=?`("banana", "banana"))
-  expect_true(env$`string>=?`("banana", "apple"))
+  expect_true(get("string>=?", envir = env)("banana", "banana"))
+  expect_true(get("string>=?", envir = env)("banana", "apple"))
 })
 
 test_that("string->list and list->string convert between representations", {
@@ -108,20 +108,20 @@ test_that("string->list and list->string convert between representations", {
   toplevel_env(engine, env = env)
 
   # string->list
-  result <- env$`string->list`("abc")
+  result <- get("string->list", envir = env)("abc")
   expect_equal(length(result), 3)
   expect_equal(result[[1]], "a")
   expect_equal(result[[2]], "b")
   expect_equal(result[[3]], "c")
 
   # list->string
-  result <- env$`list->string`(list("a", "b", "c"))
+  result <- get("list->string", envir = env)(list("a", "b", "c"))
   expect_equal(result, "abc")
 
   # Round trip
   original <- "hello"
-  chars <- env$`string->list`(original)
-  reconstructed <- env$`list->string`(chars)
+  chars <- get("string->list", envir = env)(original)
+  reconstructed <- get("list->string", envir = env)(chars)
   expect_equal(reconstructed, original)
 })
 
@@ -129,14 +129,14 @@ test_that("string-append concatenates strings", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$`string-append`("hello", " ", "world"), "hello world")
-  expect_equal(env$`string-append`("a", "b", "c"), "abc")
+  expect_equal(get("string-append", envir = env)("hello", " ", "world"), "hello world")
+  expect_equal(get("string-append", envir = env)("a", "b", "c"), "abc")
 
   # Single string
-  expect_equal(env$`string-append`("alone"), "alone")
+  expect_equal(get("string-append", envir = env)("alone"), "alone")
 
   # Empty strings
-  expect_equal(env$`string-append`("", "test", ""), "test")
+  expect_equal(get("string-append", envir = env)("", "test", ""), "test")
 })
 
 # Note: string-copy may not be implemented
@@ -145,7 +145,7 @@ test_that("string-append concatenates strings", {
 #   toplevel_env(engine, env = env)
 #
 #   original <- "hello"
-#   copy <- env$`string-copy`(original)
+#   copy <- get("string-copy", envir = env)(original)
 #   expect_equal(copy, original)
 #   expect_equal(copy, "hello")
 # })
@@ -158,13 +158,13 @@ test_that("string and io helpers work", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$`string-concat`("a", 1, "b"), "a1b")
-  expect_equal(env$`format-value`(list(1, 2, 3)), "(1 2 3)")
-  expect_equal(env$`format-value`(quote(f(a, b))), "(f a b)")
-  expect_equal(env$`string-join`(list("a", "b", "c"), "-"), "a-b-c")
-  expect_equal(env$`string-split`("a-b-c", "-"), list("a", "b", "c"))
-  expect_equal(env$trim("  hi "), "hi")
-  expect_equal(env$`string-format`("x=%s", "y"), "x=y")
+  expect_equal(get("string-concat", envir = env)("a", 1, "b"), "a1b")
+  expect_equal(get("format-value", envir = env)(list(1, 2, 3)), "(1 2 3)")
+  expect_equal(get("format-value", envir = env)(quote(f(a, b))), "(f a b)")
+  expect_equal(get("string-join", envir = env)(list("a", "b", "c"), "-"), "a-b-c")
+  expect_equal(get("string-split", envir = env)("a-b-c", "-"), list("a", "b", "c"))
+  expect_equal(get("trim", envir = env)("  hi "), "hi")
+  expect_equal(get("string-format", envir = env)("x=%s", "y"), "x=y")
 
   con <- textConnection("hello")
   old_opts <- options(arl.stdin = con)
@@ -172,31 +172,31 @@ test_that("string and io helpers work", {
     options(old_opts)
     close(con)
   }, add = TRUE)
-  expect_equal(env$`read-line`(), "hello")
+  expect_equal(get("read-line", envir = env)(), "hello")
 })
 
 test_that("string match helpers work", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_true(env$`string-contains?`("hello", "ell"))
-  expect_false(env$`string-contains?`("hello", "^ell"))
-  expect_true(env$`string-contains?`("hello", "^he", fixed = FALSE))
+  expect_true(get("string-contains?", envir = env)("hello", "ell"))
+  expect_false(get("string-contains?", envir = env)("hello", "^ell"))
+  expect_true(get("string-contains?", envir = env)("hello", "^he", fixed = FALSE))
 
-  expect_true(env$`string-match?`("hello", "^he"))
-  expect_false(env$`string-match?`("hello", "ELL"))
-  expect_false(env$`string-match?`("hello", "ELL", fixed = TRUE))
+  expect_true(get("string-match?", envir = env)("hello", "^he"))
+  expect_false(get("string-match?", envir = env)("hello", "ELL"))
+  expect_false(get("string-match?", envir = env)("hello", "ELL", fixed = TRUE))
 
-  expect_equal(env$`string-find`("hello", "ll"), 2)
-  expect_equal(env$`string-find`("hello", "nope"), NULL)
-  expect_equal(env$`string-find`("hello", "^he", fixed = FALSE), 0)
+  expect_equal(get("string-find", envir = env)("hello", "ll"), 2)
+  expect_equal(get("string-find", envir = env)("hello", "nope"), NULL)
+  expect_equal(get("string-find", envir = env)("hello", "^he", fixed = FALSE), 0)
 
-  expect_equal(env$`string-replace`("hello", "l", "L"), "heLlo")
-  expect_equal(env$`string-replace-all`("hello", "l", "L"), "heLLo")
+  expect_equal(get("string-replace", envir = env)("hello", "l", "L"), "heLlo")
+  expect_equal(get("string-replace-all", envir = env)("hello", "l", "L"), "heLLo")
 
   # Regex mode via :fixed #f
-  expect_equal(env$`string-replace`("abc123", "[0-9]+", "NUM", fixed = FALSE), "abcNUM")
-  expect_equal(env$`string-replace-all`("a1b2c3", "[0-9]", "X", fixed = FALSE), "aXbXcX")
+  expect_equal(get("string-replace", envir = env)("abc123", "[0-9]+", "NUM", fixed = FALSE), "abcNUM")
+  expect_equal(get("string-replace-all", envir = env)("a1b2c3", "[0-9]", "X", fixed = FALSE), "aXbXcX")
 })
 
 # ============================================================================
@@ -208,36 +208,36 @@ test_that("string operations handle edge cases", {
   toplevel_env(engine, env = env)
 
   # string-concat with no arguments returns empty string
-  expect_equal(env$`string-concat`(), "")
+  expect_equal(get("string-concat", envir = env)(), "")
 
   # string-concat with single argument
-  expect_equal(env$`string-concat`("hello"), "hello")
+  expect_equal(get("string-concat", envir = env)("hello"), "hello")
 
   # string-concat with NULL (NULLs are skipped)
-  expect_equal(env$`string-concat`(NULL, "world"), "world")
+  expect_equal(get("string-concat", envir = env)(NULL, "world"), "world")
 
   # string-concat with numbers
-  expect_equal(env$`string-concat`(1, 2, 3), "123")
+  expect_equal(get("string-concat", envir = env)(1, 2, 3), "123")
 
   # string-join with empty list
-  expect_equal(env$`string-join`(list(), "-"), "")
+  expect_equal(get("string-join", envir = env)(list(), "-"), "")
 
   # string-join with single element
-  expect_equal(env$`string-join`(list("a"), "-"), "a")
+  expect_equal(get("string-join", envir = env)(list("a"), "-"), "a")
 
   # string-split with empty string (R's strsplit("", "-", fixed=TRUE) returns character(0))
-  result <- env$`string-split`("", "-")
+  result <- get("string-split", envir = env)("", "-")
   expect_equal(length(result), 0)
   expect_true(is.list(result))
 
   # string-split with delimiter not present
-  expect_equal(env$`string-split`("hello", "-"), list("hello"))
+  expect_equal(get("string-split", envir = env)("hello", "-"), list("hello"))
 
   # trim with already trimmed string
-  expect_equal(env$trim("hello"), "hello")
+  expect_equal(get("trim", envir = env)("hello"), "hello")
 
   # trim with only whitespace
-  expect_equal(env$trim("   "), "")
+  expect_equal(get("trim", envir = env)("   "), "")
 })
 
 # ============================================================================
