@@ -1,7 +1,7 @@
 ;;; Extended tests for equality functions
 
-(import assert)
-(import equality)
+(import assert :refer :all)
+(import equality :refer :all)
 
 (define test-list-equal-basic (lambda ()
   ;; Test list-equal? with various lists

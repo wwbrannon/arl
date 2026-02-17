@@ -1,7 +1,7 @@
 ;;; Tests for complex number utilities
 
-(import assert)
-(import math)
+(import assert :refer :all)
+(import math :refer :all)
 
 (define test-make-rectangular (lambda ()
   (define z (make-rectangular 3 4))

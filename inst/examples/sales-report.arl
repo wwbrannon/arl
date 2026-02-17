@@ -1,11 +1,11 @@
 ;; Sales Report Example
 ;; Demonstrates data wrangling with R interop and file output
 
-(import assert)
-(import binding)
-(import control)
-(import looping)
-(import threading)
+(import assert :refer :all)
+(import binding :refer :all)
+(import control :refer :all)
+(import looping :refer :all)
+(import threading :refer :all)
 
 (define transactions
   (list

@@ -227,10 +227,10 @@ when working with a bare engine created via `Engine$new(load_prelude = FALSE)`
 or `arl --no-stdlib`:
 
 ```{arl, eval=FALSE}
-(import control)   ; when/unless/cond/case/try/catch/finally
-(import binding)   ; let/let*/letrec
-(import looping)   ; do-list/loop/recur/until
-(import threading) ; -> and ->>
+(import control :refer :all)   ; when/unless/cond/case/try/catch/finally
+(import binding :refer :all)   ; let/let*/letrec
+(import looping :refer :all)   ; do-list/loop/recur/until
+(import threading :refer :all) ; -> and ->>
 
 ;; imports can be selective
 (import control :refer (when unless))
@@ -239,10 +239,10 @@ or `arl --no-stdlib`:
 
 
 ```{arl, include=FALSE}
-(import control)
-(import binding)
-(import looping)
-(import threading)
+(import control :refer :all)
+(import binding :refer :all)
+(import looping :refer :all)
+(import threading :refer :all)
 
 (assert-true (macro? 'when))
 (assert-true (macro? 'unless))

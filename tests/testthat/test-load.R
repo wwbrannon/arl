@@ -111,7 +111,7 @@ test_that("(import ...) loads module exports into environment", {
     "  (define inc (lambda (x) (+ x 1))))"
   ), module_file)
 
-  exprs <- engine$read(sprintf("(import %s)", module_name))
+  exprs <- engine$read(sprintf("(import %s :refer :all)", module_name))
   engine$eval(exprs[[1]], env = env)
 
   exprs <- engine$read("(square 3)")
@@ -140,14 +140,14 @@ test_that("(import ...) does not re-evaluate loaded modules", {
     "  (define tick (lambda () (begin (set! counter (+ counter 1)) counter))))"
   ), module_file)
 
-  exprs <- engine$read(sprintf("(import %s)", module_name))
+  exprs <- engine$read(sprintf("(import %s :refer :all)", module_name))
   engine$eval(exprs[[1]], env = env)
 
   exprs <- engine$read("(tick)")
   expect_equal(engine$eval(exprs[[1]], env = env), 1)
   expect_equal(engine$eval(exprs[[1]], env = env), 2)
 
-  exprs <- engine$read(sprintf("(import %s)", module_name))
+  exprs <- engine$read(sprintf("(import %s :refer :all)", module_name))
   engine$eval(exprs[[1]], env = env)
   expect_equal(engine$eval(engine$read("(tick)")[[1]], env = env), 3)
 })
@@ -200,7 +200,7 @@ test_that("(import \"path\") loads module by path and attaches exports", {
     "  (define double (lambda (x) (* x 2))))"
   ), module_file)
 
-  exprs <- engine$read(sprintf('(import "%s")', module_file))
+  exprs <- engine$read(sprintf('(import "%s" :refer :all)', module_file))
   engine$eval(exprs[[1]], env = env)
 
   exprs <- engine$read("(double 7)")
@@ -229,10 +229,10 @@ test_that("second (import \"path\") does not reload module", {
   ), module_file)
 
   path_abs <- normalizePath(module_file, winslash = "/", mustWork = TRUE)
-  engine$eval(engine$read(sprintf('(import "%s")', path_abs))[[1]], env = env)
+  engine$eval(engine$read(sprintf('(import "%s" :refer :all)', path_abs))[[1]], env = env)
   expect_equal(engine$eval(engine$read("(getn)")[[1]], env = env), 1)
 
-  engine$eval(engine$read(sprintf('(import "%s")', path_abs))[[1]], env = env)
+  engine$eval(engine$read(sprintf('(import "%s" :refer :all)', path_abs))[[1]], env = env)
   expect_equal(engine$eval(engine$read("(getn)")[[1]], env = env), 2)
 })
 
@@ -253,7 +253,7 @@ test_that("relative import paths resolve from importing file's directory", {
 
   # lib/main.arl - imports sibling via relative path
   writeLines(c(
-    '(import "helper.arl")',
+    '(import "helper.arl" :refer :all)',
     "(define main-val (helper-fn))"
   ), file.path(tmp_dir, "lib", "main.arl"))
 
@@ -270,7 +270,7 @@ test_that("(import symbol) is module name, (import \"string\") is path", {
   engine <- make_engine()
   env <- engine$get_env()
 
-  expect_silent(engine$eval(engine$read("(import control)")[[1]], env = env))
+  expect_silent(engine$eval(engine$read("(import control :refer :all)")[[1]], env = env))
   expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("when"), env = env))
 
   missing_path <- tempfile(fileext = ".arl")

@@ -42,8 +42,15 @@ template, the shorthand `,@expr` is equivalent.
 - [`or`](lang-core.html#or) -- Short-circuit logical disjunction.
 - [`while`](lang-core.html#while) -- Repeatedly evaluate body while condition remains truthy.
 - [`delay`](lang-core.html#delay) -- Create a promise that delays evaluation of expr until forced.
-- [`import`](lang-core.html#import) -- Load a module and attach its exports into the current scope.
-- [`module`](lang-core.html#module) -- Define a named module with explicit exports.
+- [`import`](lang-core.html#import) -- Load a module and bind it as a first-class value. By default,
+`(import name)` binds the module environment to the symbol `name` for
+qualified access via `name/sym`. Use `:refer` to bring specific exports
+(or all exports) into scope unqualified. Use `:as` to alias the module
+binding.
+- [`module`](lang-core.html#module) -- Define a module with explicit exports. A named module registers
+itself in the module registry. A nameless module derives its name from the
+source file. `export-all` exports all non-private definitions; add
+`:re-export` to also re-export imported symbols.
 
 Anything not in this list is a function or macro, whether
 [built-in](#built-in-functions), [standard library](#standard-library),
@@ -68,6 +75,7 @@ are not loaded (`Engine$new(load_prelude = FALSE)`).
 | Macro Utilities | [`capture`](lang-core.html#capture), [`gensym`](lang-core.html#gensym), [`macro?`](lang-core.html#macro-p), [`macroexpand`](lang-core.html#macroexpand) |
 | Promises (Lazy Evaluation) | [`promise?`](lang-core.html#promise-p), [`force`](lang-core.html#force), [`promise-expr`](lang-core.html#promise-expr) |
 | Environment Introspection | [`toplevel-env`](lang-core.html#toplevel-env), [`builtins-env`](lang-core.html#builtins-env), [`current-env`](lang-core.html#current-env) |
+| Module Introspection | [`module-ref`](lang-core.html#module-ref), [`module?`](lang-core.html#module-p), [`namespace?`](lang-core.html#namespace-p), [`module-exports`](lang-core.html#module-exports), [`module-name`](lang-core.html#module-name) |
 
 These builtins are documented alongside the stdlib functions they relate to
 in the individual reference pages below.
@@ -261,7 +269,11 @@ Evaluation, macro utilities, R interop helpers, and assertions.
 [`toplevel-env`](lang-core.html#toplevel-env),
 [`builtins-env`](lang-core.html#builtins-env),
 [`current-env`](lang-core.html#current-env), [`doc!`](lang-core.html#doc-bang),
-[`doc`](lang-core.html#doc)
+[`doc`](lang-core.html#doc), [`module-ref`](lang-core.html#module-ref),
+[`module?`](lang-core.html#module-p),
+[`namespace?`](lang-core.html#namespace-p),
+[`module-exports`](lang-core.html#module-exports),
+[`module-name`](lang-core.html#module-name)
 
 Modules: [`core.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/core.arl), [`r-interop.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/r-interop.arl), [`assert.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/assert.arl), and builtins
 

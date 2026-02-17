@@ -407,16 +407,22 @@ a nice minimal isolated reproducible configuration
 
 o) #11: reserved special form for import-runtime (not implemented yet)
 
+o) module naming / relation to files: addressed. Nameless modules derive name
+from filename. Named modules register explicitly. One-module-per-file convention.
+
+o) first-class module objects: addressed. `(import X)` binds the module env as
+a first-class value. `:refer`/`:as` control how exports are accessed.
+
+o) #3: qualified access: addressed. `/` syntax (`mod/sym`) desugars to
+`module-ref`. Works with `:as` aliases.
+
+o) #7: hierarchical module names: addressed. Namespace nodes support `a/b/c`
+style hierarchical names.
+
 ## Remaining
-these are all aspects of the same problem:
-    o) not in list: module naming conventions / relation to files / one module
-    per file / can you define a module at the toplevel?
-
-    o) not in list: should a module be a first-class object? should import
-    return the module?
-
-    o) #3: qualified access / prefixed access convention syntax
-
-    o) #7: hierarchical module names
 
     o) #12: multiple modules per file
+
+Note: The comparison table above reflects the pre-overhaul state of Arl. Many
+cells in the "Arl" column have improved (qualified access, re-export,
+namespace hierarchy, private-by-default for export-all, etc.).

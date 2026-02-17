@@ -419,7 +419,54 @@ CompiledRuntime <- R6::R6Class(
 
       squash <- isTRUE(self$context$squash_imports)
 
-      # Determine how to bind unqualified names
+      # Bind module env to a name in the importing environment.
+      # Skip for path-based imports (is_path) unless :as is specified.
+      # Skip when squashing for prelude.
+      # Skip when a referred export name collides with the module binding name
+      # (e.g. dict module exports dict — the proxy binding would be shadowed).
+      if (!squash && (!is_path || !is.null(as_alias))) {
+        entry <- shared_registry$get(registry_key)
+        if (!is.null(entry)) {
+          if (!is.null(as_alias)) {
+            local_name <- as_alias
+          } else {
+            # Use last /-component of module name, or full name if no /
+            parts <- strsplit(registry_key, "/", fixed = TRUE)[[1]]
+            local_name <- parts[length(parts)]
+          }
+          # Check for collision with referred exports
+          skip_binding <- FALSE
+          if (!is.null(refer)) {
+            referred_names <- if (isTRUE(refer)) entry$exports else refer
+            if (!is.null(rename)) {
+              idx <- match(names(rename), referred_names)
+              valid <- !is.na(idx)
+              referred_names[idx[valid]] <- unname(rename[valid])
+            }
+            skip_binding <- local_name %in% referred_names
+          }
+          if (!skip_binding) {
+            assign(local_name, entry$env, envir = env)
+          }
+
+          # Create namespace node for hierarchical names (if no :as and name has /)
+          if (is.null(as_alias) && grepl("/", registry_key, fixed = TRUE)) {
+            parts <- strsplit(registry_key, "/", fixed = TRUE)[[1]]
+            top <- parts[1]
+            if (nzchar(top)) {
+              # Only create namespace node if top-level name isn't already bound to something else
+              existing <- get0(top, envir = env, inherits = FALSE)
+              if (is.null(existing) || inherits(existing, "arl_namespace")) {
+                if (is.null(existing)) {
+                  assign(top, make_namespace_node(top), envir = env)
+                }
+              }
+            }
+          }
+        }
+      }
+
+      # Determine how to bind unqualified names (after module binding so exports win)
       if (!is.null(refer)) {
         if (isTRUE(refer)) {
           # :refer :all — attach all exports
@@ -442,42 +489,12 @@ CompiledRuntime <- R6::R6Class(
         # :rename alone implies all exports
         shared_registry$attach_into(registry_key, env, only = NULL,
                                      rename = rename, squash = squash)
-      } else {
-        # Bare (import X): dump all exports into scope (backward compat)
+      } else if (squash) {
+        # Squashed (prelude) imports: always dump exports
         shared_registry$attach_into(registry_key, env, squash = squash)
-      }
-
-      # Bind module env to a name in the importing environment.
-      # Skip for path-based imports (is_path) unless :as is specified.
-      # Skip when squashing for prelude.
-      use_new_style <- !is.null(refer) || !is.null(as_alias)
-      if (!squash && use_new_style && (!is_path || !is.null(as_alias))) {
-        entry <- shared_registry$get(registry_key)
-        if (!is.null(entry)) {
-          if (!is.null(as_alias)) {
-            local_name <- as_alias
-          } else {
-            # Use last /-component of module name, or full name if no /
-            parts <- strsplit(registry_key, "/", fixed = TRUE)[[1]]
-            local_name <- parts[length(parts)]
-          }
-          assign(local_name, entry$env, envir = env)
-
-          # Create namespace node for hierarchical names (if no :as and name has /)
-          if (is.null(as_alias) && grepl("/", registry_key, fixed = TRUE)) {
-            parts <- strsplit(registry_key, "/", fixed = TRUE)[[1]]
-            top <- parts[1]
-            if (nzchar(top)) {
-              # Only create namespace node if top-level name isn't already bound to something else
-              existing <- get0(top, envir = env, inherits = FALSE)
-              if (is.null(existing) || inherits(existing, "arl_namespace")) {
-                if (is.null(existing)) {
-                  assign(top, make_namespace_node(top), envir = env)
-                }
-              }
-            }
-          }
-        }
+      } else {
+        # Bare (import X): bind module only, no unqualified exports
+        # Use :refer :all to dump exports into scope
       }
 
       # Invalidate macro names cache — import may add proxy envs with new macro registries

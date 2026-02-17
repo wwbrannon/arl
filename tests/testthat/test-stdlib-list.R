@@ -29,33 +29,33 @@ test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", 
   env <- toplevel_env(engine, new.env())
 
   # From list values
-  expect_equal(engine$eval(engine$read("(begin (import list) (cadr (list 1 2 3 4)))")[[1]], env = env), 2)
-  expect_equal(engine$eval(engine$read("(begin (import list) (caddr (list 1 2 3 4)))")[[1]], env = env), 3)
-  expect_equal(engine$eval(engine$read("(begin (import list) (cadddr (list 1 2 3 4)))")[[1]], env = env), 4)
+  expect_equal(engine$eval(engine$read("(begin (import list :refer :all) (cadr (list 1 2 3 4)))")[[1]], env = env), 2)
+  expect_equal(engine$eval(engine$read("(begin (import list :refer :all) (caddr (list 1 2 3 4)))")[[1]], env = env), 3)
+  expect_equal(engine$eval(engine$read("(begin (import list :refer :all) (cadddr (list 1 2 3 4)))")[[1]], env = env), 4)
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (caar (list (list 10 11) (list 20 21))))")[[1]], env = env),
+    engine$eval(engine$read("(begin (import list :refer :all) (caar (list (list 10 11) (list 20 21))))")[[1]], env = env),
     10
   )
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (cdar (list (list 10 11) (list 20 21))))")[[1]], env = env),
+    engine$eval(engine$read("(begin (import list :refer :all) (cdar (list (list 10 11) (list 20 21))))")[[1]], env = env),
     list(11)
   )
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (cddr (list 1 2 3 4)))")[[1]], env = env),
+    engine$eval(engine$read("(begin (import list :refer :all) (cddr (list 1 2 3 4)))")[[1]], env = env),
     list(3, 4)
   )
 
   # From quoted calls (call objects)
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (cadr '(+ 1 2 3)))")[[1]], env = env),
+    engine$eval(engine$read("(begin (import list :refer :all) (cadr '(+ 1 2 3)))")[[1]], env = env),
     1
   )
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (caddr '(+ 1 2 3)))")[[1]], env = env),
+    engine$eval(engine$read("(begin (import list :refer :all) (caddr '(+ 1 2 3)))")[[1]], env = env),
     2
   )
   expect_equal(
-    engine$eval(engine$read("(begin (import list) (cadddr '(+ 1 2 3)))")[[1]], env = env),
+    engine$eval(engine$read("(begin (import list :refer :all) (cadddr '(+ 1 2 3)))")[[1]], env = env),
     3
   )
 })

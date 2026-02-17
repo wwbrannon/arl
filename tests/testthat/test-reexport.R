@@ -25,7 +25,7 @@ test_that("explicit re-export: imported symbol available to consumers", {
   # Module A imports from B, re-exports foo along with own binding
   write_module(file.path(tmp_dir, "a.arl"), "a", c(
     "  (export foo baz)",
-    '  (import "b.arl")',
+    '  (import "b.arl" :refer :all)',
     "  (define baz 7)"
   ))
 
@@ -36,7 +36,7 @@ test_that("explicit re-export: imported symbol available to consumers", {
   eng$load_file_in_env(file.path(tmp_dir, "a.arl"))
 
   # Module C imports from A
-  eng$eval_text('(import a)')
+  eng$eval_text('(import a :refer :all)')
   expect_equal(eng$eval_text("foo"), 42)
   expect_equal(eng$eval_text("baz"), 7)
 })
@@ -55,7 +55,7 @@ test_that("export-all :re-export includes imported symbols", {
   # Facade module re-exports everything
   write_module(file.path(tmp_dir, "facade.arl"), "facade", c(
     "  (export-all :re-export)",
-    '  (import "provider.arl")',
+    '  (import "provider.arl" :refer :all)',
     "  (define own-val 200)"
   ))
 
@@ -69,7 +69,7 @@ test_that("export-all :re-export includes imported symbols", {
   expect_true("val" %in% entry$exports)
   expect_true("own-val" %in% entry$exports)
 
-  eng$eval_text('(import facade)')
+  eng$eval_text('(import facade :refer :all)')
   expect_equal(eng$eval_text("val"), 100)
   expect_equal(eng$eval_text("own-val"), 200)
 })
@@ -87,7 +87,7 @@ test_that("export-all without :re-export excludes imports (unchanged behavior)",
 
   write_module(file.path(tmp_dir, "consumer.arl"), "consumer", c(
     "  (export-all)",
-    '  (import "src.arl")',
+    '  (import "src.arl" :refer :all)',
     "  (define own 2)"
   ))
 
@@ -116,7 +116,7 @@ test_that("re-export with :only modifier", {
 
   write_module(file.path(tmp_dir, "a.arl"), "a", c(
     "  (export x y own)",
-    '  (import "b.arl")',
+    '  (import "b.arl" :refer :all)',
     "  (define own 30)"
   ))
 
@@ -145,7 +145,7 @@ test_that("re-export with :as modifier for qualified access", {
 
   write_module(file.path(tmp_dir, "a.arl"), "a", c(
     "  (export val)",
-    '  (import "b.arl")'
+    '  (import "b.arl" :refer :all)'
   ))
 
   old_wd <- getwd()
@@ -170,7 +170,7 @@ test_that("re-export with :rename modifier", {
 
   write_module(file.path(tmp_dir, "a.arl"), "a", c(
     "  (export val)",
-    '  (import "b.arl")'
+    '  (import "b.arl" :refer :all)'
   ))
 
   old_wd <- getwd()
@@ -198,7 +198,7 @@ test_that("macro re-export: consumer can use macro from transitive module", {
   # Module A re-exports macro from B
   write_module(file.path(tmp_dir, "a.arl"), "a", c(
     "  (export my-when)",
-    '  (import "b.arl")'
+    '  (import "b.arl" :refer :all)'
   ))
 
   old_wd <- getwd()
@@ -206,7 +206,7 @@ test_that("macro re-export: consumer can use macro from transitive module", {
   on.exit(setwd(old_wd), add = TRUE)
 
   eng$load_file_in_env(file.path(tmp_dir, "a.arl"))
-  eng$eval_text('(import a)')
+  eng$eval_text('(import a :refer :all)')
   expect_equal(eng$eval_text("(my-when #t 42)"), 42)
   expect_equal(eng$eval_text("(my-when #f 42)"), FALSE)
 })
@@ -224,12 +224,12 @@ test_that("transitive re-export: A -> B -> C -> D", {
 
   write_module(file.path(tmp_dir, "c.arl"), "c", c(
     "  (export deep-val)",
-    '  (import "d.arl")'
+    '  (import "d.arl" :refer :all)'
   ))
 
   write_module(file.path(tmp_dir, "b.arl"), "b", c(
     "  (export deep-val)",
-    '  (import "c.arl")'
+    '  (import "c.arl" :refer :all)'
   ))
 
   old_wd <- getwd()
@@ -237,7 +237,7 @@ test_that("transitive re-export: A -> B -> C -> D", {
   on.exit(setwd(old_wd), add = TRUE)
 
   eng$load_file_in_env(file.path(tmp_dir, "b.arl"))
-  eng$eval_text('(import b)')
+  eng$eval_text('(import b :refer :all)')
   expect_equal(eng$eval_text("deep-val"), 999)
 })
 
@@ -254,7 +254,7 @@ test_that("reload value change reflected through re-export (live forwarding)", {
 
   write_module(file.path(tmp_dir, "facade.arl"), "facade", c(
     "  (export val)",
-    '  (import "src.arl")'
+    '  (import "src.arl" :refer :all)'
   ))
 
   old_wd <- getwd()
@@ -262,7 +262,7 @@ test_that("reload value change reflected through re-export (live forwarding)", {
   on.exit(setwd(old_wd), add = TRUE)
 
   eng$load_file_in_env(file.path(tmp_dir, "facade.arl"))
-  eng$eval_text('(import facade)')
+  eng$eval_text('(import facade :refer :all)')
   expect_equal(eng$eval_text("val"), 1)
 
   # Change the source module's value and reload
@@ -291,7 +291,7 @@ test_that("reload does not cascade: facade export set unchanged after source rel
 
   write_module(file.path(tmp_dir, "facade.arl"), "facade", c(
     "  (export-all :re-export)",
-    '  (import "src.arl")'
+    '  (import "src.arl" :refer :all)'
   ))
 
   old_wd <- getwd()
@@ -379,7 +379,7 @@ test_that("export-all :re-export still excludes _-prefixed own bindings", {
 
   write_module(file.path(tmp_dir, "facade.arl"), "facade", c(
     "  (export-all :re-export)",
-    '  (import "provider.arl")',
+    '  (import "provider.arl" :refer :all)',
     "  (define own-public 200)",
     "  (define _own-private 300)"
   ))
@@ -414,7 +414,7 @@ test_that("explicit export of _-prefixed name still works", {
 
   eng$load_file_in_env(file.path(tmp_dir, "mod.arl"))
 
-  eng$eval_text('(import mod)')
+  eng$eval_text('(import mod :refer :all)')
   expect_equal(eng$eval_text("_intentionally-public"), 1)
   expect_equal(eng$eval_text("helper"), 2)
 })

@@ -322,25 +322,45 @@ Create a promise that delays evaluation of expr until forced.
 
 ### import {#import}
 
-Load a module and attach its exports into the current scope.
+Load a module and bind it as a first-class value. By default,
+`(import name)` binds the module environment to the symbol `name` for
+qualified access via `name/sym`. Use `:refer` to bring specific exports
+(or all exports) into scope unqualified. Use `:as` to alias the module
+binding.
 
-**Signature:** `(import name) or (import "path")`
+**Signature:** `(import name)
+(import name :refer (sym1 sym2 ...))
+(import name :refer :all)
+(import name :as alias)
+(import name :rename ((old new) ...))
+(import name :reload)
+(import "path/to/file.arl")`
 
 **Examples:**
 ```{arl, eval=FALSE}
-(import control)
-(import "lib/helpers.arl")
+(import math)
+(math/inc 5)               ; qualified access
+(import math :refer :all)
+(inc 5)                     ; unqualified access
+(import math :as m)
+(m/inc 5)                   ; aliased qualified access
 ```
 
-**See also:** [module](#module), [load](#load)
+**See also:** [module](#module), [load](#load), [module-ref](#module-ref)
 
 ---
 
 ### module {#module}
 
-Define a named module with explicit exports.
+Define a module with explicit exports. A named module registers
+itself in the module registry. A nameless module derives its name from the
+source file. `export-all` exports all non-private definitions; add
+`:re-export` to also re-export imported symbols.
 
-**Signature:** `(module name (export ...) body...)`
+**Signature:** `(module name (export ...) body...)
+(module (export ...) body...)
+(module name (export-all) body...)
+(module name (export-all :re-export) body...)`
 
 **Examples:**
 ```{arl, eval=FALSE}
@@ -353,11 +373,11 @@ Define a named module with explicit exports.
 (module sf-demo
 (export sf-answer)
 (define sf-answer 42))
-(import sf-demo)
+(import sf-demo :refer :all)
 (assert-equal 42 sf-answer)
 ```
 
-**See also:** [import](#import)
+**See also:** [import](#import), [module?](#module-p), [module-exports](#module-exports), [module-name](#module-name)
 
 ---
 
@@ -1710,6 +1730,123 @@ Return the current Arl evaluation environment.
 ```
 
 **See also:** [toplevel-env](#toplevel-env), [builtins-env](#builtins-env)
+
+---
+
+## Module Introspection {#section-module-introspection}
+
+### module-ref {#module-ref}
+
+Look up a symbol in a module or namespace. This is the
+desugared form of qualified access: `mod/sym` parses as
+`(module-ref mod sym)`.
+
+**Signature:** `(module-ref mod sym)`
+
+**Examples:**
+```{arl}
+(import math)
+(module-ref math inc)  ; same as math/inc
+```
+
+```{arl, include=FALSE}
+(module __mr-mod (export __mr-x) (define __mr-x 99))
+(import __mr-mod)
+(assert-equal 99 (module-ref __mr-mod __mr-x))
+```
+
+**See also:** [import](#import), [module?](#module-p), [module-exports](#module-exports)
+
+---
+
+### module? {#module-p}
+
+Return #t if x is a module environment (registered in the
+module registry).
+
+**Signature:** `(module? x)`
+
+**Examples:**
+```{arl}
+(import math)
+(module? math)  ; => #t
+(module? 42)    ; => #f
+```
+
+```{arl, include=FALSE}
+(module __mp-mod (export __mp-a) (define __mp-a 1))
+(import __mp-mod)
+(assert-true (module? __mp-mod))
+(assert-false (module? 42))
+```
+
+**See also:** [namespace?](#namespace-p), [module-exports](#module-exports), [module-name](#module-name)
+
+---
+
+### namespace? {#namespace-p}
+
+Return #t if x is a namespace node (created by importing a
+hierarchical module name like `a/b`).
+
+**Signature:** `(namespace? x)`
+
+**Examples:**
+```{arl}
+(namespace? x)  ; => #f for most values
+```
+
+```{arl, include=FALSE}
+(assert-false (namespace? 42))
+(assert-false (namespace? "hello"))
+```
+
+**See also:** [module?](#module-p), [module-ref](#module-ref)
+
+---
+
+### module-exports {#module-exports}
+
+Return the list of exported symbol names from a module.
+
+**Signature:** `(module-exports mod)`
+
+**Examples:**
+```{arl}
+(import math)
+(module-exports math)  ; => list of exported names
+```
+
+```{arl, include=FALSE}
+(module __me-mod (export __me-x __me-y) (define __me-x 1) (define __me-y 2))
+(import __me-mod)
+(define __me-exports (module-exports __me-mod))
+(assert-true (list? __me-exports))
+```
+
+**See also:** [module?](#module-p), [module-name](#module-name), [module-ref](#module-ref)
+
+---
+
+### module-name {#module-name}
+
+Return the canonical name string of a module.
+
+**Signature:** `(module-name mod)`
+
+**Examples:**
+```{arl}
+(import math)
+(module-name math)  ; => "math"
+```
+
+```{arl, include=FALSE}
+(module __mn-mod (export __mn-a) (define __mn-a 1))
+(import __mn-mod)
+(assert-equal "__mn-mod" (module-name __mn-mod))
+```
+
+**See also:** [module?](#module-p), [module-exports](#module-exports)
 
 ---
 

@@ -171,7 +171,7 @@ test_that("export-all excludes symbols imported from other modules", {
   writeLines(c(
     "(module consumer",
     "  (export-all)",
-    "  (import provider-mod)",
+    "  (import provider-mod :refer :all)",
     "  (define own-fn (lambda () (provided-fn))))"
   ), file.path(tmp_dir, "consumer.arl"))
 
@@ -270,7 +270,7 @@ test_that("import_compiled() by module name as symbol", {
 
   # Import using a symbol (which is how compiled code calls it)
   module_name_sym <- as.symbol("display")
-  engine_field(eng, "compiled_runtime")$import_compiled(module_name_sym, test_env)
+  engine_field(eng, "compiled_runtime")$import_compiled(module_name_sym, test_env, refer = TRUE)
 
   # Check that some exported functions from display are now accessible
   expect_true(exists("string-concat", envir = test_env, inherits = TRUE))
@@ -293,8 +293,8 @@ test_that("import_compiled() loads module only once", {
   test_env2 <- new.env(parent = eng$get_env())
 
   # Import the same module twice into different environments (using symbols)
-  engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("functional"), test_env1)
-  engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("functional"), test_env2)
+  engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("functional"), test_env1, refer = TRUE)
+  engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("functional"), test_env2, refer = TRUE)
 
   # Both should get the same module (accessible via proxy)
   expect_true(exists("map", envir = test_env1, inherits = TRUE))
@@ -319,7 +319,7 @@ test_that("import_compiled() by path loads and attaches exports", {
 
   # Import using absolute path (strings are treated as paths by import_compiled)
   test_env <- new.env(parent = eng$get_env())
-  engine_field(eng, "compiled_runtime")$import_compiled(tmp_file, test_env)
+  engine_field(eng, "compiled_runtime")$import_compiled(tmp_file, test_env, refer = TRUE)
 
   # Check that the exported value is accessible via proxy
   expect_true(exists("test-value", envir = test_env, inherits = TRUE))
@@ -331,7 +331,7 @@ test_that("import_compiled() attaches exports to target environment", {
   test_env <- new.env(parent = eng$get_env())
 
   # Import a module (using symbol)
-  engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("types"), test_env)
+  engine_field(eng, "compiled_runtime")$import_compiled(as.symbol("types"), test_env, refer = TRUE)
 
   # Proxy-based imports are accessible via inheritance, not in ls()
   # Check specific exports from types module

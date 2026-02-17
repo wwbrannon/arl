@@ -22,7 +22,7 @@ Arl has three mechanisms for loading code:
 
 - **`load`**: Evaluates a file in the current environment (source-like; definitions and imports from the file are visible in the caller)
 - **`run`**: Evaluates a file in an isolated child environment (definitions and imports in the file are not visible in the caller)
-- **`import`**: Loads a module and attaches only its exported symbols into the current environment
+- **`import`**: Loads a module and binds it as a first-class value; use `:refer` to bring exports into scope unqualified
 
 ## The `load` Function
 
@@ -126,10 +126,24 @@ The `module` special form defines a named module with explicit exports.
   (define __test-square (lambda (x) (* x x)))
   (define __test-cube (lambda (x) (* x x x)))
   (define __test-helper (lambda (x) (+ x 1))))
-(import __test-math-utils)
+(import __test-math-utils :refer :all)
 (assert-equal 25 (__test-square 5))
 (assert-equal 27 (__test-cube 3))
 ```
+
+### Nameless Modules
+
+If you omit the module name, Arl derives it from the source filename:
+
+```{arl, eval=FALSE}
+; File: math-utils.arl
+(module (export square cube)
+  (define square (lambda (x) (* x x)))
+  (define cube (lambda (x) (* x x x))))
+; Registers as "math-utils" (derived from filename)
+```
+
+This is convenient for single-module files where the filename already conveys the module name.
 
 ### Export Strategies
 
@@ -154,17 +168,34 @@ The `module` special form defines a named module with explicit exports.
 
 Names beginning with `_` (underscore) are private by convention and are excluded
 from `export-all`. This lets you define internal helpers without accidentally
-exposing them. If you need to export a `_`-prefixed name, use explicit
-`(export ...)` instead.
+exposing them. The `_` prefix convention applies only to `export-all`; explicit
+`(export ...)` can still export `_`-prefixed names if needed.
+
+**Re-export imported symbols**:
+```{arl, eval=FALSE}
+; Facade module that bundles several modules
+(module collections
+  (export-all :re-export)
+  (import list :refer :all)
+  (import dict :refer :all)
+  (import set :refer :all))
+
+; Users can import everything from the facade
+(import collections :refer :all)
+```
+
+By default, `export-all` excludes imported symbols. The `:re-export` modifier
+includes them, enabling facade modules that re-package multiple modules under
+a single name.
 
 ## The `import` Special Form
 
-The `import` special form loads a module and makes its exports available. By default, `(import X)` binds the module environment to the symbol `X` and dumps all exports into scope. Use `:refer` to control which names are brought in unqualified, and `:as` to alias the module binding.
+The `import` special form loads a module and makes its exports available. `(import X)` binds the module environment to the symbol `X`. Access exports via qualified syntax (`X/sym`), or use `:refer` to bring specific names into scope unqualified. Use `:as` to alias the module binding.
 
 ### Signature
 
 ```{arl, eval=FALSE}
-(import name)                          ; bind module as `name`, dump all exports
+(import name)                          ; bind module as `name` (qualified access only)
 (import name :refer (sym1 sym2))       ; bind module + only these names unqualified
 (import name :refer :all)              ; bind module + all exports unqualified
 (import name :as alias)                ; bind module as `alias`
@@ -191,6 +222,8 @@ After importing, you can access module exports using the `/` syntax:
 (sin 1.0)           ; unqualified (referred)
 (math/cos 0.0)      ; qualified still works
 ```
+
+The `/` syntax is reader sugar for the `module-ref` builtin: `math/inc` parses as `(module-ref math inc)`.
 
 ### Examples
 
@@ -258,6 +291,16 @@ When you `import` a module:
 
 **Import scoping**: Each `(import M)` only makes M's exports visible in the environment where that form was evaluated. Imports in one file are not visible in another file or in the REPL unless that file (or the REPL) also runs `(import M)`. Modules are loaded once per engine and shared; only the set of environments that "see" the exports depends on where you call `import`.
 
+### Module Introspection
+
+Arl provides several builtins for inspecting modules at runtime:
+
+- **`(module? x)`** — returns `#t` if `x` is a module environment
+- **`(namespace? x)`** — returns `#t` if `x` is a namespace node (created by hierarchical imports)
+- **`(module-exports mod)`** — returns the list of exported symbol names
+- **`(module-name mod)`** — returns the canonical name string of a module
+- **`(module-ref mod sym)`** — look up `sym` in module `mod`; the desugared form of `mod/sym`
+
 ### Error Handling
 
 ```{arl, eval=FALSE}
@@ -277,7 +320,7 @@ When you `import` a module:
   (define public-fn (lambda () "visible"))
   (define private-fn (lambda () "hidden")))
 
-(import restricted)
+(import restricted :refer :all)
 public-fn   ; Works
 private-fn  ; Error: object 'private-fn' not found
 ```
@@ -304,7 +347,7 @@ Create a file `mymodule.arl`:
 Then import it:
 
 ```{arl, eval=FALSE}
-(import mymodule)
+(import mymodule :refer :all)
 (greet "Alice")     ; => "Hello, Alice!"
 (farewell "Bob")    ; => "Goodbye, Bob!"
 ```
@@ -348,7 +391,7 @@ Then import it:
   (define __calc-subtract
     (lambda (a b)
       (- (__validate-number a) (__validate-number b)))))
-(import __test-calculator)
+(import __test-calculator :refer :all)
 (assert-equal 7 (__calc-add 3 4))
 (assert-equal 1 (__calc-subtract 5 4))
 (assert-error (__calc-add "x" 1))
@@ -369,14 +412,14 @@ Modules can load other modules:
 (module text-utils
   (export format-name)
 
-  (import string-helpers)
+  (import string-helpers :refer :all)
 
   (define format-name
     (lambda (first last)
       (string-concat (upcase first) " " (upcase last)))))
 
 ; Usage:
-(import text-utils)
+(import text-utils :refer :all)
 (format-name "john" "doe")  ; => "JOHN DOE"
 ```
 
@@ -390,33 +433,33 @@ explicitly import their dependencies) or when creating a bare engine with
 
 ```{arl, eval=FALSE}
 ; Control flow macros
-(import control)    ; when, unless, cond, case, try/catch/finally
+(import control :refer :all)    ; when, unless, cond, case, try/catch/finally
 
 ; Binding forms
-(import binding)    ; let, let*, letrec
+(import binding :refer :all)    ; let, let*, letrec
 
 ; Looping constructs
-(import looping)    ; until, do-list, loop, recur
+(import looping :refer :all)    ; until, do-list, loop, recur
 
 ; Threading macros
-(import threading)  ; ->, ->>
+(import threading :refer :all)  ; ->, ->>
 
 ; Error handling is now part of the control module
 
 ; Functional (higher-order) functions
-(import functional)  ; map, filter, reduce, etc.
+(import functional :refer :all)  ; map, filter, reduce, etc.
 
 ; String operations
-(import strings)    ; str, string-join, string-split, etc.
+(import strings :refer :all)    ; str, string-join, string-split, etc.
 
 ; I/O operations
-(import io)         ; display, println, read-line
+(import io :refer :all)         ; display, println, read-line
 
 ; Dictionaries
-(import dict)       ; dict operations
+(import dict :refer :all)       ; dict operations
 
 ; Sets
-(import set)        ; set operations
+(import set :refer :all)        ; set operations
 ```
 
 All prelude modules are loaded automatically when the engine starts. Core

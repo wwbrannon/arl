@@ -24,7 +24,7 @@ test_that("imports are not visible across distinct child environments", {
 
   file_a <- file.path(tmp_dir, "file_a.arl")
   writeLines(c(
-    sprintf("(import %s)", module_name),
+    sprintf("(import %s :refer :all)", module_name),
     "(myfn 5)"
   ), file_a)
   file_b <- file.path(tmp_dir, "file_b.arl")
@@ -48,7 +48,7 @@ test_that("imports are visible in the same file", {
 
   # Use stdlib 'list' so we don't need a temp module
   path <- file.path(tmp_dir, "single.arl")
-  writeLines(c("(import list)", "(cadr (list 1 2 3))"), path)
+  writeLines(c("(import list :refer :all)", "(cadr (list 1 2 3))"), path)
   result <- engine$load_file_in_env(path, env = new.env(parent = parent_env))
   expect_equal(result, 2)
 })
@@ -86,7 +86,7 @@ test_that("(load path) runs in caller env - imports visible to caller", {
   }, add = TRUE)
 
   with_import_path <- file.path(tmp_dir, "with_import.arl")
-  writeLines(c("(import list)", "(define x (cadr (list 1 2 3)))"), with_import_path)
+  writeLines(c("(import list :refer :all)", "(define x (cadr (list 1 2 3)))"), with_import_path)
   main_code <- sprintf('(begin (load "%s") x)', normalizePath(with_import_path, winslash = "/"))
   exprs <- engine$read(main_code)
   result <- engine$eval(exprs[[1]], env = env)
@@ -188,9 +188,9 @@ test_that("global module cache: same module loaded once per engine, shared acros
   ), mod_file)
 
   file_a <- file.path(tmp_dir, "file_a.arl")
-  writeLines(c(sprintf("(import %s)", mod_name), "(tick)"), file_a)
+  writeLines(c(sprintf("(import %s :refer :all)", mod_name), "(tick)"), file_a)
   file_b <- file.path(tmp_dir, "file_b.arl")
-  writeLines(c(sprintf("(import %s)", mod_name), "(tick)"), file_b)
+  writeLines(c(sprintf("(import %s :refer :all)", mod_name), "(tick)"), file_b)
 
   expect_equal(engine$load_file_in_env(file_a, env = new.env(parent = parent_env)), 1)
   expect_equal(engine$load_file_in_env(file_b, env = new.env(parent = parent_env)), 2)

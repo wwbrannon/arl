@@ -20,7 +20,7 @@ test_that("basic reload: value updated after file change", {
   ))
   path_arl <- normalizePath(path, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s")', path_arl))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', path_arl))
   expect_equal(eng$eval_text("x"), 1)
 
   write_module(path, "test-mod", c(
@@ -28,7 +28,7 @@ test_that("basic reload: value updated after file change", {
     "  (define x 2)"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_arl))
   expect_equal(eng$eval_text("x"), 2)
 })
 
@@ -44,7 +44,7 @@ test_that("reference semantics: existing proxy sees new value after reload", {
   ))
   path_arl <- normalizePath(path, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s")', path_arl))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', path_arl))
   expect_equal(eng$eval_text("(get-val)"), 10)
 
   write_module(path, "ref-mod", c(
@@ -53,7 +53,7 @@ test_that("reference semantics: existing proxy sees new value after reload", {
     "  (define get-val (lambda () val))"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_arl))
   # The proxy active binding picks up the new get-val
   expect_equal(eng$eval_text("(get-val)"), 20)
 })
@@ -69,7 +69,7 @@ test_that("env identity preserved after reload", {
   ))
   path_arl <- normalizePath(path, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s")', path_arl))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', path_arl))
   arl_env <- arl:::Env$new(eng$get_env())
   registry <- arl_env$module_registry
   entry_before <- registry$get("id-mod")
@@ -80,7 +80,7 @@ test_that("env identity preserved after reload", {
     "  (define x 2)"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_arl))
   entry_after <- registry$get("id-mod")
   env_after <- entry_after$env
 
@@ -98,7 +98,7 @@ test_that("export-all reload: new binding added, old one updated", {
   ))
   path_arl <- normalizePath(path, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s")', path_arl))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', path_arl))
   expect_equal(eng$eval_text("x"), 1)
 
   write_module(path, "ea-mod", c(
@@ -107,7 +107,7 @@ test_that("export-all reload: new binding added, old one updated", {
     "  (define y 42)"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_arl))
   expect_equal(eng$eval_text("x"), 99)
   expect_equal(eng$eval_text("y"), 42)
 })
@@ -123,7 +123,7 @@ test_that("new exports visible after reload via proxy rebuild", {
   ))
   path_arl <- normalizePath(path, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s")', path_arl))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', path_arl))
   expect_equal(eng$eval_text("x"), 1)
 
   write_module(path, "new-exp-mod", c(
@@ -132,7 +132,7 @@ test_that("new exports visible after reload via proxy rebuild", {
     "  (define y 20)"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_arl))
   expect_equal(eng$eval_text("x"), 10)
   expect_equal(eng$eval_text("y"), 20)
 })
@@ -149,7 +149,7 @@ test_that("removed exports cleaned up from proxy", {
   ))
   path_arl <- normalizePath(path, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s")', path_arl))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', path_arl))
   expect_equal(eng$eval_text("y"), 2)
 
   write_module(path, "rm-exp-mod", c(
@@ -157,7 +157,7 @@ test_that("removed exports cleaned up from proxy", {
     "  (define x 10)"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_arl))
   expect_equal(eng$eval_text("x"), 10)
   # y should no longer be accessible
   expect_error(eng$eval_text("y"))
@@ -198,12 +198,12 @@ test_that("transitive update: A imports B, reload B, A sees new values", {
 
   write_module(path_a, "mod-a", c(
     "  (export get-b)",
-    sprintf('  (import "%s")', path_b_arl),
+    sprintf('  (import "%s" :refer :all)', path_b_arl),
     "  (define get-b (lambda () b-val))"
   ))
   path_a_arl <- normalizePath(path_a, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s")', path_a_arl))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', path_a_arl))
   expect_equal(eng$eval_text("(get-b)"), 100)
 
   # Reload B with new value — A should see it via proxy chain
@@ -212,7 +212,7 @@ test_that("transitive update: A imports B, reload B, A sees new values", {
     "  (define b-val 200)"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload)', path_b_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_b_arl))
   expect_equal(eng$eval_text("(get-b)"), 200)
 })
 
@@ -236,17 +236,17 @@ test_that("multiple consumers: both see updates after reload", {
 
   write_module(path_a, "consumer-a", c(
     "  (export get-a)",
-    sprintf('  (import "%s")', path_c_arl),
+    sprintf('  (import "%s" :refer :all)', path_c_arl),
     "  (define get-a (lambda () shared-val))"
   ))
   write_module(path_b, "consumer-b", c(
     "  (export get-b)",
-    sprintf('  (import "%s")', path_c_arl),
+    sprintf('  (import "%s" :refer :all)', path_c_arl),
     "  (define get-b (lambda () shared-val))"
   ))
 
-  eng$eval_text(sprintf('(import "%s")', normalizePath(path_a, winslash = "/")))
-  eng$eval_text(sprintf('(import "%s")', normalizePath(path_b, winslash = "/")))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', normalizePath(path_a, winslash = "/")))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', normalizePath(path_b, winslash = "/")))
   expect_equal(eng$eval_text("(get-a)"), 1)
   expect_equal(eng$eval_text("(get-b)"), 1)
 
@@ -255,7 +255,7 @@ test_that("multiple consumers: both see updates after reload", {
     "  (define shared-val 999)"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload)', path_c_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_c_arl))
   expect_equal(eng$eval_text("(get-a)"), 999)
   expect_equal(eng$eval_text("(get-b)"), 999)
 })
@@ -272,7 +272,7 @@ test_that("cache bypass: modified file re-read on reload", {
   path_arl <- normalizePath(path, winslash = "/")
 
   # First load (may cache)
-  eng$eval_text(sprintf('(import "%s")', path_arl))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', path_arl))
   expect_equal(eng$eval_text("x"), 1)
 
   # Modify file
@@ -282,7 +282,7 @@ test_that("cache bypass: modified file re-read on reload", {
   ))
 
   # Reload should bypass cache
-  eng$eval_text(sprintf('(import "%s" :reload)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_arl))
   expect_equal(eng$eval_text("x"), 42)
 })
 
@@ -361,7 +361,7 @@ test_that("macro reload: macro body changes visible through proxy", {
   ))
   path_arl <- normalizePath(path, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s")', path_arl))
+  eng$eval_text(sprintf('(import "%s" :refer :all)', path_arl))
   expect_equal(eng$eval_text("(my-mac 5)"), 6)
 
   write_module(path, "mac-mod", c(
@@ -369,6 +369,6 @@ test_that("macro reload: macro body changes visible through proxy", {
     '  (defmacro my-mac (x) `(+ ,x 10))'
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer :all)', path_arl))
   expect_equal(eng$eval_text("(my-mac 5)"), 15)
 })

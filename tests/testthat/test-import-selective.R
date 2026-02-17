@@ -29,7 +29,7 @@ test_that("import with no modifiers imports all exports", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import testmod)")
+  engine$eval_text("(import testmod :refer :all)")
   expect_equal(engine$eval_text("(square 5)"), 25L)
   expect_equal(engine$eval_text("(cube 3)"), 27L)
   expect_equal(engine$eval_text("helper-val"), 99L)

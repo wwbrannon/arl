@@ -229,8 +229,8 @@ HelpSystem <- R6::R6Class(
           description = "Define a module with explicit exports. Use (export-all) to export all definitions (names starting with _ are excluded as private)."
         ),
         import = list(
-          usage = "(import name) or (import \"path\")",
-          description = "Load a module and attach its exports. Symbol: module name (stdlib, then CWD). String: file path (path-only resolution, normalized to absolute)."
+          usage = "(import name) or (import name :refer :all) or (import name :as alias)",
+          description = "Load a module and bind it as a first-class value. Use :refer to bring exports into scope unqualified, :as to alias. Qualified access via name/sym."
         ),
         macroexpand = list(
           description = "Recursively expand macros in expr."

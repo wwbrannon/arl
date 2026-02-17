@@ -1,3 +1,28 @@
+# arl 0.0.2
+
+## Module System Overhaul
+
+* **Qualified access via `/`:** Import a module and access its exports with
+  `mod/sym` syntax (e.g. `math/inc`). The `/` is reader sugar for the new
+  `module-ref` builtin.
+* **Symbol renames:** `r/call` → `r-call`, `r/eval` → `r-eval`,
+  `call/cc` → `call-cc` (freeing `/` for namespace use).
+* **New import modifiers:** `:refer` and `:as` replace the old `:only`,
+  `:except`, and `:prefix` modifiers. Bare `(import X)` now binds the module
+  without dumping exports; use `(import X :refer :all)` for unqualified access.
+* **First-class modules:** Modules are bound as first-class environment objects.
+  Use `:as` to alias, `:refer` to selectively import, and qualified access for
+  everything else.
+* **Nameless modules:** `(module (export ...) body...)` derives its name from
+  the source filename.
+* **Binding locking:** Module bindings are locked after load (immutable from
+  outside).
+* **`export-all :re-export`:** Facade modules can re-export imported symbols.
+* **`_` prefix convention:** Names starting with `_` are excluded from
+  `export-all` (private by convention).
+* **New builtins:** `module-ref`, `module?`, `namespace?`, `module-exports`,
+  `module-name` for module introspection.
+
 # arl 0.0.1
 
 Initial CRAN release.

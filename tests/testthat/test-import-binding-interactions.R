@@ -29,7 +29,7 @@ test_that("define shadows a proxy-imported value binding", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import bindmod)")
+  engine$eval_text("(import bindmod :refer :all)")
   # Verify the import works
 
   expect_equal(engine$eval_text("x"), 42L)
@@ -47,7 +47,7 @@ test_that("define shadows a proxy-imported function binding", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import bindmod)")
+  engine$eval_text("(import bindmod :refer :all)")
   expect_equal(engine$eval_text("(add1 10)"), 11L)
 
   # Replace the imported function with a different one
@@ -63,7 +63,7 @@ test_that("define on imported name does not mutate the module", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import bindmod)")
+  engine$eval_text("(import bindmod :refer :all)")
   engine$eval_text("(define x 99)")
 
   # The module's original binding should be untouched
@@ -83,7 +83,7 @@ test_that("set! on a proxy-imported binding creates a local shadow", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import bindmod)")
+  engine$eval_text("(import bindmod :refer :all)")
   expect_equal(engine$eval_text("x"), 42L)
 
   # set! should create a local shadow, not mutate the proxy
@@ -99,7 +99,7 @@ test_that("set! on a proxy-imported binding does not mutate the module", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import bindmod)")
+  engine$eval_text("(import bindmod :refer :all)")
   engine$eval_text("(set! x 999)")
 
   # The module's original binding should be untouched
@@ -117,7 +117,7 @@ test_that("set! local shadow is visible on subsequent reads", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import bindmod)")
+  engine$eval_text("(import bindmod :refer :all)")
   engine$eval_text("(set! x 1)")
   engine$eval_text("(set! x (+ x 1))")
   expect_equal(engine$eval_text("x"), 2L)
@@ -158,7 +158,7 @@ test_that("doc! on a proxy-imported function works", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import bindmod)")
+  engine$eval_text("(import bindmod :refer :all)")
   expect_equal(engine$eval_text("(add1 10)"), 11L)
 
   # doc! should remove the active binding, attach docs, and assign the value
@@ -179,7 +179,7 @@ test_that("doc! on a proxy-imported function does not mutate the module", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import bindmod)")
+  engine$eval_text("(import bindmod :refer :all)")
   engine$eval_text('(doc! add1 "docs")')
 
   # The module's original function should have no documentation

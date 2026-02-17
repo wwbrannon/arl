@@ -34,14 +34,14 @@ test_that("file-backed nameless module derives name from path", {
   on.exit(setwd(old_wd), add = TRUE)
 
   eng$load_file_in_env(file.path(tmp_dir, "mymod.arl"))
-  eng$eval_text("(import mymod)")
+  eng$eval_text("(import mymod :refer :all)")
   expect_equal(eng$eval_text("x"), 42)
 })
 
 test_that("named module in eval_text works as before", {
   eng <- make_engine()
   eng$eval_text("(module test-named (export x) (define x 1))")
-  eng$eval_text("(import test-named)")
+  eng$eval_text("(import test-named :refer :all)")
   expect_equal(eng$eval_text("x"), 1)
 })
 
@@ -71,7 +71,7 @@ test_that("nameless module with hierarchical file path derives correct name", {
 
   eng$load_file_in_env(file.path(sub_dir, "deep.arl"))
   # Name derived from basename "deep"
-  eng$eval_text("(import deep)")
+  eng$eval_text("(import deep :refer :all)")
   expect_equal(eng$eval_text("y"), 99)
 })
 
@@ -92,7 +92,7 @@ test_that("nameless module with export-all works", {
   on.exit(setwd(old_wd), add = TRUE)
 
   eng$load_file_in_env(file.path(tmp_dir, "ea-nameless.arl"))
-  eng$eval_text("(import ea-nameless)")
+  eng$eval_text("(import ea-nameless :refer :all)")
   expect_equal(eng$eval_text("a"), 10)
   expect_equal(eng$eval_text("b"), 20)
 })

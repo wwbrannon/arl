@@ -1,8 +1,8 @@
 ;;; Tests for type coercion functions
 
-(import assert)
-(import conversions)
-(import math)
+(import assert :refer :all)
+(import conversions :refer :all)
+(import math :refer :all)
 
 (define test-exact-inexact-conversion (lambda ()
   (assert-equal (exact->inexact 5) 5.0)

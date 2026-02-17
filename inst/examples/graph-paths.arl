@@ -1,12 +1,12 @@
 ;; Graph Paths Example
 ;; Demonstrates BFS traversal and Dijkstra shortest paths
 
-(import assert)
-(import binding)
-(import control)
-(import functional)
-(import looping)
-(import threading)
+(import assert :refer :all)
+(import binding :refer :all)
+(import control :refer :all)
+(import functional :refer :all)
+(import looping :refer :all)
+(import threading :refer :all)
 
 (define contains?
   (lambda (lst value)

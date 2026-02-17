@@ -485,7 +485,7 @@ Engine <- R6::R6Class(
       env <- private$.env$env
       if (!is.function(get0("format-value", envir = env, inherits = TRUE))) {
         tryCatch(
-          self$eval_text("(import display)", env = env),
+          self$eval_text("(import display :refer :all)", env = env),
           error = function(e) NULL
         )
       }
@@ -1100,7 +1100,7 @@ Engine <- R6::R6Class(
     .load_modules = function(module_names, env) {
       for (name in module_names) {
         tryCatch(
-          self$eval_text(sprintf("(import %s)", name), env = env),
+          self$eval_text(sprintf("(import %s :refer :all)", name), env = env),
           error = function(e) {
             stop(sprintf("Failed to load module '%s': %s", name, conditionMessage(e)), call. = FALSE)
           }

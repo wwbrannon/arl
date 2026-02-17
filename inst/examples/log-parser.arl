@@ -1,11 +1,11 @@
 ;; Log Parser Example
 ;; Demonstrates text processing and simple analytics
 
-(import assert)
-(import binding)
-(import control)
-(import looping)
-(import threading)
+(import assert :refer :all)
+(import binding :refer :all)
+(import control :refer :all)
+(import looping :refer :all)
+(import threading :refer :all)
 
 (define log-lines
   (list

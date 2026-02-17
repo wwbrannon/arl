@@ -35,3 +35,25 @@ test_that("module bindings are locked (immutable from outside)", {
   expect_true(is.environment(mod_env))
   expect_true(bindingIsLocked("inc", mod_env))
 })
+
+test_that("bare import binds module env but does not dump exports", {
+  engine <- make_engine()
+  engine$eval_text("(import math)")
+  # Module env is bound
+  expect_true(engine$eval_text("(module? math)"))
+  # Qualified access works
+  result <- engine$eval_text("(math/inc 5)")
+  expect_equal(result, 6)
+  # Unqualified access does NOT work
+  expect_error(engine$eval_text("(inc 5)"))
+})
+
+test_that(":refer :all dumps exports into scope", {
+  engine <- make_engine()
+  engine$eval_text("(import math :refer :all)")
+  # Module env is bound
+  expect_true(engine$eval_text("(module? math)"))
+  # Unqualified access works
+  result <- engine$eval_text("(inc 5)")
+  expect_equal(result, 6)
+})

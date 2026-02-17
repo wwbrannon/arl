@@ -44,7 +44,7 @@ test_that("modules cannot use non-prelude stdlib functions without importing the
       (module __scoping_bad
         (export foo)
         (define foo (lambda () (dict :a 1))))
-      (import __scoping_bad)
+      (import __scoping_bad :refer :all)
       (foo)"),
     "dict|not found|object"
   )
@@ -55,9 +55,9 @@ test_that("macros from imported modules are available in subsequent module body 
   result <- engine$eval_text("
     (module __scoping_macro
       (export safe-double)
-      (import control)
+      (import control :refer :all)
       (define safe-double (lambda (x) (when (> x 0) (* x 2)))))
-    (import __scoping_macro)
+    (import __scoping_macro :refer :all)
     (safe-double 5)")
   expect_equal(result, 10)
 })
@@ -122,7 +122,7 @@ test_that("builtins-env is accessible from inside a module", {
     (module __be_test
       (export get-be)
       (define get-be (lambda () (builtins-env))))
-    (import __be_test)
+    (import __be_test :refer :all)
     (environment? (get-be))")
   expect_true(result)
 })
@@ -135,7 +135,7 @@ test_that("r-eval works correctly inside a module function", {
       (export test-fn)
       (define y 42)
       (define test-fn (lambda () (r-eval (quote y)))))
-    (import __reval_mod)
+    (import __reval_mod :refer :all)
     (test-fn)")
   expect_equal(result, 42)
 })
@@ -221,7 +221,7 @@ test_that("modules can use default package functions without importing them", {
     (module __dpkg_test
       (export med)
       (define med (lambda (xs) (median xs))))
-    (import __dpkg_test)
+    (import __dpkg_test :refer :all)
     (med (c 1 2 3 4 5))")
   expect_equal(result, 3)
 })
@@ -238,7 +238,7 @@ test_that("cross-module macro with private helper function", {
       (define private-double (lambda (x) (* x 2)))
       (defmacro my-double-macro (val)
         `(private-double ,val)))
-    (import __xmacro_helper)
+    (import __xmacro_helper :refer :all)
     (my-double-macro 21)")
   expect_equal(result, 42)
 })
@@ -251,7 +251,7 @@ test_that("cross-module macro with private constant", {
       (define scale-factor 10)
       (defmacro scale-macro (val)
         `(* scale-factor ,val)))
-    (import __xmacro_const)
+    (import __xmacro_const :refer :all)
     (scale-macro 5)")
   expect_equal(result, 50)
 })
@@ -265,7 +265,7 @@ test_that("prelude symbols are NOT resolved as refs (they're universally availab
       (export inc-macro)
       (defmacro inc-macro (val)
         `(+ ,val 1)))
-    (import __xmacro_prelude)
+    (import __xmacro_prelude :refer :all)
     (inc-macro 41)")
   expect_equal(result, 42)
 })
@@ -282,7 +282,7 @@ test_that("hygiene still works alongside resolved refs", {
         (let ((tmp (gensym \"tmp\")))
           `(let ((,tmp ,val))
              (private-transform ,tmp)))))
-    (import __xmacro_hygiene)
+    (import __xmacro_hygiene :refer :all)
     (define private-transform (lambda (x) (+ x 1)))
     (safe-compute 10)")
   # Should use the module's private-transform (* 3), not the caller's (+ 1)
@@ -299,11 +299,11 @@ test_that("nested macros across modules resolve correctly", {
         `(inner-helper ,val)))
     (module __xmacro_outer
       (export outer-macro)
-      (import __xmacro_inner)
+      (import __xmacro_inner :refer :all)
       (define outer-helper (lambda (x) (* x 2)))
       (defmacro outer-macro (val)
         `(outer-helper (inner-macro ,val))))
-    (import __xmacro_outer)
+    (import __xmacro_outer :refer :all)
     (outer-macro 5)")
   # inner-macro expands: (inner-helper 5) -> 105
   # outer-macro expands: (outer-helper (inner-macro 5)) -> (* 105 2) -> 210
@@ -319,7 +319,7 @@ test_that("cross-module macro works with lambda reference", {
       (define do-twice (lambda (f x) (f (f x))))
       (defmacro apply-twice (f val)
         `(do-twice ,f ,val)))
-    (import __xmacro_lambda)
+    (import __xmacro_lambda :refer :all)
     (apply-twice (lambda (x) (+ x 1)) 0)")
   expect_equal(result, 2)
 })

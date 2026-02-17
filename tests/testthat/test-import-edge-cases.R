@@ -44,10 +44,10 @@ test_that("same file imported with different path strings uses one module (absol
   path_abs <- normalizePath(module_file, winslash = "/", mustWork = TRUE)
   path_rel <- "aliasm.arl"
 
-  engine$eval(engine$read(sprintf('(import "%s")', path_abs))[[1]], env = env)
+  engine$eval(engine$read(sprintf('(import "%s" :refer :all)', path_abs))[[1]], env = env)
   n_after_first <- engine$eval(engine$read("(getn)")[[1]], env = env)
 
-  engine$eval(engine$read(sprintf('(import "%s")', path_rel))[[1]], env = env)
+  engine$eval(engine$read(sprintf('(import "%s" :refer :all)', path_rel))[[1]], env = env)
   n_after_second <- engine$eval(engine$read("(getn)")[[1]], env = env)
 
   expect_equal(n_after_first, 1L)

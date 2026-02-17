@@ -73,7 +73,7 @@ test_that("optimized math functions have docstrings", {
   engine <- make_engine()
   env <- engine$get_env()
 
-  engine$eval(engine$read('(import math)')[[1]], env = env)
+  engine$eval(engine$read('(import math :refer :all)')[[1]], env = env)
 
   # Test a few optimized functions that remain in math module
   inc_doc <- engine$eval(engine$read('(doc inc)')[[1]], env = env)
@@ -90,7 +90,7 @@ test_that("optimized predicate functions have docstrings", {
   engine <- make_engine()
   env <- engine$get_env()
 
-  engine$eval(engine$read('(import types)')[[1]], env = env)
+  engine$eval(engine$read('(import types :refer :all)')[[1]], env = env)
 
   symbol_doc <- engine$eval(engine$read('(doc symbol?)')[[1]], env = env)
   expect_match(symbol_doc, "symbol", ignore.case = TRUE)
@@ -103,7 +103,7 @@ test_that("optimized string functions have docstrings", {
   engine <- make_engine()
   env <- engine$get_env()
 
-  engine$eval(engine$read('(import strings)')[[1]], env = env)
+  engine$eval(engine$read('(import strings :refer :all)')[[1]], env = env)
 
   trim_doc <- engine$eval(engine$read('(doc trim)')[[1]], env = env)
   expect_match(trim_doc, "trim", ignore.case = TRUE)
@@ -119,7 +119,7 @@ test_that("optimized string functions have docstrings", {
 test_that("docstrings survive nested imports (strings imports list, math, core)", {
   engine <- make_engine()
   env <- engine$get_env()
-  engine$eval(engine$read('(import strings)')[[1]], env = env)
+  engine$eval(engine$read('(import strings :refer :all)')[[1]], env = env)
 
   # trim is defined after (import list), (import math), (import core)
   # so its ;;' annotation must survive those nested module loads
@@ -139,7 +139,7 @@ test_that("docstrings survive nested imports across multiple modules", {
 
   # Import several non-prelude modules that each have nested imports
   for (mod in c("strings", "sort", "dict")) {
-    engine$eval(engine$read(sprintf('(import %s)', mod))[[1]], env = env)
+    engine$eval(engine$read(sprintf('(import %s :refer :all)', mod))[[1]], env = env)
   }
 
   # strings: trim (after 3 nested imports)
@@ -263,7 +263,7 @@ test_that("@internal flag is present in arl_doc at runtime", {
 
   child <- new.env(parent = env)
   engine$eval_text(code, env = child)
-  engine$eval_text("(import int-test-mod)", env = child)
+  engine$eval_text("(import int-test-mod :refer :all)", env = child)
 
   helper <- get("__int-helper", envir = child)
   doc_h <- attr(helper, "arl_doc", exact = TRUE)
@@ -294,7 +294,7 @@ test_that("@noeval flag is present in arl_doc at runtime", {
 )'
 
   engine$eval_text(code, env = env)
-  engine$eval_text("(import noeval-test-mod)", env = env)
+  engine$eval_text("(import noeval-test-mod :refer :all)", env = env)
 
   io <- get("io-fn", envir = env)
   doc_io <- attr(io, "arl_doc", exact = TRUE)
@@ -369,7 +369,7 @@ test_that("annotation docs attach complete arl_doc for functions and macros", {
 
   child <- new.env(parent = env)
   engine$eval_text(code, env = child)
-  engine$eval_text("(import doc-complete-mod)", env = child)
+  engine$eval_text("(import doc-complete-mod :refer :all)", env = child)
 
   fn <- get("f", envir = child)
   fn_doc <- attr(fn, "arl_doc", exact = TRUE)

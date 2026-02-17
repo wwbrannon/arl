@@ -172,7 +172,7 @@ test_that("string-input modules get annotation-based docs via eval_text", {
   engine <- make_engine()
   env <- engine$get_env()
   engine$eval_text(code, env = env)
-  engine$eval_text("(import str-ann-mod)", env = env)
+  engine$eval_text("(import str-ann-mod :refer :all)", env = env)
 
   fn <- engine$eval_text("greet", env = env)
   doc <- attr(fn, "arl_doc", exact = TRUE)
@@ -252,7 +252,7 @@ test_that("annotation-based docs are available via compiler", {
 
   # Load the module from file (triggers annotation parsing in compiler)
   engine$eval(engine$read(sprintf('(load "%s")', tmp))[[1]], env = env)
-  engine$eval(engine$read("(import test-ann-mod)")[[1]], env = env)
+  engine$eval(engine$read("(import test-ann-mod :refer :all)")[[1]], env = env)
 
   # The function should have annotation-based arl_doc
   fn <- engine$eval(engine$read("add")[[1]], env = env)

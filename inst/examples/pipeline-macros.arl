@@ -1,11 +1,11 @@
 ;; Pipeline Macros Example
 ;; Demonstrates a small macro-driven data pipeline
 
-(import assert)
-(import binding)
-(import control)
-(import looping)
-(import threading)
+(import assert :refer :all)
+(import binding :refer :all)
+(import control :refer :all)
+(import looping :refer :all)
+(import threading :refer :all)
 
 ;; Pipeline macro: threads a value through a sequence of steps
 ;;' @description Thread value through steps (last argument).

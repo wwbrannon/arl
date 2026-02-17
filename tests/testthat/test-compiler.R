@@ -226,7 +226,7 @@ test_that("compiler conformance for core constructs", {
     ),
     list(
       name = "import",
-      expr = "(begin (import list) (caddr (list 1 2 3 4)))"
+      expr = "(begin (import list :refer :all) (caddr (list 1 2 3 4)))"
     ),
     list(
       name = "load",

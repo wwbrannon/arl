@@ -218,19 +218,39 @@ Name: import
 Kind: special-form
 Vignette: lang-core
 Section: Special Forms
-Description: Load a module and attach its exports into the current scope.
-Signature: (import name) or (import "path")
+Description: Load a module and bind it as a first-class value. By default,
+  `(import name)` binds the module environment to the symbol `name` for
+  qualified access via `name/sym`. Use `:refer` to bring specific exports
+  (or all exports) into scope unqualified. Use `:as` to alias the module
+  binding.
+Signature: (import name)
+  (import name :refer (sym1 sym2 ...))
+  (import name :refer :all)
+  (import name :as alias)
+  (import name :rename ((old new) ...))
+  (import name :reload)
+  (import "path/to/file.arl")
 Examples:
-  (import control)
-  (import "lib/helpers.arl")
-Seealso: module, load
+  (import math)
+  (math/inc 5)               ; qualified access
+  (import math :refer :all)
+  (inc 5)                     ; unqualified access
+  (import math :as m)
+  (m/inc 5)                   ; aliased qualified access
+Seealso: module, load, module-ref
 
 Name: module
 Kind: special-form
 Vignette: lang-core
 Section: Special Forms
-Description: Define a named module with explicit exports.
+Description: Define a module with explicit exports. A named module registers
+  itself in the module registry. A nameless module derives its name from the
+  source file. `export-all` exports all non-private definitions; add
+  `:re-export` to also re-export imported symbols.
 Signature: (module name (export ...) body...)
+  (module (export ...) body...)
+  (module name (export-all) body...)
+  (module name (export-all :re-export) body...)
 Examples:
   (module demo
     (export answer)
@@ -239,9 +259,9 @@ Assert:
   (module sf-demo
     (export sf-answer)
     (define sf-answer 42))
-  (import sf-demo)
+  (import sf-demo :refer :all)
   (assert-equal 42 sf-answer)
-Seealso: import
+Seealso: import, module?, module-exports, module-name
 
 Name: +
 Kind: builtin
@@ -793,3 +813,83 @@ Assert:
   (doc! __doc-get-fn :note "Simple function.")
   (assert-equal "Simple function." (doc __doc-get-fn "note"))
 Seealso: doc!, help
+
+Name: module-ref
+Kind: builtin
+Vignette: lang-core
+Section: Module Introspection
+Description: Look up a symbol in a module or namespace. This is the
+  desugared form of qualified access: `mod/sym` parses as
+  `(module-ref mod sym)`.
+Signature: (module-ref mod sym)
+Examples:
+  (import math)
+  (module-ref math inc)  ; same as math/inc
+Assert:
+  (module __mr-mod (export __mr-x) (define __mr-x 99))
+  (import __mr-mod)
+  (assert-equal 99 (module-ref __mr-mod __mr-x))
+Seealso: import, module?, module-exports
+
+Name: module?
+Kind: builtin
+Vignette: lang-core
+Section: Module Introspection
+Description: Return #t if x is a module environment (registered in the
+  module registry).
+Signature: (module? x)
+Examples:
+  (import math)
+  (module? math)  ; => #t
+  (module? 42)    ; => #f
+Assert:
+  (module __mp-mod (export __mp-a) (define __mp-a 1))
+  (import __mp-mod)
+  (assert-true (module? __mp-mod))
+  (assert-false (module? 42))
+Seealso: namespace?, module-exports, module-name
+
+Name: namespace?
+Kind: builtin
+Vignette: lang-core
+Section: Module Introspection
+Description: Return #t if x is a namespace node (created by importing a
+  hierarchical module name like `a/b`).
+Signature: (namespace? x)
+Examples:
+  (namespace? x)  ; => #f for most values
+Assert:
+  (assert-false (namespace? 42))
+  (assert-false (namespace? "hello"))
+Seealso: module?, module-ref
+
+Name: module-exports
+Kind: builtin
+Vignette: lang-core
+Section: Module Introspection
+Description: Return the list of exported symbol names from a module.
+Signature: (module-exports mod)
+Examples:
+  (import math)
+  (module-exports math)  ; => list of exported names
+Assert:
+  (module __me-mod (export __me-x __me-y) (define __me-x 1) (define __me-y 2))
+  (import __me-mod)
+  (define __me-exports (module-exports __me-mod))
+  (assert-true (list? __me-exports))
+Seealso: module?, module-name, module-ref
+
+Name: module-name
+Kind: builtin
+Vignette: lang-core
+Section: Module Introspection
+Description: Return the canonical name string of a module.
+Signature: (module-name mod)
+Examples:
+  (import math)
+  (module-name math)  ; => "math"
+Assert:
+  (module __mn-mod (export __mn-a) (define __mn-a 1))
+  (import __mn-mod)
+  (assert-equal "__mn-mod" (module-name __mn-mod))
+Seealso: module?, module-exports

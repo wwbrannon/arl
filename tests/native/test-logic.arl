@@ -1,7 +1,7 @@
 ;;; Tests for logic operations (not, xor)
 
-(import assert)
-(import logic)
+(import assert :refer :all)
+(import logic :refer :all)
 
 (define test-logic-not-truthy (lambda ()
   ;; Test not with various truthy/falsy values
