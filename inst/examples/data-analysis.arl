@@ -34,7 +34,7 @@
 ;; Create R vectors directly
 (define nums (c 1 2 3 4 5 6 7 8 9 10))
 (assert-equal (list 1 2 3 4 5 6 7 8 9 10) (as.list nums))
-(println (str "R vector: " nums))
+(println (string-concat "R vector: " nums))
 
 ;; Use R statistical functions
 (define mean-val (mean nums))
@@ -45,9 +45,9 @@
 (assert-true (> sd-val 3.0))
 (assert-true (< sd-val 3.1))
 
-(println (str "Mean: " mean-val))
-(println (str "Median: " median-val))
-(println (str "SD: " sd-val))
+(println (string-concat "Mean: " mean-val))
+(println (string-concat "Median: " median-val))
+(println (string-concat "SD: " sd-val))
 
 ;; ============================================================================
 ;; Generating Data with R
@@ -57,8 +57,8 @@
 
 ;; Generate random normal data
 (define random-data ((:: stats rnorm) 100))
-(println (str "Generated 100 random numbers"))
-(println (str "First 10: " ((:: utils head) random-data 10)))
+(println (string-concat "Generated 100 random numbers"))
+(println (string-concat "First 10: " ((:: utils head) random-data 10)))
 
 ;; Summary statistics
 (println "\nSummary:")
@@ -72,7 +72,7 @@
 
 ;; Create sample data
 (define scores (c 85 92 78 90 88 76 95 89 91 87))
-(println (str "Original scores: " scores))
+(println (string-concat "Original scores: " scores))
 
 ;; Transform data using Arl's higher-order functions
 (define score-list (as.list scores))
@@ -80,17 +80,17 @@
 ;; Add 5 points to each score
 (define adjusted-scores (map (lambda (x) (+ x 5)) score-list))
 (assert-equal (list 90 97 83 95 93 81 100 94 96 92) adjusted-scores)
-(println (str "After adding 5 points: " adjusted-scores))
+(println (string-concat "After adding 5 points: " adjusted-scores))
 
 ;; Filter passing scores (>= 80)
 (define passing (filter (lambda (x) (>= x 80)) adjusted-scores))
 (assert-equal 10 (length passing))
-(println (str "Passing scores: " passing))
+(println (string-concat "Passing scores: " passing))
 
 ;; Calculate average of passing scores
 (define passing-avg (/ (reduce + passing) (length passing)))
 (assert-equal 92.1 passing-avg)
-(println (str "Average of passing scores: " passing-avg))
+(println (string-concat "Average of passing scores: " passing-avg))
 
 ;; ============================================================================
 ;; Working with Named Lists (Data Frames)
@@ -111,12 +111,12 @@
 ;; Extract and process names
 (define names (get "names" student-data))
 (assert-equal (list "Alice" "Bob" "Carol" "Dave" "Eve") names)
-(println (str "\nStudent names: " names))
+(println (string-concat "\nStudent names: " names))
 
 ;; Extract and analyze scores
 (define scores-data (get "scores" student-data))
 (assert-equal (list 85 92 78 90 88) scores-data)
-(println (str "Scores: " scores-data))
+(println (string-concat "Scores: " scores-data))
 
 ;; ============================================================================
 ;; Statistical Analysis
@@ -129,14 +129,14 @@
 (define group-b (c 30 32 28 31 29 33 27))
 
 (assert-equal 23 (mean group-a))
-(println (str "Group A mean: " (mean group-a)))
+(println (string-concat "Group A mean: " (mean group-a)))
 (assert-equal 30 (mean group-b))
-(println (str "Group B mean: " (mean group-b)))
+(println (string-concat "Group B mean: " (mean group-b)))
 
 ;; Combine groups for comparison
 (define all-values (c group-a group-b))
-(println (str "\nCombined range: " ((:: base range) all-values)))
-(println (str "Combined quantiles: " ((:: stats quantile) all-values)))
+(println (string-concat "\nCombined range: " ((:: base range) all-values)))
+(println (string-concat "Combined quantiles: " ((:: stats quantile) all-values)))
 
 ;; ============================================================================
 ;; Using R's seq and rep functions
@@ -147,16 +147,16 @@
 ;; Create sequences
 (define seq-1-10 (seq 1 10))
 (assert-equal (list 1 2 3 4 5 6 7 8 9 10) (as.list seq-1-10))
-(println (str "Sequence 1-10: " seq-1-10))
+(println (string-concat "Sequence 1-10: " seq-1-10))
 
 (define seq-by-2 (seq 0 20 2))
 (assert-equal (list 0 2 4 6 8 10 12 14 16 18 20) (as.list seq-by-2))
-(println (str "Even numbers 0-20: " seq-by-2))
+(println (string-concat "Even numbers 0-20: " seq-by-2))
 
 ;; Repeat values
 (define repeated (rep 5 10))
 (assert-equal (list 5 5 5 5 5 5 5 5 5 5) (as.list repeated))
-(println (str "Repeat 5 ten times: " repeated))
+(println (string-concat "Repeat 5 ten times: " repeated))
 
 ;; ============================================================================
 ;; Combining Arl and R for Data Processing
@@ -174,12 +174,12 @@
 (define filtered (filter (lambda (x) (> x 50)) data-list))
 (define squared (map (lambda (x) (* x x)) filtered))
 
-(println (str "Values > 50: " filtered))
-(println (str "Squared: " squared))
+(println (string-concat "Values > 50: " filtered))
+(println (string-concat "Squared: " squared))
 
 ;; Convert back to R vector for R functions
 (define result-vec (unlist squared))
-(println (str "Mean of squared values: " (mean result-vec)))
+(println (string-concat "Mean of squared values: " (mean result-vec)))
 
 ;; ============================================================================
 ;; Using keyword arguments (R named arguments)
@@ -191,7 +191,7 @@
 (println "Creating sequences with named arguments:")
 (define seq-named (seq :from 1 :to 10 :by 2))
 (assert-equal (list 1 3 5 7 9) (as.list seq-named))
-(println (str "seq(from=1, to=10, by=2): " seq-named))
+(println (string-concat "seq(from=1, to=10, by=2): " seq-named))
 
 ;; ============================================================================
 ;; Data Aggregation Example
@@ -214,23 +214,23 @@
 ;; Extract all amounts
 (define amounts (map (lambda (t) (get "amount" t)) transactions))
 (assert-equal (list 100 50 75 200 30) amounts)
-(println (str "\nAll amounts: " amounts))
+(println (string-concat "\nAll amounts: " amounts))
 
 ;; Calculate total
 (define total (reduce + amounts))
 (assert-equal 455 total)
-(println (str "Total spent: $" total))
+(println (string-concat "Total spent: $" total))
 
 ;; Filter food transactions
 (define food-trans (filter (lambda (t)
                              (= (get "category" t) "food"))
                            transactions))
 (assert-equal 2 (length food-trans))
-(println (str "\nFood transactions: " (length food-trans) " items"))
+(println (string-concat "\nFood transactions: " (length food-trans) " items"))
 
 (define food-total (reduce + (map (lambda (t) (get "amount" t))
                                   food-trans)))
 (assert-equal 175 food-total)
-(println (str "Food total: $" food-total))
+(println (string-concat "Food total: $" food-total))
 
 (println "\nExample complete!")

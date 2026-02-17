@@ -284,11 +284,11 @@ Create a file `mymodule.arl`:
 
   (define greet
     (lambda (name)
-      (str "Hello, " name "!")))
+      (string-concat "Hello, " name "!")))
 
   (define farewell
     (lambda (name)
-      (str "Goodbye, " name "!"))))
+      (string-concat "Goodbye, " name "!"))))
 ```
 
 Then import it:
@@ -363,7 +363,7 @@ Modules can load other modules:
 
   (define format-name
     (lambda (first last)
-      (str (upcase first) " " (upcase last)))))
+      (string-concat (upcase first) " " (upcase last)))))
 
 ; Usage:
 (import text-utils)
@@ -380,19 +380,18 @@ explicitly import their dependencies) or when creating a bare engine with
 
 ```{arl, eval=FALSE}
 ; Control flow macros
-(import control)    ; when, unless, cond, case, try*
+(import control)    ; when, unless, cond, case, try/catch/finally
 
 ; Binding forms
 (import binding)    ; let, let*, letrec
 
 ; Looping constructs
-(import looping)    ; until, for, loop, recur
+(import looping)    ; until, do-list, loop, recur
 
 ; Threading macros
 (import threading)  ; ->, ->>
 
-; Error handling
-(import error)      ; try, catch, finally
+; Error handling is now part of the control module
 
 ; Functional (higher-order) functions
 (import functional)  ; map, filter, reduce, etc.

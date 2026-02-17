@@ -41,8 +41,8 @@
 
 (println "=== Log Summary ===")
 (assert-equal 6 (length log-lines))
-(println (str "Total lines: " (length log-lines)))
-(println (str "HTTP 500 count: " status-500))
-(println (str "Average latency: " avg-latency))
+(println (string-concat "Total lines: " (length log-lines)))
+(println (string-concat "HTTP 500 count: " status-500))
+(println (string-concat "Average latency: " avg-latency))
 
 (println "\nExample complete!")

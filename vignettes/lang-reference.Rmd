@@ -206,11 +206,10 @@ and when working with a bare engine (`Engine$new(load_prelude = FALSE)`):
 
 ```{arl, eval=FALSE}
 ; Import focused modules
-(import control)   ; when/unless/cond/case/try*
+(import control)   ; when/unless/cond/case/try/try-catch
 (import binding)   ; let/let*/letrec
-(import looping)   ; for/loop/recur/until
+(import looping)   ; do-list/loop/recur/until
 (import threading) ; -> and ->>
-(import error)     ; try/catch/finally
 ```
 
 From R, you can create an engine with the stdlib already loaded:
@@ -325,18 +324,19 @@ Conditionals, binding forms, looping, threading macros, continuations, and error
 
 [`when`](lang-control.html#when), [`unless`](lang-control.html#unless),
 [`cond`](lang-control.html#cond), [`case`](lang-control.html#case),
-[`try*`](lang-control.html#try-star), [`call/cc`](lang-control.html#call-cc),
+[`try`](lang-control.html#try), [`try-catch`](lang-control.html#try-catch),
+[`call/cc`](lang-control.html#call-cc),
 [`call-with-current-continuation`](lang-control.html#call-with-current-continuation),
 [`pattern-symbols`](lang-control.html#pattern-symbols),
 [`destructuring-bind`](lang-control.html#destructuring-bind),
 [`let`](lang-control.html#let), [`let*`](lang-control.html#let-star),
 [`letrec`](lang-control.html#letrec), [`when-let`](lang-control.html#when-let),
 [`if-let`](lang-control.html#if-let), [`until`](lang-control.html#until),
-[`for`](lang-control.html#for), [`loop`](lang-control.html#loop),
+[`do-list`](lang-control.html#do-list), [`loop`](lang-control.html#loop),
 [`recur`](lang-control.html#recur), [`->`](lang-control.html#thread-first),
-[`->>`](lang-control.html#thread-last), [`try`](lang-control.html#try)
+[`->>`](lang-control.html#thread-last)
 
-Modules: [`control.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/control.arl), [`binding.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/binding.arl), [`looping.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/looping.arl), [`threading.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/threading.arl), [`error.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/error.arl)
+Modules: [`control.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/control.arl), [`binding.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/binding.arl), [`looping.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/looping.arl), [`threading.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/threading.arl)
 
 ## [Lists and Sequences](lang-list-seq.html)
 
@@ -378,8 +378,10 @@ List construction, accessors, association lists, sequence helpers, and sorting.
 [`contains?`](lang-list-seq.html#contains-p),
 [`length=`](lang-list-seq.html#length-eq),
 [`length>`](lang-list-seq.html#length-gt),
-[`length<`](lang-list-seq.html#length-lt), [`sort`](lang-list-seq.html#sort),
-[`sort-by`](lang-list-seq.html#sort-by), [`merge`](lang-list-seq.html#merge),
+[`length<`](lang-list-seq.html#length-lt),
+[`list-sort`](lang-list-seq.html#list-sort),
+[`sort-by`](lang-list-seq.html#sort-by),
+[`merge-sorted`](lang-list-seq.html#merge-sorted),
 [`stable-sort`](lang-list-seq.html#stable-sort)
 
 Modules: [`list.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/list.arl), [`sequences.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/sequences.arl), [`sort.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/sort.arl)
@@ -390,7 +392,8 @@ String manipulation, file and console I/O, environment access, and display forma
 
 [`string-join`](lang-strings-io.html#string-join),
 [`string-split`](lang-strings-io.html#string-split),
-[`trim`](lang-strings-io.html#trim), [`format`](lang-strings-io.html#format),
+[`trim`](lang-strings-io.html#trim),
+[`string-format`](lang-strings-io.html#string-format),
 [`string-contains?`](lang-strings-io.html#string-contains-p),
 [`string-match?`](lang-strings-io.html#string-match-p),
 [`string-find`](lang-strings-io.html#string-find),
@@ -400,7 +403,7 @@ String manipulation, file and console I/O, environment access, and display forma
 [`->string`](lang-strings-io.html#to-string),
 [`char-at`](lang-strings-io.html#char-at),
 [`string-ref`](lang-strings-io.html#string-ref),
-[`substring`](lang-strings-io.html#substring),
+[`string-slice`](lang-strings-io.html#string-slice),
 [`string-length`](lang-strings-io.html#string-length),
 [`string-upcase`](lang-strings-io.html#string-upcase),
 [`string-downcase`](lang-strings-io.html#string-downcase),
@@ -421,7 +424,6 @@ String manipulation, file and console I/O, environment access, and display forma
 [`write-lines`](lang-strings-io.html#write-lines),
 [`append-file`](lang-strings-io.html#append-file),
 [`file-exists?`](lang-strings-io.html#file-exists-p),
-[`print`](lang-strings-io.html#print),
 [`newline`](lang-strings-io.html#newline),
 [`read-from-string`](lang-strings-io.html#read-from-string),
 [`write-string`](lang-strings-io.html#write-string),
@@ -433,12 +435,12 @@ String manipulation, file and console I/O, environment access, and display forma
 [`directory-delete`](lang-strings-io.html#directory-delete),
 [`getenv`](lang-strings-io.html#getenv),
 [`setenv`](lang-strings-io.html#setenv),
-[`system`](lang-strings-io.html#system),
 [`system-output`](lang-strings-io.html#system-output),
 [`exit`](lang-strings-io.html#exit),
 [`format-value`](lang-strings-io.html#format-value),
 [`display`](lang-strings-io.html#display),
-[`println`](lang-strings-io.html#println), [`str`](lang-strings-io.html#str),
+[`println`](lang-strings-io.html#println),
+[`string-concat`](lang-strings-io.html#string-concat),
 [`trace`](lang-strings-io.html#trace)
 
 Modules: [`strings.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/strings.arl), [`io.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/io.arl), [`display.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/display.arl)
@@ -495,16 +497,8 @@ Arithmetic, comparison, rounding, trigonometry, number theory, and complex numbe
 
 [`%`](lang-math.html#percent), [`inc`](lang-math.html#inc),
 [`dec`](lang-math.html#dec), [`clamp`](lang-math.html#clamp),
-[`within?`](lang-math.html#within-p), [`abs`](lang-math.html#abs),
-[`floor`](lang-math.html#floor), [`ceiling`](lang-math.html#ceiling),
-[`truncate`](lang-math.html#truncate), [`round`](lang-math.html#round),
-[`signum`](lang-math.html#signum), [`sqrt`](lang-math.html#sqrt),
-[`expt`](lang-math.html#expt), [`log`](lang-math.html#log),
-[`exp`](lang-math.html#exp), [`log10`](lang-math.html#log10),
-[`log2`](lang-math.html#log2), [`sin`](lang-math.html#sin),
-[`cos`](lang-math.html#cos), [`tan`](lang-math.html#tan),
-[`asin`](lang-math.html#asin), [`acos`](lang-math.html#acos),
-[`atan`](lang-math.html#atan), [`atan2`](lang-math.html#atan2),
+[`within?`](lang-math.html#within-p), [`signum`](lang-math.html#signum),
+[`truncate`](lang-math.html#truncate), [`expt`](lang-math.html#expt),
 [`quotient`](lang-math.html#quotient), [`remainder`](lang-math.html#remainder),
 [`modulo`](lang-math.html#modulo), [`gcd`](lang-math.html#gcd),
 [`lcm`](lang-math.html#lcm),
@@ -537,7 +531,6 @@ initializing.
 - [`sequences.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/sequences.arl)
 - [`sort.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/sort.arl)
 - [`struct.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/struct.arl)
-- [`error.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/error.arl)
 - [`threading.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/threading.arl)
 - [`binding.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/binding.arl)
 - [`looping.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/looping.arl)

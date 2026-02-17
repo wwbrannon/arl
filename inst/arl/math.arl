@@ -1,11 +1,8 @@
 ;;; Arl Standard Library - Math Helpers
 
 (module math
-  (export % inc dec clamp within?
-          abs floor ceiling truncate round signum
-          sqrt expt
-          log exp log10 log2
-          sin cos tan asin acos atan atan2
+  (export % inc dec clamp within? signum
+          expt
           quotient remainder modulo
           gcd lcm
           make-rectangular make-polar real-part imag-part magnitude angle)
@@ -66,9 +63,9 @@
 
   ;;' @description Compute the angle (argument) of a complex number.
   ;;' @examples
-  ;;' (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (π/4)
+  ;;' (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (pi/4)
   ;;' @assert
-  ;;' (assert-true (< (abs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
+  ;;' (assert-true (< (__rabs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
   ;;' @seealso magnitude, make-polar
   (define angle
     (lambda (z)
@@ -143,67 +140,6 @@
         #f
         (if (> x hi) #f #t))))
 
-  ;;' @section Rounding and Truncation
-
-  ;; DESIGN NOTE: Simple one-argument pass-through functions use direct assignment
-  ;; (define func __rfunc) rather than lambda wrappers to avoid unnecessary stack frames.
-  ;; Functions with multiple arguments, optional parameters, or custom logic remain as lambdas.
-
-  ;;' @description Return absolute value of x.
-  ;;' @examples
-  ;;' (abs -5)      ; => 5
-  ;;' (abs 5)       ; => 5
-  ;;' @assert
-  ;;' (assert-equal 5 (abs -5))
-  ;;' (assert-equal 5 (abs 5))
-  ;;' @signature (abs x)
-  (define abs __rabs)
-
-  ;;' @description Return floor (round down) of x.
-  ;;' @examples
-  ;;' (floor 3.7)   ; => 3
-  ;;' (floor -3.2)  ; => -4
-  ;;' @assert
-  ;;' (assert-equal 3 (floor 3.7))
-  ;;' (assert-equal -4 (floor -3.2))
-  ;;' @seealso ceiling, truncate, round
-  ;;' @signature (floor x)
-  (define floor __rfloor)
-
-  ;;' @description Return ceiling (round up) of x.
-  ;;' @examples
-  ;;' (ceiling 3.2)  ; => 4
-  ;;' (ceiling -3.7) ; => -3
-  ;;' @assert
-  ;;' (assert-equal 4 (ceiling 3.2))
-  ;;' (assert-equal -3 (ceiling -3.7))
-  ;;' @seealso floor, truncate, round
-  ;;' @signature (ceiling x)
-  (define ceiling __rceiling)
-
-  ;;' @description Return truncated (towards zero) value of x.
-  ;;' @examples
-  ;;' (truncate 3.7)  ; => 3
-  ;;' (truncate -3.7) ; => -3
-  ;;' @assert
-  ;;' (assert-equal 3 (truncate 3.7))
-  ;;' (assert-equal -3 (truncate -3.7))
-  ;;' @seealso floor, ceiling, round
-  ;;' @signature (truncate x)
-  (define truncate __rtrunc)
-
-  ;;' @description Round x to given number of decimal places (default 0).
-  ;;' @examples
-  ;;' (round 3.567)    ; => 4
-  ;;' (round 3.567 2)  ; => 3.57
-  ;;' @assert
-  ;;' (assert-equal 4 (round 3.567))
-  ;;' (assert-equal 3.57 (round 3.567 2))
-  ;;' @seealso floor, ceiling, truncate
-  (define round
-    (lambda (x (digits 0))
-      (__rround x digits)))
-
   ;;' @description Return sign of x: -1, 0, or 1.
   ;;' @examples
   ;;' (signum 42)    ; => 1
@@ -216,17 +152,7 @@
   ;;' @signature (signum x)
   (define signum __rsign)
 
-  ;;' @section Power, Roots, and Logarithms
-
-  ;;' @description Return square root of x.
-  ;;' @examples
-  ;;' (sqrt 16)     ; => 4
-  ;;' (sqrt 2)      ; => 1.414...
-  ;;' @assert
-  ;;' (assert-equal 4 (sqrt 16))
-  ;;' @seealso expt
-  ;;' @signature (sqrt x)
-  (define sqrt __rsqrt)
+  ;;' @section Power and Roots
 
   ;;' @description Return base raised to power.
   ;;' @examples
@@ -235,111 +161,9 @@
   ;;' @assert
   ;;' (assert-equal 1024 (expt 2 10))
   ;;' (assert-equal 27 (expt 3 3))
-  ;;' @seealso sqrt
   (define expt
     (lambda (base power)
       (__r^ base power)))
-
-  ;;' @description Return logarithm of x. With one argument,
-  ;;' returns natural log. With two, returns log to the given base.
-  ;;' @examples
-  ;;' (log 1)           ; => 0
-  ;;' (log (exp 1))     ; => 1.0
-  ;;' (log 100 10)      ; => 2.0
-  ;;' @assert
-  ;;' (assert-equal 0 (log 1))
-  ;;' (assert-equal 1.0 (log (exp 1)))
-  ;;' (assert-equal 2.0 (log 100 10))
-  ;;' @seealso exp, log10, log2
-  (define log
-    (lambda (x (base #nil))
-      (if (is.null base)
-        (__rlog x)
-        (__rlog x base))))
-
-  ;;' @description Return e raised to power x.
-  ;;' @examples
-  ;;' (exp 0)       ; => 1
-  ;;' (exp 1)       ; => 2.718...
-  ;;' @assert
-  ;;' (assert-equal 1 (exp 0))
-  ;;' @seealso log
-  ;;' @signature (exp x)
-  (define exp __rexp)
-
-  ;;' @description Return base-10 logarithm of x.
-  ;;' @examples
-  ;;' (log10 100)   ; => 2
-  ;;' (log10 1000)  ; => 3
-  ;;' @assert
-  ;;' (assert-equal 2 (log10 100))
-  ;;' (assert-equal 3 (log10 1000))
-  ;;' @seealso log, log2
-  ;;' @signature (log10 x)
-  (define log10 __rlog10)
-
-  ;;' @description Return base-2 logarithm of x.
-  ;;' @examples
-  ;;' (log2 8)      ; => 3
-  ;;' (log2 1024)   ; => 10
-  ;;' @assert
-  ;;' (assert-equal 3 (log2 8))
-  ;;' (assert-equal 10 (log2 1024))
-  ;;' @seealso log, log10
-  ;;' @signature (log2 x)
-  (define log2 __rlog2)
-
-  ;;' @section Trigonometric Functions
-
-  ;;' @description Return sine of x (in radians).
-  ;;' @signature (sin x)
-  ;;' @examples
-  ;;' (sin 0)       ; => 0
-  ;;' (cos 0)       ; => 1
-  ;;' (tan 0)       ; => 0
-  ;;' @assert
-  ;;' (assert-equal 0 (sin 0))
-  ;;' (assert-equal 1 (cos 0))
-  ;;' (assert-equal 0 (tan 0))
-  (define sin __rsin)
-
-  ;;' @description Return cosine of x (in radians).
-  ;;' @signature (cos x)
-  (define cos __rcos)
-
-  ;;' @description Return tangent of x (in radians).
-  ;;' @signature (tan x)
-  (define tan __rtan)
-
-  ;;' @description Return arcsine of x (in radians).
-  ;;' @signature (asin x)
-  ;;' @examples
-  ;;' (asin 1)      ; => 1.5707... (pi/2)
-  ;;' (acos 1)      ; => 0
-  ;;' (atan 1)      ; => 0.7853... (pi/4)
-  ;;' @assert
-  ;;' (assert-true (< (abs (- (asin 1) (/ pi 2))) 1e-10))
-  ;;' (assert-true (< (abs (acos 1)) 1e-10))
-  ;;' (assert-true (< (abs (- (atan 1) (/ pi 4))) 1e-10))
-  (define asin __rasin)
-
-  ;;' @description Return arccosine of x (in radians).
-  ;;' @signature (acos x)
-  (define acos __racos)
-
-  ;;' @description Return arctangent of x (in radians).
-  ;;' @signature (atan x)
-  (define atan __ratan)
-
-  ;;' @description Return arctangent of y/x (in radians), respecting quadrant.
-  ;;' @examples
-  ;;' (atan2 1 1)   ; => 0.7853... (pi/4)
-  ;;' (atan2 -1 -1) ; => -2.356... (-3*pi/4)
-  ;;' @assert
-  ;;' (assert-true (< (abs (- (atan2 1 1) (/ pi 4))) 1e-10))
-  (define atan2
-    (lambda (y x)
-      (__ratan2 y x)))
 
   ;;' @section Integer Division
 

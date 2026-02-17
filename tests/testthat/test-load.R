@@ -80,13 +80,13 @@ test_that("(load ...) re-evaluates on each call", {
 test_that("stdlib modules register macros", {
   engine <- make_engine()
   env <- engine$get_env()
-  import_stdlib_modules(engine, c("control", "binding", "threading", "error"))
+  import_stdlib_modules(engine, c("control", "binding", "threading"))
 
   expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("when"), env = env))
   expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("unless"), env = env))
   expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("let"), env = env))
   expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("->"), env = env))
-  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("try"), env = env))
+  expect_true(engine_field(engine, "macro_expander")$is_macro(as.symbol("try-catch"), env = env))
 })
 
 test_that("(import ...) loads module exports into environment", {

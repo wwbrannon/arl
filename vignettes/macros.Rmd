@@ -115,7 +115,7 @@ Parameters wrapped in a pair `(name default)` are optional:
 
 ```{arl}
 (defmacro greet ((name "world"))
-  `(str "hello, " ,name))
+  `(string-concat "hello, " ,name))
 
 (greet)          ; => "hello, world"
 (greet "Alice")  ; => "hello, Alice"
@@ -336,11 +336,11 @@ unique.
 Another common pattern is loop macros:
 
 ```{arl}
-(defmacro for (binding . body)
+(defmacro do-list (binding . body)
   (begin
     (define var (car binding))
     (define seq (car (cdr binding)))
-    (define remaining (gensym "for_remaining"))
+    (define remaining (gensym "do_list_remaining"))
     `(begin
        (define ,remaining (__as-list ,seq))
        (while (not (null? ,remaining))
@@ -348,7 +348,7 @@ Another common pattern is loop macros:
          ,@body
          (set! ,remaining (cdr ,remaining))))))
 
-(for (x '(1 2 3))
+(do-list (x '(1 2 3))
   (print x))
 ```
 
@@ -386,12 +386,12 @@ Usage:
 
 ```{arl}
 (aif (+ 2 3)
-     (str "result is " it)   ; it => 5
+     (string-concat "result is " it)   ; it => 5
      "no result")  ; => "result is 5"
 ```
 
 ```{arl, include=FALSE}
-(assert-equal "result is 5" (aif (+ 2 3) (str "result is " it) "no result"))
+(assert-equal "result is 5" (aif (+ 2 3) (string-concat "result is " it) "no result"))
 ```
 
 Here `capture` is applied to the `then` and `alt` expressions (which
@@ -621,17 +621,17 @@ variables, all using `gensym` to avoid conflicts:
 ### `try`/`catch`/`finally` -- syntax sugar
 
 The `try` macro parses its clause list at expansion time and rewrites
-into calls to the lower-level `try*` function (which in turns calls R's
+into calls to the lower-level `try` function (which in turn calls R's
 `tryCatch`):
 
 ```{arl}
 (try (stop "something went wrong")
-  (catch e (str "caught: " ($ e "message")))
+  (catch e (string-concat "caught: " ($ e "message")))
   (finally (display "cleanup")))
 ```
 
 ```{arl, include=FALSE}
-(assert-true (string? (try (stop "test error") (catch e (str "caught: " ($ e "message"))))))
+(assert-true (string? (try (stop "test error") (catch e (string-concat "caught: " ($ e "message"))))))
 ```
 
 ## Related guides

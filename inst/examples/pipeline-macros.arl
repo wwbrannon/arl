@@ -28,9 +28,9 @@
 
 (println "=== Pipeline Output ===")
 (assert-equal (list 1 2 3 4 5 6 7 8 9) data)
-(println (str "Input: " data))
+(println (string-concat "Input: " data))
 (assert-equal 45 pipeline-result)
-(println (str "Pipeline result: " pipeline-result))
+(println (string-concat "Pipeline result: " pipeline-result))
 
 (define expanded (macroexpand-1
                   '(pipeline data

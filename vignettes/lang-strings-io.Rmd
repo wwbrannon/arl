@@ -42,7 +42,7 @@ Join strings with separator.
 (assert-equal "hello world" (string-join (list "hello" "world") " "))
 ```
 
-**See also:** [string-split](#string-split), [str](#str)
+**See also:** [string-split](#string-split), [string-format](#string-format)
 
 ---
 
@@ -86,26 +86,26 @@ Trim leading and trailing whitespace.
 
 ---
 
-### format {#format}
+### string-format {#string-format}
 
 Format string with sprintf.
 
-**Signature:** `(format fmt args...)`
+**Signature:** `(string-format fmt args...)`
 
 **Examples:**
 ```{arl}
-(format "Hello, %s!" "world")   ; => "Hello, world!"
-(format "%d + %d = %d" 1 2 3)   ; => "1 + 2 = 3"
-(format "%.2f" 3.14159)          ; => "3.14"
+(string-format "Hello, %s!" "world")   ; => "Hello, world!"
+(string-format "%d + %d = %d" 1 2 3)   ; => "1 + 2 = 3"
+(string-format "%.2f" 3.14159)          ; => "3.14"
 ```
 
 ```{arl, include=FALSE}
-(assert-equal "Hello, world!" (format "Hello, %s!" "world"))
-(assert-equal "1 + 2 = 3" (format "%d + %d = %d" 1 2 3))
-(assert-equal "3.14" (format "%.2f" 3.14159))
+(assert-equal "Hello, world!" (string-format "Hello, %s!" "world"))
+(assert-equal "1 + 2 = 3" (string-format "%d + %d = %d" 1 2 3))
+(assert-equal "3.14" (string-format "%.2f" 3.14159))
 ```
 
-**See also:** [str](#str)
+**See also:** [string-concat](#string-concat)
 
 ---
 
@@ -239,7 +239,7 @@ Concatenate strings together.
 (assert-equal "" (string-append))
 ```
 
-**See also:** [str](#str), [string-join](#string-join)
+**See also:** [string-concat](#string-concat), [string-join](#string-join)
 
 ---
 
@@ -281,7 +281,7 @@ Get character at index (0-based).
 (assert-equal "o" (char-at "hello" 4))
 ```
 
-**See also:** [string-ref](#string-ref), [substring](#substring)
+**See also:** [string-ref](#string-ref), [string-slice](#string-slice)
 
 ---
 
@@ -295,23 +295,23 @@ Scheme-style character accessor (alias for char-at).
 
 ---
 
-### substring {#substring}
+### string-slice {#string-slice}
 
 Extract substring from start (inclusive) to end (exclusive), 0-based.
 
-**Signature:** `(substring str start end)`
+**Signature:** `(string-slice str start end)`
 
 **Examples:**
 ```{arl}
-(substring "hello" 1 4)  ; => "ell"
-(substring "hello" 0 5)  ; => "hello"
-(substring "hello" 2 2)  ; => ""
+(string-slice "hello" 1 4)  ; => "ell"
+(string-slice "hello" 0 5)  ; => "hello"
+(string-slice "hello" 2 2)  ; => ""
 ```
 
 ```{arl, include=FALSE}
-(assert-equal "ell" (substring "hello" 1 4))
-(assert-equal "hello" (substring "hello" 0 5))
-(assert-equal "" (substring "hello" 2 2))
+(assert-equal "ell" (string-slice "hello" 1 4))
+(assert-equal "hello" (string-slice "hello" 0 5))
+(assert-equal "" (string-slice "hello" 2 2))
 ```
 
 **See also:** [char-at](#char-at)
@@ -632,22 +632,6 @@ Read single line from stdin.
 **Signature:** `(read-from-string x)`
 
 **See also:** [read](lang-core.html#read)
-
----
-
-### print {#print}
-
-Print value in Arl representation.
-
-**Signature:** `(print x)`
-
-**Examples:**
-```{arl}
-(print 42)              ; prints "42" and returns 42
-(print (list 1 2 3))    ; prints "(1 2 3)" and returns the list
-```
-
-**See also:** [display](#display), [write-string](#write-string)
 
 ---
 
@@ -981,21 +965,6 @@ Set environment variable.
 
 ---
 
-### system {#system}
-
-Execute shell command. Return exit status.
-
-**Signature:** `(system command)`
-
-**Examples:**
-```{arl}
-(system "ls")              ; => 0 (exit status)
-```
-
-**See also:** [system-output](#system-output)
-
----
-
 ### system-output {#system-output}
 
 Execute shell command and capture output as string.
@@ -1011,8 +980,6 @@ Execute shell command and capture output as string.
 ```{arl, include=FALSE}
 (assert-equal "hi" (system-output "echo hi"))
 ```
-
-**See also:** [system](#system)
 
 ---
 
@@ -1063,25 +1030,25 @@ Alias for display.
 
 ---
 
-### str {#str}
+### string-concat {#string-concat}
 
 Concatenate values into a string.
 Strings are included as-is (unquoted); other values are formatted.
 
-**Signature:** `(str args...)`
+**Signature:** `(string-concat args...)`
 
 **Examples:**
 ```{arl}
-(str "hello" " " "world")  ; => "hello world"
-(str 1 "+" 2)              ; => "1+2"
+(string-concat "hello" " " "world")  ; => "hello world"
+(string-concat 1 "+" 2)              ; => "1+2"
 ```
 
 ```{arl, include=FALSE}
-(assert-equal "hello world" (str "hello" " " "world"))
-(assert-equal "1+2" (str 1 "+" 2))
+(assert-equal "hello world" (string-concat "hello" " " "world"))
+(assert-equal "1+2" (string-concat 1 "+" 2))
 ```
 
-**See also:** [string-join](#string-join), [format](#format)
+**See also:** [string-join](#string-join), [string-format](#string-format)
 
 ---
 

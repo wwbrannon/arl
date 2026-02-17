@@ -31,13 +31,13 @@
 
 (println "Recursive Fibonacci:")
 (assert-equal 0 (fib-recursive 0))
-(println (str "fib(0) = " (fib-recursive 0)))
+(println (string-concat "fib(0) = " (fib-recursive 0)))
 (assert-equal 1 (fib-recursive 1))
-(println (str "fib(1) = " (fib-recursive 1)))
+(println (string-concat "fib(1) = " (fib-recursive 1)))
 (assert-equal 5 (fib-recursive 5))
-(println (str "fib(5) = " (fib-recursive 5)))
+(println (string-concat "fib(5) = " (fib-recursive 5)))
 (assert-equal 55 (fib-recursive 10))
-(println (str "fib(10) = " (fib-recursive 10)))
+(println (string-concat "fib(10) = " (fib-recursive 10)))
 
 ;; ============================================================================
 ;; Iterative Implementation with While Loop
@@ -60,9 +60,9 @@
 
 (println "\nIterative Fibonacci:")
 (assert-equal 55 (fib-iterative 10))
-(println (str "fib(10) = " (fib-iterative 10)))
+(println (string-concat "fib(10) = " (fib-iterative 10)))
 (assert-equal 610 (fib-iterative 15))
-(println (str "fib(15) = " (fib-iterative 15)))
+(println (string-concat "fib(15) = " (fib-iterative 15)))
 
 ;; ============================================================================
 ;; Sequence Generation using unfold-like pattern
@@ -91,9 +91,9 @@
 
 (println "\nFibonacci Sequence:")
 (assert-equal (list 0 1 1 2 3 5 8 13 21 34) (fib-sequence 10))
-(println (str "First 10: " (fib-sequence 10)))
+(println (string-concat "First 10: " (fib-sequence 10)))
 (assert-equal (list 0 1 1 2 3 5 8 13 21 34 55 89 144 233 377) (fib-sequence 15))
-(println (str "First 15: " (fib-sequence 15)))
+(println (string-concat "First 15: " (fib-sequence 15)))
 
 ;; ============================================================================
 ;; Using reduce to sum fibonacci sequence
@@ -105,7 +105,7 @@
 
 (println "\nSum of Fibonacci:")
 (assert-equal 88 (sum-fib 10))
-(println (str "Sum of first 10: " (sum-fib 10)))
+(println (string-concat "Sum of first 10: " (sum-fib 10)))
 
 ;; ============================================================================
 ;; Memoized Fibonacci (using R environment for cache)
@@ -117,11 +117,11 @@
       (lambda (n)
         (if (< n 2)
             n
-            (let ((cached (get (str n) cache)))
+            (let ((cached (get (string-concat n) cache)))
               (if (null? cached)
                   (let ((result (+ (fib-recursive (- n 1))
                                   (fib-recursive (- n 2)))))
-                    (assign (str n) result cache)
+                    (assign (string-concat n) result cache)
                     result)
                   cached)))))))
 

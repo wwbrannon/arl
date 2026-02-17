@@ -21,10 +21,10 @@
   (assert-equal (ceiling -3.2) -3)
   (assert-equal (ceiling 5) 5)))
 
-(define test-truncate (lambda ()
-  (assert-equal (truncate 3.7) 3)
-  (assert-equal (truncate -3.7) -3)
-  (assert-equal (truncate 5) 5)))
+(define test-trunc (lambda ()
+  (assert-equal (trunc 3.7) 3)
+  (assert-equal (trunc -3.7) -3)
+  (assert-equal (trunc 5) 5)))
 
 (define test-round (lambda ()
   (assert-equal (round 3.5) 4)

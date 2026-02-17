@@ -1,4 +1,4 @@
-# Comprehensive control flow tests: when, unless, cond, case, and, or, not, xor, try*
+# Comprehensive control flow tests: when, unless, cond, case, and, or, not, xor, try
 
 engine <- make_engine()
 
@@ -247,26 +247,26 @@ test_that("not function works", {
   expect_false(engine$eval(engine$read("(not 42)")[[1]], env = env))
 })
 
-test_that("try* with only error handler works", {
+test_that("try with only error handler works", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
   # Success case
-  result <- env$`try*`(
+  result <- env$`try`(
     function() 42,
     function(e) "error"
   )
   expect_equal(result, 42)
 
   # Error case
-  result <- env$`try*`(
+  result <- env$`try`(
     function() stop("boom"),
     function(e) "caught"
   )
   expect_equal(result, "caught")
 })
 
-test_that("try* with only finally handler works", {
+test_that("try with only finally handler works", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -274,7 +274,7 @@ test_that("try* with only finally handler works", {
   finally_ran <- FALSE
 
   # Success case
-  result <- env$`try*`(
+  result <- env$`try`(
     function() 42,
     NULL,
     function() finally_ran <<- TRUE
@@ -285,7 +285,7 @@ test_that("try* with only finally handler works", {
   # Error case (finally should run but error should propagate)
   finally_ran <- FALSE
   expect_error({
-    env$`try*`(
+    env$`try`(
       function() stop("boom"),
       NULL,
       function() finally_ran <<- TRUE
@@ -294,7 +294,7 @@ test_that("try* with only finally handler works", {
   expect_true(finally_ran)
 })
 
-test_that("try* with both handlers works", {
+test_that("try with both handlers works", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -302,7 +302,7 @@ test_that("try* with both handlers works", {
   finally_ran <- FALSE
 
   # Error caught and finally runs
-  result <- env$`try*`(
+  result <- env$`try`(
     function() stop("boom"),
     function(e) "caught",
     function() finally_ran <<- TRUE
@@ -312,7 +312,7 @@ test_that("try* with both handlers works", {
 
   # Success and finally runs
   finally_ran <- FALSE
-  result <- env$`try*`(
+  result <- env$`try`(
     function() 99,
     function(e) "error",
     function() finally_ran <<- TRUE
@@ -322,35 +322,35 @@ test_that("try* with both handlers works", {
 })
 
 # ============================================================================
-# Coverage: try* via R-level calls with explicit #f / NULL handlers
+# Coverage: try via R-level calls with explicit #f / NULL handlers
 # ============================================================================
 
-test_that("try* with no handlers (thunk only)", {
+test_that("try with no handlers (thunk only)", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
   # Just thunk, no error or finally handler
-  result <- env$`try*`(function() 99)
+  result <- env$`try`(function() 99)
   expect_equal(result, 99)
 })
 
-test_that("try* errors when thunk is not a function", {
+test_that("try errors when thunk is not a function", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_error(env$`try*`(42), "expects a function as first argument")
+  expect_error(env$`try`(42), "expects a function as first argument")
 })
 
-test_that("try* errors when error handler is not a function", {
+test_that("try errors when error handler is not a function", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_error(env$`try*`(function() 1, 42), "error handler must be a function")
+  expect_error(env$`try`(function() 1, 42), "error handler must be a function")
 })
 
-test_that("try* errors when finally handler is not a function", {
+test_that("try errors when finally handler is not a function", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_error(env$`try*`(function() 1, NULL, 42), "finally handler must be a function")
+  expect_error(env$`try`(function() 1, NULL, 42), "finally handler must be a function")
 })

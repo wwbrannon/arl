@@ -4,7 +4,7 @@
   (export defstruct)
 
   (import functional :only (map mapcat))
-  (import display :only (str))
+  (import display :only (string-concat))
   (import core :only (r/call))
 
 ;;' @section Struct Definition
@@ -35,8 +35,8 @@
 ;;' @seealso dict
 (defmacro defstruct (name fields)
   (define struct-name (as.character name))
-  (define ctor-name (as.symbol (str "make-" struct-name)))
-  (define pred-name (as.symbol (str struct-name "?")))
+  (define ctor-name (as.symbol (string-concat "make-" struct-name)))
+  (define pred-name (as.symbol (string-concat struct-name "?")))
   (define field-pairs
     (mapcat
       (lambda (field)
@@ -45,7 +45,7 @@
   (define accessors
     (map
       (lambda (field)
-        (define accessor-name (as.symbol (str struct-name "-" (as.character field))))
+        (define accessor-name (as.symbol (string-concat struct-name "-" (as.character field))))
         `(define ,accessor-name
            (lambda (obj)
              (r/call "[["

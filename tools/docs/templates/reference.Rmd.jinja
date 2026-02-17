@@ -180,11 +180,10 @@ and when working with a bare engine (`Engine$new(load_prelude = FALSE)`):
 
 ```{arl, eval=FALSE}
 ; Import focused modules
-(import control)   ; when/unless/cond/case/try*
+(import control)   ; when/unless/cond/case/try/try-catch
 (import binding)   ; let/let*/letrec
-(import looping)   ; for/loop/recur/until
+(import looping)   ; do-list/loop/recur/until
 (import threading) ; -> and ->>
-(import error)     ; try/catch/finally
 ```
 
 From R, you can create an engine with the stdlib already loaded:

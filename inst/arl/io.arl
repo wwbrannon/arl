@@ -4,12 +4,12 @@
   (export __normalize-line-vector __normalize-lines
           read-line read-file read-lines
           write-file write-lines append-file file-exists?
-          print newline
+          newline
           read-from-string write-string
           file-size file-modified-time file-delete
           directory-exists? directory-list directory-delete
           getenv setenv
-          system system-output exit)
+          system-output exit)
 
   (import core :only (r/call get))
 
@@ -48,16 +48,6 @@
 
   ;;' @seealso read
   (define read-from-string read)  ;; Alias for read
-
-  ;;' @description Print value in Arl representation.
-  ;;' @examples
-  ;;' (print 42)              ; prints "42" and returns 42
-  ;;' (print (list 1 2 3))    ; prints "(1 2 3)" and returns the list
-  ;;' @seealso display, write-string
-  (define print
-    (lambda (x)
-      (__rprint x)
-      x))
 
   ;;' @description Write string to output (alias for cat).
   ;;' @examples
@@ -180,8 +170,7 @@
     (lambda (path)
       (isTRUE (file.exists path))))
 
-  ;; Get R base functions to avoid infinite recursion
-  (define __rprint (get "print" :envir (baseenv)))
+  ;; Get R base system function for system-output
   (define __rsystem (get "system" :envir (baseenv)))
 
   ;;' @description Return size of file in bytes.
@@ -322,21 +311,12 @@
       (r/call "do.call" (list "Sys.setenv" named-list))
       #t))
 
-  ;;' @description Execute shell command. Return exit status.
-  ;;' @examples
-  ;;' (system "ls")              ; => 0 (exit status)
-  ;;' @seealso system-output
-  (define system
-    (lambda (command)
-      (__rsystem command)))
-
   ;;' @description Execute shell command and capture output as string.
   ;;' @examples
   ;;' (system-output "whoami")   ; => "username"
   ;;' (system-output "echo hi")  ; => "hi"
   ;;' @assert
   ;;' (assert-equal "hi" (system-output "echo hi"))
-  ;;' @seealso system
   (define system-output
     (lambda (command)
       (paste (__rsystem command #t) :collapse "\n")))

@@ -173,7 +173,7 @@ receives exactly the expression it expects.
 3. Use `r/eval` (not `r/call`) to evaluate the constructed expression
 4. Pass `(current-env)` as the evaluation environment
 
-This pattern is used throughout the stdlib — see `try*` in `control.arl` and
+This pattern is used throughout the stdlib — see `try` in `control.arl` and
 `assert-error` in `assert.arl` for working examples.
 
 #### Detecting errors with a sentinel value

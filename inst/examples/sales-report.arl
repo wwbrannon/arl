@@ -33,7 +33,7 @@
 
 (define totals-env
   (new.env :parent (emptyenv)))
-(for (t transactions)
+(do-list (t transactions)
   (define product (get "product" t))
   (define amount (get "amount" t))
   (define has (exists product :envir totals-env :inherits #f))
@@ -59,16 +59,16 @@
 (assert-equal "beta" top-product)
 
 (define totals-by-product (list))
-(for (name product-names-list)
+(do-list (name product-names-list)
   (set! totals-by-product
         (append totals-by-product
                 (list (dict :product name
                             :total (get name totals-env #f))))))
 
 (println "\n=== Summary ===")
-(println (str "Total sales: " total-sales))
-(println (str "Totals by product: " totals-by-product))
-(println (str "Top product: " top-product))
+(println (string-concat "Total sales: " total-sales))
+(println (string-concat "Totals by product: " totals-by-product))
+(println (string-concat "Top product: " top-product))
 
 (define sales-df
   (data.frame :product products-vec :region regions-vec :amount amounts-vec))

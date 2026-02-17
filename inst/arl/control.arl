@@ -1,11 +1,11 @@
 ;;; Arl Standard Library - Control Flow Macros
 
 (module control
-  (export when unless cond case try*
+  (export when unless cond case try try-catch
           call/cc call-with-current-continuation)
   ;; Note: 'and' and 'or' removed from exports - now compiler special forms
 
-  (import types :only (symbol? null?))
+  (import types :only (symbol? list? null?))
   (import list :only (car cdr call))
 
 
@@ -109,29 +109,29 @@
   (define key-sym (gensym "case-key"))
   `((lambda (,key-sym) ,(__case-clauses key-sym clause rest)) ,key))
 
-;;' @section Error Handling Helper
+;;' @section Error Handling
 
 ;;' @description Evaluate thunk with error/finally handlers.
-;;' @signature (try* thunk [error_handler] [finally_handler])
+;;' @signature (try thunk [error_handler] [finally_handler])
 ;;' @examples
-;;' (try* (lambda () 42))                           ; => 42
-;;' (try* (lambda () (stop "oops"))
+;;' (try (lambda () 42))                           ; => 42
+;;' (try (lambda () (stop "oops"))
 ;;'       :error_handler (lambda (e) "caught"))      ; => "caught"
-;;' (try* (lambda () 1)
+;;' (try (lambda () 1)
 ;;'       :finally_handler (lambda () (display "done")))  ; => 1
 ;;' @assert
-;;' (assert-equal 42 (try* (lambda () 42)))
-;;' (assert-equal "caught" (try* (lambda () (stop "oops")) :error_handler (lambda (e) "caught")))
-;;' @note Low-level functional interface to R's tryCatch. Prefer the `try` macro for cleaner syntax.
-;;' @seealso try (in `error` module), catch, finally
-(define try*
+;;' (assert-equal 42 (try (lambda () 42)))
+;;' (assert-equal "caught" (try (lambda () (stop "oops")) :error_handler (lambda (e) "caught")))
+;;' @note Low-level functional interface to R's tryCatch.
+;;' @seealso try-catch
+(define try
   (lambda (thunk (error_handler #f) (finally_handler #f))
     (if (not (is.function thunk))
-      (stop "try* expects a function as first argument"))
+      (stop "try expects a function as first argument"))
     (if (and error_handler (not (is.function error_handler)))
-      (stop "try* error handler must be a function"))
+      (stop "try error handler must be a function"))
     (if (and finally_handler (not (is.function finally_handler)))
-      (stop "try* finally handler must be a function"))
+      (stop "try finally handler must be a function"))
     (define thunk-expr (call (list thunk)))
     (if (not error_handler)
       (if (not finally_handler)
@@ -147,6 +147,53 @@
                             :error error_handler
                             :finally (call (list finally_handler))))
                 (current-env))))))
+
+;;' @description Macro wrapper around try with catch/finally.
+;;' @examples
+;;' ;; Basic try with catch
+;;' (try-catch (/ 1 0)
+;;'   (catch e (string-append "caught: " ($ e "message"))))
+;;'
+;;' ;; try with finally (always runs)
+;;' (try-catch (+ 1 2)
+;;'   (finally (display "cleanup")))    ; => 3
+;;'
+;;' ;; try with both catch and finally
+;;' (try-catch (stop "oops")
+;;'   (catch e (string-append "error: " ($ e "message")))
+;;'   (finally (display "done")))       ; => "error: oops"
+;;'
+;;' ;; try with no handlers (just evaluates body)
+;;' (try-catch (+ 1 2))                       ; => 3
+;;' @assert
+;;' (assert-equal 3 (try-catch (+ 1 2)))
+;;' (assert-equal "error: oops" (try-catch (stop "oops") (catch e (string-append "error: " ($ e "message")))))
+;;' @note Macro wrapper around `try` that provides familiar catch/finally syntax. The catch clause binds the error condition to the given variable. The finally clause runs regardless of success or failure.
+;;' @seealso try
+(defmacro try-catch (body . clauses)
+  (begin
+    (define catch-clause #nil)
+    (define finally-clause #nil)
+    (define first (car clauses))
+    (define second (car (cdr clauses)))
+    (if (and (list? first) (symbol? (car first)) (= (as.character (car first)) "catch"))
+      (begin
+        (define catch-clause first)
+        (if (and (list? second) (symbol? (car second)) (= (as.character (car second)) "finally"))
+          (define finally-clause second)))
+      (if (and (list? first) (symbol? (car first)) (= (as.character (car first)) "finally"))
+        (define finally-clause first)))
+    (if (null? catch-clause)
+      (if (null? finally-clause)
+        `(try (lambda () ,body))
+        `(try (lambda () ,body)
+           :finally_handler (lambda () ,@(cdr finally-clause))))
+      (if (null? finally-clause)
+        `(try (lambda () ,body)
+           :error_handler (lambda (,(car (cdr catch-clause))) ,@(cdr (cdr catch-clause))))
+        `(try (lambda () ,body)
+           :error_handler (lambda (,(car (cdr catch-clause))) ,@(cdr (cdr catch-clause)))
+           :finally_handler (lambda () ,@(cdr finally-clause)))))))
 
 ;;' @section Continuations
 

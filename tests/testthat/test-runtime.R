@@ -267,8 +267,8 @@ test_that("import_compiled() by module name as symbol", {
   engine_field(eng, "compiled_runtime")$import_compiled(module_name_sym, test_env)
 
   # Check that some exported functions from display are now available
-  expect_true(exists("str", envir = test_env, inherits = FALSE))
-  expect_true(is.function(test_env$str))
+  expect_true(exists("string-concat", envir = test_env, inherits = FALSE))
+  expect_true(is.function(test_env$`string-concat`))
 })
 
 test_that("import_compiled() errors on missing module", {

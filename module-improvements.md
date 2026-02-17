@@ -52,7 +52,7 @@ naming convention for non-internal helpers that should remain private.
 
 ### 7. Stdlib Loads Eagerly and Entirely
 
-`.load_stdlib_into_env` iterates all modules in load order and attaches every one
+`.load_modules` iterates all modules in load order and attaches every one
 into the engine env. Every Arl program pays the cost of loading the entire
 stdlib, even if it only uses `car`. There is no lazy loading or autoload
 mechanism.

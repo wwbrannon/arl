@@ -2,7 +2,7 @@
 
 (module display
   (export __format-atomic __format-seq __format-named-list __format-s3-object
-          format-value display println str trace)
+          format-value display println string-concat trace)
 
   (import list :only (__as-list car cdr))
   (import strings :only (string-join))
@@ -193,13 +193,13 @@
   ;;' @description Concatenate values into a string.
   ;;' Strings are included as-is (unquoted); other values are formatted.
   ;;' @examples
-  ;;' (str "hello" " " "world")  ; => "hello world"
-  ;;' (str 1 "+" 2)              ; => "1+2"
+  ;;' (string-concat "hello" " " "world")  ; => "hello world"
+  ;;' (string-concat 1 "+" 2)              ; => "1+2"
   ;;' @assert
-  ;;' (assert-equal "hello world" (str "hello" " " "world"))
-  ;;' (assert-equal "1+2" (str 1 "+" 2))
-  ;;' @seealso string-join, format
-  (define str
+  ;;' (assert-equal "hello world" (string-concat "hello" " " "world"))
+  ;;' (assert-equal "1+2" (string-concat 1 "+" 2))
+  ;;' @seealso string-join, string-format
+  (define string-concat
     (lambda (. args)
       (define parts (lapply (__as-list args)
                       (lambda (x)

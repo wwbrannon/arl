@@ -25,13 +25,13 @@
 
 (println "Quicksort Examples:")
 (assert-equal (list 1 1 2 3 4 5 6 9) (quicksort (list 3 1 4 1 5 9 2 6)))
-(println (str "Sort [3 1 4 1 5 9 2 6]: " (quicksort (list 3 1 4 1 5 9 2 6))))
+(println (string-concat "Sort [3 1 4 1 5 9 2 6]: " (quicksort (list 3 1 4 1 5 9 2 6))))
 (assert-equal (list 1 2 3 4 5) (quicksort (list 5 4 3 2 1)))
-(println (str "Sort [5 4 3 2 1]: " (quicksort (list 5 4 3 2 1))))
+(println (string-concat "Sort [5 4 3 2 1]: " (quicksort (list 5 4 3 2 1))))
 (assert-equal (list 1) (quicksort (list 1)))
-(println (str "Sort [1]: " (quicksort (list 1))))
+(println (string-concat "Sort [1]: " (quicksort (list 1))))
 (assert-equal (list) (quicksort (list)))
-(println (str "Sort []: " (quicksort (list))))
+(println (string-concat "Sort []: " (quicksort (list))))
 
 ;; ============================================================================
 ;; Three-way Partition Quicksort (handles duplicates better)
@@ -52,7 +52,7 @@
 
 (println "\nThree-way Quicksort:")
 (assert-equal (list 1 1 2 3 3 4 5 5 6 9) (quicksort-3way (list 3 1 4 1 5 9 2 6 5 3)))
-(println (str "Sort [3 1 4 1 5 9 2 6 5 3]: "
+(println (string-concat "Sort [3 1 4 1 5 9 2 6 5 3]: "
               (quicksort-3way (list 3 1 4 1 5 9 2 6 5 3))))
 
 ;; ============================================================================
@@ -69,7 +69,7 @@
 (let ((result (partition-by-pivot 5 (list 3 7 2 9 1 5 8 4))))
   (assert-equal (list 3 2 1 4) (car result))
   (assert-equal (list 7 9 5 8) (car (cdr result)))
-  (println (str "Partition by 5: smaller=" (car result)
+  (println (string-concat "Partition by 5: smaller=" (car result)
                 " greater=" (car (cdr result)))))
 
 ;; ============================================================================
@@ -80,25 +80,25 @@
 
 ;; take and drop
 (define data (list 10 20 30 40 50))
-(println (str "Original: " data))
+(println (string-concat "Original: " data))
 (assert-equal (list 10 20 30) (take 3 data))
-(println (str "Take 3: " (take 3 data)))
+(println (string-concat "Take 3: " (take 3 data)))
 (assert-equal (list 40 50) (drop 3 data))
-(println (str "Drop 3: " (drop 3 data)))
+(println (string-concat "Drop 3: " (drop 3 data)))
 
 ;; reverse
 (assert-equal (list 50 40 30 20 10) (reverse data))
-(println (str "Reversed: " (reverse data)))
+(println (string-concat "Reversed: " (reverse data)))
 
 ;; map to transform
 (assert-equal (list 20 40 60 80 100) (map (lambda (x) (* x 2)) data))
-(println (str "Double all: " (map (lambda (x) (* x 2)) data)))
+(println (string-concat "Double all: " (map (lambda (x) (* x 2)) data)))
 
 ;; reduce to aggregate
 (assert-equal 150 (reduce + data))
-(println (str "Sum: " (reduce + data)))
+(println (string-concat "Sum: " (reduce + data)))
 (assert-equal 12000000 (reduce * data))
-(println (str "Product: " (reduce * data)))
+(println (string-concat "Product: " (reduce * data)))
 
 ;; ============================================================================
 ;; Merge Sort for comparison
@@ -125,7 +125,7 @@
 
 (println "\nMergesort Example:")
 (assert-equal (list 1 1 2 3 4 5 6 9) (mergesort (list 3 1 4 1 5 9 2 6)))
-(println (str "Sort [3 1 4 1 5 9 2 6]: " (mergesort (list 3 1 4 1 5 9 2 6))))
+(println (string-concat "Sort [3 1 4 1 5 9 2 6]: " (mergesort (list 3 1 4 1 5 9 2 6))))
 
 (define sorted-small (quicksort (list 3 1 4)))
 (define merge-sorted (mergesort (list 3 1 4 1 5 9 2 6)))

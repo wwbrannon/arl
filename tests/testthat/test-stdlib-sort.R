@@ -1,28 +1,28 @@
-# Sorting tests: sort, sort-by, stable-sort, merge
+# Sorting tests: list-sort, sort-by, stable-sort, merge-sorted
 
 engine <- make_engine()
 
-test_that("sort works with comparator function", {
+test_that("list-sort works with comparator function", {
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env = env)
 
   result <- engine$eval(
-    engine$read("(sort '(3 1 4 1 5) <)")[[1]], env = env)
+    engine$read("(list-sort '(3 1 4 1 5) <)")[[1]], env = env)
   expect_equal(result, list(1, 1, 3, 4, 5))
 
   # Descending sort
   result <- engine$eval(
-    engine$read("(sort '(3 1 4 1 5) >)")[[1]], env = env)
+    engine$read("(list-sort '(3 1 4 1 5) >)")[[1]], env = env)
   expect_equal(result, list(5, 4, 3, 1, 1))
 
   # Empty list
   result <- engine$eval(
-    engine$read("(sort '() <)")[[1]], env = env)
+    engine$read("(list-sort '() <)")[[1]], env = env)
   expect_equal(result, list())
 
   # Single element
   result <- engine$eval(
-    engine$read("(sort '(42) <)")[[1]], env = env)
+    engine$read("(list-sort '(42) <)")[[1]], env = env)
   expect_equal(result, list(42))
 })
 
@@ -143,42 +143,42 @@ test_that("stable-sort stability across various patterns", {
   expect_equal(result, list(1, 2, 3, 4, 5))
 })
 
-test_that("merge combines two sorted lists", {
+test_that("merge-sorted combines two sorted lists", {
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env = env)
 
   result <- engine$eval(
-    engine$read("(merge '(1 3 5) '(2 4 6) <)")[[1]], env = env)
+    engine$read("(merge-sorted '(1 3 5) '(2 4 6) <)")[[1]], env = env)
   expect_equal(result, list(1, 2, 3, 4, 5, 6))
 
   # One empty list
   result <- engine$eval(
-    engine$read("(merge '() '(1 2 3) <)")[[1]], env = env)
+    engine$read("(merge-sorted '() '(1 2 3) <)")[[1]], env = env)
   expect_equal(result, list(1, 2, 3))
 
   # Both empty
   result <- engine$eval(
-    engine$read("(merge '() '() <)")[[1]], env = env)
+    engine$read("(merge-sorted '() '() <)")[[1]], env = env)
   expect_equal(result, list())
 
   # Other side empty
   result <- engine$eval(
-    engine$read("(merge '(1 2 3) '() <)")[[1]], env = env)
+    engine$read("(merge-sorted '(1 2 3) '() <)")[[1]], env = env)
   expect_equal(result, list(1, 2, 3))
 
   # Interleaved
   result <- engine$eval(
-    engine$read("(merge '(1 4 7) '(2 5 8) <)")[[1]], env = env)
+    engine$read("(merge-sorted '(1 4 7) '(2 5 8) <)")[[1]], env = env)
   expect_equal(result, list(1, 2, 4, 5, 7, 8))
 
   # One list entirely before the other
   result <- engine$eval(
-    engine$read("(merge '(1 2 3) '(4 5 6) <)")[[1]], env = env)
+    engine$read("(merge-sorted '(1 2 3) '(4 5 6) <)")[[1]], env = env)
   expect_equal(result, list(1, 2, 3, 4, 5, 6))
 
   # Duplicates across lists (stability: equal elements from list1 come first)
   result <- engine$eval(
-    engine$read("(merge (list (list 1 'L1) (list 3 'L1))
+    engine$read("(merge-sorted (list (list 1 'L1) (list 3 'L1))
                         (list (list 1 'L2) (list 3 'L2))
                    (lambda (x y) (< (car x) (car y))))")[[1]], env = env)
   expect_equal(result[[1]], list(1, quote(L1)))
@@ -188,6 +188,6 @@ test_that("merge combines two sorted lists", {
 
   # Single-element lists
   result <- engine$eval(
-    engine$read("(merge '(1) '(2) <)")[[1]], env = env)
+    engine$read("(merge-sorted '(1) '(2) <)")[[1]], env = env)
   expect_equal(result, list(1, 2))
 })

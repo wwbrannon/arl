@@ -243,11 +243,10 @@ are always available; non-prelude modules require explicit import (or
 use `Engine$new(load_prelude = FALSE)` for a completely bare engine):
 
 ``` lisp
-(import control)   ; when/unless/cond/case/try*
+(import control)   ; when/unless/cond/case/try/catch/finally
 (import binding)   ; let/let*/letrec
-(import looping)   ; until/for/loop/recur
+(import looping)   ; until/do-list/loop/recur
 (import threading) ; -> and ->>
-(import error)     ; try/catch/finally
 ```
 
 ### Modules and File Loading

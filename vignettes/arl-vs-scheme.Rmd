@@ -348,11 +348,11 @@ dropping down to a lower-level system.
   `(let ((it ,test))
      (if it ,(capture 'it then) ,(capture 'it alt))))
 
-(aif2 (+ 10 20) (str "got " it) "none")
+(aif2 (+ 10 20) (string-concat "got " it) "none")
 ```
 
 ```{arl, include=FALSE}
-(assert-equal "got 30" (aif2 (+ 10 20) (str "got " it) "none"))
+(assert-equal "got 30" (aif2 (+ 10 20) (string-concat "got " it) "none"))
 ```
 
 ### Summary of differences

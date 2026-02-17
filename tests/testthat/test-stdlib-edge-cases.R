@@ -63,8 +63,8 @@ test_that("stdlib handles mixed types correctly", {
   result <- env$filter(function(x) is.numeric(x), mixed)
   expect_equal(length(result), 2)  # 1 and 3.0
 
-  # str should convert all types
-  result <- env$str(1, "two", TRUE, NULL)
+  # string-concat should convert all types
+  result <- env$`string-concat`(1, "two", TRUE, NULL)
   expect_true(is.character(result))
 })
 

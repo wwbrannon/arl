@@ -20,7 +20,7 @@ Summary: Type predicates, numeric type hierarchy, structural and identity equali
 
 Name: lang-control
 Title: Standard Library: Control Flow and Macros
-Modules: control, binding, looping, threading, error
+Modules: control, binding, looping, threading
 Summary: Conditionals, binding forms, looping, threading macros, continuations, and error handling.
 
 Name: lang-list-seq

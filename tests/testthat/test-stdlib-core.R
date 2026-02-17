@@ -355,7 +355,7 @@ test_that("unbind-variable makes variable inaccessible", {
     (begin
       (define ub-gone 10)
       (unbind-variable "ub-gone" (current-env))
-      (try ub-gone (catch e "removed")))
+      (try-catch ub-gone (catch e "removed")))
   ')[[1]], env = env)
   expect_equal(result, "removed")
 })

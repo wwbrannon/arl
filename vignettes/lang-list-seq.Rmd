@@ -882,25 +882,25 @@ Return #t if length of x is less than n.
 ## Sorting {#section-sorting}
 
 General-purpose sorting with user-supplied comparator functions.
-`sort` uses quicksort (not stable); `stable-sort` uses merge sort
-and preserves the relative order of equal elements. `merge` combines
+`list-sort` uses quicksort (not stable); `stable-sort` uses merge sort
+and preserves the relative order of equal elements. `merge-sorted` combines
 two already-sorted lists.
 
-### sort {#sort}
+### list-sort {#list-sort}
 
 Sort list using comparison function (simple quicksort implementation).
 
-**Signature:** `(sort lst comparator)`
+**Signature:** `(list-sort lst comparator)`
 
 **Examples:**
 ```{arl}
-(sort (list 3 1 4 1 5) <)        ; => (1 1 3 4 5)
-(sort (list "b" "a" "c")
+(list-sort (list 3 1 4 1 5) <)        ; => (1 1 3 4 5)
+(list-sort (list "b" "a" "c")
       (lambda (a b) (< a b)))   ; => ("a" "b" "c")
 ```
 
 ```{arl, include=FALSE}
-(assert-equal (list 1 1 3 4 5) (sort (list 3 1 4 1 5) <))
+(assert-equal (list 1 1 3 4 5) (list-sort (list 3 1 4 1 5) <))
 ```
 
 **See also:** [stable-sort](#stable-sort), [sort-by](#sort-by)
@@ -924,30 +924,30 @@ Sort list by applying key-fn to each element, then comparing.
 (assert-equal (list -1 2 3) (sort-by (list 3 -1 2) abs <))
 ```
 
-**See also:** [sort](#sort), [stable-sort](#stable-sort)
+**See also:** [list-sort](#list-sort), [stable-sort](#stable-sort)
 
 ---
 
-### merge {#merge}
+### merge-sorted {#merge-sorted}
 
 Merge two sorted lists into one sorted list.
 Stable: when elements are equal (neither comparator direction
 is true), takes from list1 first.
 
-**Signature:** `(merge list1 list2 comparator)`
+**Signature:** `(merge-sorted list1 list2 comparator)`
 
 **Examples:**
 ```{arl}
-(merge (list 1 3 5) (list 2 4 6) <)  ; => (1 2 3 4 5 6)
-(merge (list 1 2) (list) <)           ; => (1 2)
+(merge-sorted (list 1 3 5) (list 2 4 6) <)  ; => (1 2 3 4 5 6)
+(merge-sorted (list 1 2) (list) <)           ; => (1 2)
 ```
 
 ```{arl, include=FALSE}
-(assert-equal (list 1 2 3 4 5 6) (merge (list 1 3 5) (list 2 4 6) <))
-(assert-equal (list 1 2) (merge (list 1 2) (list) <))
+(assert-equal (list 1 2 3 4 5 6) (merge-sorted (list 1 3 5) (list 2 4 6) <))
+(assert-equal (list 1 2) (merge-sorted (list 1 2) (list) <))
 ```
 
-**See also:** [stable-sort](#stable-sort), [sort](#sort)
+**See also:** [stable-sort](#stable-sort), [list-sort](#list-sort)
 
 ---
 
@@ -966,9 +966,9 @@ Stable sort - preserves order of equal elements. Uses merge sort internally.
 (assert-equal (list 1 1 3 4 5) (stable-sort (list 3 1 4 1 5) <))
 ```
 
-**Note:** Preserves the relative order of elements that compare equal, unlike `sort`.
+**Note:** Preserves the relative order of elements that compare equal, unlike `list-sort`.
 
-**See also:** [sort](#sort), [merge](#merge), [sort-by](#sort-by)
+**See also:** [list-sort](#list-sort), [merge-sorted](#merge-sorted), [sort-by](#sort-by)
 
 ---
 

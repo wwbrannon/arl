@@ -2,15 +2,15 @@
 
 engine <- make_engine()
 
-test_that("substring extracts string portions", {
+test_that("string-slice extracts string portions", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$substring("hello", 1, 4), "ell")
-  expect_equal(env$substring("world", 0, 3), "wor")
+  expect_equal(env$`string-slice`("hello", 1, 4), "ell")
+  expect_equal(env$`string-slice`("world", 0, 3), "wor")
 
   # Full string
-  expect_equal(env$substring("test", 0, 4), "test")
+  expect_equal(env$`string-slice`("test", 0, 4), "test")
 })
 
 test_that("string case conversion works", {
@@ -158,13 +158,13 @@ test_that("string and io helpers work", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  expect_equal(env$str("a", 1, "b"), "a1b")
+  expect_equal(env$`string-concat`("a", 1, "b"), "a1b")
   expect_equal(env$`format-value`(list(1, 2, 3)), "(1 2 3)")
   expect_equal(env$`format-value`(quote(f(a, b))), "(f a b)")
   expect_equal(env$`string-join`(list("a", "b", "c"), "-"), "a-b-c")
   expect_equal(env$`string-split`("a-b-c", "-"), list("a", "b", "c"))
   expect_equal(env$trim("  hi "), "hi")
-  expect_equal(env$format("x=%s", "y"), "x=y")
+  expect_equal(env$`string-format`("x=%s", "y"), "x=y")
 
   con <- textConnection("hello")
   old_opts <- options(arl.stdin = con)
@@ -207,17 +207,17 @@ test_that("string operations handle edge cases", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
-  # str with no arguments returns empty string
-  expect_equal(env$str(), "")
+  # string-concat with no arguments returns empty string
+  expect_equal(env$`string-concat`(), "")
 
-  # str with single argument
-  expect_equal(env$str("hello"), "hello")
+  # string-concat with single argument
+  expect_equal(env$`string-concat`("hello"), "hello")
 
-  # str with NULL (NULLs are skipped)
-  expect_equal(env$str(NULL, "world"), "world")
+  # string-concat with NULL (NULLs are skipped)
+  expect_equal(env$`string-concat`(NULL, "world"), "world")
 
-  # str with numbers
-  expect_equal(env$str(1, 2, 3), "123")
+  # string-concat with numbers
+  expect_equal(env$`string-concat`(1, 2, 3), "123")
 
   # string-join with empty list
   expect_equal(env$`string-join`(list(), "-"), "")
@@ -253,12 +253,12 @@ test_that("string-find returns #nil when pattern not found", {
   expect_null(result)
 })
 
-test_that("substring errors on negative start", {
+test_that("string-slice errors on negative start", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
   expect_error(
-    engine$eval(engine$read('(substring "hello" -1 3)')[[1]], env = env),
+    engine$eval(engine$read('(string-slice "hello" -1 3)')[[1]], env = env),
     "start index cannot be negative")
 })
 

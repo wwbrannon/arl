@@ -1,10 +1,10 @@
 ;;; Arl Standard Library - String Helpers
 
 (module strings
-  (export string-join string-split trim format string-contains? string-match?
+  (export string-join string-split trim string-format string-contains? string-match?
           string-find string-replace string-replace-all string-append ->string
           char-at string-ref
-          substring string-length
+          string-slice string-length
           string-upcase string-downcase string-titlecase
           string<? string>? string=? string<=? string>=?
           string->list list->string
@@ -28,7 +28,7 @@
   ;;' (assert-equal "a-b-c" (string-join (list "a" "b" "c") "-"))
   ;;' (assert-equal "xyz" (string-join (list "x" "y" "z")))
   ;;' (assert-equal "hello world" (string-join (list "hello" "world") " "))
-  ;;' @seealso string-split, str
+  ;;' @seealso string-split, string-format
   (define string-join
     (lambda (x (sep ""))
       (paste (unlist (__as-list x)) :collapse sep)))
@@ -60,15 +60,15 @@
 
   ;;' @description Format string with sprintf.
   ;;' @examples
-  ;;' (format "Hello, %s!" "world")   ; => "Hello, world!"
-  ;;' (format "%d + %d = %d" 1 2 3)   ; => "1 + 2 = 3"
-  ;;' (format "%.2f" 3.14159)          ; => "3.14"
+  ;;' (string-format "Hello, %s!" "world")   ; => "Hello, world!"
+  ;;' (string-format "%d + %d = %d" 1 2 3)   ; => "1 + 2 = 3"
+  ;;' (string-format "%.2f" 3.14159)          ; => "3.14"
   ;;' @assert
-  ;;' (assert-equal "Hello, world!" (format "Hello, %s!" "world"))
-  ;;' (assert-equal "1 + 2 = 3" (format "%d + %d = %d" 1 2 3))
-  ;;' (assert-equal "3.14" (format "%.2f" 3.14159))
-  ;;' @seealso str
-  (define format
+  ;;' (assert-equal "Hello, world!" (string-format "Hello, %s!" "world"))
+  ;;' (assert-equal "1 + 2 = 3" (string-format "%d + %d = %d" 1 2 3))
+  ;;' (assert-equal "3.14" (string-format "%.2f" 3.14159))
+  ;;' @seealso string-concat
+  (define string-format
     (lambda (fmt . args)
       (r/call "sprintf" (cons fmt args))))
 
@@ -149,7 +149,7 @@
   ;;' (assert-equal "hello world" (string-append "hello" " " "world"))
   ;;' (assert-equal "abc" (string-append "a" "b" "c"))
   ;;' (assert-equal "" (string-append))
-  ;;' @seealso str, string-join
+  ;;' @seealso string-concat, string-join
   (define string-append
     (lambda (. args)
       (if (r/call "==" (list (length args) 0))
@@ -180,7 +180,7 @@
   ;;' @assert
   ;;' (assert-equal "h" (char-at "hello" 0))
   ;;' (assert-equal "o" (char-at "hello" 4))
-  ;;' @seealso string-ref, substring
+  ;;' @seealso string-ref, string-slice
   (define char-at
     (lambda (str index)
       (if (< index 0)
@@ -198,22 +198,22 @@
   ;; Substring
   ;;' @description Extract substring from start (inclusive) to end (exclusive), 0-based.
   ;;' @examples
-  ;;' (substring "hello" 1 4)  ; => "ell"
-  ;;' (substring "hello" 0 5)  ; => "hello"
-  ;;' (substring "hello" 2 2)  ; => ""
+  ;;' (string-slice "hello" 1 4)  ; => "ell"
+  ;;' (string-slice "hello" 0 5)  ; => "hello"
+  ;;' (string-slice "hello" 2 2)  ; => ""
   ;;' @assert
-  ;;' (assert-equal "ell" (substring "hello" 1 4))
-  ;;' (assert-equal "hello" (substring "hello" 0 5))
-  ;;' (assert-equal "" (substring "hello" 2 2))
+  ;;' (assert-equal "ell" (string-slice "hello" 1 4))
+  ;;' (assert-equal "hello" (string-slice "hello" 0 5))
+  ;;' (assert-equal "" (string-slice "hello" 2 2))
   ;;' @seealso char-at
-  (define substring
+  (define string-slice
     (lambda (str start end)
       (if (< start 0)
-        (stop "substring: start index cannot be negative")
+        (stop "string-slice: start index cannot be negative")
         (if (> end (nchar str))
-          (stop (sprintf "substring: end index %d exceeds string length %d" end (nchar str)))
+          (stop (sprintf "string-slice: end index %d exceeds string length %d" end (nchar str)))
           (if (> start end)
-            (stop "substring: start index must be <= end index")
+            (stop "string-slice: start index must be <= end index")
             (if (== start end)
               ""
               (substr str (+ start 1) end)))))))

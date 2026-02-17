@@ -19,9 +19,9 @@
   `(* 2 ,x))
 
 (assert-equal 10 (double 5))
-(println (str "(double 5) = " (double 5)))
+(println (string-concat "(double 5) = " (double 5)))
 (assert-equal 6 (double (+ 1 2)))
-(println (str "(double (+ 1 2)) = " (double (+ 1 2))))
+(println (string-concat "(double (+ 1 2)) = " (double (+ 1 2))))
 
 ;; A macro that creates a variable with a default value
 ;;' @description Define a variable with a value.
@@ -30,7 +30,7 @@
 
 (defvar x 42)
 (assert-equal 42 x)
-(println (str "x = " x))
+(println (string-concat "x = " x))
 
 ;; ============================================================================
 ;; Macros with Multiple Expressions
@@ -81,7 +81,7 @@
 (define count 0)
 (do-times 5
   (set! count (+ count 1))
-  (println (str "Count: " count)))
+  (println (string-concat "Count: " count)))
 (assert-equal 5 count)
 
 ;; ============================================================================
@@ -112,7 +112,7 @@
 
 (println "Anaphoric if example:")
 (aif (+ 2 3)
-     (println (str "Result is: " it))
+     (println (string-concat "Result is: " it))
      (println "No result"))
 
 ;; ============================================================================
@@ -125,7 +125,7 @@
 ;;' @description Define and run a simple test case.
 (defmacro deftest (name . body)
   `(begin
-     (println (str "Running test: " (quote ,name)))
+     (println (string-concat "Running test: " (quote ,name)))
      ,@body
      (println "Test passed!\n")))
 
@@ -134,7 +134,7 @@
   (assert (= (+ 5 5) 10) "5 + 5 should equal 10"))
 
 (deftest string-operations
-  (assert (= (str "hello" " " "world") "hello world")
+  (assert (= (string-concat "hello" " " "world") "hello world")
           "String concatenation works"))
 
 ;; ============================================================================
@@ -151,9 +151,9 @@
      (set! ,b temp)))
 
 (println "Demonstrating gensym:")
-(println (str "Generated symbol 1: " (gensym)))
-(println (str "Generated symbol 2: " (gensym)))
-(println (str "Generated symbol with prefix: " (gensym "my-prefix")))
+(println (string-concat "Generated symbol 1: " (gensym)))
+(println (string-concat "Generated symbol 2: " (gensym)))
+(println (string-concat "Generated symbol with prefix: " (gensym "my-prefix")))
 
 ;; ============================================================================
 ;; Quasiquote Examples
@@ -196,7 +196,7 @@
                      (+ 3)
                      (* 2)
                      (- 1)))
-(println (str "Result: " (-> 5
+(println (string-concat "Result: " (-> 5
                               (+ 3)
                               (* 2)
                               (- 1))))  ; ((5 + 3) * 2) - 1 = 15
@@ -214,7 +214,7 @@
     `(quote ,result)))
 
 (assert-equal 42 (const-multiply 6 7))
-(println (str "(const-multiply 6 7) = " (const-multiply 6 7)))
+(println (string-concat "(const-multiply 6 7) = " (const-multiply 6 7)))
 (println "This multiplication happened at macro expansion time!")
 
 (define threading-result (-> 5 (+ 3) (* 2) (- 1)))

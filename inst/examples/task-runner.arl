@@ -34,15 +34,15 @@
           (set! visited (append visited (list name)))
           (define task (task-by-name name))
           (define deps (get "deps" task))
-          (for (dep deps)
+          (do-list (dep deps)
             (visit dep))
           (set! run-order (append run-order (list name)))))))
 
 (println "=== Task Runner ===")
-(for (t tasks)
+(do-list (t tasks)
   (visit (get "name" t)))
 (assert-equal (list "clean" "compile" "test" "package" "deploy") run-order)
 (assert-equal 5 (length run-order))
-(println (str "Execution order: " run-order))
+(println (string-concat "Execution order: " run-order))
 
 (println "\nExample complete!")

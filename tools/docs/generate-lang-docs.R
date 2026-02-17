@@ -458,7 +458,6 @@ MODULE_SOURCE_FILES <- list(
   list(file = "sequences.arl",   desc = NULL),
   list(file = "sort.arl",        desc = NULL),
   list(file = "struct.arl",      desc = NULL),
-  list(file = "error.arl",       desc = NULL),
   list(file = "threading.arl",   desc = NULL),
   list(file = "binding.arl",     desc = NULL),
   list(file = "looping.arl",     desc = NULL),

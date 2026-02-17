@@ -17,7 +17,7 @@
       ((= (% n 15) 0) "FizzBuzz")
       ((= (% n 3) 0) "Fizz")
       ((= (% n 5) 0) "Buzz")
-      (else (str n)))))
+      (else (string-concat n)))))
 
 (assert-equal "1" (fizzbuzz 1))
 (assert-equal "2" (fizzbuzz 2))
@@ -36,7 +36,7 @@
 ;; ============================================================================
 
 (println "\nUsing for loop (1-15):")
-(for (n (seq 1 15))
+(do-list (n (seq 1 15))
   (println (fizzbuzz n)))
 
 ;; ============================================================================
@@ -59,11 +59,11 @@
   (lambda (n)
     (let ((result ""))
       (when (= (% n 3) 0)
-        (set! result (str result "Fizz")))
+        (set! result (string-concat result "Fizz")))
       (when (= (% n 5) 0)
-        (set! result (str result "Buzz")))
+        (set! result (string-concat result "Buzz")))
       (when (= result "")
-        (set! result (str n)))
+        (set! result (string-concat n)))
       result)))
 
 (assert-equal "Fizz" (fizzbuzz-when 3))
@@ -72,7 +72,7 @@
 (assert-equal "1" (fizzbuzz-when 1))
 
 (println "\nUsing when (1-10):")
-(for (n (seq 1 10))
+(do-list (n (seq 1 10))
   (println (fizzbuzz-when n)))
 
 ;; ============================================================================
@@ -85,11 +85,11 @@
       ((0) "FizzBuzz")
       ((3 6 9 12) "Fizz")
       ((5 10) "Buzz")
-      (else (str n)))))
+      (else (string-concat n)))))
 
 (println "\nUsing case (note: case checks exact value, not pattern):")
 (println "1-15 with case-based FizzBuzz:")
-(for (n (seq 1 15))
+(do-list (n (seq 1 15))
   (println (fizzbuzz-case n)))
 
 ;; ============================================================================
@@ -112,9 +112,9 @@
 (assert-equal (list 3 6 9 12 15 18 21 24 27 30) fizz-numbers)
 (assert-equal (list 5 10 15 20 25 30) buzz-numbers)
 (assert-equal (list 15 30) fizzbuzz-numbers)
-(println (str "Fizz numbers (1-30): " fizz-numbers))
-(println (str "Buzz numbers (1-30): " buzz-numbers))
-(println (str "FizzBuzz numbers (1-30): " fizzbuzz-numbers))
+(println (string-concat "Fizz numbers (1-30): " fizz-numbers))
+(println (string-concat "Buzz numbers (1-30): " buzz-numbers))
+(println (string-concat "FizzBuzz numbers (1-30): " fizzbuzz-numbers))
 
 ;; ============================================================================
 ;; Count FizzBuzz occurrences

@@ -75,15 +75,15 @@ test_that("optimized math functions have docstrings", {
 
   engine$eval(engine$read('(import math)')[[1]], env = env)
 
-  # Test a few optimized functions
-  abs_doc <- engine$eval(engine$read('(doc abs)')[[1]], env = env)
-  expect_match(abs_doc, "absolute value", ignore.case = TRUE)
+  # Test a few optimized functions that remain in math module
+  inc_doc <- engine$eval(engine$read('(doc inc)')[[1]], env = env)
+  expect_match(inc_doc, "increment", ignore.case = TRUE)
 
-  sqrt_doc <- engine$eval(engine$read('(doc sqrt)')[[1]], env = env)
-  expect_match(sqrt_doc, "square root", ignore.case = TRUE)
+  clamp_doc <- engine$eval(engine$read('(doc clamp)')[[1]], env = env)
+  expect_match(clamp_doc, "clamp", ignore.case = TRUE)
 
-  sin_doc <- engine$eval(engine$read('(doc sin)')[[1]], env = env)
-  expect_match(sin_doc, "sine", ignore.case = TRUE)
+  signum_doc <- engine$eval(engine$read('(doc signum)')[[1]], env = env)
+  expect_match(signum_doc, "sign", ignore.case = TRUE)
 })
 
 test_that("optimized predicate functions have docstrings", {
@@ -127,8 +127,8 @@ test_that("docstrings survive nested imports (strings imports list, math, core)"
   expect_false(is.null(attr(trim_fn, "arl_doc", exact = TRUE)))
   expect_match(attr(trim_fn, "arl_doc")$description, "whitespace", ignore.case = TRUE)
 
-  # format is defined later in the file — also after all imports
-  fmt_fn <- get("format", envir = env, inherits = TRUE)
+  # string-format is defined later in the file — also after all imports
+  fmt_fn <- get("string-format", envir = env, inherits = TRUE)
   expect_false(is.null(attr(fmt_fn, "arl_doc", exact = TRUE)))
   expect_match(attr(fmt_fn, "arl_doc")$description, "sprintf|format", ignore.case = TRUE)
 })
@@ -144,8 +144,8 @@ test_that("docstrings survive nested imports across multiple modules", {
 
   # strings: trim (after 3 nested imports)
   expect_false(is.null(attr(get("trim", envir = env, inherits = TRUE), "arl_doc")))
-  # sort: sort (imports list, types, core)
-  sort_fn <- get("sort", envir = env, inherits = TRUE)
+  # sort: list-sort (imports list, types, core)
+  sort_fn <- get("list-sort", envir = env, inherits = TRUE)
   expect_false(is.null(attr(sort_fn, "arl_doc", exact = TRUE)))
   # dict: dict (imports list, types, core, equality)
   dict_fn <- get("dict", envir = env, inherits = TRUE)

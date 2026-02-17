@@ -1,6 +1,10 @@
 o) read module guide
 
+o) update docs with fix to import permissible positioning
+
 o) load and run should not check the stdlib modules
+
+o) what happens if parent.env<- goes away
 
 o) we probably honestly don't want load, and thus run, doing any caching at all
 
@@ -11,6 +15,8 @@ o) more future-proof import syntax a la python
 o) the module system seems to decide what a module is called based on its filename
 
 o) run the test auditor and doc auditor again
+
+o) code duplication and removal check
 
 words to write yourself
 o) README: package does not include a citation file, revise wording, actually figure out the citation at all

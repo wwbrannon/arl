@@ -19,8 +19,8 @@
 ;; ============================================================================
 
 (define test-substring-basic (lambda ()
-  (assert-equal (substring "hello world" 0 5) "hello")
-  (assert-equal (substring "hello world" 6 11) "world")))
+  (assert-equal (string-slice "hello world" 0 5) "hello")
+  (assert-equal (string-slice "hello world" 6 11) "world")))
 
 ;; ============================================================================
 ;; Case Conversion

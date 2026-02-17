@@ -215,7 +215,7 @@ test_that("capture allows intentional binding capture", {
 test_that("stdlib macros from files work", {
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
-  import_stdlib_modules(engine, c("control", "binding", "looping", "threading", "error"), env = env)
+  import_stdlib_modules(engine, c("control", "binding", "looping", "threading"), env = env)
 
   result <- engine$eval(engine$read("(cond ((> 1 2) 1) ((< 1 2) 2) (else 3))")[[1]], env = env)
   expect_equal(result, 2)
@@ -248,13 +248,13 @@ test_that("stdlib macros from files work", {
   result <- engine$eval(engine$read("(->> (list 1 2 3) (map (lambda (x) (* x 2))) (reduce +))")[[1]], env = env)
   expect_equal(result, 12)
 
-  result <- engine$eval(engine$read("(try (error \"boom\") (catch e 42))")[[1]], env = env)
+  result <- engine$eval(engine$read("(try-catch (error \"boom\") (catch e 42))")[[1]], env = env)
   expect_equal(result, 42)
 
   result <- engine$eval(
     engine$read(paste0(
       "(begin (define x 0) ",
-      "(try (begin (set! x 1) (error \"boom\")) ",
+      "(try-catch (begin (set! x 1) (error \"boom\")) ",
       "(catch e (set! x 2)) ",
       "(finally (set! x 3))) ",
       "x)"
