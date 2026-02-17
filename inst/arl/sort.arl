@@ -8,10 +8,10 @@
 (module sort
   (export list-sort sort-by merge-sorted stable-sort)
 
-  (import _utils :only (_as-list))
-  (import list :only (car cdr cadr cons append reverse))
-  (import types :only (null?))
-  (import core :only (r/call))
+  (import _utils :refer (_as-list))
+  (import list :refer (car cdr cadr cons append reverse))
+  (import types :refer (null?))
+  (import core :refer (r-call))
 
   ;;' @section Sorting
   ;;' General-purpose sorting with user-supplied comparator functions.
@@ -113,8 +113,8 @@
         items
         (begin
           (define mid (as.integer (/ (length items) 2)))
-          (define left (r/call "[" (list items (seq_len mid))))
-          (define right (r/call "[" (list items (seq (+ mid 1) (length items)))))
+          (define left (r-call "[" (list items (seq_len mid))))
+          (define right (r-call "[" (list items (seq (+ mid 1) (length items)))))
           (merge-sorted (stable-sort left comparator)
                  (stable-sort right comparator)
                  comparator)))))

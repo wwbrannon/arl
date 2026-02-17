@@ -941,12 +941,11 @@ Compiler <- R6::R6Class(
       # Pass argument unevaluated (module name is a symbol/string, not a variable lookup)
       arg_quoted <- as.call(list(quote(quote), expr[[2]]))
 
-      # Parse optional keyword modifiers: :only, :except, :prefix, :rename, :reload
-      only <- NULL
-      except <- NULL
-      prefix <- NULL
+      # Parse optional keyword modifiers: :refer, :as, :rename, :reload
       rename <- NULL
       reload <- FALSE
+      as_alias <- NULL
+      refer <- NULL
 
       if (length(expr) > 2) {
         rest <- as.list(expr)[-(1:2)]
@@ -977,40 +976,7 @@ Compiler <- R6::R6Class(
           val <- rest[[i + 1]]
           i <- i + 2
 
-          if (kw_name == "only") {
-            if (!is.null(only)) {
-              return(private$fail("import: duplicate :only modifier"))
-            }
-            if (!is.null(except)) {
-              return(private$fail("import: :only and :except are mutually exclusive"))
-            }
-            # val should be a list of symbols (parsed as a call)
-            syms <- private$parse_symbol_list(val, ":only")
-            if (is.character(syms) && length(syms) == 1 && startsWith(syms, "ERROR:")) {
-              return(private$fail(substring(syms, 7)))
-            }
-            only <- syms
-          } else if (kw_name == "except") {
-            if (!is.null(except)) {
-              return(private$fail("import: duplicate :except modifier"))
-            }
-            if (!is.null(only)) {
-              return(private$fail("import: :only and :except are mutually exclusive"))
-            }
-            syms <- private$parse_symbol_list(val, ":except")
-            if (is.character(syms) && length(syms) == 1 && startsWith(syms, "ERROR:")) {
-              return(private$fail(substring(syms, 7)))
-            }
-            except <- syms
-          } else if (kw_name == "prefix") {
-            if (!is.null(prefix)) {
-              return(private$fail("import: duplicate :prefix modifier"))
-            }
-            if (!is.symbol(val)) {
-              return(private$fail("import: :prefix requires a symbol"))
-            }
-            prefix <- as.character(val)
-          } else if (kw_name == "rename") {
+          if (kw_name == "rename") {
             if (!is.null(rename)) {
               return(private$fail("import: duplicate :rename modifier"))
             }
@@ -1020,36 +986,62 @@ Compiler <- R6::R6Class(
               return(private$fail(substring(rename_map, 7)))
             }
             rename <- rename_map
+          } else if (kw_name == "as") {
+            if (!is.null(as_alias)) {
+              return(private$fail("import: duplicate :as modifier"))
+            }
+            if (!is.symbol(val)) {
+              return(private$fail("import: :as requires a symbol"))
+            }
+            alias_str <- as.character(val)
+            if (grepl("/", alias_str, fixed = TRUE)) {
+              return(private$fail("import: :as alias must not contain '/'"))
+            }
+            as_alias <- alias_str
+          } else if (kw_name == "refer") {
+            if (!is.null(refer)) {
+              return(private$fail("import: duplicate :refer modifier"))
+            }
+            # :refer :all or :refer (sym1 sym2 ...)
+            if (inherits(val, "arl_keyword") && identical(as.character(val), "all")) {
+              refer <- TRUE
+            } else {
+              syms <- private$parse_symbol_list(val, ":refer")
+              if (is.character(syms) && length(syms) == 1 && startsWith(syms, "ERROR:")) {
+                return(private$fail(substring(syms, 7)))
+              }
+              refer <- syms
+            }
           } else {
             return(private$fail(sprintf(
-              "import: unknown modifier :%s (expected :only, :except, :prefix, :rename, or :reload)",
+              "import: unknown modifier :%s (expected :as, :refer, :rename, or :reload)",
               kw_name
             )))
           }
         }
       }
 
-      # Build the call: .__import(quote(name), env, only, except, prefix, rename)
+      # Build the call: .__import(quote(name), env, ...)
       call_args <- list(
         as.symbol(".__import"),
         arg_quoted,
         as.symbol(self$env_var_name)
       )
-      # Pass non-NULL modifiers as literal R values
-      if (!is.null(only)) {
-        call_args$only <- only
-      }
-      if (!is.null(except)) {
-        call_args$except <- except
-      }
-      if (!is.null(prefix)) {
-        call_args$prefix <- prefix
-      }
       if (!is.null(rename)) {
         call_args$rename <- rename
       }
       if (isTRUE(reload)) {
         call_args$reload <- TRUE
+      }
+      if (!is.null(as_alias)) {
+        call_args$as_alias <- as_alias
+      }
+      if (!is.null(refer)) {
+        if (isTRUE(refer)) {
+          call_args$refer <- TRUE
+        } else {
+          call_args$refer <- refer
+        }
       }
       as.call(call_args)
     },
@@ -1229,15 +1221,33 @@ Compiler <- R6::R6Class(
       ))
     },
     compile_module = function(expr) {
-      if (length(expr) < 3) {
-        return(private$fail("module requires at least 2 arguments: (module name (export ...) body...)"))
+      if (length(expr) < 2) {
+        return(private$fail("module requires at least: (module name (export ...) body...) or (module (export ...) body...)"))
       }
-      module_name <- expr[[2]]
-      name_str <- private$as_name_string(module_name)
-      if (is.null(name_str)) {
-        return(private$fail("module name must be a symbol or string"))
+
+      # Detect nameless form: (module (export ...) body...)
+      # vs named form: (module name (export ...) body...)
+      second <- expr[[2]]
+      is_nameless <- is.call(second) && length(second) >= 1 && is.symbol(second[[1]]) &&
+        as.character(second[[1]]) %in% c("export", "export-all")
+
+      if (is_nameless) {
+        name_str <- ""
+        exports_expr <- second
+        body_exprs <- as.list(expr)[-(1:2)]
+      } else {
+        if (length(expr) < 3) {
+          return(private$fail("named module requires at least 2 arguments: (module name (export ...) body...)"))
+        }
+        module_name <- second
+        name_str <- private$as_name_string(module_name)
+        if (is.null(name_str)) {
+          return(private$fail("module name must be a symbol or string"))
+        }
+        exports_expr <- expr[[3]]
+        body_exprs <- as.list(expr)[-(1:3)]
       }
-      exports_expr <- expr[[3]]
+
       if (!is.call(exports_expr) || length(exports_expr) < 1 || !is.symbol(exports_expr[[1]])) {
         return(private$fail("module requires an export list: (module name (export ...) body...)"))
       }
@@ -1270,7 +1280,6 @@ Compiler <- R6::R6Class(
       } else {
         return(private$fail("module requires an export list: (module name (export ...) body...)"))
       }
-      body_exprs <- as.list(expr)[-(1:3)]
       body_exprs <- if (length(body_exprs) == 0) list() else body_exprs
       src <- private$src_get(expr)
       src_file <- NULL

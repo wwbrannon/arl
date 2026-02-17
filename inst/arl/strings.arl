@@ -10,10 +10,10 @@
           string->list list->string
           number->string string->number)
 
-  (import _utils :only (_as-list))
-  (import list :only (car cons))
-  (import math :only (quotient))
-  (import core :only (r/call))
+  (import _utils :refer (_as-list))
+  (import list :refer (car cons))
+  (import math :refer (quotient))
+  (import core :refer (r-call))
 
   ;;' @section String Operations
   ;;' Core string manipulation functions: joining, splitting, searching,
@@ -44,7 +44,7 @@
   ;;' @seealso string-join
   (define string-split
     (lambda (x (sep ""))
-      (as.list (unname (r/call "[[" (list (strsplit x :split sep :fixed #t) 1))))))
+      (as.list (unname (r-call "[[" (list (strsplit x :split sep :fixed #t) 1))))))
 
   ;; DESIGN NOTE: Simple one-argument pass-through functions use direct
   ;; assignment to avoid unnecessary stack frames.
@@ -71,7 +71,7 @@
   ;;' @seealso string-concat
   (define string-format
     (lambda (fmt . args)
-      (r/call "sprintf" (cons fmt args))))
+      (r-call "sprintf" (cons fmt args))))
 
   ;;' @description Check pattern in string (fixed).
   ;;' @examples
@@ -114,7 +114,7 @@
   (define string-find
     (lambda (str pattern (fixed #t))
       (define match (regexpr pattern str :fixed fixed))
-      (define pos (r/call "[[" (list match 1)))
+      (define pos (r-call "[[" (list match 1)))
       (if (< pos 0) #nil (- pos 1))))
 
   ;;' @description Replace first match. Default is literal (fixed); pass :fixed #f for regex.
@@ -153,9 +153,9 @@
   ;;' @seealso string-concat, string-join
   (define string-append
     (lambda (. args)
-      (if (r/call "==" (list (length args) 0))
+      (if (r-call "==" (list (length args) 0))
         ""
-        (r/call "paste0" args))))
+        (r-call "paste0" args))))
 
   ;;' @description Convert value to string representation.
   ;;' @signature (->string x)
@@ -270,7 +270,7 @@
     (lambda (str)
       ;; Simple implementation: split on spaces, capitalize each word
       (begin
-        (define words (r/call "[[" (list (strsplit str " ") 1)))
+        (define words (r-call "[[" (list (strsplit str " ") 1)))
         (define capitalize-word
           (lambda (word)
             (if (== (nchar word) 0)
@@ -360,7 +360,7 @@
     (lambda (str)
       (if (== (nchar str) 0)
         (list)
-        (as.list (r/call "[[" (list (strsplit str "") 1))))))
+        (as.list (r-call "[[" (list (strsplit str "") 1))))))
 
   ;;' @description Convert list of characters to string.
   ;;' @examples
@@ -397,9 +397,9 @@
             (if (== base 10)
               (as.character num)
               (if (== base 16)
-                (tolower (r/call "as.hexmode" (list (as.integer num))))
+                (tolower (r-call "as.hexmode" (list (as.integer num))))
                 (if (== base 8)
-                  (as.character (r/call "as.octmode" (list (as.integer num))))
+                  (as.character (r-call "as.octmode" (list (as.integer num))))
                   (if (== base 2)
                     ;; Binary conversion
                     (begin
@@ -460,15 +460,15 @@
                     (if (== base 2)
                       ;; Binary parsing
                       (begin
-                        (define chars (r/call "[[" (list (strsplit str "") 1)))
+                        (define chars (r-call "[[" (list (strsplit str "") 1)))
                         (define parse-binary
                           (lambda (digits acc)
                             (if (== (length digits) 0)
                               acc
                               (begin
-                                (define d (r/call "[[" (list digits 1)))
+                                (define d (r-call "[[" (list digits 1)))
                                 (define rest (if (> (length digits) 1)
-                                              (r/call "[" (list digits (seq 2 (length digits))))
+                                              (r-call "[" (list digits (seq 2 (length digits))))
                                               (list)))
                                 (if (if (== d "0") #t (== d "1"))
                                   (parse-binary rest (+ (* acc 2) (as.integer d)))

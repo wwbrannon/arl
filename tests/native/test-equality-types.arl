@@ -54,10 +54,10 @@
 
 (define test-equal-with-environments (lambda ()
   ;; equal? should handle reference-semantic types like environments
-  (define env1 (r/call "new.env" (list)))
-  (define env2 (r/call "new.env" (list)))
-  (r/call "assign" (list "x" 1 :envir env1))
-  (r/call "assign" (list "x" 1 :envir env2))
+  (define env1 (r-call "new.env" (list)))
+  (define env2 (r-call "new.env" (list)))
+  (r-call "assign" (list "x" 1 :envir env1))
+  (r-call "assign" (list "x" 1 :envir env2))
   (assert-false (identical? env1 env2))  ;; Different objects
   (assert-true (equal? env1 env2))))     ;; Same contents
 

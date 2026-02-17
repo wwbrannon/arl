@@ -1,6 +1,16 @@
 # Module registry for Arl modules. Tracks loaded modules (name -> list(env, exports, path))
 # and supports attach into a target environment. Used by compiled runtime for (import ...).
 
+# Create a namespace node: a locked environment representing a hierarchical module prefix.
+# Used for qualified access like collections/sorted-set where "collections" is a namespace.
+make_namespace_node <- function(prefix) {
+  ns <- new.env(parent = emptyenv())
+  assign(".__namespace_prefix", prefix, envir = ns)
+  class(ns) <- "arl_namespace"
+  lockEnvironment(ns, bindings = TRUE)
+  ns
+}
+
 # Create active bindings directly in target_env (no proxy, no chain modification).
 # Used for prelude squash loading and toplevel_env test helper.
 squash_active_bindings <- function(module_env, orig_names, target_names,
@@ -208,6 +218,16 @@ ModuleRegistry <- R6::R6Class(
       }
       matches
     },
+    # @description Check if any registered module name starts with the given prefix + "/".
+    # @param prefix A string prefix (e.g. "collections").
+    # @return Logical.
+    has_prefix = function(prefix) {
+      registry <- self$arl_env$module_registry_env(create = FALSE)
+      if (is.null(registry)) return(FALSE)
+      needle <- paste0(prefix, "/")
+      all_keys <- ls(registry, all.names = TRUE)
+      any(startsWith(all_keys, needle))
+    },
     # @description Remove a module from the registry.
     # @param name Module name (single string).
     unregister = function(name) {
@@ -269,12 +289,10 @@ ModuleRegistry <- R6::R6Class(
     # @description Attach a module's exports into an arbitrary target environment.
     # @param name Module name (single string).
     # @param target_env Environment to attach exports into.
-    # @param only Character vector of names to import (NULL = all). Mutually exclusive with except.
-    # @param except Character vector of names to exclude (NULL = none). Mutually exclusive with only.
-    # @param prefix String to prepend to all imported names (NULL = no prefix).
+    # @param only Character vector of names to import (NULL = all).
     # @param rename Named character vector: names are original, values are new names (NULL = no rename).
     # @param squash If TRUE, create active bindings directly in target_env (no proxy).
-    attach_into = function(name, target_env, only = NULL, except = NULL, prefix = NULL, rename = NULL, squash = FALSE) {
+    attach_into = function(name, target_env, only = NULL, rename = NULL, squash = FALSE) {
       entry <- self$get(name)
       if (is.null(entry)) {
         stop(sprintf("module '%s' is not loaded", name))
@@ -282,23 +300,16 @@ ModuleRegistry <- R6::R6Class(
       exports <- entry$exports
       module_env <- entry$env
 
-      # Apply filtering: only/except
+      # Apply filtering
       if (!is.null(only)) {
         bad <- setdiff(only, exports)
         if (length(bad) > 0L) {
           stop(sprintf("module '%s' does not export '%s'", name, bad[1L]), call. = FALSE)
         }
         exports <- intersect(exports, only)
-      } else if (!is.null(except)) {
-        bad <- setdiff(except, exports)
-        if (length(bad) > 0L) {
-          stop(sprintf("module '%s' does not export '%s'", name, bad[1L]), call. = FALSE)
-        }
-        exports <- setdiff(exports, except)
       }
 
       # Build name mapping: original_name -> target_name
-      # Apply rename first, then prefix
       target_names <- exports
       if (!is.null(rename)) {
         bad <- setdiff(names(rename), exports)
@@ -308,9 +319,6 @@ ModuleRegistry <- R6::R6Class(
         idx <- match(names(rename), exports)
         valid <- !is.na(idx)
         target_names[idx[valid]] <- unname(rename[valid])
-      }
-      if (!is.null(prefix)) {
-        target_names <- paste0(prefix, target_names)
       }
 
       module_macro_registry <- get0(".__macros", envir = module_env, inherits = FALSE)

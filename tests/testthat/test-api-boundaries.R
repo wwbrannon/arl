@@ -73,20 +73,20 @@ test_that("module registry bindings are locked", {
   }, "locked")
 })
 
-test_that("r/eval without env parameter works correctly", {
+test_that("r-eval without env parameter works correctly", {
   engine <- make_engine()
 
-  # r/eval should work without explicit env parameter
+  # r-eval should work without explicit env parameter
   result <- engine$eval_text('
     (define x 100)
-    (r/eval (quote (+ x 1)))
+    (r-eval (quote (+ x 1)))
   ')
 
   expect_equal(result, 101)
 
   # Should work in nested contexts
   result2 <- engine$eval_text('
-    ((lambda (y) (r/eval (quote (+ y 10)))) 5)
+    ((lambda (y) (r-eval (quote (+ y 10)))) 5)
   ')
 
   expect_equal(result2, 15)
@@ -98,7 +98,7 @@ test_that(".__env is documented as internal", {
   engine <- make_engine()
 
   # .__env exists in compiled lambda bodies for internal use
-  fn <- engine$eval_text('(lambda (x) (r/eval (quote (environment))))')
+  fn <- engine$eval_text('(lambda (x) (r-eval (quote (environment))))')
   env <- fn(42)
 
   # It should have .__env bound

@@ -193,9 +193,9 @@ Macro wrapper around try with catch/finally.
 
 ## Continuations {#section-continuations}
 
-### call/cc {#call-cc}
+### call-cc {#call-cc}
 
-**Signature:** `(call/cc receiver)`
+**Signature:** `(call-cc receiver)`
 
 **Note:** Alias for R's `callCC`. The receiver is passed the current continuation.
 
@@ -207,9 +207,9 @@ Macro wrapper around try with catch/finally.
 
 **Signature:** `(call-with-current-continuation receiver)`
 
-**Note:** Full name alias for `call/cc`.
+**Note:** Full name alias for `call-cc`.
 
-**See also:** [call/cc](#call-cc)
+**See also:** [call-cc](#call-cc)
 
 ---
 

@@ -53,14 +53,14 @@ test_that("use-method dispatches using generic-name parameter (not hardcoded to 
   eng$eval(eng$read('(define describe.default (lambda (a) (begin "default description")))')[[1]], env = env)
 
   # Create an object of class my_obj
-  eng$eval(eng$read('(define obj (r/call "structure" (list (list 1) :class "my_obj")))')[[1]], env = env)
+  eng$eval(eng$read('(define obj (r-call "structure" (list (list 1) :class "my_obj")))')[[1]], env = env)
 
   # use-method with "describe" should find describe.my_obj, not equal?.my_obj
   result <- eng$eval(eng$read('(use-method "describe" obj (list obj))')[[1]], env = env)
   expect_equal(result, "my_obj description")
 
   # use-method with unknown class should fall back to describe.default
-  eng$eval(eng$read('(define other (r/call "structure" (list (list 2) :class "unknown_cls")))')[[1]], env = env)
+  eng$eval(eng$read('(define other (r-call "structure" (list (list 2) :class "unknown_cls")))')[[1]], env = env)
   result <- eng$eval(eng$read('(use-method "describe" other (list other))')[[1]], env = env)
   expect_equal(result, "default description")
 })
@@ -83,20 +83,20 @@ test_that("set-method! registers and overwrites methods", {
   # Overwrite: second registration for same generic.class wins.
   # Run entirely in Arl so equal? and set-method! use the same env (no R->Arl closure env subtlety).
   eng$eval(eng$read('(set-method! (quote equal?) (quote overwrite_test) (lambda (a b strict) #t))')[[1]], env = env)
-  eng$eval(eng$read("(define o1 (r/call \"structure\" (list (list 1) :class \"overwrite_test\")))")[[1]], env = env)
-  eng$eval(eng$read("(define o2 (r/call \"structure\" (list (list 1) :class \"overwrite_test\")))")[[1]], env = env)
+  eng$eval(eng$read("(define o1 (r-call \"structure\" (list (list 1) :class \"overwrite_test\")))")[[1]], env = env)
+  eng$eval(eng$read("(define o2 (r-call \"structure\" (list (list 1) :class \"overwrite_test\")))")[[1]], env = env)
   res_first <- eng$eval(eng$read("(equal? o1 o2)")[[1]], env = env)
   expect_true(identical(res_first, TRUE))
 
   eng$eval(eng$read('(set-method! (quote equal?) (quote overwrite_test) equal?.list)')[[1]], env = env)
   # Binding must exist in (toplevel-env) after set-method!
-  exists_after <- eng$eval(eng$read('(r/call "exists" (list "equal?.overwrite_test" :envir (toplevel-env)))')[[1]], env = env)
+  exists_after <- eng$eval(eng$read('(r-call "exists" (list "equal?.overwrite_test" :envir (toplevel-env)))')[[1]], env = env)
   expect_true(identical(exists_after, TRUE))
   # set up some objects to use
-  eng$eval(eng$read("(define o3 (r/call \"structure\" (list (list 3) :class \"overwrite_test\")))")[[1]], env = env)
-  eng$eval(eng$read("(define o4 (r/call \"structure\" (list (list 4) :class \"overwrite_test\")))")[[1]], env = env)
+  eng$eval(eng$read("(define o3 (r-call \"structure\" (list (list 3) :class \"overwrite_test\")))")[[1]], env = env)
+  eng$eval(eng$read("(define o4 (r-call \"structure\" (list (list 4) :class \"overwrite_test\")))")[[1]], env = env)
   # Directly get method from (toplevel-env) and call it: should be the one able to return FALSE
-  direct_call <- eng$eval(eng$read('(begin (define e (toplevel-env)) (define m (r/call "get0" (list "equal?.overwrite_test" :envir e :inherits #f))) (m o3 o4 #f))')[[1]], env = env)
+  direct_call <- eng$eval(eng$read('(begin (define e (toplevel-env)) (define m (r-call "get0" (list "equal?.overwrite_test" :envir e :inherits #f))) (m o3 o4 #f))')[[1]], env = env)
   expect_identical(direct_call, FALSE)
   res_second <- eng$eval(eng$read("(equal? o3 o4)")[[1]], env = env)
   expect_identical(res_second, FALSE)

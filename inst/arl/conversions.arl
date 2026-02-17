@@ -6,7 +6,7 @@
           ->integer ->double ->complex
           exact->inexact inexact->exact)
 
-  (import types :only (symbol? number? string? list? vector?))
+  (import types :refer (symbol? number? string? list? vector?))
 
   ;;' @section Symbol Conversions
 

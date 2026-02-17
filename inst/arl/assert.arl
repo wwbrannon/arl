@@ -4,10 +4,10 @@
   (export assert assert-equal assert-true assert-false assert-eq
           assert-error assert-no-error)
 
-  (import core :only (error))
-  (import equality :only (equal? identical?))
-  (import strings :only (string-append ->string))
-  (import list :only (call))
+  (import core :refer (error))
+  (import equality :refer (equal? identical?))
+  (import strings :refer (string-append ->string))
+  (import list :refer (call))
 
 ;;' @section Assertion Helpers
 ;;' These functions provide test-style assertions that signal errors on failure
@@ -131,7 +131,7 @@
       (define error-caught (gensym "error-caught"))
       (define thunk-expr (call (list thunk)))
       (define result
-        (r/eval (call (list 'tryCatch thunk-expr
+        (r-eval (call (list 'tryCatch thunk-expr
                             :error (lambda (e) error-caught)))
                 (current-env)))
       (if (not (identical? result error-caught))
@@ -158,7 +158,7 @@
       (define error-caught (gensym "error-caught"))
       (define thunk-expr (call (list thunk)))
       (define result
-        (r/eval (call (list 'tryCatch thunk-expr
+        (r-eval (call (list 'tryCatch thunk-expr
                             :error (lambda (e) error-caught)))
                 (current-env)))
       (if (identical? result error-caught)

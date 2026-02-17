@@ -6,11 +6,11 @@
           member contains?
           length= length> length<)
 
-  (import _utils :only (_as-list))
-  (import list :only (car cdr))
-  (import types :only (list?))
-  (import core :only (r/call))
-  (import equality :only (equal?))
+  (import _utils :refer (_as-list))
+  (import list :refer (car cdr))
+  (import types :refer (list?))
+  (import core :refer (r-call))
+  (import equality :refer (equal?))
 
 
   ;;' @section Sequence Helpers
@@ -33,7 +33,7 @@
       (define items (_as-list lst))
       (if (<= n 0)
         (list)
-        (r/call "[" (list items (seq_len (min n (length items))))))))
+        (r-call "[" (list items (seq_len (min n (length items))))))))
 
   ;;' @description Drop first n items.
   ;;' @examples
@@ -52,7 +52,7 @@
         items
         (if (>= n (length items))
           (list)
-          (r/call "[" (list items (seq (+ n 1) (length items))))))))
+          (r-call "[" (list items (seq (+ n 1) (length items))))))))
 
   ;;' @description Take items while predicate is true.
   ;;' @examples
@@ -114,7 +114,7 @@
               (while (<= idx n-items)
                 (define end (+ idx (- n 1)))
                 (if (<= end n-items)
-                  (set! acc (c acc (list (r/call "[" (list items (seq idx end)))))))
+                  (set! acc (c acc (list (r-call "[" (list items (seq idx end)))))))
                 (set! idx (+ idx step)))
               acc))))))
 
@@ -181,7 +181,7 @@
               ;; Collect ith elements from lists.
               (define zip-at
                 (lambda (i)
-                  (lapply items (lambda (lst) (r/call "[[" (list lst i))))))
+                  (lapply items (lambda (lst) (r-call "[[" (list lst i))))))
               (lapply (seq_len min-len) zip-at)))))))
 
   ;;' @description Return sublist of lst starting at first element

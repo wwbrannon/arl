@@ -1,5 +1,5 @@
-# Core stdlib functions: identity, values, call-with-values, funcall, r/call,
-# delay/force, call/cc
+# Core stdlib functions: identity, values, call-with-values, funcall, r-call,
+# delay/force, call-cc
 
 engine <- make_engine()
 
@@ -35,35 +35,35 @@ test_that("force returns non-promises unchanged", {
   expect_equal(result, 42)
 })
 
-test_that("call/cc exits to current continuation", {
+test_that("call-cc exits to current continuation", {
   env <- toplevel_env(engine)
   result <- engine$eval(
-    engine$read("(call/cc (lambda (k) (+ 1 (k 42) 3)))")[[1]],
+    engine$read("(call-cc (lambda (k) (+ 1 (k 42) 3)))")[[1]],
     env = env
   )
   expect_equal(result, 42)
 })
 
-test_that("call/cc is downward-only (R's callCC behavior)", {
+test_that("call-cc is downward-only (R's callCC behavior)", {
   env <- toplevel_env(engine)
   # R's callCC is one-shot and downward-only
   result <- engine$eval(
-    engine$read("(call/cc (lambda (k) (k 5)))")[[1]],
+    engine$read("(call-cc (lambda (k) (k 5)))")[[1]],
     env = env
   )
   expect_equal(result, 5)
 
   # Test that it works as a regular function
   result2 <- engine$eval(
-    engine$read("(call/cc (lambda (exit) (if (> 2 1) (exit 10) 20)))")[[1]],
+    engine$read("(call-cc (lambda (exit) (if (> 2 1) (exit 10) 20)))")[[1]],
     env = env
   )
   expect_equal(result2, 10)
 })
 
-test_that("call/cc is first-class and has an alias", {
+test_that("call-cc is first-class and has an alias", {
   env <- toplevel_env(engine)
-  engine$eval(engine$read("(define cc call/cc)")[[1]], env = env)
+  engine$eval(engine$read("(define cc call-cc)")[[1]], env = env)
   result <- engine$eval(engine$read("(cc (lambda (k) (k 7)))")[[1]], env = env)
   expect_equal(result, 7)
   alias_result <- engine$eval(
@@ -73,56 +73,56 @@ test_that("call/cc is first-class and has an alias", {
   expect_equal(alias_result, 9)
 })
 
-test_that("call/cc returns receiver's value when continuation is not invoked", {
+test_that("call-cc returns receiver's value when continuation is not invoked", {
   env <- toplevel_env(engine)
   result <- engine$eval(
-    engine$read("(call/cc (lambda (k) 99))")[[1]],
+    engine$read("(call-cc (lambda (k) 99))")[[1]],
     env = env
   )
   expect_equal(result, 99)
 })
 
-test_that("call/cc can return complex values", {
+test_that("call-cc can return complex values", {
   env <- toplevel_env(engine)
   result <- engine$eval(
-    engine$read("(call/cc (lambda (k) (k (list 1 2 3))))")[[1]],
+    engine$read("(call-cc (lambda (k) (k (list 1 2 3))))")[[1]],
     env = env
   )
   expect_equal(result, list(1L, 2L, 3L))
 })
 
-test_that("call/cc preserves side effects before escape", {
+test_that("call-cc preserves side effects before escape", {
   env <- toplevel_env(engine)
   engine$eval(engine$read("(define x 0)")[[1]], env = env)
   engine$eval(
-    engine$read("(call/cc (lambda (k) (set! x 42) (k #nil)))")[[1]],
+    engine$read("(call-cc (lambda (k) (set! x 42) (k #nil)))")[[1]],
     env = env
   )
   result <- engine$eval(engine$read("x")[[1]], env = env)
   expect_equal(result, 42)
 })
 
-test_that("nested call/cc works correctly", {
+test_that("nested call-cc works correctly", {
   env <- toplevel_env(engine)
   result <- engine$eval(
-    engine$read("(call/cc (lambda (outer) (+ 1 (call/cc (lambda (inner) (inner 10))))))")[[1]],
+    engine$read("(call-cc (lambda (outer) (+ 1 (call-cc (lambda (inner) (inner 10))))))")[[1]],
     env = env
   )
   expect_equal(result, 11)
 
   # Inner continuation escapes outer
   result2 <- engine$eval(
-    engine$read("(call/cc (lambda (outer) (+ 1 (call/cc (lambda (inner) (outer 42))))))")[[1]],
+    engine$read("(call-cc (lambda (outer) (+ 1 (call-cc (lambda (inner) (outer 42))))))")[[1]],
     env = env
   )
   expect_equal(result2, 42)
 })
 
-test_that("call/cc can simulate early return from nested computation", {
+test_that("call-cc can simulate early return from nested computation", {
   env <- toplevel_env(engine)
-  # Use call/cc to bail out of a deep computation early
+  # Use call-cc to bail out of a deep computation early
   result <- engine$eval(engine$read("
-    (call/cc (lambda (return)
+    (call-cc (lambda (return)
       (define a 1)
       (define b 2)
       (when (= (+ a b) 3) (return 'found))
@@ -132,7 +132,7 @@ test_that("call/cc can simulate early return from nested computation", {
 
   # Without early return: continuation not invoked, falls through
   result2 <- engine$eval(engine$read("
-    (call/cc (lambda (return)
+    (call-cc (lambda (return)
       (define a 1)
       (define b 2)
       (when (= (+ a b) 99) (return 'found))
@@ -175,24 +175,24 @@ test_that("identity returns its argument", {
   expect_null(get("identity", envir = env)(NULL))
 })
 
-test_that("r/call invokes R functions with arguments", {
+test_that("r-call invokes R functions with arguments", {
   env <- new.env()
   toplevel_env(engine, env = env)
 
   # Call R function by name (string)
-  result <- get("r/call", envir = env)("sum", list(1, 2, 3, 4))
+  result <- get("r-call", envir = env)("sum", list(1, 2, 3, 4))
   expect_equal(result, 10)
 
   # Call R function by symbol
-  result <- get("r/call", envir = env)(quote(prod), list(2, 3, 4))
+  result <- get("r-call", envir = env)(quote(prod), list(2, 3, 4))
   expect_equal(result, 24)
 
   # Call with single argument
-  result <- get("r/call", envir = env)("sqrt", list(16))
+  result <- get("r-call", envir = env)("sqrt", list(16))
   expect_equal(result, 4)
 
   # Call with no arguments
-  result <- get("r/call", envir = env)("ls", list())
+  result <- get("r-call", envir = env)("ls", list())
   expect_true(is.character(result))
 })
 

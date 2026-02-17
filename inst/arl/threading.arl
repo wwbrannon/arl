@@ -3,8 +3,8 @@
 (module threading
   (export -> ->>)
 
-  (import list :only (car cdr cons append call))
-  (import types :only (list?))
+  (import list :refer (car cdr cons append call))
+  (import types :refer (list?))
 
 ;;' @section Threading Macros
 

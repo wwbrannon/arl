@@ -4,10 +4,10 @@
   (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial
           curry juxt constantly iterate iterate-until memoize)
 
-  (import _utils :only (_as-list))
-  (import list :only (car append))
-  (import types :only (null?))
-  (import core :only (r/call))
+  (import _utils :refer (_as-list))
+  (import list :refer (car append))
+  (import types :refer (null?))
+  (import core :refer (r-call))
 
   ;;' @section Core Higher-Order Functions
   ;;' The fundamental building blocks for functional programming in Arl.
@@ -295,14 +295,14 @@
   ;;' (assert-equal 4 ((memoize (lambda (x) (* x x))) 2))
   (define memoize
     (lambda (fn)
-      (define cache (r/call "new.env" (list)))
+      (define cache (r-call "new.env" (list)))
       (lambda (. args)
-        (define key (r/call "paste" (list args :collapse "|")))
-        (if (r/call "exists" (list key :envir cache))
-          (r/call "get" (list key :envir cache))
+        (define key (r-call "paste" (list args :collapse "|")))
+        (if (r-call "exists" (list key :envir cache))
+          (r-call "get" (list key :envir cache))
           (begin
             (define result (do.call fn args))
-            (r/call "assign" (list key result :envir cache))
+            (r-call "assign" (list key result :envir cache))
             result)))))
 
 )

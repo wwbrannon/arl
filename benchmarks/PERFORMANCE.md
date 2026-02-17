@@ -708,7 +708,7 @@ Arl's performance has already been significantly improved through fixing three O
 
 **Key Takeaways**:
 
-1. **Compiler/evaluator is the bottleneck** - Consumes 60-80% of execution time
+1. **Compiler-evaluator is the bottleneck** - Consumes 60-80% of execution time
 2. **CPS overhead was removed** - Evaluator replaced by compiler emitting R code
 3. **Macro hygiene is expensive** - 35x overhead for simple macros
 4. **Fixed issues prevent worst-case behavior** - Linear scaling achieved

@@ -2,11 +2,11 @@
 
 (module control
   (export when unless cond case try try-catch
-          call/cc call-with-current-continuation)
+          call-cc call-with-current-continuation)
   ;; Note: 'and' and 'or' removed from exports - now compiler special forms
 
-  (import types :only (symbol? list? null?))
-  (import list :only (car cdr call))
+  (import types :refer (symbol? list? null?))
+  (import list :refer (car cdr call))
 
 
 ;;' @section Control Flow Macros
@@ -136,14 +136,14 @@
     (if (not error_handler)
       (if (not finally_handler)
         (thunk)
-        (r/eval (call (list 'tryCatch thunk-expr
+        (r-eval (call (list 'tryCatch thunk-expr
                             :finally (call (list finally_handler))))
                 (current-env)))
       (if (not finally_handler)
-        (r/eval (call (list 'tryCatch thunk-expr
+        (r-eval (call (list 'tryCatch thunk-expr
                             :error error_handler))
                 (current-env))
-        (r/eval (call (list 'tryCatch thunk-expr
+        (r-eval (call (list 'tryCatch thunk-expr
                             :error error_handler
                             :finally (call (list finally_handler))))
                 (current-env))))))
@@ -197,13 +197,13 @@
 
 ;;' @section Continuations
 
-  ;;' @signature (call/cc receiver)
+  ;;' @signature (call-cc receiver)
   ;;' @note Alias for R's `callCC`. The receiver is passed the current continuation.
   ;;' @seealso call-with-current-continuation
-  (define call/cc callCC)
+  (define call-cc callCC)
 
   ;;' @signature (call-with-current-continuation receiver)
-  ;;' @note Full name alias for `call/cc`.
-  ;;' @seealso call/cc
+  ;;' @note Full name alias for `call-cc`.
+  ;;' @seealso call-cc
   (define call-with-current-continuation callCC)
 )

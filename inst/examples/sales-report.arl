@@ -54,8 +54,8 @@
        product-names-list))
 (define totals-vec (unlist totals-list))
 (define top-index (which.max totals-vec))
-;; r/call is handy for calling R operators with special names like "["
-(define top-product (r/call "[" (list product-names top-index)))
+;; r-call is handy for calling R operators with special names like "["
+(define top-product (r-call "[" (list product-names top-index)))
 (assert-equal "beta" top-product)
 
 (define totals-by-product (list))

@@ -5,7 +5,7 @@
           error warn
           identity values values?
           call-with-values
-          funcall r/call get unbind-variable run
+          funcall r-call get unbind-variable run
           macroexpand-1 macroexpand-all)
 
 
@@ -56,7 +56,7 @@
   ;;' @seealso values?, call-with-values
   (define values
     (lambda (. args)
-      (r/call "structure" (list args :class "arl_values"))))
+      (r-call "structure" (list args :class "arl_values"))))
 
   ;;' @description Return #t if x is a multiple-values container.
   ;;' @examples
@@ -89,7 +89,7 @@
       (define produced (producer))
       (define args
         (if (values? produced)
-          (r/call "unclass" (list produced))
+          (r-call "unclass" (list produced))
           (list produced)))
       (funcall consumer args)))
 
@@ -102,36 +102,36 @@
   ;;' (funcall c (list 1 2 3))  ; => c(1, 2, 3)
   ;;' @assert
   ;;' (assert-equal 6 (funcall + (list 1 2 3)))
-  ;;' @seealso apply, r/call
+  ;;' @seealso apply, r-call
   (define funcall
     (lambda (fn args)
       (do.call fn args :quote #t)))
 
-  ; for use in r/call below: we need R's get, not the get defined below
-  ; in terms of r/call itself
+  ; for use in r-call below: we need R's get, not the get defined below
+  ; in terms of r-call itself
   (define _rget base::get)
 
   ;;' @description Call an R function with optional environment.
   ;;' Searches from .GlobalEnv by default, finding base and loaded
   ;;' package functions.
   ;;' @examples
-  ;;' (r/call "mean" (list (c 1 2 3)))   ; => 2
-  ;;' (r/call "ls" (list))                ; list .GlobalEnv bindings
-  ;;' (r/call "Sys.time" (list))          ; current time
+  ;;' (r-call "mean" (list (c 1 2 3)))   ; => 2
+  ;;' (r-call "ls" (list))                ; list .GlobalEnv bindings
+  ;;' (r-call "Sys.time" (list))          ; current time
   ;;' @assert
-  ;;' (assert-equal 2 (r/call "mean" (list (c 1 2 3))))
-  ;;' @note R functions are directly available in Arl without `r/call`. Use `r/call` when you need to look up a function by string name or specify the search environment.
-  ;;' @seealso funcall, r/eval
-  ;; Private binding to R's base `get` — needed to bootstrap r/call without
-  ;; circular dependency (r/call uses _rget; everything else uses r/call).
-  (define r/call
+  ;;' (assert-equal 2 (r-call "mean" (list (c 1 2 3))))
+  ;;' @note R functions are directly available in Arl without `r-call`. Use `r-call` when you need to look up a function by string name or specify the search environment.
+  ;;' @seealso funcall, r-eval
+  ;; Private binding to R's base `get` — needed to bootstrap r-call without
+  ;; circular dependency (r-call uses _rget; everything else uses r-call).
+  (define r-call
     (lambda (fn (args (list)) (envir (globalenv)))
       (define fn-name
         (if (is.symbol fn)
           (as.character fn)
           (if (is.character fn)
             fn
-            (error "r/call requires a symbol or string function name"))))
+            (error "r-call requires a symbol or string function name"))))
       (define fn-obj (_rget fn-name :envir envir :inherits #t))
       (funcall fn-obj (as.list args))))  ; as.list handles environments
 
@@ -143,14 +143,14 @@
   ;;' @assert
   ;;' (assert-true (is.function (get "mean")))
   ;;' (assert-true (> (get "pi" (baseenv)) 3.14))
-  ;;' @seealso r/call
+  ;;' @seealso r-call
   (define get
     (lambda (name (envir (globalenv)) (inherits #t))
       (define name-str
         (if (is.symbol name)
           (as.character name)
           name))
-      (r/call "get" (list name-str :envir envir :inherits inherits))))
+      (r-call "get" (list name-str :envir envir :inherits inherits))))
 
   ;;' @description Remove a variable binding from an environment.
   ;;' @signature (unbind-variable name [envir])
@@ -193,12 +193,12 @@
   (define license
     (lambda ()
       (begin
-        (r/call "cat" (list "Arl is licensed under the MIT License:\n\n"))
-        (define license-file (r/call "system.file" (list "LICENSE.md" :package "arl")))
-        (define license-lines (r/call "readLines" (list license-file)))
-        (r/call "cat" (list license-lines :sep "\n"))
-        (r/call "cat" (list "\n\nArl is built on R. R's license:\n\n"))
-        (r/call "license" (list)))))
+        (r-call "cat" (list "Arl is licensed under the MIT License:\n\n"))
+        (define license-file (r-call "system.file" (list "LICENSE.md" :package "arl")))
+        (define license-lines (r-call "readLines" (list license-file)))
+        (r-call "cat" (list license-lines :sep "\n"))
+        (r-call "cat" (list "\n\nArl is built on R. R's license:\n\n"))
+        (r-call "license" (list)))))
 
 ;;' @section Macro Introspection
 

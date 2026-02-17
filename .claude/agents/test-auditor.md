@@ -19,7 +19,7 @@ Arl is a Scheme-like Lisp implemented in R. Key design decisions:
 - **Truthiness**: only `#f`/`FALSE` and `#nil`/`NULL` are falsy; `0` is also falsy (R convention). Everything else is truthy.
 - **Self-tail-call optimization** -- the compiler rewrites self-recursive tail calls (through `if`/`begin`/`cond`/`let`/`let*`/`letrec`) as loops, so deep self-recursion works. Mutual TCO and general tail calls are not optimized; `loop`/`recur` handles those cases.
 - **R's type system**: Arl values *are* R values. Integers, doubles, characters, logicals, lists, environments -- all R types. There is no separate Arl type system.
-- **`r/call` and `r/eval`**: explicit bridges to R when needed, but most R functions are callable directly
+- **`r-call` and `r-eval`**: explicit bridges to R when needed, but most R functions are callable directly
 - **Cons cells**: implemented via a custom `arl_cons` S3 class (not R's native pairlist)
 - **Lists**: Arl lists are built from cons cells (like Scheme), NOT R vectors
 - **`car`/`cdr`**: operate on cons cells, not R vectors or pairlists

@@ -231,7 +231,7 @@ test_that("equal? on environment vs non-environment returns #f", {
   env <- setup_env()
 
   result <- engine$eval(
-    engine$read("(equal? (r/call \"new.env\" (list)) 42)")[[1]], env = env)
+    engine$read("(equal? (r-call \"new.env\" (list)) 42)")[[1]], env = env)
   expect_false(result)
 })
 

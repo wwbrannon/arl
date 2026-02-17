@@ -14,9 +14,9 @@
           range iota make-list
           list-ref list-tail)
 
-  (import _utils :only (_as-list))
-  (import core :only (r/call error))
-  (import types :only (null? list?))
+  (import _utils :refer (_as-list))
+  (import core :refer (r-call error))
+  (import types :refer (null? list?))
 
   ;;' @section List Operations
   ;;' Core list constructors and accessors, following Scheme conventions.
@@ -35,7 +35,7 @@
     (lambda (lst)
       (if (<= (length lst) 1)
         (list)
-        (r/call "[" (list lst (seq 1 (- (length lst) 1)))))))
+        (r-call "[" (list lst (seq 1 (- (length lst) 1)))))))
 
   ;;' @description Convert a list to a callable form.
   ;;' @examples
@@ -61,7 +61,7 @@
   (define car
     (lambda (lst)
       (if (pair? lst)
-        (r/call "[[" (list lst "car"))
+        (r-call "[[" (list lst "car"))
         (if (is.call lst)
           (if (> (length lst) 0) ([[ lst 1) #nil)
           (if (is.list lst)
@@ -80,14 +80,14 @@
   (define cdr
     (lambda (lst)
       (if (pair? lst)
-        (r/call "[[" (list lst "cdr"))
+        (r-call "[[" (list lst "cdr"))
         (if (is.call lst)
           (if (> (length lst) 1)
-            (r/call "[" (list (as.list lst) (seq 2 (length lst))))
+            (r-call "[" (list (as.list lst) (seq 2 (length lst))))
             (list))
           (if (is.list lst)
             (if (> (length lst) 1)
-              (r/call "[" (list lst (seq 2 (length lst))))
+              (r-call "[" (list lst (seq 2 (length lst))))
               (list))
             (list))))))
 
@@ -254,7 +254,7 @@
         (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
         (if (>= n (length items))
           (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
-          (r/call "[[" (list items (+ n 1)))))))
+          (r-call "[[" (list items (+ n 1)))))))
 
   ;; ============================================================================
   ;; Phase 2: Extended List Operations
@@ -271,10 +271,10 @@
   ;;' @description Wrap R's == to handle vector results; returns #t only if all elements match.
   (define _r==-pred
     (lambda (a b)
-      (define comp-result (r/call "==" (list a b)))
-      (if (r/call "is.logical" (list comp-result))
-        (if (> (r/call "length" (list comp-result)) 1)
-          (isTRUE (r/call "all" (list comp-result)))
+      (define comp-result (r-call "==" (list a b)))
+      (if (r-call "is.logical" (list comp-result))
+        (if (> (r-call "length" (list comp-result)) 1)
+          (isTRUE (r-call "all" (list comp-result)))
           (isTRUE comp-result))
         #f)))
 
@@ -464,5 +464,5 @@
         items
         (if (>= k (length items))
           (list)
-          (as.list (r/call "[" (list items (seq (+ k 1) (length items)))))))))
+          (as.list (r-call "[" (list items (seq (+ k 1) (length items)))))))))
 )

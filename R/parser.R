@@ -92,6 +92,24 @@ Parser <- R6::R6Class(
         if (token$type == "SYMBOL") {
           pos <<- pos + 1
 
+          # Handle / qualified access: math/sin -> (module-ref math sin)
+          # Bare "/" stays as division symbol
+          # R's %op% infix operators (e.g. %/%, %*%) are exempt
+          if (token$value != "/" && grepl("/", token$value, fixed = TRUE) &&
+              !grepl("^%.*%$", token$value)) {
+            parts <- strsplit(token$value, "/", fixed = TRUE)[[1]]
+            # Guard: all parts must be non-empty (reject "foo/" or "foo//bar")
+            if (length(parts) >= 2 && all(nzchar(parts))) {
+              # Build nested (module-ref ...) calls: a/b/c -> (module-ref (module-ref a b) c)
+              expr <- as.symbol(parts[1])
+              for (i in seq(2, length(parts))) {
+                expr <- as.call(list(as.symbol("module-ref"), expr, as.symbol(parts[i])))
+              }
+              return(tracker$src_set(expr, make_src(token)))
+            }
+            # Invalid format (empty parts), fall through to return as-is
+          }
+
           # Handle :: and ::: syntactic sugar
           # Check for ::: first (3 colons) as it's more specific
           if (grepl(":::", token$value, fixed = TRUE)) {
@@ -320,6 +338,15 @@ Parser <- R6::R6Class(
             return(paste0(
               as.character(expr[[2L]]), head_name, as.character(expr[[3L]])
             ))
+          }
+
+          # Sugar: (module-ref lhs rhs) -> lhs/rhs
+          # Nested module-ref naturally produces a/b/c via recursion
+          if (head_name == "module-ref" && length(expr) == 3L &&
+              is.symbol(expr[[3L]])) {
+            lhs <- self$write(expr[[2L]])
+            rhs <- as.character(expr[[3L]])
+            return(paste0(lhs, "/", rhs))
           }
         }
 

@@ -3,11 +3,11 @@
 (module looping
   (export until do-list loop recur)
 
-  (import functional :only (map every?))
-  (import _utils :only (_as-list))
-  (import list :only (car cdr call cons))
-  (import types :only (symbol? list-or-pair? list? null?))
-  (import sequences :only (zip))
+  (import functional :refer (map every?))
+  (import _utils :refer (_as-list))
+  (import list :refer (car cdr call cons))
+  (import types :refer (symbol? list-or-pair? list? null?))
+  (import sequences :refer (zip))
 
   ;;' @section Looping Macros
 
@@ -187,7 +187,7 @@
                (set! ,recur-flag #f)
                (set! ,loop-result (,loop-step))
                (if ,recur-flag
-                 (r/eval ,rebind-block (current-env))
+                 (r-eval ,rebind-block (current-env))
                  (set! ,loop-done #t)))
 
              ,loop-result)))))

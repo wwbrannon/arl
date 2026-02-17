@@ -159,32 +159,47 @@ exposing them. If you need to export a `_`-prefixed name, use explicit
 
 ## The `import` Special Form
 
-The `import` special form loads a module and makes its exports available in the current environment.
+The `import` special form loads a module and makes its exports available. By default, `(import X)` binds the module environment to the symbol `X` and dumps all exports into scope. Use `:refer` to control which names are brought in unqualified, and `:as` to alias the module binding.
 
 ### Signature
 
 ```{arl, eval=FALSE}
-(import name)      ; name is a symbol: module name (stdlib, then CWD)
-(import "path")    ; path is a string: file path (path-only resolution)
-
-; With import modifiers:
-(import name :only (sym1 sym2))          ; only these names
-(import name :except (sym1))             ; all except these
-(import name :prefix pfx/)              ; all names prefixed
-(import name :rename ((old new)))        ; rename specific names
-(import name :only (sym1) :prefix pfx/) ; composable
+(import name)                          ; bind module as `name`, dump all exports
+(import name :refer (sym1 sym2))       ; bind module + only these names unqualified
+(import name :refer :all)              ; bind module + all exports unqualified
+(import name :as alias)                ; bind module as `alias`
+(import name :as alias :refer (sym1))  ; alias + selective refer
+(import name :rename ((old new)))      ; rename specific names
+(import "path")                        ; import by file path
 ```
 
 - **Symbol** (e.g. `control`): treated as a **module name**. Resolution looks in the stdlib, then the current working directory (same as `load` by name).
 - **String** (e.g. `"lib/utils.arl"`): treated as a **file path**. Only path-based resolution is used (no stdlib lookup). The path is normalized to absolute so that the same file imported with different path strings (e.g. `"inst/arl/control.arl"` and `"./inst/arl/control.arl"`) reuses the same loaded module.
 
+### Qualified Access
+
+After importing, you can access module exports using the `/` syntax:
+
+```{arl, eval=FALSE}
+(import math)
+(math/sin 1.0)     ; qualified access
+
+(import math :as m)
+(m/sin 1.0)         ; aliased qualified access
+
+(import math :refer (sin cos))
+(sin 1.0)           ; unqualified (referred)
+(math/cos 0.0)      ; qualified still works
+```
+
 ### Examples
 
 ```{arl, eval=FALSE}
 ; Import by module name (symbol): stdlib or CWD
-(import math-utils)
-(square 5)  ; => 25
-(import control)
+(import math)
+(math/square 5)  ; => 25
+
+(import control :refer :all)
 (when #t (println "hello"))
 
 ; Import by path (string): path-only resolution, no stdlib
@@ -197,43 +212,32 @@ The `import` special form loads a module and makes its exports available in the 
 Import modifiers let you control which names are imported and how they appear
 in the current scope. This avoids namespace pollution and name collisions.
 
-**`:only`** — import only the listed names:
+**`:refer`** — control which names are available unqualified:
 
 ```{arl, eval=FALSE}
-(import list :only (map filter reduce))
+(import list :refer (map filter reduce))  ; only these names unqualified
+(import list :refer :all)                 ; all exports unqualified
 ```
 
-**`:except`** — import everything except the listed names:
+**`:as`** — alias the module binding:
 
 ```{arl, eval=FALSE}
-(import list :except (last))
+(import list :as l)
+(l/map square '(1 2 3))  ; => (1 4 9)
 ```
 
-**`:prefix`** — add a prefix to all imported names:
+**`:rename`** — rename specific referred names:
 
 ```{arl, eval=FALSE}
-(import list :prefix list/)
-(list/map square '(1 2 3))  ; => (1 4 9)
-```
-
-**`:rename`** — rename specific names:
-
-```{arl, eval=FALSE}
-(import control :rename ((when my-when) (unless my-unless)))
+(import control :refer (when unless) :rename ((when my-when)))
 (my-when #t 42)  ; => 42
 ```
 
-**Composition** — modifiers can be combined. They apply in order: `:only`/`:except` filter first, then `:rename`, then `:prefix`:
+**`:reload`** — force re-evaluation of the module source:
 
 ```{arl, eval=FALSE}
-(import list :only (map filter) :prefix l/)
-; Only l/map and l/filter are imported
-
-(import control :only (when unless) :rename ((when w)) :prefix c/)
-; Imports c/w and c/unless
+(import my-module :reload)
 ```
-
-`:only` and `:except` are mutually exclusive — using both is a compile error.
 
 Modifiers work with both symbol and string imports, and apply to both regular
 values and macros.
@@ -510,27 +514,28 @@ Then load with relative paths:
 
 ### vs. Common Lisp
 
-- Arl doesn't have package namespaces - imports bring symbols into the current environment
-- No `use-package` or package-qualified symbols like `package::symbol`
+- Arl uses first-class module environments with qualified access (`mod/sym`)
+- No `use-package` — use `:refer` to bring names into scope
 - Simpler, file-based module system
 
 ### vs. Scheme
 
-- Arl's `module` is similar to R6RS libraries but simpler
-- Arl supports `:only`, `:except`, `:prefix`, and `:rename` modifiers (similar to R7RS)
+- Arl's `module` is similar to R6RS libraries but with Clojure-style qualified access
+- Arl supports `:refer`, `:as`, `:rename`, and `:reload` modifiers
 - Path resolution is more straightforward
 
 ### vs. Clojure
 
-- Arl uses `:only`/`:except`/`:prefix`/`:rename` keywords (similar to Clojure's `:refer`, `:exclude`, `:as`)
-- No namespace-qualified access (`ns/symbol`) without explicit `:prefix`
-- Simpler syntax — all modifiers go directly in the `import` form
+- Arl uses `:refer`/`:as`/`:rename` keywords (same as Clojure's `require`)
+- Qualified access via `mod/sym` (same as Clojure's `ns/sym`)
+- Hierarchical module names: `collections/sorted-set`
+- Module bindings are locked after load (immutable from outside)
 
 ## Summary
 
 - **`load`**: Evaluates a file in the current environment; always re-evaluates (no caching, no stdlib lookup)
 - **`run`**: Evaluates a file in an isolated child environment (definitions and imports not visible in the caller)
 - **`module`**: Defines a module with explicit exports; `(export-all)` exports only symbols defined in the module (excluding `_`-prefixed private names and imported symbols)
-- **`import`**: Loads a module and attaches its exports into the current scope only; each module is loaded once per engine; relative paths resolve from the importing file's directory
+- **`import`**: Loads a module, binds it as a first-class value, and optionally brings exports into scope via `:refer`; each module is loaded once per engine; qualified access via `mod/sym`
 - Circular imports are detected with a clear error message
 - Use explicit exports for maintainable module interfaces

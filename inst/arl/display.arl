@@ -3,12 +3,12 @@
 (module display
   (export format-value display println string-concat trace)
 
-  (import _utils :only (_as-list))
-  (import list :only (car cdr))
-  (import strings :only (string-join))
-  (import dict :only (dict? dict-keys dict-get))
-  (import set :only (set?))
-  (import core :only (r/call values?))
+  (import _utils :refer (_as-list))
+  (import list :refer (car cdr))
+  (import strings :refer (string-join))
+  (import dict :refer (dict? dict-keys dict-get))
+  (import set :refer (set?))
+  (import core :refer (r-call values?))
 
   ;; Format atomic values to a single string.
   ;; Character strings are quoted so they are distinguishable from symbols.
@@ -19,7 +19,7 @@
         ""
         (if (is.character x)
           (if (= (length parts) 1)
-            (string-join (list "\"" (r/call "[[" (list parts 1)) "\"") "")
+            (string-join (list "\"" (r-call "[[" (list parts 1)) "\"") "")
             (string-join (lapply (_as-list parts)
                            (lambda (s) (string-join (list "\"" s "\"") ""))) " "))
           (if (= (length parts) 1)
@@ -37,10 +37,10 @@
   ;; Format functions/macros/closures.
   (define _format-function
     (lambda (x)
-      (if (r/call "inherits" (list x "arl_closure"))
+      (if (r-call "inherits" (list x "arl_closure"))
         "<closure>"
-        (if (r/call "is.function" (list x))
-          (if (r/call "is.null" (list (r/call "attr" (list x "arl_macro" :exact #t))))
+        (if (r-call "is.function" (list x))
+          (if (r-call "is.null" (list (r-call "attr" (list x "arl_macro" :exact #t))))
             "<function>"
             "<macro>")
           #nil))))
@@ -48,14 +48,14 @@
   ;; Format environments (excluding dict, set, promise).
   (define _format-environment
     (lambda (x)
-      (if (and (r/call "is.environment" (list x))
+      (if (and (r-call "is.environment" (list x))
                (not (dict? x))
                (not (set? x))
                (not (promise? x)))
         (begin
-          (define classes (r/call "class" (list x)))
+          (define classes (r-call "class" (list x)))
           (define class-str (if (> (length classes) 0)
-                              (r/call "paste" (list classes :collapse ", "))
+                              (r-call "paste" (list classes :collapse ", "))
                               "environment"))
           (string-join (list "<" class-str ">") ""))
         #nil)))
@@ -63,17 +63,17 @@
   ;; Format named lists with keyword-style keys: (:key1 val1 :key2 val2).
   (define _format-named-list
     (lambda (x)
-      (define nms (r/call "names" (list x)))
-      (if (or (r/call "is.null" (list nms))
-              (r/call "all" (list (r/call "==" (list nms "")))))
+      (define nms (r-call "names" (list x)))
+      (if (or (r-call "is.null" (list nms))
+              (r-call "all" (list (r-call "==" (list nms "")))))
         #nil
         (begin
           (define parts (list))
           (define i 1)
           (while (<= i (length x))
             (begin
-              (define nm (r/call "[[" (list nms i)))
-              (define val (r/call "[[" (list x i)))
+              (define nm (r-call "[[" (list nms i)))
+              (define val (r-call "[[" (list x i)))
               (if (!= nm "")
                 (set! parts (c parts (list (string-join (list ":" nm) "")
                                            (format-value val))))
@@ -83,32 +83,32 @@
 
   ;; Helper: capture R print output as character vector.
   (define _capture-print
-    (r/call "eval" (list (r/call "parse" (list :text "function(obj) capture.output(print(obj))")))))
+    (r-call "eval" (list (r-call "parse" (list :text "function(obj) capture.output(print(obj))")))))
 
   ;; Format S3 objects with non-trivial class using R's print method.
   ;; Output is truncated at arl.display.max.lines (default 20, Inf to disable).
   (define _format-s3-object
     (lambda (x)
-      (define cls (r/call "class" (list x)))
+      (define cls (r-call "class" (list x)))
       ;; Only apply to lists with real S3 classes (not just "list" or "data.frame")
       (if (and (is.list x)
-               (not (r/call "is.null" (list cls)))
-               (not (r/call "all" (list (r/call "%in%" (list cls (c "list" "data.frame")))))))
+               (not (r-call "is.null" (list cls)))
+               (not (r-call "all" (list (r-call "%in%" (list cls (c "list" "data.frame")))))))
         (begin
           (define lines (_capture-print x))
-          (define max-lines-opt (r/call "getOption" (list "arl.display.max.lines" #nil)))
-          (define max-lines-env (r/call "Sys.getenv" (list "ARL_DISPLAY_MAX_LINES" "")))
+          (define max-lines-opt (r-call "getOption" (list "arl.display.max.lines" #nil)))
+          (define max-lines-env (r-call "Sys.getenv" (list "ARL_DISPLAY_MAX_LINES" "")))
           (define max-lines
-            (if (not (r/call "is.null" (list max-lines-opt)))
+            (if (not (r-call "is.null" (list max-lines-opt)))
               max-lines-opt
               (if (!= max-lines-env "")
-                (r/call "as.numeric" (list max-lines-env))
+                (r-call "as.numeric" (list max-lines-env))
                 20)))
-          (if (or (r/call "is.infinite" (list max-lines))
+          (if (or (r-call "is.infinite" (list max-lines))
                   (<= (length lines) max-lines))
             (string-join lines "\n")
             (string-join
-              (c (r/call "head" (list lines max-lines))
+              (c (r-call "head" (list lines max-lines))
                  (string-join (list "... (output truncated at " (as.character max-lines)
                                     " lines; set options(arl.display.max.lines=) to change)") ""))
               "\n")))
@@ -126,8 +126,8 @@
           (if (pair? x)
               (begin
                 (define parts (.__cons-parts x))
-                (define prefix (r/call "[[" (list parts "prefix")))
-                (define tail (r/call "[[" (list parts "tail")))
+                (define prefix (r-call "[[" (list parts "prefix")))
+                (define tail (r-call "[[" (list parts "tail")))
                 (define head-str (if (= (length prefix) 0)
                   ""
                   (string-join (lapply prefix format-value) " ")))
@@ -139,7 +139,7 @@
                   env-tag
                   (if (values? x)
                 (begin
-                  (define inner (r/call "unclass" (list x)))
+                  (define inner (r-call "unclass" (list x)))
                   (if (= (length inner) 0)
                     "(values)"
                     (string-join (append (list "(values") (lapply inner format-value) (list ")")) " ")))
@@ -149,7 +149,7 @@
                     (define values (lapply keys (lambda (k) (dict-get x k))))
                     (_format-seq values))
                   (if (set? x)
-                    (_format-seq (r/call "as.list" (list x :all.names #t)))
+                    (_format-seq (r-call "as.list" (list x :all.names #t)))
                     (if (promise? x)
                       "<promise>"
                       (if (is.symbol x)
@@ -178,11 +178,11 @@
   ;;' @seealso println, trace
   (define display
     (lambda (x)
-      (define quiet-env (r/call "Sys.getenv" (list "ARL_QUIET" "")))
-      (define quiet-opt (r/call "getOption" (list "arl.quiet" #f)))
+      (define quiet-env (r-call "Sys.getenv" (list "ARL_QUIET" "")))
+      (define quiet-opt (r-call "getOption" (list "arl.quiet" #f)))
       (if (or (!= quiet-env "") (= quiet-opt #t))
         #nil
-        (r/call "cat" (list (format-value x) "\n")))))
+        (r-call "cat" (list (format-value x) "\n")))))
 
   ;;' @description Alias for display.
   ;;' @seealso display
@@ -218,14 +218,14 @@
   (define trace
     (lambda (x . rest)
       (define label (if (> (length rest) 0) (car rest) #nil))
-      (define quiet-env (r/call "Sys.getenv" (list "ARL_QUIET" "")))
-      (define quiet-opt (r/call "getOption" (list "arl.quiet" #f)))
+      (define quiet-env (r-call "Sys.getenv" (list "ARL_QUIET" "")))
+      (define quiet-opt (r-call "getOption" (list "arl.quiet" #f)))
       (if (or (!= quiet-env "") (= quiet-opt #t))
         x
         (begin
           (if (is.null label)
             #nil
-            (r/call "cat" (list (format-value label) ": ")))
-          (r/call "cat" (list (format-value x) "\n"))
+            (r-call "cat" (list (format-value label) ": ")))
+          (r-call "cat" (list (format-value x) "\n"))
           x))))
 )

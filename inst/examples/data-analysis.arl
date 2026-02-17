@@ -6,12 +6,12 @@
 ;;   (mean (c 1 2 3))              ; call R's mean() and c()
 ;;   (seq :from 1 :to 10 :by 2)   ; named arguments via keywords
 ;;
-;; Arl also provides r/call, which bypasses bindings in intermediate
+;; Arl also provides r-call, which bypasses bindings in intermediate
 ;; scopes to reach objects in R environments that Arl's stack isn't
 ;; managing. For example:
 ;;
-;;   (r/call "mean" (list (c 1 2 3)))         ; look up "mean" by string name
-;;   (r/call "fn" args (some-environment))    ; search a specific environment
+;;   (r-call "mean" (list (c 1 2 3)))         ; look up "mean" by string name
+;;   (r-call "fn" args (some-environment))    ; search a specific environment
 ;;
 ;; In practice, direct calls are simpler and preferred. This example
 ;; uses direct calls throughout.

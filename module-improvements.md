@@ -401,24 +401,22 @@ underscore) are excluded from export-all. This is a convention (like Python's
 _foo), separate from the .__ prefix which is reserved for Arl internals.
 Explicit (export ...) can still export _-prefixed names if needed.
 
+o) not in list: dynamic R package search path by default, configurable to a
+fixed one. NOTE docs should mention getOption("defaultPackages") as a way to get
+a nice minimal isolated reproducible configuration
+
+o) #11: reserved special form for import-runtime (not implemented yet)
+
 ## Remaining
-
-o) #11: let's not actually do this now, but we should pick a name for the special
-form doing this, or a designated syntax for import, set it up, and have it error
-with "not implemented, reserved for future use" or something like that
-
-o) are we using the "_" and ".__" prefixes correctly in the stdlib? any
-ambiguity to rename?
-
-=============
-
 these are all aspects of the same problem:
+    o) not in list: module naming conventions / relation to files / one module
+    per file / can you define a module at the toplevel?
 
-o) not in list: module naming conventions / relation to files / one module per file
-/ can you define a module at the toplevel?
+    o) not in list: should a module be a first-class object? should import
+    return the module?
 
-o) #3: qualified access / prefixed access convention syntax
+    o) #3: qualified access / prefixed access convention syntax
 
-o) #7: hierarchical module names
+    o) #7: hierarchical module names
 
-o) #12: multiple modules per file
+    o) #12: multiple modules per file

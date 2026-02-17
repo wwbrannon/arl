@@ -20,7 +20,7 @@ Initial CRAN release.
 * **Help and docstring system:** `(help "topic")` dispatches to specials,
   macros, function docstrings, or R help. `(doc fn)` / `(doc! fn "text")` for
   programmatic docstring access.
-* **Continuations:** `call/cc` and `call-with-current-continuation` via R's
+* **Continuations:** `call-cc` and `call-with-current-continuation` via R's
   native `callCC`.
 
 ## Documentation

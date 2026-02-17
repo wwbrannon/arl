@@ -122,7 +122,7 @@ test_that("eval text errors include source and stack context", {
 })
 
 # =============================================================================
-# current-env and r/eval (per-engine env stack, no global state)
+# current-env and r-eval (per-engine env stack, no global state)
 # =============================================================================
 
 test_that("current-env returns the active evaluation environment", {
@@ -132,20 +132,20 @@ test_that("current-env returns the active evaluation environment", {
   expect_equal(get("_ce_test", envir = curr, inherits = FALSE), 123)
 })
 
-test_that("r/eval with no env uses current environment", {
-  # + is in the env (from stdlib); r/eval (quote +) should return it
-  result <- engine$eval(engine$read("(r/eval (quote +))")[[1]])
+test_that("r-eval with no env uses current environment", {
+  # + is in the env (from stdlib); r-eval (quote +) should return it
+  result <- engine$eval(engine$read("(r-eval (quote +))")[[1]])
   expect_true(is.function(result))
 })
 
-test_that("r/eval with no env sees bindings from same evaluation context", {
+test_that("r-eval with no env sees bindings from same evaluation context", {
   # current-env returns the active env (with bindings from previous evals in same engine)
   eng <- make_engine()
   eng$eval(eng$read("(define _reval_secret 99)")[[1]])
   curr <- eng$eval(eng$read("(current-env)")[[1]])
   expect_equal(get("_reval_secret", envir = curr, inherits = FALSE), 99)
-  # r/eval (quote x) looks up x in current env when called in same eval
-  result <- eng$eval(eng$read("(r/eval (quote +))")[[1]])
+  # r-eval (quote x) looks up x in current env when called in same eval
+  result <- eng$eval(eng$read("(r-eval (quote +))")[[1]])
   expect_true(is.function(result))
 })
 
@@ -158,9 +158,9 @@ test_that("multiple engines have independent current-env", {
   curr_b <- engine_b$eval(engine_b$read("(current-env)")[[1]])
   expect_equal(get("_eng_x", envir = curr_a, inherits = FALSE), 1)
   expect_equal(get("_eng_x", envir = curr_b, inherits = FALSE), 2)
-  # r/eval (quote +) works in each engine (each has its own current-env closure)
-  result_a <- engine_a$eval(engine_a$read("(r/eval (quote +))")[[1]])
-  result_b <- engine_b$eval(engine_b$read("(r/eval (quote +))")[[1]])
+  # r-eval (quote +) works in each engine (each has its own current-env closure)
+  result_a <- engine_a$eval(engine_a$read("(r-eval (quote +))")[[1]])
+  result_b <- engine_b$eval(engine_b$read("(r-eval (quote +))")[[1]])
   expect_true(is.function(result_a))
   expect_true(is.function(result_b))
 })

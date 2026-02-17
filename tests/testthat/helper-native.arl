@@ -8,5 +8,5 @@
     Only available in test contexts where testthat is loaded."
     ;; Get skip function from testthat namespace and call it
     (define skip-fn
-      (r/call "get" (list "skip" :envir (r/call "getNamespace" (list "testthat")) :inherits #f)))
+      (r-call "get" (list "skip" :envir (r-call "getNamespace" (list "testthat")) :inherits #f)))
     (skip-fn reason)))

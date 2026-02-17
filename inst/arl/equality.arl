@@ -7,10 +7,10 @@
           env-equal? list-equal?
           s3-type check-s3-type-match use-method set-method!)
 
-  (import core :only (r/call funcall get error))
-  (import types :only (environment? list? nil? null?))
-  (import _utils :only (_as-list))
-  (import list :only (car cdr))
+  (import core :refer (r-call funcall get error))
+  (import types :refer (environment? list? nil? null?))
+  (import _utils :refer (_as-list))
+  (import list :refer (car cdr))
 
   ;;' @section Equality Predicates
   ;;' Arl provides `equal?` for deep structural equality with S3-style dispatch,
@@ -87,8 +87,8 @@
   ;;' @seealso equal?.environment
   (define env-equal?
     (lambda (env1 env2)
-      (define names1 (_as-list (r/call "sort" (list (r/call "ls" (list env1 :all.names #t))))))
-      (define names2 (_as-list (r/call "sort" (list (r/call "ls" (list env2 :all.names #t))))))
+      (define names1 (_as-list (r-call "sort" (list (r-call "ls" (list env1 :all.names #t))))))
+      (define names2 (_as-list (r-call "sort" (list (r-call "ls" (list env2 :all.names #t))))))
       (if (equal? names1 names2)
         ;; Same names - recursively compare values
         (begin
@@ -96,8 +96,8 @@
           (define remaining names1)
           (while (and (not (null? remaining)) result)
             (begin
-              (if (not (equal? (r/call "get" (list (car remaining) :envir env1))
-                               (r/call "get" (list (car remaining) :envir env2))))
+              (if (not (equal? (r-call "get" (list (car remaining) :envir env1))
+                               (r-call "get" (list (car remaining) :envir env2))))
                 (set! result #f)
                 #nil)
               (set! remaining (cdr remaining))))
@@ -230,7 +230,7 @@
   (define equal?.default
     (lambda (a b (strict #f))
       (begin
-        (define comp-result (if strict (identical? a b) (r/call "==" (list a b))))
+        (define comp-result (if strict (identical? a b) (r-call "==" (list a b))))
         (if (is.logical comp-result)
           (if (> (length comp-result) 1)
             (isTRUE (all comp-result))

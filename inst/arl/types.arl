@@ -13,7 +13,7 @@
           even? odd? zero?
           positive? negative? non-negative? non-positive?)
 
-  (import core :only (r/call))
+  (import core :refer (r-call))
 
   ;;' @section List and Pair Predicates
 
@@ -228,7 +228,7 @@
   ;;' @note R6 objects, dicts, and sets are all environments in R, so this predicate returns #t for them.
   (define environment?
     (lambda (x)
-      (r/call "is.environment" (list x))))
+      (r-call "is.environment" (list x))))
 
   ;;' @description Test if x is a Reference Class object.
   ;;' @examples
@@ -237,8 +237,8 @@
   ;;' (assert-false (is-refclass? (baseenv)))
   (define is-refclass?
     (lambda (x)
-      (and (r/call "isS4" (list x))
-           (r/call "is" (list x "refClass")))))
+      (and (r-call "isS4" (list x))
+           (r-call "is" (list x "refClass")))))
 
   ;;' @section Type Introspection
 

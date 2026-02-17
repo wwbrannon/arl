@@ -504,32 +504,32 @@ Apply a function with a provided list of arguments.
 (assert-equal 6 (funcall + (list 1 2 3)))
 ```
 
-**See also:** apply, [r/call](#r-call)
+**See also:** apply, [r-call](#r-call)
 
 ---
 
-### r/call {#r-call}
+### r-call {#r-call}
 
 Call an R function with optional environment.
 Searches from .GlobalEnv by default, finding base and loaded
 package functions.
 
-**Signature:** `(r/call fn [args (list])`
+**Signature:** `(r-call fn [args (list])`
 
 **Examples:**
 ```{arl}
-(r/call "mean" (list (c 1 2 3)))   ; => 2
-(r/call "ls" (list))                ; list .GlobalEnv bindings
-(r/call "Sys.time" (list))          ; current time
+(r-call "mean" (list (c 1 2 3)))   ; => 2
+(r-call "ls" (list))                ; list .GlobalEnv bindings
+(r-call "Sys.time" (list))          ; current time
 ```
 
 ```{arl, include=FALSE}
-(assert-equal 2 (r/call "mean" (list (c 1 2 3))))
+(assert-equal 2 (r-call "mean" (list (c 1 2 3))))
 ```
 
-**Note:** R functions are directly available in Arl without `r/call`. Use `r/call` when you need to look up a function by string name or specify the search environment.
+**Note:** R functions are directly available in Arl without `r-call`. Use `r-call` when you need to look up a function by string name or specify the search environment.
 
-**See also:** [funcall](#funcall), [r/eval](#r-eval)
+**See also:** [funcall](#funcall), [r-eval](#r-eval)
 
 ---
 
@@ -550,7 +550,7 @@ Get a binding by name, defaulting to .GlobalEnv.
 (assert-true (> (get "pi" (baseenv)) 3.14))
 ```
 
-**See also:** [r/call](#r-call)
+**See also:** [r-call](#r-call)
 
 ---
 
@@ -1280,7 +1280,7 @@ Evaluate a Arl expression in the current environment.
 (assert-equal (list 1 2 3) (eval '(list 1 2 3)))
 ```
 
-**See also:** [r/eval](#r-eval), [read](#read), [macroexpand](#macroexpand)
+**See also:** [r-eval](#r-eval), [read](#read), [macroexpand](#macroexpand)
 
 ---
 
@@ -1372,26 +1372,26 @@ __load_demo_value
 
 ---
 
-### r/eval {#r-eval}
+### r-eval {#r-eval}
 
 Evaluate an R expression directly via R's eval(), bypassing
 Arl's compiler.
 
-**Signature:** `(r/eval expr)`
+**Signature:** `(r-eval expr)`
 
 **Examples:**
 ```{arl}
-(r/eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
+(r-eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
 ```
 
 ```{arl, include=FALSE}
-(assert-equal (c 1 2 3 4 5) (r/eval (quote (seq_len 5))))
+(assert-equal (c 1 2 3 4 5) (r-eval (quote (seq_len 5))))
 ```
 
 **Note:** Useful for evaluating raw R calls that use R control flow (for,
 while) or other constructs that Arl normally overrides.
 
-**See also:** [eval](#eval), [r/call](#r-call)
+**See also:** [eval](#eval), [r-call](#r-call)
 
 ---
 

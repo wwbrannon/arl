@@ -99,14 +99,14 @@ Use `skip()` to mark a test as skipped (only available in native tests):
 
 (define test-platform-specific (lambda ()
   ;; Skip on Windows
-  (define os (r/call "Sys.info" (list)))
-  (if (== (r/call "[[" (list os "sysname")) "Windows")
+  (define os (r-call "Sys.info" (list)))
+  (if (== (r-call "[[" (list os "sysname")) "Windows")
     (skip "Not supported on Windows")
     (assert-equal 1 1))))
 
 (define test-requires-new-r (lambda ()
   ;; Skip if R version too old
-  (if (< (r/call "getRversion" (list)) (r/call "package_version" (list "4.5")))
+  (if (< (r-call "getRversion" (list)) (r-call "package_version" (list "4.5")))
     (skip "Requires R >= 4.5")
     (assert-equal 1 1))))
 ```

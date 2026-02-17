@@ -43,7 +43,12 @@ engine$eval_string("(+ 4 5)")
 \subsection{Method \code{new()}}{
 Initialize engine components and base environment.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Engine$new(coverage_tracker = NULL, load_prelude = TRUE, disable_tco = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Engine$new(
+  coverage_tracker = NULL,
+  load_prelude = TRUE,
+  disable_tco = NULL,
+  r_packages = "search_path"
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -60,6 +65,10 @@ builtins — useful for testing or when you want to import specific modules.}
 \item{\code{disable_tco}}{Optional logical. If TRUE, disables self-tail-call optimization
 in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
 which inherits from global option \code{getOption("arl.disable_tco", FALSE)}.}
+
+\item{\code{r_packages}}{Controls which R packages are visible to Arl code.
+\code{"search_path"} (default) tracks R's \code{search()} dynamically;
+a character vector pins a fixed set; \code{NULL} exposes only \code{baseenv()}.}
 }
 \if{html}{\out{</div>}}
 }

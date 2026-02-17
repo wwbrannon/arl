@@ -127,14 +127,14 @@ test_that("builtins-env is accessible from inside a module", {
   expect_true(result)
 })
 
-test_that("r/eval works correctly inside a module function", {
+test_that("r-eval works correctly inside a module function", {
   engine <- make_engine()
-  # r/eval in a module should see the module's local bindings
+  # r-eval in a module should see the module's local bindings
   result <- engine$eval_text("
     (module __reval_mod
       (export test-fn)
       (define y 42)
-      (define test-fn (lambda () (r/eval (quote y)))))
+      (define test-fn (lambda () (r-eval (quote y)))))
     (import __reval_mod)
     (test-fn)")
   expect_equal(result, 42)

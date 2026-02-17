@@ -1,5 +1,4 @@
-# Tests for selective/prefixed/renamed imports
-# Covers :only, :except, :prefix, :rename modifiers and their composition
+# Tests for selective imports with :refer, :as, :rename modifiers
 
 # Helper: create a temp module file with known exports
 make_temp_module <- function(name = "testmod", exports = c("square", "cube", "helper-val"),
@@ -36,9 +35,9 @@ test_that("import with no modifiers imports all exports", {
   expect_equal(engine$eval_text("helper-val"), 99L)
 })
 
-# --- :only ---
+# --- :refer ---
 
-test_that("import :only imports only specified symbols", {
+test_that("import :refer imports only specified symbols", {
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -46,13 +45,13 @@ test_that("import :only imports only specified symbols", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import testmod :only (square))")
+  engine$eval_text("(import testmod :refer (square))")
   expect_equal(engine$eval_text("(square 5)"), 25L)
   expect_error(engine$eval_text("(cube 3)"), "not found|could not find|object .* not found")
   expect_error(engine$eval_text("helper-val"), "not found|could not find|object .* not found")
 })
 
-test_that("import :only errors on names not in module exports", {
+test_that("import :refer errors on names not in module exports", {
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -61,14 +60,12 @@ test_that("import :only errors on names not in module exports", {
   on.exit(setwd(old_wd), add = TRUE)
 
   expect_error(
-    engine$eval_text("(import testmod :only (nonexistent))"),
+    engine$eval_text("(import testmod :refer (nonexistent))"),
     "does not export 'nonexistent'"
   )
 })
 
-# --- :except ---
-
-test_that("import :except excludes specified symbols", {
+test_that("import :refer :all imports all exports", {
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -76,29 +73,15 @@ test_that("import :except excludes specified symbols", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import testmod :except (helper-val))")
+  engine$eval_text("(import testmod :refer :all)")
   expect_equal(engine$eval_text("(square 5)"), 25L)
   expect_equal(engine$eval_text("(cube 3)"), 27L)
-  expect_error(engine$eval_text("helper-val"), "not found|could not find|object .* not found")
+  expect_equal(engine$eval_text("helper-val"), 99L)
 })
 
-test_that("import :except errors on names not in module exports", {
-  m <- make_temp_module()
-  on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
+# --- :as ---
 
-  engine <- make_engine()
-  old_wd <- setwd(m$dir)
-  on.exit(setwd(old_wd), add = TRUE)
-
-  expect_error(
-    engine$eval_text("(import testmod :except (nonexistent))"),
-    "does not export 'nonexistent'"
-  )
-})
-
-# --- :prefix ---
-
-test_that("import :prefix adds prefix to all imported names", {
+test_that("import :as aliases the module binding", {
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -106,10 +89,25 @@ test_that("import :prefix adds prefix to all imported names", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import testmod :prefix m/)")
+  engine$eval_text("(import testmod :as m)")
+  # Qualified access works via alias
   expect_equal(engine$eval_text("(m/square 5)"), 25L)
   expect_equal(engine$eval_text("(m/cube 3)"), 27L)
+  # Unqualified names not imported (no :refer)
   expect_error(engine$eval_text("(square 5)"), "not found|could not find|object .* not found")
+})
+
+test_that("import :as with :refer combines correctly", {
+  m <- make_temp_module(exports = c("square", "cube"))
+  on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
+
+  engine <- make_engine()
+  old_wd <- setwd(m$dir)
+  on.exit(setwd(old_wd), add = TRUE)
+
+  engine$eval_text("(import testmod :as m :refer (square))")
+  expect_equal(engine$eval_text("(square 5)"), 25L)
+  expect_equal(engine$eval_text("(m/cube 3)"), 27L)
   expect_error(engine$eval_text("(cube 3)"), "not found|could not find|object .* not found")
 })
 
@@ -145,7 +143,7 @@ test_that("import :rename errors on names not in module exports", {
 
 # --- Composition ---
 
-test_that("import :only + :prefix composes correctly", {
+test_that("import :refer + :rename composes correctly", {
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -153,45 +151,15 @@ test_that("import :only + :prefix composes correctly", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import testmod :only (square) :prefix m/)")
-  expect_equal(engine$eval_text("(m/square 5)"), 25L)
-  expect_error(engine$eval_text("(m/cube 3)"), "not found|could not find")
-  expect_error(engine$eval_text("(square 5)"), "not found|could not find|object .* not found")
-})
-
-test_that("import :except + :rename composes correctly", {
-  m <- make_temp_module(exports = c("square", "cube"))
-  on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
-
-  engine <- make_engine()
-  old_wd <- setwd(m$dir)
-  on.exit(setwd(old_wd), add = TRUE)
-
-  engine$eval_text("(import testmod :except (cube) :rename ((square sq)))")
+  engine$eval_text("(import testmod :refer (square cube) :rename ((square sq)))")
   expect_equal(engine$eval_text("(sq 5)"), 25L)
+  expect_equal(engine$eval_text("(cube 3)"), 27L)
   expect_error(engine$eval_text("(square 5)"), "not found|could not find|object .* not found")
-  expect_error(engine$eval_text("(cube 3)"), "not found|could not find|object .* not found")
-})
-
-test_that("import :only + :rename + :prefix composes correctly", {
-  m <- make_temp_module(exports = c("square", "cube"))
-  on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
-
-  engine <- make_engine()
-  old_wd <- setwd(m$dir)
-  on.exit(setwd(old_wd), add = TRUE)
-
-  engine$eval_text("(import testmod :only (square cube) :rename ((square sq)) :prefix m/)")
-  expect_equal(engine$eval_text("(m/sq 5)"), 25L)
-  expect_equal(engine$eval_text("(m/cube 3)"), 27L)
-  expect_error(engine$eval_text("(square 5)"), "not found|could not find|object .* not found")
-  expect_error(engine$eval_text("(m/square 5)"), "not found|could not find")
 })
 
 # --- Macros ---
-# With properly scoped macro registries, selective import works for macros too.
 
-test_that("import :only works with macros", {
+test_that("import :refer works with macros", {
   m <- make_temp_module(name = "macmod", exports = c("my-when", "my-unless"), body = c(
     "(module macmod",
     "  (export my-when my-unless)",
@@ -204,13 +172,13 @@ test_that("import :only works with macros", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import macmod :only (my-when))")
+  engine$eval_text("(import macmod :refer (my-when))")
   expect_equal(engine$eval_text("(my-when #t 42)"), 42L)
-  # my-unless was excluded — not visible as a macro
+  # my-unless was not referred — not visible as a macro
   expect_error(engine$eval_text("(my-unless #f 42)"), "not found|could not find")
 })
 
-test_that("import :prefix works with macros", {
+test_that("import :refer works with macros", {
   m <- make_temp_module(name = "macmod2", exports = c("mw"), body = c(
     "(module macmod2",
     "  (export mw)",
@@ -222,10 +190,8 @@ test_that("import :prefix works with macros", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import macmod2 :prefix c/)")
-  expect_equal(engine$eval_text("(c/mw #t 42)"), 42L)
-  # unprefixed name is not visible
-  expect_error(engine$eval_text("(mw #t 42)"), "not found|could not find")
+  engine$eval_text("(import macmod2 :refer (mw))")
+  expect_equal(engine$eval_text("(mw #t 42)"), 42L)
 })
 
 test_that("import :rename works with macros", {
@@ -248,7 +214,7 @@ test_that("import :rename works with macros", {
 
 # --- Edge cases ---
 
-test_that("import with empty :only imports nothing", {
+test_that("import with empty :refer imports nothing unqualified", {
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -256,9 +222,11 @@ test_that("import with empty :only imports nothing", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import testmod :only ())")
+  engine$eval_text("(import testmod :refer ())")
   expect_error(engine$eval_text("(square 5)"), "not found|could not find|object .* not found")
   expect_error(engine$eval_text("(cube 3)"), "not found|could not find|object .* not found")
+  # But qualified access should work
+  expect_equal(engine$eval_text("(testmod/square 5)"), 25L)
 })
 
 test_that("import with path string supports modifiers", {
@@ -269,7 +237,7 @@ test_that("import with path string supports modifiers", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text(sprintf('(import "%s" :only (square))', m$file))
+  engine$eval_text(sprintf('(import "%s" :refer (square))', m$file))
   expect_equal(engine$eval_text("(square 5)"), 25L)
   expect_error(engine$eval_text("(cube 3)"), "not found|could not find|object .* not found")
 })
@@ -282,15 +250,16 @@ test_that("proxy-based imports are accessible via scoping but not in ls(env)", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import testmod :only (square))")
+  engine$eval_text("(import testmod :refer (square))")
   env <- engine$get_env()
   # Proxy-based imports live in parent chain, not in the env itself
+  # (but the module binding "testmod" IS in env)
   expect_false("square" %in% ls(env, all.names = FALSE))
   # But they're accessible via get with inherits
   expect_equal(get("square", envir = env)(5L), 25L)
 })
 
-test_that("reference semantics: changes in module visible through proxy", {
+test_that("reference semantics: module bindings are locked", {
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -298,35 +267,33 @@ test_that("reference semantics: changes in module visible through proxy", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text("(import testmod :only (square))")
+  engine$eval_text("(import testmod :refer (square))")
 
-  # Get the module env and modify the binding
+  # Get the module env
   arl_env <- arl:::Env$new(engine$get_env())
   registry <- arl_env$module_registry
   entry <- registry$get("testmod")
   module_env <- entry$env
 
-  # Replace square with a doubling function
-  assign("square", function(x) x * 2L, envir = module_env)
-
-  # The proxy should reflect the new value
-  expect_equal(engine$eval_text("(square 5)"), 10L)
+  # Module bindings should be locked
+  expect_true(bindingIsLocked("square", module_env))
 })
 
 # --- Compile-time errors ---
-
-test_that("import :only and :except are mutually exclusive", {
-  engine <- make_engine()
-  expect_error(
-    engine$eval_text("(import testmod :only (x) :except (y))"),
-    "mutually exclusive"
-  )
-})
 
 test_that("import with unknown modifier errors", {
   engine <- make_engine()
   expect_error(
     engine$eval_text("(import testmod :foobar (x))"),
     "unknown modifier"
+  )
+})
+
+test_that("import :as rejects non-symbol alias", {
+  engine <- make_engine()
+  # a/b is parsed as (module-ref a b), not a symbol
+  expect_error(
+    engine$eval_text("(import testmod :as a/b)"),
+    ":as requires a symbol"
   )
 })

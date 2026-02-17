@@ -3,9 +3,9 @@
 (module struct
   (export defstruct)
 
-  (import functional :only (map mapcat))
-  (import display :only (string-concat))
-  (import core :only (r/call))
+  (import functional :refer (map mapcat))
+  (import display :refer (string-concat))
+  (import core :refer (r-call))
 
 ;;' @section Struct Definition
 
@@ -48,7 +48,7 @@
         (define accessor-name (as.symbol (string-concat struct-name "-" (as.character field))))
         `(define ,accessor-name
            (lambda (obj)
-             (r/call "[["
+             (r-call "[["
                (list obj ,(as.character field)))
            )))
       fields))

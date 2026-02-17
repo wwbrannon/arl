@@ -4,10 +4,10 @@
   (export dict hash dict? dict-get dict-set dict-remove dict-keys dict-values
           dict-has? dict-merge)
 
-  (import _utils :only (_as-list))
-  (import list :only (car cdr))
-  (import core :only (r/call error))
-  (import functional :only (filter))
+  (import _utils :refer (_as-list))
+  (import list :refer (car cdr))
+  (import core :refer (r-call error))
+  (import functional :refer (filter))
 
 ;;' @section Dictionary (Hash Table)
 ;;' Dictionaries are mutable key-value stores backed by R environments.
@@ -18,18 +18,18 @@
 ;;' @description Create a new empty dictionary environment.
 (define dict-new
   (lambda ()
-    (define dict-obj (r/call "new.env" (list :hash #t :parent (r/call "emptyenv" (list)))))
-    (r/call "class<-" (list dict-obj (c (list "arl_dict") (r/call "class" (list dict-obj)))))
-    (r/call "assign" (list ".__keys" (r/call "character" (list 0)) :envir dict-obj))
+    (define dict-obj (r-call "new.env" (list :hash #t :parent (r-call "emptyenv" (list)))))
+    (r-call "class<-" (list dict-obj (c (list "arl_dict") (r-call "class" (list dict-obj)))))
+    (r-call "assign" (list ".__keys" (r-call "character" (list 0)) :envir dict-obj))
     dict-obj))
 
 ;;' @description Convert key to string name for dict storage.
 (define dict-key-to-name
   (lambda (key)
-    (if (r/call "is.character" (list key))
+    (if (r-call "is.character" (list key))
       key
-      (if (or (r/call "inherits" (list key "arl_keyword")) (r/call "is.symbol" (list key)))
-        (r/call "as.character" (list key))
+      (if (or (r-call "inherits" (list key "arl_keyword")) (r-call "is.symbol" (list key)))
+        (r-call "as.character" (list key))
         #nil))))
 
 ;;; Dictionary constructor
@@ -51,19 +51,19 @@
     (if (= (length args) 0)
       dict-obj
       (begin
-        (define arg-names (r/call "names" (list args)))
-        (if (or (is.null arg-names) (r/call "any" (list (r/call "!" (list (r/call "nzchar" (list arg-names)))))))
+        (define arg-names (r-call "names" (list args)))
+        (if (or (is.null arg-names) (r-call "any" (list (r-call "!" (list (r-call "nzchar" (list arg-names)))))))
           (error "dict requires named arguments")
           (begin
-            (define keys (r/call "as.character" (list arg-names)))
+            (define keys (r-call "as.character" (list arg-names)))
             (define assign-pair
               (lambda (i)
                 (begin
-                  (define key (r/call "[[" (list keys i)))
-                  (define value (r/call "[[" (list args i)))
-                  (r/call "assign" (list key value :envir dict-obj)))))
-            (r/call "lapply" (list (r/call "seq_len" (list (length keys))) assign-pair))
-            (r/call "assign" (list ".__keys" keys :envir dict-obj))
+                  (define key (r-call "[[" (list keys i)))
+                  (define value (r-call "[[" (list args i)))
+                  (r-call "assign" (list key value :envir dict-obj)))))
+            (r-call "lapply" (list (r-call "seq_len" (list (length keys))) assign-pair))
+            (r-call "assign" (list ".__keys" keys :envir dict-obj))
             dict-obj))))))
 
 ;;' @signature (hash . args)
@@ -84,7 +84,7 @@
 ;;' (assert-false (dict? 42))
 (define dict?
   (lambda (x)
-    (and (r/call "is.environment" (list x)) (r/call "inherits" (list x "arl_dict")))))
+    (and (r-call "is.environment" (list x)) (r-call "inherits" (list x "arl_dict")))))
 
 ;;; Internal helper (defined early for forward references)
 
@@ -92,11 +92,11 @@
 (define dict-keys-ordered
   (lambda (dict)
     (if (not (dict? dict))
-      (r/call "character" (list 0))
+      (r-call "character" (list 0))
       (begin
-        (define keys (r/call "get0" (list ".__keys" :envir dict :inherits #f)))
+        (define keys (r-call "get0" (list ".__keys" :envir dict :inherits #f)))
         (if (is.null keys)
-          (r/call "sort" (list (r/call "ls" (list :envir dict :all.names #f))))
+          (r-call "sort" (list (r-call "ls" (list :envir dict :all.names #f))))
           keys)))))
 
 ;;; Dictionary operations
@@ -118,8 +118,8 @@
     (define name (dict-key-to-name key))
     (if (or (is.null name) (not (dict? dict)))
       default
-      (if (r/call "exists" (list name :envir dict :inherits #f))
-        (r/call "get" (list name :envir dict :inherits #f))
+      (if (r-call "exists" (list name :envir dict :inherits #f))
+        (r-call "get" (list name :envir dict :inherits #f))
         default))))
 
 ;;' @description Set key to value in dict and return dict.
@@ -141,9 +141,9 @@
         (error "dict-set requires a dict")
         (begin
           (define keys (dict-keys-ordered dict))
-          (if (not (r/call "%in%" (list name keys)))
-            (r/call "assign" (list ".__keys" (c keys (list name)) :envir dict)))
-          (r/call "assign" (list name value :envir dict))
+          (if (not (r-call "%in%" (list name keys)))
+            (r-call "assign" (list ".__keys" (c keys (list name)) :envir dict)))
+          (r-call "assign" (list name value :envir dict))
           dict)))))
 
 ;;' @description Remove key from dict and return dict.
@@ -161,12 +161,12 @@
     (define name (dict-key-to-name key))
     (if (or (is.null name) (not (dict? dict)))
       dict
-      (if (r/call "exists" (list name :envir dict :inherits #f))
+      (if (r-call "exists" (list name :envir dict :inherits #f))
         (begin
-          (r/call "rm" (list :list (c name) :envir dict :inherits #f))
+          (r-call "rm" (list :list (c name) :envir dict :inherits #f))
           (define keys (dict-keys-ordered dict))
           (if (> (length keys) 0)
-            (r/call "assign" (list ".__keys" (r/call "as.character" (list (filter (lambda (k) (not (= k name))) (as.list keys)))) :envir dict)))
+            (r-call "assign" (list ".__keys" (r-call "as.character" (list (filter (lambda (k) (not (= k name))) (as.list keys)))) :envir dict)))
           dict)
         dict))))
 
@@ -203,8 +203,8 @@
         (if (= (length keys) 0)
           (list)
           (begin
-            (define values (r/call "mget" (list keys :envir dict :inherits #f)))
-            (_as-list (r/call "unname" (list values)))))))))
+            (define values (r-call "mget" (list keys :envir dict :inherits #f)))
+            (_as-list (r-call "unname" (list values)))))))))
 
 ;;' @description Return #t if dict contains key.
 ;;' @examples
@@ -220,7 +220,7 @@
     (define name (dict-key-to-name key))
     (if (or (is.null name) (not (dict? dict)))
       #f
-      (r/call "exists" (list name :envir dict :inherits #f)))))
+      (r-call "exists" (list name :envir dict :inherits #f)))))
 
 ;;' @description Merge dicts, later values override earlier.
 ;;' @examples
@@ -248,17 +248,17 @@
             (define merge-key
               (lambda (name)
                 (begin
-                  (define value (r/call "get" (list name :envir d :inherits #f)))
-                  (r/call "assign" (list name value :envir result))
-                  (if (not (r/call "%in%" (list name (r/call "as.character" (list result-keys)))))
+                  (define value (r-call "get" (list name :envir d :inherits #f)))
+                  (r-call "assign" (list name value :envir result))
+                  (if (not (r-call "%in%" (list name (r-call "as.character" (list result-keys)))))
                     (set! result-keys (c result-keys (list name)))))))
             (if (> (length keys) 0)
-              (r/call "lapply" (list (as.list keys) merge-key)))))))
+              (r-call "lapply" (list (as.list keys) merge-key)))))))
     (define remaining dicts)
     (while (> (length remaining) 0)
       (begin
         (merge-dict (car remaining))
         (set! remaining (cdr remaining))))
-    (r/call "assign" (list ".__keys" (r/call "as.character" (list result-keys)) :envir result))
+    (r-call "assign" (list ".__keys" (r-call "as.character" (list result-keys)) :envir result))
     result))
 )

@@ -261,6 +261,14 @@ Engine <- R6::R6Class(
                 create_reexport_forwardings(module_env, exports, module_name)
               }
 
+              # Lock all module bindings (immutability)
+              all_binding_names <- ls(module_env, all.names = TRUE)
+              for (nm in all_binding_names) {
+                if (!bindingIsLocked(nm, module_env)) {
+                  lockBinding(as.symbol(nm), module_env)
+                }
+              }
+
               # Handle export_all
               if (export_all) {
                 # ls() only returns immediate bindings — proxy-based imports
@@ -899,7 +907,7 @@ Engine <- R6::R6Class(
       }
 
       #
-      # r/eval
+      # r-eval
       #
 
       # Execute an R expression via R's own eval(), bypassing Arl's compiler
@@ -924,7 +932,7 @@ Engine <- R6::R6Class(
       # 2. hygiene_unwrap: Strips Arl's macro hygiene wrappers so R sees clean
       #    R code.
       #
-      # 3. quote unwrapping: If you write (r/eval (quote (seq_len 5))), the
+      # 3. quote unwrapping: If you write (r-eval (quote (seq_len 5))), the
       #    compiler passes a quote(seq_len(5)) call. R's eval(quote(x), env)
       #    would just look up x, so this unwraps one layer.
       #
@@ -937,7 +945,7 @@ Engine <- R6::R6Class(
       # suppressMessages, withCallingHandlers, signal, the do looping macro,
       # and anywhere stdlib needs to build and evaluate raw R calls.
 
-      builtins_env$`r/eval` <- function(expr, env = NULL) {
+      builtins_env$`r-eval` <- function(expr, env = NULL) {
         if (is.null(env)) {
           # Use caller's environment directly (no .__env needed)
           env <- parent.frame()
@@ -974,6 +982,93 @@ Engine <- R6::R6Class(
           eval(expr, envir = env)
         }
       }
+      #
+      # module-ref — qualified access: (module-ref mod sym)
+      #
+      module_registry <- private$.env$module_registry
+      builtins_env$`module-ref` <- function(obj, name) {
+        name_str <- as.character(substitute(name))
+        if (is.environment(obj) && isTRUE(get0(".__module", envir = obj, inherits = FALSE))) {
+          # Module env: look up exported binding
+          if (!exists(name_str, envir = obj, inherits = FALSE)) {
+            stop(sprintf("module has no export '%s'", name_str), call. = FALSE)
+          }
+          return(get(name_str, envir = obj, inherits = FALSE))
+        }
+        if (inherits(obj, "arl_namespace")) {
+          # Namespace node: extend prefix and look up in module registry
+          prefix <- get(".__namespace_prefix", envir = obj, inherits = FALSE)
+          full_path <- paste0(prefix, "/", name_str)
+          if (module_registry$exists(full_path)) {
+            return(module_registry$get(full_path)$env)
+          }
+          # Check if it's a valid sub-namespace prefix
+          if (module_registry$has_prefix(full_path)) {
+            return(make_namespace_node(full_path))
+          }
+          stop(sprintf("no module or namespace '%s'", full_path), call. = FALSE)
+        }
+        stop(sprintf("module-ref: first argument must be a module or namespace, got %s",
+                      paste(class(obj), collapse = "/")), call. = FALSE)
+      }
+
+      #
+      # module? — is x a module environment?
+      #
+      builtins_env$`module?` <- function(x) {
+        is.environment(x) && isTRUE(get0(".__module", envir = x, inherits = FALSE))
+      }
+
+      #
+      # namespace? — is x a namespace node?
+      #
+      builtins_env$`namespace?` <- function(x) {
+        inherits(x, "arl_namespace")
+      }
+
+      #
+      # module-exports — get export list from a module env
+      #
+      builtins_env$`module-exports` <- function(mod) {
+        if (!is.environment(mod) || !isTRUE(get0(".__module", envir = mod, inherits = FALSE))) {
+          stop("module-exports: argument must be a module", call. = FALSE)
+        }
+        registry_env <- module_registry$arl_env$module_registry_env(create = FALSE)
+        if (!is.null(registry_env)) {
+          for (key in ls(registry_env, all.names = TRUE)) {
+            entry <- base::get(key, envir = registry_env, inherits = FALSE)
+            if (identical(entry$env, mod)) {
+              return(as.list(entry$exports))
+            }
+          }
+        }
+        stop("module-exports: module not found in registry", call. = FALSE)
+      }
+
+      #
+      # module-name — get canonical name of a module env
+      #
+      builtins_env$`module-name` <- function(mod) {
+        if (!is.environment(mod) || !isTRUE(get0(".__module", envir = mod, inherits = FALSE))) {
+          stop("module-name: argument must be a module", call. = FALSE)
+        }
+        registry_env <- module_registry$arl_env$module_registry_env(create = FALSE)
+        if (!is.null(registry_env)) {
+          # Collect all keys matching this module, return shortest (canonical name)
+          matching <- character(0)
+          for (key in ls(registry_env, all.names = TRUE)) {
+            entry <- base::get(key, envir = registry_env, inherits = FALSE)
+            if (identical(entry$env, mod)) {
+              matching <- c(matching, key)
+            }
+          }
+          if (length(matching) > 0) {
+            return(matching[which.min(nchar(matching))])
+          }
+        }
+        stop("module-name: module not found in registry", call. = FALSE)
+      }
+
       # Load arl_doc attributes from reference-docs.dcf (single source of truth
       # shared with the vignette generator)
       private$load_builtin_docs(builtins_env)

@@ -298,7 +298,7 @@ test_that(":reload with :only modifier", {
   ))
   path_arl <- normalizePath(path, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s" :only (x))', path_arl))
+  eng$eval_text(sprintf('(import "%s" :refer (x))', path_arl))
   expect_equal(eng$eval_text("x"), 1)
 
   write_module(path, "only-mod", c(
@@ -307,11 +307,11 @@ test_that(":reload with :only modifier", {
     "  (define y 20)"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload :only (x))', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :refer (x))', path_arl))
   expect_equal(eng$eval_text("x"), 10)
 })
 
-test_that(":reload with :prefix modifier", {
+test_that(":reload with :as modifier for qualified access", {
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -322,7 +322,7 @@ test_that(":reload with :prefix modifier", {
   ))
   path_arl <- normalizePath(path, winslash = "/")
 
-  eng$eval_text(sprintf('(import "%s" :prefix pfx/)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :as pfx)', path_arl))
   expect_equal(eng$eval_text("pfx/x"), 1)
 
   write_module(path, "pfx-mod", c(
@@ -330,7 +330,7 @@ test_that(":reload with :prefix modifier", {
     "  (define x 99)"
   ))
 
-  eng$eval_text(sprintf('(import "%s" :reload :prefix pfx/)', path_arl))
+  eng$eval_text(sprintf('(import "%s" :reload :as pfx)', path_arl))
   expect_equal(eng$eval_text("pfx/x"), 99)
 })
 

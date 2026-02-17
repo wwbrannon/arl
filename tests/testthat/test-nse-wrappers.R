@@ -30,7 +30,7 @@ test_that("suppressMessages suppresses messages", {
 
   # Without suppressMessages, this would print a message
   output <- capture.output(
-    result <- engine$eval_text("(suppressMessages (r/call \"test_msg\"))", env = env),
+    result <- engine$eval_text("(suppressMessages (r-call \"test_msg\"))", env = env),
     type = "message"
   )
 

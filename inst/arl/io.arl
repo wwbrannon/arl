@@ -10,7 +10,7 @@
           getenv setenv
           system-output exit)
 
-  (import core :only (r/call get))
+  (import core :refer (r-call get))
 
   ;; Normalize content to character vector.
   (define _normalize-line-vector
@@ -43,7 +43,7 @@
       (define con (getOption "arl.stdin"))
       (if (is.null con) (define con (stdin)) #nil)
       (if (nzchar prompt) (cat prompt) #nil)
-      (r/call "readLines" (list :con con :n 1 :warn #f))))
+      (r-call "readLines" (list :con con :n 1 :warn #f))))
 
   ;;' @seealso read
   (define read-from-string read)  ;; Alias for read
@@ -73,10 +73,10 @@
   ;;' (read-file "data.txt")                  ; => file contents as string
   ;;' (read-file "data.txt" "latin1")         ; read with specific encoding
   ;;' @assert
-  ;;' (define _tmp (r/call "tempfile" (list)))
-  ;;' (r/call "writeLines" (list (r/call "c" (list "line1" "line2")) _tmp))
+  ;;' (define _tmp (r-call "tempfile" (list)))
+  ;;' (r-call "writeLines" (list (r-call "c" (list "line1" "line2")) _tmp))
   ;;' (assert-equal "line1\nline2" (read-file _tmp))
-  ;;' (r/call "unlink" (list _tmp))
+  ;;' (r-call "unlink" (list _tmp))
   (define read-file
     (lambda (path (encoding "UTF-8"))
       (define con (file path :open "r" :encoding encoding))
@@ -89,10 +89,10 @@
   ;;' @examples
   ;;' (read-lines "data.txt")  ; => ("line1" "line2" "line3")
   ;;' @assert
-  ;;' (define _tmp (r/call "tempfile" (list)))
-  ;;' (r/call "writeLines" (list (r/call "c" (list "alpha" "beta" "gamma")) _tmp))
+  ;;' (define _tmp (r-call "tempfile" (list)))
+  ;;' (r-call "writeLines" (list (r-call "c" (list "alpha" "beta" "gamma")) _tmp))
   ;;' (assert-equal (list "alpha" "beta" "gamma") (read-lines _tmp))
-  ;;' (r/call "unlink" (list _tmp))
+  ;;' (r-call "unlink" (list _tmp))
   (define read-lines
     (lambda (path (encoding "UTF-8"))
       (define con (file path :open "r" :encoding encoding))
@@ -106,10 +106,10 @@
   ;;' (write-file "out.txt" "hello world")
   ;;' (write-file "out.txt" (list "line1" "line2"))
   ;;' @assert
-  ;;' (define _tmp (r/call "tempfile" (list)))
+  ;;' (define _tmp (r-call "tempfile" (list)))
   ;;' (write-file _tmp "hello world")
   ;;' (assert-equal "hello world" (read-file _tmp))
-  ;;' (r/call "unlink" (list _tmp))
+  ;;' (r-call "unlink" (list _tmp))
   (define write-file
     (lambda (path content (sep "\n") (encoding "UTF-8"))
       (define text (_normalize-lines content sep))
@@ -123,10 +123,10 @@
   ;;' @examples
   ;;' (write-lines "out.txt" (list "line1" "line2" "line3"))
   ;;' @assert
-  ;;' (define _tmp (r/call "tempfile" (list)))
+  ;;' (define _tmp (r-call "tempfile" (list)))
   ;;' (write-lines _tmp (list "one" "two" "three"))
   ;;' (assert-equal (list "one" "two" "three") (read-lines _tmp))
-  ;;' (r/call "unlink" (list _tmp))
+  ;;' (r-call "unlink" (list _tmp))
   (define write-lines
     (lambda (path lines (encoding "UTF-8"))
       (define out (_normalize-line-vector lines))
@@ -140,12 +140,12 @@
   ;;' @examples
   ;;' (append-file "log.txt" "new entry\n")
   ;;' @assert
-  ;;' (define _tmp (r/call "tempfile" (list)))
+  ;;' (define _tmp (r-call "tempfile" (list)))
   ;;' (write-file _tmp "first")
   ;;' (append-file _tmp "second")
   ;;' (assert-true (string-contains? (read-file _tmp) "first"))
   ;;' (assert-true (string-contains? (read-file _tmp) "second"))
-  ;;' (r/call "unlink" (list _tmp))
+  ;;' (r-call "unlink" (list _tmp))
   (define append-file
     (lambda (path content (sep "\n") (encoding "UTF-8"))
       (define text (_normalize-lines content sep))
@@ -160,11 +160,11 @@
   ;;' (file-exists? "data.txt")    ; => #t or #f
   ;;' (file-exists? "nope.txt")    ; => #f
   ;;' @assert
-  ;;' (define _tmp (r/call "tempfile" (list)))
-  ;;' (r/call "writeLines" (list "" _tmp))
+  ;;' (define _tmp (r-call "tempfile" (list)))
+  ;;' (r-call "writeLines" (list "" _tmp))
   ;;' (assert-true (file-exists? _tmp))
   ;;' (assert-false (file-exists? "/nonexistent/path/to/file.txt"))
-  ;;' (r/call "unlink" (list _tmp))
+  ;;' (r-call "unlink" (list _tmp))
   (define file-exists?
     (lambda (path)
       (isTRUE (file.exists path))))
@@ -177,14 +177,14 @@
   ;;' @examples
   ;;' (file-size "data.txt")       ; => 1024 (bytes)
   ;;' @assert
-  ;;' (define _tmp (r/call "tempfile" (list)))
-  ;;' (r/call "writeLines" (list "hello" _tmp))
+  ;;' (define _tmp (r-call "tempfile" (list)))
+  ;;' (r-call "writeLines" (list "hello" _tmp))
   ;;' (assert-true (> (file-size _tmp) 0))
-  ;;' (r/call "unlink" (list _tmp))
+  ;;' (r-call "unlink" (list _tmp))
   (define file-size
     (lambda (path)
       (if (file.exists path)
-        (r/call "[[" (list (r/call "file.info" (list path)) "size"))
+        (r-call "[[" (list (r-call "file.info" (list path)) "size"))
         (stop (sprintf "file-size: file does not exist: %s" path)))))
 
   ;;' @description Return file modification time as numeric timestamp.
@@ -192,15 +192,15 @@
   ;;' @examples
   ;;' (file-modified-time "data.txt")  ; => 1700000000 (numeric timestamp)
   ;;' @assert
-  ;;' (define _tmp (r/call "tempfile" (list)))
-  ;;' (r/call "writeLines" (list "" _tmp))
+  ;;' (define _tmp (r-call "tempfile" (list)))
+  ;;' (r-call "writeLines" (list "" _tmp))
   ;;' (assert-true (> (file-modified-time _tmp) 0))
-  ;;' (r/call "unlink" (list _tmp))
+  ;;' (r-call "unlink" (list _tmp))
   (define file-modified-time
     (lambda (path)
       (if (file.exists path)
         (begin
-          (define mtime (r/call "[[" (list (r/call "file.info" (list path)) "mtime")))
+          (define mtime (r-call "[[" (list (r-call "file.info" (list path)) "mtime")))
           (as.numeric mtime))
         (stop (sprintf "file-modified-time: file does not exist: %s" path)))))
 
@@ -209,8 +209,8 @@
   ;;' @examples
   ;;' (file-delete "temp.txt")     ; => #t
   ;;' @assert
-  ;;' (define _tmp (r/call "tempfile" (list)))
-  ;;' (r/call "writeLines" (list "" _tmp))
+  ;;' (define _tmp (r-call "tempfile" (list)))
+  ;;' (r-call "writeLines" (list "" _tmp))
   ;;' (assert-true (file-exists? _tmp))
   ;;' (assert-true (file-delete _tmp))
   ;;' (assert-false (file-exists? _tmp))
@@ -230,7 +230,7 @@
   ;;' (directory-exists? "/tmp")         ; => #t
   ;;' (directory-exists? "/nonexistent") ; => #f
   ;;' @assert
-  ;;' (assert-true (directory-exists? (r/call "tempdir" (list))))
+  ;;' (assert-true (directory-exists? (r-call "tempdir" (list))))
   ;;' (assert-false (directory-exists? "/nonexistent/path/that/does/not/exist"))
   (define directory-exists?
     (lambda (path)
@@ -242,14 +242,14 @@
   ;;' (directory-list ".")               ; => ("file1.txt" "file2.txt")
   ;;' (directory-list "." #t)            ; => ("./file1.txt" "./file2.txt")
   ;;' @assert
-  ;;' (define _tmpdir (r/call "tempfile" (list "dir")))
-  ;;' (r/call "dir.create" (list _tmpdir))
-  ;;' (r/call "writeLines" (list "" (r/call "file.path" (list _tmpdir "a.txt"))))
-  ;;' (r/call "writeLines" (list "" (r/call "file.path" (list _tmpdir "b.txt"))))
+  ;;' (define _tmpdir (r-call "tempfile" (list "dir")))
+  ;;' (r-call "dir.create" (list _tmpdir))
+  ;;' (r-call "writeLines" (list "" (r-call "file.path" (list _tmpdir "a.txt"))))
+  ;;' (r-call "writeLines" (list "" (r-call "file.path" (list _tmpdir "b.txt"))))
   ;;' (define _listing (directory-list _tmpdir))
   ;;' (assert-true (> (length _listing) 0))
-  ;;' (assert-true (r/call "%in%" (list "a.txt" _listing)))
-  ;;' (r/call "unlink" (list _tmpdir :recursive #t))
+  ;;' (assert-true (r-call "%in%" (list "a.txt" _listing)))
+  ;;' (r-call "unlink" (list _tmpdir :recursive #t))
   (define directory-list
     (lambda (path (full.names #f))
       (if (dir.exists path)
@@ -261,8 +261,8 @@
   ;;' @examples
   ;;' (directory-delete "/tmp/mydir")    ; => #t
   ;;' @assert
-  ;;' (define _tmpdir (r/call "tempfile" (list "deldir")))
-  ;;' (r/call "dir.create" (list _tmpdir))
+  ;;' (define _tmpdir (r-call "tempfile" (list "deldir")))
+  ;;' (r-call "dir.create" (list _tmpdir))
   ;;' (assert-true (directory-exists? _tmpdir))
   ;;' (assert-true (directory-delete _tmpdir))
   ;;' (assert-false (directory-exists? _tmpdir))
@@ -303,11 +303,11 @@
     (lambda (name value)
       ;; Create a named list and use do.call
       ;; First create a list with the value
-      (define args-list (r/call "list" (list value)))
+      (define args-list (r-call "list" (list value)))
       ;; Set the name on the first element
-      (define named-list (r/call "names<-" (list args-list (r/call "c" (list name)))))
+      (define named-list (r-call "names<-" (list args-list (r-call "c" (list name)))))
       ;; Call Sys.setenv with the named list - pass as string "Sys.setenv"
-      (r/call "do.call" (list "Sys.setenv" named-list))
+      (r-call "do.call" (list "Sys.setenv" named-list))
       #t))
 
   ;;' @description Execute shell command and capture output as string.

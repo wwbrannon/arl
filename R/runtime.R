@@ -60,7 +60,14 @@ missing_default <- function() {
         rm(list = name, envir = target)
         base::assign(name, value, envir = target)
       } else {
-        base::assign(name, value, envir = target)
+        # Handle locked bindings (module bindings are locked after load)
+        if (bindingIsLocked(name, target)) {
+          unlock_binding(name, target)
+          base::assign(name, value, envir = target)
+          lockBinding(as.symbol(name), target)
+        } else {
+          base::assign(name, value, envir = target)
+        }
       }
     }
     return(invisible(NULL))
@@ -95,6 +102,7 @@ EvalContext <- R6::R6Class(
     loading_modules = NULL,
     squash_imports = FALSE,
     reload_env = NULL,
+    expected_module_name = NULL,
     # @description Create context. macro_expander and compiler are assigned by the engine.
     # @param env Env instance.
     # @param source_tracker SourceTracker instance.
@@ -241,8 +249,8 @@ CompiledRuntime <- R6::R6Class(
         self$module_compiled(module_name, exports, export_all, re_export, body_exprs, src_file, env)
       }, "Module definition handler.")
 
-      assign_and_lock(".__import", function(arg_value, env, only = NULL, except = NULL, prefix = NULL, rename = NULL, reload = FALSE) {
-        self$import_compiled(arg_value, env, only = only, except = except, prefix = prefix, rename = rename, reload = reload)
+      assign_and_lock(".__import", function(arg_value, env, rename = NULL, reload = FALSE, as_alias = NULL, refer = NULL) {
+        self$import_compiled(arg_value, env, rename = rename, reload = reload, as_alias = as_alias, refer = refer)
       }, "Module import handler.")
 
       assign_and_lock(".__pkg_access", function(op_name, pkg, name, env) {
@@ -278,7 +286,7 @@ CompiledRuntime <- R6::R6Class(
       eval(compiled_expr, envir = env)
     },
     # Import logic for compiled (import x): same semantics as import special form.
-    import_compiled = function(arg_value, env, only = NULL, except = NULL, prefix = NULL, rename = NULL, reload = FALSE) {
+    import_compiled = function(arg_value, env, rename = NULL, reload = FALSE, as_alias = NULL, refer = NULL) {
       is_path <- is.character(arg_value) && length(arg_value) == 1
       if (is_path) {
         path_str <- arg_value
@@ -383,6 +391,11 @@ CompiledRuntime <- R6::R6Class(
             self$context$loading_modules <- ctx_loading[ctx_loading != registry_key]
           }, add = TRUE)
 
+          # Set expected_module_name so nameless modules can derive their name
+          old_expected <- self$context$expected_module_name
+          self$context$expected_module_name <- registry_key
+          on.exit(self$context$expected_module_name <- old_expected, add = TRUE)
+
           if (is_path) {
             if (is.null(self$load_file_fn)) {
               stop("import requires a load_file function")
@@ -404,9 +417,69 @@ CompiledRuntime <- R6::R6Class(
         }
       }
 
-      shared_registry$attach_into(registry_key, env, only = only, except = except,
-                                   prefix = prefix, rename = rename,
-                                   squash = isTRUE(self$context$squash_imports))
+      squash <- isTRUE(self$context$squash_imports)
+
+      # Determine how to bind unqualified names
+      if (!is.null(refer)) {
+        if (isTRUE(refer)) {
+          # :refer :all — attach all exports
+          shared_registry$attach_into(registry_key, env, only = NULL,
+                                       rename = rename, squash = squash)
+        } else {
+          # :refer (sym1 sym2 ...) — attach only listed symbols
+          shared_registry$attach_into(registry_key, env, only = refer,
+                                       rename = rename, squash = squash)
+        }
+      } else if (!is.null(as_alias)) {
+        # :as without :refer — no unqualified imports (qualified access only)
+        # Still need to attach for rename if specified
+        if (!is.null(rename)) {
+          shared_registry$attach_into(registry_key, env, only = NULL,
+                                       rename = rename, squash = squash)
+        }
+        # Otherwise, no attach_into call — only module binding
+      } else if (!is.null(rename)) {
+        # :rename alone implies all exports
+        shared_registry$attach_into(registry_key, env, only = NULL,
+                                     rename = rename, squash = squash)
+      } else {
+        # Bare (import X): dump all exports into scope (backward compat)
+        shared_registry$attach_into(registry_key, env, squash = squash)
+      }
+
+      # Bind module env to a name in the importing environment.
+      # Skip for path-based imports (is_path) unless :as is specified.
+      # Skip when squashing for prelude.
+      use_new_style <- !is.null(refer) || !is.null(as_alias)
+      if (!squash && use_new_style && (!is_path || !is.null(as_alias))) {
+        entry <- shared_registry$get(registry_key)
+        if (!is.null(entry)) {
+          if (!is.null(as_alias)) {
+            local_name <- as_alias
+          } else {
+            # Use last /-component of module name, or full name if no /
+            parts <- strsplit(registry_key, "/", fixed = TRUE)[[1]]
+            local_name <- parts[length(parts)]
+          }
+          assign(local_name, entry$env, envir = env)
+
+          # Create namespace node for hierarchical names (if no :as and name has /)
+          if (is.null(as_alias) && grepl("/", registry_key, fixed = TRUE)) {
+            parts <- strsplit(registry_key, "/", fixed = TRUE)[[1]]
+            top <- parts[1]
+            if (nzchar(top)) {
+              # Only create namespace node if top-level name isn't already bound to something else
+              existing <- get0(top, envir = env, inherits = FALSE)
+              if (is.null(existing) || inherits(existing, "arl_namespace")) {
+                if (is.null(existing)) {
+                  assign(top, make_namespace_node(top), envir = env)
+                }
+              }
+            }
+          }
+        }
+      }
+
       # Invalidate macro names cache — import may add proxy envs with new macro registries
       if (!is.null(self$context$macro_expander)) {
         self$context$macro_expander$invalidate_macro_cache()
@@ -462,6 +535,18 @@ CompiledRuntime <- R6::R6Class(
       invisible(NULL)
     },
     module_compiled = function(module_name, exports, export_all, re_export, body_exprs, src_file, env) {
+      # Handle nameless modules: derive name from expected_module_name or file path
+      if (identical(module_name, "")) {
+        if (!is.null(self$context$expected_module_name)) {
+          module_name <- self$context$expected_module_name
+        } else if (!is.null(src_file) && is.character(src_file) &&
+                   length(src_file) == 1L && nzchar(src_file)) {
+          module_name <- private$derive_module_name_from_path(src_file)
+        } else {
+          stop("nameless module requires either a file context or expected_module_name", call. = FALSE)
+        }
+      }
+
       # Module environments inherit from prelude_env (not the engine env
       # with all stdlib), so prelude bindings are visible but other stdlib
       # requires explicit import. Falls back to builtins_env then env.
@@ -577,6 +662,15 @@ CompiledRuntime <- R6::R6Class(
         self$context$env$module_registry$update_exports(module_name, all_symbols)
       }
 
+      # Lock all individual bindings in module environment for immutability.
+      # Uses lockBinding (not lockEnvironment) so reload can unlock them.
+      all_binding_names <- ls(module_env, all.names = TRUE)
+      for (nm in all_binding_names) {
+        if (!bindingIsLocked(nm, module_env)) {
+          lockBinding(as.symbol(nm), module_env)
+        }
+      }
+
       # Write caches after successful module load (skip when coverage is active
       # to avoid caching instrumented code)
       if (should_cache && !is.null(self$module_cache) && !coverage_active) {
@@ -633,6 +727,18 @@ CompiledRuntime <- R6::R6Class(
         result <- self$eval_compiled(compiled, env)
       }
       result
+    },
+    derive_module_name_from_path = function(src_file) {
+      # Try to derive relative to stdlib root
+      stdlib_root <- system.file("arl", package = "arl")
+      if (nzchar(stdlib_root) && startsWith(normalizePath(src_file, mustWork = FALSE),
+                                             normalizePath(stdlib_root, mustWork = FALSE))) {
+        rel <- substring(normalizePath(src_file, mustWork = FALSE),
+                         nchar(normalizePath(stdlib_root, mustWork = FALSE)) + 2)
+        return(sub("\\.arl$", "", rel))
+      }
+      # Fallback: basename minus .arl
+      sub("\\.arl$", "", basename(src_file))
     },
     resolve_module_path = function(name) {
       if (!is.character(name) || length(name) != 1) {

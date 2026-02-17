@@ -18,20 +18,20 @@
 
 (define test-s3-type (lambda ()
   ;; Test s3-type function
-  (define vec (r/call "c" (list 1 2 3)))
+  (define vec (r-call "c" (list 1 2 3)))
   (assert-equal (s3-type vec) "numeric")
 
-  (define df (r/call "data.frame" (list :x (r/call "c" (list 1 2 3)))))
+  (define df (r-call "data.frame" (list :x (r-call "c" (list 1 2 3)))))
   (assert-equal (s3-type df) "data.frame")))
 
 (define test-check-s3-type-match (lambda ()
   ;; Test check-s3-type-match with same types
-  (define v1 (r/call "c" (list 1 2 3)))
-  (define v2 (r/call "c" (list 4 5 6)))
+  (define v1 (r-call "c" (list 1 2 3)))
+  (define v2 (r-call "c" (list 4 5 6)))
   (assert-true (check-s3-type-match v1 v2))
 
   ;; Different types
-  (define v3 (r/call "c" (list "a" "b")))
+  (define v3 (r-call "c" (list "a" "b")))
   (assert-false (check-s3-type-match v1 v3))
 
   ;; Single object always matches

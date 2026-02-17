@@ -4,8 +4,8 @@
   (export set set? set-add set-remove set-contains? set-union set-intersection
           set-difference)
 
-  (import core :only (r/call error))
-  (import list :only (car))
+  (import core :refer (r-call error))
+  (import list :refer (car))
 
 ;;' @section Set (Hash-Backed)
 ;;' Sets are mutable collections of unique items backed by R environments.
@@ -16,15 +16,15 @@
 ;;' @description Create a new empty set environment.
 (define set-new
   (lambda ()
-    (define set-obj (r/call "new.env" (list :hash #t :parent (r/call "emptyenv" (list)))))
-    (r/call "class<-" (list set-obj (c (list "arl_set") (r/call "class" (list set-obj)))))
+    (define set-obj (r-call "new.env" (list :hash #t :parent (r-call "emptyenv" (list)))))
+    (r-call "class<-" (list set-obj (c (list "arl_set") (r-call "class" (list set-obj)))))
     set-obj))
 
 ;;' @description Convert value to string key for set storage via serialization.
 (define set-key
   (lambda (value)
-    (define raw (r/call "serialize" (list value #nil :ascii #t)))
-    (r/call "paste" (list (r/call "as.integer" (list raw)) :collapse ","))))
+    (define raw (r-call "serialize" (list value #nil :ascii #t)))
+    (r-call "paste" (list (r-call "as.integer" (list raw)) :collapse ","))))
 
 ;;; Set constructor
 
@@ -51,9 +51,9 @@
       (lambda (item)
         (begin
           (define key (set-key item))
-          (if (not (r/call "exists" (list key :envir set-obj :inherits #f)))
-            (r/call "assign" (list key item :envir set-obj))))))
-    (r/call "lapply" (list items add-item))
+          (if (not (r-call "exists" (list key :envir set-obj :inherits #f)))
+            (r-call "assign" (list key item :envir set-obj))))))
+    (r-call "lapply" (list items add-item))
     set-obj))
 
 ;;; Type predicate
@@ -69,7 +69,7 @@
 ;;' (assert-false (set? 42))
 (define set?
   (lambda (x)
-    (and (r/call "is.environment" (list x)) (r/call "inherits" (list x "arl_set")))))
+    (and (r-call "is.environment" (list x)) (r-call "inherits" (list x "arl_set")))))
 
 ;;; Set operations
 
@@ -89,8 +89,8 @@
       (error "set-add requires a set")
       (begin
         (define key (set-key item))
-        (if (not (r/call "exists" (list key :envir set :inherits #f)))
-          (r/call "assign" (list key item :envir set)))
+        (if (not (r-call "exists" (list key :envir set :inherits #f)))
+          (r-call "assign" (list key item :envir set)))
         set))))
 
 ;;' @description Remove item from set and return set.
@@ -109,8 +109,8 @@
       set
       (begin
         (define key (set-key item))
-        (if (r/call "exists" (list key :envir set :inherits #f))
-          (r/call "rm" (list :list (c key) :envir set :inherits #f)))
+        (if (r-call "exists" (list key :envir set :inherits #f))
+          (r-call "rm" (list :list (c key) :envir set :inherits #f)))
         set))))
 
 ;;' @description Return #t if set contains item.
@@ -127,7 +127,7 @@
       #f
       (begin
         (define key (set-key item))
-        (r/call "exists" (list key :envir set :inherits #f))))))
+        (r-call "exists" (list key :envir set :inherits #f))))))
 
 ;;' @description Return union of two sets.
 ;;' @examples
@@ -165,14 +165,14 @@
     (define result (set-new))
     (if (and (set? a) (set? b))
       (begin
-        (define keys (r/call "ls" (list :envir a :all.names #t :sorted #f)))
+        (define keys (r-call "ls" (list :envir a :all.names #t :sorted #f)))
         (define add-if-in-b
           (lambda (key)
-            (if (r/call "exists" (list key :envir b :inherits #f))
+            (if (r-call "exists" (list key :envir b :inherits #f))
               (begin
-                (define value (r/call "get" (list key :envir a :inherits #f)))
-                (r/call "assign" (list key value :envir result))))))
-        (r/call "lapply" (list (as.list keys) add-if-in-b))
+                (define value (r-call "get" (list key :envir a :inherits #f)))
+                (r-call "assign" (list key value :envir result))))))
+        (r-call "lapply" (list (as.list keys) add-if-in-b))
         result))
     result))
 
@@ -193,14 +193,14 @@
     (define result (set-new))
     (if (set? a)
       (begin
-        (define keys (r/call "ls" (list :envir a :all.names #t :sorted #f)))
+        (define keys (r-call "ls" (list :envir a :all.names #t :sorted #f)))
         (define add-if-not-in-b
           (lambda (key)
-            (if (or (not (set? b)) (not (r/call "exists" (list key :envir b :inherits #f))))
+            (if (or (not (set? b)) (not (r-call "exists" (list key :envir b :inherits #f))))
               (begin
-                (define value (r/call "get" (list key :envir a :inherits #f)))
-                (r/call "assign" (list key value :envir result))))))
-        (r/call "lapply" (list (as.list keys) add-if-not-in-b))
+                (define value (r-call "get" (list key :envir a :inherits #f)))
+                (r-call "assign" (list key value :envir result))))))
+        (r-call "lapply" (list (as.list keys) add-if-not-in-b))
         result))
     result))
 
@@ -211,13 +211,13 @@
   (lambda (target source)
     (if (and (set? target) (set? source))
       (begin
-        (define keys (r/call "ls" (list :envir source :all.names #t :sorted #f)))
+        (define keys (r-call "ls" (list :envir source :all.names #t :sorted #f)))
         (define copy-key
           (lambda (key)
-            (if (not (r/call "exists" (list key :envir target :inherits #f)))
+            (if (not (r-call "exists" (list key :envir target :inherits #f)))
               (begin
-                (define value (r/call "get" (list key :envir source :inherits #f)))
-                (r/call "assign" (list key value :envir target))))))
-        (r/call "lapply" (list (as.list keys) copy-key)))
+                (define value (r-call "get" (list key :envir source :inherits #f)))
+                (r-call "assign" (list key value :envir target))))))
+        (r-call "lapply" (list (as.list keys) copy-key)))
     target)))
 )

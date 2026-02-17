@@ -494,7 +494,7 @@ Examples:
 Assert:
   (assert-equal 3 (eval '(+ 1 2)))
   (assert-equal (list 1 2 3) (eval '(list 1 2 3)))
-Seealso: r/eval, read, macroexpand
+Seealso: r-eval, read, macroexpand
 
 Name: read
 Kind: builtin
@@ -693,18 +693,18 @@ Assert:
 Seealso: promise?, force, delay
 Note: Signals an error if p is not a promise.
 
-Name: r/eval
+Name: r-eval
 Kind: builtin
 Vignette: lang-core
 Section: Evaluation
 Description: Evaluate an R expression directly via R's eval(), bypassing
   Arl's compiler.
-Signature: (r/eval expr)
+Signature: (r-eval expr)
 Examples:
-  (r/eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
+  (r-eval (quote (seq_len 5)))  ; => c(1, 2, 3, 4, 5)
 Assert:
-  (assert-equal (c 1 2 3 4 5) (r/eval (quote (seq_len 5))))
-Seealso: eval, r/call
+  (assert-equal (c 1 2 3 4 5) (r-eval (quote (seq_len 5))))
+Seealso: eval, r-call
 Note: Useful for evaluating raw R calls that use R control flow (for,
   while) or other constructs that Arl normally overrides.
 

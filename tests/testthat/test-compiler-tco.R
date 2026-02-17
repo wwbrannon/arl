@@ -41,7 +41,7 @@ test_that("TCO: deep recursion does not stack overflow", {
 
 test_that("TCO: GCD (swap pattern tests temp correctness)", {
   engine$eval_text("
-    (import math :only (modulo))
+    (import math :refer (modulo))
     (define gcd (lambda (a b)
       (if (== b 0)
         a

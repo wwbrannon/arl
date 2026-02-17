@@ -127,12 +127,12 @@ test_that("re-export with :only modifier", {
   eng$load_file_in_env(file.path(tmp_dir, "a.arl"))
 
   # Import only x from facade a
-  eng$eval_text('(import a :only (x))')
+  eng$eval_text('(import a :refer (x))')
   expect_equal(eng$eval_text("x"), 10)
   expect_error(eng$eval_text("y"))
 })
 
-test_that("re-export with :prefix modifier", {
+test_that("re-export with :as modifier for qualified access", {
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -153,8 +153,8 @@ test_that("re-export with :prefix modifier", {
   on.exit(setwd(old_wd), add = TRUE)
 
   eng$load_file_in_env(file.path(tmp_dir, "a.arl"))
-  eng$eval_text('(import a :prefix a/)')
-  expect_equal(eng$eval_text("a/val"), 42)
+  eng$eval_text('(import a :as aa)')
+  expect_equal(eng$eval_text("aa/val"), 42)
 })
 
 test_that("re-export with :rename modifier", {
