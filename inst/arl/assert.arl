@@ -3,7 +3,7 @@
 (module assert
   (export assert assert-equal assert-true assert-false assert-eq
           assert-error assert-no-error
-          __assert-error-impl __assert-no-error-impl)
+          _assert-error-impl _assert-no-error-impl)
 
   (import core :only (error))
   (import equality :only (equal? identical?))
@@ -123,10 +123,10 @@
   ;;' (assert-error (assert-error 42))
   ;;' @seealso assert, error
   (defmacro assert-error (expr)
-    `(__assert-error-impl (lambda () ,expr)))
+    `(_assert-error-impl (lambda () ,expr)))
 
   ;; Internal function backing assert-error macro.
-  (define __assert-error-impl
+  (define _assert-error-impl
     (lambda (thunk)
       ;; Use a unique sentinel value to detect if error was caught
       (define error-caught (gensym "error-caught"))
@@ -151,10 +151,10 @@
   ;;' (assert-error (assert-no-error (error "boom")))
   ;;' @seealso assert-error, assert
   (defmacro assert-no-error (expr)
-    `(__assert-no-error-impl (lambda () ,expr)))
+    `(_assert-no-error-impl (lambda () ,expr)))
 
   ;; Internal function backing assert-no-error macro.
-  (define __assert-no-error-impl
+  (define _assert-no-error-impl
     (lambda (thunk)
       (define error-caught (gensym "error-caught"))
       (define thunk-expr (call (list thunk)))

@@ -1,8 +1,7 @@
 ;;; Arl Standard Library - IO Helpers
 
 (module io
-  (export __normalize-line-vector __normalize-lines
-          read-line read-file read-lines
+  (export read-line read-file read-lines
           write-file write-lines append-file file-exists?
           newline
           read-from-string write-string
@@ -14,7 +13,7 @@
   (import core :only (r/call get))
 
   ;; Normalize content to character vector.
-  (define __normalize-line-vector
+  (define _normalize-line-vector
     (lambda (lines)
       (if (is.null lines)
         (character 0)
@@ -25,9 +24,9 @@
             (as.character lines))))))
 
   ;; Collapse content to string.
-  (define __normalize-lines
+  (define _normalize-lines
     (lambda (content (sep "\n"))
-      (define lines (__normalize-line-vector content))
+      (define lines (_normalize-line-vector content))
       (if (<= (length lines) 1)
         (as.character lines)
         (paste lines :collapse sep))))
@@ -113,7 +112,7 @@
   ;;' (r/call "unlink" (list __tmp))
   (define write-file
     (lambda (path content (sep "\n") (encoding "UTF-8"))
-      (define text (__normalize-lines content sep))
+      (define text (_normalize-lines content sep))
       (define con (file path :open "w" :encoding encoding))
       (writeLines text :con con :useBytes #f)
       (close con)
@@ -130,7 +129,7 @@
   ;;' (r/call "unlink" (list __tmp))
   (define write-lines
     (lambda (path lines (encoding "UTF-8"))
-      (define out (__normalize-line-vector lines))
+      (define out (_normalize-line-vector lines))
       (define con (file path :open "w" :encoding encoding))
       (writeLines out :con con :useBytes #f)
       (close con)
@@ -149,7 +148,7 @@
   ;;' (r/call "unlink" (list __tmp))
   (define append-file
     (lambda (path content (sep "\n") (encoding "UTF-8"))
-      (define text (__normalize-lines content sep))
+      (define text (_normalize-lines content sep))
       (define con (file path :open "a" :encoding encoding))
       (writeLines text :con con :useBytes #f :sep "")
       (close con)
@@ -171,7 +170,7 @@
       (isTRUE (file.exists path))))
 
   ;; Get R base system function for system-output
-  (define __rsystem (get "system" :envir (baseenv)))
+  (define _rsystem (get "system" :envir (baseenv)))
 
   ;;' @description Return size of file in bytes.
   ;;' @noeval
@@ -319,7 +318,7 @@
   ;;' (assert-equal "hi" (system-output "echo hi"))
   (define system-output
     (lambda (command)
-      (paste (__rsystem command #t) :collapse "\n")))
+      (paste (_rsystem command #t) :collapse "\n")))
 
   ;;' @description Exit program with status code.
   ;;' @signature (exit status)

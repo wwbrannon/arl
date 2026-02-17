@@ -1,10 +1,10 @@
 ;;; Arl Standard Library - Display Helpers
 
 (module display
-  (export __format-atomic __format-seq __format-named-list __format-s3-object
-          format-value display println string-concat trace)
+  (export format-value display println string-concat trace)
 
-  (import list :only (__as-list car cdr))
+  (import _utils :only (_as-list))
+  (import list :only (car cdr))
   (import strings :only (string-join))
   (import dict :only (dict? dict-keys dict-get))
   (import set :only (set?))
@@ -12,7 +12,7 @@
 
   ;; Format atomic values to a single string.
   ;; Character strings are quoted so they are distinguishable from symbols.
-  (define __format-atomic
+  (define _format-atomic
     (lambda (x)
       (define parts (as.character x))
       (if (= (length parts) 0)
@@ -20,22 +20,22 @@
         (if (is.character x)
           (if (= (length parts) 1)
             (string-join (list "\"" (r/call "[[" (list parts 1)) "\"") "")
-            (string-join (lapply (__as-list parts)
+            (string-join (lapply (_as-list parts)
                            (lambda (s) (string-join (list "\"" s "\"") ""))) " "))
           (if (= (length parts) 1)
             (as.character parts)
             (string-join parts " "))))))
 
   ;; Format list/call contents with spaces.
-  (define __format-seq
+  (define _format-seq
     (lambda (items)
-      (define parts (lapply (__as-list items) format-value))
+      (define parts (lapply (_as-list items) format-value))
       (if (= (length parts) 0)
         ""
         (string-join parts " "))))
 
   ;; Format functions/macros/closures.
-  (define __format-function
+  (define _format-function
     (lambda (x)
       (if (r/call "inherits" (list x "arl_closure"))
         "<closure>"
@@ -46,7 +46,7 @@
           #nil))))
 
   ;; Format environments (excluding dict, set, promise).
-  (define __format-environment
+  (define _format-environment
     (lambda (x)
       (if (and (r/call "is.environment" (list x))
                (not (dict? x))
@@ -61,7 +61,7 @@
         #nil)))
 
   ;; Format named lists with keyword-style keys: (:key1 val1 :key2 val2).
-  (define __format-named-list
+  (define _format-named-list
     (lambda (x)
       (define nms (r/call "names" (list x)))
       (if (or (r/call "is.null" (list nms))
@@ -82,12 +82,12 @@
           (string-join (list "(" (string-join parts " ") ")") "")))))
 
   ;; Helper: capture R print output as character vector.
-  (define __capture-print
+  (define _capture-print
     (r/call "eval" (list (r/call "parse" (list :text "function(obj) capture.output(print(obj))")))))
 
   ;; Format S3 objects with non-trivial class using R's print method.
   ;; Output is truncated at arl.display.max.lines (default 20, Inf to disable).
-  (define __format-s3-object
+  (define _format-s3-object
     (lambda (x)
       (define cls (r/call "class" (list x)))
       ;; Only apply to lists with real S3 classes (not just "list" or "data.frame")
@@ -95,7 +95,7 @@
                (not (r/call "is.null" (list cls)))
                (not (r/call "all" (list (r/call "%in%" (list cls (c "list" "data.frame")))))))
         (begin
-          (define lines (__capture-print x))
+          (define lines (_capture-print x))
           (define max-lines-opt (r/call "getOption" (list "arl.display.max.lines" #nil)))
           (define max-lines-env (r/call "Sys.getenv" (list "ARL_DISPLAY_MAX_LINES" "")))
           (define max-lines
@@ -117,7 +117,7 @@
   ;;' @description Format value for display.
   (define format-value
     (lambda (x)
-      (define fn-tag (__format-function x))
+      (define fn-tag (_format-function x))
       (if (not (is.null fn-tag))
         fn-tag
         (begin
@@ -134,7 +134,7 @@
                 (define tail-str (format-value tail))
                 (string-join (list "(" head-str " . " tail-str ")") ""))
               (begin
-                (define env-tag (__format-environment x))
+                (define env-tag (_format-environment x))
                 (if (not (is.null env-tag))
                   env-tag
                   (if (values? x)
@@ -147,25 +147,25 @@
                   (begin
                     (define keys (dict-keys x))
                     (define values (lapply keys (lambda (k) (dict-get x k))))
-                    (__format-seq values))
+                    (_format-seq values))
                   (if (set? x)
-                    (__format-seq (r/call "as.list" (list x :all.names #t)))
+                    (_format-seq (r/call "as.list" (list x :all.names #t)))
                     (if (promise? x)
                       "<promise>"
                       (if (is.symbol x)
                         (as.character x)
                         (begin
                           ;; Check S3 object before named-list before generic list
-                          (define s3-tag (__format-s3-object x))
+                          (define s3-tag (_format-s3-object x))
                           (if (not (is.null s3-tag))
                             s3-tag
                             (begin
-                              (define named-tag (__format-named-list x))
+                              (define named-tag (_format-named-list x))
                               (if (not (is.null named-tag))
                                 named-tag
                                 (if (or (is.call x) (is.list x))
-                                  (string-join (list "(" (__format-seq x) ")") "")
-                                  (__format-atomic x))))))))))))))))))
+                                  (string-join (list "(" (_format-seq x) ")") "")
+                                  (_format-atomic x))))))))))))))))))
 
   ;;' @section Display and Output
   ;;' Functions for formatting and printing values.
@@ -201,7 +201,7 @@
   ;;' @seealso string-join, string-format
   (define string-concat
     (lambda (. args)
-      (define parts (lapply (__as-list args)
+      (define parts (lapply (_as-list args)
                       (lambda (x)
                         (if (is.character x)
                           (as.character x)

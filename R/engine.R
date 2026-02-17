@@ -267,6 +267,8 @@ Engine <- R6::R6Class(
                 # live in parent chain proxies, so they're naturally excluded.
                 all_symbols <- ls(module_env, all.names = TRUE)
                 all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
+                # Exclude _* user-private helpers (convention: _ prefix = module-private)
+                all_symbols <- all_symbols[!grepl("^_", all_symbols)]
 
                 if (re_export) {
                   imported_names <- collect_proxy_imported_names(module_env)

@@ -185,11 +185,16 @@ test_that("list? is false but pair? is true for dotted pair (Cons)", {
   expect_true(get("pair?", envir = env)(pair))  # pair? = dotted pair (Cons)
 })
 
-test_that("__as-list on improper list returns proper prefix only", {
+test_that("_as-list on improper list returns proper prefix only", {
   env <- toplevel_env(engine, new.env())
+  # _as-list is module-private in _utils; access it via the module registry
+  arl_env <- arl:::Env$new(engine$get_env())
+  registry <- arl_env$module_registry
+  utils_entry <- registry$get("_utils")
+  as_list_fn <- get("_as-list", envir = utils_entry$env)
   pl <- engine$read("'(a b . c)")[[1]][[2]]
   expect_true(r6_isinstance(pl, "Cons"))
-  prefix <- get("__as-list", envir = env)(pl)
+  prefix <- as_list_fn(pl)
   expect_equal(length(prefix), 2)
   expect_equal(as.character(prefix[[1]]), "a")
   expect_equal(as.character(prefix[[2]]), "b")

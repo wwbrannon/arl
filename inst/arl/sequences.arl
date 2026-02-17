@@ -6,7 +6,8 @@
           member contains?
           length= length> length<)
 
-  (import list :only (__as-list car cdr))
+  (import _utils :only (_as-list))
+  (import list :only (car cdr))
   (import types :only (list?))
   (import core :only (r/call))
   (import equality :only (equal?))
@@ -29,7 +30,7 @@
   ;;' @seealso drop, take-while
   (define take
     (lambda (n lst)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (if (<= n 0)
         (list)
         (r/call "[" (list items (seq_len (min n (length items))))))))
@@ -46,7 +47,7 @@
   ;;' @seealso take, drop-while
   (define drop
     (lambda (n lst)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (if (<= n 0)
         items
         (if (>= n (length items))
@@ -63,7 +64,7 @@
   ;;' @seealso take, drop-while, filter
   (define take-while
     (lambda (pred lst)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (define acc (list))
       (define remaining items)
       (while (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
@@ -82,7 +83,7 @@
   ;;' @seealso drop, take-while, filter
   (define drop-while
     (lambda (pred lst)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (define remaining items)
       (while (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
         (set! remaining (cdr remaining)))
@@ -99,7 +100,7 @@
   ;;' @seealso take, drop
   (define partition
     (lambda (n lst (step n))
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (if (<= n 0)
         (stop "partition requires positive n and step")
         (if (<= step 0)
@@ -127,7 +128,7 @@
   ;;' @seealso mapcat, append
   (define flatten
     (lambda (lst)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (define acc (list))
       (define remaining items)
       (while (> (length remaining) 0)
@@ -172,7 +173,7 @@
       (if (= (length lists) 0)
         (list)
         (begin
-          (define items (lapply lists __as-list))
+          (define items (lapply lists _as-list))
           (define min-len (min (vapply items length (integer 1))))
           (if (= min-len 0)
             (list)
@@ -188,7 +189,7 @@
   ;;' pass :use-identical #t for R's identical().
   (define member
     (lambda (x lst (use-identical #f))
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (define result #f)
       (define remaining items)
       (while (and (> (length remaining) 0) (not result))

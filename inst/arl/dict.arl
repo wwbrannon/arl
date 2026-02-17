@@ -4,7 +4,8 @@
   (export dict hash dict? dict-get dict-set dict-remove dict-keys dict-values
           dict-has? dict-merge)
 
-  (import list :only (car cdr __as-list))
+  (import _utils :only (_as-list))
+  (import list :only (car cdr))
   (import core :only (r/call error))
   (import functional :only (filter))
 
@@ -184,7 +185,7 @@
       (list)
       (begin
         (define keys (dict-keys-ordered dict))
-        (__as-list keys)))))
+        (_as-list keys)))))
 
 ;;' @description Return a list of dict values.
 ;;' @examples
@@ -203,7 +204,7 @@
           (list)
           (begin
             (define values (r/call "mget" (list keys :envir dict :inherits #f)))
-            (__as-list (r/call "unname" (list values)))))))))
+            (_as-list (r/call "unname" (list values)))))))))
 
 ;;' @description Return #t if dict contains key.
 ;;' @examples

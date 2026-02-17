@@ -10,7 +10,8 @@
           string->list list->string
           number->string string->number)
 
-  (import list :only (__as-list car cons))
+  (import _utils :only (_as-list))
+  (import list :only (car cons))
   (import math :only (quotient))
   (import core :only (r/call))
 
@@ -31,7 +32,7 @@
   ;;' @seealso string-split, string-format
   (define string-join
     (lambda (x (sep ""))
-      (paste (unlist (__as-list x)) :collapse sep)))
+      (paste (unlist (_as-list x)) :collapse sep)))
 
   ;;' @description Split string on separator.
   ;;' @examples
@@ -371,7 +372,7 @@
   ;;' @seealso string->list
   (define list->string
     (lambda (lst)
-      (paste (unlist (__as-list lst)) :collapse "")))
+      (paste (unlist (_as-list lst)) :collapse "")))
 
   ;; Number/String conversions
   ;;' @description Convert number to string with optional base (2-36).

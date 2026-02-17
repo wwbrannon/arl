@@ -234,3 +234,38 @@ test_that("load_code() returns NULL for hash mismatch", {
 
   expect_null(result)
 })
+
+# Integration test: cache hit path excludes _-prefixed names from export-all
+test_that("cache hit path excludes _-prefixed names from export-all exports", {
+  tmp_dir <- tempfile("cache_underscore_test")
+  dir.create(tmp_dir, recursive = TRUE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  module_file <- file.path(tmp_dir, "undermod.arl")
+  writeLines(c(
+    "(module undermod",
+    "  (export-all)",
+    "  (define public-fn (lambda () 1))",
+    "  (define _private-helper (lambda () 2))",
+    "  (define __also-private (lambda () 3)))"
+  ), module_file)
+
+  eng <- make_engine()
+
+  # First load — populates cache and module registry
+  eng$load_file_in_env(module_file)
+  entry1 <- engine_field(eng, "env")$module_registry$get("undermod")
+  expect_true("public-fn" %in% entry1$exports)
+  expect_false("_private-helper" %in% entry1$exports)
+  expect_false("__also-private" %in% entry1$exports)
+
+  # Second load with a fresh engine — should hit cache
+  eng2 <- make_engine()
+  eng2$load_file_in_env(module_file)
+  entry2 <- engine_field(eng2, "env")$module_registry$get("undermod")
+  expect_true("public-fn" %in% entry2$exports)
+  expect_false("_private-helper" %in% entry2$exports,
+               info = "cache hit path must exclude _-prefixed names")
+  expect_false("__also-private" %in% entry2$exports,
+               info = "cache hit path must exclude .__-prefixed names")
+})

@@ -147,12 +147,12 @@ test_that("set-add errors on non-set", {
 # Coverage: Display edge cases
 # ============================================================================
 
-test_that("__format-seq with empty list returns empty string", {
+test_that("format-value with empty list returns parens", {
   env <- setup_env()
 
   result <- engine$eval(
-    engine$read("(__format-seq (list))")[[1]], env = env)
-  expect_equal(result, "")
+    engine$read("(format-value (list))")[[1]], env = env)
+  expect_equal(result, "()")
 })
 
 # ============================================================================

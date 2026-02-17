@@ -8,7 +8,8 @@
 (module sort
   (export list-sort sort-by merge-sorted stable-sort)
 
-  (import list :only (__as-list car cdr cadr cons append reverse))
+  (import _utils :only (_as-list))
+  (import list :only (car cdr cadr cons append reverse))
   (import _r :only (__rlength __r<=))
   (import types :only (null?))
   (import core :only (r/call))
@@ -30,7 +31,7 @@
   ;; Sorting
   (define list-sort
     (lambda (lst comparator)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (if (<= (__rlength items) 1)
         items
         (begin
@@ -60,7 +61,7 @@
   ;;' @seealso list-sort, stable-sort
   (define sort-by
     (lambda (lst key-fn comparator)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (if (<= (__rlength items) 1)
         items
         (begin
@@ -83,8 +84,8 @@
   ;;' @seealso stable-sort, list-sort
   (define merge-sorted
     (lambda (list1 list2 comparator)
-      (define l1 (__as-list list1))
-      (define l2 (__as-list list2))
+      (define l1 (_as-list list1))
+      (define l2 (_as-list list2))
       (define acc (list))
       (while (and (not (null? l1)) (not (null? l2)))
         ;; Take from l2 only when l2 is strictly less than l1; otherwise take from l1 (stable)
@@ -108,7 +109,7 @@
   ;;' @seealso list-sort, merge-sorted, sort-by
   (define stable-sort
     (lambda (lst comparator)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (if (<= (__rlength items) 1)
         items
         (begin

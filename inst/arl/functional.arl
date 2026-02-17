@@ -4,7 +4,8 @@
   (export map mapcat filter remove reduce foldl foldr every? any? complement compose partial
           curry juxt constantly iterate iterate-until memoize)
 
-  (import list :only (__as-list car append))
+  (import _utils :only (_as-list))
+  (import list :only (car append))
   (import types :only (null?))
   (import core :only (r/call))
 
@@ -23,7 +24,7 @@
   ;;' @seealso filter, mapcat, reduce
   (define map
     (lambda (fn lst)
-      (lapply (__as-list lst) fn)))
+      (lapply (_as-list lst) fn)))
 
   ;;' @description Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
   ;;' @examples
@@ -37,7 +38,7 @@
       (define results (map fn lst))
       (if (null? results)
         (list)
-        (do.call c (lapply results (lambda (x) (__as-list x)))))))
+        (do.call c (lapply results (lambda (x) (_as-list x)))))))
 
   ;;' @description Filter items by predicate.
   ;;' @examples
@@ -49,7 +50,7 @@
   ;;' @seealso remove, take-while, drop-while
   (define filter
     (lambda (pred lst)
-      (Filter pred (__as-list lst))))
+      (Filter pred (_as-list lst))))
 
   ;;' @description Remove items where predicate is true.
   ;;' @examples
@@ -60,7 +61,7 @@
   ;;' @seealso filter
   (define remove
     (lambda (pred lst)
-      (Filter (lambda (x) (not (isTRUE (pred x)))) (__as-list lst))))
+      (Filter (lambda (x) (not (isTRUE (pred x)))) (_as-list lst))))
 
   ;;' @description Reduce list with function.
   ;;' @examples
@@ -76,8 +77,8 @@
   (define reduce
     (lambda (fn lst . rest)
       (if (= (length rest) 0)
-        (Reduce fn (__as-list lst))
-        (Reduce fn (__as-list lst) :init (car rest)))))
+        (Reduce fn (_as-list lst))
+        (Reduce fn (_as-list lst) :init (car rest)))))
 
   ;;' @description Left fold alias for reduce. Applies fn as (fn acc elem).
   ;;' @examples
@@ -92,8 +93,8 @@
   (define foldl
     (lambda (fn lst . rest)
       (if (= (length rest) 0)
-        (Reduce fn (__as-list lst))
-        (Reduce fn (__as-list lst) :init (car rest)))))
+        (Reduce fn (_as-list lst))
+        (Reduce fn (_as-list lst) :init (car rest)))))
 
   ;;' @description Right fold. Applies fn as (fn elem acc).
   ;;' @examples
@@ -108,8 +109,8 @@
   (define foldr
     (lambda (fn lst . rest)
       (if (= (length rest) 0)
-        (Reduce fn (__as-list lst) :right #t)
-        (Reduce fn (__as-list lst) :init (car rest) :right #t))))
+        (Reduce fn (_as-list lst) :right #t)
+        (Reduce fn (_as-list lst) :init (car rest) :right #t))))
 
   ;;' @description Return #t if predicate true for all items.
   ;;' @examples
@@ -123,7 +124,7 @@
   ;;' @seealso any?, filter
   (define every?
     (lambda (pred lst)
-      (all (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
+      (all (vapply (_as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
 
   ;;' @description Return #t if predicate true for any item.
   ;;' @examples
@@ -136,7 +137,7 @@
   ;;' @seealso every?, filter
   (define any?
     (lambda (pred lst)
-      (any (vapply (__as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
+      (any (vapply (_as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
 
   ;;' @description Negate predicate.
   ;;' @examples

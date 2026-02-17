@@ -66,7 +66,7 @@
           `(if ,test (begin ,@body) (cond ,@rest)))))))
 
 ;; Helper: generate case clause expansion using already-bound key symbol.
-(define __case-clauses
+(define _case-clauses
   (lambda (key-sym clause rest)
     (if (null? clause)
       (error "case: Missing required parameter (else clause)")
@@ -84,7 +84,7 @@
             (if (null? rest)
               `(if ,test-expr (begin ,@body) #nil)
               `(if ,test-expr (begin ,@body)
-                   ,(__case-clauses key-sym (car rest) (cdr rest))))))))))
+                   ,(_case-clauses key-sym (car rest) (cdr rest))))))))))
 
 ;;' @description Branch on key equality. Each clause:
 ;;' ((datum ...) body ...) or (else body ...).
@@ -107,7 +107,7 @@
 ;;' @seealso cond, if
 (defmacro case (key clause . rest)
   (define key-sym (gensym "case-key"))
-  `((lambda (,key-sym) ,(__case-clauses key-sym clause rest)) ,key))
+  `((lambda (,key-sym) ,(_case-clauses key-sym clause rest)) ,key))
 
 ;;' @section Error Handling
 

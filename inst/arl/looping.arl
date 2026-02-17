@@ -4,7 +4,8 @@
   (export until do-list loop recur)
 
   (import functional :only (map every?))
-  (import list :only (car cdr __as-list call cons))
+  (import _utils :only (_as-list))
+  (import list :only (car cdr call cons))
   (import types :only (symbol? list-or-pair? list? null?))
   (import sequences :only (zip))
 
@@ -37,7 +38,7 @@
       (define seq (car (cdr binding)))
       (define remaining (gensym "for_remaining"))
       `(begin
-         (define ,remaining (__as-list ,seq))
+         (define ,remaining (_as-list ,seq))
          (while (not (null? ,remaining))
            (define ,var (car ,remaining))
            ,@body

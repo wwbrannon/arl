@@ -1,8 +1,7 @@
 ;;; Arl Standard Library - List Helpers
 
 (module list
-  (export __as-list __list-last __list-head
-          call
+  (export call
           car cdr
           caar cadr cdar cddr
           caaar caadr cadar caddr
@@ -16,6 +15,7 @@
           list-ref list-tail)
 
   (import _r :only (__r[[ __rlength __r> __r== __r- __r<=))
+  (import _utils :only (_as-list))
   (import core :only (r/call error))
   (import types :only (null? list?))
 
@@ -25,28 +25,14 @@
   ;;' decomposition and `cons` the fundamental construction.
 
   ;;' @internal
-  ;;' @description Coerce calls and vectors to list; dotted pair to proper prefix.
-  (define __as-list
-    (lambda (x)
-      (if (pair? x)
-        (.__cons-as-list x)
-        (if (is.call x)
-          (as.list x)
-          (if (is.list x)
-            x
-            (if (__r== (__rlength x) 0)
-              (list)
-              (as.list x)))))))
-
-  ;;' @internal
   ;;' @description Return last element of list.
-  (define __list-last
+  (define _list-last
     (lambda (lst)
       (__r[[ lst (__rlength lst))))
 
   ;;' @internal
   ;;' @description Return list without last element.
-  (define __list-head
+  (define _list-head
     (lambda (lst)
       (if (__r<= (__rlength lst) 1)
         (list)
@@ -62,7 +48,7 @@
     (lambda (lst)
       (if (is.call lst)
         lst
-        (as.call (__as-list lst)))))
+        (as.call (_as-list lst)))))
 
   ;;' @description Return first element or #nil.
   ;;' @examples
@@ -174,12 +160,12 @@
         (if (= (__rlength args) 1)
           (car args)
           (begin
-            (define last (__list-last args))
-            (define head (__list-head args))
+            (define last (_list-last args))
+            (define head (_list-head args))
             (if (is.list last)
-              (c head (__as-list last))
+              (c head (_as-list last))
               (if (is.call last)
-                (c head (__as-list last))
+                (c head (_as-list last))
                 (c head (list last)))))))))
 
   ;;' @description Concatenate multiple lists into one.
@@ -195,9 +181,9 @@
   (define append
     (lambda (. lists)
       (define result (list))
-      (define remaining (__as-list lists))
+      (define remaining (_as-list lists))
       (while (__r> (__rlength remaining) 0)
-        (set! result (c result (__as-list (car remaining))))
+        (set! result (c result (_as-list (car remaining))))
         (set! remaining (cdr remaining)))
       result))
 
@@ -210,7 +196,7 @@
   ;;' (assert-equal (list) (reverse (list)))
   (define reverse
     (lambda (x)
-      (rev (__as-list x))))
+      (rev (_as-list x))))
 
   ;;' @description Alias for car.
   ;;' @seealso car, rest, last
@@ -251,8 +237,8 @@
   ;;' @seealso first, nth
   (define last
     (lambda (lst)
-      (define items (__as-list lst))
-      (if (= (__rlength items) 0) #nil (__list-last items))))
+      (define items (_as-list lst))
+      (if (= (__rlength items) 0) #nil (_list-last items))))
 
   ;;' @description Return nth item (0-based).
   ;;' @examples
@@ -264,7 +250,7 @@
   ;;' @seealso first, last
   (define nth
     (lambda (lst n)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (if (< n 0)
         (stop (sprintf "Index %d out of bounds for list of length %d" n (__rlength items)))
         (if (>= n (__rlength items))
@@ -284,7 +270,7 @@
   ;; __r== can return a vector; treat as match only when scalar #t or all true.
   ;;' @internal
   ;;' @description Wrap R's == to handle vector results; returns #t only if all elements match.
-  (define __r==-pred
+  (define _r==-pred
     (lambda (a b)
       (define comp-result (__r== a b))
       (if (r/call "is.logical" (list comp-result))
@@ -295,10 +281,10 @@
 
   ;;' @internal
   ;;' @description Find first alist entry with matching key using given predicate.
-  (define __assoc-by-pred
+  (define _assoc-by-pred
     (lambda (key alist pred)
       (define result #nil)
-      (define remaining (__as-list alist))
+      (define remaining (_as-list alist))
       (while (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
@@ -320,7 +306,7 @@
   ;;' @seealso rassoc, assoc-by-identical?, assoc-by-==
   (define assoc
     (lambda (key alist)
-      (__assoc-by-pred key alist __r==-pred)))
+      (_assoc-by-pred key alist _r==-pred)))
 
   ;;' @description Find first alist entry with key matching under equal? (deep structural comparison).
   ;;' Requires `(import equality)` for `equal?`.
@@ -331,13 +317,13 @@
   ;;' @seealso assoc, assoc-by-==
   (define assoc-by-identical?
     (lambda (key alist)
-      (__assoc-by-pred key alist identical)))
+      (_assoc-by-pred key alist identical)))
 
   ;;' @description Find first alist entry with matching key (uses R's ==).
   ;;' @seealso assoc, assoc-by-identical?
   (define assoc-by-==
     (lambda (key alist)
-      (__assoc-by-pred key alist __r==-pred)))
+      (_assoc-by-pred key alist _r==-pred)))
 
   ;;' @description assq cannot be properly implemented in R (no eq?).
   ;;' Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
@@ -365,7 +351,7 @@
   (define rassoc
     (lambda (value alist)
       (define result #nil)
-      (define remaining (__as-list alist))
+      (define remaining (_as-list alist))
       (while (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
@@ -474,7 +460,7 @@
   ;;' @seealso drop
   (define list-tail
     (lambda (lst k)
-      (define items (__as-list lst))
+      (define items (_as-list lst))
       (if (<= k 0)
         items
         (if (>= k (__rlength items))

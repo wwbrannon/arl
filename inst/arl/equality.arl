@@ -10,7 +10,8 @@
   (import _r :only (__r! __ridentical __rclass __r[[ __runique __rlapply __rlength __r== __r> __r!=))
   (import core :only (r/call funcall get error))
   (import types :only (environment? list? nil? null?))
-  (import list :only (car cdr __as-list))
+  (import _utils :only (_as-list))
+  (import list :only (car cdr))
 
   ;;' @section Equality Predicates
   ;;' Arl provides `equal?` for deep structural equality with S3-style dispatch,
@@ -87,8 +88,8 @@
   ;;' @seealso equal?.environment
   (define env-equal?
     (lambda (env1 env2)
-      (define names1 (__as-list (r/call "sort" (list (r/call "ls" (list env1 :all.names #t))))))
-      (define names2 (__as-list (r/call "sort" (list (r/call "ls" (list env2 :all.names #t))))))
+      (define names1 (_as-list (r/call "sort" (list (r/call "ls" (list env1 :all.names #t))))))
+      (define names2 (_as-list (r/call "sort" (list (r/call "ls" (list env2 :all.names #t))))))
       (if (equal? names1 names2)
         ;; Same names - recursively compare values
         (begin
