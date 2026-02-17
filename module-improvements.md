@@ -403,11 +403,14 @@ Explicit (export ...) can still export _-prefixed names if needed.
 
 ## Remaining
 
-o) #8: private by default for export-all
-
 o) #11: let's not actually do this now, but we should pick a name for the special
 form doing this, or a designated syntax for import, set it up, and have it error
 with "not implemented, reserved for future use" or something like that
+
+o) are we using the "_" and ".__" prefixes correctly in the stdlib? any
+ambiguity to rename?
+
+o) what happens if the R search path changes at runtime? should we update ours?
 
 =============
 

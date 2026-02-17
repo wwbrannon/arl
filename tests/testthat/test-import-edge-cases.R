@@ -241,6 +241,15 @@ test_that("circular import dependency produces clear error", {
   )
 })
 
+test_that("import-runtime is reserved and errors", {
+  engine <- make_engine()
+
+  expect_error(
+    engine$eval_text("(import-runtime some-mod)"),
+    "reserved for future use"
+  )
+})
+
 test_that("load with relative path", {
   # Create a module in current directory
   temp_dir <- tempdir()

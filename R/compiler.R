@@ -286,6 +286,7 @@ Compiler <- R6::R6Class(
           `set!` = private$compile_set(expr),
           lambda = private$compile_lambda(expr),
           import = private$compile_import(expr),
+          `import-runtime` = private$compile_import_runtime(expr),
           `while` = private$compile_while(expr),
           and = private$compile_and(expr),
           or = private$compile_or(expr),
@@ -1051,6 +1052,9 @@ Compiler <- R6::R6Class(
         call_args$reload <- TRUE
       }
       as.call(call_args)
+    },
+    compile_import_runtime = function(expr) {
+      private$fail("import-runtime is reserved for future use and not yet implemented")
     },
     compile_help = function(expr) {
       if (!(length(expr) == 2 || length(expr) == 4)) {
