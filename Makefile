@@ -72,7 +72,7 @@ lint: clean-cache stdlib-order ## help: Run linter checks
 	R -q -e "devtools::load_all(); lintr::lint_dir(path='.')"
 
 .PHONY: test
-test: clean-cache stdlib-order ## help: Run tests
+test: clean-cache stdlib-order lang-docs ## help: Run tests
 	R -q -e "testthat::set_max_fails(Inf); devtools::test()"
 
 .PHONY: test-file
