@@ -423,11 +423,13 @@ Without `capture`, the caller would not be able to refer to `it`:
 ```
 
 ```{arl, include=FALSE}
-;; Verify the broken aif: 'it' in the caller is unbound, so it should error
+;; Verify the broken aif: caller's symbol is unbound, so it should error.
+;; Use a fresh name (not 'it') to avoid picking up the binding leaked by
+;; the working aif example above under devtools::load_all().
 (defmacro bad-aif (test then alt)
   `(let ((it ,test))
      (if it ,then ,alt)))
-(assert-error (bad-aif (+ 2 3) it 0))
+(assert-error (bad-aif (+ 2 3) unbound-caller-sym 0))
 ```
 
 ## Compile-time computation

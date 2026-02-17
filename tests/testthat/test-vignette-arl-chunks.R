@@ -14,8 +14,8 @@ pkg_root <- function() {
   wd
 }
 
-# Extract {arl} chunks from an Rmd file via knitr::purl(), then parse
-# chunk options from the #| comments that purl preserves.
+# Extract {arl} chunks from an Rmd file.  Returns a list of
+# list(code, eval, error_ok, label) for each chunk.
 extract_arl_chunks <- function(path) {
   lines <- readLines(path, warn = FALSE)
   chunks <- list()
@@ -67,8 +67,9 @@ for (rmd_path in all_rmds) {
     if (chunk$error_ok) next
 
     test_that(sprintf("%s: %s evaluates without error", rmd_name, chunk$label), {
+      # Suppress warnings — some chunks intentionally demonstrate warn()
       expect_no_error(
-        arl:::evaluate_arl_code(engine, chunk$code)
+        suppressWarnings(arl:::evaluate_arl_code(engine, chunk$code))
       )
     })
   }
