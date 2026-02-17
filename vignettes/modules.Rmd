@@ -148,8 +148,14 @@ The `module` special form defines a named module with explicit exports.
 (module mymodule
   (export-all)
   (define func1 (lambda (x) (* x 2)))
-  (define func2 (lambda (x) (+ x 1))))
+  (define func2 (lambda (x) (+ x 1)))
+  (define _helper (lambda (x) (/ x 2))))  ; Not exported: _ prefix = private
 ```
+
+Names beginning with `_` (underscore) are private by convention and are excluded
+from `export-all`. This lets you define internal helpers without accidentally
+exposing them. If you need to export a `_`-prefixed name, use explicit
+`(export ...)` instead.
 
 ## The `import` Special Form
 
@@ -429,10 +435,11 @@ Prefer `(export symbol1 symbol2 ...)` over `(export-all)` to maintain clear modu
   (define public-fn1 ...)
   (define private-helper ...))
 
-; Avoid - exposes everything
+; OK - use _ prefix for private helpers with export-all
 (module utils
   (export-all)
-  ...)
+  (define public-fn ...)
+  (define _private-helper ...))  ; excluded by convention
 ```
 
 ### 2. Organize Related Functionality
@@ -523,7 +530,7 @@ Then load with relative paths:
 
 - **`load`**: Evaluates a file in the current environment; always re-evaluates (no caching, no stdlib lookup)
 - **`run`**: Evaluates a file in an isolated child environment (definitions and imports not visible in the caller)
-- **`module`**: Defines a module with explicit exports; `(export-all)` exports only symbols defined in the module, not imported ones
+- **`module`**: Defines a module with explicit exports; `(export-all)` exports only symbols defined in the module (excluding `_`-prefixed private names and imported symbols)
 - **`import`**: Loads a module and attaches its exports into the current scope only; each module is loaded once per engine; relative paths resolve from the importing file's directory
 - Circular imports are detected with a clear error message
 - Use explicit exports for maintainable module interfaces

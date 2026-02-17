@@ -339,6 +339,86 @@ test_that("error: exporting undefined/unimported name", {
   )
 })
 
+test_that("export-all excludes _-prefixed names (private convention)", {
+  eng <- make_engine()
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  write_module(file.path(tmp_dir, "mod.arl"), "mod", c(
+    "  (export-all)",
+    "  (define public-fn 1)",
+    "  (define _private-helper 2)",
+    "  (define __also-private 3)",
+    "  (define _another 4)"
+  ))
+
+  old_wd <- getwd()
+  setwd(tmp_dir)
+  on.exit(setwd(old_wd), add = TRUE)
+
+  eng$load_file_in_env(file.path(tmp_dir, "mod.arl"))
+
+  entry <- engine_field(eng, "env")$module_registry$get("mod")
+  expect_true("public-fn" %in% entry$exports)
+  expect_false("_private-helper" %in% entry$exports)
+  expect_false("__also-private" %in% entry$exports)
+  expect_false("_another" %in% entry$exports)
+})
+
+test_that("export-all :re-export still excludes _-prefixed own bindings", {
+  eng <- make_engine()
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  write_module(file.path(tmp_dir, "provider.arl"), "provider", c(
+    "  (export val)",
+    "  (define val 100)"
+  ))
+
+  write_module(file.path(tmp_dir, "facade.arl"), "facade", c(
+    "  (export-all :re-export)",
+    '  (import "provider.arl")',
+    "  (define own-public 200)",
+    "  (define _own-private 300)"
+  ))
+
+  old_wd <- getwd()
+  setwd(tmp_dir)
+  on.exit(setwd(old_wd), add = TRUE)
+
+  eng$load_file_in_env(file.path(tmp_dir, "facade.arl"))
+
+  entry <- engine_field(eng, "env")$module_registry$get("facade")
+  expect_true("val" %in% entry$exports)
+  expect_true("own-public" %in% entry$exports)
+  expect_false("_own-private" %in% entry$exports)
+})
+
+test_that("explicit export of _-prefixed name still works", {
+  eng <- make_engine()
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  write_module(file.path(tmp_dir, "mod.arl"), "mod", c(
+    "  (export _intentionally-public helper)",
+    "  (define _intentionally-public 1)",
+    "  (define helper 2)"
+  ))
+
+  old_wd <- getwd()
+  setwd(tmp_dir)
+  on.exit(setwd(old_wd), add = TRUE)
+
+  eng$load_file_in_env(file.path(tmp_dir, "mod.arl"))
+
+  eng$eval_text('(import mod)')
+  expect_equal(eng$eval_text("_intentionally-public"), 1)
+  expect_equal(eng$eval_text("helper"), 2)
+})
+
 test_that("compile error: export-all with bad modifier", {
   eng <- make_engine()
   expect_error(

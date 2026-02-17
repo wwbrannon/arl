@@ -561,6 +561,8 @@ CompiledRuntime <- R6::R6Class(
         all_symbols <- ls(module_env, all.names = TRUE)
         # Exclude .__* internals
         all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
+        # Exclude _* user-private helpers (convention: _ prefix = module-private)
+        all_symbols <- all_symbols[!grepl("^_", all_symbols)]
 
         if (isTRUE(re_export)) {
           # Collect imported names from proxy envs in the parent chain

@@ -226,7 +226,7 @@ HelpSystem <- R6::R6Class(
         ),
         module = list(
           usage = "(module name (export ...) body...)",
-          description = "Define a module with explicit exports. Use (export-all) to export all definitions."
+          description = "Define a module with explicit exports. Use (export-all) to export all definitions (names starting with _ are excluded as private)."
         ),
         import = list(
           usage = "(import name) or (import \"path\")",

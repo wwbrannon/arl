@@ -373,11 +373,17 @@ broader set loaded only explicitly by import.
 o) #1: prelude loading obviates the need for lazy stdlib loading because we're
 not loading all of it by default anymore. startup cost is small enough now
 
+#2: module reloading: this is implemented via the "(import <modname> :reload)"
+form
+
 o) #4: import position restrictions
 
 o) #5: completed. cross-module macro scoping fixed so that macro expansions can
 refer at execution time to objects contained in the lexical scope (i.e., the
 defining module) of the macro
+
+#6: reexport: completed. modules can re-export imported symbols and fusion
+modules work
 
 o) #9: reference-based imports via proxy environments with active bindings.
 
@@ -390,20 +396,28 @@ only real cycle (list ↔ equality) is already cleanly resolved by having list u
 raw R operators. If future cycles arise, a targeted mechanism (forward
 declarations or extracting shared definitions into a third module) is preferred.
 
-o) #12: skip. one module per file is a fine convention
+o) #8: private-by-default for export-all. Names starting with _ (single
+underscore) are excluded from export-all. This is a convention (like Python's
+_foo), separate from the .__ prefix which is reserved for Arl internals.
+Explicit (export ...) can still export _-prefixed names if needed.
 
 ## Remaining
 
-#2: module reloading
+o) #8: private by default for export-all
 
-#3: qualified access / prefixed access convention syntax
-
-#6: reexport
-
-#7: hierarchical module names
-
-#8: private by default for export-all
-
-#11: let's not actually do this now, but we should pick a name for the special
+o) #11: let's not actually do this now, but we should pick a name for the special
 form doing this, or a designated syntax for import, set it up, and have it error
 with "not implemented, reserved for future use" or something like that
+
+=============
+
+these are all aspects of the same problem:
+
+o) not in list: module naming conventions / relation to files / one module per file
+/ can you define a module at the toplevel?
+
+o) #3: qualified access / prefixed access convention syntax
+
+o) #7: hierarchical module names
+
+o) #12: multiple modules per file
