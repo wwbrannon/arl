@@ -10,7 +10,6 @@
 
   (import _utils :only (_as-list))
   (import list :only (car cdr cadr cons append reverse))
-  (import _r :only (__rlength __r<=))
   (import types :only (null?))
   (import core :only (r/call))
 
@@ -32,7 +31,7 @@
   (define list-sort
     (lambda (lst comparator)
       (define items (_as-list lst))
-      (if (<= (__rlength items) 1)
+      (if (<= (length items) 1)
         items
         (begin
           ;; Simple quicksort
@@ -62,7 +61,7 @@
   (define sort-by
     (lambda (lst key-fn comparator)
       (define items (_as-list lst))
-      (if (<= (__rlength items) 1)
+      (if (<= (length items) 1)
         items
         (begin
           ;; Create list of (key, value) entries
@@ -110,12 +109,12 @@
   (define stable-sort
     (lambda (lst comparator)
       (define items (_as-list lst))
-      (if (<= (__rlength items) 1)
+      (if (<= (length items) 1)
         items
         (begin
-          (define mid (as.integer (/ (__rlength items) 2)))
+          (define mid (as.integer (/ (length items) 2)))
           (define left (r/call "[" (list items (seq_len mid))))
-          (define right (r/call "[" (list items (seq (+ mid 1) (__rlength items)))))
+          (define right (r/call "[" (list items (seq (+ mid 1) (length items)))))
           (merge-sorted (stable-sort left comparator)
                  (stable-sort right comparator)
                  comparator)))))

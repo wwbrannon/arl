@@ -32,7 +32,7 @@ test_that("stdlib modules are discovered and have valid topsort", {
   expect_true(length(load_order) >= 1)
   expect_true("core" %in% load_order)
   expect_true("list" %in% load_order)
-  expect_true("_r" %in% load_order)
+
   g <- d$get_graph()
   pos <- setNames(seq_along(load_order), load_order)
   for (e in g$edges) {

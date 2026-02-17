@@ -14,7 +14,6 @@
           range iota make-list
           list-ref list-tail)
 
-  (import _r :only (__r[[ __rlength __r> __r== __r- __r<=))
   (import _utils :only (_as-list))
   (import core :only (r/call error))
   (import types :only (null? list?))
@@ -28,15 +27,15 @@
   ;;' @description Return last element of list.
   (define _list-last
     (lambda (lst)
-      (__r[[ lst (__rlength lst))))
+      ([[ lst (length lst))))
 
   ;;' @internal
   ;;' @description Return list without last element.
   (define _list-head
     (lambda (lst)
-      (if (__r<= (__rlength lst) 1)
+      (if (<= (length lst) 1)
         (list)
-        (r/call "[" (list lst (seq 1 (__r- (__rlength lst) 1)))))))
+        (r/call "[" (list lst (seq 1 (- (length lst) 1)))))))
 
   ;;' @description Convert a list to a callable form.
   ;;' @examples
@@ -64,9 +63,9 @@
       (if (pair? lst)
         (r/call "[[" (list lst "car"))
         (if (is.call lst)
-          (if (__r> (__rlength lst) 0) (__r[[ lst 1) #nil)
+          (if (> (length lst) 0) ([[ lst 1) #nil)
           (if (is.list lst)
-            (if (__r> (__rlength lst) 0) (__r[[ lst 1) #nil)
+            (if (> (length lst) 0) ([[ lst 1) #nil)
             #nil)))))
 
   ;;' @description Return list without first element (or cdr of dotted pair).
@@ -83,12 +82,12 @@
       (if (pair? lst)
         (r/call "[[" (list lst "cdr"))
         (if (is.call lst)
-          (if (__r> (__rlength lst) 1)
-            (r/call "[" (list (as.list lst) (seq 2 (__rlength lst))))
+          (if (> (length lst) 1)
+            (r/call "[" (list (as.list lst) (seq 2 (length lst))))
             (list))
           (if (is.list lst)
-            (if (__r> (__rlength lst) 1)
-              (r/call "[" (list lst (seq 2 (__rlength lst))))
+            (if (> (length lst) 1)
+              (r/call "[" (list lst (seq 2 (length lst))))
               (list))
             (list))))))
 
@@ -155,9 +154,9 @@
   ;;' @seealso list, cons, append
   (define list*
     (lambda (. args)
-      (if (= (__rlength args) 0)
+      (if (= (length args) 0)
         (list)
-        (if (= (__rlength args) 1)
+        (if (= (length args) 1)
           (car args)
           (begin
             (define last (_list-last args))
@@ -182,7 +181,7 @@
     (lambda (. lists)
       (define result (list))
       (define remaining (_as-list lists))
-      (while (__r> (__rlength remaining) 0)
+      (while (> (length remaining) 0)
         (set! result (c result (_as-list (car remaining))))
         (set! remaining (cdr remaining)))
       result))
@@ -238,7 +237,7 @@
   (define last
     (lambda (lst)
       (define items (_as-list lst))
-      (if (= (__rlength items) 0) #nil (_list-last items))))
+      (if (= (length items) 0) #nil (_list-last items))))
 
   ;;' @description Return nth item (0-based).
   ;;' @examples
@@ -252,9 +251,9 @@
     (lambda (lst n)
       (define items (_as-list lst))
       (if (< n 0)
-        (stop (sprintf "Index %d out of bounds for list of length %d" n (__rlength items)))
-        (if (>= n (__rlength items))
-          (stop (sprintf "Index %d out of bounds for list of length %d" n (__rlength items)))
+        (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
+        (if (>= n (length items))
+          (stop (sprintf "Index %d out of bounds for list of length %d" n (length items)))
           (r/call "[[" (list items (+ n 1)))))))
 
   ;; ============================================================================
@@ -267,14 +266,14 @@
   ;;' friends search by key; `rassoc` searches by value.
 
   ;; Internal: predicate (key-in-entry target-key) -> boolean; entry = alist element (list or dotted pair).
-  ;; __r== can return a vector; treat as match only when scalar #t or all true.
+  ;; R's base == can return a vector; treat as match only when scalar #t or all true.
   ;;' @internal
   ;;' @description Wrap R's == to handle vector results; returns #t only if all elements match.
   (define _r==-pred
     (lambda (a b)
-      (define comp-result (__r== a b))
+      (define comp-result (r/call "==" (list a b)))
       (if (r/call "is.logical" (list comp-result))
-        (if (__r> (r/call "length" (list comp-result)) 1)
+        (if (> (r/call "length" (list comp-result)) 1)
           (isTRUE (r/call "all" (list comp-result)))
           (isTRUE comp-result))
         #f)))
@@ -288,7 +287,7 @@
       (while (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
-          (if (and (list? pair) (>= (__rlength pair) 1))
+          (if (and (list? pair) (>= (length pair) 1))
             (if (pred (car pair) key)
               (set! result pair)
               #nil)
@@ -355,7 +354,7 @@
       (while (and (not (null? remaining)) (not result))
         (begin
           (define pair (car remaining))
-          (if (and (list? pair) (>= (__rlength pair) 2))
+          (if (and (list? pair) (>= (length pair) 2))
             (if (= (cadr pair) value)
               (set! result pair)
               #nil)
@@ -384,7 +383,7 @@
   ;;' @seealso iota, make-list
   (define range
     (lambda (start end . step-args)
-      (define step (if (> (__rlength step-args) 0) (car step-args) 1))
+      (define step (if (> (length step-args) 0) (car step-args) 1))
       (if (= step 0)
         (stop "range: step cannot be zero")
         (if (> step 0)
@@ -410,8 +409,8 @@
   ;;' @seealso range, make-list
   (define iota
     (lambda (count . args)
-      (define start (if (> (__rlength args) 0) (car args) 0))
-      (define step (if (> (__rlength args) 1) (cadr args) 1))
+      (define start (if (> (length args) 0) (car args) 0))
+      (define step (if (> (length args) 1) (cadr args) 1))
       (if (<= count 0)
         (list)
         (as.list (seq start (+ start (* (- count 1) step)) step)))))
@@ -463,7 +462,7 @@
       (define items (_as-list lst))
       (if (<= k 0)
         items
-        (if (>= k (__rlength items))
+        (if (>= k (length items))
           (list)
-          (as.list (r/call "[" (list items (seq (+ k 1) (__rlength items)))))))))
+          (as.list (r/call "[" (list items (seq (+ k 1) (length items)))))))))
 )

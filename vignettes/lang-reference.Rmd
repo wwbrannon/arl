@@ -519,7 +519,6 @@ Arl stdlib modules are organized by topic in
 defines a module). The engine loads these modules in dependency order when
 initializing.
 
-- [`_r.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/_r.arl) (R operator/function aliases, internal)
 - [`core.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/core.arl)
 - [`list.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/list.arl)
 - [`types.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/types.arl) (type predicates, numeric type hierarchy)

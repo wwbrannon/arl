@@ -446,7 +446,6 @@ GITHUB_BASE <- "https://github.com/wwbrannon/arl/blob/main"
 
 #' List of .arl module source files in load order, with optional descriptions.
 MODULE_SOURCE_FILES <- list(
-  list(file = "_r.arl",          desc = "R operator/function aliases, internal"),
   list(file = "core.arl",        desc = NULL),
   list(file = "list.arl",        desc = NULL),
   list(file = "types.arl",       desc = "type predicates, numeric type hierarchy"),

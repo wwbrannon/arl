@@ -7,7 +7,6 @@
           env-equal? list-equal?
           s3-type check-s3-type-match use-method set-method!)
 
-  (import _r :only (__r! __ridentical __rclass __r[[ __runique __rlapply __rlength __r== __r> __r!=))
   (import core :only (r/call funcall get error))
   (import types :only (environment? list? nil? null?))
   (import _utils :only (_as-list))
@@ -37,7 +36,7 @@
   ;;' @seealso identical?, eq?, eqv?, set-method!
   (define equal?
     (lambda (a b (strict #f))
-       (if (__r! (check-s3-type-match (list a b)))
+       (if (not (check-s3-type-match (list a b)))
          #f
         (if (identical? a b)
           #t
@@ -57,7 +56,7 @@
   ;;' @note This is R's `identical()` with no modifications. Use `equal?`
   ;;'   for deep structural equality with type coercion.
   (define identical?
-    (lambda (a b) (__ridentical a b)))
+    (lambda (a b) (identical a b)))
 
   ;;' @description **Not implemented in Arl.** Raises an error when called.
   ;;' @note True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
@@ -151,7 +150,7 @@
   ;;' (assert-equal "environment" (s3-type (new.env)))
   (define s3-type
     (lambda (obj)
-      (__r[[ (__rclass obj) 1)))
+      ([[ (class obj) 1)))
 
   ;;' @description Check if all objects have the same S3 type.
   ;;' @examples
@@ -165,13 +164,13 @@
     (lambda (obj . rest)
       (begin
         (define type-a (s3-type obj))
-        (if (__r== (__rlength rest) 0)
+        (if (== (length rest) 0)
           #t
           (begin
-            (define cand-types (__runique (__rlapply rest s3-type)))
-            (if (__r> (__rlength cand-types) 1)
+            (define cand-types (unique (lapply rest s3-type)))
+            (if (> (length cand-types) 1)
               #f
-              (if (__r!= type-a (__r[[ cand-types 1))
+              (if (!= type-a ([[ cand-types 1))
                 #f
                 #t)))))))
 
@@ -231,9 +230,9 @@
   (define equal?.default
     (lambda (a b (strict #f))
       (begin
-        (define comp-result (if strict (identical? a b) (__r== a b)))
+        (define comp-result (if strict (identical? a b) (r/call "==" (list a b))))
         (if (is.logical comp-result)
-          (if (__r> (length comp-result) 1)
+          (if (> (length comp-result) 1)
             (isTRUE (all comp-result))
             (isTRUE comp-result))
           #f))))

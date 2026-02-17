@@ -8,7 +8,6 @@
           funcall r/call get unbind-variable run
           macroexpand-1 macroexpand-all)
 
-  (import _r :only (__rget))
 
 ;;' @section Error and Warning
 
@@ -119,6 +118,10 @@
   ;;' (assert-equal 2 (r/call "mean" (list (c 1 2 3))))
   ;;' @note R functions are directly available in Arl without `r/call`. Use `r/call` when you need to look up a function by string name or specify the search environment.
   ;;' @seealso funcall, r/eval
+  ;; Private binding to R's base `get` — needed to bootstrap r/call without
+  ;; circular dependency (r/call uses _rget; everything else uses r/call).
+  (define _rget (get "get" :envir (baseenv)))
+
   (define r/call
     (lambda (fn (args (list)) (envir (globalenv)))
       (define fn-name
@@ -127,7 +130,7 @@
           (if (is.character fn)
             fn
             (error "r/call requires a symbol or string function name"))))
-      (define fn-obj (__rget fn-name :envir envir :inherits #t))
+      (define fn-obj (_rget fn-name :envir envir :inherits #t))
       (funcall fn-obj (as.list args))))  ; as.list handles environments
 
   ;;' @description Get a binding by name, defaulting to .GlobalEnv.

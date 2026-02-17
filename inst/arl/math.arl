@@ -7,7 +7,7 @@
           gcd lcm
           make-rectangular make-polar real-part imag-part magnitude angle)
 
-  (import _r)
+
 
   ;;' @section Complex Number Utilities
 
@@ -65,7 +65,7 @@
   ;;' @examples
   ;;' (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (pi/4)
   ;;' @assert
-  ;;' (assert-true (< (__rabs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
+  ;;' (assert-true (< (abs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
   ;;' @seealso magnitude, make-polar
   (define angle
     (lambda (z)
@@ -150,7 +150,7 @@
   ;;' (assert-equal -1 (signum -5))
   ;;' (assert-equal 0 (signum 0))
   ;;' @signature (signum x)
-  (define signum __rsign)
+  (define signum sign)
 
   ;;' @section Power and Roots
 
@@ -163,7 +163,7 @@
   ;;' (assert-equal 27 (expt 3 3))
   (define expt
     (lambda (base power)
-      (__r^ base power)))
+      (^ base power)))
 
   ;;' @section Integer Division
 
@@ -177,7 +177,7 @@
   ;;' @seealso remainder, modulo
   (define quotient
     (lambda (x y)
-      (__ras.integer (__rtrunc (__r/ x y)))))
+      (as.integer (trunc (/ x y)))))
 
   ;;' @description Return remainder of x divided by y (same sign as x).
   ;;' @examples
@@ -189,7 +189,7 @@
   ;;' @seealso quotient, modulo
   (define remainder
     (lambda (x y)
-      (__r- x (__r* y (quotient x y)))))
+      (- x (* y (quotient x y)))))
 
   ;;' @description Return modulo of x and y (same sign as y).
   ;;' @examples
@@ -216,16 +216,16 @@
   ;;' @seealso lcm
   (define gcd
     (lambda (. args)
-      (if (__r== (__rlength args) 0)
+      (if (== (length args) 0)
         0
-        (if (__r== (__rlength args) 1)
-          (__rabs (__r[[ args 1))
+        (if (== (length args) 1)
+          (abs ([[ args 1))
           (begin
             ;; GCD of two numbers using Euclidean algorithm.
             (define gcd-two
               (lambda (a b)
-                (if (__r== b 0)
-                  (__rabs a)
+                (if (== b 0)
+                  (abs a)
                   (gcd-two b (modulo a b)))))
             (Reduce gcd-two args))))))
 
@@ -240,16 +240,16 @@
   ;;' @seealso gcd
   (define lcm
     (lambda (. args)
-      (if (__r== (__rlength args) 0)
+      (if (== (length args) 0)
         1
-        (if (__r== (__rlength args) 1)
-          (__rabs (__r[[ args 1))
+        (if (== (length args) 1)
+          (abs ([[ args 1))
           (begin
             ;; LCM of two numbers using a*b/gcd(a,b).
             (define lcm-two
               (lambda (a b)
-                (if (if (__r== a 0) #t (__r== b 0))
+                (if (if (== a 0) #t (== b 0))
                   0
-                  (__r/ (__rabs (__r* a b)) (gcd a b)))))
+                  (/ (abs (* a b)) (gcd a b)))))
             (Reduce lcm-two args))))))
 )

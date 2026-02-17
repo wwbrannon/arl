@@ -421,9 +421,8 @@ DocParser <- R6::R6Class(
       }
 
       line1 <- trimws(lines[def_line])
-      if (grepl("^\\(define\\s+\\S+\\s+__r", line1) ||
-          (grepl("^\\(define\\s+\\S+\\s+\\S+\\)$", line1) &&
-           !grepl("\\(lambda", line1))) {
+      if (grepl("^\\(define\\s+\\S+\\s+\\S+\\)$", line1) &&
+          !grepl("\\(lambda", line1)) {
         return(NULL)
       }
 

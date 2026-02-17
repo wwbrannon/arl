@@ -6,8 +6,6 @@
 (module _utils
   (export _as-list)
 
-  (import _r :only (__r== __rlength))
-
   ;;' @internal
   ;;' @description Coerce calls and vectors to list; dotted pair to proper prefix.
   (define _as-list
@@ -18,7 +16,7 @@
           (as.list x)
           (if (is.list x)
             x
-            (if (__r== (__rlength x) 0)
+            (if (== (length x) 0)
               (list)
               (as.list x)))))))
 )
