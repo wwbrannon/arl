@@ -1041,10 +1041,6 @@ Compiler <- R6::R6Class(
         self$nesting_depth <- self$nesting_depth - 1L
       }, add = TRUE)
       compiled <- private$compile_impl(expr[[2]])
-      self$enable_constant_folding <- old_folding
-      self$nesting_depth <- self$nesting_depth - 1L
-      on.exit()
-
       if (is.null(compiled)) {
         return(private$fail("delay expression could not be compiled"))
       }
@@ -2047,8 +2043,6 @@ Compiler <- R6::R6Class(
       } else {
         private$compile_impl(expr[[3]])
       }
-      self$nesting_depth <- self$nesting_depth - 1L
-      on.exit()
       if (is.null(val)) {
         return(private$fail(paste0(mode, " value could not be compiled")))
       }
