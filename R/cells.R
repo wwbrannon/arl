@@ -6,7 +6,7 @@
 #
 #' @keywords internal
 #' @noRd
-Cons <- R6::R6Class("Cons",
+Cons <- R6::R6Class("ArlCons",
   public = list(
     car = NULL,
     cdr = NULL,
@@ -23,7 +23,7 @@ Cons <- R6::R6Class("Cons",
       # Count length first, then fill pre-allocated vector
       n <- 0L
       x <- self
-      while (r6_isinstance(x, "Cons")) { n <- n + 1L; x <- x$cdr }
+      while (inherits(x, "ArlCons")) { n <- n + 1L; x <- x$cdr }
       out <- vector("list", n)
       x <- self
       for (i in seq_len(n)) { out[[i]] <- x$car; x <- x$cdr }
@@ -34,7 +34,7 @@ Cons <- R6::R6Class("Cons",
     parts = function() {
       n <- 0L
       x <- self
-      while (r6_isinstance(x, "Cons")) { n <- n + 1L; x <- x$cdr }
+      while (inherits(x, "ArlCons")) { n <- n + 1L; x <- x$cdr }
       prefix <- vector("list", n)
       x <- self
       for (i in seq_len(n)) { prefix[[i]] <- x$car; x <- x$cdr }
@@ -47,7 +47,7 @@ Cons <- R6::R6Class("Cons",
 #
 # (No public fields; state in private R6 fields.)
 #
-Promise <- R6::R6Class("Promise",
+Promise <- R6::R6Class("ArlPromise",
   private = list(
     expr = NULL,
     env = NULL,

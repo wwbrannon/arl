@@ -81,7 +81,7 @@ missing_default <- function() {
 #' @keywords internal
 #' @noRd
 EvalContext <- R6::R6Class(
-  "EvalContext",
+  "ArlEvalContext",
   public = list(
     env = NULL,
     source_tracker = NULL,
@@ -101,7 +101,7 @@ EvalContext <- R6::R6Class(
     # @param source_tracker SourceTracker instance.
     # @param coverage_tracker Optional CoverageTracker instance.
     initialize = function(env, source_tracker, coverage_tracker = NULL) {
-      if (!r6_isinstance(env, "Env")) {
+      if (!inherits(env, "ArlEnv")) {
         stop("EvalContext requires a Env")
       }
       self$env <- env
@@ -122,7 +122,7 @@ EvalContext <- R6::R6Class(
 #' @keywords internal
 #' @noRd
 CompiledRuntime <- R6::R6Class(
-  "CompiledRuntime",
+  "ArlCompiledRuntime",
   public = list(
     context = NULL,
     load_file_fn = NULL,
@@ -135,7 +135,7 @@ CompiledRuntime <- R6::R6Class(
     # @param module_cache Optional ModuleCache instance.
     initialize = function(context, load_file_fn = NULL,
                           help_fn = NULL, module_cache = NULL) {
-      if (!r6_isinstance(context, "EvalContext")) {
+      if (!inherits(context, "ArlEvalContext")) {
         stop("CompiledRuntime requires an EvalContext")
       }
       self$context <- context

@@ -6,7 +6,7 @@
 #' @keywords internal
 #' @noRd
 Compiler <- R6::R6Class(
-  "Compiler",
+  "ArlCompiler",
   public = list(
     context = NULL,
     # Reserved name for current env in compiled code. User code that defines/sets this is not compiled.
@@ -31,7 +31,7 @@ Compiler <- R6::R6Class(
     source_text = NULL,
     # @param context EvalContext (for source_tracker).
     initialize = function(context) {
-      if (!r6_isinstance(context, "EvalContext")) {
+      if (!inherits(context, "ArlEvalContext")) {
         stop("Compiler requires an EvalContext")
       }
       self$context <- context
@@ -760,7 +760,7 @@ Compiler <- R6::R6Class(
     lambda_params = function(args_expr) {
       arg_items <- if (is.null(args_expr)) {
         list()
-      } else if (r6_isinstance(args_expr, "Cons")) {
+      } else if (inherits(args_expr, "ArlCons")) {
         parts <- args_expr$parts()
         c(parts$prefix, list(as.symbol(".")), list(parts$tail))
       } else if (is.call(args_expr) && length(args_expr) > 0) {
@@ -1066,7 +1066,7 @@ Compiler <- R6::R6Class(
         return(private$fail("defmacro requires a symbol as the first argument"))
       }
       params_expr <- expr[[3]]
-      if (r6_isinstance(params_expr, "Cons")) {
+      if (inherits(params_expr, "ArlCons")) {
         parts <- params_expr$parts()
         params_expr <- as.call(c(parts$prefix, list(as.symbol(".")), list(parts$tail)))
       }

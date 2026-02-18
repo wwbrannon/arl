@@ -26,13 +26,13 @@ is_resolved_ref <- function(x) inherits(x, "arl_resolved_ref")
 #' @keywords internal
 #' @noRd
 MacroExpander <- R6::R6Class(
-  "MacroExpander",
+  "ArlMacroExpander",
   public = list(
     context = NULL,
     # @description Create macro expander.
     # @param context EvalContext instance.
     initialize = function(context) {
-      if (!r6_isinstance(context, "EvalContext")) {
+      if (!inherits(context, "ArlEvalContext")) {
         stop("MacroExpander requires an EvalContext")
       }
       self$context <- context
@@ -206,7 +206,7 @@ MacroExpander <- R6::R6Class(
       if (is.null(expr)) {
         return(FALSE)
       }
-      if (r6_isinstance(expr, "Cons")) {
+      if (inherits(expr, "ArlCons")) {
         if (private$contains_macro_head(expr$car, macro_names)) {
           return(TRUE)
         }

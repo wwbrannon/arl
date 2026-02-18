@@ -23,7 +23,7 @@ test_that("Promise uses private fields", {
   expect_true(is.call(expr))
 
   # Verify the promise is an R6 object with private fields
-  expect_s3_class(promise, "Promise")
+  expect_s3_class(promise, "ArlPromise")
   expect_s3_class(promise, "R6")
 })
 
@@ -145,7 +145,7 @@ test_that("Env fields are read-only via active bindings", {
 
   # Can read fields
   expect_true(is.environment(engine_field(engine, "env")$env))
-  expect_s3_class(engine_field(engine, "env")$module_registry, "ModuleRegistry")
+  expect_s3_class(engine_field(engine, "env")$module_registry, "ArlModuleRegistry")
   expect_true(is.list(engine_field(engine, "env")$env_stack))
 
   # Cannot reassign fields

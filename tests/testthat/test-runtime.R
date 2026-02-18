@@ -560,7 +560,7 @@ test_that("promise_new_compiled() creates Promise", {
 
   promise <- engine_field(eng, "compiled_runtime")$promise_new_compiled(quote(1 + 1), eng$get_env())
 
-  expect_true(arl:::r6_isinstance(promise, "Promise"))
+  expect_true(inherits(promise, "ArlPromise"))
 })
 
 test_that("promise_new_compiled() delays evaluation", {

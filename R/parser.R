@@ -6,7 +6,7 @@
 #' @keywords internal
 #' @noRd
 Parser <- R6::R6Class(
-  "Parser",
+  "ArlParser",
   public = list(
     source_tracker = NULL,
     # @description Create parser with optional source tracker.
@@ -257,7 +257,7 @@ Parser <- R6::R6Class(
       if (is.null(expr)) return("#nil")
 
       # Cons (dotted pair) -> (a b . c)
-      if (r6_isinstance(expr, "Cons")) {
+      if (inherits(expr, "ArlCons")) {
         p <- expr$parts()
         elems <- vapply(p$prefix, function(e) self$write(e), character(1))
         tail_str <- self$write(p$tail)

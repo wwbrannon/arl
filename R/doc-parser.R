@@ -7,7 +7,7 @@
 #' @keywords internal
 #' @noRd
 DocParser <- R6::R6Class(
-  "DocParser",
+  "ArlDocParser",
   public = list(
     #' @description Parse ;;' annotations from a .arl source file.
     #' @param file Path to a .arl source file.

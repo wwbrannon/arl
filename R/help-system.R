@@ -7,7 +7,7 @@
 #' @keywords internal
 #' @noRd
 HelpSystem <- R6::R6Class(
-  "HelpSystem",
+  "ArlHelpSystem",
   public = list(
     env = NULL,
     macro_expander = NULL,
@@ -45,7 +45,7 @@ HelpSystem <- R6::R6Class(
         stop("help package must be a non-empty symbol or string")
       }
 
-      if (r6_isinstance(env, "Env")) {
+      if (inherits(env, "ArlEnv")) {
         env <- env$env
       } else if (is.null(env)) {
         env <- self$env$env

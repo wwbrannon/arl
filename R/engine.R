@@ -33,7 +33,7 @@
 #' engine$eval_string("(+ 4 5)")
 #' @export
 Engine <- R6::R6Class(
-  "Engine",
+  "ArlEngine",
 
   cloneable = FALSE,
 
@@ -677,10 +677,10 @@ Engine <- R6::R6Class(
       #
 
       builtins_env$`.__cons` <- function(car, cdr) Cons$new(car, cdr)
-      builtins_env$`.__cons-as-list` <- function(x) if (r6_isinstance(x, "Cons")) x$as_list() else list()
-      builtins_env$`.__cons-parts` <- function(x) if (r6_isinstance(x, "Cons")) x$parts() else list(prefix = list(), tail = x)
+      builtins_env$`.__cons-as-list` <- function(x) if (inherits(x, "ArlCons")) x$as_list() else list()
+      builtins_env$`.__cons-parts` <- function(x) if (inherits(x, "ArlCons")) x$parts() else list(prefix = list(), tail = x)
 
-      builtins_env$`pair?` <- function(x) r6_isinstance(x, "Cons")
+      builtins_env$`pair?` <- function(x) inherits(x, "ArlCons")
 
       #
       # Macro builtins
@@ -790,17 +790,17 @@ Engine <- R6::R6Class(
       # delay is a compiler special form, but these can be defined here
 
       builtins_env$`promise?` <- function(x) {
-        r6_isinstance(x, "Promise")
+        inherits(x, "ArlPromise")
       }
       builtins_env$force <- function(x) {
-        if (!r6_isinstance(x, "Promise")) {
+        if (!inherits(x, "ArlPromise")) {
           return(x)
         }
         x$value()
       }
 
       builtins_env$`promise-expr` <- function(p) {
-        if (!r6_isinstance(p, "Promise")) {
+        if (!inherits(p, "ArlPromise")) {
           stop("promise-expr requires a promise (created with delay)")
         }
         p$get_expr()

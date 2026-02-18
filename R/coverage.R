@@ -58,7 +58,7 @@
 #' }
 #' @export
 CoverageTracker <- R6::R6Class(
-  "CoverageTracker",
+  "ArlCoverageTracker",
   public = list(
     coverage = NULL,    # environment: "file:line" -> count
     enabled = TRUE,     # flag to enable/disable tracking

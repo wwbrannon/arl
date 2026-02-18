@@ -6,7 +6,7 @@
 #' @keywords internal
 #' @noRd
 ModuleCache <- R6::R6Class(
-  "ModuleCache",
+  "ArlModuleCache",
   public = list(
     #' @description Initialize module cache
     initialize = function() {

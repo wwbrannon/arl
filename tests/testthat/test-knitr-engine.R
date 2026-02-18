@@ -78,7 +78,7 @@ test_that("get_arl_engine returns an Engine instance", {
   # Reset first to ensure clean state
   arl:::reset_arl_engine()
   eng <- arl:::get_arl_engine()
-  expect_true(inherits(eng, "Engine"))
+  expect_true(inherits(eng, "ArlEngine"))
 })
 
 test_that("get_arl_engine returns the same instance on repeated calls", {

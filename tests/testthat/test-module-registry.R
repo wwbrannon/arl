@@ -16,7 +16,7 @@ test_that("ModuleRegistry initializes with Env", {
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
 
-  expect_true(r6_isinstance(registry, "ModuleRegistry"))
+  expect_true(inherits(registry, "ArlModuleRegistry"))
   expect_identical(registry$arl_env, arl_env)
 
   # Should create the registry environment

@@ -6,7 +6,7 @@
 #' @keywords internal
 #' @noRd
 SourceTracker <- R6::R6Class(
-  "SourceTracker",
+  "ArlSourceTracker",
   private = list(
     stack_env = NULL,
     stack_n = 0L
@@ -80,7 +80,7 @@ SourceTracker <- R6::R6Class(
         return(value)
       }
 
-      if (r6_isinstance(value, "Cons")) {
+      if (inherits(value, "ArlCons")) {
         value$car <- self$strip_src(value$car)
         value$cdr <- self$strip_src(value$cdr)
         return(value)

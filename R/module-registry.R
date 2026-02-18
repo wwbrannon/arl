@@ -87,13 +87,13 @@ clear_module_env <- function(module_env) {
 #' @keywords internal
 #' @noRd
 ModuleRegistry <- R6::R6Class(
-  "ModuleRegistry",
+  "ArlModuleRegistry",
   public = list(
     arl_env = NULL,
     # @description Create a module registry for the given Env.
     # @param arl_env A Env instance.
     initialize = function(arl_env) {
-      if (!r6_isinstance(arl_env, "Env")) {
+      if (!inherits(arl_env, "ArlEnv")) {
         stop("ModuleRegistry requires a Env")
       }
       self$arl_env <- arl_env

@@ -21,14 +21,14 @@ test_that("quote sugar works", {
 
 test_that("delay creates a promise", {
   result <- engine$eval(engine$read("(delay (+ 1 2))")[[1]])
-  expect_true(r6_isinstance(result, "Promise"))
+  expect_true(inherits(result, "ArlPromise"))
 })
 
 test_that("delay compiles to a promise", {
   info <- engine$inspect_compilation("(delay (+ 1 2))")
   expect_false(is.null(info$compiled))
   result <- engine_field(engine, "compiled_runtime")$eval_compiled(info$compiled, engine$get_env())
-  expect_true(r6_isinstance(result, "Promise"))
+  expect_true(inherits(result, "ArlPromise"))
   expect_equal(result$value(), 3)
 })
 

@@ -61,7 +61,7 @@ test_that("format-value for dotted pair (arl_cons) shows dotted form", {
   env <- new.env()
   toplevel_env(engine, env = env)
   pair <- engine$read("'(a . b)")[[1]][[2]]
-  expect_true(r6_isinstance(pair, "Cons"))
+  expect_true(inherits(pair, "ArlCons"))
   formatted <- get("format-value", envir = env)(pair)
   expect_true(grepl(" \\. ", formatted))
   expect_true(grepl("a", formatted))
@@ -72,7 +72,7 @@ test_that("format-value for improper list shows dotted tail", {
   env <- new.env()
   toplevel_env(engine, env = env)
   improper <- engine$read("'(a b . c)")[[1]][[2]]
-  expect_true(r6_isinstance(improper, "Cons"))
+  expect_true(inherits(improper, "ArlCons"))
   formatted <- get("format-value", envir = env)(improper)
   expect_true(grepl(" \\. ", formatted))
   expect_true(grepl("a", formatted))

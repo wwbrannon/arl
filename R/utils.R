@@ -44,18 +44,6 @@
   do.call("options", opt)
 }
 
-#' Test if an object is an R6 instance of a given class
-#'
-#' @param obj Any object.
-#' @param cls Character class name (e.g. \code{"Cons"}).
-#' @return Logical.
-#' @keywords internal
-#' @noRd
-#' @importFrom R6 is.R6
-r6_isinstance <- function(obj, cls) {
-  R6::is.R6(obj) && inherits(obj, cls)
-}
-
 # Wrapper for unlockBinding to avoid R CMD check NOTE
 # R CMD check flags direct calls to unlockBinding as "possibly unsafe"
 unlock_binding <- function(sym, env) {
@@ -87,7 +75,7 @@ resolve_stdlib_path <- function(name) {
 # Resolve an env argument to a raw R environment.
 # Accepts Env (extracts $env), environment (pass-through), or NULL (uses fallback_env).
 resolve_env <- function(env, fallback_env) {
-  if (r6_isinstance(env, "Env")) {
+  if (inherits(env, "ArlEnv")) {
     return(env$env)
   }
   if (is.environment(env)) {

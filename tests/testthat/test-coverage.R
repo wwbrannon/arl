@@ -1253,7 +1253,7 @@ test_that("Engine accepts coverage_tracker parameter", {
   tracker <- CoverageTracker$new()
   engine <- Engine$new(coverage_tracker = tracker)
 
-  expect_s3_class(engine, "Engine")
+  expect_s3_class(engine, "ArlEngine")
 })
 
 test_that("Engine tracks coverage for executed code", {

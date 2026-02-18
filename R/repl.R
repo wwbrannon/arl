@@ -32,7 +32,7 @@
 #' @keywords internal
 #' @noRd
 REPL <- R6::R6Class(
-  "REPL",
+  "ArlREPL",
   public = list(
     engine = NULL,
     prompt = "arl> ",

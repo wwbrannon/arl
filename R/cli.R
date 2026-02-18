@@ -32,7 +32,7 @@ CLI_HELP_TEXT <- paste(
 #' @keywords internal
 #' @noRd
 CLI <- R6::R6Class(
-  "CLI",
+  "ArlCLI",
   public = list(
     args = NULL,
     parsed = NULL,

@@ -10,7 +10,7 @@
 #' @keywords internal
 #' @noRd
 Env <- R6::R6Class(
-  "Env",
+  "ArlEnv",
   private = list(
     .env = NULL,
     .macro_registry = NULL,
@@ -240,7 +240,7 @@ Env <- R6::R6Class(
         }
         return(invisible(NULL))
       }
-      if (r6_isinstance(pattern, "Cons")) {
+      if (inherits(pattern, "ArlCons")) {
         parts <- pattern$parts()
         pattern <- c(parts$prefix, list(as.symbol(".")), list(parts$tail))
         self$destructure_bind(pattern, value, mode = mode)
@@ -270,7 +270,7 @@ Env <- R6::R6Class(
         }
         invisible(NULL)
       }
-      if (r6_isinstance(pattern, "Cons")) {
+      if (inherits(pattern, "ArlCons")) {
         parts <- pattern$parts()
         pattern <- c(parts$prefix, list(as.symbol(".")), list(parts$tail))
       }

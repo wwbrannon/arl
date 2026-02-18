@@ -166,7 +166,7 @@ test_that("cons adds element to front", {
 test_that("cons with non-list cdr produces dotted pair (arl_cons)", {
   env <- toplevel_env(engine, new.env())
   result <- engine$eval(engine$read("(cons 'a 'b)")[[1]], env = env)
-  expect_true(r6_isinstance(result, "Cons"))
+  expect_true(inherits(result, "ArlCons"))
   expect_equal(as.character(result$car), "a")
   expect_equal(as.character(result$cdr), "b")
 })
@@ -193,7 +193,7 @@ test_that("_as-list on improper list returns proper prefix only", {
   utils_entry <- registry$get("_utils")
   as_list_fn <- get("_as-list", envir = utils_entry$env)
   pl <- engine$read("'(a b . c)")[[1]][[2]]
-  expect_true(r6_isinstance(pl, "Cons"))
+  expect_true(inherits(pl, "ArlCons"))
   prefix <- as_list_fn(pl)
   expect_equal(length(prefix), 2)
   expect_equal(as.character(prefix[[1]]), "a")

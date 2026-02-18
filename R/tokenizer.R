@@ -117,7 +117,7 @@ unescape_string <- function(s) {
 }
 
 Tokenizer <- R6::R6Class(
-  "Tokenizer",
+  "ArlTokenizer",
   public = list(
     delimiters = NULL,
     # @description Create tokenizer with default or custom delimiters.

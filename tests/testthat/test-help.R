@@ -53,11 +53,11 @@ test_that("HelpSystem initialization requires Env and MacroExpander", {
   arl_env <- arl:::Env$new(env)
 
   # Need both arl_env and macro_expander
-  expect_true(r6_isinstance(arl_env, "Env"))
+  expect_true(inherits(arl_env, "ArlEnv"))
 
   # Create full engine to get macro_expander
   engine <- make_engine()
-  expect_true(r6_isinstance(engine_field(engine, "help_system"), "HelpSystem"))
+  expect_true(inherits(engine_field(engine, "help_system"), "ArlHelpSystem"))
 })
 
 test_that("HelpSystem builds special forms help on init", {

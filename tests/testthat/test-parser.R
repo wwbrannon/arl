@@ -111,7 +111,7 @@ test_that("single dotted pair parses to arl_cons", {
   exprs <- engine$read("'(a . b)")
   expect_equal(length(exprs), 1)
   pair <- exprs[[1]][[2]]
-  expect_true(r6_isinstance(pair, "Cons"))
+  expect_true(inherits(pair, "ArlCons"))
   expect_equal(as.character(pair$car), "a")
   expect_equal(as.character(pair$cdr), "b")
 })
@@ -120,9 +120,9 @@ test_that("improper list parses to arl_cons chain", {
   exprs <- engine$read("'(a b . c)")
   expect_equal(length(exprs), 1)
   improper <- exprs[[1]][[2]]
-  expect_true(r6_isinstance(improper, "Cons"))
+  expect_true(inherits(improper, "ArlCons"))
   expect_equal(as.character(improper$car), "a")
-  expect_true(r6_isinstance(improper$cdr, "Cons"))
+  expect_true(inherits(improper$cdr, "ArlCons"))
   expect_equal(as.character(improper$cdr$car), "b")
   expect_equal(as.character(improper$cdr$cdr), "c")
 })

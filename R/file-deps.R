@@ -5,7 +5,7 @@
 #' @keywords internal
 #' @noRd
 FileDeps <- R6::R6Class(
-  "FileDeps",
+  "ArlFileDeps",
   public = list(
     #' @field dir Path to directory containing .arl module files.
     dir = NULL,
