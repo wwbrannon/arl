@@ -93,11 +93,10 @@ make document  # all of the above plus vignettes
    `define`. Include `@description`, `@examples`, and `@seealso` at
    minimum. See [Documenting functions](getting-started.html#documenting-functions)
    for the full tag reference.
-4. **Add a vignette entry** in the corresponding `vignettes/lang-*.Rmd`
-   file with signature, description, examples, and see-also.
-5. **Add to the overview** in `vignettes/lang-reference.Rmd`.
-6. **Write tests**: native test for idiomatic usage, R test for edge cases.
-7. **Rebuild stdlib cache**: `make stdlib-order` (run before `make install`).
+4. **Regenerate vignettes**: run `make lang-docs` to update the
+   auto-generated `vignettes/lang-*.Rmd` files (do not edit them by hand).
+5. **Write tests**: native test for idiomatic usage, R test for edge cases.
+6. **Rebuild stdlib cache**: `make stdlib-order` (run before `make install`).
 
 ## Adding examples
 

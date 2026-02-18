@@ -302,15 +302,19 @@ source("benchmarks/profile-macro.R")
 
 ---
 
-#### Issue 6: Repeated arl_strip_src Calls
+#### Issue 6: Repeated arl_strip_src Calls - HISTORICAL
 
-**Location**: `R/utils.R:88-110` (called >30 times throughout eval.R)
+**Note**: The references to `eval.R` below are historical; the old CPS
+evaluator has been replaced by the compiler (`R/compiler.R`). The
+`arl_strip_src` function still exists but call patterns have changed.
+
+**Original Location**: `R/utils.R:88-110` (called >30 times throughout the old eval.R)
 
 **Pattern**: `arl_strip_src()` walks the entire expression tree to remove source location metadata, and is called repeatedly without memoization.
 
 **Code Example**:
 ```r
-# Called in many places in eval.R
+# Called in many places in the old eval.R
 arl_strip_src <- function(expr) {
   if (is.null(expr)) return(NULL)
 
