@@ -5,15 +5,8 @@ missing_default <- function() {
 # Compiled-mode helpers: installed in env before eval(compiled, env).
 # Arl truthiness: #f (FALSE), #nil (NULL), and 0 are false.
 .__true_p <- compiler::cmpfun(function(x) {
-  if (is.null(x)) {
-    return(FALSE)
-  }
-  if (is.logical(x) && length(x) == 1L && !is.na(x) && identical(x[[1]], FALSE)) {
-    return(FALSE)
-  }
-  if (is.numeric(x) && length(x) == 1L && !is.na(x) && x == 0) {
-    return(FALSE)
-  }
+  if (is.null(x) || isFALSE(x)) return(FALSE)
+  if (is.numeric(x) && length(x) == 1L && !is.na(x) && x == 0) return(FALSE)
   TRUE
 })
 
