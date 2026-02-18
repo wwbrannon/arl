@@ -891,90 +891,51 @@ MacroExpander <- R6::R6Class(
       param_defaults <- parsed$param_defaults
       rest_param_spec <- parsed$rest_param_spec
 
+      # Bind a single macro parameter: use provided arg or fall back to default
+      bind_param <- function(spec, args, i, macro_env) {
+        param_name <- spec$formal
+        if (i <= length(args)) {
+          value <- args[[i]]
+        } else {
+          default_expr <- param_defaults[[param_name]]
+          if (inherits(default_expr, "arl_missing_default")) {
+            stop(sprintf("Missing required parameter (position %d)", i))
+          }
+          value <- private$eval_compiled_in_env(default_expr, env)
+        }
+        if (spec$type == "pattern") {
+          Env$new(macro_env)$destructure_bind(spec$pattern, value, mode = "define")
+        } else {
+          assign(param_name, value, envir = macro_env)
+        }
+      }
+
       macro_fn <- function(...) {
         macro_env <- new.env(parent = env)
         assign(".__macroexpanding", TRUE, envir = macro_env)
         args <- match.call(expand.dots = FALSE)$...
 
+        # Bind regular parameters
+        for (i in seq_along(param_specs)) {
+          bind_param(param_specs[[i]], args, i, macro_env)
+        }
+
         if (!is.null(rest_param_spec)) {
-          # Extract regular param specs (before rest)
-          regular_param_specs <- param_specs
-
-          # Bind regular parameters
-          for (i in seq_along(regular_param_specs)) {
-            spec <- regular_param_specs[[i]]
-            param_name <- spec$formal
-
-            if (i <= length(args)) {
-              # Argument provided
-              value <- args[[i]]
-            } else {
-              # Check for default
-              default_expr <- param_defaults[[param_name]]
-              if (inherits(default_expr, "arl_missing_default")) {
-                stop(sprintf("Missing required parameter (position %d)", i))
-              }
-              # Evaluate default
-              value <- private$eval_compiled_in_env(default_expr, env)
-            }
-
-            # Bind the value
-            if (spec$type == "pattern") {
-              # Destructure into macro_env
-              Env$new(macro_env)$destructure_bind(spec$pattern, value, mode = "define")
-            } else {
-              # Simple binding
-              assign(param_name, value, envir = macro_env)
-            }
-          }
-
           # Bind rest parameter
-          if (length(args) > length(regular_param_specs)) {
-            rest_args <- args[(length(regular_param_specs) + 1):length(args)]
+          if (length(args) > length(param_specs)) {
+            rest_args <- args[(length(param_specs) + 1):length(args)]
           } else {
             rest_args <- list()
           }
 
           if (rest_param_spec$type == "pattern") {
-            # Destructure rest args
             Env$new(macro_env)$destructure_bind(rest_param_spec$pattern, rest_args, mode = "define")
           } else {
-            # Simple rest binding
             assign(rest_param_spec$name, rest_args, envir = macro_env)
           }
-
         } else {
-          # No rest parameter - bind all regular params
-          for (i in seq_along(param_specs)) {
-            spec <- param_specs[[i]]
-            param_name <- spec$formal
-
-            if (i <= length(args)) {
-              # Argument provided
-              value <- args[[i]]
-            } else {
-              # Check for default
-              default_expr <- param_defaults[[param_name]]
-              if (inherits(default_expr, "arl_missing_default")) {
-                stop(sprintf("Missing required parameter (position %d)", i))
-              }
-              # Evaluate default
-              value <- private$eval_compiled_in_env(default_expr, env)
-            }
-
-            # Bind the value
-            if (spec$type == "pattern") {
-              # Destructure into macro_env
-              Env$new(macro_env)$destructure_bind(spec$pattern, value, mode = "define")
-            } else {
-              # Simple binding
-              assign(param_name, value, envir = macro_env)
-            }
-          }
-
           # Check we didn't get too many args (no rest param to catch them)
           if (length(args) > length(param_specs)) {
-            # Count required vs provided
             required_count <- sum(vapply(param_specs, function(spec) {
               inherits(param_defaults[[spec$formal]], "arl_missing_default")
             }, logical(1)))
