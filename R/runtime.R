@@ -650,43 +650,8 @@ CompiledRuntime <- R6::R6Class(
         result <- self$eval_compiled(compiled, module_env)
       }
 
-      # Re-export forwarding: create active bindings for explicitly exported
-      # names that are imported (not own bindings) so they become visible via
-      # inherits=FALSE lookup in attach_into.
-      if (!export_all && length(exports) > 0) {
-        create_reexport_forwardings(module_env, exports, module_name)
-      }
-
-      if (export_all) {
-        # ls() only returns immediate bindings — proxy-based imports live in
-        # parent chain proxies, so they're naturally excluded.
-        all_symbols <- ls(module_env, all.names = TRUE)
-        # Exclude .__* internals
-        all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
-        # Exclude _* user-private helpers (convention: _ prefix = module-private)
-        all_symbols <- all_symbols[!grepl("^_", all_symbols)]
-
-        if (isTRUE(re_export)) {
-          # Collect imported names from proxy envs in the parent chain
-          imported_names <- collect_proxy_imported_names(module_env)
-          new_names <- setdiff(imported_names, all_symbols)
-          if (length(new_names) > 0) {
-            create_reexport_forwardings(module_env, new_names, module_name)
-            all_symbols <- c(all_symbols, new_names)
-          }
-        }
-
-        self$context$env$module_registry$update_exports(module_name, all_symbols)
-      }
-
-      # Lock all individual bindings in module environment for immutability.
-      # Uses lockBinding (not lockEnvironment) so reload can unlock them.
-      all_binding_names <- ls(module_env, all.names = TRUE)
-      for (nm in all_binding_names) {
-        if (!bindingIsLocked(nm, module_env)) {
-          lockBinding(as.symbol(nm), module_env)
-        }
-      }
+      finalize_module_env(module_env, module_name, exports, export_all, re_export,
+                         self$context$env$module_registry)
 
       # Write caches after successful module load (skip when coverage is active
       # to avoid caching instrumented code)
@@ -810,6 +775,44 @@ CompiledRuntime <- R6::R6Class(
     }
   )
 )
+
+# Finalize a module environment after evaluation: re-export forwardings,
+# export_all symbol collection, registry update, and binding locking.
+finalize_module_env <- function(module_env, module_name, exports, export_all, re_export, module_registry) {
+  # Re-export forwarding for explicitly exported names that are imported
+  if (!export_all && length(exports) > 0) {
+    create_reexport_forwardings(module_env, exports, module_name)
+  }
+
+  if (export_all) {
+    # ls() only returns immediate bindings — proxy-based imports live in
+    # parent chain proxies, so they're naturally excluded.
+    all_symbols <- ls(module_env, all.names = TRUE)
+    all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
+    # Exclude _* user-private helpers (convention: _ prefix = module-private)
+    all_symbols <- all_symbols[!grepl("^_", all_symbols)]
+
+    if (isTRUE(re_export)) {
+      imported_names <- collect_proxy_imported_names(module_env)
+      new_names <- setdiff(imported_names, all_symbols)
+      if (length(new_names) > 0) {
+        create_reexport_forwardings(module_env, new_names, module_name)
+        all_symbols <- c(all_symbols, new_names)
+      }
+    }
+
+    module_registry$update_exports(module_name, all_symbols)
+  }
+
+  # Lock all individual bindings in module environment for immutability.
+  # Uses lockBinding (not lockEnvironment) so reload can unlock them.
+  all_binding_names <- ls(module_env, all.names = TRUE)
+  for (nm in all_binding_names) {
+    if (!bindingIsLocked(nm, module_env)) {
+      lockBinding(as.symbol(nm), module_env)
+    }
+  }
+}
 
 # Collect imported symbol names from proxy environments in the parent chain.
 # Walks from parent.env(module_env) upward, collecting .__import_target_names

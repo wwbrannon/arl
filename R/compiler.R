@@ -532,31 +532,8 @@ Compiler <- R6::R6Class(
         return(private$fail("define requires exactly 2 arguments: (define name value)"))
       }
       name <- expr[[2]]
-      if (is.symbol(name) && startsWith(as.character(name), ".__")) {
-        return(private$fail(sprintf(
-          "define cannot bind reserved name '%s' (names starting with '.__' are internal)",
-          as.character(name)
-        )))
-      }
-      # Detect (define name (lambda ...)) for self-tail-call optimization
-      val_expr <- expr[[3]]
-      self_name <- NULL
-      if (is.symbol(name) && is.call(val_expr) && length(val_expr) >= 3 &&
-          is.symbol(val_expr[[1]]) && identical(as.character(val_expr[[1]]), "lambda")) {
-        self_name <- as.character(name)
-      }
-      self$nesting_depth <- self$nesting_depth + 1L
-      on.exit(self$nesting_depth <- self$nesting_depth - 1L, add = TRUE)
-      val <- if (!is.null(self_name)) {
-        private$compile_lambda(val_expr, self_name = self_name)
-      } else {
-        private$compile_impl(expr[[3]])
-      }
-      self$nesting_depth <- self$nesting_depth - 1L
-      on.exit()
-      if (is.null(val)) {
-        return(private$fail("define value could not be compiled"))
-      }
+      val <- private$compile_assignment_value(expr, "define")
+      if (is.null(val)) return(NULL)
       # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .__quote(pattern)
       pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".__quote"), name))
       tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
@@ -579,28 +556,8 @@ Compiler <- R6::R6Class(
         ann <- self$annotations[[name_str]]
       }
       if (!is.null(ann)) {
-        doc_list <- list()
-        if (!is.null(ann$description) && nchar(ann$description) > 0) {
-          doc_list$description <- ann$description
-        }
-        if (!is.null(ann$signature) && nchar(ann$signature) > 0) {
-          doc_list$signature <- ann$signature
-        }
-        if (!is.null(ann$examples) && nchar(ann$examples) > 0) {
-          doc_list$examples <- ann$examples
-        }
-        if (!is.null(ann$assert) && nchar(ann$assert) > 0) {
-          doc_list$assert <- ann$assert
-        }
-        if (!is.null(ann$seealso) && nchar(ann$seealso) > 0) {
-          doc_list$seealso <- ann$seealso
-        }
-        if (!is.null(ann$note) && nchar(ann$note) > 0) {
-          doc_list$note <- ann$note
-        }
-        if (isTRUE(ann$internal)) doc_list$internal <- TRUE
-        if (isTRUE(ann$noeval)) doc_list$noeval <- TRUE
-        if (length(doc_list) > 0) {
+        doc_list <- private$build_doc_list(ann)
+        if (!is.null(doc_list)) {
           # Use .__attach_doc helper (handles primitive wrapping)
           return(as.call(list(
             quote(`{`),
@@ -620,31 +577,8 @@ Compiler <- R6::R6Class(
         return(private$fail("set! requires exactly 2 arguments: (set! name value)"))
       }
       name <- expr[[2]]
-      if (is.symbol(name) && startsWith(as.character(name), ".__")) {
-        return(private$fail(sprintf(
-          "set! cannot bind reserved name '%s' (names starting with '.__' are internal)",
-          as.character(name)
-        )))
-      }
-      # Detect (set! name (lambda ...)) for self-tail-call optimization
-      val_expr <- expr[[3]]
-      self_name <- NULL
-      if (is.symbol(name) && is.call(val_expr) && length(val_expr) >= 3 &&
-          is.symbol(val_expr[[1]]) && identical(as.character(val_expr[[1]]), "lambda")) {
-        self_name <- as.character(name)
-      }
-      self$nesting_depth <- self$nesting_depth + 1L
-      on.exit(self$nesting_depth <- self$nesting_depth - 1L, add = TRUE)
-      val <- if (!is.null(self_name)) {
-        private$compile_lambda(val_expr, self_name = self_name)
-      } else {
-        private$compile_impl(expr[[3]])
-      }
-      self$nesting_depth <- self$nesting_depth - 1L
-      on.exit()
-      if (is.null(val)) {
-        return(private$fail("set! value could not be compiled"))
-      }
+      val <- private$compile_assignment_value(expr, "set!")
+      if (is.null(val)) return(NULL)
       # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .__quote(pattern)
       pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".__quote"), name))
       as.call(list(
@@ -1192,30 +1126,7 @@ Compiler <- R6::R6Class(
         macro_name_str <- as.character(name)
         ann <- self$annotations[[macro_name_str]]
         if (!is.null(ann)) {
-          doc_list <- list()
-          if (!is.null(ann$description) && nchar(ann$description) > 0) {
-            doc_list$description <- ann$description
-          }
-          if (!is.null(ann$signature) && nchar(ann$signature) > 0) {
-            doc_list$signature <- ann$signature
-          }
-          if (!is.null(ann$examples) && nchar(ann$examples) > 0) {
-            doc_list$examples <- ann$examples
-          }
-          if (!is.null(ann$assert) && nchar(ann$assert) > 0) {
-            doc_list$assert <- ann$assert
-          }
-          if (!is.null(ann$seealso) && nchar(ann$seealso) > 0) {
-            doc_list$seealso <- ann$seealso
-          }
-          if (!is.null(ann$note) && nchar(ann$note) > 0) {
-            doc_list$note <- ann$note
-          }
-          if (isTRUE(ann$internal)) doc_list$internal <- TRUE
-          if (isTRUE(ann$noeval)) doc_list$noeval <- TRUE
-          if (length(doc_list) == 0) {
-            doc_list <- NULL
-          }
+          doc_list <- private$build_doc_list(ann)
         }
       }
       body_quoted <- as.call(list(quote(quote), as.call(c(list(quote(begin)), body_exprs))))
@@ -2112,6 +2023,47 @@ Compiler <- R6::R6Class(
       if (is.symbol(x)) return(as.character(x))
       if (is.character(x) && length(x) == 1L) return(x)
       NULL
+    },
+    # Shared validation + compilation for define and set!.
+    # Returns the compiled value expression, or NULL on failure.
+    compile_assignment_value = function(expr, mode) {
+      name <- expr[[2]]
+      if (is.symbol(name) && startsWith(as.character(name), ".__")) {
+        return(private$fail(sprintf(
+          "%s cannot bind reserved name '%s' (names starting with '.__' are internal)",
+          mode, as.character(name)
+        )))
+      }
+      val_expr <- expr[[3]]
+      self_name <- NULL
+      if (is.symbol(name) && is.call(val_expr) && length(val_expr) >= 3 &&
+          is.symbol(val_expr[[1]]) && identical(as.character(val_expr[[1]]), "lambda")) {
+        self_name <- as.character(name)
+      }
+      self$nesting_depth <- self$nesting_depth + 1L
+      on.exit(self$nesting_depth <- self$nesting_depth - 1L, add = TRUE)
+      val <- if (!is.null(self_name)) {
+        private$compile_lambda(val_expr, self_name = self_name)
+      } else {
+        private$compile_impl(expr[[3]])
+      }
+      self$nesting_depth <- self$nesting_depth - 1L
+      on.exit()
+      if (is.null(val)) {
+        return(private$fail(paste0(mode, " value could not be compiled")))
+      }
+      val
+    },
+    # Build a doc_list from an annotation record, or return NULL if empty.
+    build_doc_list = function(ann) {
+      doc_list <- list()
+      for (field in c("description", "signature", "examples", "assert", "seealso", "note")) {
+        val <- ann[[field]]
+        if (!is.null(val) && nchar(val) > 0) doc_list[[field]] <- val
+      }
+      if (isTRUE(ann$internal)) doc_list$internal <- TRUE
+      if (isTRUE(ann$noeval)) doc_list$noeval <- TRUE
+      if (length(doc_list) == 0) NULL else doc_list
     }
   )
 )

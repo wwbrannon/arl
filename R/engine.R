@@ -256,39 +256,8 @@ Engine <- R6::R6Class(
                 result <- private$.compiled_runtime$eval_compiled(block, module_env)
               }
 
-              # Re-export forwarding for explicit exports
-              if (!export_all && length(exports) > 0) {
-                create_reexport_forwardings(module_env, exports, module_name)
-              }
-
-              # Lock all module bindings (immutability)
-              all_binding_names <- ls(module_env, all.names = TRUE)
-              for (nm in all_binding_names) {
-                if (!bindingIsLocked(nm, module_env)) {
-                  lockBinding(as.symbol(nm), module_env)
-                }
-              }
-
-              # Handle export_all
-              if (export_all) {
-                # ls() only returns immediate bindings — proxy-based imports
-                # live in parent chain proxies, so they're naturally excluded.
-                all_symbols <- ls(module_env, all.names = TRUE)
-                all_symbols <- all_symbols[!grepl("^\\.__", all_symbols)]
-                # Exclude _* user-private helpers (convention: _ prefix = module-private)
-                all_symbols <- all_symbols[!grepl("^_", all_symbols)]
-
-                if (re_export) {
-                  imported_names <- collect_proxy_imported_names(module_env)
-                  new_names <- setdiff(imported_names, all_symbols)
-                  if (length(new_names) > 0) {
-                    create_reexport_forwardings(module_env, new_names, module_name)
-                    all_symbols <- c(all_symbols, new_names)
-                  }
-                }
-
-                module_registry$update_exports(module_name, all_symbols)
-              }
+              finalize_module_env(module_env, module_name, exports, export_all,
+                                 re_export, module_registry)
 
               return(invisible(result))
             }
