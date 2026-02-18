@@ -362,3 +362,104 @@ test_that("VERIFY: strength reduction only applies to safe cases", {
   expect_true(grepl("\\^", compiled_str),
     info = "Power of 3 should not reduce")
 })
+
+test_that("VERIFY: strength reduction does not duplicate side-effectful expressions", {
+  engine <- Engine$new(load_prelude = TRUE)
+
+  # (* (begin (set! x (+ x 1)) x) 2) should NOT be reduced to addition,
+  # because the expression has side effects that would execute twice
+  engine$eval_text("(define x 0)")
+  out <- engine$inspect_compilation("(* (begin (set! x (+ x 1)) x) 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  # Should still use multiplication (not reduced)
+  expect_true(grepl("\\*", compiled_str),
+    info = "Side-effectful expression should not be strength-reduced")
+
+  # But (* x 2) with a simple symbol should still reduce
+  out <- engine$inspect_compilation("(* x 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(grepl("\\+", compiled_str),
+    info = "Simple symbol should still be strength-reduced")
+
+  # (* (f x) 2) with a function call should NOT reduce
+  out <- engine$inspect_compilation("(* (f x) 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(grepl("\\*", compiled_str),
+    info = "Function call should not be strength-reduced")
+
+  # (^ (f x) 2) with a function call should NOT reduce
+  out <- engine$inspect_compilation("(^ (f x) 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(grepl("\\^", compiled_str),
+    info = "Function call in exponent base should not be strength-reduced")
+
+  # Semantic correctness: side effects should execute exactly once
+  engine$eval_text("(define counter 0)")
+  engine$eval_text("(define bump (lambda () (set! counter (+ counter 1)) counter))")
+  result <- engine$eval_text("(* (bump) 2)")
+  expect_equal(result, 2)  # bump returns 1, * 2 = 2
+  expect_equal(engine$eval_text("counter"), 1)  # bump called exactly once
+})
+
+# ==============================================================================
+# Nesting Depth Restoration Verification
+# ==============================================================================
+
+test_that("VERIFY: nesting_depth is restored after compilation errors in define", {
+  # The observable effect of corrupted nesting_depth is that top-level import
+  # compilation would fail (compile_import checks nesting_depth > 0).
+  # We test that after a failed define, subsequent compilations still work.
+  engine <- Engine$new(load_prelude = FALSE)
+
+  # Compile a valid top-level define
+  engine$eval_text("(define x 1)")
+
+  # Attempt to compile a define with an invalid value expression.
+  # This should fail gracefully without corrupting compiler state.
+  tryCatch(
+    engine$eval_text("(define y (undefined-special-form z))"),
+    error = function(e) NULL
+  )
+
+  # If nesting_depth was corrupted, this define would behave unexpectedly
+  # because the compiler would think we're inside a nested scope
+  expect_no_error(engine$eval_text("(define z 3)"))
+  expect_equal(engine$eval_text("z"), 3)
+})
+
+test_that("VERIFY: nesting_depth is restored after compilation errors in set!", {
+  engine <- Engine$new(load_prelude = FALSE)
+  engine$eval_text("(define x 1)")
+
+  # Attempt set! with an invalid value
+  tryCatch(
+    engine$eval_text("(set! x (undefined-special-form z))"),
+    error = function(e) NULL
+  )
+
+  # Subsequent define should still work at top level
+  expect_no_error(engine$eval_text("(define y 2)"))
+  expect_equal(engine$eval_text("y"), 2)
+})
+
+# ==============================================================================
+# Boolean Flatten Edge Cases
+# ==============================================================================
+
+test_that("VERIFY: and/or handle degenerate nested empty forms", {
+  engine <- Engine$new(load_prelude = FALSE)
+
+  # (and) with no args should return #t (identity for and)
+  result <- engine$eval_text("(and)")
+  expect_true(result)
+
+  # (or) with no args should return #f (identity for or)
+  result <- engine$eval_text("(or)")
+  expect_false(result)
+
+  # Single-arg forms should work
+  result <- engine$eval_text("(and 42)")
+  expect_equal(result, 42)
+  result <- engine$eval_text("(or 42)")
+  expect_equal(result, 42)
+})

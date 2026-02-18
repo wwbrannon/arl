@@ -141,7 +141,7 @@ Compiler <- R6::R6Class(
       # Flatten nested ops: (and (and a b) c) → (and a b c)
       flatten <- function(e) {
         result <- list()
-        for (i in 2:length(e)) {
+        for (i in if (length(e) >= 2) 2:length(e) else integer(0)) {
           arg <- e[[i]]
           if (is.call(arg) && length(arg) >= 1 && identical(arg[[1]], op_sym)) {
             result <- c(result, flatten(arg))
@@ -546,12 +546,14 @@ Compiler <- R6::R6Class(
         self_name <- as.character(name)
       }
       self$nesting_depth <- self$nesting_depth + 1L
+      on.exit(self$nesting_depth <- self$nesting_depth - 1L, add = TRUE)
       val <- if (!is.null(self_name)) {
         private$compile_lambda(val_expr, self_name = self_name)
       } else {
         private$compile_impl(expr[[3]])
       }
       self$nesting_depth <- self$nesting_depth - 1L
+      on.exit()
       if (is.null(val)) {
         return(private$fail("define value could not be compiled"))
       }
@@ -632,12 +634,14 @@ Compiler <- R6::R6Class(
         self_name <- as.character(name)
       }
       self$nesting_depth <- self$nesting_depth + 1L
+      on.exit(self$nesting_depth <- self$nesting_depth - 1L, add = TRUE)
       val <- if (!is.null(self_name)) {
         private$compile_lambda(val_expr, self_name = self_name)
       } else {
         private$compile_impl(expr[[3]])
       }
       self$nesting_depth <- self$nesting_depth - 1L
+      on.exit()
       if (is.null(val)) {
         return(private$fail("set! value could not be compiled"))
       }
@@ -1098,9 +1102,14 @@ Compiler <- R6::R6Class(
       # Disable constant folding to preserve expression structure for promise-expr
       old_folding <- self$enable_constant_folding
       self$enable_constant_folding <- FALSE
+      on.exit({
+        self$enable_constant_folding <- old_folding
+        self$nesting_depth <- self$nesting_depth - 1L
+      }, add = TRUE)
       compiled <- private$compile_impl(expr[[2]])
       self$enable_constant_folding <- old_folding
       self$nesting_depth <- self$nesting_depth - 1L
+      on.exit()
 
       if (is.null(compiled)) {
         return(private$fail("delay expression could not be compiled"))
@@ -1590,22 +1599,27 @@ Compiler <- R6::R6Class(
       op_name <- as.character(op)
 
       # Multiplication by 2: (* x 2) → (+ x x)
+      # Only reduce when the duplicated operand is a symbol or literal (no side effects)
       if (op_name == "*" && length(args) == 2) {
         # Check if second arg is literal 2
-        if (is.numeric(args[[2]]) && args[[2]] == 2) {
+        if (is.numeric(args[[2]]) && args[[2]] == 2 &&
+            (is.symbol(args[[1]]) || is.atomic(args[[1]]))) {
           # Replace with addition: x + x
           return(as.call(list(quote(`+`), args[[1]], args[[1]])))
         }
         # Also handle (* 2 x)
-        if (is.numeric(args[[1]]) && args[[1]] == 2) {
+        if (is.numeric(args[[1]]) && args[[1]] == 2 &&
+            (is.symbol(args[[2]]) || is.atomic(args[[2]]))) {
           return(as.call(list(quote(`+`), args[[2]], args[[2]])))
         }
       }
 
       # Power of 2: (^ x 2) → (* x x)
+      # Only reduce when the duplicated operand is a symbol or literal (no side effects)
       if (op_name == "^" && length(args) == 2) {
         # Check if second arg is literal 2
-        if (is.numeric(args[[2]]) && args[[2]] == 2) {
+        if (is.numeric(args[[2]]) && args[[2]] == 2 &&
+            (is.symbol(args[[1]]) || is.atomic(args[[1]]))) {
           # Replace with multiplication: x * x
           return(as.call(list(quote(`*`), args[[1]], args[[1]])))
         }
