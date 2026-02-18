@@ -91,7 +91,7 @@ make document  # all of the above plus vignettes
 2. **Export** it from the module's `(export ...)` list.
 3. **Document** it with `;;'` annotation comments immediately before the
    `define`. Include `@description`, `@examples`, and `@seealso` at
-   minimum. See [Documenting functions](getting-started.html#documenting-functions)
+   minimum. See [Documenting functions](documenting-functions-macros.html)
    for the full tag reference.
 4. **Regenerate vignettes**: run `make lang-docs` to update the
    auto-generated `vignettes/lang-*.Rmd` files (do not edit them by hand).

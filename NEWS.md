@@ -1,6 +1,6 @@
-# arl 0.0.2
+# arl 0.1.0
 
-## Module System Overhaul
+## Module System
 
 * **Qualified access via `/`:** Import a module and access its exports with
   `mod/sym` syntax (e.g. `math/inc`). The `/` is reader sugar for the new
@@ -23,20 +23,16 @@
 * **New builtins:** `module-ref`, `module?`, `namespace?`, `module-exports`,
   `module-name` for module introspection.
 
-# arl 0.0.1
-
-Initial CRAN release.
-
-## Features
+## Compiler
 
 * **Self-tail-call optimization (self-TCO):** The compiler detects
   `(define name (lambda ...))` with self-calls in tail position and rewrites
   them as `while` loops, avoiding stack overflow. Works through `if`, `begin`,
   `cond`, `let`, `let*`, and `letrec`, and supports destructuring params,
   keyword args, and rest params.
-* **Arl code coverage:** New `CoverageTracker` class instruments Arl stdlib
-  and user code, tracking line-level and branch-level (`if`) coverage. Reports
-  in console, HTML, and JSON formats; integrates with Codecov via flags.
+
+## Standard Library
+
 * **Sorting module:** `sort`, `sort-by`, `merge`, and `stable-sort` functions.
 * **Dict and set modules:** Hash-backed `dict` and `set` data structures with
   full helper suites (`dict-get`, `dict-set`, `dict-merge`, `set-union`, etc.).
@@ -47,6 +43,9 @@ Initial CRAN release.
   programmatic docstring access.
 * **Continuations:** `call-cc` and `call-with-current-continuation` via R's
   native `callCC`.
+* **Arl code coverage:** New `CoverageTracker` class instruments Arl stdlib
+  and user code, tracking line-level and branch-level (`if`) coverage. Reports
+  in console, HTML, and JSON formats; integrates with Codecov via flags.
 
 ## Documentation
 

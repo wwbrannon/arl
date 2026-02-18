@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
 [![R CMD
 check](https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/check.yaml)
 [![Codecov](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/arl)
@@ -217,7 +217,8 @@ the `looping` module is still available:
 
 ### Standard Library
 
-All stdlib modules are loaded automatically. Key areas include:
+Prelude modules are loaded automatically; non-prelude modules require
+explicit `(import ...)`. Key areas include:
 
 - **Lists**: `car`, `cdr`, `cons`, `append`, `reverse`, `nth`, `list*`
 - **Higher-order**: `map`, `filter`, `reduce`, `compose`, `partial`,
@@ -226,7 +227,7 @@ All stdlib modules are loaded automatically. Key areas include:
   `partition`, `flatten`, `zip`
 - **Control flow**: `when`, `unless`, `cond`, `case`
 - **Bindings**: `let`, `let*`, `letrec`, `destructuring-bind`
-- **Looping**: `for`, `loop`/`recur`, `until`
+- **Looping**: `do-list`, `loop`/`recur`, `until`
 - **Threading**: `->`, `->>`
 - **Error handling**: `try`/`catch`/`finally`, `assert`
 - **Strings & I/O**: `str`, `string-join`, `string-split`, `display`,
@@ -243,10 +244,10 @@ are always available; non-prelude modules require explicit import (or
 use `Engine$new(load_prelude = FALSE)` for a completely bare engine):
 
 ``` lisp
-(import control)   ; when/unless/cond/case/try/catch/finally
-(import binding)   ; let/let*/letrec
+(import math)      ; inc/dec/abs/min/max/floor/ceiling/round/square/...
 (import looping)   ; until/do-list/loop/recur
-(import threading) ; -> and ->>
+(import sort)      ; sort/sort-by
+(import strings)   ; str/string-join/string-split/...
 ```
 
 ### Modules and File Loading
@@ -322,8 +323,8 @@ Arl leverages R’s existing eval/quote/environment system:
 1.  **Lexer/Tokenizer**: Lexical analysis of Arl source, producing a
     token stream for the parser to consume.
 2.  **Parser**: Consume the tokenizer’s token stream and produce an
-    abstrat syntax tree (AST), removing syntactic sugar like `'` (quote)
-    \`\`\` (quasiquote), etc.
+    abstract syntax tree (AST), removing syntactic sugar like `'`
+    (quote) \`\`\` (quasiquote), etc.
 3.  **Macro expander**: Expand macros occurring in the input into code.
     Macro expansion is recursive, with each step generating new code
     that may have further macro calls to expand. Expansion terminates
@@ -363,8 +364,7 @@ make document
 
 ## Citing Arl
 
-If you use Arl in academic work, please cite it. The package includes a
-`CITATION` file, so you can use:
+If you use Arl in academic work, please cite it:
 
 ``` r
 citation("arl")

@@ -5,16 +5,10 @@
 
 **A Lisp dialect for R** — homoiconic syntax, powerful macros, and seamless access to every R function.
 
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum."
+Arl brings the expressiveness of Lisp to the R ecosystem. It compiles to R code and evaluates with R's native `eval()`, so every R function and data structure is available directly — no FFI or bridging needed. The macro system gives you compile-time code transformation, and self-tail-call optimization lets you write deep recursion without stack overflow.
 
-TODO: a couple paragraphs here incl getting started and examples links
-<!-- - [**Getting Started**](articles/getting-started.html) — installation, REPL basics, core syntax
-- [**Examples**](articles/examples.html) — complete working programs from fibonacci to data analysis -->
+- [**Getting Started**](articles/getting-started.html) — installation, REPL basics, core syntax
+- [**Examples**](articles/examples.html) — complete working programs from fibonacci to data analysis
 
 ## Quick Examples
 
@@ -66,7 +60,7 @@ TODO: a couple paragraphs here incl getting started and examples links
 ### From R
 
 ```r
-> devtools::install()  # or another method
+> devtools::install_github("wwbrannon/arl")
 
 > library(arl)
 > engine <- Engine$new()
@@ -80,5 +74,5 @@ TODO: a couple paragraphs here incl getting started and examples links
 
 $ arl                    # start REPL
 $ arl --file script.arl  # or "-f"
-$ arl --eval "(+ 1 2)"   # of "-e"
+$ arl --eval "(+ 1 2)"   # or "-e"
 ```

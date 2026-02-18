@@ -1,6 +1,6 @@
 #' R6 class for tracking and reporting Arl code execution coverage
 #'
-#' Tracks which lines of .arl source files actually execute during runtime.
+#' @description Tracks which lines of .arl source files actually execute during runtime.
 #' Maintains execution counts per file/line and generates reports.
 #' Supports flexible configuration for tracking custom directories,
 #' test files, and custom comment syntax.

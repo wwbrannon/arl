@@ -11,7 +11,7 @@
 
 ## Architecture Overview
 
-Arl uses a pipeline architecture with four main components:
+Arl uses a pipeline architecture with five main components:
 
 ```
 Source Code

@@ -883,15 +883,6 @@ MacroExpander <- R6::R6Class(
       )
     },
     define_macro = function(name, params, body, env, doc_list = NULL) {
-      # Debug: check body
-      if (isTRUE(.pkg_option("debug_macro", FALSE)) && as.character(name) == "empty-pat") {
-        message("DEBUG define_macro for ", as.character(name))
-        message("  body class: ", class(body))
-        message("  body length: ", length(body))
-        if (length(body) > 0) {
-          message("  first body expr: ", deparse(body[[1]]))
-        }
-      }
 
       # Parse parameters
       parsed <- private$macro_parse_params(params)

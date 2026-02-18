@@ -4,11 +4,6 @@
 \alias{CoverageTracker}
 \title{R6 class for tracking and reporting Arl code execution coverage}
 \description{
-R6 class for tracking and reporting Arl code execution coverage
-
-R6 class for tracking and reporting Arl code execution coverage
-}
-\details{
 Tracks which lines of .arl source files actually execute during runtime.
 Maintains execution counts per file/line and generates reports.
 Supports flexible configuration for tracking custom directories,

@@ -9,7 +9,7 @@ Arl is a fully-functional Lisp dialect implemented in R with seamless R interope
 ## Project Structure
 
 Standard R package layout:
-- `R/` - Core implementation (~8800 lines across 20 files)
+- `R/` - Core implementation (~10,800 lines across 21 files)
   - `tokenizer.R` - Lexical analysis
   - `parser.R` - S-expression parsing to R calls
   - `compiler.R` - Compiles Arl AST to R code; handles all special forms
@@ -26,21 +26,21 @@ Standard R package layout:
   - `module-registry.R` - Module registry and dependency tracking
   - `file-deps.R` - File dependency resolution
   - `topological-sort.R` - Topological sort for module loading order
-  - `cells.R` - Mutable cell implementation
+  - `cells.R` - Cons cell / dotted-pair implementation
   - `coverage.R` - Code coverage support
   - `source-tracker.R` - Source location tracking
   - `utils.R` - Utilities
 - `inst/` - Installed package files
-  - `arl/` - Modular stdlib (~25 modules: core, control, functional, binding, looping, threading, error, struct, assert, r-interop, list, sequences, strings, math, logic, io, conversions, types, dict, display, equality, set, sort, _utils); 10 "prelude" modules are loaded at startup (see `prelude-modules.txt`), others require explicit `(import ...)`
+  - `arl/` - Modular stdlib (23 modules: core, control, functional, binding, looping, threading, struct, assert, r-interop, list, sequences, strings, math, logic, io, conversions, types, dict, display, equality, set, sort, _utils); 10 "prelude" modules are loaded at startup (see `prelude-modules.txt`), others require explicit `(import ...)`
   - `examples/` - Complete working programs (fibonacci, quicksort, data-analysis, macros, fizzbuzz, graph-paths, log-parser, pipeline-macros, sales-report, task-runner)
   - `design-docs/` - Design documentation for internal subsystems
 - `exec/arl` - Command-line executable (shell script wrapper)
 - `tests/`
-  - `testthat/` - Comprehensive test suite (60+ test files plus helpers)
-  - `native/` - Native Arl test files (17 `.arl` tests run via `make test-native`)
+  - `testthat/` - Comprehensive test suite (74 test files plus helpers)
+  - `native/` - Native Arl test files (18 `.arl` tests run via `make test-native`)
 - `benchmarks/` - Performance benchmarking suite (component benchmarks, profiling scripts)
 - `tools/` - Build helpers (stdlib load-order generation, dependency analysis, CRAN submission tools, doc generators)
-- `vignettes/` - User documentation (18 vignettes: getting-started, macros, modules, R interop, stdlib reference, internals, troubleshooting, etc.)
+- `vignettes/` - User documentation (22 vignettes: getting-started, macros, modules, R interop, stdlib reference, internals, troubleshooting, etc.)
 - `man/` - Roxygen2 documentation
 - `DESCRIPTION` - Package metadata
 - `NAMESPACE` - Package exports
