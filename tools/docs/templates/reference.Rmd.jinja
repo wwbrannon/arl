@@ -174,16 +174,18 @@ pages:
 
 ## Importing modules
 
-All stdlib modules are loaded automatically by `Engine$new()`. The `import`
-form is useful inside your own modules (where you start with an empty scope)
-and when working with a bare engine (`Engine$new(load_prelude = FALSE)`):
+Prelude modules are loaded automatically by `Engine$new()`. Non-prelude
+modules (like `math`, `looping`, `sort`, `strings`, `dict`, `set`, `io`,
+etc.) require explicit `(import ...)`. The `import` form is also needed
+inside your own modules (where you start with an empty scope) and when
+working with a bare engine (`Engine$new(load_prelude = FALSE)`):
 
 ```{arl, eval=FALSE}
-; Import focused modules
-(import control)   ; when/unless/cond/case/try/try-catch
-(import binding)   ; let/let*/letrec
+; Import non-prelude modules
+(import math)      ; inc/dec/abs/min/max/floor/ceiling/round/square/...
 (import looping)   ; do-list/loop/recur/until
-(import threading) ; -> and ->>
+(import sort)      ; sort/sort-by
+(import strings)   ; str/string-join/string-split/...
 ```
 
 From R, you can create an engine with the stdlib already loaded:

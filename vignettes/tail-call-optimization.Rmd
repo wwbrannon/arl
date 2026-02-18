@@ -167,8 +167,8 @@ easier to identify where things went wrong.
 ## loop/recur
 
 For mutual recursion or explicit looping patterns where self-TCO is not
-applicable, the `looping` module (imported by default with the rest of the
-standard library) provides Clojure-style `loop`/`recur`:
+applicable, the `looping` module provides Clojure-style `loop`/`recur`.
+Since `looping` is not a prelude module, you need to import it explicitly:
 
 ```{arl}
 (define factorial
@@ -192,7 +192,7 @@ self-TCO.
 
 | Feature | Self-TCO | loop/recur |
 |---------|----------|------------|
-| Activation | Automatic | Explicit `(import looping)` though imported by default |
+| Activation | Automatic | Explicit `(import looping)` required |
 | Pattern | `(define name (lambda ...))` or `(set! name (lambda ...))` | `(loop ((var init) ...) body)` |
 | Scope | Self-recursion only | Any loop pattern |
 | Stack growth | None | None |

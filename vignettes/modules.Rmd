@@ -204,7 +204,7 @@ The `import` special form loads a module and makes its exports available. `(impo
 (import "path")                        ; import by file path
 ```
 
-- **Symbol** (e.g. `control`): treated as a **module name**. Resolution looks in the stdlib, then the current working directory (same as `load` by name).
+- **Symbol** (e.g. `control`): treated as a **module name**. Resolution looks in the stdlib directory first, then the current working directory.
 - **String** (e.g. `"lib/utils.arl"`): treated as a **file path**. Only path-based resolution is used (no stdlib lookup). The path is normalized to absolute so that the same file imported with different path strings (e.g. `"inst/arl/control.arl"` and `"./inst/arl/control.arl"`) reuses the same loaded module.
 
 ### Qualified Access
@@ -425,46 +425,33 @@ Modules can load other modules:
 
 ## Standard Library Modules
 
-Arl's standard library is organized into modules. All prelude modules are loaded
-automatically when creating an engine, so everything is available by default.
-The module structure is relevant when writing your own modules (which must
+Arl's standard library is organized into modules. The 10 **prelude** modules
+(logic, core, types, list, equality, functional, control, sequences, binding,
+threading) are loaded automatically when creating an engine, so their exports
+are available by default. **Non-prelude** modules require explicit import.
+The module structure is also relevant when writing your own modules (which must
 explicitly import their dependencies) or when creating a bare engine with
 `Engine$new(load_prelude = FALSE)`:
 
 ```{arl, eval=FALSE}
-; Control flow macros
-(import control :refer :all)    ; when, unless, cond, case, try/catch/finally
-
-; Binding forms
-(import binding :refer :all)    ; let, let*, letrec
-
-; Looping constructs
+; Non-prelude modules require explicit import:
+(import math :refer :all)       ; inc, dec, abs, floor, ceiling, round, etc.
 (import looping :refer :all)    ; until, do-list, loop, recur
-
-; Threading macros
-(import threading :refer :all)  ; ->, ->>
-
-; Error handling is now part of the control module
-
-; Functional (higher-order) functions
-(import functional :refer :all)  ; map, filter, reduce, etc.
-
-; String operations
+(import sort :refer :all)       ; sort, sort-by
 (import strings :refer :all)    ; str, string-join, string-split, etc.
-
-; I/O operations
 (import io :refer :all)         ; display, println, read-line
-
-; Dictionaries
 (import dict :refer :all)       ; dict operations
-
-; Sets
 (import set :refer :all)        ; set operations
+
+; Prelude modules are already loaded but can be explicitly imported
+; in your own modules (which start with an empty scope):
+(import control :refer :all)    ; when, unless, cond, case, try/catch/finally
+(import binding :refer :all)    ; let, let*, letrec
+(import functional :refer :all) ; map, filter, reduce, etc.
 ```
 
-All prelude modules are loaded automatically when the engine starts. Core
-functions (`car`, `cdr`, `cons`, `list`, arithmetic, predicates) come from the
-R runtime layer; the Arl modules above add macros and higher-level functions.
+Core functions (`car`, `cdr`, `cons`, `list`, arithmetic, predicates) come from
+the R runtime layer; the Arl modules above add macros and higher-level functions.
 To create an engine without prelude modules, use
 `Engine$new(load_prelude = FALSE)` — builtins like `gensym`, `eval`, `read`,
 and `cons` are still available.
