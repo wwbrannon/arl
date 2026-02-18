@@ -258,6 +258,24 @@ Arl can call R functions directly:
 Scheme code typically requires FFI layers for such interop; Arl treats it as
 normal function application.
 
+### Module system
+
+Arl's module system is closer to Clojure's namespaces or Racket's modules than
+to R5RS/R6RS libraries:
+
+- **First-class modules**: modules are ordinary R environments and can be
+  passed around, inspected, and stored in data structures.
+- **Qualified access via `/`**: `(import math)` then `(math/inc 5)`, similar
+  to Racket's prefix imports.
+- **`:refer`, `:as`, `:rename` modifiers**: `(import strings :as str)` or
+  `(import math :refer (inc dec))` — Clojure-inspired, unlike Scheme's
+  `import` specs.
+- **Prelude**: 10 core modules are loaded automatically (like Scheme's base
+  library), while other stdlib modules require explicit `import`.
+
+Scheme's R6RS library system is static and resolved at expansion time; Arl's
+imports are evaluated at runtime and modules can be loaded conditionally.
+
 ## Macro systems
 
 This is one of the most significant design differences between Arl and

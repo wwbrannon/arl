@@ -77,9 +77,12 @@ remaining first-class values when needed.
 
 ### r-call
 
-You can also call R functions via `r-call` if you need to pass a name
-programmatically. This function skips all Arl-defined evaluation frames and
-looks up its character argument in the containing R scopes:
+Most R functions can be called directly from Arl (e.g. `(mean x)`). `r-call`
+is useful in two situations: (1) when an Arl binding has **shadowed** an R
+function name and you need to reach the original, and (2) when the function
+name is **computed at runtime** (stored in a variable as a string). It takes a
+character string, skips all Arl-defined evaluation frames, and looks up the
+name in the containing R scopes:
 
 ```{arl}
 ; shadow the binding so direct calls fail

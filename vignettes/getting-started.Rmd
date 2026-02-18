@@ -220,29 +220,37 @@ toplevel environment.
 
 ## Loading stdlib modules
 
-The engine loads the prelude automatically, so functions like `when`,
-`let`, `for`, `->`, and `try` are available immediately. The `import` form is
-primarily useful inside your own modules (which start with an empty scope) and
-when working with a bare engine created via `Engine$new(load_prelude = FALSE)`
-or `arl --no-stdlib`:
+The engine loads the **prelude** automatically — 10 modules (`logic`, `core`,
+`types`, `list`, `equality`, `functional`, `control`, `sequences`, `binding`,
+`threading`) whose exports are available immediately. Functions like `when`,
+`let`, `do-list`, `->`, and `try` come from the prelude and need no import.
+
+Non-prelude modules must be loaded explicitly with `import`:
+
+```{arl, eval=FALSE}
+(import math :refer :all)      ; inc/dec/abs/clamp/...
+(import looping :refer :all)   ; loop/recur/until
+(import sort :refer :all)      ; sort/sort-by/...
+(import strings :refer :all)   ; string-split/string-join/...
+```
+
+Imports can also be selective or aliased:
+
+```{arl, eval=FALSE}
+(import control :refer (when unless))
+(import strings :as str)       ; str/string-split, str/string-join, ...
+```
+
+Prelude modules are already available, but you can still import them
+explicitly in your own modules (which start with an empty scope plus prelude
+access):
 
 ```{arl, eval=FALSE}
 (import control :refer :all)   ; when/unless/cond/case/try/catch/finally
-(import binding :refer :all)   ; let/let*/letrec
-(import looping :refer :all)   ; do-list/loop/recur/until
-(import threading :refer :all) ; -> and ->>
-
-;; imports can be selective
-(import control :refer (when unless))
-(import strings :as str)
 ```
 
-
 ```{arl, include=FALSE}
-(import control :refer :all)
-(import binding :refer :all)
 (import looping :refer :all)
-(import threading :refer :all)
 
 (assert-true (macro? 'when))
 (assert-true (macro? 'unless))
