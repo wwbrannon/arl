@@ -4,7 +4,7 @@ missing_default <- function() {
 
 # Compiled-mode helpers: installed in env before eval(compiled, env).
 # Arl truthiness: #f (FALSE), #nil (NULL), and 0 are false.
-.__true_p <- function(x) {
+.__true_p <- compiler::cmpfun(function(x) {
   if (is.null(x)) {
     return(FALSE)
   }
@@ -15,11 +15,11 @@ missing_default <- function() {
     return(FALSE)
   }
   TRUE
-}
+})
 
 # Wrapper for define/set! from compiled code (including pattern destructuring).
 # pattern can be a symbol, a string (converted to symbol for simple binding), or a list for destructuring.
-.__assign_pattern <- function(env, pattern, value, mode) {
+.__assign_pattern <- compiler::cmpfun(function(env, pattern, value, mode) {
   if (is.character(pattern) && length(pattern) == 1L) {
     pattern <- as.symbol(pattern)
   }
@@ -75,7 +75,7 @@ missing_default <- function() {
   # Slow path: destructuring (cons cells, lists, calls) — need full Env
   ctx <- if (identical(mode, "define")) "define" else "set!"
   Env$new(env)$assign_pattern(pattern, value, mode = mode, context = ctx)
-}
+})
 
 # EvalContext: Shared context for MacroExpander and CompiledRuntime. Holds env (Env)
 # and source_tracker. Created once per engine; macro_expander and compiler are set after.
@@ -659,7 +659,7 @@ CompiledRuntime <- R6::R6Class(
         cache_paths <- self$module_cache$get_paths(src_file)
         if (!is.null(cache_paths)) {
           # Always write expr cache (safe fallback)
-          self$module_cache$write_code(module_name, compiled_body, exports, export_all, re_export, src_file, cache_paths$file_hash)
+          self$module_cache$write_code(module_name, compiled_body, exports, export_all, re_export, src_file, cache_paths$file_hash, cache_paths = cache_paths)
 
           # Env cache disabled: proxy-based imports use active bindings in
           # the parent chain which can't survive serialization/deserialization.

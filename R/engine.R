@@ -214,7 +214,7 @@ Engine <- R6::R6Class(
 
           # Expr cache (compiled expressions)
           if (file.exists(cache_paths$code_cache)) {
-            cache_data <- private$.module_cache$load_code(cache_paths$code_cache, path)
+            cache_data <- private$.module_cache$load_code(cache_paths$code_cache, path, file_hash = cache_paths$file_hash)
             if (!is.null(cache_data)) {
               # Recreate module environment (like module_compiled does)
               module_name <- cache_data$module_name
@@ -581,12 +581,12 @@ Engine <- R6::R6Class(
       # because every module needs them and R's baseenv semantics conflict.
       #
 
-      null_safe_eq <- function(a, b) {
+      null_safe_eq <- compiler::cmpfun(function(a, b) {
         if (is.null(a)) return(is.null(b))
         if (is.null(b)) return(FALSE)
         a == b
-      }
-      variadic_eq <- function(...) {
+      })
+      variadic_eq <- compiler::cmpfun(function(...) {
         args <- list(...)
         n <- length(args)
         if (n < 2L) return(TRUE)
@@ -594,14 +594,14 @@ Engine <- R6::R6Class(
           if (!isTRUE(null_safe_eq(args[[i]], args[[i + 1L]]))) return(FALSE)
         }
         TRUE
-      }
+      })
       builtins_env$`=` <- variadic_eq
       builtins_env$`==` <- variadic_eq
-      builtins_env$`!=` <- function(a, b) {
+      builtins_env$`!=` <- compiler::cmpfun(function(a, b) {
         if (is.null(a)) return(!is.null(b))
         if (is.null(b)) return(TRUE)
         a != b
-      }
+      })
 
       #
       # Variadic arithmetic operators — the compiler folds these at compile time
@@ -609,34 +609,34 @@ Engine <- R6::R6Class(
       # for funcall/apply and higher-order usage.
       #
 
-      builtins_env$`+` <- function(...) {
+      builtins_env$`+` <- compiler::cmpfun(function(...) {
         args <- list(...)
         n <- length(args)
         if (n == 0L) return(0)
         if (n == 1L) return(args[[1L]])
         Reduce(`+`, args)
-      }
-      builtins_env$`*` <- function(...) {
+      })
+      builtins_env$`*` <- compiler::cmpfun(function(...) {
         args <- list(...)
         n <- length(args)
         if (n == 0L) return(1)
         if (n == 1L) return(args[[1L]])
         Reduce(`*`, args)
-      }
-      builtins_env$`-` <- function(...) {
+      })
+      builtins_env$`-` <- compiler::cmpfun(function(...) {
         args <- list(...)
         n <- length(args)
         if (n == 0L) stop("- requires at least one argument")
         if (n == 1L) return(-args[[1L]])
         Reduce(`-`, args)
-      }
-      builtins_env$`/` <- function(...) {
+      })
+      builtins_env$`/` <- compiler::cmpfun(function(...) {
         args <- list(...)
         n <- length(args)
         if (n == 0L) stop("/ requires at least one argument")
         if (n == 1L) return(1 / args[[1L]])
         Reduce(`/`, args)
-      }
+      })
 
       #
       # Variadic comparison operators — chained pairwise comparison.
@@ -644,7 +644,7 @@ Engine <- R6::R6Class(
 
       make_variadic_cmp <- function(op) {
         force(op)
-        function(...) {
+        compiler::cmpfun(function(...) {
           args <- list(...)
           n <- length(args)
           if (n < 2L) return(TRUE)
@@ -656,7 +656,7 @@ Engine <- R6::R6Class(
             if (!isTRUE(op(args[[i]], args[[i + 1L]]))) return(FALSE)
           }
           TRUE
-        }
+        })
       }
       builtins_env$`<`  <- make_variadic_cmp(`<`)
       builtins_env$`<=` <- make_variadic_cmp(`<=`)
@@ -668,9 +668,9 @@ Engine <- R6::R6Class(
       # R's ! works on logical/numeric but not on arbitrary values.
       #
 
-      builtins_env$`not` <- function(x) {
+      builtins_env$`not` <- compiler::cmpfun(function(x) {
         if (.__true_p(x)) FALSE else TRUE
-      }
+      })
 
       #
       # Cons-cell primitives — installed into builtins_env

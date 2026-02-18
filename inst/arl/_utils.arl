@@ -10,12 +10,12 @@
   ;;' @description Coerce calls and vectors to list; dotted pair to proper prefix.
   (define _as-list
     (lambda (x)
-      (if (pair? x)
-        (.__cons-as-list x)
+      (if (is.list x)
+        x
         (if (is.call x)
           (as.list x)
-          (if (is.list x)
-            x
+          (if (pair? x)
+            (.__cons-as-list x)
             (if (== (length x) 0)
               (list)
               (as.list x)))))))

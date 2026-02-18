@@ -42,8 +42,8 @@ ModuleCache <- R6::R6Class(
     #' @param export_all Export all flag
     #' @param src_file Source file path
     #' @param file_hash File hash
-    write_code = function(module_name, compiled_body, exports, export_all, re_export, src_file, file_hash, coverage = FALSE) {
-      paths <- self$get_paths(src_file)
+    write_code = function(module_name, compiled_body, exports, export_all, re_export, src_file, file_hash, coverage = FALSE, cache_paths = NULL) {
+      paths <- cache_paths %||% self$get_paths(src_file)
       if (is.null(paths)) return(FALSE)
 
       # Create cache directory if needed
@@ -109,7 +109,7 @@ ModuleCache <- R6::R6Class(
     #' @param cache_file Path to .code.rds cache file
     #' @param src_file Source file for validation
     #' @return Cache data or NULL if invalid
-    load_code = function(cache_file, src_file, coverage = FALSE) {
+    load_code = function(cache_file, src_file, coverage = FALSE, file_hash = NULL) {
       if (!file.exists(cache_file)) {
         return(NULL)
       }
@@ -126,14 +126,12 @@ ModuleCache <- R6::R6Class(
         return(NULL)
       }
 
-      # Validate cache
-      if (!private$is_valid(cache_data, src_file, coverage = coverage)) {
-        # Invalid cache, delete all related cache files
-        paths <- self$get_paths(src_file)
-        if (!is.null(paths)) {
-          unlink(paths$code_cache)
-          unlink(paths$code_r)
-        }
+      # Validate cache (pass file_hash to avoid recomputing MD5)
+      if (!private$is_valid(cache_data, src_file, coverage = coverage, file_hash = file_hash)) {
+        # Invalid cache, delete related cache files (use dirname to avoid get_paths)
+        unlink(cache_file)
+        code_r <- sub("\\.code\\.rds$", ".code.R", cache_file)
+        if (file.exists(code_r)) unlink(code_r)
         return(NULL)
       }
 
@@ -168,7 +166,7 @@ ModuleCache <- R6::R6Class(
     #' @param cache_data Deserialized cache data
     #' @param src_file Source file path
     #' @return TRUE if valid, FALSE otherwise
-    is_valid = function(cache_data, src_file, coverage = FALSE) {
+    is_valid = function(cache_data, src_file, coverage = FALSE, file_hash = NULL) {
       if (!is.list(cache_data)) return(FALSE)
 
       # Check version
@@ -177,12 +175,14 @@ ModuleCache <- R6::R6Class(
         return(FALSE)
       }
 
-      # Check file hash
-      paths <- self$get_paths(src_file)
-      if (is.null(paths) || is.null(cache_data$file_hash)) {
+      # Check file hash (use provided hash to avoid recomputing MD5)
+      if (is.null(file_hash)) {
+        file_hash <- tools::md5sum(src_file)
+      }
+      if (is.null(cache_data$file_hash)) {
         return(FALSE)
       }
-      if (cache_data$file_hash != paths$file_hash) {
+      if (cache_data$file_hash != file_hash) {
         return(FALSE)
       }
 
