@@ -103,7 +103,7 @@ DocParser <- R6::R6Class(
 
         dcf_field <- function(field) {
           if (!field %in% colnames(m)) return(NULL)
-          val <- m[i, field]
+          val <- unname(m[i, field])
           if (is.na(val) || !nzchar(val)) NULL else val
         }
 

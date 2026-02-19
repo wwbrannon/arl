@@ -117,7 +117,7 @@
         (as.integer (round x))
         (stop "inexact->exact: argument must be a number"))))
 
-  ;;' @section Numeric Conversions
+  ;;' @section R-Style Numeric Conversions
   ;;' R-style type conversions providing explicit control over the target numeric type.
 
   ;;' @description Convert value to integer.

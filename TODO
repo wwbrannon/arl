@@ -1,18 +1,3 @@
-  Low-Hanging Optimization Opportunities
-
-  1. sugar_map in parser — hoist to module-level constant (allocated once instead of thousands of times)
-  2. .classify_atom grepl cascade — replace with single-char checks or a single combined regex
-  3. Per-token named list allocation — could use a column-oriented representation (parallel vectors of types, values, lines, cols) instead of list-of-lists
-  4. contains_macro_head walk — could be skipped when macro cache is empty (already happens, but strip_src still walks the tree)
-  5. O(n^2) top-level expression append — preallocate or use chunked collection like s-expr parsing does
-  6. try_constant_fold whitelist — use an environment for O(1) lookup instead of %in%
-
----
-
-o) get car/cdr cons at the top of the list-seq vignette
-
----
-
 o) enable actions / get non-pkgdown workflows running
 
 o) review all the docs

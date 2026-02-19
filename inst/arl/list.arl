@@ -19,8 +19,8 @@
 
   ;;' @section List Operations
   ;;' Core list constructors and accessors, following Scheme conventions.
-  ;;' Lists in Arl are backed by R lists; `car`/`cdr` provide the fundamental
-  ;;' decomposition and `cons` the fundamental construction.
+  ;;' Lists in Arl are backed by R lists; [`car`](#car)/[`cdr`](#cdr) provide the fundamental
+  ;;' decomposition and [`cons`](#cons) the fundamental construction.
 
   ;;' @internal
   ;;' @description Return last element of list.

@@ -20,8 +20,8 @@ arl::register_knitr_engine()
 ## List Operations {#section-list-operations}
 
 Core list constructors and accessors, following Scheme conventions.
-Lists in Arl are backed by R lists; `car`/`cdr` provide the fundamental
-decomposition and `cons` the fundamental construction.
+Lists in Arl are backed by R lists; [`car`](#car)/[`cdr`](#cdr) provide the fundamental
+decomposition and [`cons`](#cons) the fundamental construction.
 
 ### call {#call}
 
@@ -304,6 +304,72 @@ Return nth item (0-based).
 ```
 
 **See also:** [first](#first), [last](#last)
+
+---
+
+### car {#car}
+
+Return first element or #nil.
+
+**Signature:** `(car lst)`
+
+**Examples:**
+```{arl}
+(car (list 1 2 3))    ; => 1
+(car (list))           ; => #nil
+(car (cons 'a 'b))    ; => a
+```
+
+```{arl, include=FALSE}
+(assert-equal 1 (car (list 1 2 3)))
+(assert-equal #nil (car (list)))
+```
+
+**See also:** [cdr](#cdr), [cons](#cons), [first](#first)
+
+---
+
+### cdr {#cdr}
+
+Return list without first element (or cdr of dotted pair).
+
+**Signature:** `(cdr lst)`
+
+**Examples:**
+```{arl}
+(cdr (list 1 2 3))    ; => (2 3)
+(cdr (list 1))        ; => ()
+(cdr (cons 'a 'b))    ; => b
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 2 3) (cdr (list 1 2 3)))
+(assert-equal (list) (cdr (list 1)))
+```
+
+**See also:** [car](#car), [cons](#cons), [rest](#rest)
+
+---
+
+### cons {#cons}
+
+Prepend item to list or call; dotted pair when cdr is not a list.
+
+**Signature:** `(cons item lst)`
+
+**Examples:**
+```{arl}
+(cons 1 (list 2 3))   ; => (1 2 3)
+(cons 'a (list 'b))   ; => (a b)
+(cons 'a 'b)          ; => dotted pair (a . b)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 1 2 3) (cons 1 (list 2 3)))
+(assert-equal (list 'a 'b) (cons 'a (list 'b)))
+```
+
+**See also:** [car](#car), [cdr](#cdr), [append](#append)
 
 ---
 
@@ -903,78 +969,6 @@ Stable sort - preserves order of equal elements. Uses merge sort internally.
 **Note:** Preserves the relative order of elements that compare equal, unlike `list-sort`.
 
 **See also:** [list-sort](#list-sort), [merge-sorted](#merge-sorted), [sort-by](#sort-by)
-
----
-
-## List Operations {#section-list-operations-2}
-
-Core list constructors and accessors, following Scheme conventions.
-Lists in Arl are backed by R lists; `car`/`cdr` provide the fundamental
-decomposition and `cons` the fundamental construction.
-
-### car {#car}
-
-Return first element or #nil.
-
-**Signature:** `(car lst)`
-
-**Examples:**
-```{arl}
-(car (list 1 2 3))    ; => 1
-(car (list))           ; => #nil
-(car (cons 'a 'b))    ; => a
-```
-
-```{arl, include=FALSE}
-(assert-equal 1 (car (list 1 2 3)))
-(assert-equal #nil (car (list)))
-```
-
-**See also:** [cdr](#cdr), [cons](#cons), [first](#first)
-
----
-
-### cdr {#cdr}
-
-Return list without first element (or cdr of dotted pair).
-
-**Signature:** `(cdr lst)`
-
-**Examples:**
-```{arl}
-(cdr (list 1 2 3))    ; => (2 3)
-(cdr (list 1))        ; => ()
-(cdr (cons 'a 'b))    ; => b
-```
-
-```{arl, include=FALSE}
-(assert-equal (list 2 3) (cdr (list 1 2 3)))
-(assert-equal (list) (cdr (list 1)))
-```
-
-**See also:** [car](#car), [cons](#cons), [rest](#rest)
-
----
-
-### cons {#cons}
-
-Prepend item to list or call; dotted pair when cdr is not a list.
-
-**Signature:** `(cons item lst)`
-
-**Examples:**
-```{arl}
-(cons 1 (list 2 3))   ; => (1 2 3)
-(cons 'a (list 'b))   ; => (a b)
-(cons 'a 'b)          ; => dotted pair (a . b)
-```
-
-```{arl, include=FALSE}
-(assert-equal (list 1 2 3) (cons 1 (list 2 3)))
-(assert-equal (list 'a 'b) (cons 'a (list 'b)))
-```
-
-**See also:** [car](#car), [cdr](#cdr), [append](#append)
 
 ---
 

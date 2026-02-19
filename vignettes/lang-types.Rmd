@@ -146,6 +146,31 @@ Return #t if x is empty (0-length).
 
 ---
 
+### pair? {#pair-p}
+
+Return #t if x is a cons cell (dotted pair).
+
+**Signature:** `(pair? x)`
+
+**Examples:**
+```{arl}
+(pair? (cons 1 2))        ; => #t (dotted pair)
+(pair? (cons 1 (list 2 3)))  ; => #f (cons onto list returns a list)
+(pair? '(1 2 3))          ; => #f (quoted list, not a cons cell)
+(pair? '())               ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (pair? (cons 1 2)))
+(assert-false (pair? (cons 1 (list 2 3))))
+(assert-false (pair? '(1 2 3)))
+(assert-false (pair? '()))
+```
+
+**See also:** [list?](#list-p), [null?](#null-p), [atom?](#atom-p)
+
+---
+
 ## Symbol Predicates {#section-symbol-predicates}
 
 ### symbol? {#symbol-p}
@@ -1212,8 +1237,6 @@ Convert value to symbol.
 
 ## Numeric Conversions {#section-numeric-conversions}
 
-R-style type conversions providing explicit control over the target numeric type.
-
 ### ->number {#to-number}
 
 Convert value to number.
@@ -1289,7 +1312,7 @@ Convert inexact number to exact (double to integer, rounds to nearest).
 
 ---
 
-## Numeric Conversions {#section-numeric-conversions-2}
+## R-Style Numeric Conversions {#section-r-style-numeric-conversions}
 
 R-style type conversions providing explicit control over the target numeric type.
 
@@ -1406,33 +1429,6 @@ Convert value to vector.
 **Note:** When given a list, `->vector` flattens it into an atomic vector using `unlist`. Nested lists will be recursively flattened.
 
 **See also:** [->list](#to-list)
-
----
-
-## List and Pair Predicates {#section-list-and-pair-predicates-2}
-
-### pair? {#pair-p}
-
-Return #t if x is a cons cell (dotted pair).
-
-**Signature:** `(pair? x)`
-
-**Examples:**
-```{arl}
-(pair? (cons 1 2))        ; => #t (dotted pair)
-(pair? (cons 1 (list 2 3)))  ; => #f (cons onto list returns a list)
-(pair? '(1 2 3))          ; => #f (quoted list, not a cons cell)
-(pair? '())               ; => #f
-```
-
-```{arl, include=FALSE}
-(assert-true (pair? (cons 1 2)))
-(assert-false (pair? (cons 1 (list 2 3))))
-(assert-false (pair? '(1 2 3)))
-(assert-false (pair? '()))
-```
-
-**See also:** [list?](#list-p), [null?](#null-p), [atom?](#atom-p)
 
 ---
 
