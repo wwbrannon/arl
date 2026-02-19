@@ -43,7 +43,7 @@
   programmatic docstring access.
 * **Continuations:** `call-cc` and `call-with-current-continuation` via R's
   native `callCC`.
-* **Arl code coverage:** New `CoverageTracker` class instruments Arl stdlib
+* **Arl code coverage:** A coverage-tracking facility instruments Arl stdlib
   and user code, tracking line-level and branch-level (`if`) coverage. Reports
   in console, HTML, and JSON formats; integrates with Codecov via flags.
 

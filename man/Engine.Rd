@@ -15,31 +15,31 @@ engine$eval_string("(+ 4 5)")
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-Engine-new}{\code{Engine$new()}}
-\item \href{#method-Engine-read}{\code{Engine$read()}}
-\item \href{#method-Engine-write}{\code{Engine$write()}}
-\item \href{#method-Engine-eval}{\code{Engine$eval()}}
-\item \href{#method-Engine-eval_text}{\code{Engine$eval_text()}}
-\item \href{#method-Engine-eval_string}{\code{Engine$eval_string()}}
-\item \href{#method-Engine-load_file_in_env}{\code{Engine$load_file_in_env()}}
-\item \href{#method-Engine-macroexpand}{\code{Engine$macroexpand()}}
-\item \href{#method-Engine-inspect_compilation}{\code{Engine$inspect_compilation()}}
-\item \href{#method-Engine-help}{\code{Engine$help()}}
-\item \href{#method-Engine-repl}{\code{Engine$repl()}}
-\item \href{#method-Engine-enable_coverage}{\code{Engine$enable_coverage()}}
-\item \href{#method-Engine-disable_coverage}{\code{Engine$disable_coverage()}}
-\item \href{#method-Engine-get_coverage}{\code{Engine$get_coverage()}}
-\item \href{#method-Engine-reset_coverage}{\code{Engine$reset_coverage()}}
-\item \href{#method-Engine-get_env}{\code{Engine$get_env()}}
-\item \href{#method-Engine-define}{\code{Engine$define()}}
-\item \href{#method-Engine-format_value}{\code{Engine$format_value()}}
-\item \href{#method-Engine-with_error_context}{\code{Engine$with_error_context()}}
-\item \href{#method-Engine-print_error}{\code{Engine$print_error()}}
+\item \href{#method-ArlEngine-new}{\code{Engine$new()}}
+\item \href{#method-ArlEngine-read}{\code{Engine$read()}}
+\item \href{#method-ArlEngine-write}{\code{Engine$write()}}
+\item \href{#method-ArlEngine-eval}{\code{Engine$eval()}}
+\item \href{#method-ArlEngine-eval_text}{\code{Engine$eval_text()}}
+\item \href{#method-ArlEngine-eval_string}{\code{Engine$eval_string()}}
+\item \href{#method-ArlEngine-load_file_in_env}{\code{Engine$load_file_in_env()}}
+\item \href{#method-ArlEngine-macroexpand}{\code{Engine$macroexpand()}}
+\item \href{#method-ArlEngine-inspect_compilation}{\code{Engine$inspect_compilation()}}
+\item \href{#method-ArlEngine-help}{\code{Engine$help()}}
+\item \href{#method-ArlEngine-repl}{\code{Engine$repl()}}
+\item \href{#method-ArlEngine-enable_coverage}{\code{Engine$enable_coverage()}}
+\item \href{#method-ArlEngine-disable_coverage}{\code{Engine$disable_coverage()}}
+\item \href{#method-ArlEngine-get_coverage}{\code{Engine$get_coverage()}}
+\item \href{#method-ArlEngine-reset_coverage}{\code{Engine$reset_coverage()}}
+\item \href{#method-ArlEngine-get_env}{\code{Engine$get_env()}}
+\item \href{#method-ArlEngine-define}{\code{Engine$define()}}
+\item \href{#method-ArlEngine-format_value}{\code{Engine$format_value()}}
+\item \href{#method-ArlEngine-with_error_context}{\code{Engine$with_error_context()}}
+\item \href{#method-ArlEngine-print_error}{\code{Engine$print_error()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-new"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-new}{}}}
+\if{html}{\out{<a id="method-ArlEngine-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize engine components and base environment.
 \subsection{Usage}{
@@ -74,8 +74,8 @@ a character vector pins a fixed set; \code{NULL} exposes only \code{baseenv()}.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-read"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-read}{}}}
+\if{html}{\out{<a id="method-ArlEngine-read"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-read}{}}}
 \subsection{Method \code{read()}}{
 Tokenize and parse source into expressions. The format returned by this
 method is not guaranteed to be stable across package versions.
@@ -94,8 +94,8 @@ method is not guaranteed to be stable across package versions.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-write"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-write}{}}}
+\if{html}{\out{<a id="method-ArlEngine-write"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-write}{}}}
 \subsection{Method \code{write()}}{
 Convert an Arl expression to its string representation. Inverse of read().
 The format returned by this method is not guaranteed to be stable across
@@ -113,8 +113,8 @@ package versions.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-eval"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-eval}{}}}
+\if{html}{\out{<a id="method-ArlEngine-eval"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-eval}{}}}
 \subsection{Method \code{eval()}}{
 Evaluate one or more expressions.
 \subsection{Usage}{
@@ -134,8 +134,8 @@ Evaluate one or more expressions.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-eval_text"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-eval_text}{}}}
+\if{html}{\out{<a id="method-ArlEngine-eval_text"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-eval_text}{}}}
 \subsection{Method \code{eval_text()}}{
 Read and evaluate Arl source text. Convenience wrapper around
 \code{read()} and \code{eval()}.
@@ -156,8 +156,8 @@ Read and evaluate Arl source text. Convenience wrapper around
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-eval_string"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-eval_string}{}}}
+\if{html}{\out{<a id="method-ArlEngine-eval_string"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-eval_string}{}}}
 \subsection{Method \code{eval_string()}}{
 Alias for \code{eval_text()}.
 \subsection{Usage}{
@@ -177,8 +177,8 @@ Alias for \code{eval_text()}.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-load_file_in_env"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-load_file_in_env}{}}}
+\if{html}{\out{<a id="method-ArlEngine-load_file_in_env"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-load_file_in_env}{}}}
 \subsection{Method \code{load_file_in_env()}}{
 Load and evaluate an Arl source file in the given environment. Definitions
 and imports in the file are visible in \code{env}. To evaluate in an
@@ -201,8 +201,8 @@ isolated child scope, create one explicitly:
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-macroexpand"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-macroexpand}{}}}
+\if{html}{\out{<a id="method-ArlEngine-macroexpand"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-macroexpand}{}}}
 \subsection{Method \code{macroexpand()}}{
 Expand macros in an expression. With \code{depth = NULL} (the default),
 fully and recursively expand all macros. With \code{depth = N}, expand
@@ -226,8 +226,8 @@ only the top-level macro up to N times without walking into subexpressions.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-inspect_compilation"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-inspect_compilation}{}}}
+\if{html}{\out{<a id="method-ArlEngine-inspect_compilation"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-inspect_compilation}{}}}
 \subsection{Method \code{inspect_compilation()}}{
 Inspect expansion and compilation for debugging. Parse text, expand macros in env,
 then compile to R. Returns parsed AST, expanded form, compiled R expression, and
@@ -252,8 +252,8 @@ List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr o
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-help"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-help}{}}}
+\if{html}{\out{<a id="method-ArlEngine-help"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-help}{}}}
 \subsection{Method \code{help()}}{
 Show help for a topic.
 \subsection{Usage}{
@@ -274,8 +274,8 @@ lookup in a specific package.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-repl"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-repl}{}}}
+\if{html}{\out{<a id="method-ArlEngine-repl"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-repl}{}}}
 \subsection{Method \code{repl()}}{
 Start the Arl REPL using this engine.
 \subsection{Usage}{
@@ -284,8 +284,8 @@ Start the Arl REPL using this engine.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-enable_coverage"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-enable_coverage}{}}}
+\if{html}{\out{<a id="method-ArlEngine-enable_coverage"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-enable_coverage}{}}}
 \subsection{Method \code{enable_coverage()}}{
 Enable coverage tracking.
 
@@ -297,8 +297,8 @@ Should be called before running code you want to track.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-disable_coverage"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-disable_coverage}{}}}
+\if{html}{\out{<a id="method-ArlEngine-disable_coverage"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-disable_coverage}{}}}
 \subsection{Method \code{disable_coverage()}}{
 Disable coverage tracking.
 \subsection{Usage}{
@@ -307,8 +307,8 @@ Disable coverage tracking.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-get_coverage"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-get_coverage}{}}}
+\if{html}{\out{<a id="method-ArlEngine-get_coverage"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-get_coverage}{}}}
 \subsection{Method \code{get_coverage()}}{
 Get coverage data as a data frame.
 \subsection{Usage}{
@@ -323,8 +323,8 @@ Returns NULL if coverage tracking is not enabled.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-reset_coverage"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-reset_coverage}{}}}
+\if{html}{\out{<a id="method-ArlEngine-reset_coverage"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-reset_coverage}{}}}
 \subsection{Method \code{reset_coverage()}}{
 Reset coverage data.
 \subsection{Usage}{
@@ -333,8 +333,8 @@ Reset coverage data.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-get_env"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-get_env}{}}}
+\if{html}{\out{<a id="method-ArlEngine-get_env"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-get_env}{}}}
 \subsection{Method \code{get_env()}}{
 Get the top-level R environment backing this engine.
 \subsection{Usage}{
@@ -346,8 +346,8 @@ An R environment.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-define"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-define}{}}}
+\if{html}{\out{<a id="method-ArlEngine-define"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-define}{}}}
 \subsection{Method \code{define()}}{
 Define a binding in the engine's top-level environment. This is the
 supported way to inject R objects for use in Arl code.
@@ -369,8 +369,8 @@ Invisible self (for chaining).
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-format_value"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-format_value}{}}}
+\if{html}{\out{<a id="method-ArlEngine-format_value"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-format_value}{}}}
 \subsection{Method \code{format_value()}}{
 Format a value for display using the engine's formatter.
 \subsection{Usage}{
@@ -389,8 +389,8 @@ Character string.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-with_error_context"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-with_error_context}{}}}
+\if{html}{\out{<a id="method-ArlEngine-with_error_context"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-with_error_context}{}}}
 \subsection{Method \code{with_error_context()}}{
 Run a function with source-tracking error context.
 \subsection{Usage}{
@@ -409,8 +409,8 @@ The return value of \code{fn}.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Engine-print_error"></a>}}
-\if{latex}{\out{\hypertarget{method-Engine-print_error}{}}}
+\if{html}{\out{<a id="method-ArlEngine-print_error"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlEngine-print_error}{}}}
 \subsection{Method \code{print_error()}}{
 Format and print an Arl error with source context.
 \subsection{Usage}{

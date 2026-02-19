@@ -73,22 +73,22 @@ tracker <- CoverageTracker$new(
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-CoverageTracker-new}{\code{CoverageTracker$new()}}
-\item \href{#method-CoverageTracker-track}{\code{CoverageTracker$track()}}
-\item \href{#method-CoverageTracker-register_coverable}{\code{CoverageTracker$register_coverable()}}
-\item \href{#method-CoverageTracker-get_summary}{\code{CoverageTracker$get_summary()}}
-\item \href{#method-CoverageTracker-discover_files}{\code{CoverageTracker$discover_files()}}
-\item \href{#method-CoverageTracker-reset}{\code{CoverageTracker$reset()}}
-\item \href{#method-CoverageTracker-set_enabled}{\code{CoverageTracker$set_enabled()}}
-\item \href{#method-CoverageTracker-report_console}{\code{CoverageTracker$report_console()}}
-\item \href{#method-CoverageTracker-report_html}{\code{CoverageTracker$report_html()}}
-\item \href{#method-CoverageTracker-report_json}{\code{CoverageTracker$report_json()}}
-\item \href{#method-CoverageTracker-clone}{\code{CoverageTracker$clone()}}
+\item \href{#method-ArlCoverageTracker-new}{\code{CoverageTracker$new()}}
+\item \href{#method-ArlCoverageTracker-track}{\code{CoverageTracker$track()}}
+\item \href{#method-ArlCoverageTracker-register_coverable}{\code{CoverageTracker$register_coverable()}}
+\item \href{#method-ArlCoverageTracker-get_summary}{\code{CoverageTracker$get_summary()}}
+\item \href{#method-ArlCoverageTracker-discover_files}{\code{CoverageTracker$discover_files()}}
+\item \href{#method-ArlCoverageTracker-reset}{\code{CoverageTracker$reset()}}
+\item \href{#method-ArlCoverageTracker-set_enabled}{\code{CoverageTracker$set_enabled()}}
+\item \href{#method-ArlCoverageTracker-report_console}{\code{CoverageTracker$report_console()}}
+\item \href{#method-ArlCoverageTracker-report_html}{\code{CoverageTracker$report_html()}}
+\item \href{#method-ArlCoverageTracker-report_json}{\code{CoverageTracker$report_json()}}
+\item \href{#method-ArlCoverageTracker-clone}{\code{CoverageTracker$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-new"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-new}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize the coverage tracker
 \subsection{Usage}{
@@ -121,8 +121,8 @@ Initialize the coverage tracker
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-track"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-track}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-track"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-track}{}}}
 \subsection{Method \code{track()}}{
 Track execution of an expression with source info
 \subsection{Usage}{
@@ -138,8 +138,8 @@ Track execution of an expression with source info
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-register_coverable"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-register_coverable}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-register_coverable"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-register_coverable}{}}}
 \subsection{Method \code{register_coverable()}}{
 Register coverable lines from an instrumented source range
 \subsection{Usage}{
@@ -159,8 +159,8 @@ Register coverable lines from an instrumented source range
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-get_summary"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-get_summary}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-get_summary"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-get_summary}{}}}
 \subsection{Method \code{get_summary()}}{
 Get coverage summary as list: file -> line -> count
 \subsection{Usage}{
@@ -169,8 +169,8 @@ Get coverage summary as list: file -> line -> count
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-discover_files"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-discover_files}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-discover_files"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-discover_files}{}}}
 \subsection{Method \code{discover_files()}}{
 Discover all .arl files to track
 
@@ -182,8 +182,8 @@ By default excludes test files unless include_tests = TRUE.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-reset"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-reset}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-reset"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-reset}{}}}
 \subsection{Method \code{reset()}}{
 Reset coverage data
 \subsection{Usage}{
@@ -192,8 +192,8 @@ Reset coverage data
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-set_enabled"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-set_enabled}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-set_enabled"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-set_enabled}{}}}
 \subsection{Method \code{set_enabled()}}{
 Enable/disable tracking
 \subsection{Usage}{
@@ -209,8 +209,8 @@ Enable/disable tracking
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-report_console"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-report_console}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-report_console"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-report_console}{}}}
 \subsection{Method \code{report_console()}}{
 Generate console coverage report
 \subsection{Usage}{
@@ -226,8 +226,8 @@ Generate console coverage report
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-report_html"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-report_html}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-report_html"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-report_html}{}}}
 \subsection{Method \code{report_html()}}{
 Generate HTML coverage report
 \subsection{Usage}{
@@ -243,8 +243,8 @@ Generate HTML coverage report
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-report_json"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-report_json}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-report_json"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-report_json}{}}}
 \subsection{Method \code{report_json()}}{
 Generate codecov-compatible JSON format
 \subsection{Usage}{
@@ -260,8 +260,8 @@ Generate codecov-compatible JSON format
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CoverageTracker-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-CoverageTracker-clone}{}}}
+\if{html}{\out{<a id="method-ArlCoverageTracker-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-ArlCoverageTracker-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
