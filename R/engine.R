@@ -373,6 +373,24 @@ Engine <- R6::R6Class(
 
       summary <- tracker$get_summary()
 
+      # Warn about likely path normalization issues (basename match, path differs)
+      tracked_files <- names(summary)
+      orphaned <- setdiff(tracked_files, tracker$all_files)
+      if (length(orphaned) > 0) {
+        discovered_basenames <- basename(tracker$all_files)
+        mismatched <- orphaned[basename(orphaned) %in% discovered_basenames]
+        if (length(mismatched) > 0) {
+          warning(
+            "Coverage path mismatch: ", length(mismatched), " tracked file(s) ",
+            "share a basename with discovered files but have different paths. ",
+            "This likely indicates a path normalization issue.\n",
+            "  Mismatched: ", paste(utils::head(mismatched, 5), collapse = ", "),
+            if (length(mismatched) > 5) paste0(" ... and ", length(mismatched) - 5, " more") else "",
+            call. = FALSE
+          )
+        }
+      }
+
       files <- character(0)
       total_lines <- integer(0)
       covered_lines <- integer(0)

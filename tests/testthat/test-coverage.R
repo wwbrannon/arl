@@ -1335,7 +1335,9 @@ test_that("coverage tracking persists across multiple evaluations", {
 })
 
 test_that("Engine$get_coverage() returns NULL when coverage not enabled", {
-  engine <- make_engine()
+  # Explicitly create engine without coverage tracker to avoid inheriting
+  # one from getOption("arl.coverage_tracker") under covr instrumentation
+  engine <- Engine$new()
   expect_null(engine$get_coverage())
 })
 
@@ -1350,7 +1352,10 @@ test_that("Engine$get_coverage() returns data frame with correct structure", {
 
   engine$load_file_in_env(tmp)
 
-  result <- engine$get_coverage()
+  result <- suppressWarnings(
+    engine$get_coverage(),
+    classes = "simpleWarning"
+  )
 
   expect_s3_class(result, "data.frame")
   expect_true(all(c("file", "total_lines", "covered_lines", "coverage_pct") %in% names(result)))
@@ -1372,7 +1377,10 @@ test_that("Engine$get_coverage() reports correct coverage stats", {
 
   engine$load_file_in_env(tmp)
 
-  result <- engine$get_coverage()
+  result <- suppressWarnings(
+    engine$get_coverage(),
+    classes = "simpleWarning"
+  )
   row <- result[result$file == tmp, ]
 
   expect_equal(nrow(row), 1)
@@ -1460,7 +1468,10 @@ test_that("handles very large execution counts", {
   expect_equal(tracker$coverage[[key]], 1000L)
 
   # Reports should handle large counts
-  output <- capture.output(tracker$report_console())
+  output <- capture.output(suppressWarnings(
+    tracker$report_console(),
+    classes = "simpleWarning"
+  ))
   expect_true(length(output) > 0)
 })
 

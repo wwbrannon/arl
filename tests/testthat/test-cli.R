@@ -108,9 +108,8 @@ test_that("install_cli installs wrapper to target dir", {
 
   result <- testthat::with_mocked_bindings(
     {
-      capture.output(
-        installed <- arl::install_cli(target_dir = temp_dir, overwrite = TRUE),
-        type = "message"
+      suppressMessages(
+        installed <- arl::install_cli(target_dir = temp_dir, overwrite = TRUE)
       )
       installed
     },
@@ -238,10 +237,7 @@ test_that("cli errors and shows help on invalid args", {
       exit_fn_called <<- TRUE
     }
   ))
-  capture.output(
-    suppressMessages(arl:::cli(c("--unknown-flag"))),
-    type = "message"
-  )
+  suppressMessages(arl:::cli(c("--unknown-flag")))
   expect_true(exit_fn_called)
 })
 
@@ -427,15 +423,18 @@ test_that("run() displays parse errors to user", {
       exit_messages <<- c(exit_messages, message)
     }
   ))
-  # Capture both stdout (help text) and stderr (error messages)
+  # Capture both stdout (help text) and stderr (message handlers)
+  messages <- character(0)
   capture.output(
-    output <- capture.output(
+    withCallingHandlers(
       arl:::cli(c("--unknown-flag")),
-      type = "message"
+      message = function(m) {
+        messages <<- c(messages, conditionMessage(m))
+        invokeRestart("muffleMessage")
+      }
     )
   )
   # Either the error goes through exit_fn or is printed — one of these should have content
-
-  has_output <- length(output) > 0 || length(exit_messages) > 0
+  has_output <- length(messages) > 0 || length(exit_messages) > 0
   expect_true(has_output)
 })

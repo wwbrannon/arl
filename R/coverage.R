@@ -124,7 +124,7 @@ CoverageTracker <- R6::R6Class(
       for (line in start_line:end_line) {
         # Only track if this line is a code line
         if (!is.null(code_line_nums) && line %in% code_line_nums) {
-          key <- paste0(file, ":", line)
+          key <- private$make_key(file, line)
           current <- self$coverage[[key]]
           self$coverage[[key]] <- if (is.null(current)) 1L else current + 1L
         }
@@ -159,12 +159,11 @@ CoverageTracker <- R6::R6Class(
       result <- list()
 
       for (key in ls(self$coverage, all.names = TRUE)) {
-        # Split on the last colon to handle Windows drive letters (e.g. C:\path:1)
-        last_colon <- regexpr(":[^:]*$", key)
-        if (last_colon < 1) next
+        parsed <- private$parse_key(key)
+        if (is.null(parsed)) next
 
-        file <- substr(key, 1, last_colon - 1)
-        line <- substr(key, last_colon + 1, nchar(key))
+        file <- parsed$file
+        line <- parsed$line
         count <- self$coverage[[key]]
 
         if (is.null(result[[file]])) {
@@ -270,6 +269,7 @@ CoverageTracker <- R6::R6Class(
       total_covered <- 0
 
       coverage_summary <- self$get_summary()
+      private$warn_path_mismatches(coverage_summary)
 
       for (file in self$all_files) {
         if (!file.exists(file)) next
@@ -351,6 +351,7 @@ CoverageTracker <- R6::R6Class(
       }
 
       coverage_summary <- self$get_summary()
+      private$warn_path_mismatches(coverage_summary)
 
       # Build HTML
       html_parts <- c(
@@ -550,6 +551,7 @@ CoverageTracker <- R6::R6Class(
       }
 
       coverage_summary <- self$get_summary()
+      private$warn_path_mismatches(coverage_summary)
 
       # Build codecov-compatible JSON structure
       coverage_data <- list()
@@ -629,6 +631,49 @@ CoverageTracker <- R6::R6Class(
       }
 
       arl_files
+    },
+
+    # Helper: Construct a coverage key from file path and line number
+    make_key = function(file, line) {
+      paste0(file, ":", line)
+    },
+
+    # Helper: Parse a coverage key into file and line components
+    # Returns list(file, line) or NULL if key is malformed
+    parse_key = function(key) {
+      last_colon <- regexpr(":[^:]*$", key)
+      if (last_colon < 1) return(NULL)
+      list(
+        file = substr(key, 1, last_colon - 1),
+        line = substr(key, last_colon + 1, nchar(key))
+      )
+    },
+
+    # Helper: Warn about likely path normalization issues
+    # Only flags tracked files whose basename matches a discovered file but
+    # whose full path differs — this catches symlink/normalization bugs
+    # (e.g. /var/... vs /private/var/...) without false-positiving on
+    # unrelated temp files that happen to be tracked by a shared tracker.
+    warn_path_mismatches = function(coverage_summary) {
+      if (length(self$all_files) == 0 || length(coverage_summary) == 0) return(invisible(NULL))
+      tracked_files <- names(coverage_summary)
+      orphaned <- setdiff(tracked_files, self$all_files)
+      if (length(orphaned) == 0) return(invisible(NULL))
+
+      # Only warn about files that share a basename with a discovered file
+      discovered_basenames <- basename(self$all_files)
+      mismatched <- orphaned[basename(orphaned) %in% discovered_basenames]
+      if (length(mismatched) > 0) {
+        warning(
+          "Coverage path mismatch: ", length(mismatched), " tracked file(s) ",
+          "share a basename with discovered files but have different paths. ",
+          "This likely indicates a path normalization issue.\n",
+          "  Mismatched: ", paste(utils::head(mismatched, 5), collapse = ", "),
+          if (length(mismatched) > 5) paste0(" ... and ", length(mismatched) - 5, " more") else "",
+          call. = FALSE
+        )
+      }
+      invisible(NULL)
     },
 
     # Helper: Strip paths for display in reports

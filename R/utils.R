@@ -122,10 +122,24 @@ normalize_path_absolute <- function(path) {
   if (!is.character(path) || length(path) != 1 || !nzchar(path)) {
     return(path)
   }
-  normalized <- tryCatch(
-    normalizePath(path, mustWork = FALSE, winslash = "/"),
-    error = function(e) path
-  )
+  if (file.exists(path)) {
+    # File exists: resolve symlinks with mustWork = TRUE for stronger guarantees
+    normalized <- tryCatch(
+      normalizePath(path, mustWork = TRUE, winslash = "/"),
+      error = function(e) normalizePath(path, mustWork = FALSE, winslash = "/")
+    )
+  } else {
+    # File doesn't exist: normalize the parent directory (which likely exists)
+    # and reattach basename. This resolves macOS /var -> /private/var symlinks
+    # even for temp files that haven't been written yet.
+    parent <- dirname(path)
+    base <- basename(path)
+    norm_parent <- tryCatch(
+      normalizePath(parent, mustWork = FALSE, winslash = "/"),
+      error = function(e) parent
+    )
+    normalized <- file.path(norm_parent, base)
+  }
   if (is.na(normalized) || !nzchar(normalized)) {
     return(path)
   }
