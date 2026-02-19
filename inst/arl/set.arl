@@ -5,7 +5,7 @@
           set-difference)
 
   (import core :refer (r-call error))
-  (import list :refer (car))
+
 
 ;;' @section Set (Hash-Backed)
 ;;' Sets are mutable collections of unique items backed by R environments.

@@ -11,7 +11,7 @@
           number->string string->number)
 
   (import _utils :refer (_as-list))
-  (import list :refer (car cons))
+
   (import math :refer (quotient))
   (import core :refer (r-call))
 

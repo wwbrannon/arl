@@ -10,7 +10,7 @@
 
   (import core :refer (get error))
   (import strings :refer (string-append))
-  (import list :refer (car cdr call))
+  (import list :refer (call))
 
 ;;' @section R Nonstandard Evaluation Wrappers
 ;;' These macros provide Arl-friendly interfaces to R functions that use

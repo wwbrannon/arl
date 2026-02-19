@@ -4,7 +4,7 @@
   (export pattern-symbols destructuring-bind let let* letrec when-let if-let)
 
   (import types :refer (symbol? list-or-pair? null?))
-  (import list :refer (car cdr append))
+  (import list :refer (append))
   (import sequences :refer (zip))
 
 ;;' @section Binding Macros

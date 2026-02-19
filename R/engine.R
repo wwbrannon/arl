@@ -683,6 +683,39 @@ Engine <- R6::R6Class(
       builtins_env$`pair?` <- function(x) inherits(x, "ArlCons")
 
       #
+      # List primitives — car/cdr/cons as byte-compiled builtins
+      #
+
+      builtins_env$car <- compiler::cmpfun(function(lst) {
+        if (inherits(lst, "ArlCons")) return(lst$car)
+        if (is.call(lst) || is.list(lst)) {
+          if (length(lst) > 0L) return(lst[[1L]])
+        }
+        NULL
+      })
+
+      builtins_env$cdr <- compiler::cmpfun(function(lst) {
+        if (inherits(lst, "ArlCons")) return(lst$cdr)
+        if (is.call(lst)) {
+          n <- length(lst)
+          if (n > 1L) return(as.list(lst)[2L:n])
+          return(list())
+        }
+        if (is.list(lst)) {
+          n <- length(lst)
+          if (n > 1L) return(lst[2L:n])
+          return(list())
+        }
+        list()
+      })
+
+      builtins_env$cons <- compiler::cmpfun(function(item, lst) {
+        if (is.call(lst)) return(as.call(c(list(item), as.list(lst))))
+        if (is.list(lst)) return(c(list(item), lst))
+        Cons$new(item, lst)
+      })
+
+      #
       # Macro builtins
       #
 

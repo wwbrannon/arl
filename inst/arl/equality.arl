@@ -10,7 +10,7 @@
   (import core :refer (r-call funcall get error))
   (import types :refer (environment? list? nil? null?))
   (import _utils :refer (_as-list))
-  (import list :refer (car cdr))
+
 
   ;;' @section Equality Predicates
   ;;' Arl provides `equal?` for deep structural equality with S3-style dispatch,

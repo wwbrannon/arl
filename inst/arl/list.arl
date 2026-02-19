@@ -2,12 +2,11 @@
 
 (module list
   (export call
-          car cdr
           caar cadr cdar cddr
           caaar caadr cadar caddr
           cdaar cdadr cddar cdddr
           cadddr cddddr
-          cons list* append reverse
+          list* append reverse
           first second third fourth rest last nth
           assoc assoc-by-equal? assoc-by-identical? assoc-by-==
           assq assv rassoc rassoc-by-equal?
@@ -49,48 +48,6 @@
         lst
         (as.call (_as-list lst)))))
 
-  ;;' @description Return first element or #nil.
-  ;;' @examples
-  ;;' (car (list 1 2 3))    ; => 1
-  ;;' (car (list))           ; => #nil
-  ;;' (car (cons 'a 'b))    ; => a
-  ;;' @assert
-  ;;' (assert-equal 1 (car (list 1 2 3)))
-  ;;' (assert-equal #nil (car (list)))
-  ;;' @seealso cdr, cons, first
-  (define car
-    (lambda (lst)
-      (if (pair? lst)
-        (r-call "[[" (list lst "car"))
-        (if (is.call lst)
-          (if (> (length lst) 0) ([[ lst 1) #nil)
-          (if (is.list lst)
-            (if (> (length lst) 0) ([[ lst 1) #nil)
-            #nil)))))
-
-  ;;' @description Return list without first element (or cdr of dotted pair).
-  ;;' @examples
-  ;;' (cdr (list 1 2 3))    ; => (2 3)
-  ;;' (cdr (list 1))        ; => ()
-  ;;' (cdr (cons 'a 'b))    ; => b
-  ;;' @assert
-  ;;' (assert-equal (list 2 3) (cdr (list 1 2 3)))
-  ;;' (assert-equal (list) (cdr (list 1)))
-  ;;' @seealso car, cons, rest
-  (define cdr
-    (lambda (lst)
-      (if (pair? lst)
-        (r-call "[[" (list lst "cdr"))
-        (if (is.call lst)
-          (if (> (length lst) 1)
-            (r-call "[" (list (as.list lst) (seq 2 (length lst))))
-            (list))
-          (if (is.list lst)
-            (if (> (length lst) 1)
-              (r-call "[" (list lst (seq 2 (length lst))))
-              (list))
-            (list))))))
-
   ;; Common composed list accessors
   ;; These intentionally compose the semantics of car/cdr (including #nil / empty list handling).
   ;;' @description car of car.
@@ -124,23 +81,6 @@
   (define cadddr (lambda (x) (car (cdr (cdr (cdr x))))))
   ;;' @description cdr of cdr of cdr of cdr.
   (define cddddr (lambda (x) (cdr (cdr (cdr (cdr x))))))
-
-  ;;' @description Prepend item to list or call; dotted pair when cdr is not a list.
-  ;;' @examples
-  ;;' (cons 1 (list 2 3))   ; => (1 2 3)
-  ;;' (cons 'a (list 'b))   ; => (a b)
-  ;;' (cons 'a 'b)          ; => dotted pair (a . b)
-  ;;' @assert
-  ;;' (assert-equal (list 1 2 3) (cons 1 (list 2 3)))
-  ;;' (assert-equal (list 'a 'b) (cons 'a (list 'b)))
-  ;;' @seealso car, cdr, append
-  (define cons
-    (lambda (item lst)
-      (if (is.call lst)
-        (as.call (c (list item) (as.list lst)))
-        (if (is.list lst)
-          (c (list item) lst)
-          (.__cons item lst)))))
 
   ;;' @description Build list ending with last arg.
   ;;' @examples

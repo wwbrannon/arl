@@ -7,7 +7,7 @@
           length= length> length<)
 
   (import _utils :refer (_as-list))
-  (import list :refer (car cdr))
+
   (import types :refer (list?))
   (import core :refer (r-call))
   (import equality :refer (equal?))

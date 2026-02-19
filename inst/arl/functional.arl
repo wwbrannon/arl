@@ -5,7 +5,7 @@
           curry juxt constantly iterate iterate-until memoize)
 
   (import _utils :refer (_as-list))
-  (import list :refer (car append))
+  (import list :refer (append))
   (import types :refer (null?))
   (import core :refer (r-call))
 

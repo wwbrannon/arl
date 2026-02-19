@@ -6,7 +6,7 @@
   ;; Note: 'and' and 'or' removed from exports - now compiler special forms
 
   (import types :refer (symbol? list? null?))
-  (import list :refer (car cdr call))
+  (import list :refer (call))
 
 
 ;;' @section Control Flow Macros

@@ -9,7 +9,7 @@
   (export list-sort sort-by merge-sorted stable-sort)
 
   (import _utils :refer (_as-list))
-  (import list :refer (car cdr cadr cons append reverse))
+  (import list :refer (cadr append reverse))
   (import types :refer (null?))
   (import core :refer (r-call))
 

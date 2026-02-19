@@ -502,6 +502,51 @@ Assert:
   (assert-false (pair? '()))
 Seealso: list?, null?, atom?
 
+Name: car
+Kind: builtin
+Vignette: lang-list-seq
+Section: List Operations
+Description: Return first element or #nil.
+Signature: (car lst)
+Examples:
+  (car (list 1 2 3))    ; => 1
+  (car (list))           ; => #nil
+  (car (cons 'a 'b))    ; => a
+Assert:
+  (assert-equal 1 (car (list 1 2 3)))
+  (assert-equal #nil (car (list)))
+Seealso: cdr, cons, first
+
+Name: cdr
+Kind: builtin
+Vignette: lang-list-seq
+Section: List Operations
+Description: Return list without first element (or cdr of dotted pair).
+Signature: (cdr lst)
+Examples:
+  (cdr (list 1 2 3))    ; => (2 3)
+  (cdr (list 1))        ; => ()
+  (cdr (cons 'a 'b))    ; => b
+Assert:
+  (assert-equal (list 2 3) (cdr (list 1 2 3)))
+  (assert-equal (list) (cdr (list 1)))
+Seealso: car, cons, rest
+
+Name: cons
+Kind: builtin
+Vignette: lang-list-seq
+Section: List Operations
+Description: Prepend item to list or call; dotted pair when cdr is not a list.
+Signature: (cons item lst)
+Examples:
+  (cons 1 (list 2 3))   ; => (1 2 3)
+  (cons 'a (list 'b))   ; => (a b)
+  (cons 'a 'b)          ; => dotted pair (a . b)
+Assert:
+  (assert-equal (list 1 2 3) (cons 1 (list 2 3)))
+  (assert-equal (list 'a 'b) (cons 'a (list 'b)))
+Seealso: car, cdr, append
+
 Name: eval
 Kind: builtin
 Vignette: lang-core
