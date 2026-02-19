@@ -76,40 +76,52 @@ unescape_string <- function(s) {
   if (text == "NA_character_") return(list(type = "NA", value = NA_character_))
   if (text == "NA_complex_") return(list(type = "NA", value = NA_complex_))
 
-  # Integer literal (e.g., 4L, 42L, -10L)
-  if (grepl("^[-+]?\\d+L$", text)) {
-    num_str <- substr(text, 1, nchar(text) - 1)
-    return(list(type = "NUMBER", value = as.integer(num_str)))
-  }
+  # Fast pre-check: only attempt numeric parsing if the first character suggests a number
+  nc <- nchar(text)
+  ch1 <- substr(text, 1L, 1L)
+  is_sign <- (ch1 == "+" || ch1 == "-")
+  ch_after_sign <- if (is_sign && nc > 1L) substr(text, 2L, 2L) else ""
+  starts_numeric <- (ch1 >= "0" && ch1 <= "9") || (is_sign && ch_after_sign >= "0" && ch_after_sign <= "9")
 
-  # Full complex number (e.g., 2+4i, 3.14-2.5i)
-  if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?[+-]\\d+(\\.\\d+)?([eE][-+]?\\d+)?i$", text)) {
-    start_pos <- 1L
-    ch1 <- substr(text, 1, 1)
-    if (ch1 == "+" || ch1 == "-") start_pos <- 2L
-    sep_pos <- NULL
-    nc <- nchar(text)
-    for (j in start_pos:nc) {
-      ch <- substr(text, j, j)
-      if (ch == "+" || ch == "-") {
-        sep_pos <- j
-        break
+  if (starts_numeric) {
+    last_ch <- substr(text, nc, nc)
+
+    # Integer literal (e.g., 4L, 42L, -10L)
+    if (last_ch == "L" && grepl("^[-+]?\\d+L$", text)) {
+      num_str <- substr(text, 1L, nc - 1L)
+      return(list(type = "NUMBER", value = as.integer(num_str)))
+    }
+
+    # Complex/imaginary (ends with 'i')
+    if (last_ch == "i") {
+      # Full complex number (e.g., 2+4i, 3.14-2.5i)
+      if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?[+-]\\d+(\\.\\d+)?([eE][-+]?\\d+)?i$", text)) {
+        start_pos <- 1L
+        if (is_sign) start_pos <- 2L
+        sep_pos <- NULL
+        for (j in start_pos:nc) {
+          ch <- substr(text, j, j)
+          if (ch == "+" || ch == "-") {
+            sep_pos <- j
+            break
+          }
+        }
+        real_str <- substr(text, 1L, sep_pos - 1L)
+        imag_str <- substr(text, sep_pos, nc - 1L)
+        return(list(type = "NUMBER", value = complex(real = as.numeric(real_str), imaginary = as.numeric(imag_str))))
+      }
+
+      # Pure imaginary number (e.g., 4i, 3.14i, -2.5i)
+      if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?i$", text)) {
+        num_str <- substr(text, 1L, nc - 1L)
+        return(list(type = "NUMBER", value = complex(real = 0, imaginary = as.numeric(num_str))))
       }
     }
-    real_str <- substr(text, 1, sep_pos - 1)
-    imag_str <- substr(text, sep_pos, nc - 1)
-    return(list(type = "NUMBER", value = complex(real = as.numeric(real_str), imaginary = as.numeric(imag_str))))
-  }
 
-  # Pure imaginary number (e.g., 4i, 3.14i, -2.5i)
-  if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?i$", text)) {
-    num_str <- substr(text, 1, nchar(text) - 1)
-    return(list(type = "NUMBER", value = complex(real = 0, imaginary = as.numeric(num_str))))
-  }
-
-  # Regular number (including scientific notation)
-  if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$", text)) {
-    return(list(type = "NUMBER", value = as.numeric(text)))
+    # Regular number (including scientific notation)
+    if (grepl("^[-+]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$", text)) {
+      return(list(type = "NUMBER", value = as.numeric(text)))
+    }
   }
 
   # Default: symbol

@@ -1,34 +1,29 @@
-o) read module guide
+  Low-Hanging Optimization Opportunities
 
-o) rather than defaultPackages, should we use the whole R search path at the time of startup? possibly controllable by engine option
+  1. sugar_map in parser — hoist to module-level constant (allocated once instead of thousands of times)
+  2. .classify_atom grepl cascade — replace with single-char checks or a single combined regex
+  3. Per-token named list allocation — could use a column-oriented representation (parallel vectors of types, values, lines, cols) instead of list-of-lists
+  4. contains_macro_head walk — could be skipped when macro cache is empty (already happens, but strip_src still walks the tree)
+  5. O(n^2) top-level expression append — preallocate or use chunked collection like s-expr parsing does
+  6. try_constant_fold whitelist — use an environment for O(1) lookup instead of %in%
 
-o) update docs with fix to import permissible positioning
+---
 
-o) load and run should not check the stdlib modules
+o) get car/cdr cons at the top of the list-seq vignette
 
-o) what happens if parent.env<- goes away
-
-o) we probably honestly don't want load, and thus run, doing any caching at all
-
-o) there's no "import ____ from"
-
-o) more future-proof import syntax a la python
-
-o) the module system seems to decide what a module is called based on its filename
-
-o) run the test auditor and doc auditor again
-
-o) code duplication and removal check
-
-words to write yourself
-o) README: package does not include a citation file, revise wording, actually figure out the citation at all
-o) top couple paras of Getting Started, README and index.md need updating
-o) include links to getting started and examples at top of index.md
-o) DESCRIPTION title and description
-o) logo?
+---
 
 o) enable actions / get non-pkgdown workflows running
+
+o) review all the docs
+
+words to write yourself
+o) figure out citation
+o) top couple paras of Getting Started, README and index.md need updating
+o) DESCRIPTION title and description
+
+o) logo?
+
 o) figure out how to host the docs
-o) version number bump
 
 o) run other cran submission steps and submit

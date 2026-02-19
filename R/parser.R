@@ -1,5 +1,13 @@
 # Parser: Converts token lists from Tokenizer into Arl S-expressions (R calls). Expands
 # quote/quasiquote sugar into explicit forms. Uses source_tracker for source locations.
+
+# Module-level constant for quote sugar mapping (allocated once at package load)
+.SUGAR_MAP <- list(
+  QUOTE = "quote",
+  QUASIQUOTE = "quasiquote",
+  UNQUOTE = "unquote",
+  UNQUOTE_SPLICING = "unquote-splicing"
+)
 #
 # @field source_tracker SourceTracker for attaching source info to expressions.
 #
@@ -32,12 +40,6 @@ Parser <- R6::R6Class(
         }
 
         token <- tokens[[pos]]
-        sugar_map <- list(
-          QUOTE = "quote",
-          QUASIQUOTE = "quasiquote",
-          UNQUOTE = "unquote",
-          UNQUOTE_SPLICING = "unquote-splicing"
-        )
 
         make_src <- function(start_token, end_src = NULL) {
           end_line <- start_token$line
@@ -54,10 +56,10 @@ Parser <- R6::R6Class(
         }
 
         # Quote/quasiquote/unquote sugar
-        if (token$type %in% names(sugar_map)) {
+        if (token$type %in% names(.SUGAR_MAP)) {
           pos <<- pos + 1
           quoted <- parse_expr()
-          op <- sugar_map[[token$type]]
+          op <- .SUGAR_MAP[[token$type]]
           expr <- as.call(list(as.symbol(op), quoted))
           return(tracker$src_set(expr, make_src(token, tracker$src_get(quoted))))
         }
@@ -237,9 +239,24 @@ Parser <- R6::R6Class(
         stop(sprintf("Unexpected token type: %s", token$type))
       }
 
+      chunk <- vector("list", 32)
+      chunk_idx <- 1L
+
       while (pos <= length(tokens)) {
         expr <- parse_expr()
-        expressions <- c(expressions, list(expr))
+        chunk[[chunk_idx]] <- expr
+        chunk_idx <- chunk_idx + 1L
+
+        if (chunk_idx > 32L) {
+          expressions <- c(expressions, chunk)
+          chunk <- vector("list", 32)
+          chunk_idx <- 1L
+        }
+      }
+
+      # Flush remaining chunk
+      if (chunk_idx > 1L) {
+        expressions <- c(expressions, chunk[seq_len(chunk_idx - 1L)])
       }
 
       expressions

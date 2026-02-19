@@ -3,6 +3,29 @@
 # Reserved name: .__env is used for the current environment in compiled code.
 # (define .__env x) and (set! .__env x) are not compiled (return NULL).
 
+# Module-level hashed environment for O(1) pure-function lookup in constant folding
+.PURE_FUNCTIONS <- (function() {
+  e <- new.env(hash = TRUE, parent = emptyenv())
+  for (fn in c(
+    # Arithmetic
+    "+", "-", "*", "/", "^", "%%", "%/%",
+    # Comparison
+    "<", ">", "<=", ">=", "==", "!=",
+    # Logical (element-wise)
+    "&", "|", "!",
+    # Math functions
+    "abs", "sqrt", "exp", "log", "log10", "log2",
+    "sin", "cos", "tan", "asin", "acos", "atan",
+    "floor", "ceiling", "round", "trunc",
+    "sign", "signif",
+    # Other pure functions
+    "length", "nchar", "toupper", "tolower"
+  )) {
+    e[[fn]] <- TRUE
+  }
+  e
+})()
+
 #' @keywords internal
 #' @noRd
 Compiler <- R6::R6Class(
@@ -1373,25 +1396,8 @@ Compiler <- R6::R6Class(
 
       op_name <- as.character(op)
 
-      # Whitelist of pure functions safe to evaluate at compile time
-      # These must be deterministic and have no side effects
-      pure_functions <- c(
-        # Arithmetic
-        "+", "-", "*", "/", "^", "%%", "%/%",
-        # Comparison
-        "<", ">", "<=", ">=", "==", "!=",
-        # Logical (element-wise)
-        "&", "|", "!",
-        # Math functions
-        "abs", "sqrt", "exp", "log", "log10", "log2",
-        "sin", "cos", "tan", "asin", "acos", "atan",
-        "floor", "ceiling", "round", "trunc",
-        "sign", "signif",
-        # Other pure functions
-        "length", "nchar", "toupper", "tolower"
-      )
-
-      if (!(op_name %in% pure_functions)) {
+      # Check against module-level .PURE_FUNCTIONS hash set (O(1) lookup)
+      if (!exists(op_name, envir = .PURE_FUNCTIONS, inherits = FALSE)) {
         return(NULL)
       }
 
