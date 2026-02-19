@@ -79,11 +79,12 @@ cat("\n")
 # Benchmark 4: String operations
 cat("Benchmark 4: String operations\n")
 engine4 <- Engine$new()
+engine4$eval_text('(import display :refer :all)')
 
 bench_strings <- benchmark_component(
-  "str (2 args)" = engine4$eval(engine4$read('(str "hello" "world")')[[1]]),
-  "str (5 args)" = engine4$eval(engine4$read('(str "a" "b" "c" "d" "e")')[[1]]),
-  "str (10 args)" = engine4$eval(engine4$read('(str "a" "b" "c" "d" "e" "f" "g" "h" "i" "j")')[[1]]),
+  "string-concat (2 args)" = engine4$eval(engine4$read('(string-concat "hello" "world")')[[1]]),
+  "string-concat (5 args)" = engine4$eval(engine4$read('(string-concat "a" "b" "c" "d" "e")')[[1]]),
+  "string-concat (10 args)" = engine4$eval(engine4$read('(string-concat "a" "b" "c" "d" "e" "f" "g" "h" "i" "j")')[[1]]),
   iterations = 1000,
   check = FALSE
 )

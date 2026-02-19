@@ -4,7 +4,10 @@
 (import assert :refer :all)
 (import binding :refer :all)
 (import control :refer :all)
+(import dict :refer :all)
+(import display :refer :all)
 (import looping :refer :all)
+(import math :refer :all)
 (import threading :refer :all)
 
 ;; ============================================================================
