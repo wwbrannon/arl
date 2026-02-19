@@ -10,7 +10,12 @@
 # Normalize a path for consistent cross-platform comparison (resolves symlinks,
 # converts backslashes to forward slashes). Must match normalize_path_absolute()
 # in coverage.R so test keys align with tracker keys.
-norm_path <- function(path) normalizePath(path, winslash = "/", mustWork = FALSE)
+# When the file doesn't exist yet, normalizes the parent directory (which does
+# exist) to ensure symlinks like /var -> /private/var are resolved.
+norm_path <- function(path) {
+  if (file.exists(path)) return(normalizePath(path, winslash = "/", mustWork = TRUE))
+  file.path(normalizePath(dirname(path), winslash = "/", mustWork = TRUE), basename(path))
+}
 
 # Create .arl test files with controlled content
 create_arl_file <- function(content, dir = NULL) {
