@@ -193,10 +193,14 @@ Engine <- R6::R6Class(
         stop(sprintf("File not found: %s", path))
       }
 
+      # Normalize path once for consistent use everywhere (source_name, cache,
+      # coverage tracking). Resolves symlinks and uses forward slashes on Windows.
+      path <- normalize_path_absolute(path)
+
       # Set current_source_file for relative import resolution
       ctx <- private$.compiled_runtime$context
       old_source_file <- ctx$current_source_file
-      ctx$current_source_file <- normalizePath(path, mustWork = TRUE)
+      ctx$current_source_file <- path
       on.exit(ctx$current_source_file <- old_source_file, add = TRUE)
 
       # Try cache loading for module files
