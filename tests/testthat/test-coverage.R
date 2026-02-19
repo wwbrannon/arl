@@ -7,6 +7,11 @@
 # Test Harness Infrastructure
 # ============================================================================
 
+# Normalize a path for consistent cross-platform comparison (resolves symlinks,
+# converts backslashes to forward slashes). Must match normalize_path_absolute()
+# in coverage.R so test keys align with tracker keys.
+norm_path <- function(path) normalizePath(path, winslash = "/", mustWork = FALSE)
+
 # Create .arl test files with controlled content
 create_arl_file <- function(content, dir = NULL) {
   if (is.null(dir)) {
@@ -16,8 +21,7 @@ create_arl_file <- function(content, dir = NULL) {
     file <- file.path(dir, sprintf("test%d.arl", sample(1:10000, 1)))
   }
   writeLines(content, file)
-  # Normalize to forward slashes for consistent keys on all platforms
-  normalizePath(file, winslash = "/", mustWork = FALSE)
+  norm_path(file)
 }
 
 # Create mock arl_src for testing track()
@@ -342,7 +346,7 @@ test_that("discover_files() populates code_lines cache", {
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
 
-  tmp_file <- file.path(tmp_dir, "test.arl")
+  tmp_file <- norm_path(file.path(tmp_dir, "test.arl"))
   writeLines(c(";; comment", "(define x 1)", "", "(define y 2)"), tmp_file)
 
   tracker <- CoverageTracker$new(search_paths = tmp_dir)
@@ -1258,7 +1262,7 @@ test_that("Engine accepts coverage_tracker parameter", {
 })
 
 test_that("Engine tracks coverage for executed code", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define add (lambda (x y) (+ x y)))",
     "(define result (add 1 2))"
@@ -1280,7 +1284,7 @@ test_that("Engine tracks coverage for executed code", {
 })
 
 test_that("disabled coverage tracker doesn't track", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c("(define x 1)"), tmp)
   on.exit(unlink(tmp))
 
@@ -1299,7 +1303,7 @@ test_that("disabled coverage tracker doesn't track", {
 })
 
 test_that("coverage tracking persists across multiple evaluations", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define counter 0)",
     "(define inc (lambda () (set! counter (+ counter 1))))"
@@ -1331,7 +1335,7 @@ test_that("Engine$get_coverage() returns NULL when coverage not enabled", {
 })
 
 test_that("Engine$get_coverage() returns data frame with correct structure", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c("(define x 1)", "(define y 2)"), tmp)
   on.exit(unlink(tmp))
 
@@ -1353,7 +1357,7 @@ test_that("Engine$get_coverage() returns data frame with correct structure", {
 })
 
 test_that("Engine$get_coverage() reports correct coverage stats", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c("(define x 1)", "(define y 2)", "(define z 3)"), tmp)
   on.exit(unlink(tmp))
 
@@ -1381,7 +1385,7 @@ test_that("handles empty files", {
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
 
-  file <- file.path(tmp_dir, "empty.arl")
+  file <- norm_path(file.path(tmp_dir, "empty.arl"))
   writeLines(character(0), file)
 
   tracker <- CoverageTracker$new(search_paths = tmp_dir)
@@ -1494,7 +1498,7 @@ test_that("HTML escaping prevents XSS", {
 # ============================================================================
 
 test_that("uncalled function body is NOT covered", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",
     "  (lambda (x)",
@@ -1521,7 +1525,7 @@ test_that("uncalled function body is NOT covered", {
 })
 
 test_that("called function body IS covered", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",
     "  (lambda (x)",
@@ -1551,7 +1555,7 @@ test_that("called function body IS covered", {
 })
 
 test_that("module loading does not mark entire file as covered", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(module test-cov-mod (export f g)",
     "  (define f",
@@ -1588,7 +1592,7 @@ test_that("module loading does not mark entire file as covered", {
 # ============================================================================
 
 test_that("if expression only covers taken then-branch", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",
     "  (lambda (x)",
@@ -1615,7 +1619,7 @@ test_that("if expression only covers taken then-branch", {
 })
 
 test_that("if expression only covers taken else-branch", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",
     "  (lambda (x)",
@@ -1642,7 +1646,7 @@ test_that("if expression only covers taken else-branch", {
 })
 
 test_that("if expression covers both branches when both are taken", {
-  tmp <- tempfile(fileext = ".arl")
+  tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",
     "  (lambda (x)",
