@@ -37,6 +37,7 @@ jobs:
         with:
           extra-packages: |
             any::covr
+            any::devtools
             any::yaml
             any::jsonlite
             any::R6

@@ -103,7 +103,7 @@ CoverageTracker <- R6::R6Class(
         return(invisible(NULL))
       }
 
-      file <- arl_src$file
+      file <- normalize_path_absolute(arl_src$file)
       start_line <- arl_src$start_line
       end_line <- arl_src$end_line
 
@@ -139,6 +139,7 @@ CoverageTracker <- R6::R6Class(
     #' @param end_line End line of the instrumented form
     register_coverable = function(file, start_line, end_line) {
       if (is.null(file) || is.null(start_line) || is.null(end_line)) return(invisible(NULL))
+      file <- normalize_path_absolute(file)
       existing <- self$coverable_lines[[file]]
       new_lines <- start_line:end_line
       # Filter to actual code lines (skip blanks/comments within range)
@@ -158,11 +159,12 @@ CoverageTracker <- R6::R6Class(
       result <- list()
 
       for (key in ls(self$coverage, all.names = TRUE)) {
-        parts <- strsplit(key, ":", fixed = TRUE)[[1]]
-        if (length(parts) != 2) next
+        # Split on the last colon to handle Windows drive letters (e.g. C:\path:1)
+        last_colon <- regexpr(":[^:]*$", key)
+        if (last_colon < 1) next
 
-        file <- parts[1]
-        line <- parts[2]
+        file <- substr(key, 1, last_colon - 1)
+        line <- substr(key, last_colon + 1, nchar(key))
         count <- self$coverage[[key]]
 
         if (is.null(result[[file]])) {
@@ -196,7 +198,7 @@ CoverageTracker <- R6::R6Class(
             # Filter out tests unless explicitly included
             if (!private$include_tests) {
               # Exclude files in directories named "test" or "tests"
-              found_files <- found_files[!grepl("/tests?/", found_files)]
+              found_files <- found_files[!grepl("[/\\\\]tests?[/\\\\]", found_files)]
             }
 
             arl_files <- c(arl_files, found_files)
@@ -207,8 +209,8 @@ CoverageTracker <- R6::R6Class(
         arl_files <- private$find_stdlib_files()
       }
 
-      # Remove duplicates if overlapping paths were provided
-      arl_files <- unique(arl_files)
+      # Normalize paths and remove duplicates
+      arl_files <- unique(vapply(arl_files, normalize_path_absolute, character(1)))
       self$all_files <- arl_files
 
       # Build cache of which lines are code (non-blank, non-comment) for each file

@@ -43,7 +43,7 @@ ModuleCache <- R6::R6Class(
     #' @param src_file Source file path
     #' @param file_hash File hash
     write_code = function(module_name, compiled_body, exports, export_all, re_export, src_file, file_hash, coverage = FALSE, cache_paths = NULL) {
-      paths <- cache_paths %||% self$get_paths(src_file)
+      paths <- if (!is.null(cache_paths)) cache_paths else self$get_paths(src_file)
       if (is.null(paths)) return(FALSE)
 
       # Create cache directory if needed

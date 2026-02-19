@@ -246,7 +246,7 @@ test_that("directory-list with full.names returns full paths", {
 
   expect_true(is.list(result))
   expect_match(result[[1]], "file1.txt$")
-  expect_match(result[[1]], "^/")  # Full path starts with /
+  expect_match(result[[1]], "^(/|[A-Za-z]:)")  # Full path starts with / or drive letter
 })
 
 test_that("directory-list errors on non-existent directory", {

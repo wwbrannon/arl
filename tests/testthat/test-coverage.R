@@ -16,7 +16,8 @@ create_arl_file <- function(content, dir = NULL) {
     file <- file.path(dir, sprintf("test%d.arl", sample(1:10000, 1)))
   }
   writeLines(content, file)
-  file
+  # Normalize to forward slashes for consistent keys on all platforms
+  normalizePath(file, winslash = "/", mustWork = FALSE)
 }
 
 # Create mock arl_src for testing track()
