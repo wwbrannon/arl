@@ -137,20 +137,22 @@ test_that("install_cli warns when target dir is not on PATH", {
   source <- file.path(temp_dir, "arl-src")
   writeLines(c("#!/usr/bin/env sh", "echo arl"), source)
 
-  messages <- testthat::with_mocked_bindings(
-    {
-      capture.output(
-        arl::install_cli(target_dir = temp_dir, overwrite = TRUE),
-        type = "message"
-      )
-    },
-    system.file = function(..., package = NULL) {
-      if (!is.null(package) && package == "arl") {
-        return(source)
-      }
-      base::system.file(..., package = package)
-    },
-    .package = "base"
+  messages <- character()
+  withCallingHandlers(
+    testthat::with_mocked_bindings(
+      arl::install_cli(target_dir = temp_dir, overwrite = TRUE),
+      system.file = function(..., package = NULL) {
+        if (!is.null(package) && package == "arl") {
+          return(source)
+        }
+        base::system.file(..., package = package)
+      },
+      .package = "base"
+    ),
+    message = function(m) {
+      messages[[length(messages) + 1L]] <<- conditionMessage(m)
+      invokeRestart("muffleMessage")
+    }
   )
 
   expect_true(any(grepl("PATH", messages)))
