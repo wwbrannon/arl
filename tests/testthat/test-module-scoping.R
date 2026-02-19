@@ -181,9 +181,9 @@ test_that("default-packages chain structure between builtins_env and baseenv()",
     if (!is.null(nm)) seen_names <- c(seen_names, nm)
     e <- parent.env(e)
   }
-  # Should have package: entries for the default packages
+  # Should have the squashed R packages env
   expect_true(length(seen_names) > 0)
-  expect_true(any(grepl("^package:", seen_names)))
+  expect_true("arl:r-packages" %in% seen_names)
 })
 
 test_that("empty defaultPackages skips the package chain", {
@@ -204,7 +204,7 @@ test_that("custom defaultPackages changes which packages are in the chain", {
   engine <- Engine$new(load_prelude = FALSE, r_packages = getOption("defaultPackages"))
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
-  # Should have exactly one package env (stats) between builtins_env and baseenv()
+  # Should have exactly one squashed package env between builtins_env and baseenv()
   e <- parent.env(builtins_env)
   seen_names <- character()
   while (!identical(e, baseenv())) {
@@ -212,7 +212,7 @@ test_that("custom defaultPackages changes which packages are in the chain", {
     if (!is.null(nm)) seen_names <- c(seen_names, nm)
     e <- parent.env(e)
   }
-  expect_equal(seen_names, "package:stats")
+  expect_equal(seen_names, "arl:r-packages")
 })
 
 test_that("modules can use default package functions without importing them", {
@@ -344,7 +344,7 @@ test_that("r_packages = c('stats') gives exactly one package env", {
   engine <- Engine$new(load_prelude = FALSE, r_packages = c("stats"))
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
-  # Should have exactly one package env (stats) between builtins_env and baseenv()
+  # Should have exactly one squashed package env between builtins_env and baseenv()
   e <- parent.env(builtins_env)
   seen_names <- character()
   while (!identical(e, baseenv())) {
@@ -352,7 +352,7 @@ test_that("r_packages = c('stats') gives exactly one package env", {
     if (!is.null(nm)) seen_names <- c(seen_names, nm)
     e <- parent.env(e)
   }
-  expect_equal(seen_names, "package:stats")
+  expect_equal(seen_names, "arl:r-packages")
 
   # stats::median is visible
   expect_equal(engine$eval_text("(median (c 1 2 3 4 5))"), 3)
@@ -371,7 +371,7 @@ test_that("r_packages = 'search_path' picks up current search path", {
     e <- parent.env(e)
   }
   expect_true(length(seen_names) > 0)
-  expect_true(all(grepl("^package:", seen_names)))
+  expect_true("arl:r-packages" %in% seen_names)
 })
 
 test_that("search_path mode dynamically tracks library() calls", {

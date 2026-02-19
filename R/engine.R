@@ -498,14 +498,14 @@ Engine <- R6::R6Class(
     .build_pkgs_chain = function(pkg_names) {
       if (is.null(pkg_names) || length(pkg_names) == 0L) return(baseenv())
 
-      # Build bottom-up: last package is closest to baseenv().
-      parent <- baseenv()
+      # Squash all package exports into a single flat environment.
+      # Iterate in reverse so earlier packages (higher on the search path)
+      # overwrite later ones, matching R's shadowing semantics.
+      pkgs_env <- new.env(parent = baseenv())
       for (pkg in rev(pkg_names)) {
         ns <- tryCatch(asNamespace(pkg), error = function(e) NULL)
         if (is.null(ns)) next
-        pkg_env <- new.env(parent = parent)
         exports <- getNamespaceExports(ns)
-        # Also include lazy data (e.g. datasets package uses this mechanism)
         nsinfo <- get(".__NAMESPACE__.", envir = ns)
         if (exists("lazydata", envir = nsinfo)) {
           ld <- get("lazydata", envir = nsinfo)
@@ -513,14 +513,13 @@ Engine <- R6::R6Class(
         }
         for (name in exports) {
           tryCatch(
-            assign(name, getExportedValue(pkg, name), envir = pkg_env),
+            assign(name, getExportedValue(pkg, name), envir = pkgs_env),
             error = function(e) NULL
           )
         }
-        attr(pkg_env, "name") <- paste0("package:", pkg)
-        parent <- pkg_env
       }
-      parent
+      attr(pkgs_env, "name") <- "arl:r-packages"
+      pkgs_env
     },
 
     .resolve_r_packages = function() {
