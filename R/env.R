@@ -101,7 +101,7 @@ Env <- R6::R6Class(
       # causing "unused argument" errors. Remove the active binding first.
       if (exists(name, envir = target, inherits = FALSE) &&
           bindingIsActive(name, target)) {
-        if (bindingIsLocked(name, target)) unlock_binding(name, target)
+        unlock_binding(name, target)
         rm(list = name, envir = target)
       }
       assign(name, value, envir = target)
@@ -119,7 +119,7 @@ Env <- R6::R6Class(
           assign(name, value, envir = self$env)
         } else {
           # Active binding in same env (squash mode) — remove and replace
-          if (bindingIsLocked(name, target_env)) unlock_binding(name, target_env)
+          unlock_binding(name, target_env)
           rm(list = name, envir = target_env)
           assign(name, value, envir = target_env)
         }

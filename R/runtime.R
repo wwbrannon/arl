@@ -29,7 +29,7 @@ missing_default <- function() {
       # Remove active binding first to allow regular assignment.
       if (exists(name, envir = env, inherits = FALSE) &&
           bindingIsActive(name, env)) {
-        if (bindingIsLocked(name, env)) unlock_binding(name, env)
+        unlock_binding(name, env)
         rm(list = name, envir = env)
       }
       base::assign(name, value, envir = env)
@@ -49,7 +49,7 @@ missing_default <- function() {
         base::assign(name, value, envir = env)
       } else if (bindingIsActive(name, target)) {
         # Active binding in same env (squash mode) — remove and replace
-        if (bindingIsLocked(name, target)) unlock_binding(name, target)
+        unlock_binding(name, target)
         rm(list = name, envir = target)
         base::assign(name, value, envir = target)
       } else {
@@ -68,6 +68,53 @@ missing_default <- function() {
   # Slow path: destructuring (cons cells, lists, calls) — need full Env
   ctx <- if (identical(mode, "define")) "define" else "set!"
   Env$new(env)$assign_pattern(pattern, value, mode = mode, context = ctx)
+})
+
+# Fast-path define for simple symbol names (no destructuring, no reserved-name check,
+# no mode dispatch). The compiler emits calls to this directly for (define x val).
+.__define <- compiler::cmpfun(function(env, name, value) {
+  # Active bindings (from proxy imports) must be removed before assignment
+  if (exists(name, envir = env, inherits = FALSE) &&
+      bindingIsActive(name, env)) {
+    unlock_binding(name, env)
+    rm(list = name, envir = env)
+  }
+  base::assign(name, value, envir = env)
+  invisible(NULL)
+})
+
+# Fast-path set! for simple symbol names. Single bounded loop that stops at
+# boundary (parent.env(builtins_env)) to avoid walking into R package envs.
+.__set_impl <- compiler::cmpfun(function(env, name, value, boundary) {
+  target <- env
+  while (!identical(target, boundary) && !identical(target, emptyenv())) {
+    if (exists(name, envir = target, inherits = FALSE)) {
+      # If the binding lives in a proxy env (active binding from import),
+      # create a local shadow in the current env rather than mutating the proxy.
+      if (bindingIsActive(name, target)) {
+        if (isTRUE(get0(".__import_proxy", envir = target, inherits = FALSE))) {
+          base::assign(name, value, envir = env)
+        } else {
+          # Active binding in same env (squash mode) — remove and replace
+          unlock_binding(name, target)
+          rm(list = name, envir = target)
+          base::assign(name, value, envir = target)
+        }
+      } else {
+        # Handle locked bindings (module bindings are locked after load)
+        if (bindingIsLocked(name, target)) {
+          unlock_binding(name, target)
+          base::assign(name, value, envir = target)
+          lockBinding(as.symbol(name), target)
+        } else {
+          base::assign(name, value, envir = target)
+        }
+      }
+      return(invisible(NULL))
+    }
+    target <- parent.env(target)
+  }
+  stop(sprintf("set!: variable '%s' is not defined", name), call. = FALSE)
 })
 
 # EvalContext: Shared context for MacroExpander and CompiledRuntime. Holds env (Env)
@@ -190,7 +237,15 @@ CompiledRuntime <- R6::R6Class(
       # Core helpers
       assign_and_lock(".__assign_pattern", function(env, pattern, value, mode) {
         .__assign_pattern(env, pattern, value, mode)
-      }, "Pattern assignment for define/set!.")
+      }, "Pattern assignment for define/set! (destructuring).")
+
+      assign_and_lock(".__define", .__define,
+        "Fast-path define for simple symbol names.")
+
+      boundary <- parent.env(self$context$builtins_env)
+      assign_and_lock(".__set", function(env, name, value) {
+        .__set_impl(env, name, value, boundary)
+      }, "Fast-path set! for simple symbol names.")
 
       assign_and_lock(".__help", function(topic, env, package = NULL) {
         if (is.symbol(topic)) topic <- as.character(topic)

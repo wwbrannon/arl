@@ -46,10 +46,9 @@
 
 # Wrapper for unlockBinding to avoid R CMD check NOTE
 # R CMD check flags direct calls to unlockBinding as "possibly unsafe"
+# unlockBinding is a no-op on already-unlocked bindings, so no guard needed.
 unlock_binding <- function(sym, env) {
-  if (bindingIsLocked(sym, env)) {
-    do.call("unlockBinding", list(sym, env))
-  }
+  do.call("unlockBinding", list(sym, env))
 }
 
 resolve_stdlib_path <- function(name) {

@@ -534,21 +534,36 @@ Compiler <- R6::R6Class(
       name <- expr[[2]]
       val <- private$compile_assignment_value(expr, "define")
       if (is.null(val)) return(NULL)
-      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .__quote(pattern)
-      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".__quote"), name))
+
+      # Simple symbol: emit .__define (fast path, no destructuring overhead)
+      # Destructuring: emit .__assign_pattern (slow path)
+      is_simple <- is.symbol(name)
+      pattern_arg <- if (is_simple) as.character(name) else as.call(list(as.symbol(".__quote"), name))
+
       tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
         self$context$macro_expander$gensym(".__define_value")
       } else {
         as.symbol(paste0(".__define_value", as.integer(stats::runif(1, 1, 1e9))))
       }
       assign_tmp <- as.call(list(quote(`<-`), tmp_sym, val))
-      assign_call <- as.call(list(
-        as.symbol(".__assign_pattern"),
-        as.symbol(self$env_var_name),
-        pattern_arg,
-        tmp_sym,
-        "define"
-      ))
+
+      if (is_simple) {
+        assign_call <- as.call(list(
+          as.symbol(".__define"),
+          as.symbol(self$env_var_name),
+          pattern_arg,
+          tmp_sym
+        ))
+      } else {
+        assign_call <- as.call(list(
+          as.symbol(".__assign_pattern"),
+          as.symbol(self$env_var_name),
+          pattern_arg,
+          tmp_sym,
+          "define"
+        ))
+      }
+
       # Check if annotations exist for this name (from ;;' blocks)
       ann <- NULL
       name_str <- private$as_name_string(name)
@@ -579,15 +594,26 @@ Compiler <- R6::R6Class(
       name <- expr[[2]]
       val <- private$compile_assignment_value(expr, "set!")
       if (is.null(val)) return(NULL)
-      # Pass pattern unevaluated for destructuring: symbol -> string; list/call -> .__quote(pattern)
-      pattern_arg <- if (is.symbol(name)) as.character(name) else as.call(list(as.symbol(".__quote"), name))
-      as.call(list(
-        as.symbol(".__assign_pattern"),
-        as.symbol(self$env_var_name),
-        pattern_arg,
-        val,
-        "set"
-      ))
+
+      # Simple symbol: emit .__set (fast path, bounded walk)
+      # Destructuring: emit .__assign_pattern (slow path)
+      if (is.symbol(name)) {
+        as.call(list(
+          as.symbol(".__set"),
+          as.symbol(self$env_var_name),
+          as.character(name),
+          val
+        ))
+      } else {
+        pattern_arg <- as.call(list(as.symbol(".__quote"), name))
+        as.call(list(
+          as.symbol(".__assign_pattern"),
+          as.symbol(self$env_var_name),
+          pattern_arg,
+          val,
+          "set"
+        ))
+      }
     },
     compile_lambda = function(expr, self_name = NULL) {
       if (length(expr) < 3) {

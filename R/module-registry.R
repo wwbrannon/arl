@@ -21,9 +21,7 @@ squash_active_bindings <- function(module_env, orig_names, target_names,
       tname <- target_names[i]
       # Remove existing binding if present (may be locked from previous squash)
       if (exists(tname, envir = target_env, inherits = FALSE)) {
-        if (bindingIsLocked(tname, target_env)) {
-          unlock_binding(tname, target_env)
-        }
+        unlock_binding(tname, target_env)
         rm(list = tname, envir = target_env)
       }
       makeActiveBinding(tname, function() {
@@ -70,7 +68,7 @@ clear_module_env <- function(module_env) {
     # Clear all macro bindings
     macro_names <- ls(macro_reg, all.names = TRUE)
     for (nm in macro_names) {
-      if (bindingIsLocked(nm, macro_reg)) unlock_binding(nm, macro_reg)
+      unlock_binding(nm, macro_reg)
       rm(list = nm, envir = macro_reg)
     }
   }
@@ -78,7 +76,7 @@ clear_module_env <- function(module_env) {
   all_names <- ls(module_env, all.names = TRUE)
   for (nm in all_names) {
     if (identical(nm, ".__macros") && !is.null(macro_reg)) next
-    if (bindingIsLocked(nm, module_env)) unlock_binding(nm, module_env)
+    unlock_binding(nm, module_env)
     rm(list = nm, envir = module_env)
   }
   invisible(NULL)
@@ -499,7 +497,7 @@ ModuleRegistry <- R6::R6Class(
       for (j in removed_idx) {
         tname <- old_target[j]
         if (exists(tname, envir = proxy, inherits = FALSE)) {
-          if (bindingIsLocked(tname, proxy)) unlock_binding(tname, proxy)
+          unlock_binding(tname, proxy)
           rm(list = tname, envir = proxy)
         }
       }
@@ -552,7 +550,7 @@ ModuleRegistry <- R6::R6Class(
         old_macro_names <- ls(proxy_macro_reg, all.names = TRUE)
         for (nm in old_macro_names) {
           if (!exists(nm, envir = module_macro_registry, inherits = FALSE)) {
-            if (bindingIsLocked(nm, proxy_macro_reg)) unlock_binding(nm, proxy_macro_reg)
+            unlock_binding(nm, proxy_macro_reg)
             rm(list = nm, envir = proxy_macro_reg)
           }
         }
@@ -563,7 +561,7 @@ ModuleRegistry <- R6::R6Class(
             tname <- updated_target[i]
             if (exists(oname, envir = module_macro_registry, inherits = FALSE)) {
               if (exists(tname, envir = proxy_macro_reg, inherits = FALSE)) {
-                if (bindingIsLocked(tname, proxy_macro_reg)) unlock_binding(tname, proxy_macro_reg)
+                unlock_binding(tname, proxy_macro_reg)
                 rm(list = tname, envir = proxy_macro_reg)
               }
               makeActiveBinding(tname, function() {
@@ -576,7 +574,7 @@ ModuleRegistry <- R6::R6Class(
         # Module no longer has macros — clear proxy macro registry
         macro_names <- ls(proxy_macro_reg, all.names = TRUE)
         for (nm in macro_names) {
-          if (bindingIsLocked(nm, proxy_macro_reg)) unlock_binding(nm, proxy_macro_reg)
+          unlock_binding(nm, proxy_macro_reg)
           rm(list = nm, envir = proxy_macro_reg)
         }
       }

@@ -857,7 +857,7 @@ Engine <- R6::R6Class(
         }
         # Handle active bindings (from proxy imports)
         if (bindingIsActive(name, target)) {
-          if (bindingIsLocked(name, target)) unlock_binding(name, target)
+          unlock_binding(name, target)
           rm(list = name, envir = target)
         }
         base::assign(name, fn, envir = target)
