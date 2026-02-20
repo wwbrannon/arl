@@ -9,68 +9,6 @@
 
 
 
-  ;;' @section Complex Number Utilities
-
-  ;;' @description Construct a complex number from real and imaginary parts.
-  ;;' @examples
-  ;;' (make-rectangular 3 4)  ; => 3+4i
-  ;;' @assert
-  ;;' (assert-equal (complex :real 3 :imaginary 4) (make-rectangular 3 4))
-  ;;' @seealso make-polar, real-part, imag-part
-  (define make-rectangular
-    (lambda (real imag)
-      (complex :real real :imaginary imag)))
-
-  ;;' @description Construct a complex number from polar coordinates (magnitude and angle).
-  ;;' @examples
-  ;;' (make-polar 5 0)      ; => 5+0i
-  ;;' @assert
-  ;;' (assert-equal (complex :modulus 5 :argument 0) (make-polar 5 0))
-  ;;' @seealso make-rectangular, magnitude, angle
-  (define make-polar
-    (lambda (magnitude angle)
-      (complex :modulus magnitude :argument angle)))
-
-  ;;' @description Extract the real part of a complex number.
-  ;;' @examples
-  ;;' (real-part (make-rectangular 3 4))  ; => 3.0
-  ;;' @assert
-  ;;' (assert-equal 3.0 (real-part (make-rectangular 3 4)))
-  ;;' @seealso imag-part, make-rectangular
-  (define real-part
-    (lambda (z)
-      (Re z)))
-
-  ;;' @description Extract the imaginary part of a complex number.
-  ;;' @examples
-  ;;' (imag-part (make-rectangular 3 4))  ; => 4.0
-  ;;' @assert
-  ;;' (assert-equal 4.0 (imag-part (make-rectangular 3 4)))
-  ;;' @seealso real-part, make-rectangular
-  (define imag-part
-    (lambda (z)
-      (Im z)))
-
-  ;;' @description Compute the magnitude (modulus) of a complex number.
-  ;;' @examples
-  ;;' (magnitude (make-rectangular 3 4))  ; => 5.0
-  ;;' @assert
-  ;;' (assert-equal 5.0 (magnitude (make-rectangular 3 4)))
-  ;;' @seealso angle, make-polar
-  (define magnitude
-    (lambda (z)
-      (Mod z)))
-
-  ;;' @description Compute the angle (argument) of a complex number.
-  ;;' @examples
-  ;;' (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (pi/4)
-  ;;' @assert
-  ;;' (assert-true (< (abs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
-  ;;' @seealso magnitude, make-polar
-  (define angle
-    (lambda (z)
-      (Arg z)))
-
   ;;' @section Arithmetic Helpers
 
   ;;' @description Modulo helper using R %%.
@@ -252,4 +190,66 @@
                   0
                   (/ (abs (* a b)) (gcd a b)))))
             (Reduce lcm-two args))))))
+
+  ;;' @section Complex Number Utilities
+
+  ;;' @description Construct a complex number from real and imaginary parts.
+  ;;' @examples
+  ;;' (make-rectangular 3 4)  ; => 3+4i
+  ;;' @assert
+  ;;' (assert-equal (complex :real 3 :imaginary 4) (make-rectangular 3 4))
+  ;;' @seealso make-polar, real-part, imag-part
+  (define make-rectangular
+    (lambda (real imag)
+      (complex :real real :imaginary imag)))
+
+  ;;' @description Construct a complex number from polar coordinates (magnitude and angle).
+  ;;' @examples
+  ;;' (make-polar 5 0)      ; => 5+0i
+  ;;' @assert
+  ;;' (assert-equal (complex :modulus 5 :argument 0) (make-polar 5 0))
+  ;;' @seealso make-rectangular, magnitude, angle
+  (define make-polar
+    (lambda (magnitude angle)
+      (complex :modulus magnitude :argument angle)))
+
+  ;;' @description Extract the real part of a complex number.
+  ;;' @examples
+  ;;' (real-part (make-rectangular 3 4))  ; => 3.0
+  ;;' @assert
+  ;;' (assert-equal 3.0 (real-part (make-rectangular 3 4)))
+  ;;' @seealso imag-part, make-rectangular
+  (define real-part
+    (lambda (z)
+      (Re z)))
+
+  ;;' @description Extract the imaginary part of a complex number.
+  ;;' @examples
+  ;;' (imag-part (make-rectangular 3 4))  ; => 4.0
+  ;;' @assert
+  ;;' (assert-equal 4.0 (imag-part (make-rectangular 3 4)))
+  ;;' @seealso real-part, make-rectangular
+  (define imag-part
+    (lambda (z)
+      (Im z)))
+
+  ;;' @description Compute the magnitude (modulus) of a complex number.
+  ;;' @examples
+  ;;' (magnitude (make-rectangular 3 4))  ; => 5.0
+  ;;' @assert
+  ;;' (assert-equal 5.0 (magnitude (make-rectangular 3 4)))
+  ;;' @seealso angle, make-polar
+  (define magnitude
+    (lambda (z)
+      (Mod z)))
+
+  ;;' @description Compute the angle (argument) of a complex number.
+  ;;' @examples
+  ;;' (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (pi/4)
+  ;;' @assert
+  ;;' (assert-true (< (abs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
+  ;;' @seealso magnitude, make-polar
+  (define angle
+    (lambda (z)
+      (Arg z)))
 )

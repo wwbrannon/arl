@@ -191,6 +191,12 @@
           (substr str (+ index 1) (+ index 1))))))
 
   ;;' @description Scheme-style character accessor (alias for char-at).
+  ;;' @examples
+  ;;' (string-ref "hello" 0)    ; => "h"
+  ;;' (string-ref "hello" 4)    ; => "o"
+  ;;' @assert
+  ;;' (assert-equal "h" (string-ref "hello" 0))
+  ;;' (assert-equal "o" (string-ref "hello" 4))
   ;;' @seealso char-at
   (define string-ref
     (lambda (str index)

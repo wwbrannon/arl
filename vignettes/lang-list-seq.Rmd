@@ -225,6 +225,15 @@ Alias for car.
 
 **Signature:** `(first lst)`
 
+**Examples:**
+```{arl}
+(first (list 10 20 30))   ; => 10
+```
+
+```{arl, include=FALSE}
+(assert-equal 10 (first (list 10 20 30)))
+```
+
 **See also:** [car](#car), [rest](#rest), [last](#last)
 
 ---
@@ -235,6 +244,17 @@ Return second element or #nil.
 
 **Signature:** `(second lst)`
 
+**Examples:**
+```{arl}
+(second (list 10 20 30))  ; => 20
+```
+
+```{arl, include=FALSE}
+(assert-equal 20 (second (list 10 20 30)))
+```
+
+**See also:** [first](#first), [third](#third)
+
 ---
 
 ### third {#third}
@@ -242,6 +262,17 @@ Return second element or #nil.
 Return third element or #nil.
 
 **Signature:** `(third lst)`
+
+**Examples:**
+```{arl}
+(third (list 10 20 30))   ; => 30
+```
+
+```{arl, include=FALSE}
+(assert-equal 30 (third (list 10 20 30)))
+```
+
+**See also:** [second](#second), [fourth](#fourth)
 
 ---
 
@@ -251,6 +282,17 @@ Return fourth element or #nil.
 
 **Signature:** `(fourth lst)`
 
+**Examples:**
+```{arl}
+(fourth (list 1 2 3 4))   ; => 4
+```
+
+```{arl, include=FALSE}
+(assert-equal 4 (fourth (list 1 2 3 4)))
+```
+
+**See also:** [third](#third)
+
 ---
 
 ### rest {#rest}
@@ -258,6 +300,15 @@ Return fourth element or #nil.
 Alias for cdr.
 
 **Signature:** `(rest lst)`
+
+**Examples:**
+```{arl}
+(rest (list 1 2 3))       ; => (2 3)
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 2 3) (rest (list 1 2 3)))
+```
 
 **See also:** [cdr](#cdr), [first](#first)
 
@@ -802,6 +853,19 @@ pass :use-identical #t for R's identical().
 
 **Signature:** `(member x lst [use-identical #f])`
 
+**Examples:**
+```{arl}
+(member 3 (list 1 2 3 4 5))   ; => (3 4 5)
+(member 9 (list 1 2 3))       ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-equal (list 3 4 5) (member 3 (list 1 2 3 4 5)))
+(assert-false (member 9 (list 1 2 3)))
+```
+
+**See also:** [contains?](#contains-p)
+
 ---
 
 ### contains? {#contains-p}
@@ -809,6 +873,19 @@ pass :use-identical #t for R's identical().
 Return #t if lst contains element equal to x.
 
 **Signature:** `(contains? x lst)`
+
+**Examples:**
+```{arl}
+(contains? 2 (list 1 2 3))   ; => #t
+(contains? 9 (list 1 2 3))   ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (contains? 2 (list 1 2 3)))
+(assert-false (contains? 9 (list 1 2 3)))
+```
+
+**See also:** [member](#member)
 
 ---
 

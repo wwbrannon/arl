@@ -185,6 +185,9 @@
         (r-call "cat" (list (format-value x) "\n")))))
 
   ;;' @description Alias for display.
+  ;;' @examples
+  ;;' (println 42)               ; prints "42\n"
+  ;;' (println (list 1 2 3))     ; prints "(1 2 3)\n"
   ;;' @seealso display
   (define println
     (lambda (x)

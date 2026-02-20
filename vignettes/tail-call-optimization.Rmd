@@ -171,6 +171,8 @@ applicable, the `looping` module provides Clojure-style `loop`/`recur`.
 Since `looping` is not a prelude module, you need to import it explicitly:
 
 ```{arl}
+(import looping :refer :all)
+
 (define factorial
   (lambda (n)
     (loop ((i n) (acc 1))

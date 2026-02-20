@@ -195,7 +195,18 @@ Macro wrapper around try with catch/finally.
 
 ### call-cc {#call-cc}
 
+Invoke receiver with the current continuation (escape procedure).
+
 **Signature:** `(call-cc receiver)`
+
+**Examples:**
+```{arl}
+(call-cc (lambda (k) (k 42)))  ; => 42
+```
+
+```{arl, include=FALSE}
+(assert-equal 42 (call-cc (lambda (k) (k 42))))
+```
 
 **Note:** Alias for R's `callCC`. The receiver is passed the current continuation.
 
@@ -205,7 +216,18 @@ Macro wrapper around try with catch/finally.
 
 ### call-with-current-continuation {#call-with-current-continuation}
 
+Full name alias for call-cc.
+
 **Signature:** `(call-with-current-continuation receiver)`
+
+**Examples:**
+```{arl}
+(call-with-current-continuation (lambda (k) (k 42)))  ; => 42
+```
+
+```{arl, include=FALSE}
+(assert-equal 42 (call-with-current-continuation (lambda (k) (k 42))))
+```
 
 **Note:** Full name alias for `call-cc`.
 
@@ -230,6 +252,19 @@ Collect all symbols from a destructuring pattern, ignoring dots.
 Bind a destructuring pattern to a value, then evaluate body forms.
 
 **Signature:** `(destructuring-bind pattern value body...)`
+
+**Examples:**
+```{arl}
+(destructuring-bind (a b c) (list 1 2 3)
+  (+ a b c))                 ; => 6
+(destructuring-bind (x . rest) (list 10 20 30)
+  rest)                      ; => (20 30)
+```
+
+```{arl, include=FALSE}
+(assert-equal 6 (destructuring-bind (a b c) (list 1 2 3) (+ a b c)))
+(assert-equal (list 20 30) (destructuring-bind (x . rest) (list 10 20 30) rest))
+```
 
 **See also:** [let](#let), [let*](#let-star), [pattern-symbols](#pattern-symbols)
 
@@ -396,6 +431,16 @@ result                      ; => ("a" "b" "c")
 Signal a recur back to the enclosing `loop`. Only valid inside a `loop` body.
 
 **Signature:** `(recur args...)`
+
+**Examples:**
+```{arl}
+(loop ((i 5) (acc 0))
+  (if (= i 0) acc (recur (- i 1) (+ acc i))))  ; => 15
+```
+
+```{arl, include=FALSE}
+(assert-equal 15 (loop ((i 5) (acc 0)) (if (= i 0) acc (recur (- i 1) (+ acc i)))))
+```
 
 **See also:** [loop](#loop)
 

@@ -17,122 +17,6 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
 
-## Complex Number Utilities {#section-complex-number-utilities}
-
-### make-rectangular {#make-rectangular}
-
-Construct a complex number from real and imaginary parts.
-
-**Signature:** `(make-rectangular real imag)`
-
-**Examples:**
-```{arl}
-(make-rectangular 3 4)  ; => 3+4i
-```
-
-```{arl, include=FALSE}
-(assert-equal (complex :real 3 :imaginary 4) (make-rectangular 3 4))
-```
-
-**See also:** [make-polar](#make-polar), [real-part](#real-part), [imag-part](#imag-part)
-
----
-
-### make-polar {#make-polar}
-
-Construct a complex number from polar coordinates (magnitude and angle).
-
-**Signature:** `(make-polar magnitude angle)`
-
-**Examples:**
-```{arl}
-(make-polar 5 0)      ; => 5+0i
-```
-
-```{arl, include=FALSE}
-(assert-equal (complex :modulus 5 :argument 0) (make-polar 5 0))
-```
-
-**See also:** [make-rectangular](#make-rectangular), [magnitude](#magnitude), [angle](#angle)
-
----
-
-### real-part {#real-part}
-
-Extract the real part of a complex number.
-
-**Signature:** `(real-part z)`
-
-**Examples:**
-```{arl}
-(real-part (make-rectangular 3 4))  ; => 3.0
-```
-
-```{arl, include=FALSE}
-(assert-equal 3.0 (real-part (make-rectangular 3 4)))
-```
-
-**See also:** [imag-part](#imag-part), [make-rectangular](#make-rectangular)
-
----
-
-### imag-part {#imag-part}
-
-Extract the imaginary part of a complex number.
-
-**Signature:** `(imag-part z)`
-
-**Examples:**
-```{arl}
-(imag-part (make-rectangular 3 4))  ; => 4.0
-```
-
-```{arl, include=FALSE}
-(assert-equal 4.0 (imag-part (make-rectangular 3 4)))
-```
-
-**See also:** [real-part](#real-part), [make-rectangular](#make-rectangular)
-
----
-
-### magnitude {#magnitude}
-
-Compute the magnitude (modulus) of a complex number.
-
-**Signature:** `(magnitude z)`
-
-**Examples:**
-```{arl}
-(magnitude (make-rectangular 3 4))  ; => 5.0
-```
-
-```{arl, include=FALSE}
-(assert-equal 5.0 (magnitude (make-rectangular 3 4)))
-```
-
-**See also:** [angle](#angle), [make-polar](#make-polar)
-
----
-
-### angle {#angle}
-
-Compute the angle (argument) of a complex number.
-
-**Signature:** `(angle z)`
-
-**Examples:**
-```{arl}
-(angle (make-rectangular 1 1))  ; => 0.7853981633974483 (pi/4)
-```
-
-```{arl, include=FALSE}
-(assert-true (< (abs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
-```
-
-**See also:** [magnitude](#magnitude), [make-polar](#make-polar)
-
----
-
 ## Arithmetic Helpers {#section-arithmetic-helpers}
 
 ### % {#percent}
@@ -390,6 +274,122 @@ Return least common multiple of arguments.
 ```
 
 **See also:** [gcd](#gcd)
+
+---
+
+## Complex Number Utilities {#section-complex-number-utilities}
+
+### make-rectangular {#make-rectangular}
+
+Construct a complex number from real and imaginary parts.
+
+**Signature:** `(make-rectangular real imag)`
+
+**Examples:**
+```{arl}
+(make-rectangular 3 4)  ; => 3+4i
+```
+
+```{arl, include=FALSE}
+(assert-equal (complex :real 3 :imaginary 4) (make-rectangular 3 4))
+```
+
+**See also:** [make-polar](#make-polar), [real-part](#real-part), [imag-part](#imag-part)
+
+---
+
+### make-polar {#make-polar}
+
+Construct a complex number from polar coordinates (magnitude and angle).
+
+**Signature:** `(make-polar magnitude angle)`
+
+**Examples:**
+```{arl}
+(make-polar 5 0)      ; => 5+0i
+```
+
+```{arl, include=FALSE}
+(assert-equal (complex :modulus 5 :argument 0) (make-polar 5 0))
+```
+
+**See also:** [make-rectangular](#make-rectangular), [magnitude](#magnitude), [angle](#angle)
+
+---
+
+### real-part {#real-part}
+
+Extract the real part of a complex number.
+
+**Signature:** `(real-part z)`
+
+**Examples:**
+```{arl}
+(real-part (make-rectangular 3 4))  ; => 3.0
+```
+
+```{arl, include=FALSE}
+(assert-equal 3.0 (real-part (make-rectangular 3 4)))
+```
+
+**See also:** [imag-part](#imag-part), [make-rectangular](#make-rectangular)
+
+---
+
+### imag-part {#imag-part}
+
+Extract the imaginary part of a complex number.
+
+**Signature:** `(imag-part z)`
+
+**Examples:**
+```{arl}
+(imag-part (make-rectangular 3 4))  ; => 4.0
+```
+
+```{arl, include=FALSE}
+(assert-equal 4.0 (imag-part (make-rectangular 3 4)))
+```
+
+**See also:** [real-part](#real-part), [make-rectangular](#make-rectangular)
+
+---
+
+### magnitude {#magnitude}
+
+Compute the magnitude (modulus) of a complex number.
+
+**Signature:** `(magnitude z)`
+
+**Examples:**
+```{arl}
+(magnitude (make-rectangular 3 4))  ; => 5.0
+```
+
+```{arl, include=FALSE}
+(assert-equal 5.0 (magnitude (make-rectangular 3 4)))
+```
+
+**See also:** [angle](#angle), [make-polar](#make-polar)
+
+---
+
+### angle {#angle}
+
+Compute the angle (argument) of a complex number.
+
+**Signature:** `(angle z)`
+
+**Examples:**
+```{arl}
+(angle (make-rectangular 1 1))  ; => 0.7853981633974483 (pi/4)
+```
+
+```{arl, include=FALSE}
+(assert-true (< (abs (- (angle (make-rectangular 1 1)) (/ pi 4))) 1e-10))
+```
+
+**See also:** [magnitude](#magnitude), [make-polar](#make-polar)
 
 ---
 

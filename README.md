@@ -163,11 +163,14 @@ form.
 
 In addition to special forms, Arl provides a small set of **built-in
 functions** implemented in R and available before any stdlib modules
-load (and if stdlib loading is disabled): `eval`, `read`, `write`,
-`load`, `gensym`, `capture`, `macro?`, `macroexpand`, `pair?`,
-`promise?`, `force`, `promise-expr`, `toplevel-env`, `current-env`,
-`r-eval`, `doc`, and `doc!`. Unlike special forms, these are ordinary
-functions and can be passed as values.
+load (and if stdlib loading is disabled), including: `eval`, `read`,
+`write`, `load`, `gensym`, `capture`, `macro?`, `macroexpand`, `pair?`,
+`car`, `cdr`, `cons`, `promise?`, `force`, `promise-expr`,
+`toplevel-env`, `current-env`, `r-eval`, `help`, `doc`, `doc!`,
+`module-ref`, `module?`, `module-exports`, and `module-name`. Unlike
+special forms, these are ordinary functions and can be passed as values.
+See the [Language Reference](articles/lang-reference.html) for the full
+list.
 
 ### Continuations
 

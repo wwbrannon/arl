@@ -64,7 +64,18 @@ Create a hash-backed dictionary from key/value pairs.
 
 ### hash {#hash}
 
+Alias for dict. Create a dictionary from key/value pairs.
+
 **Signature:** `(hash . args)`
+
+**Examples:**
+```{arl}
+(hash :x 1 :y 2)           ; => dict with x=1, y=2
+```
+
+```{arl, include=FALSE}
+(assert-equal 1 (dict-get (hash :x 1 :y 2) "x"))
+```
 
 **Note:** Alias for `dict`.
 

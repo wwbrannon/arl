@@ -187,6 +187,13 @@
   ;;' @description Return sublist of lst starting at first element
   ;;' equal to x, or #f if not found. Uses equal? by default;
   ;;' pass :use-identical #t for R's identical().
+  ;;' @examples
+  ;;' (member 3 (list 1 2 3 4 5))   ; => (3 4 5)
+  ;;' (member 9 (list 1 2 3))       ; => #f
+  ;;' @assert
+  ;;' (assert-equal (list 3 4 5) (member 3 (list 1 2 3 4 5)))
+  ;;' (assert-false (member 9 (list 1 2 3)))
+  ;;' @seealso contains?
   (define member
     (lambda (x lst (use-identical #f))
       (define items (_as-list lst))
@@ -203,6 +210,13 @@
       result))
 
   ;;' @description Return #t if lst contains element equal to x.
+  ;;' @examples
+  ;;' (contains? 2 (list 1 2 3))   ; => #t
+  ;;' (contains? 9 (list 1 2 3))   ; => #f
+  ;;' @assert
+  ;;' (assert-true (contains? 2 (list 1 2 3)))
+  ;;' (assert-false (contains? 9 (list 1 2 3)))
+  ;;' @seealso member
   (define contains?
     (lambda (x lst)
       (if (member x lst) #t #f)))

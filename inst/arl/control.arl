@@ -197,12 +197,22 @@
 
 ;;' @section Continuations
 
+  ;;' @description Invoke receiver with the current continuation (escape procedure).
   ;;' @signature (call-cc receiver)
+  ;;' @examples
+  ;;' (call-cc (lambda (k) (k 42)))  ; => 42
+  ;;' @assert
+  ;;' (assert-equal 42 (call-cc (lambda (k) (k 42))))
   ;;' @note Alias for R's `callCC`. The receiver is passed the current continuation.
   ;;' @seealso call-with-current-continuation
   (define call-cc callCC)
 
+  ;;' @description Full name alias for call-cc.
   ;;' @signature (call-with-current-continuation receiver)
+  ;;' @examples
+  ;;' (call-with-current-continuation (lambda (k) (k 42)))  ; => 42
+  ;;' @assert
+  ;;' (assert-equal 42 (call-with-current-continuation (lambda (k) (k 42))))
   ;;' @note Full name alias for `call-cc`.
   ;;' @seealso call-cc
   (define call-with-current-continuation callCC)

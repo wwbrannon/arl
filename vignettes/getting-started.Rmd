@@ -246,7 +246,7 @@ explicitly in your own modules (which start with an empty scope plus prelude
 access):
 
 ```{arl, eval=FALSE}
-(import control :refer :all)   ; when/unless/cond/case/try/catch/finally
+(import control :refer :all)   ; when/unless/cond/case/try/try-catch/call-cc
 ```
 
 ```{arl, include=FALSE}

@@ -49,6 +49,11 @@
   ;;
 
   ;;' @description Signal a recur back to the enclosing `loop`. Only valid inside a `loop` body.
+  ;;' @examples
+  ;;' (loop ((i 5) (acc 0))
+  ;;'   (if (= i 0) acc (recur (- i 1) (+ acc i))))  ; => 15
+  ;;' @assert
+  ;;' (assert-equal 15 (loop ((i 5) (acc 0)) (if (= i 0) acc (recur (- i 1) (+ acc i)))))
   ;;' @seealso loop
   (defmacro recur (. args)
     (stop "recur can only be used inside loop"))

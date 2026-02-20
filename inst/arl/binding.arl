@@ -28,6 +28,14 @@
         (list)))))
 
 ;;' @description Bind a destructuring pattern to a value, then evaluate body forms.
+;;' @examples
+;;' (destructuring-bind (a b c) (list 1 2 3)
+;;'   (+ a b c))                 ; => 6
+;;' (destructuring-bind (x . rest) (list 10 20 30)
+;;'   rest)                      ; => (20 30)
+;;' @assert
+;;' (assert-equal 6 (destructuring-bind (a b c) (list 1 2 3) (+ a b c)))
+;;' (assert-equal (list 20 30) (destructuring-bind (x . rest) (list 10 20 30) rest))
 ;;' @seealso let, let*, pattern-symbols
 (defmacro destructuring-bind (pattern value . body)
   (define tmp (gensym "tmp"))

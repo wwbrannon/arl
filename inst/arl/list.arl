@@ -138,27 +138,50 @@
       (rev (_as-list x))))
 
   ;;' @description Alias for car.
+  ;;' @examples
+  ;;' (first (list 10 20 30))   ; => 10
+  ;;' @assert
+  ;;' (assert-equal 10 (first (list 10 20 30)))
   ;;' @seealso car, rest, last
   (define first
     (lambda (lst)
       (car lst)))
 
   ;;' @description Return second element or #nil.
+  ;;' @examples
+  ;;' (second (list 10 20 30))  ; => 20
+  ;;' @assert
+  ;;' (assert-equal 20 (second (list 10 20 30)))
+  ;;' @seealso first, third
   (define second
     (lambda (lst)
       (cadr lst)))
 
   ;;' @description Return third element or #nil.
+  ;;' @examples
+  ;;' (third (list 10 20 30))   ; => 30
+  ;;' @assert
+  ;;' (assert-equal 30 (third (list 10 20 30)))
+  ;;' @seealso second, fourth
   (define third
     (lambda (lst)
       (caddr lst)))
 
   ;;' @description Return fourth element or #nil.
+  ;;' @examples
+  ;;' (fourth (list 1 2 3 4))   ; => 4
+  ;;' @assert
+  ;;' (assert-equal 4 (fourth (list 1 2 3 4)))
+  ;;' @seealso third
   (define fourth
     (lambda (lst)
       (cadddr lst)))
 
   ;;' @description Alias for cdr.
+  ;;' @examples
+  ;;' (rest (list 1 2 3))       ; => (2 3)
+  ;;' @assert
+  ;;' (assert-equal (list 2 3) (rest (list 1 2 3)))
   ;;' @seealso cdr, first
   (define rest
     (lambda (lst)

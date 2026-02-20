@@ -291,6 +291,17 @@ Scheme-style character accessor (alias for char-at).
 
 **Signature:** `(string-ref str index)`
 
+**Examples:**
+```{arl}
+(string-ref "hello" 0)    ; => "h"
+(string-ref "hello" 4)    ; => "o"
+```
+
+```{arl, include=FALSE}
+(assert-equal "h" (string-ref "hello" 0))
+(assert-equal "o" (string-ref "hello" 4))
+```
+
 **See also:** [char-at](#char-at)
 
 ---
@@ -1025,6 +1036,12 @@ Print value with newline.
 Alias for display.
 
 **Signature:** `(println x)`
+
+**Examples:**
+```{arl}
+(println 42)               ; prints "42\n"
+(println (list 1 2 3))     ; prints "(1 2 3)\n"
+```
 
 **See also:** [display](#display)
 
