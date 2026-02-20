@@ -9,7 +9,7 @@
 maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
 [![R CMD
 check](https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/check.yaml)
-[![Codecov](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg)](https://codecov.io/gh/wwbrannon/arl)
+[![Codecov](https://codecov.io/gh/wwbrannon/arl/graph/badge.svg?token=7pxGM6lI73)](https://codecov.io/gh/wwbrannon/arl)
 [![R
 Coverage](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?flag=r-code)](https://codecov.io/gh/wwbrannon/arl?flags%5B0%5D=r-code)
 [![Arl
