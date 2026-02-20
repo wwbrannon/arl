@@ -143,6 +143,7 @@ EvalContext <- R6::R6Class(
     squash_imports = FALSE,
     reload_env = NULL,
     expected_module_name = NULL,
+    cache_paths = NULL,
     # @description Create context. macro_expander and compiler are assigned by the engine.
     # @param env Env instance.
     # @param source_tracker SourceTracker instance.
@@ -704,10 +705,32 @@ CompiledRuntime <- R6::R6Class(
       # Write caches after successful module load (skip when coverage is active
       # to avoid caching instrumented code)
       if (should_cache && !is.null(self$module_cache) && !coverage_active) {
-        cache_paths <- self$module_cache$get_paths(src_file)
+        # Use cache_paths from context (threaded from engine's initial
+        # get_paths() call) to avoid TOCTOU races — if the file changed
+        # between read and now, a fresh get_paths() would compute the new
+        # hash and map it to the old compiled code.
+        cache_paths <- self$context$cache_paths
+        if (is.null(cache_paths)) {
+          cache_paths <- self$module_cache$get_paths(src_file)
+        }
         if (!is.null(cache_paths)) {
+          # Extract compiler flags for cache validation
+          compiler_flags <- NULL
+          comp <- self$context$compiler
+          if (!is.null(comp)) {
+            compiler_flags <- c(
+              enable_tco = comp$enable_tco,
+              enable_constant_folding = comp$enable_constant_folding,
+              enable_dead_code_elim = comp$enable_dead_code_elim,
+              enable_strength_reduction = comp$enable_strength_reduction,
+              enable_identity_elim = comp$enable_identity_elim,
+              enable_truthiness_opt = comp$enable_truthiness_opt,
+              enable_begin_simplify = comp$enable_begin_simplify,
+              enable_boolean_flatten = comp$enable_boolean_flatten
+            )
+          }
           # Always write expr cache (safe fallback)
-          self$module_cache$write_code(module_name, compiled_body, exports, export_all, re_export, src_file, cache_paths$file_hash, cache_paths = cache_paths)
+          self$module_cache$write_code(module_name, compiled_body, exports, export_all, re_export, src_file, cache_paths$file_hash, cache_paths = cache_paths, compiler_flags = compiler_flags)
 
           # Env cache disabled: proxy-based imports use active bindings in
           # the parent chain which can't survive serialization/deserialization.

@@ -249,6 +249,7 @@ Engine <- R6::R6Class(
         cache_paths <- private$.module_cache$get_paths(path)
         if (!is.null(cache_paths)) {
           target_env <- resolved
+          compiler_flags <- private$get_compiler_flags()
 
           # Env cache disabled: proxy-based imports use active bindings
           # in the parent chain which can't survive serialization/deserialization.
@@ -256,7 +257,7 @@ Engine <- R6::R6Class(
 
           # Expr cache (compiled expressions)
           if (file.exists(cache_paths$code_cache)) {
-            cache_data <- private$.module_cache$load_code(cache_paths$code_cache, path, file_hash = cache_paths$file_hash)
+            cache_data <- private$.module_cache$load_code(cache_paths$code_cache, path, file_hash = cache_paths$file_hash, compiler_flags = compiler_flags)
             if (!is.null(cache_data)) {
               # Recreate module environment (like module_compiled does)
               module_name <- cache_data$module_name
@@ -308,6 +309,17 @@ Engine <- R6::R6Class(
       }
 
       # Cache miss - full load
+      # Compute cache_paths now (before file read) and thread through context
+      # so module_compiled uses the same hash, avoiding TOCTOU races if the
+      # file changes between read and cache write.
+      if (isTRUE(cache) && !coverage_active) {
+        if (is.null(cache_paths)) {
+          cache_paths <- private$.module_cache$get_paths(path)
+        }
+        old_cache_paths <- ctx$cache_paths
+        ctx$cache_paths <- cache_paths
+        on.exit(ctx$cache_paths <- old_cache_paths, add = TRUE)
+      }
       text <- paste(readLines(path, warn = FALSE), collapse = "\n")
       exprs <- self$read(text, source_name = path)
       if (length(exprs) == 0L) return(invisible(NULL))
@@ -553,6 +565,20 @@ Engine <- R6::R6Class(
 
     resolve_env_arg = function(env) {
       resolve_env(env, private$.env$env)
+    },
+
+    get_compiler_flags = function() {
+      comp <- private$.compiler
+      c(
+        enable_tco = comp$enable_tco,
+        enable_constant_folding = comp$enable_constant_folding,
+        enable_dead_code_elim = comp$enable_dead_code_elim,
+        enable_strength_reduction = comp$enable_strength_reduction,
+        enable_identity_elim = comp$enable_identity_elim,
+        enable_truthiness_opt = comp$enable_truthiness_opt,
+        enable_begin_simplify = comp$enable_begin_simplify,
+        enable_boolean_flatten = comp$enable_boolean_flatten
+      )
     },
 
     .build_pkgs_chain = function(pkg_names) {

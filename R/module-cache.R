@@ -42,7 +42,7 @@ ModuleCache <- R6::R6Class(
     #' @param export_all Export all flag
     #' @param src_file Source file path
     #' @param file_hash File hash
-    write_code = function(module_name, compiled_body, exports, export_all, re_export, src_file, file_hash, coverage = FALSE, cache_paths = NULL) {
+    write_code = function(module_name, compiled_body, exports, export_all, re_export, src_file, file_hash, coverage = FALSE, cache_paths = NULL, compiler_flags = NULL) {
       paths <- if (!is.null(cache_paths)) cache_paths else self$get_paths(src_file)
       if (is.null(paths)) return(FALSE)
 
@@ -50,6 +50,9 @@ ModuleCache <- R6::R6Class(
       if (!dir.exists(paths$cache_dir)) {
         dir.create(paths$cache_dir, recursive = TRUE)
       }
+
+      # Clean up stale cache files for the same source before writing new ones
+      private$cleanup_stale_cache(paths$cache_dir, basename(src_file), file_hash)
 
       tryCatch({
         # Deflate resolved refs (replace tagged closures with symbolic placeholders)
@@ -60,6 +63,7 @@ ModuleCache <- R6::R6Class(
           file_hash = file_hash,
           coverage = coverage,
           default_packages = sort(getOption("defaultPackages", character(0))),
+          compiler_flags = compiler_flags,
           module_name = module_name,
           exports = exports,
           export_all = export_all,
@@ -109,7 +113,7 @@ ModuleCache <- R6::R6Class(
     #' @param cache_file Path to .code.rds cache file
     #' @param src_file Source file for validation
     #' @return Cache data or NULL if invalid
-    load_code = function(cache_file, src_file, coverage = FALSE, file_hash = NULL) {
+    load_code = function(cache_file, src_file, coverage = FALSE, file_hash = NULL, compiler_flags = NULL) {
       if (!file.exists(cache_file)) {
         return(NULL)
       }
@@ -127,7 +131,7 @@ ModuleCache <- R6::R6Class(
       }
 
       # Validate cache (pass file_hash to avoid recomputing MD5)
-      if (!private$is_valid(cache_data, src_file, coverage = coverage, file_hash = file_hash)) {
+      if (!private$is_valid(cache_data, src_file, coverage = coverage, file_hash = file_hash, compiler_flags = compiler_flags)) {
         # Invalid cache, delete related cache files (use dirname to avoid get_paths)
         unlink(cache_file)
         code_r <- sub("\\.code\\.rds$", ".code.R", cache_file)
@@ -166,7 +170,7 @@ ModuleCache <- R6::R6Class(
     #' @param cache_data Deserialized cache data
     #' @param src_file Source file path
     #' @return TRUE if valid, FALSE otherwise
-    is_valid = function(cache_data, src_file, coverage = FALSE, file_hash = NULL) {
+    is_valid = function(cache_data, src_file, coverage = FALSE, file_hash = NULL, compiler_flags = NULL) {
       if (!is.list(cache_data)) return(FALSE)
 
       # Check version
@@ -186,10 +190,24 @@ ModuleCache <- R6::R6Class(
         return(FALSE)
       }
 
-      # Check defaultPackages (affects which symbols are resolved vs left bare)
+      # Check defaultPackages (affects which symbols are resolved vs left bare).
+      # The field must be present (not NULL); caches from before this field
+      # was added are invalidated.
+      if (is.null(cache_data$default_packages)) {
+        return(FALSE)
+      }
       current_pkgs <- sort(getOption("defaultPackages", character(0)))
-      if (!is.null(cache_data$default_packages) &&
-          !identical(cache_data$default_packages, current_pkgs)) {
+      if (!identical(cache_data$default_packages, current_pkgs)) {
+        return(FALSE)
+      }
+
+      # Check compiler flags — different optimization settings produce different
+      # compiled output. The field must be present (not NULL); caches from
+      # before this field was added are invalidated.
+      if (is.null(cache_data$compiler_flags)) {
+        return(FALSE)
+      }
+      if (!is.null(compiler_flags) && !identical(cache_data$compiler_flags, compiler_flags)) {
         return(FALSE)
       }
 
@@ -203,6 +221,24 @@ ModuleCache <- R6::R6Class(
       }
 
       TRUE
+    },
+    #' @description Clean up stale cache files for a source file
+    #' @param cache_dir Cache directory path
+    #' @param src_basename Source file basename (e.g., "module.arl")
+    #' @param current_hash The current hash being written
+    cleanup_stale_cache = function(cache_dir, src_basename, current_hash) {
+      if (!dir.exists(cache_dir)) return(invisible(NULL))
+      # Pattern: <basename>.<hash>.code.rds and .code.R
+      # Match all cache files for this source file
+      pattern <- paste0("^", gsub("\\.", "\\\\.", src_basename), "\\.[a-f0-9]+\\.code\\.(rds|R)$")
+      existing <- list.files(cache_dir, pattern = pattern, full.names = TRUE)
+      # Keep files matching the current hash
+      current_pattern <- paste0(src_basename, ".", current_hash, ".code.")
+      stale <- existing[!grepl(current_pattern, basename(existing), fixed = TRUE)]
+      if (length(stale) > 0) {
+        unlink(stale)
+      }
+      invisible(NULL)
     }
   )
 )
