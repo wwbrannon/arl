@@ -29,6 +29,10 @@ Apply function to each element.
 
 **Signature:** `(map fn lst)`
 
+**Parameters:**
+- **`fn`** — Function to apply to each element
+- **`lst`** — List to transform
+
 **Examples:**
 ```{arl}
 (map (lambda (x) (* x 2)) (list 1 2 3))  ; => (2 4 6)
@@ -50,6 +54,10 @@ Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
 
 **Signature:** `(mapcat fn lst)`
 
+**Parameters:**
+- **`fn`** — Function that returns a list for each element
+- **`lst`** — List to transform
+
 **Examples:**
 ```{arl}
 (mapcat (lambda (x) (list x (* x 10))) (list 1 2 3))  ; => (1 10 2 20 3 30)
@@ -69,6 +77,10 @@ Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
 Filter items by predicate.
 
 **Signature:** `(filter pred lst)`
+
+**Parameters:**
+- **`pred`** — Predicate function; elements where it returns #t are kept
+- **`lst`** — List to filter
 
 **Examples:**
 ```{arl}
@@ -91,6 +103,10 @@ Remove items where predicate is true.
 
 **Signature:** `(remove pred lst)`
 
+**Parameters:**
+- **`pred`** — Predicate function; elements where it returns #t are removed
+- **`lst`** — List to filter
+
 **Examples:**
 ```{arl}
 (remove even? (list 1 2 3 4 5 6))                 ; => (1 3 5)
@@ -110,6 +126,11 @@ Remove items where predicate is true.
 Reduce list with function.
 
 **Signature:** `(reduce fn lst rest...)`
+
+**Parameters:**
+- **`fn`** — Binary function taking accumulator and current element
+- **`lst`** — List to reduce
+- **`rest`** — Optional initial accumulator value
 
 **Examples:**
 ```{arl}
@@ -135,6 +156,11 @@ Left fold alias for reduce. Applies fn as (fn acc elem).
 
 **Signature:** `(foldl fn lst rest...)`
 
+**Parameters:**
+- **`fn`** — Binary function taking accumulator and current element
+- **`lst`** — List to fold over
+- **`rest`** — Optional initial accumulator value
+
 **Examples:**
 ```{arl}
 (foldl + (list 1 2 3 4))        ; => 10
@@ -157,6 +183,11 @@ Left fold alias for reduce. Applies fn as (fn acc elem).
 Right fold. Applies fn as (fn elem acc).
 
 **Signature:** `(foldr fn lst rest...)`
+
+**Parameters:**
+- **`fn`** — Binary function taking current element and accumulator
+- **`lst`** — List to fold over from the right
+- **`rest`** — Optional initial accumulator value
 
 **Examples:**
 ```{arl}
@@ -181,6 +212,10 @@ Return #t if predicate true for all items.
 
 **Signature:** `(every? pred lst)`
 
+**Parameters:**
+- **`pred`** — Predicate function to test each element
+- **`lst`** — List to check
+
 **Examples:**
 ```{arl}
 (every? positive? (list 1 2 3))       ; => #t
@@ -204,6 +239,10 @@ Return #t if predicate true for any item.
 
 **Signature:** `(any? pred lst)`
 
+**Parameters:**
+- **`pred`** — Predicate function to test each element
+- **`lst`** — List to check
+
 **Examples:**
 ```{arl}
 (any? even? (list 1 3 4 5))           ; => #t
@@ -225,6 +264,9 @@ Return #t if predicate true for any item.
 Negate predicate.
 
 **Signature:** `(complement pred)`
+
+**Parameters:**
+- **`pred`** — Predicate function to negate
 
 **Examples:**
 ```{arl}
@@ -249,6 +291,10 @@ Compose two functions.
 
 **Signature:** `(compose f g)`
 
+**Parameters:**
+- **`f`** — Outer function (applied second)
+- **`g`** — Inner function (applied first)
+
 **Examples:**
 ```{arl}
 (define add1-then-double (compose (lambda (x) (* x 2)) (lambda (x) (+ x 1))))
@@ -270,6 +316,10 @@ Compose two functions.
 Partially apply function.
 
 **Signature:** `(partial fn captured...)`
+
+**Parameters:**
+- **`fn`** — Function to partially apply
+- **`captured`** — Arguments to bind to fn's first positions
 
 **Examples:**
 ```{arl}
@@ -299,6 +349,10 @@ with optional initial arguments.
 
 **Signature:** `(curry fn initial-args...)`
 
+**Parameters:**
+- **`fn`** — Function to curry (must have fixed arity)
+- **`initial-args`** — Optional arguments to apply immediately
+
 **Examples:**
 ```{arl}
 (define add (curry (lambda (a b) (+ a b))))
@@ -321,6 +375,9 @@ with optional initial arguments.
 Juxtaposition - apply multiple functions to same args, return list of results.
 
 **Signature:** `(juxt fns...)`
+
+**Parameters:**
+- **`fns`** — Functions to apply to the arguments
 
 **Examples:**
 ```{arl}
@@ -345,6 +402,9 @@ Return a function that always returns the given value.
 
 **Signature:** `(constantly value)`
 
+**Parameters:**
+- **`value`** — Value to return regardless of arguments
+
 **Examples:**
 ```{arl}
 (define always-42 (constantly 42))
@@ -365,6 +425,11 @@ Return a function that always returns the given value.
 Apply function n times to initial value.
 
 **Signature:** `(iterate fn n init)`
+
+**Parameters:**
+- **`fn`** — Unary function to apply repeatedly
+- **`n`** — Number of times to apply fn
+- **`init`** — Starting value
 
 **Examples:**
 ```{arl}
@@ -391,6 +456,11 @@ predicate is false, stops when next value would satisfy predicate.
 
 **Signature:** `(iterate-until fn init pred)`
 
+**Parameters:**
+- **`fn`** — Unary function to apply repeatedly
+- **`init`** — Starting value
+- **`pred`** — Predicate that signals when to stop collecting
+
 **Examples:**
 ```{arl}
 (iterate-until (lambda (x) (* x 2)) 1 (lambda (x) (> x 100)))
@@ -413,6 +483,9 @@ predicate is false, stops when next value would satisfy predicate.
 Memoize function - cache results for previously seen arguments.
 
 **Signature:** `(memoize fn)`
+
+**Parameters:**
+- **`fn`** — Function whose results to cache by arguments
 
 **Examples:**
 ```{arl}
@@ -440,6 +513,9 @@ are not part of this module.
 Logical negation with Arl truthiness.
 
 **Signature:** `(not x)`
+
+**Parameters:**
+- **`x`** — Value to negate
 
 **Examples:**
 ```{arl}
@@ -471,6 +547,10 @@ Logical negation with Arl truthiness.
 Logical exclusive OR with Arl truthiness.
 
 **Signature:** `(xor a b)`
+
+**Parameters:**
+- **`a`** — First value
+- **`b`** — Second value
 
 **Examples:**
 ```{arl}

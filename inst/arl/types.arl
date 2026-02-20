@@ -18,6 +18,7 @@
   ;;' @section List and Pair Predicates
 
   ;;' @description Return #t if x is a proper list (R list or call), not a dotted pair.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (list? (list 1 2 3))  ; => #t
   ;;' (list? ())  ; => #t
@@ -33,6 +34,7 @@
         (if (is.list x) #t (if (is.call x) #t #f)))))
 
   ;;' @description Return #t if x is a non-empty list or dotted pair (pairlist cell).
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (list-or-pair? (list 1))  ; => #t
   ;;' @assert
@@ -44,6 +46,7 @@
         (if (list? x) (if (> (length x) 0) #t #f) #f))))
 
   ;;' @description Return #t for empty list or #nil.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (null? #nil)  ; => #t
   ;;' (null? ())  ; => #t
@@ -64,6 +67,7 @@
             #f)))))
 
   ;;' @description Alias for null?.
+  ;;' @param x Value to test
   ;;' @seealso null?
   (define nil?
     (lambda (x)
@@ -71,6 +75,7 @@
 
   ;;' @description Return #t if x is not a non-empty list or
   ;;' dotted pair (i.e. not list-or-pair?).
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (atom? 42)  ; => #t
   ;;' (atom? "hello")  ; => #t
@@ -88,6 +93,7 @@
 
   ;;' @description Return #t if x is empty (0-length).
   ;;' (Note the empty string "" has length 1 and is not "empty"!)
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (empty? ())  ; => #t
   ;;' (empty? (list))  ; => #t
@@ -105,6 +111,7 @@
   ;;' @section Symbol Predicates
 
   ;;' @description Return #t if x is a symbol.
+  ;;' @param x Value to test
   ;;' @signature (symbol? x)
   ;;' @examples
   ;;' (symbol? 'foo)  ; => #t
@@ -117,6 +124,7 @@
   (define symbol? is.symbol)
 
   ;;' @description Return #t if x is an Arl keyword.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (keyword? ':foo)  ; => #t
   ;;' (keyword? 'foo)   ; => #f
@@ -130,6 +138,7 @@
   ;;' @section Basic Type Predicates
 
   ;;' @description Return #t if x is a number (real or complex).
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (number? 42)  ; => #t
   ;;' @assert
@@ -142,6 +151,7 @@
         (if (is.complex x) #t #f))))
 
   ;;' @description Return #t if x is character.
+  ;;' @param x Value to test
   ;;' @signature (string? x)
   ;;' @examples
   ;;' (string? "hello")  ; => #t
@@ -150,6 +160,7 @@
   (define string? is.character)
 
   ;;' @description Return #t if x is a non-list atomic vector.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (vector? (c 1 2 3))  ; => #t
   ;;' @assert
@@ -162,6 +173,7 @@
         #f)))
 
   ;;' @description Return #t if x is a single logical value.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (boolean? #t)  ; => #t
   ;;' (boolean? #f)  ; => #t
@@ -179,6 +191,7 @@
         #f)))
 
   ;;' @description Return #t if x is TRUE.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (true? #t)  ; => #t
   ;;' @assert
@@ -188,6 +201,7 @@
       (isTRUE x)))
 
   ;;' @description Return #t if x is #f.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (false? #f)  ; => #t
   ;;' @assert
@@ -199,6 +213,7 @@
   ;;' @section Function Predicates
 
   ;;' @description Return #t if x is a function.
+  ;;' @param x Value to test
   ;;' @signature (fn? x)
   ;;' @examples
   ;;' (fn? car)  ; => #t
@@ -208,11 +223,13 @@
   (define fn? is.function)
 
   ;;' @description Alias for fn?.
+  ;;' @param x Value to test
   ;;' @signature (callable? x)
   ;;' @seealso fn?
   (define callable? fn?)
 
   ;;' @description Alias for fn? - return #t if x is a function.
+  ;;' @param x Value to test
   ;;' @seealso fn?, callable?
   (define procedure?
     (lambda (x)
@@ -221,6 +238,7 @@
   ;;' @section Environment Predicates
 
   ;;' @description Test if x is an environment (including R6 objects).
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (environment? (baseenv))  ; => #t
   ;;' @assert
@@ -231,6 +249,7 @@
       (r-call "is.environment" (list x))))
 
   ;;' @description Test if x is a Reference Class object.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (is-refclass? (baseenv))  ; => #f
   ;;' @assert
@@ -243,6 +262,7 @@
   ;;' @section Type Introspection
 
   ;;' @description Return the type of value (alias for R's typeof).
+  ;;' @param x Value to test
   ;;' @signature (type-of x)
   ;;' @examples
   ;;' (type-of 42)  ; => "double"
@@ -269,6 +289,7 @@
   ;;' ```
 
   ;;' @description Return #t if x is a real number (includes ±Inf, excludes complex).
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (real? 42)            ; => #t
   ;;' (real? 3.14)          ; => #t
@@ -287,6 +308,7 @@
         #f)))
 
   ;;' @description Return #t if x is a complex number.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (complex? (make-rectangular 3 4))  ; => #t
   ;;' (complex? 42)         ; => #f
@@ -299,6 +321,7 @@
       (is.complex x)))
 
   ;;' @description Return #t if x is a finite real number (rational in R are finite floats).
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (rational? 42)        ; => #t
   ;;' (rational? 3.14)      ; => #t
@@ -318,6 +341,7 @@
         #f)))
 
   ;;' @description Return #t if x is an exact number (integer storage type in R).
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (exact? 5L)           ; => #t (integer type)
   ;;' (exact? 5.0)          ; => #f (double type)
@@ -333,6 +357,7 @@
       (is.integer x)))
 
   ;;' @description Return #t if x is an inexact number (double or complex in R).
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (inexact? 5.0)        ; => #t
   ;;' (inexact? (make-rectangular 3 4))  ; => #t
@@ -349,6 +374,7 @@
         #f)))
 
   ;;' @description Return #t if x is an integer-valued number.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (integer? 42)         ; => #t
   ;;' (integer? 42.0)       ; => #t (value is integer even if storage is double)
@@ -370,6 +396,7 @@
         #f)))
 
   ;;' @description Return #t if x is a natural number (integer >= 0).
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (natural? 0)          ; => #t
   ;;' (natural? 42)         ; => #t
@@ -388,6 +415,7 @@
         #f)))
 
   ;;' @description Return #t if x is finite.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (finite? 42)          ; => #t
   ;;' (finite? Inf)         ; => #f
@@ -404,6 +432,7 @@
       (isTRUE (is.finite x))))
 
   ;;' @description Return #t if x is infinite.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (infinite? Inf)       ; => #t
   ;;' (infinite? -Inf)      ; => #t
@@ -420,6 +449,7 @@
       (isTRUE (is.infinite x))))
 
   ;;' @description Return #t if x is NaN.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (nan? NaN)            ; => #t
   ;;' (nan? (/ 0 0))        ; => #t (0/0 = NaN)
@@ -438,6 +468,7 @@
   ;;' @section Value Predicates
 
   ;;' @description Return #t if x is an even number.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (even? 4)             ; => #t
   ;;' (even? 3)             ; => #f
@@ -452,6 +483,7 @@
       (isTRUE (== (%% x 2) 0))))
 
   ;;' @description Return #t if x is an odd number.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (odd? 3)              ; => #t
   ;;' (odd? 4)              ; => #f
@@ -464,6 +496,7 @@
       (isTRUE (== (%% x 2) 1))))
 
   ;;' @description Return #t if x is zero.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (zero? 0)             ; => #t
   ;;' (zero? 0.0)           ; => #t
@@ -478,6 +511,7 @@
       (isTRUE (== x 0))))
 
   ;;' @description Return #t if x is greater than zero.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (positive? 5)         ; => #t
   ;;' (positive? 0)         ; => #f
@@ -492,6 +526,7 @@
       (isTRUE (> x 0))))
 
   ;;' @description Return #t if x is less than zero.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (negative? -5)        ; => #t
   ;;' (negative? 0)         ; => #f
@@ -506,6 +541,7 @@
       (isTRUE (< x 0))))
 
   ;;' @description Return #t if x is greater than or equal to zero.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (non-negative? 5)     ; => #t
   ;;' (non-negative? 0)     ; => #t
@@ -520,6 +556,7 @@
       (isTRUE (>= x 0))))
 
   ;;' @description Return #t if x is less than or equal to zero.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (non-positive? -5)    ; => #t
   ;;' (non-positive? 0)     ; => #t

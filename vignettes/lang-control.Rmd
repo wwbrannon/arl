@@ -25,6 +25,10 @@ Evaluate body forms when test is truthy.
 
 **Signature:** `(when test body...)`
 
+**Parameters:**
+- **`test`** — Condition to evaluate
+- **`body`** — Expressions to evaluate when test is truthy
+
 **Examples:**
 ```{arl}
 (when #t "yes")          ; => "yes"
@@ -47,6 +51,10 @@ Evaluate body forms when test is truthy.
 Evaluate body forms when test is falsy.
 
 **Signature:** `(unless test body...)`
+
+**Parameters:**
+- **`test`** — Condition to evaluate
+- **`body`** — Expressions to evaluate when test is falsy
 
 **Examples:**
 ```{arl}
@@ -72,6 +80,10 @@ Evaluate body forms when test is falsy.
 Multi-branch conditional.
 
 **Signature:** `(cond clause rest...)`
+
+**Parameters:**
+- **`clause`** — First (test body...) clause
+- **`rest`** — Additional clauses; last may be (else body...)
 
 **Examples:**
 ```{arl}
@@ -101,6 +113,11 @@ Branch on key equality. Each clause:
 Key expression is evaluated only once.
 
 **Signature:** `(case key clause rest...)`
+
+**Parameters:**
+- **`key`** — Expression to match (evaluated once)
+- **`clause`** — First match clause: ((datum...) body...)
+- **`rest`** — Additional clauses; last may be (else body...)
 
 **Examples:**
 ```{arl}
@@ -135,6 +152,11 @@ Evaluate thunk with error/finally handlers.
 
 **Signature:** `(try thunk [error_handler] [finally_handler])`
 
+**Parameters:**
+- **`thunk`** — Zero-argument function to execute
+- **`error_handler`** — Function receiving error condition (default #f)
+- **`finally_handler`** — Zero-argument cleanup function (default #f)
+
 **Examples:**
 ```{arl}
 (try (lambda () 42))                           ; => 42
@@ -160,6 +182,10 @@ Evaluate thunk with error/finally handlers.
 Macro wrapper around try with catch/finally.
 
 **Signature:** `(try-catch body clauses...)`
+
+**Parameters:**
+- **`body`** — Expression to evaluate
+- **`clauses`** — Optional (catch var body...) and/or (finally body...) clauses
 
 **Examples:**
 ```{arl}
@@ -199,6 +225,9 @@ Invoke receiver with the current continuation (escape procedure).
 
 **Signature:** `(call-cc receiver)`
 
+**Parameters:**
+- **`receiver`** — Function that receives the current continuation as its argument
+
 **Examples:**
 ```{arl}
 (call-cc (lambda (k) (k 42)))  ; => 42
@@ -219,6 +248,9 @@ Invoke receiver with the current continuation (escape procedure).
 Full name alias for call-cc.
 
 **Signature:** `(call-with-current-continuation receiver)`
+
+**Parameters:**
+- **`receiver`** — Function that receives the current continuation as its argument
 
 **Examples:**
 ```{arl}
@@ -243,6 +275,9 @@ Collect all symbols from a destructuring pattern, ignoring dots.
 
 **Signature:** `(pattern-symbols pattern)`
 
+**Parameters:**
+- **`pattern`** — Nested list/symbol pattern to extract symbol names from
+
 **See also:** [destructuring-bind](#destructuring-bind)
 
 ---
@@ -252,6 +287,11 @@ Collect all symbols from a destructuring pattern, ignoring dots.
 Bind a destructuring pattern to a value, then evaluate body forms.
 
 **Signature:** `(destructuring-bind pattern value body...)`
+
+**Parameters:**
+- **`pattern`** — Destructuring pattern (possibly nested, with . for rest)
+- **`value`** — Expression whose result is destructured
+- **`body`** — Expressions evaluated with the pattern bindings in scope
 
 **Examples:**
 ```{arl}
@@ -276,6 +316,10 @@ Bind names to values within body.
 
 **Signature:** `(let bindings body...)`
 
+**Parameters:**
+- **`bindings`** — List of (pattern value) pairs, evaluated in parallel
+- **`body`** — Expressions evaluated with the bindings in scope
+
 **Examples:**
 ```{arl}
 (let ((x 1) (y 2))
@@ -299,6 +343,10 @@ Bind names to values within body.
 ### let* {#let-star}
 
 Sequential let bindings.
+
+**Parameters:**
+- **`bindings`** — List of (pattern value) pairs, evaluated sequentially
+- **`body`** — Expressions evaluated with the bindings in scope
 
 **Examples:**
 ```{arl}
@@ -326,6 +374,10 @@ Recursive bindings.
 
 **Signature:** `(letrec bindings body...)`
 
+**Parameters:**
+- **`bindings`** — List of (name value) pairs, all mutually visible
+- **`body`** — Expressions evaluated with the bindings in scope
+
 **Examples:**
 ```{arl}
 (letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
@@ -348,6 +400,10 @@ Recursive bindings.
 Bind pattern to value and evaluate body when value is truthy.
 
 **Signature:** `(when-let binding body...)`
+
+**Parameters:**
+- **`binding`** — Single (pattern value) pair
+- **`body`** — Expressions evaluated when value is truthy, with pattern bound
 
 **Examples:**
 ```{arl}
@@ -372,6 +428,11 @@ Bind pattern to value and evaluate body when value is truthy.
 Bind pattern to value and choose branch based on its truthiness.
 
 **Signature:** `(if-let binding then rest...)`
+
+**Parameters:**
+- **`binding`** — Single (pattern value) pair
+- **`then`** — Expression evaluated when value is truthy, with pattern bound
+- **`rest`** — Optional else expression when value is falsy
 
 **Examples:**
 ```{arl}
@@ -400,6 +461,10 @@ Bind pattern to value and choose branch based on its truthiness.
 Loop over seq binding var each iteration. Expands to while.
 
 **Signature:** `(do-list binding body...)`
+
+**Parameters:**
+- **`binding`** — Pair of (var sequence-expr)
+- **`body`** — Expressions evaluated for each element with var bound
 
 **Examples:**
 ```{arl}
@@ -432,6 +497,9 @@ Signal a recur back to the enclosing `loop`. Only valid inside a `loop` body.
 
 **Signature:** `(recur args...)`
 
+**Parameters:**
+- **`args`** — New values for each loop variable (must match loop binding count)
+
 **Examples:**
 ```{arl}
 (loop ((i 5) (acc 0))
@@ -451,6 +519,10 @@ Signal a recur back to the enclosing `loop`. Only valid inside a `loop` body.
 Clojure-style loop/recur that expands to an R while loop.
 
 **Signature:** `(loop bindings body...)`
+
+**Parameters:**
+- **`bindings`** — List of (var init-value) pairs for loop variables
+- **`body`** — Loop body; use (recur ...) to iterate with new values
 
 **Examples:**
 ```{arl}
@@ -484,6 +556,10 @@ Repeat body until test is truthy.
 
 **Signature:** `(until test body...)`
 
+**Parameters:**
+- **`test`** — Condition checked before each iteration; loop stops when truthy
+- **`body`** — Expressions evaluated each iteration
+
 **Examples:**
 ```{arl}
 (define i 0)
@@ -510,6 +586,10 @@ Thread value through forms (first argument).
 
 **Signature:** `(-> value forms...)`
 
+**Parameters:**
+- **`value`** — Initial value to thread
+- **`forms`** — Sequence of forms to thread through
+
 **Examples:**
 ```{arl}
 (-> 5 (+ 3) (* 2))       ; => 16  ; (5+3)*2
@@ -535,6 +615,10 @@ Thread value through forms (first argument).
 Thread value through forms (last argument).
 
 **Signature:** `(->> value forms...)`
+
+**Parameters:**
+- **`value`** — Initial value to thread
+- **`forms`** — Sequence of forms to thread through
 
 **Examples:**
 ```{arl}

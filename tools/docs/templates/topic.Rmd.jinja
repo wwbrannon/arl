@@ -39,6 +39,13 @@ arl::register_knitr_engine()
 
 **Signature:** `{{ entry.signature }}`
 {% endif %}
+{% if entry.params %}
+
+**Parameters:**
+{% for p in entry.params %}
+- **`{{ p.name }}`** — {{ p.description }}
+{% endfor %}
+{% endif %}
 {% if entry.has_examples %}
 
 **Examples:**

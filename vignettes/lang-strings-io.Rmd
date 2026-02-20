@@ -29,6 +29,10 @@ Join strings with separator.
 
 **Signature:** `(string-join x [sep ""])`
 
+**Parameters:**
+- **`x`** — A list of strings to join.
+- **`sep`** — Separator inserted between elements (default "").
+
 **Examples:**
 ```{arl}
 (string-join (list "a" "b" "c") "-")  ; => "a-b-c"
@@ -52,6 +56,10 @@ Split string on separator.
 
 **Signature:** `(string-split x [sep ""])`
 
+**Parameters:**
+- **`x`** — The string to split.
+- **`sep`** — Separator to split on (default ""), splitting into characters.
+
 **Examples:**
 ```{arl}
 (string-split "a-b-c" "-")  ; => ("a" "b" "c")
@@ -73,6 +81,9 @@ Trim leading and trailing whitespace.
 
 **Signature:** `(trim str)`
 
+**Parameters:**
+- **`str`** — The string to trim.
+
 **Examples:**
 ```{arl}
 (trim "  hello  ")  ; => "hello"
@@ -91,6 +102,10 @@ Trim leading and trailing whitespace.
 Format string with sprintf.
 
 **Signature:** `(string-format fmt args...)`
+
+**Parameters:**
+- **`fmt`** — A sprintf-style format string.
+- **`args`** — Values to substitute into the format placeholders.
 
 **Examples:**
 ```{arl}
@@ -115,6 +130,11 @@ Check pattern in string (fixed).
 
 **Signature:** `(string-contains? str pattern [fixed #t])`
 
+**Parameters:**
+- **`str`** — The string to search in.
+- **`pattern`** — The pattern to search for.
+- **`fixed`** — If #t (default), match literally; if #f, treat as regex.
+
 **Examples:**
 ```{arl}
 (string-contains? "hello world" "world")       ; => #t
@@ -137,6 +157,11 @@ Check pattern in string (fixed).
 Check pattern in string (regex).
 
 **Signature:** `(string-match? str pattern [fixed #f])`
+
+**Parameters:**
+- **`str`** — The string to search in.
+- **`pattern`** — The pattern to search for.
+- **`fixed`** — If #f (default), treat as regex; if #t, match literally.
 
 **Examples:**
 ```{arl}
@@ -161,6 +186,11 @@ Find pattern index or #nil.
 
 **Signature:** `(string-find str pattern [fixed #t])`
 
+**Parameters:**
+- **`str`** — The string to search in.
+- **`pattern`** — The pattern to find.
+- **`fixed`** — If #t (default), match literally; if #f, treat as regex.
+
 **Examples:**
 ```{arl}
 (string-find "hello world" "world")  ; => 6
@@ -184,6 +214,12 @@ Replace first match. Default is literal (fixed); pass :fixed #f for regex.
 
 **Signature:** `(string-replace str pattern replacement [fixed #t])`
 
+**Parameters:**
+- **`str`** — The string to modify.
+- **`pattern`** — The pattern to match.
+- **`replacement`** — The replacement string.
+- **`fixed`** — If #t (default), match literally; if #f, treat as regex.
+
 **Examples:**
 ```{arl}
 (string-replace "hello world" "world" "there")    ; => "hello there"
@@ -205,6 +241,12 @@ Replace all matches. Default is literal (fixed); pass :fixed #f for regex.
 
 **Signature:** `(string-replace-all str pattern replacement [fixed #t])`
 
+**Parameters:**
+- **`str`** — The string to modify.
+- **`pattern`** — The pattern to match.
+- **`replacement`** — The replacement string.
+- **`fixed`** — If #t (default), match literally; if #f, treat as regex.
+
 **Examples:**
 ```{arl}
 (string-replace-all "aaa" "a" "b")   ; => "bbb"
@@ -225,6 +267,9 @@ Replace all matches. Default is literal (fixed); pass :fixed #f for regex.
 Concatenate strings together.
 
 **Signature:** `(string-append args...)`
+
+**Parameters:**
+- **`args`** — Zero or more strings to concatenate.
 
 **Examples:**
 ```{arl}
@@ -249,6 +294,9 @@ Convert value to string representation.
 
 **Signature:** `(->string x)`
 
+**Parameters:**
+- **`x`** — The value to convert to a string.
+
 **Examples:**
 ```{arl}
 (->string 42)     ; => "42"
@@ -269,6 +317,10 @@ Convert value to string representation.
 Get character at index (0-based).
 
 **Signature:** `(char-at str index)`
+
+**Parameters:**
+- **`str`** — The string to index into.
+- **`index`** — Zero-based character position.
 
 **Examples:**
 ```{arl}
@@ -291,6 +343,10 @@ Scheme-style character accessor (alias for char-at).
 
 **Signature:** `(string-ref str index)`
 
+**Parameters:**
+- **`str`** — The string to index into.
+- **`index`** — Zero-based character position.
+
 **Examples:**
 ```{arl}
 (string-ref "hello" 0)    ; => "h"
@@ -311,6 +367,11 @@ Scheme-style character accessor (alias for char-at).
 Extract substring from start (inclusive) to end (exclusive), 0-based.
 
 **Signature:** `(string-slice str start end)`
+
+**Parameters:**
+- **`str`** — The string to slice.
+- **`start`** — Zero-based start index (inclusive).
+- **`end`** — Zero-based end index (exclusive).
 
 **Examples:**
 ```{arl}
@@ -335,6 +396,9 @@ Return length of string.
 
 **Signature:** `(string-length str)`
 
+**Parameters:**
+- **`str`** — The string to measure.
+
 **Examples:**
 ```{arl}
 (string-length "hello")  ; => 5
@@ -358,6 +422,9 @@ Convert string to uppercase.
 
 **Signature:** `(string-upcase str)`
 
+**Parameters:**
+- **`str`** — The string to convert.
+
 **Examples:**
 ```{arl}
 (string-upcase "hello")  ; => "HELLO"
@@ -379,6 +446,9 @@ Convert string to lowercase.
 
 **Signature:** `(string-downcase str)`
 
+**Parameters:**
+- **`str`** — The string to convert.
+
 **Examples:**
 ```{arl}
 (string-downcase "HELLO")  ; => "hello"
@@ -399,6 +469,9 @@ Convert string to lowercase.
 Convert string to title case (capitalize first letter of each word).
 
 **Signature:** `(string-titlecase str)`
+
+**Parameters:**
+- **`str`** — The string to convert.
 
 **Examples:**
 ```{arl}
@@ -425,6 +498,10 @@ Lexicographic less-than comparison.
 
 **Signature:** `(string<? a b)`
 
+**Parameters:**
+- **`a`** — First string.
+- **`b`** — Second string.
+
 **Examples:**
 ```{arl}
 (string<? "abc" "def")  ; => #t
@@ -445,6 +522,10 @@ Lexicographic less-than comparison.
 Lexicographic greater-than comparison.
 
 **Signature:** `(string>? a b)`
+
+**Parameters:**
+- **`a`** — First string.
+- **`b`** — Second string.
 
 **Examples:**
 ```{arl}
@@ -467,6 +548,10 @@ String equality comparison.
 
 **Signature:** `(string=? a b)`
 
+**Parameters:**
+- **`a`** — First string.
+- **`b`** — Second string.
+
 **Examples:**
 ```{arl}
 (string=? "hello" "hello")  ; => #t
@@ -485,6 +570,10 @@ String equality comparison.
 Lexicographic less-than-or-equal comparison.
 
 **Signature:** `(string<=? a b)`
+
+**Parameters:**
+- **`a`** — First string.
+- **`b`** — Second string.
 
 **Examples:**
 ```{arl}
@@ -506,6 +595,10 @@ Lexicographic less-than-or-equal comparison.
 Lexicographic greater-than-or-equal comparison.
 
 **Signature:** `(string>=? a b)`
+
+**Parameters:**
+- **`a`** — First string.
+- **`b`** — Second string.
 
 **Examples:**
 ```{arl}
@@ -532,6 +625,9 @@ Convert string to list of characters.
 
 **Signature:** `(string->list str)`
 
+**Parameters:**
+- **`str`** — The string to convert.
+
 **Examples:**
 ```{arl}
 (string->list "hello")  ; => ("h" "e" "l" "l" "o")
@@ -553,6 +649,9 @@ Convert list of characters to string.
 
 **Signature:** `(list->string lst)`
 
+**Parameters:**
+- **`lst`** — A list of single-character strings.
+
 **Examples:**
 ```{arl}
 (list->string (list "h" "e" "l" "l" "o"))  ; => "hello"
@@ -573,6 +672,10 @@ Convert list of characters to string.
 Convert number to string with optional base (2-36).
 
 **Signature:** `(number->string num base-args...)`
+
+**Parameters:**
+- **`num`** — The number to convert.
+- **`base-args`** — Optional base for conversion (2, 8, 10, or 16; default 10).
 
 **Examples:**
 ```{arl}
@@ -598,6 +701,10 @@ Convert number to string with optional base (2-36).
 Parse string to number with optional base (2-36).
 
 **Signature:** `(string->number str base-args...)`
+
+**Parameters:**
+- **`str`** — The string to parse.
+- **`base-args`** — Optional base for parsing (2, 8, 10, or 16; default 10).
 
 **Examples:**
 ```{arl}
@@ -630,6 +737,9 @@ Read single line from stdin.
 
 **Signature:** `(read-line [prompt ""])`
 
+**Parameters:**
+- **`prompt`** — Prompt string to display before reading (default "")
+
 **Examples:**
 ```{arl}
 (read-line)              ; waits for user input, returns string
@@ -651,6 +761,9 @@ Read single line from stdin.
 Write string to output (alias for cat).
 
 **Signature:** `(write-string x)`
+
+**Parameters:**
+- **`x`** — Value to write to standard output
 
 **Examples:**
 ```{arl}
@@ -681,6 +794,10 @@ Read entire file as string.
 
 **Signature:** `(read-file path [encoding "UTF-8"])`
 
+**Parameters:**
+- **`path`** — File path to read
+- **`encoding`** — Character encoding to use (default "UTF-8")
+
 **Examples:**
 ```{arl, eval=FALSE}
 (read-file "data.txt")                  ; => file contents as string
@@ -702,6 +819,10 @@ Read file into list of lines.
 
 **Signature:** `(read-lines path [encoding "UTF-8"])`
 
+**Parameters:**
+- **`path`** — File path to read
+- **`encoding`** — Character encoding to use (default "UTF-8")
+
 **Examples:**
 ```{arl, eval=FALSE}
 (read-lines "data.txt")  ; => ("line1" "line2" "line3")
@@ -721,6 +842,12 @@ Read file into list of lines.
 Write string or lines to file.
 
 **Signature:** `(write-file path content [sep "\n"])`
+
+**Parameters:**
+- **`path`** — File path to write to
+- **`content`** — String or list of lines to write
+- **`sep`** — Separator used to join lines (default "\n")
+- **`encoding`** — Character encoding to use (default "UTF-8")
 
 **Examples:**
 ```{arl, eval=FALSE}
@@ -743,6 +870,11 @@ Write list of lines to file.
 
 **Signature:** `(write-lines path lines [encoding "UTF-8"])`
 
+**Parameters:**
+- **`path`** — File path to write to
+- **`lines`** — List of lines to write
+- **`encoding`** — Character encoding to use (default "UTF-8")
+
 **Examples:**
 ```{arl, eval=FALSE}
 (write-lines "out.txt" (list "line1" "line2" "line3"))
@@ -762,6 +894,12 @@ Write list of lines to file.
 Append content to file.
 
 **Signature:** `(append-file path content [sep "\n"])`
+
+**Parameters:**
+- **`path`** — File path to append to
+- **`content`** — String or list of lines to append
+- **`sep`** — Separator used to join lines (default "\n")
+- **`encoding`** — Character encoding to use (default "UTF-8")
 
 **Examples:**
 ```{arl, eval=FALSE}
@@ -785,6 +923,9 @@ Return #t if file exists.
 
 **Signature:** `(file-exists? path)`
 
+**Parameters:**
+- **`path`** — File path to check
+
 **Examples:**
 ```{arl, eval=FALSE}
 (file-exists? "data.txt")    ; => #t or #f
@@ -807,6 +948,9 @@ Return size of file in bytes.
 
 **Signature:** `(file-size path)`
 
+**Parameters:**
+- **`path`** — File path to query
+
 **Examples:**
 ```{arl, eval=FALSE}
 (file-size "data.txt")       ; => 1024 (bytes)
@@ -827,6 +971,9 @@ Return file modification time as numeric timestamp.
 
 **Signature:** `(file-modified-time path)`
 
+**Parameters:**
+- **`path`** — File path to query
+
 **Examples:**
 ```{arl, eval=FALSE}
 (file-modified-time "data.txt")  ; => 1700000000 (numeric timestamp)
@@ -846,6 +993,9 @@ Return file modification time as numeric timestamp.
 Delete file. Return #t on success.
 
 **Signature:** `(file-delete path)`
+
+**Parameters:**
+- **`path`** — File path to delete
 
 **Examples:**
 ```{arl, eval=FALSE}
@@ -872,6 +1022,9 @@ Return #t if directory exists.
 
 **Signature:** `(directory-exists? path)`
 
+**Parameters:**
+- **`path`** — Directory path to check
+
 **Examples:**
 ```{arl}
 (directory-exists? "/tmp")         ; => #t
@@ -890,6 +1043,10 @@ Return #t if directory exists.
 List directory contents as list of filenames.
 
 **Signature:** `(directory-list path [full.names #f])`
+
+**Parameters:**
+- **`path`** — Directory path to list
+- **`full.names`** — When #t, return full file paths instead of just names (default #f)
 
 **Examples:**
 ```{arl, eval=FALSE}
@@ -916,6 +1073,10 @@ Delete directory. Return #t on success.
 
 **Signature:** `(directory-delete path [recursive #t])`
 
+**Parameters:**
+- **`path`** — Directory path to delete
+- **`recursive`** — When #t, delete contents recursively (default #t)
+
 **Examples:**
 ```{arl, eval=FALSE}
 (directory-delete "/tmp/mydir")    ; => #t
@@ -941,6 +1102,9 @@ Get environment variable value. Return #nil if not set.
 
 **Signature:** `(getenv name)`
 
+**Parameters:**
+- **`name`** — Environment variable name
+
 **Examples:**
 ```{arl}
 (getenv "HOME")           ; => "/home/user"
@@ -962,6 +1126,10 @@ Set environment variable.
 
 **Signature:** `(setenv name value)`
 
+**Parameters:**
+- **`name`** — Environment variable name
+- **`value`** — Value to assign to the variable
+
 **Examples:**
 ```{arl}
 (setenv "MY_VAR" "hello")  ; => #t
@@ -982,6 +1150,9 @@ Execute shell command and capture output as string.
 
 **Signature:** `(system-output command)`
 
+**Parameters:**
+- **`command`** — Shell command string to execute
+
 **Examples:**
 ```{arl}
 (system-output "whoami")   ; => "username"
@@ -1000,6 +1171,9 @@ Exit program with status code.
 
 **Signature:** `(exit status)`
 
+**Parameters:**
+- **`status`** — Exit status code (default 0)
+
 ---
 
 ### format-value {#format-value}
@@ -1007,6 +1181,9 @@ Exit program with status code.
 Format value for display.
 
 **Signature:** `(format-value x)`
+
+**Parameters:**
+- **`x`** — Value to format as a string
 
 ---
 
@@ -1019,6 +1196,9 @@ Functions for formatting and printing values.
 Print value with newline.
 
 **Signature:** `(display x)`
+
+**Parameters:**
+- **`x`** — Value to print
 
 **Examples:**
 ```{arl}
@@ -1037,6 +1217,9 @@ Alias for display.
 
 **Signature:** `(println x)`
 
+**Parameters:**
+- **`x`** — Value to print
+
 **Examples:**
 ```{arl}
 (println 42)               ; prints "42\n"
@@ -1053,6 +1236,9 @@ Concatenate values into a string.
 Strings are included as-is (unquoted); other values are formatted.
 
 **Signature:** `(string-concat args...)`
+
+**Parameters:**
+- **`args`** — Values to concatenate together
 
 **Examples:**
 ```{arl}
@@ -1074,6 +1260,10 @@ Strings are included as-is (unquoted); other values are formatted.
 Print value and return it.
 
 **Signature:** `(trace x rest...)`
+
+**Parameters:**
+- **`x`** — Value to print and return
+- **`rest`** — Optional label string to prefix the output
 
 **Examples:**
 ```{arl}

@@ -12,6 +12,7 @@
 ;;' @section Error and Warning
 
   ;;' @description Signal an error with message.
+  ;;' @param msg Error message string
   ;;' @examples
   ;;' (try-catch (error "something went wrong")
   ;;'   (catch e ($ e "message")))     ; => "something went wrong"
@@ -26,6 +27,7 @@
       (stop msg :call. #f)))
 
   ;;' @description Emit warning with message.
+  ;;' @param msg Warning message string
   ;;' @examples
   ;;' (warn "check your input")       ; emits warning, returns #nil
   ;;' @seealso error, trace
@@ -36,6 +38,7 @@
 ;;' @section Identity and Values
 
   ;;' @description Return argument.
+  ;;' @param x Value to return unchanged
   ;;' @examples
   ;;' (identity 42)             ; => 42
   ;;' (identity "hello")        ; => "hello"
@@ -49,6 +52,7 @@
       x))
 
   ;;' @description Return multiple values to a call-with-values consumer.
+  ;;' @param args Values to package together
   ;;' @examples
   ;;' (values 1 2 3)            ; => multiple-values container
   ;;' @assert
@@ -59,6 +63,7 @@
       (r-call "structure" (list args :class "arl_values"))))
 
   ;;' @description Return #t if x is a multiple-values container.
+  ;;' @param x Value to test
   ;;' @examples
   ;;' (values? (values 1 2))    ; => #t
   ;;' (values? 42)              ; => #f
@@ -73,6 +78,8 @@
         #f)))
 
   ;;' @description Call producer and pass its values to consumer.
+  ;;' @param producer Zero-argument function that returns values
+  ;;' @param consumer Function that receives the produced values as arguments
   ;;' @examples
   ;;' (call-with-values
   ;;'   (lambda () (values 1 2))
@@ -97,6 +104,8 @@
 
   ;;' @description Apply a function with a provided list of arguments.
   ;;' @signature (funcall fn args)
+  ;;' @param fn Function to apply
+  ;;' @param args List of arguments to pass to fn
   ;;' @examples
   ;;' (funcall + (list 1 2 3))  ; => 6
   ;;' (funcall c (list 1 2 3))  ; => c(1, 2, 3)
@@ -114,6 +123,9 @@
   ;;' @description Call an R function with optional environment.
   ;;' Searches from .GlobalEnv by default, finding base and loaded
   ;;' package functions.
+  ;;' @param fn Symbol or string naming the R function
+  ;;' @param args List of arguments to pass (default empty)
+  ;;' @param envir Environment to search for fn (default .GlobalEnv)
   ;;' @examples
   ;;' (r-call "mean" (list (c 1 2 3)))   ; => 2
   ;;' (r-call "ls" (list))                ; list .GlobalEnv bindings
@@ -137,6 +149,9 @@
 
   ;;' @description Get a binding by name, defaulting to .GlobalEnv.
   ;;' @signature (get name [envir] [inherits])
+  ;;' @param name Symbol or string naming the binding to look up
+  ;;' @param envir Environment to search in (default .GlobalEnv)
+  ;;' @param inherits Whether to search parent environments (default #t)
   ;;' @examples
   ;;' (get "mean")              ; => the `mean` function
   ;;' (get "pi" (baseenv))      ; => 3.141593
@@ -154,6 +169,8 @@
 
   ;;' @description Remove a variable binding from an environment.
   ;;' @signature (unbind-variable name [envir])
+  ;;' @param name Symbol or string naming the variable to remove
+  ;;' @param envir Environment to remove from (default current environment)
   ;;' @examples
   ;;' (begin
   ;;'   (define tmp-var 42)
@@ -174,6 +191,8 @@
   ;;' Uses `parent` as the child environment parent. Definitions/imports in
   ;;' the loaded file remain in the child and are not visible in `parent`.
   ;;' @signature (run path [parent])
+  ;;' @param path File path to evaluate
+  ;;' @param parent Parent environment for the child (default current environment)
   ;;' @examples
   ;;' (define run-demo-path (tempfile :fileext ".arl"))
   ;;' (writeLines (c "(define run-demo-val 1)") run-demo-path)
@@ -203,6 +222,7 @@
 ;;' @section Macro Introspection
 
   ;;' @description Expand one layer of macros in expr.
+  ;;' @param expr Expression to macro-expand
   ;;' @examples
   ;;' (macroexpand-1 '(when #t 42))  ; => (if #t (begin 42) #nil)
   ;;' @assert
@@ -211,6 +231,7 @@
   (define macroexpand-1 (lambda (expr) (macroexpand expr 1)))
 
   ;;' @description Fully expand all macros in expr. Same as macroexpand with no depth.
+  ;;' @param expr Expression to recursively macro-expand
   ;;' @examples
   ;;' (macroexpand-all '(when #t 42))  ; => (if #t (begin 42) #nil)
   ;;' @assert

@@ -25,6 +25,9 @@ Return #t if x is a proper list (R list or call), not a dotted pair.
 
 **Signature:** `(list? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (list? (list 1 2 3))  ; => #t
@@ -48,6 +51,9 @@ Return #t if x is a non-empty list or dotted pair (pairlist cell).
 
 **Signature:** `(list-or-pair? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (list-or-pair? (list 1))  ; => #t
@@ -66,6 +72,9 @@ Return #t if x is a non-empty list or dotted pair (pairlist cell).
 Return #t for empty list or #nil.
 
 **Signature:** `(null? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -90,6 +99,9 @@ Alias for null?.
 
 **Signature:** `(nil? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **See also:** [null?](#null-p)
 
 ---
@@ -100,6 +112,9 @@ Return #t if x is not a non-empty list or
 dotted pair (i.e. not list-or-pair?).
 
 **Signature:** `(atom? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -126,6 +141,9 @@ Return #t if x is empty (0-length).
 (Note the empty string "" has length 1 and is not "empty"!)
 
 **Signature:** `(empty? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -179,6 +197,9 @@ Return #t if x is a symbol.
 
 **Signature:** `(symbol? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (symbol? 'foo)  ; => #t
@@ -199,6 +220,9 @@ Return #t if x is a symbol.
 Return #t if x is an Arl keyword.
 
 **Signature:** `(keyword? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -221,6 +245,9 @@ Return #t if x is a number (real or complex).
 
 **Signature:** `(number? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (number? 42)  ; => #t
@@ -240,6 +267,9 @@ Return #t if x is character.
 
 **Signature:** `(string? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (string? "hello")  ; => #t
@@ -256,6 +286,9 @@ Return #t if x is character.
 Return #t if x is a non-list atomic vector.
 
 **Signature:** `(vector? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -275,6 +308,9 @@ Return #t if x is a non-list atomic vector.
 Return #t if x is a single logical value.
 
 **Signature:** `(boolean? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -299,6 +335,9 @@ Return #t if x is TRUE.
 
 **Signature:** `(true? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (true? #t)  ; => #t
@@ -315,6 +354,9 @@ Return #t if x is TRUE.
 Return #t if x is #f.
 
 **Signature:** `(false? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -335,6 +377,9 @@ Return #t if x is a function.
 
 **Signature:** `(fn? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (fn? car)  ; => #t
@@ -354,6 +399,9 @@ Alias for fn?.
 
 **Signature:** `(callable? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **See also:** [fn?](#fn-p)
 
 ---
@@ -363,6 +411,9 @@ Alias for fn?.
 Alias for fn? - return #t if x is a function.
 
 **Signature:** `(procedure? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **See also:** [fn?](#fn-p), [callable?](#callable-p)
 
@@ -375,6 +426,9 @@ Alias for fn? - return #t if x is a function.
 Test if x is an environment (including R6 objects).
 
 **Signature:** `(environment? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -395,6 +449,9 @@ Test if x is a Reference Class object.
 
 **Signature:** `(is-refclass? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (is-refclass? (baseenv))  ; => #f
@@ -413,6 +470,9 @@ Test if x is a Reference Class object.
 Return the type of value (alias for R's typeof).
 
 **Signature:** `(type-of x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -451,6 +511,9 @@ Return #t if x is a real number (includes ±Inf, excludes complex).
 
 **Signature:** `(real? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (real? 42)            ; => #t
@@ -476,6 +539,9 @@ Return #t if x is a complex number.
 
 **Signature:** `(complex? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (complex? (make-rectangular 3 4))  ; => #t
@@ -496,6 +562,9 @@ Return #t if x is a complex number.
 Return #t if x is a finite real number (rational in R are finite floats).
 
 **Signature:** `(rational? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -524,6 +593,9 @@ Return #t if x is an exact number (integer storage type in R).
 
 **Signature:** `(exact? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (exact? 5L)           ; => #t (integer type)
@@ -549,6 +621,9 @@ Return #t if x is an inexact number (double or complex in R).
 
 **Signature:** `(inexact? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (inexact? 5.0)        ; => #t
@@ -571,6 +646,9 @@ Return #t if x is an inexact number (double or complex in R).
 Return #t if x is an integer-valued number.
 
 **Signature:** `(integer? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -599,6 +677,9 @@ Return #t if x is a natural number (integer >= 0).
 
 **Signature:** `(natural? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (natural? 0)          ; => #t
@@ -623,6 +704,9 @@ Return #t if x is a natural number (integer >= 0).
 Return #t if x is finite.
 
 **Signature:** `(finite? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -649,6 +733,9 @@ Return #t if x is infinite.
 
 **Signature:** `(infinite? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (infinite? Inf)       ; => #t
@@ -673,6 +760,9 @@ Return #t if x is infinite.
 Return #t if x is NaN.
 
 **Signature:** `(nan? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -701,6 +791,9 @@ Return #t if x is an even number.
 
 **Signature:** `(even? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (even? 4)             ; => #t
@@ -724,6 +817,9 @@ Return #t if x is an odd number.
 
 **Signature:** `(odd? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (odd? 3)              ; => #t
@@ -744,6 +840,9 @@ Return #t if x is an odd number.
 Return #t if x is zero.
 
 **Signature:** `(zero? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -768,6 +867,9 @@ Return #t if x is greater than zero.
 
 **Signature:** `(positive? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (positive? 5)         ; => #t
@@ -790,6 +892,9 @@ Return #t if x is greater than zero.
 Return #t if x is less than zero.
 
 **Signature:** `(negative? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -814,6 +919,9 @@ Return #t if x is greater than or equal to zero.
 
 **Signature:** `(non-negative? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (non-negative? 5)     ; => #t
@@ -836,6 +944,9 @@ Return #t if x is greater than or equal to zero.
 Return #t if x is less than or equal to zero.
 
 **Signature:** `(non-positive? x)`
+
+**Parameters:**
+- **`x`** — Value to test
 
 **Examples:**
 ```{arl}
@@ -869,6 +980,11 @@ Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
 
 **Signature:** `(equal? a b [strict #f])`
 
+**Parameters:**
+- **`a`** — First value
+- **`b`** — Second value
+- **`strict`** — When #t, use identical? for atomics (default #f)
+
 **Examples:**
 ```{arl}
 (equal? 1 1)                    ; => #t
@@ -897,6 +1013,10 @@ R's native equality test. Structural comparison for value
 
 **Signature:** `(identical? a b)`
 
+**Parameters:**
+- **`a`** — First value
+- **`b`** — Second value
+
 **Examples:**
 ```{arl}
 (identical? 1 1)          ; => #t
@@ -923,6 +1043,10 @@ R's native equality test. Structural comparison for value
 
 **Signature:** `(eq? a b)`
 
+**Parameters:**
+- **`a`** — First value
+- **`b`** — Second value
+
 **Note:** True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
 
 **See also:** [identical?](#identical-p), [equal?](#equal-p)
@@ -934,6 +1058,10 @@ R's native equality test. Structural comparison for value
 **Not implemented in Arl.** Raises an error when called.
 
 **Signature:** `(eqv? a b)`
+
+**Parameters:**
+- **`a`** — First value
+- **`b`** — Second value
 
 **Note:** True Scheme `eqv?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. Use `identical?` for R's native equality, or `equal?` for deep structural equality.
 
@@ -951,6 +1079,10 @@ recursive structural comparison of environments and lists.
 Compare two environments by their bindings and values.
 
 **Signature:** `(env-equal? env1 env2)`
+
+**Parameters:**
+- **`env1`** — First environment
+- **`env2`** — Second environment
 
 **Examples:**
 ```{arl}
@@ -972,6 +1104,10 @@ Compare two environments by their bindings and values.
 Recursively compare list elements.
 
 **Signature:** `(list-equal? lst1 lst2)`
+
+**Parameters:**
+- **`lst1`** — First list
+- **`lst2`** — Second list
 
 **Examples:**
 ```{arl}
@@ -1004,6 +1140,9 @@ Extract the first S3 class from an object.
 
 **Signature:** `(s3-type obj)`
 
+**Parameters:**
+- **`obj`** — Object to get the S3 class of
+
 **Examples:**
 ```{arl}
 (s3-type 42)                    ; => "numeric"
@@ -1027,6 +1166,10 @@ Check if all objects have the same S3 type.
 
 **Signature:** `(check-s3-type-match obj rest...)`
 
+**Parameters:**
+- **`obj`** — First object
+- **`rest`** — Additional objects to compare against
+
 **Examples:**
 ```{arl}
 (check-s3-type-match 1 2 3)     ; => #t (all numeric)
@@ -1048,6 +1191,11 @@ Register an S3-style method.
 Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
 
 **Signature:** `(set-method! generic-name class-name method-fun)`
+
+**Parameters:**
+- **`generic-name`** — Symbol naming the generic function (e.g. 'equal?)
+- **`class-name`** — Symbol naming the S3 class to dispatch on
+- **`method-fun`** — Implementation function for this class
 
 **Examples:**
 ```{arl}
@@ -1072,6 +1220,11 @@ Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
 Dispatch to an S3 method based on object class.
 
 **Signature:** `(use-method generic-name obj args)`
+
+**Parameters:**
+- **`generic-name`** — String naming the generic (e.g. "equal?")
+- **`obj`** — Object whose class determines which method to call
+- **`args`** — List of arguments to pass to the method
 
 **Examples:**
 ```{arl}
@@ -1101,6 +1254,11 @@ Default equality: atomic/vector comparison.
 
 **Signature:** `(equal?.default a b [strict #f])`
 
+**Parameters:**
+- **`a`** — First value
+- **`b`** — Second value
+- **`strict`** — When #t, use identical? instead of == (default #f)
+
 **Examples:**
 ```{arl}
 (equal?.default 1 1)             ; => #t
@@ -1123,6 +1281,11 @@ Compare lists recursively by structure and elements.
 
 **Signature:** `(equal?.list a b [strict #f])`
 
+**Parameters:**
+- **`a`** — First list
+- **`b`** — Second list
+- **`strict`** — When #t, use strict comparison (default #f)
+
 **Examples:**
 ```{arl}
 (equal?.list (list 1 2 3) (list 1 2 3))          ; => #t
@@ -1144,6 +1307,11 @@ Compare environments by bindings and values
 (dict, set, R6, refclass are env-based).
 
 **Signature:** `(equal?.environment a b [strict #f])`
+
+**Parameters:**
+- **`a`** — First environment
+- **`b`** — Second environment
+- **`strict`** — When #t, use strict comparison (default #f)
 
 **Examples:**
 ```{arl}
@@ -1172,6 +1340,9 @@ Convert symbol to string.
 
 **Signature:** `(symbol->string sym)`
 
+**Parameters:**
+- **`sym`** — Symbol to convert to string
+
 **Examples:**
 ```{arl}
 (symbol->string 'hello)  ; => "hello"
@@ -1195,6 +1366,9 @@ Convert string to symbol.
 
 **Signature:** `(string->symbol str)`
 
+**Parameters:**
+- **`str`** — String to convert to symbol
+
 **Examples:**
 ```{arl}
 (string->symbol "hello")  ; => hello (a symbol)
@@ -1217,6 +1391,9 @@ Convert string to symbol.
 Convert value to symbol.
 
 **Signature:** `(->symbol x)`
+
+**Parameters:**
+- **`x`** — Value to convert to symbol
 
 **Examples:**
 ```{arl}
@@ -1242,6 +1419,9 @@ Convert value to symbol.
 Convert value to number.
 
 **Signature:** `(->number x)`
+
+**Parameters:**
+- **`x`** — Value to convert to number
 
 **Examples:**
 ```{arl}
@@ -1270,6 +1450,9 @@ Convert exact number to inexact (integer to double).
 
 **Signature:** `(exact->inexact x)`
 
+**Parameters:**
+- **`x`** — Exact (integer) number to convert to double
+
 **Examples:**
 ```{arl}
 (exact->inexact 5L)     ; => 5.0 (integer to double)
@@ -1292,6 +1475,9 @@ Convert exact number to inexact (integer to double).
 Convert inexact number to exact (double to integer, rounds to nearest).
 
 **Signature:** `(inexact->exact x)`
+
+**Parameters:**
+- **`x`** — Inexact (double) number to round to integer
 
 **Examples:**
 ```{arl}
@@ -1322,6 +1508,9 @@ Convert value to integer.
 
 **Signature:** `(->integer x)`
 
+**Parameters:**
+- **`x`** — Value to convert to integer
+
 **Examples:**
 ```{arl}
 (->integer 3.7)     ; => 3L (truncates toward zero)
@@ -1347,6 +1536,9 @@ Convert value to double.
 
 **Signature:** `(->double x)`
 
+**Parameters:**
+- **`x`** — Value to convert to double
+
 **Examples:**
 ```{arl}
 (->double 5L)       ; => 5.0
@@ -1369,6 +1561,9 @@ Convert value to double.
 Convert value to complex number (imaginary part = 0).
 
 **Signature:** `(->complex x)`
+
+**Parameters:**
+- **`x`** — Value to convert to complex number
 
 **Examples:**
 ```{arl}
@@ -1394,6 +1589,9 @@ Convert value to list.
 
 **Signature:** `(->list x)`
 
+**Parameters:**
+- **`x`** — Value to convert to list
+
 **Examples:**
 ```{arl}
 (->list (c 1 2 3))       ; => (1 2 3)
@@ -1414,6 +1612,9 @@ Convert value to list.
 Convert value to vector.
 
 **Signature:** `(->vector x)`
+
+**Parameters:**
+- **`x`** — Value to convert to atomic vector
 
 **Examples:**
 ```{arl}

@@ -1,7 +1,7 @@
 # DocParser: Parses ;;' annotation blocks from .arl source files.
-# Extracts @description, @examples, @assert, @seealso, @note, @section,
-# @signature for use by the compiler (baking docs into compiled code) and
-# the vignette generator (tools/docs/generate-lang-docs.R).
+# Extracts @description, @param, @examples, @assert, @seealso, @note,
+# @section, @signature for use by the compiler (baking docs into compiled
+# code) and the vignette generator (tools/docs/generate-lang-docs.R).
 
 #' @importFrom R6 R6Class
 #' @keywords internal
@@ -186,7 +186,7 @@ DocParser <- R6::R6Class(
           i <- i + 1L
         }
 
-        tags <- private$parse_annotation_tags(block_lines)
+        tags <- private$parse_annotation_tags(block_lines, block_start)
 
         if (!is.null(tags$section) && !private$is_followed_by_definition(lines, i, n)) {
           current_section <- tags$section
@@ -225,6 +225,7 @@ DocParser <- R6::R6Class(
           name = func_name,
           description = if (is.null(description)) "" else description,
           signature = if (is.null(signature)) "" else signature,
+          params = tags$params,
           examples = tags$examples,
           assert = tags$assert,
           seealso = tags$seealso,
@@ -241,9 +242,10 @@ DocParser <- R6::R6Class(
 
       list(functions = functions, sections = sections)
     },
-    parse_annotation_tags = function(block_lines) {
+    parse_annotation_tags = function(block_lines, block_start = NA_integer_) {
       tags <- list(
         description = NULL,
+        params = list(),
         examples = NULL,
         assert = NULL,
         seealso = NULL,
@@ -336,8 +338,26 @@ DocParser <- R6::R6Class(
           tags$noeval <- TRUE
           next
         }
+        if (grepl("^@param\\s+", line)) {
+          flush_tag()
+          current_tag <- NULL
+          current_content <- character()
+          param_name <- sub("^@param\\s+(\\S+).*", "\\1", line)
+          param_desc <- trimws(sub("^@param\\s+\\S+\\s*", "", line))
+          tags$params <- c(tags$params, list(list(name = param_name, description = param_desc)))
+          next
+        }
+        if (grepl("^@returns?\\s", line) || grepl("^@returns?$", line)) {
+          flush_tag()
+          current_tag <- NULL
+          current_content <- character()
+          next
+        }
         if (grepl("^@", line)) {
           flush_tag()
+          tag_name <- sub("^@(\\S+).*", "\\1", line)
+          warning(sprintf("Unknown doc tag '@%s' in annotation block starting at line %d",
+                          tag_name, block_start), call. = FALSE)
           current_tag <- NULL
           current_content <- character()
           next

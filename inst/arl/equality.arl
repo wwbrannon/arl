@@ -21,6 +21,9 @@
   ;;' @description Deep structural equality. Dispatches on class of
   ;;' first argument. Optional :strict #t uses identical? for atomics.
   ;;' Add methods with (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
+  ;;' @param a First value
+  ;;' @param b Second value
+  ;;' @param strict When #t, use identical? for atomics (default #f)
   ;;' @examples
   ;;' (equal? 1 1)                    ; => #t
   ;;' (equal? 1 1.0)                  ; => #t (type coercion)
@@ -44,6 +47,8 @@
 
   ;;' @description R's native equality test. Structural comparison for value
   ;;'   types, pointer comparison for reference types.
+  ;;' @param a First value
+  ;;' @param b Second value
   ;;' @examples
   ;;' (identical? 1 1)          ; => #t
   ;;' (identical? 1L 1.0)       ; => #f (integer vs double)
@@ -59,6 +64,8 @@
     (lambda (a b) (identical a b)))
 
   ;;' @description **Not implemented in Arl.** Raises an error when called.
+  ;;' @param a First value
+  ;;' @param b Second value
   ;;' @note True Scheme `eq?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. R's `identical()` does structural comparison for some types (lists, vectors) but pointer comparison for others (environments, reference classes). Use `identical?` for R's native equality, or `equal?` for deep structural equality.
   ;;' @seealso identical?, equal?
   (define eq?
@@ -66,6 +73,8 @@
       (error "eq? cannot be properly implemented in R. Use identical? for R's native equality, or equal? for deep structural equality.")))
 
   ;;' @description **Not implemented in Arl.** Raises an error when called.
+  ;;' @param a First value
+  ;;' @param b Second value
   ;;' @note True Scheme `eqv?` semantics cannot be properly implemented in R because R does not provide reliable pointer equality for all object types. Use `identical?` for R's native equality, or `equal?` for deep structural equality.
   ;;' @seealso identical?, equal?
   (define eqv?
@@ -77,6 +86,8 @@
   ;;' recursive structural comparison of environments and lists.
 
   ;;' @description Compare two environments by their bindings and values.
+  ;;' @param env1 First environment
+  ;;' @param env2 Second environment
   ;;' @examples
   ;;' (define e1 (new.env :parent (emptyenv)))
   ;;' (define e2 (new.env :parent (emptyenv)))
@@ -105,6 +116,8 @@
         #f)))
 
   ;;' @description Recursively compare list elements.
+  ;;' @param lst1 First list
+  ;;' @param lst2 Second list
   ;;' @examples
   ;;' (list-equal? (list 1 2 3) (list 1 2 3))  ; => #t
   ;;' (list-equal? (list 1 2) (list 1 2 3))     ; => #f
@@ -138,6 +151,7 @@
   ;;' are registered as `generic.class` bindings in the top-level environment.
 
   ;;' @description Extract the first S3 class from an object.
+  ;;' @param obj Object to get the S3 class of
   ;;' @examples
   ;;' (s3-type 42)                    ; => "numeric"
   ;;' (s3-type "hello")               ; => "character"
@@ -153,6 +167,8 @@
       ([[ (class obj) 1)))
 
   ;;' @description Check if all objects have the same S3 type.
+  ;;' @param obj First object
+  ;;' @param rest Additional objects to compare against
   ;;' @examples
   ;;' (check-s3-type-match 1 2 3)     ; => #t (all numeric)
   ;;' (check-s3-type-match 1 "a")     ; => #f (numeric vs character)
@@ -176,6 +192,9 @@
 
   ;;' @description Register an S3-style method.
   ;;' Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
+  ;;' @param generic-name Symbol naming the generic function (e.g. 'equal?)
+  ;;' @param class-name Symbol naming the S3 class to dispatch on
+  ;;' @param method-fun Implementation function for this class
   ;;' @examples
   ;;' ;; Register a custom equality method for "point" objects:
   ;;' (set-method! 'equal? 'point
@@ -193,6 +212,9 @@
       (assign method-name method-fun :envir env)))
 
   ;;' @description Dispatch to an S3 method based on object class.
+  ;;' @param generic-name String naming the generic (e.g. "equal?")
+  ;;' @param obj Object whose class determines which method to call
+  ;;' @param args List of arguments to pass to the method
   ;;' @note Internal function. Dispatches to the appropriate S3 method based on the object's class, falling back to the `.default` method if no class-specific method is found.
   ;;' @examples
   ;;' (use-method "equal?" (list 1 2) (list (list 1 2) (list 1 2) #f))  ; dispatches to equal?.list
@@ -218,6 +240,9 @@
 
   ;;' @description Default equality: atomic/vector comparison.
   ;;' :strict #t => #f; else use == with type coercion.
+  ;;' @param a First value
+  ;;' @param b Second value
+  ;;' @param strict When #t, use identical? instead of == (default #f)
   ;;' @examples
   ;;' (equal?.default 1 1)             ; => #t
   ;;' (equal?.default 1 1.0)           ; => #t (coercion via ==)
@@ -238,6 +263,9 @@
           #f))))
 
   ;;' @description Compare lists recursively by structure and elements.
+  ;;' @param a First list
+  ;;' @param b Second list
+  ;;' @param strict When #t, use strict comparison (default #f)
   ;;' @examples
   ;;' (equal?.list (list 1 2 3) (list 1 2 3))          ; => #t
   ;;' (equal?.list (list 1 (list 2 3)) (list 1 (list 2 3)))  ; => #t (nested)
@@ -254,6 +282,9 @@
 
   ;;' @description Compare environments by bindings and values
   ;;' (dict, set, R6, refclass are env-based).
+  ;;' @param a First environment
+  ;;' @param b Second environment
+  ;;' @param strict When #t, use strict comparison (default #f)
   ;;' @examples
   ;;' (define e1 (new.env :parent (emptyenv)))
   ;;' (define e2 (new.env :parent (emptyenv)))

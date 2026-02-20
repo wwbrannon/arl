@@ -11,6 +11,7 @@
 
 ;;' @description Collect all symbols from a destructuring pattern, ignoring dots.
 ;;' @signature (pattern-symbols pattern)
+;;' @param pattern Nested list/symbol pattern to extract symbol names from
 ;;' @seealso destructuring-bind
 (define pattern-symbols
   (lambda (pattern)
@@ -28,6 +29,9 @@
         (list)))))
 
 ;;' @description Bind a destructuring pattern to a value, then evaluate body forms.
+;;' @param pattern Destructuring pattern (possibly nested, with . for rest)
+;;' @param value Expression whose result is destructured
+;;' @param body Expressions evaluated with the pattern bindings in scope
 ;;' @examples
 ;;' (destructuring-bind (a b c) (list 1 2 3)
 ;;'   (+ a b c))                 ; => 6
@@ -45,6 +49,8 @@
     ,value))
 
 ;;' @description Bind names to values within body.
+;;' @param bindings List of (pattern value) pairs, evaluated in parallel
+;;' @param body Expressions evaluated with the bindings in scope
 ;;' @examples
 ;;' (let ((x 1) (y 2))
 ;;'   (+ x y))               ; => 3
@@ -71,6 +77,8 @@
         ,@values))))
 
 ;;' @description Sequential let bindings.
+;;' @param bindings List of (pattern value) pairs, evaluated sequentially
+;;' @param body Expressions evaluated with the bindings in scope
 ;;' @examples
 ;;' (let* ((x 1) (y (+ x 1)))
 ;;'   (+ x y))               ; => 3
@@ -93,6 +101,8 @@
          (let* ,(cdr bindings) ,@body)))))
 
 ;;' @description Recursive bindings.
+;;' @param bindings List of (name value) pairs, all mutually visible
+;;' @param body Expressions evaluated with the bindings in scope
 ;;' @examples
 ;;' (letrec ((even? (lambda (n) (if (= n 0) #t (odd? (- n 1)))))
 ;;'          (odd?  (lambda (n) (if (= n 0) #f (even? (- n 1))))))
@@ -108,6 +118,8 @@
      (begin ,@body)))
 
 ;;' @description Bind pattern to value and evaluate body when value is truthy.
+;;' @param binding Single (pattern value) pair
+;;' @param body Expressions evaluated when value is truthy, with pattern bound
 ;;' @examples
 ;;' (when-let (x (assoc 'a (list (list 'a 1) (list 'b 2))))
 ;;'   (cadr x))              ; => 1
@@ -131,6 +143,9 @@
       (list ,value))))
 
 ;;' @description Bind pattern to value and choose branch based on its truthiness.
+;;' @param binding Single (pattern value) pair
+;;' @param then Expression evaluated when value is truthy, with pattern bound
+;;' @param rest Optional else expression when value is falsy
 ;;' @examples
 ;;' (if-let (x 42)
 ;;'   (+ x 1)

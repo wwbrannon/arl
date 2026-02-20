@@ -36,6 +36,9 @@ Convert key to string name for dict storage.
 
 **Signature:** `(dict-key-to-name key)`
 
+**Parameters:**
+- **`key`** — String, symbol, or keyword to convert
+
 ---
 
 ### dict {#dict}
@@ -43,6 +46,9 @@ Convert key to string name for dict storage.
 Create a hash-backed dictionary from key/value pairs.
 
 **Signature:** `(dict args...)`
+
+**Parameters:**
+- **`args`** — Named key/value pairs (e.g. :x 1 :y 2)
 
 **Examples:**
 ```{arl}
@@ -89,6 +95,9 @@ Return #t if x is a dictionary.
 
 **Signature:** `(dict? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (dict? (dict :x 1))        ; => #t
@@ -110,6 +119,9 @@ Return ordered keys vector (internal helper).
 
 **Signature:** `(dict-keys-ordered dict)`
 
+**Parameters:**
+- **`dict`** — Dictionary to retrieve keys from
+
 ---
 
 ### dict-get {#dict-get}
@@ -117,6 +129,11 @@ Return ordered keys vector (internal helper).
 Get value for key or default if missing.
 
 **Signature:** `(dict-get dict key rest...)`
+
+**Parameters:**
+- **`dict`** — Dictionary to look up in
+- **`key`** — Key to retrieve (string, symbol, or keyword)
+- **`rest`** — Optional default value if key is missing (defaults to #nil)
 
 **Examples:**
 ```{arl}
@@ -142,6 +159,11 @@ Set key to value in dict and return dict.
 
 **Signature:** `(dict-set dict key value)`
 
+**Parameters:**
+- **`dict`** — Dictionary to modify
+- **`key`** — Key to set (string, symbol, or keyword)
+- **`value`** — Value to associate with the key
+
 **Examples:**
 ```{arl}
 (define d (dict))
@@ -164,6 +186,10 @@ Set key to value in dict and return dict.
 Remove key from dict and return dict.
 
 **Signature:** `(dict-remove dict key)`
+
+**Parameters:**
+- **`dict`** — Dictionary to modify
+- **`key`** — Key to remove (string, symbol, or keyword)
 
 **Examples:**
 ```{arl}
@@ -188,6 +214,9 @@ Return a list of dict keys.
 
 **Signature:** `(dict-keys dict)`
 
+**Parameters:**
+- **`dict`** — Dictionary to retrieve keys from
+
 **Examples:**
 ```{arl}
 (define d (dict :x 1 :y 2))
@@ -210,6 +239,9 @@ Return a list of dict values.
 
 **Signature:** `(dict-values dict)`
 
+**Parameters:**
+- **`dict`** — Dictionary to retrieve values from
+
 **Examples:**
 ```{arl}
 (define d (dict :x 1 :y 2))
@@ -229,6 +261,10 @@ Return a list of dict values.
 Return #t if dict contains key.
 
 **Signature:** `(dict-has? dict key)`
+
+**Parameters:**
+- **`dict`** — Dictionary to check
+- **`key`** — Key to look for (string, symbol, or keyword)
 
 **Examples:**
 ```{arl}
@@ -251,6 +287,9 @@ Return #t if dict contains key.
 Merge dicts, later values override earlier.
 
 **Signature:** `(dict-merge dicts...)`
+
+**Parameters:**
+- **`dicts`** — Dictionaries to merge in order (later values win)
 
 **Examples:**
 ```{arl}
@@ -292,6 +331,9 @@ Convert value to string key for set storage via serialization.
 
 **Signature:** `(set-key value)`
 
+**Parameters:**
+- **`value`** — Value to serialize into a string key
+
 ---
 
 ### set {#set}
@@ -299,6 +341,9 @@ Convert value to string key for set storage via serialization.
 Create a hash-backed set of unique items.
 
 **Signature:** `(set args...)`
+
+**Parameters:**
+- **`args`** — Items to include in the set, or a single list to convert
 
 **Examples:**
 ```{arl}
@@ -324,6 +369,9 @@ Return #t if x is a set.
 
 **Signature:** `(set? x)`
 
+**Parameters:**
+- **`x`** — Value to test
+
 **Examples:**
 ```{arl}
 (set? (set 1 2))           ; => #t
@@ -344,6 +392,10 @@ Return #t if x is a set.
 Add item to set and return set.
 
 **Signature:** `(set-add set item)`
+
+**Parameters:**
+- **`set`** — Set to add to
+- **`item`** — Value to add
 
 **Examples:**
 ```{arl}
@@ -368,6 +420,10 @@ Remove item from set and return set.
 
 **Signature:** `(set-remove set item)`
 
+**Parameters:**
+- **`set`** — Set to remove from
+- **`item`** — Value to remove
+
 **Examples:**
 ```{arl}
 (define s (set 1 2 3))
@@ -391,6 +447,10 @@ Return #t if set contains item.
 
 **Signature:** `(set-contains? set item)`
 
+**Parameters:**
+- **`set`** — Set to search in
+- **`item`** — Value to look for
+
 **Examples:**
 ```{arl}
 (define s (set 1 2 3))
@@ -410,6 +470,10 @@ Return #t if set contains item.
 Return union of two sets.
 
 **Signature:** `(set-union a b)`
+
+**Parameters:**
+- **`a`** — First set
+- **`b`** — Second set
 
 **Examples:**
 ```{arl}
@@ -436,6 +500,10 @@ Return intersection of two sets.
 
 **Signature:** `(set-intersection a b)`
 
+**Parameters:**
+- **`a`** — First set
+- **`b`** — Second set
+
 **Examples:**
 ```{arl}
 (define a (set 1 2 3))
@@ -460,6 +528,10 @@ Return intersection of two sets.
 Return items in a that are not in b.
 
 **Signature:** `(set-difference a b)`
+
+**Parameters:**
+- **`a`** — Set to take items from
+- **`b`** — Set whose items are excluded
 
 **Examples:**
 ```{arl}
@@ -486,6 +558,10 @@ Copy items from source into target (internal helper).
 
 **Signature:** `(set-copy-into target source)`
 
+**Parameters:**
+- **`target`** — Set to copy items into
+- **`source`** — Set to copy items from
+
 ---
 
 ## Struct Definition {#section-struct-definition}
@@ -495,6 +571,10 @@ Copy items from source into target (internal helper).
 Define a struct constructor, predicate, and accessors.
 
 **Signature:** `(defstruct name fields)`
+
+**Parameters:**
+- **`name`** — Name for the struct type
+- **`fields`** — List of field name symbols
 
 **Examples:**
 ```{arl}

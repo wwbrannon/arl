@@ -2114,6 +2114,12 @@ Compiler <- R6::R6Class(
         val <- ann[[field]]
         if (!is.null(val) && nchar(val) > 0) doc_list[[field]] <- val
       }
+      if (length(ann$params) > 0) {
+        doc_list$arguments <- paste(
+          vapply(ann$params, function(p) paste0(p$name, " \u2014 ", p$description), character(1)),
+          collapse = "\n"
+        )
+      }
       if (isTRUE(ann$internal)) doc_list$internal <- TRUE
       if (isTRUE(ann$noeval)) doc_list$noeval <- TRUE
       if (length(doc_list) == 0) NULL else doc_list

@@ -15,6 +15,8 @@
   ;;' the function argument first, then the data argument.
 
   ;;' @description Apply function to each element.
+  ;;' @param fn Function to apply to each element
+  ;;' @param lst List to transform
   ;;' @examples
   ;;' (map (lambda (x) (* x 2)) (list 1 2 3))  ; => (2 4 6)
   ;;' (map (lambda (x) (* x x)) (list 1 2 3 4)) ; => (1 4 9 16)
@@ -27,6 +29,8 @@
       (lapply (_as-list lst) fn)))
 
   ;;' @description Map then concatenate results. Uses do.call(c, ...) for O(n) concatenation.
+  ;;' @param fn Function that returns a list for each element
+  ;;' @param lst List to transform
   ;;' @examples
   ;;' (mapcat (lambda (x) (list x (* x 10))) (list 1 2 3))  ; => (1 10 2 20 3 30)
   ;;' (mapcat (lambda (x) (list x x)) (list 1 2 3))          ; => (1 1 2 2 3 3)
@@ -41,6 +45,8 @@
         (do.call c (lapply results (lambda (x) (_as-list x)))))))
 
   ;;' @description Filter items by predicate.
+  ;;' @param pred Predicate function; elements where it returns #t are kept
+  ;;' @param lst List to filter
   ;;' @examples
   ;;' (filter (lambda (x) (> x 2)) (list 1 2 3 4 5))  ; => (3 4 5)
   ;;' (filter even? (list 1 2 3 4 5 6))                 ; => (2 4 6)
@@ -53,6 +59,8 @@
       (Filter pred (_as-list lst))))
 
   ;;' @description Remove items where predicate is true.
+  ;;' @param pred Predicate function; elements where it returns #t are removed
+  ;;' @param lst List to filter
   ;;' @examples
   ;;' (remove even? (list 1 2 3 4 5 6))                 ; => (1 3 5)
   ;;' (remove (lambda (x) (> x 3)) (list 1 2 3 4 5))   ; => (1 2 3)
@@ -64,6 +72,9 @@
       (Filter (lambda (x) (not (isTRUE (pred x)))) (_as-list lst))))
 
   ;;' @description Reduce list with function.
+  ;;' @param fn Binary function taking accumulator and current element
+  ;;' @param lst List to reduce
+  ;;' @param rest Optional initial accumulator value
   ;;' @examples
   ;;' (reduce + (list 1 2 3 4))       ; => 10
   ;;' (reduce * (list 1 2 3 4))       ; => 24
@@ -81,6 +92,9 @@
         (Reduce fn (_as-list lst) :init (car rest)))))
 
   ;;' @description Left fold alias for reduce. Applies fn as (fn acc elem).
+  ;;' @param fn Binary function taking accumulator and current element
+  ;;' @param lst List to fold over
+  ;;' @param rest Optional initial accumulator value
   ;;' @examples
   ;;' (foldl + (list 1 2 3 4))        ; => 10
   ;;' (foldl - (list 1 2 3) 10)       ; => 4 (10 - 1 - 2 - 3)
@@ -97,6 +111,9 @@
         (Reduce fn (_as-list lst) :init (car rest)))))
 
   ;;' @description Right fold. Applies fn as (fn elem acc).
+  ;;' @param fn Binary function taking current element and accumulator
+  ;;' @param lst List to fold over from the right
+  ;;' @param rest Optional initial accumulator value
   ;;' @examples
   ;;' (foldr + (list 1 2 3 4))        ; => 10
   ;;' (foldr - (list 1 2 3) 10)       ; => -8 (1 - (2 - (3 - 10)))
@@ -113,6 +130,8 @@
         (Reduce fn (_as-list lst) :init (car rest) :right #t))))
 
   ;;' @description Return #t if predicate true for all items.
+  ;;' @param pred Predicate function to test each element
+  ;;' @param lst List to check
   ;;' @examples
   ;;' (every? positive? (list 1 2 3))       ; => #t
   ;;' (every? even? (list 2 4 6))           ; => #t
@@ -127,6 +146,8 @@
       (all (vapply (_as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
 
   ;;' @description Return #t if predicate true for any item.
+  ;;' @param pred Predicate function to test each element
+  ;;' @param lst List to check
   ;;' @examples
   ;;' (any? even? (list 1 3 4 5))           ; => #t
   ;;' (any? negative? (list 1 2 3))         ; => #f
@@ -140,6 +161,7 @@
       (any (vapply (_as-list lst) (lambda (x) (isTRUE (pred x))) (logical 1)))))
 
   ;;' @description Negate predicate.
+  ;;' @param pred Predicate function to negate
   ;;' @examples
   ;;' (define not-even? (complement even?))
   ;;' (not-even? 3)                          ; => #t
@@ -155,6 +177,8 @@
         (not (do.call pred args)))))
 
   ;;' @description Compose two functions.
+  ;;' @param f Outer function (applied second)
+  ;;' @param g Inner function (applied first)
   ;;' @examples
   ;;' (define add1-then-double (compose (lambda (x) (* x 2)) (lambda (x) (+ x 1))))
   ;;' (add1-then-double 3)                   ; => 8  ((3+1)*2)
@@ -169,6 +193,8 @@
         (f (do.call g args)))))
 
   ;;' @description Partially apply function.
+  ;;' @param fn Function to partially apply
+  ;;' @param captured Arguments to bind to fn's first positions
   ;;' @examples
   ;;' (define add5 (partial + 5))
   ;;' (add5 3)                               ; => 8
@@ -192,6 +218,8 @@
 
   ;;' @description Curry a function - enables partial application
   ;;' with optional initial arguments.
+  ;;' @param fn Function to curry (must have fixed arity)
+  ;;' @param initial-args Optional arguments to apply immediately
   ;;' @examples
   ;;' (define add (curry (lambda (a b) (+ a b))))
   ;;' (define add5 (add 5))
@@ -214,6 +242,7 @@
       (curry-helper initial-args)))
 
   ;;' @description Juxtaposition - apply multiple functions to same args, return list of results.
+  ;;' @param fns Functions to apply to the arguments
   ;;' @examples
   ;;' (define stats (juxt min max mean))
   ;;' (stats (c 1 2 3 4 5))                  ; => (1 5 3)
@@ -229,6 +258,7 @@
         (map (lambda (f) (do.call f args)) fns))))
 
   ;;' @description Return a function that always returns the given value.
+  ;;' @param value Value to return regardless of arguments
   ;;' @examples
   ;;' (define always-42 (constantly 42))
   ;;' (always-42)                             ; => 42
@@ -243,6 +273,9 @@
         value)))
 
   ;;' @description Apply function n times to initial value.
+  ;;' @param fn Unary function to apply repeatedly
+  ;;' @param n Number of times to apply fn
+  ;;' @param init Starting value
   ;;' @examples
   ;;' (iterate (lambda (x) (* x 2)) 5 1)     ; => 32  (1 -> 2 -> 4 -> 8 -> 16 -> 32)
   ;;' (iterate inc 3 0)                       ; => 3   (0 -> 1 -> 2 -> 3)
@@ -261,6 +294,9 @@
   ;;' @description Apply function starting from init, collecting
   ;;' values until predicate becomes true. Includes all values where
   ;;' predicate is false, stops when next value would satisfy predicate.
+  ;;' @param fn Unary function to apply repeatedly
+  ;;' @param init Starting value
+  ;;' @param pred Predicate that signals when to stop collecting
   ;;' @examples
   ;;' (iterate-until (lambda (x) (* x 2)) 1 (lambda (x) (> x 100)))
   ;;'   ; => (1 2 4 8 16 32 64)  (stops before 128 which exceeds 100)
@@ -285,6 +321,7 @@
       acc))
 
   ;;' @description Memoize function - cache results for previously seen arguments.
+  ;;' @param fn Function whose results to cache by arguments
   ;;' @examples
   ;;' (define slow-fib (lambda (n) (if (< n 2) n (+ (slow-fib (- n 1)) (slow-fib (- n 2))))))
   ;;' (define fast-fib (memoize slow-fib))

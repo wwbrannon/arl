@@ -9,6 +9,8 @@
 ;;' @section Threading Macros
 
 ;;' @description Thread value through forms (first argument).
+;;' @param value Initial value to thread
+;;' @param forms Sequence of forms to thread through
 ;;' @examples
 ;;' (-> 5 (+ 3) (* 2))       ; => 16  ; (5+3)*2
 ;;' (-> (list 1 2 3) reverse) ; => (3 2 1)
@@ -30,6 +32,8 @@
     :init value))
 
 ;;' @description Thread value through forms (last argument).
+;;' @param value Initial value to thread
+;;' @param forms Sequence of forms to thread through
 ;;' @examples
 ;;' (->> '(1 2 3) (map (lambda (x) (* x x))))  ; => (1 4 9)
 ;;' (->> 5 (- 10))           ; => 5  ; (- 10 5)

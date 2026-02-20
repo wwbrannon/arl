@@ -278,3 +278,73 @@ test_that("DocParser loads reference docs and filters by kind", {
   expect_true("eval" %in% names(builtins))
   expect_false("if" %in% names(builtins))
 })
+
+test_that("@param tags are parsed correctly", {
+  parser <- DocParser$new()
+  result <- parser$parse_text(paste(
+    "(module param-test",
+    "  (export add)",
+    "",
+    "  ;;' @description Add two numbers.",
+    "  ;;' @param a First number",
+    "  ;;' @param b Second number",
+    "  (define add (lambda (a b) (+ a b)))",
+    ")",
+    sep = "\n"
+  ))
+
+  fn <- result$functions[["add"]]
+  expect_false(is.null(fn))
+  expect_equal(length(fn$params), 2)
+  expect_equal(fn$params[[1]]$name, "a")
+  expect_equal(fn$params[[1]]$description, "First number")
+  expect_equal(fn$params[[2]]$name, "b")
+  expect_equal(fn$params[[2]]$description, "Second number")
+})
+
+test_that("unknown @ tags emit a warning", {
+  parser <- DocParser$new()
+  expect_warning(
+    parser$parse_text(paste(
+      "(module warn-test",
+      "  (export foo)",
+      "",
+      "  ;;' @description A function.",
+      "  ;;' @bogus something",
+      "  (define foo (lambda () 1))",
+      ")",
+      sep = "\n"
+    )),
+    "@bogus"
+  )
+})
+
+test_that("@param tags produce arl_doc$arguments via compiler", {
+  tmp <- tempfile(fileext = ".arl")
+  on.exit(unlink(tmp))
+  writeLines(c(
+    "(module param-compiler-test",
+    "  (export add)",
+    "",
+    "  ;;' @description Add two numbers.",
+    "  ;;' @param a First number",
+    "  ;;' @param b Second number",
+    "  (define add",
+    "    (lambda (a b) (+ a b)))",
+    ")"
+  ), tmp)
+
+  engine <- make_engine()
+  env <- engine$get_env()
+  engine$eval(engine$read(sprintf('(load "%s")', tmp))[[1]], env = env)
+  engine$eval(engine$read("(import param-compiler-test :refer :all)")[[1]], env = env)
+
+  fn <- engine$eval(engine$read("add")[[1]], env = env)
+  doc <- attr(fn, "arl_doc", exact = TRUE)
+  expect_false(is.null(doc))
+  expect_false(is.null(doc$arguments))
+  expect_match(doc$arguments, "a")
+  expect_match(doc$arguments, "First number")
+  expect_match(doc$arguments, "b")
+  expect_match(doc$arguments, "Second number")
+})

@@ -19,6 +19,8 @@
   ;;' module with lazy-style idioms common in functional programming.
 
   ;;' @description Take first n items.
+  ;;' @param n Number of elements to take
+  ;;' @param lst Source list
   ;;' @examples
   ;;' (take 3 (list 1 2 3 4 5))  ; => (1 2 3)
   ;;' (take 0 (list 1 2 3))      ; => ()
@@ -36,6 +38,8 @@
         (r-call "[" (list items (seq_len (min n (length items))))))))
 
   ;;' @description Drop first n items.
+  ;;' @param n Number of elements to skip
+  ;;' @param lst Source list
   ;;' @examples
   ;;' (drop 2 (list 1 2 3 4 5))  ; => (3 4 5)
   ;;' (drop 0 (list 1 2 3))      ; => (1 2 3)
@@ -55,6 +59,8 @@
           (r-call "[" (list items (seq (+ n 1) (length items))))))))
 
   ;;' @description Take items while predicate is true.
+  ;;' @param pred Predicate function; taking stops at first #f
+  ;;' @param lst Source list
   ;;' @examples
   ;;' (take-while odd? (list 1 3 5 2 4))   ; => (1 3 5)
   ;;' (take-while even? (list 1 2 3))       ; => ()
@@ -74,6 +80,8 @@
       acc))
 
   ;;' @description Drop items while predicate is true.
+  ;;' @param pred Predicate function; dropping stops at first #f
+  ;;' @param lst Source list
   ;;' @examples
   ;;' (drop-while odd? (list 1 3 5 2 4))   ; => (2 4)
   ;;' (drop-while even? (list 1 2 3))       ; => (1 2 3)
@@ -90,6 +98,9 @@
       remaining))
 
   ;;' @description Split list into chunks of size n.
+  ;;' @param n Chunk size
+  ;;' @param lst Source list
+  ;;' @param step Offset between chunk starts (default n, i.e. no overlap)
   ;;' @examples
   ;;' (partition 2 (list 1 2 3 4 5 6))       ; => ((1 2) (3 4) (5 6))
   ;;' (partition 3 (list 1 2 3 4 5 6) 2)     ; => ((1 2 3) (3 4 5))
@@ -119,6 +130,7 @@
               acc))))))
 
   ;;' @description Flatten nested lists.
+  ;;' @param lst Possibly nested list to flatten into a single-level list
   ;;' @examples
   ;;' (flatten (list 1 (list 2 3) (list 4 (list 5))))  ; => (1 2 3 4 5)
   ;;' (flatten (list 1 2 3))                            ; => (1 2 3)
@@ -140,6 +152,8 @@
       acc))
 
   ;;' @description Call fn n times collecting results.
+  ;;' @param n Number of times to call fn
+  ;;' @param fn Zero-argument function to call repeatedly
   ;;' @examples
   ;;' (repeatedly 3 (lambda () 42))  ; => (42 42 42)
   ;;' @assert
@@ -150,6 +164,8 @@
       (lapply (seq_len n) (lambda (i) (fn)))))
 
   ;;' @description Repeat value n times.
+  ;;' @param n Number of repetitions
+  ;;' @param value Value to repeat
   ;;' @examples
   ;;' (repeat 4 'x)   ; => (x x x x)
   ;;' (repeat 3 0)     ; => (0 0 0)
@@ -162,6 +178,7 @@
       (replicate n value :simplify #f)))
 
   ;;' @description Zip lists into list of tuples.
+  ;;' @param lists Two or more lists to interleave element-wise
   ;;' @examples
   ;;' (zip (list 1 2 3) (list 'a 'b 'c))          ; => ((1 a) (2 b) (3 c))
   ;;' (zip (list 1 2) (list 'a 'b) (list 'x 'y))  ; => ((1 a x) (2 b y))
@@ -187,6 +204,9 @@
   ;;' @description Return sublist of lst starting at first element
   ;;' equal to x, or #f if not found. Uses equal? by default;
   ;;' pass :use-identical #t for R's identical().
+  ;;' @param x Value to search for
+  ;;' @param lst List to search in
+  ;;' @param use-identical Use R's identical() instead of equal? (default #f)
   ;;' @examples
   ;;' (member 3 (list 1 2 3 4 5))   ; => (3 4 5)
   ;;' (member 9 (list 1 2 3))       ; => #f
@@ -210,6 +230,8 @@
       result))
 
   ;;' @description Return #t if lst contains element equal to x.
+  ;;' @param x Value to search for
+  ;;' @param lst List to search in
   ;;' @examples
   ;;' (contains? 2 (list 1 2 3))   ; => #t
   ;;' (contains? 9 (list 1 2 3))   ; => #f
@@ -225,6 +247,8 @@
   ;;' Efficient length comparisons that short-circuit when possible.
 
   ;;' @description Return #t if length of x equals n.
+  ;;' @param x Sequence to measure
+  ;;' @param n Expected length
   ;;' @examples
   ;;' (length= (list 1 2 3) 3)  ; => #t
   ;;' (length= (list 1 2) 3)    ; => #f
@@ -237,6 +261,8 @@
       (isTRUE (== (length x) n))))
 
   ;;' @description Return #t if length of x is greater than n.
+  ;;' @param x Sequence to measure
+  ;;' @param n Length to compare against
   ;;' @examples
   ;;' (length> (list 1 2 3) 2)  ; => #t
   ;;' (length> (list 1 2) 3)    ; => #f
@@ -249,6 +275,8 @@
       (isTRUE (> (length x) n))))
 
   ;;' @description Return #t if length of x is less than n.
+  ;;' @param x Sequence to measure
+  ;;' @param n Length to compare against
   ;;' @examples
   ;;' (length< (list 1 2) 3)    ; => #t
   ;;' (length< (list 1 2 3) 2)  ; => #f

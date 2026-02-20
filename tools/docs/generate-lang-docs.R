@@ -233,6 +233,7 @@ merge_runtime_docs <- function(parsed, runtime_docs) {
         name = name,
         description = "",
         signature = "",
+        params = list(),
         examples = NULL,
         assert = NULL,
         seealso = NULL,
@@ -248,6 +249,7 @@ merge_runtime_docs <- function(parsed, runtime_docs) {
     fn <- parsed$functions[[name]]
     if (!is.null(doc$description)) fn$description <- doc$description
     if (!is.null(doc$signature)) fn$signature <- doc$signature
+    if (!is.null(doc$params)) fn$params <- doc$params
     if (!is.null(doc$examples)) fn$examples <- doc$examples
     if (!is.null(doc$assert)) fn$assert <- doc$assert
     if (!is.null(doc$seealso)) fn$seealso <- doc$seealso
@@ -385,6 +387,9 @@ build_topic_context <- function(vignette_name, config, all_parsed,
 
     # Note
     entry$note <- if (!is.null(fn$note) && nchar(fn$note) > 0) fn$note else FALSE
+
+    # Params
+    entry$params <- if (length(fn$params) > 0) fn$params else FALSE
 
     # See also (pre-linkified)
     if (!is.null(fn$seealso) && nchar(fn$seealso) > 0) {

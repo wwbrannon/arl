@@ -12,6 +12,8 @@
 ;;' @section Control Flow Macros
 
 ;;' @description Evaluate body forms when test is truthy.
+;;' @param test Condition to evaluate
+;;' @param body Expressions to evaluate when test is truthy
 ;;' @examples
 ;;' (when #t "yes")          ; => "yes"
 ;;' (when #f "yes")          ; => #nil
@@ -25,6 +27,8 @@
   `(if ,test (begin ,@body) #nil))
 
 ;;' @description Evaluate body forms when test is falsy.
+;;' @param test Condition to evaluate
+;;' @param body Expressions to evaluate when test is falsy
 ;;' @examples
 ;;' (unless #f "fallback")    ; => "fallback"
 ;;' (unless #t "fallback")    ; => #nil
@@ -40,6 +44,8 @@
 ;;' @section Conditional Macros
 
 ;;' @description Multi-branch conditional.
+;;' @param clause First (test body...) clause
+;;' @param rest Additional clauses; last may be (else body...)
 ;;' @examples
 ;;' (cond
 ;;'   ((= 1 2) "a")
@@ -89,6 +95,9 @@
 ;;' @description Branch on key equality. Each clause:
 ;;' ((datum ...) body ...) or (else body ...).
 ;;' Key expression is evaluated only once.
+;;' @param key Expression to match (evaluated once)
+;;' @param clause First match clause: ((datum...) body...)
+;;' @param rest Additional clauses; last may be (else body...)
 ;;' @examples
 ;;' (case (+ 1 1)
 ;;'   ((1) "one")
@@ -113,6 +122,9 @@
 
 ;;' @description Evaluate thunk with error/finally handlers.
 ;;' @signature (try thunk [error_handler] [finally_handler])
+;;' @param thunk Zero-argument function to execute
+;;' @param error_handler Function receiving error condition (default #f)
+;;' @param finally_handler Zero-argument cleanup function (default #f)
 ;;' @examples
 ;;' (try (lambda () 42))                           ; => 42
 ;;' (try (lambda () (stop "oops"))
@@ -149,6 +161,8 @@
                 (current-env))))))
 
 ;;' @description Macro wrapper around try with catch/finally.
+;;' @param body Expression to evaluate
+;;' @param clauses Optional (catch var body...) and/or (finally body...) clauses
 ;;' @examples
 ;;' ;; Basic try with catch
 ;;' (try-catch (/ 1 0)
@@ -199,6 +213,7 @@
 
   ;;' @description Invoke receiver with the current continuation (escape procedure).
   ;;' @signature (call-cc receiver)
+  ;;' @param receiver Function that receives the current continuation as its argument
   ;;' @examples
   ;;' (call-cc (lambda (k) (k 42)))  ; => 42
   ;;' @assert
@@ -209,6 +224,7 @@
 
   ;;' @description Full name alias for call-cc.
   ;;' @signature (call-with-current-continuation receiver)
+  ;;' @param receiver Function that receives the current continuation as its argument
   ;;' @examples
   ;;' (call-with-current-continuation (lambda (k) (k 42)))  ; => 42
   ;;' @assert

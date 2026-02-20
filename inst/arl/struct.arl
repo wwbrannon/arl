@@ -10,6 +10,8 @@
 ;;' @section Struct Definition
 
 ;;' @description Define a struct constructor, predicate, and accessors.
+;;' @param name Name for the struct type
+;;' @param fields List of field name symbols
 ;;' @examples
 ;;' ;; Define a Point struct
 ;;' (defstruct Point (x y))

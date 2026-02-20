@@ -20,6 +20,8 @@
   ;;' two already-sorted lists.
 
   ;;' @description Sort list using comparison function (simple quicksort implementation).
+  ;;' @param lst List to sort
+  ;;' @param comparator Binary predicate returning #t when first arg should come before second
   ;;' @examples
   ;;' (list-sort (list 3 1 4 1 5) <)        ; => (1 1 3 4 5)
   ;;' (list-sort (list "b" "a" "c")
@@ -51,6 +53,9 @@
                   (list-sort greater comparator))))))
 
   ;;' @description Sort list by applying key-fn to each element, then comparing.
+  ;;' @param lst List to sort
+  ;;' @param key-fn Function to extract a comparison key from each element
+  ;;' @param comparator Binary predicate applied to extracted keys
   ;;' @examples
   ;;' (sort-by (list (list "b" 2) (list "a" 1)) car
   ;;'          (lambda (a b) (< a b)))  ; => (("a" 1) ("b" 2))
@@ -74,6 +79,9 @@
   ;;' @description Merge two sorted lists into one sorted list.
   ;;' Stable: when elements are equal (neither comparator direction
   ;;' is true), takes from list1 first.
+  ;;' @param list1 First sorted list
+  ;;' @param list2 Second sorted list
+  ;;' @param comparator Binary predicate used to order elements
   ;;' @examples
   ;;' (merge-sorted (list 1 3 5) (list 2 4 6) <)  ; => (1 2 3 4 5 6)
   ;;' (merge-sorted (list 1 2) (list) <)           ; => (1 2)
@@ -100,6 +108,8 @@
         (append (reverse acc) l1))))
 
   ;;' @description Stable sort - preserves order of equal elements. Uses merge sort internally.
+  ;;' @param lst List to sort
+  ;;' @param comparator Binary predicate returning #t when first arg should come before second
   ;;' @examples
   ;;' (stable-sort (list 3 1 4 1 5) <)  ; => (1 1 3 4 5)
   ;;' @assert

@@ -16,6 +16,8 @@
   ;;
 
   ;;' @description Loop over seq binding var each iteration. Expands to while.
+  ;;' @param binding Pair of (var sequence-expr)
+  ;;' @param body Expressions evaluated for each element with var bound
   ;;' @examples
   ;;' (define total 0)
   ;;' (do-list (x '(1 2 3))
@@ -49,6 +51,7 @@
   ;;
 
   ;;' @description Signal a recur back to the enclosing `loop`. Only valid inside a `loop` body.
+  ;;' @param args New values for each loop variable (must match loop binding count)
   ;;' @examples
   ;;' (loop ((i 5) (acc 0))
   ;;'   (if (= i 0) acc (recur (- i 1) (+ acc i))))  ; => 15
@@ -139,6 +142,8 @@
           `(begin ,@rebinds)))))
 
   ;;' @description Clojure-style loop/recur that expands to an R while loop.
+  ;;' @param bindings List of (var init-value) pairs for loop variables
+  ;;' @param body Loop body; use (recur ...) to iterate with new values
   ;;' @examples
   ;;' ;; Factorial via loop/recur
   ;;' (loop ((n 5) (acc 1))
@@ -202,6 +207,8 @@
   ;;
 
   ;;' @description Repeat body until test is truthy.
+  ;;' @param test Condition checked before each iteration; loop stops when truthy
+  ;;' @param body Expressions evaluated each iteration
   ;;' @examples
   ;;' (define i 0)
   ;;' (until (= i 5)

@@ -24,6 +24,7 @@
     dict-obj))
 
 ;;' @description Convert key to string name for dict storage.
+;;' @param key String, symbol, or keyword to convert
 (define dict-key-to-name
   (lambda (key)
     (if (r-call "is.character" (list key))
@@ -35,6 +36,7 @@
 ;;; Dictionary constructor
 
 ;;' @description Create a hash-backed dictionary from key/value pairs.
+;;' @param args Named key/value pairs (e.g. :x 1 :y 2)
 ;;' @examples
 ;;' (dict :x 1 :y 2)           ; => dict with keys "x" and "y"
 ;;' (dict)                      ; => empty dict
@@ -79,6 +81,7 @@
 ;;; Type predicate
 
 ;;' @description Return #t if x is a dictionary.
+;;' @param x Value to test
 ;;' @examples
 ;;' (dict? (dict :x 1))        ; => #t
 ;;' (dict? (list 1 2))         ; => #f
@@ -94,6 +97,7 @@
 ;;; Internal helper (defined early for forward references)
 
 ;;' @description Return ordered keys vector (internal helper).
+;;' @param dict Dictionary to retrieve keys from
 (define dict-keys-ordered
   (lambda (dict)
     (if (not (dict? dict))
@@ -107,6 +111,9 @@
 ;;; Dictionary operations
 
 ;;' @description Get value for key or default if missing.
+;;' @param dict Dictionary to look up in
+;;' @param key Key to retrieve (string, symbol, or keyword)
+;;' @param rest Optional default value if key is missing (defaults to #nil)
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-get d "x")           ; => 1
@@ -128,6 +135,9 @@
         default))))
 
 ;;' @description Set key to value in dict and return dict.
+;;' @param dict Dictionary to modify
+;;' @param key Key to set (string, symbol, or keyword)
+;;' @param value Value to associate with the key
 ;;' @examples
 ;;' (define d (dict))
 ;;' (dict-set d "x" 42)        ; => d (mutated, x=42)
@@ -152,6 +162,8 @@
           dict)))))
 
 ;;' @description Remove key from dict and return dict.
+;;' @param dict Dictionary to modify
+;;' @param key Key to remove (string, symbol, or keyword)
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-remove d "x")        ; => d (mutated, x removed)
@@ -176,6 +188,7 @@
         dict))))
 
 ;;' @description Return a list of dict keys.
+;;' @param dict Dictionary to retrieve keys from
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-keys d)              ; => ("x" "y")
@@ -193,6 +206,7 @@
         (_as-list keys)))))
 
 ;;' @description Return a list of dict values.
+;;' @param dict Dictionary to retrieve values from
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-values d)            ; => (1 2)
@@ -212,6 +226,8 @@
             (_as-list (r-call "unname" (list values)))))))))
 
 ;;' @description Return #t if dict contains key.
+;;' @param dict Dictionary to check
+;;' @param key Key to look for (string, symbol, or keyword)
 ;;' @examples
 ;;' (define d (dict :x 1 :y 2))
 ;;' (dict-has? d "x")          ; => #t
@@ -228,6 +244,7 @@
       (r-call "exists" (list name :envir dict :inherits #f)))))
 
 ;;' @description Merge dicts, later values override earlier.
+;;' @param dicts Dictionaries to merge in order (later values win)
 ;;' @examples
 ;;' (define a (dict :x 1 :y 2))
 ;;' (define b (dict :y 99 :z 3))

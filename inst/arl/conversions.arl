@@ -11,6 +11,7 @@
   ;;' @section Symbol Conversions
 
   ;;' @description Convert symbol to string.
+  ;;' @param sym Symbol to convert to string
   ;;' @examples
   ;;' (symbol->string 'hello)  ; => "hello"
   ;;' (symbol->string 'x)      ; => "x"
@@ -26,6 +27,7 @@
         (stop "symbol->string: argument must be a symbol"))))
 
   ;;' @description Convert string to symbol.
+  ;;' @param str String to convert to symbol
   ;;' @examples
   ;;' (string->symbol "hello")  ; => hello (a symbol)
   ;;' (string->symbol "x")      ; => x
@@ -41,6 +43,7 @@
         (stop "string->symbol: argument must be a string"))))
 
   ;;' @description Convert value to symbol.
+  ;;' @param x Value to convert to symbol
   ;;' @examples
   ;;' (->symbol "hello")  ; => hello (a symbol)
   ;;' (->symbol 42)       ; => 42 (symbol named "42")
@@ -59,6 +62,7 @@
   ;;' @section Numeric Conversions
 
   ;;' @description Convert value to number.
+  ;;' @param x Value to convert to number
   ;;' @examples
   ;;' (->number "42")     ; => 42
   ;;' (->number "3.14")   ; => 3.14
@@ -84,6 +88,7 @@
   ;;' @section Scheme-Style Exact/Inexact Conversions
 
   ;;' @description Convert exact number to inexact (integer to double).
+  ;;' @param x Exact (integer) number to convert to double
   ;;' @examples
   ;;' (exact->inexact 5L)     ; => 5.0 (integer to double)
   ;;' (exact->inexact 3.14)   ; => 3.14 (already double, returned as double)
@@ -100,6 +105,7 @@
         (stop "exact->inexact: argument must be a number"))))
 
   ;;' @description Convert inexact number to exact (double to integer, rounds to nearest).
+  ;;' @param x Inexact (double) number to round to integer
   ;;' @examples
   ;;' (inexact->exact 3.7)    ; => 4L (rounds to nearest integer)
   ;;' (inexact->exact 3.2)    ; => 3L
@@ -121,6 +127,7 @@
   ;;' R-style type conversions providing explicit control over the target numeric type.
 
   ;;' @description Convert value to integer.
+  ;;' @param x Value to convert to integer
   ;;' @examples
   ;;' (->integer 3.7)     ; => 3L (truncates toward zero)
   ;;' (->integer "42")    ; => 42L
@@ -144,6 +151,7 @@
           (stop "->integer: cannot convert to integer")))))
 
   ;;' @description Convert value to double.
+  ;;' @param x Value to convert to double
   ;;' @examples
   ;;' (->double 5L)       ; => 5.0
   ;;' (->double "3.14")   ; => 3.14
@@ -166,6 +174,7 @@
           (stop "->double: cannot convert to double")))))
 
   ;;' @description Convert value to complex number (imaginary part = 0).
+  ;;' @param x Value to convert to complex number
   ;;' @examples
   ;;' (->complex 5)       ; => 5+0i
   ;;' (->complex 3.14)    ; => 3.14+0i
@@ -189,6 +198,7 @@
   ;;' @section Collection Conversions
 
   ;;' @description Convert value to list.
+  ;;' @param x Value to convert to list
   ;;' @examples
   ;;' (->list (c 1 2 3))       ; => (1 2 3)
   ;;' (->list (list 1 2 3))    ; => (1 2 3) (already a list)
@@ -203,6 +213,7 @@
         (as.list x))))
 
   ;;' @description Convert value to vector.
+  ;;' @param x Value to convert to atomic vector
   ;;' @examples
   ;;' (->vector (list 1 2 3))   ; => [1] 1 2 3 (atomic vector)
   ;;' (->vector (c 1 2 3))  ; => [1] 1 2 3 (already a vector)

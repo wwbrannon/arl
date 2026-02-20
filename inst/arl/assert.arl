@@ -14,6 +14,8 @@
 ;;' and return `#t` on success.
 
   ;;' @description Assert condition or raise error.
+  ;;' @param cond Condition to test
+  ;;' @param msg Error message if assertion fails (default "Assertion failed")
   ;;' @noeval
   ;;' @examples
   ;;' (assert #t)               ; => #t
@@ -33,6 +35,8 @@
         (error msg))))
 
   ;;' @description Assert expected and actual are equal?.
+  ;;' @param expected Expected value
+  ;;' @param actual Actual value to compare
   ;;' @noeval
   ;;' @examples
   ;;' (assert-equal 3 (+ 1 2))  ; => #t
@@ -52,6 +56,7 @@
         #t)))
 
   ;;' @description Assert value is truthy.
+  ;;' @param value Value expected to be truthy
   ;;' @noeval
   ;;' @examples
   ;;' (assert-true #t)          ; => #t
@@ -71,6 +76,7 @@
         #t)))
 
   ;;' @description Assert value is falsy.
+  ;;' @param value Value expected to be falsy
   ;;' @noeval
   ;;' @examples
   ;;' (assert-false #f)         ; => #t
@@ -90,6 +96,8 @@
         #t)))
 
   ;;' @description Assert expected and actual are identical (R's `identical()`).
+  ;;' @param expected Expected value
+  ;;' @param actual Actual value to compare with identical?
   ;;' @noeval
   ;;' @examples
   ;;' (assert-eq 42 42)          ; => #t
@@ -111,6 +119,7 @@
         #t)))
 
   ;;' @description Assert expression throws an error.
+  ;;' @param expr Expression expected to signal an error
   ;;' @noeval
   ;;' @examples
   ;;' (assert-error (error "boom"))   ; => #t
@@ -139,6 +148,7 @@
         #t)))
 
   ;;' @description Assert expression does not throw an error.
+  ;;' @param expr Expression expected to complete without error
   ;;' @noeval
   ;;' @examples
   ;;' (assert-no-error 42)                ; => #t

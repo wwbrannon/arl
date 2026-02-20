@@ -21,6 +21,7 @@
     set-obj))
 
 ;;' @description Convert value to string key for set storage via serialization.
+;;' @param value Value to serialize into a string key
 (define set-key
   (lambda (value)
     (define raw (r-call "serialize" (list value #nil :ascii #t)))
@@ -29,6 +30,7 @@
 ;;; Set constructor
 
 ;;' @description Create a hash-backed set of unique items.
+;;' @param args Items to include in the set, or a single list to convert
 ;;' @examples
 ;;' (set 1 2 3)                ; => set of {1, 2, 3}
 ;;' (set 1 1 2)                ; => set of {1, 2} (duplicates removed)
@@ -59,6 +61,7 @@
 ;;; Type predicate
 
 ;;' @description Return #t if x is a set.
+;;' @param x Value to test
 ;;' @examples
 ;;' (set? (set 1 2))           ; => #t
 ;;' (set? (list 1 2))          ; => #f
@@ -74,6 +77,8 @@
 ;;; Set operations
 
 ;;' @description Add item to set and return set.
+;;' @param set Set to add to
+;;' @param item Value to add
 ;;' @examples
 ;;' (define s (set 1 2))
 ;;' (set-add s 3)              ; => s (mutated, now {1, 2, 3})
@@ -94,6 +99,8 @@
         set))))
 
 ;;' @description Remove item from set and return set.
+;;' @param set Set to remove from
+;;' @param item Value to remove
 ;;' @examples
 ;;' (define s (set 1 2 3))
 ;;' (set-remove s 2)           ; => s (mutated, now {1, 3})
@@ -114,6 +121,8 @@
         set))))
 
 ;;' @description Return #t if set contains item.
+;;' @param set Set to search in
+;;' @param item Value to look for
 ;;' @examples
 ;;' (define s (set 1 2 3))
 ;;' (set-contains? s 2)        ; => #t
@@ -130,6 +139,8 @@
         (r-call "exists" (list key :envir set :inherits #f))))))
 
 ;;' @description Return union of two sets.
+;;' @param a First set
+;;' @param b Second set
 ;;' @examples
 ;;' (define a (set 1 2 3))
 ;;' (define b (set 3 4 5))
@@ -149,6 +160,8 @@
     result))
 
 ;;' @description Return intersection of two sets.
+;;' @param a First set
+;;' @param b Second set
 ;;' @examples
 ;;' (define a (set 1 2 3))
 ;;' (define b (set 2 3 4))
@@ -177,6 +190,8 @@
     result))
 
 ;;' @description Return items in a that are not in b.
+;;' @param a Set to take items from
+;;' @param b Set whose items are excluded
 ;;' @examples
 ;;' (define a (set 1 2 3))
 ;;' (define b (set 2 3 4))
@@ -207,6 +222,8 @@
 ;;; Internal helper
 
 ;;' @description Copy items from source into target (internal helper).
+;;' @param target Set to copy items into
+;;' @param source Set to copy items from
 (define set-copy-into
   (lambda (target source)
     (if (and (set? target) (set? source))

@@ -12,6 +12,8 @@
   ;;' @section Arithmetic Helpers
 
   ;;' @description Modulo helper using R %%.
+  ;;' @param x Dividend
+  ;;' @param y Divisor
   ;;' @examples
   ;;' (% 10 3)   ; => 1
   ;;' (% 17 5)   ; => 2
@@ -23,6 +25,8 @@
       (%% x y)))
 
   ;;' @description Increment numeric value by n (default 1).
+  ;;' @param x Number to increment
+  ;;' @param n Amount to add (default 1)
   ;;' @examples
   ;;' (inc 5)       ; => 6
   ;;' (inc 5 3)     ; => 8
@@ -35,6 +39,8 @@
       (+ x n)))
 
   ;;' @description Decrement numeric value by n (default 1).
+  ;;' @param x Number to decrement
+  ;;' @param n Amount to subtract (default 1)
   ;;' @examples
   ;;' (dec 5)       ; => 4
   ;;' (dec 5 3)     ; => 2
@@ -47,6 +53,9 @@
       (- x n)))
 
   ;;' @description Clamp numeric value x to the inclusive range [lo, hi].
+  ;;' @param x Value to clamp
+  ;;' @param lo Lower bound (inclusive)
+  ;;' @param hi Upper bound (inclusive)
   ;;' @examples
   ;;' (clamp 5 0 10)   ; => 5
   ;;' (clamp -3 0 10)  ; => 0
@@ -63,6 +72,9 @@
         (if (> x hi) hi x))))
 
   ;;' @description Return #t if x is within the inclusive range [lo, hi].
+  ;;' @param x Value to test
+  ;;' @param lo Lower bound (inclusive)
+  ;;' @param hi Upper bound (inclusive)
   ;;' @examples
   ;;' (within? 5 0 10)   ; => #t
   ;;' (within? -3 0 10)  ; => #f
@@ -79,6 +91,7 @@
         (if (> x hi) #f #t))))
 
   ;;' @description Return sign of x: -1, 0, or 1.
+  ;;' @param x Numeric value
   ;;' @examples
   ;;' (signum 42)    ; => 1
   ;;' (signum -5)    ; => -1
@@ -93,6 +106,8 @@
   ;;' @section Power and Roots
 
   ;;' @description Return base raised to power.
+  ;;' @param base Base number
+  ;;' @param power Exponent
   ;;' @examples
   ;;' (expt 2 10)   ; => 1024
   ;;' (expt 3 3)    ; => 27
@@ -106,6 +121,8 @@
   ;;' @section Integer Division
 
   ;;' @description Return integer quotient of x divided by y.
+  ;;' @param x Dividend
+  ;;' @param y Divisor
   ;;' @examples
   ;;' (quotient 10 3)   ; => 3
   ;;' (quotient -10 3)  ; => -3
@@ -118,6 +135,8 @@
       (as.integer (trunc (/ x y)))))
 
   ;;' @description Return remainder of x divided by y (same sign as x).
+  ;;' @param x Dividend
+  ;;' @param y Divisor
   ;;' @examples
   ;;' (remainder 10 3)   ; => 1
   ;;' (remainder -10 3)  ; => -1
@@ -130,6 +149,8 @@
       (- x (* y (quotient x y)))))
 
   ;;' @description Return modulo of x and y (same sign as y).
+  ;;' @param x Dividend
+  ;;' @param y Divisor
   ;;' @examples
   ;;' (modulo 10 3)    ; => 1
   ;;' (modulo -10 3)   ; => 2
@@ -145,6 +166,7 @@
 
   ;;' @description Return greatest common divisor of arguments.
   ;;' @signature (gcd a b ...)
+  ;;' @param args Two or more integers
   ;;' @examples
   ;;' (gcd 12 8)      ; => 4
   ;;' (gcd 12 8 6)    ; => 2
@@ -169,6 +191,7 @@
 
   ;;' @description Return least common multiple of arguments.
   ;;' @signature (lcm a b ...)
+  ;;' @param args Two or more integers
   ;;' @examples
   ;;' (lcm 4 6)       ; => 12
   ;;' (lcm 3 4 5)     ; => 60
@@ -194,6 +217,8 @@
   ;;' @section Complex Number Utilities
 
   ;;' @description Construct a complex number from real and imaginary parts.
+  ;;' @param real Real component
+  ;;' @param imag Imaginary component
   ;;' @examples
   ;;' (make-rectangular 3 4)  ; => 3+4i
   ;;' @assert
@@ -204,6 +229,8 @@
       (complex :real real :imaginary imag)))
 
   ;;' @description Construct a complex number from polar coordinates (magnitude and angle).
+  ;;' @param magnitude Distance from origin
+  ;;' @param angle Angle in radians
   ;;' @examples
   ;;' (make-polar 5 0)      ; => 5+0i
   ;;' @assert
@@ -214,6 +241,7 @@
       (complex :modulus magnitude :argument angle)))
 
   ;;' @description Extract the real part of a complex number.
+  ;;' @param z Complex number
   ;;' @examples
   ;;' (real-part (make-rectangular 3 4))  ; => 3.0
   ;;' @assert
@@ -224,6 +252,7 @@
       (Re z)))
 
   ;;' @description Extract the imaginary part of a complex number.
+  ;;' @param z Complex number
   ;;' @examples
   ;;' (imag-part (make-rectangular 3 4))  ; => 4.0
   ;;' @assert
@@ -234,6 +263,7 @@
       (Im z)))
 
   ;;' @description Compute the magnitude (modulus) of a complex number.
+  ;;' @param z Complex number
   ;;' @examples
   ;;' (magnitude (make-rectangular 3 4))  ; => 5.0
   ;;' @assert
@@ -244,6 +274,7 @@
       (Mod z)))
 
   ;;' @description Compute the angle (argument) of a complex number.
+  ;;' @param z Complex number
   ;;' @examples
   ;;' (angle (make-rectangular 1 1))  ; => 0.7853981633974483 (pi/4)
   ;;' @assert

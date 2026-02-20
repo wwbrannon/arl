@@ -30,6 +30,7 @@
   ;;' are not part of this module.
 
   ;;' @description Logical negation with Arl truthiness.
+  ;;' @param x Value to negate
   ;;' @examples
   ;;' (not #t)          ; => #f
   ;;' (not #f)          ; => #t
@@ -51,6 +52,8 @@
       (if x #f #t)))
 
   ;;' @description Logical exclusive OR with Arl truthiness.
+  ;;' @param a First value
+  ;;' @param b Second value
   ;;' @examples
   ;;' (xor #t #f)       ; => #t
   ;;' (xor #f #t)       ; => #t

@@ -29,6 +29,9 @@ Convert a list to a callable form.
 
 **Signature:** `(call lst)`
 
+**Parameters:**
+- **`lst`** — List to convert to a call object.
+
 **Examples:**
 ```{arl}
 (call (list '+ 1 2))  ; => language: (+ 1 2)
@@ -48,6 +51,9 @@ car of car.
 
 **Signature:** `(caar x)`
 
+**Parameters:**
+- **`x`** — Nested list to access.
+
 ---
 
 ### cadr {#cadr}
@@ -55,6 +61,9 @@ car of car.
 car of cdr.
 
 **Signature:** `(cadr x)`
+
+**Parameters:**
+- **`x`** — List to access.
 
 ---
 
@@ -64,6 +73,9 @@ cdr of car.
 
 **Signature:** `(cdar x)`
 
+**Parameters:**
+- **`x`** — Nested list to access.
+
 ---
 
 ### cddr {#cddr}
@@ -71,6 +83,9 @@ cdr of car.
 cdr of cdr.
 
 **Signature:** `(cddr x)`
+
+**Parameters:**
+- **`x`** — List to access.
 
 ---
 
@@ -80,6 +95,9 @@ car of car of car.
 
 **Signature:** `(caaar x)`
 
+**Parameters:**
+- **`x`** — Nested list to access.
+
 ---
 
 ### caadr {#caadr}
@@ -87,6 +105,9 @@ car of car of car.
 car of car of cdr.
 
 **Signature:** `(caadr x)`
+
+**Parameters:**
+- **`x`** — Nested list to access.
 
 ---
 
@@ -96,6 +117,9 @@ car of cdr of car.
 
 **Signature:** `(cadar x)`
 
+**Parameters:**
+- **`x`** — Nested list to access.
+
 ---
 
 ### caddr {#caddr}
@@ -103,6 +127,9 @@ car of cdr of car.
 car of cdr of cdr.
 
 **Signature:** `(caddr x)`
+
+**Parameters:**
+- **`x`** — List to access.
 
 ---
 
@@ -112,6 +139,9 @@ cdr of car of car.
 
 **Signature:** `(cdaar x)`
 
+**Parameters:**
+- **`x`** — Nested list to access.
+
 ---
 
 ### cdadr {#cdadr}
@@ -119,6 +149,9 @@ cdr of car of car.
 cdr of car of cdr.
 
 **Signature:** `(cdadr x)`
+
+**Parameters:**
+- **`x`** — Nested list to access.
 
 ---
 
@@ -128,6 +161,9 @@ cdr of cdr of car.
 
 **Signature:** `(cddar x)`
 
+**Parameters:**
+- **`x`** — Nested list to access.
+
 ---
 
 ### cdddr {#cdddr}
@@ -135,6 +171,9 @@ cdr of cdr of car.
 cdr of cdr of cdr.
 
 **Signature:** `(cdddr x)`
+
+**Parameters:**
+- **`x`** — List to access.
 
 ---
 
@@ -144,6 +183,9 @@ car of cdr of cdr of cdr.
 
 **Signature:** `(cadddr x)`
 
+**Parameters:**
+- **`x`** — List to access.
+
 ---
 
 ### cddddr {#cddddr}
@@ -152,6 +194,9 @@ cdr of cdr of cdr of cdr.
 
 **Signature:** `(cddddr x)`
 
+**Parameters:**
+- **`x`** — List to access.
+
 ---
 
 ### list* {#list-star}
@@ -159,6 +204,9 @@ cdr of cdr of cdr of cdr.
 Build list ending with last arg.
 
 **Signature:** `(list* args...)`
+
+**Parameters:**
+- **`args`** — Elements to combine; the last argument is appended as a tail.
 
 **Examples:**
 ```{arl}
@@ -183,6 +231,9 @@ Concatenate multiple lists into one.
 
 **Signature:** `(append lists...)`
 
+**Parameters:**
+- **`lists`** — Lists to concatenate in order.
+
 **Examples:**
 ```{arl}
 (append (list 1 2) (list 3 4))    ; => (1 2 3 4)
@@ -206,6 +257,9 @@ Reverse list.
 
 **Signature:** `(reverse x)`
 
+**Parameters:**
+- **`x`** — List to reverse.
+
 **Examples:**
 ```{arl}
 (reverse (list 1 2 3))  ; => (3 2 1)
@@ -224,6 +278,9 @@ Reverse list.
 Alias for car.
 
 **Signature:** `(first lst)`
+
+**Parameters:**
+- **`lst`** — Source list.
 
 **Examples:**
 ```{arl}
@@ -244,6 +301,9 @@ Return second element or #nil.
 
 **Signature:** `(second lst)`
 
+**Parameters:**
+- **`lst`** — Source list.
+
 **Examples:**
 ```{arl}
 (second (list 10 20 30))  ; => 20
@@ -262,6 +322,9 @@ Return second element or #nil.
 Return third element or #nil.
 
 **Signature:** `(third lst)`
+
+**Parameters:**
+- **`lst`** — Source list.
 
 **Examples:**
 ```{arl}
@@ -282,6 +345,9 @@ Return fourth element or #nil.
 
 **Signature:** `(fourth lst)`
 
+**Parameters:**
+- **`lst`** — Source list.
+
 **Examples:**
 ```{arl}
 (fourth (list 1 2 3 4))   ; => 4
@@ -301,6 +367,9 @@ Alias for cdr.
 
 **Signature:** `(rest lst)`
 
+**Parameters:**
+- **`lst`** — Source list.
+
 **Examples:**
 ```{arl}
 (rest (list 1 2 3))       ; => (2 3)
@@ -319,6 +388,9 @@ Alias for cdr.
 Return last item or #nil.
 
 **Signature:** `(last lst)`
+
+**Parameters:**
+- **`lst`** — Source list.
 
 **Examples:**
 ```{arl}
@@ -342,6 +414,10 @@ Return last item or #nil.
 Return nth item (0-based).
 
 **Signature:** `(nth lst n)`
+
+**Parameters:**
+- **`lst`** — Source list.
+- **`n`** — 0-based index of the element to retrieve.
 
 **Examples:**
 ```{arl}
@@ -436,6 +512,10 @@ Find first alist entry (list or dotted pair) with matching key (uses ==).
 
 **Signature:** `(assoc key alist)`
 
+**Parameters:**
+- **`key`** — Key to search for.
+- **`alist`** — Association list of (key value) entries.
+
 **Examples:**
 ```{arl}
 (assoc 'b (list (list 'a 1) (list 'b 2) (list 'c 3)))  ; => (b 2)
@@ -456,6 +536,10 @@ Find first alist entry (list or dotted pair) with matching key (uses ==).
 Find first alist entry with key matching under equal? (deep structural comparison).
 Requires `(import equality)` for `equal?`.
 
+**Parameters:**
+- **`key`** — Key to search for.
+- **`alist`** — Association list of (key value) entries.
+
 **See also:** [assoc](#assoc)
 
 ---
@@ -466,6 +550,10 @@ Find first alist entry with matching key (uses R's identical?).
 
 **Signature:** `(assoc-by-identical? key alist)`
 
+**Parameters:**
+- **`key`** — Key to search for.
+- **`alist`** — Association list of (key value) entries.
+
 **See also:** [assoc](#assoc), [assoc-by-==](#assoc-by-eq-eq)
 
 ---
@@ -475,6 +563,10 @@ Find first alist entry with matching key (uses R's identical?).
 Find first alist entry with matching key (uses R's ==).
 
 **Signature:** `(assoc-by-== key alist)`
+
+**Parameters:**
+- **`key`** — Key to search for.
+- **`alist`** — Association list of (key value) entries.
 
 **See also:** [assoc](#assoc), [assoc-by-identical?](#assoc-by-identical-p)
 
@@ -487,6 +579,10 @@ Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
 
 **Signature:** `(assq key alist)`
 
+**Parameters:**
+- **`key`** — Key to search for (unused; raises error).
+- **`alist`** — Association list (unused; raises error).
+
 **Note:** assq cannot be properly implemented in R (no eq?). Use assoc, assoc-by-identical?, or assoc-by-== instead.
 
 ---
@@ -498,6 +594,10 @@ Use assoc (equal?), assoc-by-identical?, or assoc-by-== instead.
 
 **Signature:** `(assv key alist)`
 
+**Parameters:**
+- **`key`** — Key to search for (unused; raises error).
+- **`alist`** — Association list (unused; raises error).
+
 **Note:** assv cannot be properly implemented in R (no eqv?). Use assoc, assoc-by-identical?, or assoc-by-== instead.
 
 ---
@@ -508,6 +608,10 @@ Find first alist entry with matching value
 (searches cdr of entries; uses equal?).
 
 **Signature:** `(rassoc value alist)`
+
+**Parameters:**
+- **`value`** — Value to search for in the second position of each entry.
+- **`alist`** — Association list of (key value) entries.
 
 **Examples:**
 ```{arl}
@@ -530,6 +634,10 @@ Alias for rassoc: find first alist entry with value matching under equal?.
 
 **Signature:** `(rassoc-by-equal? value alist)`
 
+**Parameters:**
+- **`value`** — Value to search for in the second position of each entry.
+- **`alist`** — Association list of (key value) entries.
+
 **See also:** [rassoc](#rassoc)
 
 ---
@@ -543,6 +651,11 @@ Utilities for creating lists of numbers or repeated values.
 Generate numeric range from start to end (exclusive) with optional step.
 
 **Signature:** `(range start end step-args...)`
+
+**Parameters:**
+- **`start`** — Start value (inclusive).
+- **`end`** — End value (exclusive).
+- **`step-args`** — Optional step size (default 1).
 
 **Examples:**
 ```{arl}
@@ -568,6 +681,10 @@ start (default 0) with step (default 1).
 
 **Signature:** `(iota count args...)`
 
+**Parameters:**
+- **`count`** — Number of elements to generate.
+- **`args`** — Optional start (default 0) and step (default 1).
+
 **Examples:**
 ```{arl}
 (iota 5)          ; => (0 1 2 3 4)
@@ -590,6 +707,10 @@ start (default 0) with step (default 1).
 Create list of n copies of value.
 
 **Signature:** `(make-list n value)`
+
+**Parameters:**
+- **`n`** — Number of copies.
+- **`value`** — Element to repeat.
 
 **Examples:**
 ```{arl}
@@ -614,6 +735,10 @@ Scheme-style list accessor (alias for nth).
 
 **Signature:** `(list-ref lst index)`
 
+**Parameters:**
+- **`lst`** — Source list.
+- **`index`** — 0-based index of the element to retrieve.
+
 **Examples:**
 ```{arl}
 (list-ref (list 'a 'b 'c) 1)  ; => b
@@ -632,6 +757,10 @@ Scheme-style list accessor (alias for nth).
 Return list without first k elements.
 
 **Signature:** `(list-tail lst k)`
+
+**Parameters:**
+- **`lst`** — Source list.
+- **`k`** — Number of leading elements to skip.
 
 **Examples:**
 ```{arl}
@@ -660,6 +789,10 @@ Take first n items.
 
 **Signature:** `(take n lst)`
 
+**Parameters:**
+- **`n`** — Number of elements to take
+- **`lst`** — Source list
+
 **Examples:**
 ```{arl}
 (take 3 (list 1 2 3 4 5))  ; => (1 2 3)
@@ -682,6 +815,10 @@ Take first n items.
 Drop first n items.
 
 **Signature:** `(drop n lst)`
+
+**Parameters:**
+- **`n`** — Number of elements to skip
+- **`lst`** — Source list
 
 **Examples:**
 ```{arl}
@@ -706,6 +843,10 @@ Take items while predicate is true.
 
 **Signature:** `(take-while pred lst)`
 
+**Parameters:**
+- **`pred`** — Predicate function; taking stops at first #f
+- **`lst`** — Source list
+
 **Examples:**
 ```{arl}
 (take-while odd? (list 1 3 5 2 4))   ; => (1 3 5)
@@ -727,6 +868,10 @@ Drop items while predicate is true.
 
 **Signature:** `(drop-while pred lst)`
 
+**Parameters:**
+- **`pred`** — Predicate function; dropping stops at first #f
+- **`lst`** — Source list
+
 **Examples:**
 ```{arl}
 (drop-while odd? (list 1 3 5 2 4))   ; => (2 4)
@@ -747,6 +892,11 @@ Drop items while predicate is true.
 Split list into chunks of size n.
 
 **Signature:** `(partition n lst [step n])`
+
+**Parameters:**
+- **`n`** — Chunk size
+- **`lst`** — Source list
+- **`step`** — Offset between chunk starts (default n, i.e. no overlap)
 
 **Examples:**
 ```{arl}
@@ -770,6 +920,9 @@ Flatten nested lists.
 
 **Signature:** `(flatten lst)`
 
+**Parameters:**
+- **`lst`** — Possibly nested list to flatten into a single-level list
+
 **Examples:**
 ```{arl}
 (flatten (list 1 (list 2 3) (list 4 (list 5))))  ; => (1 2 3 4 5)
@@ -791,6 +944,10 @@ Call fn n times collecting results.
 
 **Signature:** `(repeatedly n fn)`
 
+**Parameters:**
+- **`n`** — Number of times to call fn
+- **`fn`** — Zero-argument function to call repeatedly
+
 **Examples:**
 ```{arl}
 (repeatedly 3 (lambda () 42))  ; => (42 42 42)
@@ -809,6 +966,10 @@ Call fn n times collecting results.
 Repeat value n times.
 
 **Signature:** `(repeat n value)`
+
+**Parameters:**
+- **`n`** — Number of repetitions
+- **`value`** — Value to repeat
 
 **Examples:**
 ```{arl}
@@ -830,6 +991,9 @@ Repeat value n times.
 Zip lists into list of tuples.
 
 **Signature:** `(zip lists...)`
+
+**Parameters:**
+- **`lists`** — Two or more lists to interleave element-wise
 
 **Examples:**
 ```{arl}
@@ -853,6 +1017,11 @@ pass :use-identical #t for R's identical().
 
 **Signature:** `(member x lst [use-identical #f])`
 
+**Parameters:**
+- **`x`** — Value to search for
+- **`lst`** — List to search in
+- **`use-identical`** — Use R's identical() instead of equal? (default #f)
+
 **Examples:**
 ```{arl}
 (member 3 (list 1 2 3 4 5))   ; => (3 4 5)
@@ -873,6 +1042,10 @@ pass :use-identical #t for R's identical().
 Return #t if lst contains element equal to x.
 
 **Signature:** `(contains? x lst)`
+
+**Parameters:**
+- **`x`** — Value to search for
+- **`lst`** — List to search in
 
 **Examples:**
 ```{arl}
@@ -899,6 +1072,10 @@ Return #t if length of x equals n.
 
 **Signature:** `(length= x n)`
 
+**Parameters:**
+- **`x`** — Sequence to measure
+- **`n`** — Expected length
+
 **Examples:**
 ```{arl}
 (length= (list 1 2 3) 3)  ; => #t
@@ -920,6 +1097,10 @@ Return #t if length of x is greater than n.
 
 **Signature:** `(length> x n)`
 
+**Parameters:**
+- **`x`** — Sequence to measure
+- **`n`** — Length to compare against
+
 **Examples:**
 ```{arl}
 (length> (list 1 2 3) 2)  ; => #t
@@ -940,6 +1121,10 @@ Return #t if length of x is greater than n.
 Return #t if length of x is less than n.
 
 **Signature:** `(length< x n)`
+
+**Parameters:**
+- **`x`** — Sequence to measure
+- **`n`** — Length to compare against
 
 **Examples:**
 ```{arl}
@@ -969,6 +1154,10 @@ Sort list using comparison function (simple quicksort implementation).
 
 **Signature:** `(list-sort lst comparator)`
 
+**Parameters:**
+- **`lst`** — List to sort
+- **`comparator`** — Binary predicate returning #t when first arg should come before second
+
 **Examples:**
 ```{arl}
 (list-sort (list 3 1 4 1 5) <)        ; => (1 1 3 4 5)
@@ -989,6 +1178,11 @@ Sort list using comparison function (simple quicksort implementation).
 Sort list by applying key-fn to each element, then comparing.
 
 **Signature:** `(sort-by lst key-fn comparator)`
+
+**Parameters:**
+- **`lst`** — List to sort
+- **`key-fn`** — Function to extract a comparison key from each element
+- **`comparator`** — Binary predicate applied to extracted keys
 
 **Examples:**
 ```{arl}
@@ -1013,6 +1207,11 @@ is true), takes from list1 first.
 
 **Signature:** `(merge-sorted list1 list2 comparator)`
 
+**Parameters:**
+- **`list1`** — First sorted list
+- **`list2`** — Second sorted list
+- **`comparator`** — Binary predicate used to order elements
+
 **Examples:**
 ```{arl}
 (merge-sorted (list 1 3 5) (list 2 4 6) <)  ; => (1 2 3 4 5 6)
@@ -1033,6 +1232,10 @@ is true), takes from list1 first.
 Stable sort - preserves order of equal elements. Uses merge sort internally.
 
 **Signature:** `(stable-sort lst comparator)`
+
+**Parameters:**
+- **`lst`** — List to sort
+- **`comparator`** — Binary predicate returning #t when first arg should come before second
 
 **Examples:**
 ```{arl}
