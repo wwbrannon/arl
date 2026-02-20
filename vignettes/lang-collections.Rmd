@@ -312,6 +312,128 @@ Merge dicts, later values override earlier.
 
 ---
 
+## Dictionary Transformation {#section-dictionary-transformation}
+
+Functions for updating, mapping, filtering, and converting dictionaries.
+
+### dict-update {#dict-update}
+
+Apply fn to the value at key (or default if missing).
+Mutates and returns dict.
+
+**Signature:** `(dict-update d key fn rest...)`
+
+**Parameters:**
+- **`d`** — Dictionary to update
+- **`key`** — Key to update
+- **`fn`** — Function to apply to the current value
+- **`rest`** — Optional default value if key is missing
+
+**Examples:**
+```{arl}
+(dict-update (dict :x 1) "x" inc)  ; => dict with x=2
+```
+
+**See also:** [dict-set](#dict-set), [dict-get](#dict-get)
+
+---
+
+### dict-map {#dict-map}
+
+Map fn over dict entries. fn takes key and value, returns new value.
+Returns a new dict.
+
+**Signature:** `(dict-map fn d)`
+
+**Parameters:**
+- **`fn`** — Function taking key (string) and value, returning new value
+- **`d`** — Dictionary to map over
+
+**Examples:**
+```{arl}
+(dict-map (lambda (k v) (* v 10)) (dict :x 1))  ; => dict with x=10
+```
+
+**See also:** [dict-filter](#dict-filter), [dict-for-each](#dict-for-each)
+
+---
+
+### dict-filter {#dict-filter}
+
+Filter dict entries. pred takes key and value, returns #t to keep.
+Returns a new dict.
+
+**Signature:** `(dict-filter pred d)`
+
+**Parameters:**
+- **`pred`** — Predicate function taking key (string) and value
+- **`d`** — Dictionary to filter
+
+**Examples:**
+```{arl}
+(dict-filter (lambda (k v) (> v 1)) (dict :x 1 :y 2))  ; => dict with y=2
+```
+
+**See also:** [dict-map](#dict-map), [dict-for-each](#dict-for-each)
+
+---
+
+### dict-for-each {#dict-for-each}
+
+Iterate over dict entries for side effects. fn takes key and value.
+Returns #nil.
+
+**Signature:** `(dict-for-each fn d)`
+
+**Parameters:**
+- **`fn`** — Function taking key (string) and value
+- **`d`** — Dictionary to iterate over
+
+**Examples:**
+```{arl}
+(dict-for-each (lambda (k v) (print v)) (dict :x 1))  ; prints 1
+```
+
+**See also:** [dict-map](#dict-map), [dict-filter](#dict-filter)
+
+---
+
+### dict->alist {#dict-to-alist}
+
+Convert dict to association list of (key value) pairs.
+
+**Signature:** `(dict->alist d)`
+
+**Parameters:**
+- **`d`** — Dictionary to convert
+
+**Examples:**
+```{arl}
+(dict->alist (dict :x 1 :y 2))  ; => (("x" 1) ("y" 2))
+```
+
+**See also:** [alist->dict](#alist-to-dict)
+
+---
+
+### alist->dict {#alist-to-dict}
+
+Convert association list of (key value) pairs to dict.
+
+**Signature:** `(alist->dict alist)`
+
+**Parameters:**
+- **`alist`** — List of (key value) pairs
+
+**Examples:**
+```{arl}
+(alist->dict (list (list "x" 1) (list "y" 2)))  ; => dict with x=1 y=2
+```
+
+**See also:** [dict->alist](#dict-to-alist)
+
+---
+
 ## Set (Hash-Backed) {#section-set-hash-backed}
 
 Sets are mutable collections of unique items backed by R environments.
@@ -561,6 +683,112 @@ Copy items from source into target (internal helper).
 **Parameters:**
 - **`target`** — Set to copy items into
 - **`source`** — Set to copy items from
+
+---
+
+## Set Conversion and Transformation {#section-set-conversion-and-transformation}
+
+Functions for converting between sets and lists, and for transforming sets.
+
+### set->list {#set-to-list}
+
+Extract set elements as a list.
+
+**Signature:** `(set->list s)`
+
+**Parameters:**
+- **`s`** — Set to convert
+
+**Examples:**
+```{arl}
+(set->list (set 1 2 3))  ; => (1 2 3) (order may vary)
+```
+
+```{arl, include=FALSE}
+(assert-true (> (length (set->list (set 1 2 3))) 0))
+```
+
+**See also:** [list->set](#list-to-set)
+
+---
+
+### list->set {#list-to-set}
+
+Create a set from a list.
+
+**Signature:** `(list->set lst)`
+
+**Parameters:**
+- **`lst`** — List of values to include in the set
+
+**Examples:**
+```{arl}
+(list->set '(1 2 3 2 1))  ; => set of {1, 2, 3}
+```
+
+**See also:** [set->list](#set-to-list), [set](#set)
+
+---
+
+### set-size {#set-size}
+
+Return the number of elements in a set.
+
+**Signature:** `(set-size s)`
+
+**Parameters:**
+- **`s`** — Set to measure
+
+**Examples:**
+```{arl}
+(set-size (set 1 2 3))  ; => 3
+(set-size (set))         ; => 0
+```
+
+```{arl, include=FALSE}
+(assert-equal 3 (set-size (set 1 2 3)))
+(assert-equal 0 (set-size (set)))
+```
+
+**See also:** [set?](#set-p)
+
+---
+
+### set-map {#set-map}
+
+Apply function to each element, return new set of results.
+
+**Signature:** `(set-map fn s)`
+
+**Parameters:**
+- **`fn`** — Function to apply to each element
+- **`s`** — Set to map over
+
+**Examples:**
+```{arl}
+(set-map inc (set 1 2 3))  ; => set of {2, 3, 4}
+```
+
+**See also:** [set-filter](#set-filter)
+
+---
+
+### set-filter {#set-filter}
+
+Keep only elements matching predicate, return new set.
+
+**Signature:** `(set-filter pred s)`
+
+**Parameters:**
+- **`pred`** — Predicate function to test each element
+- **`s`** — Set to filter
+
+**Examples:**
+```{arl}
+(set-filter even? (set 1 2 3 4))  ; => set of {2, 4}
+```
+
+**See also:** [set-map](#set-map)
 
 ---
 

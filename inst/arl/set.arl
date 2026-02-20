@@ -2,7 +2,7 @@
 
 (module set
   (export set set? set-add set-remove set-contains? set-union set-intersection
-          set-difference)
+          set-difference set->list list->set set-size set-map set-filter)
 
   (import core :refer (r-call error))
 
@@ -237,4 +237,105 @@
                 (r-call "assign" (list key value :envir target))))))
         (r-call "lapply" (list (as.list keys) copy-key)))
     target)))
+
+;; ============================================================================
+;; Set Conversion and Transformation
+;; ============================================================================
+
+;;' @section Set Conversion and Transformation
+;;' Functions for converting between sets and lists, and for transforming sets.
+
+;;' @description Extract set elements as a list.
+;;' @param s Set to convert
+;;' @examples
+;;' (set->list (set 1 2 3))  ; => (1 2 3) (order may vary)
+;;' @assert
+;;' (assert-true (> (length (set->list (set 1 2 3))) 0))
+;;' @seealso list->set
+(define set->list
+  (lambda (s)
+    (if (not (set? s))
+      (list)
+      (begin
+        (define keys (r-call "ls" (list :envir s :all.names #t :sorted #f)))
+        (if (= (length keys) 0)
+          (list)
+          (r-call "as.list" (list (r-call "unname" (list (r-call "mget" (list keys :envir s :inherits #f)))))))))))
+
+;;' @description Create a set from a list.
+;;' @param lst List of values to include in the set
+;;' @examples
+;;' (list->set '(1 2 3 2 1))  ; => set of {1, 2, 3}
+;;' @seealso set->list, set
+(define list->set
+  (lambda (lst)
+    (define s (set-new))
+    (define items (if (is.list lst) lst (as.list lst)))
+    (define add-item
+      (lambda (item)
+        (begin
+          (define key (set-key item))
+          (if (not (r-call "exists" (list key :envir s :inherits #f)))
+            (r-call "assign" (list key item :envir s))))))
+    (r-call "lapply" (list items add-item))
+    s))
+
+;;' @description Return the number of elements in a set.
+;;' @param s Set to measure
+;;' @examples
+;;' (set-size (set 1 2 3))  ; => 3
+;;' (set-size (set))         ; => 0
+;;' @assert
+;;' (assert-equal 3 (set-size (set 1 2 3)))
+;;' (assert-equal 0 (set-size (set)))
+;;' @seealso set?
+(define set-size
+  (lambda (s)
+    (if (not (set? s))
+      0
+      (length (r-call "ls" (list :envir s :all.names #t :sorted #f))))))
+
+;;' @description Apply function to each element, return new set of results.
+;;' @param fn Function to apply to each element
+;;' @param s Set to map over
+;;' @examples
+;;' (set-map inc (set 1 2 3))  ; => set of {2, 3, 4}
+;;' @seealso set-filter
+(define set-map
+  (lambda (fn s)
+    (define result (set-new))
+    (if (set? s)
+      (begin
+        (define keys (r-call "ls" (list :envir s :all.names #t :sorted #f)))
+        (define process-key
+          (lambda (key)
+            (begin
+              (define value (r-call "get" (list key :envir s :inherits #f)))
+              (define new-value (fn value))
+              (define new-key (set-key new-value))
+              (if (not (r-call "exists" (list new-key :envir result :inherits #f)))
+                (r-call "assign" (list new-key new-value :envir result))))))
+        (r-call "lapply" (list (as.list keys) process-key))))
+    result))
+
+;;' @description Keep only elements matching predicate, return new set.
+;;' @param pred Predicate function to test each element
+;;' @param s Set to filter
+;;' @examples
+;;' (set-filter even? (set 1 2 3 4))  ; => set of {2, 4}
+;;' @seealso set-map
+(define set-filter
+  (lambda (pred s)
+    (define result (set-new))
+    (if (set? s)
+      (begin
+        (define keys (r-call "ls" (list :envir s :all.names #t :sorted #f)))
+        (define process-key
+          (lambda (key)
+            (begin
+              (define value (r-call "get" (list key :envir s :inherits #f)))
+              (if (isTRUE (pred value))
+                (r-call "assign" (list key value :envir result))))))
+        (r-call "lapply" (list (as.list keys) process-key))))
+    result))
 )

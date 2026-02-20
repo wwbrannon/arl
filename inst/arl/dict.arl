@@ -2,7 +2,8 @@
 
 (module dict
   (export dict hash dict? dict-get dict-set dict-remove dict-keys dict-values
-          dict-has? dict-merge)
+          dict-has? dict-merge
+          dict-update dict-map dict-filter dict-for-each dict->alist alist->dict)
 
   (import _utils :refer (_as-list))
 
@@ -280,6 +281,140 @@
     (while (> (length remaining) 0)
       (begin
         (merge-dict (car remaining))
+        (set! remaining (cdr remaining))))
+    (r-call "assign" (list ".__keys" (r-call "as.character" (list result-keys)) :envir result))
+    result))
+
+;; ============================================================================
+;; Dictionary Transformation
+;; ============================================================================
+
+;;' @section Dictionary Transformation
+;;' Functions for updating, mapping, filtering, and converting dictionaries.
+
+;;' @description Apply fn to the value at key (or default if missing).
+;;' Mutates and returns dict.
+;;' @param d Dictionary to update
+;;' @param key Key to update
+;;' @param fn Function to apply to the current value
+;;' @param rest Optional default value if key is missing
+;;' @examples
+;;' (dict-update (dict :x 1) "x" inc)  ; => dict with x=2
+;;' @seealso dict-set, dict-get
+(define dict-update
+  (lambda (d key fn . rest)
+    (define name (dict-key-to-name key))
+    (define current
+      (if (r-call "exists" (list name :envir d :inherits #f))
+        (r-call "get" (list name :envir d :inherits #f))
+        (if (> (length rest) 0)
+          (car rest)
+          (error "dict-update: key not found and no default provided"))))
+    (dict-set d key (fn current))))
+
+;;' @description Map fn over dict entries. fn takes key and value, returns new value.
+;;' Returns a new dict.
+;;' @param fn Function taking key (string) and value, returning new value
+;;' @param d Dictionary to map over
+;;' @examples
+;;' (dict-map (lambda (k v) (* v 10)) (dict :x 1))  ; => dict with x=10
+;;' @seealso dict-filter, dict-for-each
+(define dict-map
+  (lambda (fn d)
+    (define result (dict-new))
+    (define keys (dict-keys-ordered d))
+    (if (> (length keys) 0)
+      (begin
+        (define process-key
+          (lambda (name)
+            (begin
+              (define value (r-call "get" (list name :envir d :inherits #f)))
+              (define new-value (fn name value))
+              (r-call "assign" (list name new-value :envir result)))))
+        (r-call "lapply" (list (as.list keys) process-key))
+        (r-call "assign" (list ".__keys" keys :envir result))))
+    result))
+
+;;' @description Filter dict entries. pred takes key and value, returns #t to keep.
+;;' Returns a new dict.
+;;' @param pred Predicate function taking key (string) and value
+;;' @param d Dictionary to filter
+;;' @examples
+;;' (dict-filter (lambda (k v) (> v 1)) (dict :x 1 :y 2))  ; => dict with y=2
+;;' @seealso dict-map, dict-for-each
+(define dict-filter
+  (lambda (pred d)
+    (define result (dict-new))
+    (define keys (dict-keys-ordered d))
+    (define result-keys (list))
+    (if (> (length keys) 0)
+      (begin
+        (define process-key
+          (lambda (name)
+            (begin
+              (define value (r-call "get" (list name :envir d :inherits #f)))
+              (if (isTRUE (pred name value))
+                (begin
+                  (r-call "assign" (list name value :envir result))
+                  (set! result-keys (c result-keys (list name))))))))
+        (r-call "lapply" (list (as.list keys) process-key))
+        (r-call "assign" (list ".__keys" (r-call "as.character" (list result-keys)) :envir result))))
+    result))
+
+;;' @description Iterate over dict entries for side effects. fn takes key and value.
+;;' Returns #nil.
+;;' @param fn Function taking key (string) and value
+;;' @param d Dictionary to iterate over
+;;' @examples
+;;' (dict-for-each (lambda (k v) (print v)) (dict :x 1))  ; prints 1
+;;' @seealso dict-map, dict-filter
+(define dict-for-each
+  (lambda (fn d)
+    (define keys (dict-keys-ordered d))
+    (if (> (length keys) 0)
+      (begin
+        (define process-key
+          (lambda (name)
+            (begin
+              (define value (r-call "get" (list name :envir d :inherits #f)))
+              (fn name value))))
+        (r-call "lapply" (list (as.list keys) process-key))))
+    #nil))
+
+;;' @description Convert dict to association list of (key value) pairs.
+;;' @param d Dictionary to convert
+;;' @examples
+;;' (dict->alist (dict :x 1 :y 2))  ; => (("x" 1) ("y" 2))
+;;' @seealso alist->dict
+(define dict->alist
+  (lambda (d)
+    (define keys (dict-keys-ordered d))
+    (if (= (length keys) 0)
+      (list)
+      (begin
+        (define make-pair
+          (lambda (name)
+            (list name (r-call "get" (list name :envir d :inherits #f)))))
+        (r-call "lapply" (list (as.list keys) make-pair))))))
+
+;;' @description Convert association list of (key value) pairs to dict.
+;;' @param alist List of (key value) pairs
+;;' @examples
+;;' (alist->dict (list (list "x" 1) (list "y" 2)))  ; => dict with x=1 y=2
+;;' @seealso dict->alist
+(define alist->dict
+  (lambda (alist)
+    (define result (dict-new))
+    (define items (_as-list alist))
+    (define result-keys (list))
+    (define remaining items)
+    (while (> (length remaining) 0)
+      (begin
+        (define pair (car remaining))
+        (define key (r-call "as.character" (list (r-call "[[" (list pair 1)))))
+        (define value (r-call "[[" (list pair 2)))
+        (r-call "assign" (list key value :envir result))
+        (set! result-keys (c result-keys (list key)))
         (set! remaining (cdr remaining))))
     (r-call "assign" (list ".__keys" (r-call "as.character" (list result-keys)) :envir result))
     result))

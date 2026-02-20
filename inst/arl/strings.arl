@@ -8,7 +8,8 @@
           string-upcase string-downcase string-titlecase
           string<? string>? string=? string<=? string>=?
           string->list list->string
-          number->string string->number)
+          number->string string->number
+          string-prefix? string-suffix? string-empty? string-repeat)
 
   (import _utils :refer (_as-list))
 
@@ -538,5 +539,67 @@
         (begin
           (define result (suppressWarnings (as.numeric str)))
           (if (is.na result) #f result)))))
+
+  ;; ============================================================================
+  ;; String Predicates and Utilities
+  ;; ============================================================================
+
+  ;;' @section String Predicates
+  ;;' Common string predicates for prefix, suffix, and emptiness checks.
+
+  ;;' @description Return #t if str starts with prefix.
+  ;;' @param prefix String to check for at the start
+  ;;' @param str String to check
+  ;;' @examples
+  ;;' (string-prefix? "he" "hello")  ; => #t
+  ;;' (string-prefix? "wo" "hello")  ; => #f
+  ;;' @assert
+  ;;' (assert-true (string-prefix? "he" "hello"))
+  ;;' (assert-false (string-prefix? "wo" "hello"))
+  ;;' @seealso string-suffix?, string-contains?
+  (define string-prefix?
+    (lambda (prefix str)
+      (isTRUE (startsWith str prefix))))
+
+  ;;' @description Return #t if str ends with suffix.
+  ;;' @param suffix String to check for at the end
+  ;;' @param str String to check
+  ;;' @examples
+  ;;' (string-suffix? "lo" "hello")  ; => #t
+  ;;' (string-suffix? "he" "hello")  ; => #f
+  ;;' @assert
+  ;;' (assert-true (string-suffix? "lo" "hello"))
+  ;;' (assert-false (string-suffix? "he" "hello"))
+  ;;' @seealso string-prefix?, string-contains?
+  (define string-suffix?
+    (lambda (suffix str)
+      (isTRUE (endsWith str suffix))))
+
+  ;;' @description Return #t if str is the empty string.
+  ;;' @param str String to check
+  ;;' @examples
+  ;;' (string-empty? "")   ; => #t
+  ;;' (string-empty? "a")  ; => #f
+  ;;' @assert
+  ;;' (assert-true (string-empty? ""))
+  ;;' (assert-false (string-empty? "a"))
+  ;;' @seealso string-length
+  (define string-empty?
+    (lambda (str)
+      (isTRUE (== (nchar str) 0))))
+
+  ;;' @description Repeat string n times.
+  ;;' @param str String to repeat
+  ;;' @param n Number of repetitions
+  ;;' @examples
+  ;;' (string-repeat "ab" 3)  ; => "ababab"
+  ;;' (string-repeat "x" 0)   ; => ""
+  ;;' @assert
+  ;;' (assert-equal "ababab" (string-repeat "ab" 3))
+  ;;' (assert-equal "" (string-repeat "x" 0))
+  ;;' @seealso string-append
+  (define string-repeat
+    (lambda (str n)
+      (strrep str n)))
 
 )

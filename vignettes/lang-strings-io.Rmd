@@ -727,6 +727,109 @@ Parse string to number with optional base (2-36).
 
 ---
 
+## String Predicates {#section-string-predicates}
+
+Common string predicates for prefix, suffix, and emptiness checks.
+
+### string-prefix? {#string-prefix-p}
+
+Return #t if str starts with prefix.
+
+**Signature:** `(string-prefix? prefix str)`
+
+**Parameters:**
+- **`prefix`** — String to check for at the start
+- **`str`** — String to check
+
+**Examples:**
+```{arl}
+(string-prefix? "he" "hello")  ; => #t
+(string-prefix? "wo" "hello")  ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (string-prefix? "he" "hello"))
+(assert-false (string-prefix? "wo" "hello"))
+```
+
+**See also:** [string-suffix?](#string-suffix-p), [string-contains?](#string-contains-p)
+
+---
+
+### string-suffix? {#string-suffix-p}
+
+Return #t if str ends with suffix.
+
+**Signature:** `(string-suffix? suffix str)`
+
+**Parameters:**
+- **`suffix`** — String to check for at the end
+- **`str`** — String to check
+
+**Examples:**
+```{arl}
+(string-suffix? "lo" "hello")  ; => #t
+(string-suffix? "he" "hello")  ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (string-suffix? "lo" "hello"))
+(assert-false (string-suffix? "he" "hello"))
+```
+
+**See also:** [string-prefix?](#string-prefix-p), [string-contains?](#string-contains-p)
+
+---
+
+### string-empty? {#string-empty-p}
+
+Return #t if str is the empty string.
+
+**Signature:** `(string-empty? str)`
+
+**Parameters:**
+- **`str`** — String to check
+
+**Examples:**
+```{arl}
+(string-empty? "")   ; => #t
+(string-empty? "a")  ; => #f
+```
+
+```{arl, include=FALSE}
+(assert-true (string-empty? ""))
+(assert-false (string-empty? "a"))
+```
+
+**See also:** [string-length](#string-length)
+
+---
+
+### string-repeat {#string-repeat}
+
+Repeat string n times.
+
+**Signature:** `(string-repeat str n)`
+
+**Parameters:**
+- **`str`** — String to repeat
+- **`n`** — Number of repetitions
+
+**Examples:**
+```{arl}
+(string-repeat "ab" 3)  ; => "ababab"
+(string-repeat "x" 0)   ; => ""
+```
+
+```{arl, include=FALSE}
+(assert-equal "ababab" (string-repeat "ab" 3))
+(assert-equal "" (string-repeat "x" 0))
+```
+
+**See also:** [string-append](#string-append)
+
+---
+
 ## Console I/O {#section-console-i-o}
 
 Functions for reading from standard input and writing to standard output.

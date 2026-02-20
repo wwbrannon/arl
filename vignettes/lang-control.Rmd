@@ -641,3 +641,129 @@ Thread value through forms (last argument).
 
 ---
 
+### as-> {#as-to}
+
+Thread with a named binding. The value is bound to name
+in each form, so it can appear in any position.
+
+**Signature:** `(as-> expr name forms...)`
+
+**Parameters:**
+- **`expr`** — Initial value
+- **`name`** — Symbol to bind the threaded value to
+- **`forms`** — Sequence of forms using name
+
+**Examples:**
+```{arl}
+(as-> 1 x (+ x 1) (* x 3))  ; => 6
+```
+
+```{arl, include=FALSE}
+(assert-equal 6 (as-> 1 x (+ x 1) (* x 3)))
+```
+
+**See also:** [->](#thread-first), [->>](#thread-last)
+
+---
+
+### some-> {#some-to}
+
+Thread-first with short-circuit on falsy values.
+Like -> but stops and returns #nil or #f if any step produces a falsy value.
+
+**Signature:** `(some-> value forms...)`
+
+**Parameters:**
+- **`value`** — Initial value
+- **`forms`** — Sequence of forms to thread through
+
+**Examples:**
+```{arl}
+(some-> 5 (+ 3) (* 2))   ; => 16
+(some-> #nil (+ 3))       ; => #nil
+```
+
+```{arl, include=FALSE}
+(assert-equal 16 (some-> 5 (+ 3) (* 2)))
+(assert-equal #nil (some-> #nil (+ 3)))
+```
+
+**See also:** [->](#thread-first), [some->>](#some-to-gt)
+
+---
+
+### some->> {#some-to-gt}
+
+Thread-last with short-circuit on falsy values.
+Like ->> but stops and returns #nil or #f if any step produces a falsy value.
+
+**Signature:** `(some->> value forms...)`
+
+**Parameters:**
+- **`value`** — Initial value
+- **`forms`** — Sequence of forms to thread through
+
+**Examples:**
+```{arl}
+(some->> 5 (- 10))    ; => 5
+(some->> #nil (- 10))  ; => #nil
+```
+
+```{arl, include=FALSE}
+(assert-equal 5 (some->> 5 (- 10)))
+(assert-equal #nil (some->> #nil (- 10)))
+```
+
+**See also:** [->>](#thread-last), [some->](#some-to)
+
+---
+
+### cond-> {#cond-to}
+
+Conditionally thread value through forms (first argument).
+Each clause is (test form). If test is truthy, threads value through form;
+otherwise passes value unchanged.
+
+**Signature:** `(cond-> value clauses...)`
+
+**Parameters:**
+- **`value`** — Initial value
+- **`clauses`** — Pairs of (test form) to conditionally apply
+
+**Examples:**
+```{arl}
+(cond-> 1 (#t (+ 1)) (#f (* 3)))  ; => 2
+```
+
+```{arl, include=FALSE}
+(assert-equal 2 (cond-> 1 (#t (+ 1)) (#f (* 3))))
+```
+
+**See also:** [->](#thread-first), [cond->>](#cond-to-gt)
+
+---
+
+### cond->> {#cond-to-gt}
+
+Conditionally thread value through forms (last argument).
+Thread-last variant of cond->.
+
+**Signature:** `(cond->> value clauses...)`
+
+**Parameters:**
+- **`value`** — Initial value
+- **`clauses`** — Pairs of (test form) to conditionally apply
+
+**Examples:**
+```{arl}
+(cond->> 5 (#t (- 10)) (#f (* 100)))  ; => 5
+```
+
+```{arl, include=FALSE}
+(assert-equal 5 (cond->> 5 (#t (- 10)) (#f (* 100))))
+```
+
+**See also:** [->>](#thread-last), [cond->](#cond-to)
+
+---
+

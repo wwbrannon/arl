@@ -25,23 +25,25 @@ the function argument first, then the data argument.
 
 ### map {#map}
 
-Apply function to each element.
+Apply function to each element. With one list, maps fn over it.
+With multiple lists, maps fn over corresponding elements (like Scheme's map).
 
-**Signature:** `(map fn lst)`
+**Signature:** `(map fn lst rest...)`
 
 **Parameters:**
-- **`fn`** — Function to apply to each element
-- **`lst`** — List to transform
+- **`fn`** — Function to apply to each element (or corresponding elements)
+- **`lst`** — First list to transform
+- **`rest`** — Additional lists for multi-list mapping
 
 **Examples:**
 ```{arl}
 (map (lambda (x) (* x 2)) (list 1 2 3))  ; => (2 4 6)
-(map (lambda (x) (* x x)) (list 1 2 3 4)) ; => (1 4 9 16)
-(map string-length (list "hi" "hello"))     ; => (2 5)
+(map + (list 1 2 3) (list 4 5 6))         ; => (5 7 9)
 ```
 
 ```{arl, include=FALSE}
 (assert-equal (list 2 4 6) (map (lambda (x) (* x 2)) (list 1 2 3)))
+(assert-equal (list 5 7 9) (map + (list 1 2 3) (list 4 5 6)))
 ```
 
 **See also:** [filter](#filter), [mapcat](#mapcat), [reduce](#reduce)
@@ -499,6 +501,123 @@ Memoize function - cache results for previously seen arguments.
 (assert-equal 4 ((memoize (lambda (x) (* x x))) 2))
 (assert-equal 4 ((memoize (lambda (x) (* x x))) 2))
 ```
+
+---
+
+## Iteration and Counting {#section-iteration-and-counting}
+
+Functions for side-effecting iteration and counting over sequences.
+
+### for-each {#for-each}
+
+Apply function to each element for side effects.
+Returns #nil. Supports multiple lists like multi-list map.
+
+**Signature:** `(for-each fn lst rest...)`
+
+**Parameters:**
+- **`fn`** — Function to apply for side effects
+- **`lst`** — First list
+- **`rest`** — Additional lists for multi-list iteration
+
+**Examples:**
+```{arl}
+(for-each print '(1 2 3))  ; prints 1 2 3, returns #nil
+```
+
+```{arl, include=FALSE}
+(assert-equal #nil (for-each (lambda (x) x) (list 1 2 3)))
+```
+
+**See also:** [map](#map)
+
+---
+
+### count {#count}
+
+Count elements matching predicate.
+
+**Signature:** `(count pred lst)`
+
+**Parameters:**
+- **`pred`** — Predicate function to test each element
+- **`lst`** — List to count matching elements in
+
+**Examples:**
+```{arl}
+(count even? (list 1 2 3 4))  ; => 2
+(count even? (list))           ; => 0
+```
+
+```{arl, include=FALSE}
+(assert-equal 2 (count even? (list 1 2 3 4)))
+(assert-equal 0 (count even? (list)))
+```
+
+**See also:** [filter](#filter), [every?](#every-p), [any?](#any-p)
+
+---
+
+### map-indexed {#map-indexed}
+
+Map with index. Calls (fn index element) for each element,
+with 0-based indices.
+
+**Signature:** `(map-indexed fn lst)`
+
+**Parameters:**
+- **`fn`** — Function taking index and element
+- **`lst`** — List to map over
+
+**Examples:**
+```{arl}
+(map-indexed list '(a b c))  ; => ((0 a) (1 b) (2 c))
+```
+
+```{arl, include=FALSE}
+(assert-equal (list (list 0 'a) (list 1 'b) (list 2 'c)) (map-indexed list (list 'a 'b 'c)))
+```
+
+**See also:** [map](#map)
+
+---
+
+### group-by {#group-by}
+
+Group elements by key function. Returns a dict mapping
+each key (as string) to a list of matching elements.
+
+**Signature:** `(group-by key-fn lst)`
+
+**Parameters:**
+- **`key-fn`** — Function to compute the grouping key for each element
+- **`lst`** — List to group
+
+**Examples:**
+```{arl}
+(group-by even? '(1 2 3 4))  ; => dict with TRUE->(2 4), FALSE->(1 3)
+```
+
+**See also:** [frequencies](#frequencies), [filter](#filter)
+
+---
+
+### frequencies {#frequencies}
+
+Count occurrences of each element. Returns a dict mapping
+each element (as string) to its count.
+
+**Signature:** `(frequencies lst)`
+
+**Parameters:**
+- **`lst`** — List to count element frequencies in
+
+**Examples:**
+```{arl}
+(frequencies '(a b a c b a))  ; => dict with a->3 b->2 c->1
+```
+
+**See also:** [group-by](#group-by), [count](#count)
 
 ---
 

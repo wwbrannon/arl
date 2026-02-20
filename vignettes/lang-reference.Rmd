@@ -349,7 +349,11 @@ Conditionals, binding forms, looping, threading macros, continuations, and error
 [`if-let`](lang-control.html#if-let), [`until`](lang-control.html#until),
 [`do-list`](lang-control.html#do-list), [`loop`](lang-control.html#loop),
 [`recur`](lang-control.html#recur), [`->`](lang-control.html#thread-first),
-[`->>`](lang-control.html#thread-last)
+[`->>`](lang-control.html#thread-last), [`as->`](lang-control.html#as-to),
+[`some->`](lang-control.html#some-to),
+[`some->>`](lang-control.html#some-to-gt),
+[`cond->`](lang-control.html#cond-to),
+[`cond->>`](lang-control.html#cond-to-gt)
 
 Modules: [`control.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/control.arl), [`binding.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/binding.arl), [`looping.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/looping.arl), [`threading.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/threading.arl)
 
@@ -391,7 +395,12 @@ List construction, accessors, association lists, sequence helpers, and sorting.
 [`contains?`](lang-list-seq.html#contains-p),
 [`length=`](lang-list-seq.html#length-eq),
 [`length>`](lang-list-seq.html#length-gt),
-[`length<`](lang-list-seq.html#length-lt),
+[`length<`](lang-list-seq.html#length-lt), [`find`](lang-list-seq.html#find),
+[`distinct`](lang-list-seq.html#distinct),
+[`split-at`](lang-list-seq.html#split-at),
+[`split-with`](lang-list-seq.html#split-with),
+[`interpose`](lang-list-seq.html#interpose),
+[`partition-by`](lang-list-seq.html#partition-by),
 [`list-sort`](lang-list-seq.html#list-sort),
 [`sort-by`](lang-list-seq.html#sort-by),
 [`merge-sorted`](lang-list-seq.html#merge-sorted),
@@ -432,6 +441,10 @@ String manipulation, file and console I/O, environment access, and display forma
 [`list->string`](lang-strings-io.html#list-to-string),
 [`number->string`](lang-strings-io.html#number-to-string),
 [`string->number`](lang-strings-io.html#string-to-number),
+[`string-prefix?`](lang-strings-io.html#string-prefix-p),
+[`string-suffix?`](lang-strings-io.html#string-suffix-p),
+[`string-empty?`](lang-strings-io.html#string-empty-p),
+[`string-repeat`](lang-strings-io.html#string-repeat),
 [`read-line`](lang-strings-io.html#read-line),
 [`read-file`](lang-strings-io.html#read-file),
 [`read-lines`](lang-strings-io.html#read-lines),
@@ -473,6 +486,12 @@ Dictionaries, sets, and struct definitions for structured data.
 [`dict-values`](lang-collections.html#dict-values),
 [`dict-has?`](lang-collections.html#dict-has-p),
 [`dict-merge`](lang-collections.html#dict-merge),
+[`dict-update`](lang-collections.html#dict-update),
+[`dict-map`](lang-collections.html#dict-map),
+[`dict-filter`](lang-collections.html#dict-filter),
+[`dict-for-each`](lang-collections.html#dict-for-each),
+[`dict->alist`](lang-collections.html#dict-to-alist),
+[`alist->dict`](lang-collections.html#alist-to-dict),
 [`set`](lang-collections.html#set), [`set?`](lang-collections.html#set-p),
 [`set-add`](lang-collections.html#set-add),
 [`set-remove`](lang-collections.html#set-remove),
@@ -480,6 +499,11 @@ Dictionaries, sets, and struct definitions for structured data.
 [`set-union`](lang-collections.html#set-union),
 [`set-intersection`](lang-collections.html#set-intersection),
 [`set-difference`](lang-collections.html#set-difference),
+[`set->list`](lang-collections.html#set-to-list),
+[`list->set`](lang-collections.html#list-to-set),
+[`set-size`](lang-collections.html#set-size),
+[`set-map`](lang-collections.html#set-map),
+[`set-filter`](lang-collections.html#set-filter),
 [`defstruct`](lang-collections.html#defstruct)
 
 Modules: [`dict.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/dict.arl), [`set.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/set.arl), [`struct.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/struct.arl)
@@ -501,7 +525,12 @@ Mapping, filtering, folding, function composition, and logical combinators.
 [`constantly`](lang-functional.html#constantly),
 [`iterate`](lang-functional.html#iterate),
 [`iterate-until`](lang-functional.html#iterate-until),
-[`memoize`](lang-functional.html#memoize), [`not`](lang-core.html#not),
+[`memoize`](lang-functional.html#memoize),
+[`for-each`](lang-functional.html#for-each),
+[`count`](lang-functional.html#count),
+[`map-indexed`](lang-functional.html#map-indexed),
+[`group-by`](lang-functional.html#group-by),
+[`frequencies`](lang-functional.html#frequencies), [`not`](lang-core.html#not),
 [`xor`](lang-functional.html#xor)
 
 Modules: [`functional.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/functional.arl), [`logic.arl`](https://github.com/wwbrannon/arl/blob/main/inst/arl/logic.arl)

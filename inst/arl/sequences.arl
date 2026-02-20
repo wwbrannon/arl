@@ -4,7 +4,8 @@
   (export take drop take-while drop-while
           partition flatten repeatedly repeat zip
           member contains?
-          length= length> length<)
+          length= length> length<
+          find distinct split-at split-with interpose partition-by)
 
   (import _utils :refer (_as-list))
 
@@ -287,4 +288,150 @@
   (define length<
     (lambda (x n)
       (isTRUE (< (length x) n))))
+
+  ;; ============================================================================
+  ;; Search and Deduplication
+  ;; ============================================================================
+
+  ;;' @section Search and Deduplication
+  ;;' Functions for finding elements and removing duplicates.
+
+  ;;' @description Return first element matching predicate, or #f if not found.
+  ;;' @param pred Predicate function to test each element
+  ;;' @param lst List to search
+  ;;' @examples
+  ;;' (find even? (list 1 3 4 5))  ; => 4
+  ;;' (find even? (list 1 3 5))    ; => #f
+  ;;' @assert
+  ;;' (assert-equal 4 (find even? (list 1 3 4 5)))
+  ;;' (assert-false (find even? (list 1 3 5)))
+  ;;' @seealso member, contains?, filter
+  (define find
+    (lambda (pred lst)
+      (define items (_as-list lst))
+      (define result #f)
+      (define remaining items)
+      (while (and (> (length remaining) 0) (not result))
+        (begin
+          (if (isTRUE (pred (car remaining)))
+            (set! result (car remaining)))
+          (if (not result)
+            (set! remaining (cdr remaining)))))
+      result))
+
+  ;;' @description Remove duplicates preserving first-occurrence order.
+  ;;' Uses R's identical() for comparison.
+  ;;' @param lst List to deduplicate
+  ;;' @examples
+  ;;' (distinct (list 1 2 1 3 2))  ; => (1 2 3)
+  ;;' @assert
+  ;;' (assert-equal (list 1 2 3) (distinct (list 1 2 1 3 2)))
+  ;;' @seealso filter
+  (define distinct
+    (lambda (lst)
+      (define items (_as-list lst))
+      (define acc (list))
+      (define remaining items)
+      (while (> (length remaining) 0)
+        (begin
+          (define elem (car remaining))
+          (define found #f)
+          (define check acc)
+          (while (and (> (length check) 0) (not found))
+            (begin
+              (if (identical (car check) elem)
+                (set! found #t))
+              (set! check (cdr check))))
+          (if (not found)
+            (set! acc (c acc (list elem))))
+          (set! remaining (cdr remaining))))
+      acc))
+
+  ;; ============================================================================
+  ;; Splitting
+  ;; ============================================================================
+
+  ;;' @section Splitting
+  ;;' Functions for splitting sequences at positions or predicates.
+
+  ;;' @description Split list into two parts at index n.
+  ;;' Returns a list of (take n lst) and (drop n lst).
+  ;;' @param n Index to split at
+  ;;' @param lst List to split
+  ;;' @examples
+  ;;' (split-at 2 (list 'a 'b 'c 'd))  ; => ((a b) (c d))
+  ;;' @assert
+  ;;' (assert-equal (list (list 1 2) (list 3 4)) (split-at 2 (list 1 2 3 4)))
+  ;;' @seealso split-with, take, drop
+  (define split-at
+    (lambda (n lst)
+      (list (take n lst) (drop n lst))))
+
+  ;;' @description Split list into two parts: elements satisfying pred at the
+  ;;' start, and the rest. Returns (take-while pred lst) and (drop-while pred lst).
+  ;;' @param pred Predicate function
+  ;;' @param lst List to split
+  ;;' @examples
+  ;;' (split-with even? (list 2 4 1 3))  ; => ((2 4) (1 3))
+  ;;' @assert
+  ;;' (assert-equal (list (list 2 4) (list 1 3)) (split-with even? (list 2 4 1 3)))
+  ;;' @seealso split-at, take-while, drop-while
+  (define split-with
+    (lambda (pred lst)
+      (list (take-while pred lst) (drop-while pred lst))))
+
+  ;;' @description Insert separator between every element of list.
+  ;;' @param sep Value to insert between elements
+  ;;' @param lst List to interpose into
+  ;;' @examples
+  ;;' (interpose 0 (list 1 2 3))  ; => (1 0 2 0 3)
+  ;;' @assert
+  ;;' (assert-equal (list 1 0 2 0 3) (interpose 0 (list 1 2 3)))
+  ;;' @seealso flatten
+  (define interpose
+    (lambda (sep lst)
+      (define items (_as-list lst))
+      (define n (length items))
+      (if (<= n 1)
+        items
+        (begin
+          (define acc (list (car items)))
+          (define remaining (cdr items))
+          (while (> (length remaining) 0)
+            (begin
+              (set! acc (c acc (list sep (car remaining))))
+              (set! remaining (cdr remaining))))
+          acc))))
+
+  ;;' @description Split list into runs of consecutive elements producing
+  ;;' the same key. Different from partition which splits by size.
+  ;;' @param fn Key function applied to each element
+  ;;' @param lst List to partition
+  ;;' @examples
+  ;;' (partition-by even? (list 2 4 1 3 6))  ; => ((2 4) (1 3) (6))
+  ;;' @assert
+  ;;' (assert-equal (list (list 2 4) (list 1 3) (list 6)) (partition-by even? (list 2 4 1 3 6)))
+  ;;' @seealso partition, split-with
+  (define partition-by
+    (lambda (fn lst)
+      (define items (_as-list lst))
+      (if (= (length items) 0)
+        (list)
+        (begin
+          (define acc (list))
+          (define current-run (list (car items)))
+          (define current-key (fn (car items)))
+          (define remaining (cdr items))
+          (while (> (length remaining) 0)
+            (begin
+              (define elem (car remaining))
+              (define key (fn elem))
+              (if (identical key current-key)
+                (set! current-run (c current-run (list elem)))
+                (begin
+                  (set! acc (c acc (list current-run)))
+                  (set! current-run (list elem))
+                  (set! current-key key)))
+              (set! remaining (cdr remaining))))
+          (c acc (list current-run))))))
 )

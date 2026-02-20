@@ -1,7 +1,7 @@
 ;;; Arl Standard Library - Threading Macros
 
 (module threading
-  (export -> ->>)
+  (export -> ->> as-> some-> some->> cond-> cond->>)
 
   (import list :refer (append call))
   (import types :refer (list?))
@@ -54,4 +54,116 @@
         (call (list form acc))))
     forms
     :init value))
+
+;;' @description Thread with a named binding. The value is bound to name
+;;' in each form, so it can appear in any position.
+;;' @param expr Initial value
+;;' @param name Symbol to bind the threaded value to
+;;' @param forms Sequence of forms using name
+;;' @examples
+;;' (as-> 1 x (+ x 1) (* x 3))  ; => 6
+;;' @assert
+;;' (assert-equal 6 (as-> 1 x (+ x 1) (* x 3)))
+;;' @seealso ->, ->>
+(defmacro as-> (expr name . forms)
+  (Reduce
+    (lambda (acc form)
+      (call (list 'let (call (list (call (list name acc)))) form)))
+    forms
+    :init expr))
+
+;;' @description Thread-first with short-circuit on falsy values.
+;;' Like -> but stops and returns #nil or #f if any step produces a falsy value.
+;;' @param value Initial value
+;;' @param forms Sequence of forms to thread through
+;;' @examples
+;;' (some-> 5 (+ 3) (* 2))   ; => 16
+;;' (some-> #nil (+ 3))       ; => #nil
+;;' @assert
+;;' (assert-equal 16 (some-> 5 (+ 3) (* 2)))
+;;' (assert-equal #nil (some-> #nil (+ 3)))
+;;' @seealso ->, some->>
+(defmacro some-> (value . forms)
+  (define build-step
+    (lambda (acc form)
+      (define threaded
+        (if (list? form)
+          (call (cons (car form) (cons '__some_val (cdr form))))
+          (call (list form '__some_val))))
+      (call (list 'let (call (list (call (list '__some_val acc))))
+        (call (list 'if (call (list 'or (call (list 'is.null '__some_val))
+                                       (call (list 'identical '__some_val #f))))
+          '__some_val
+          threaded))))))
+  (Reduce build-step forms :init value))
+
+;;' @description Thread-last with short-circuit on falsy values.
+;;' Like ->> but stops and returns #nil or #f if any step produces a falsy value.
+;;' @param value Initial value
+;;' @param forms Sequence of forms to thread through
+;;' @examples
+;;' (some->> 5 (- 10))    ; => 5
+;;' (some->> #nil (- 10))  ; => #nil
+;;' @assert
+;;' (assert-equal 5 (some->> 5 (- 10)))
+;;' (assert-equal #nil (some->> #nil (- 10)))
+;;' @seealso ->>, some->
+(defmacro some->> (value . forms)
+  (define build-step
+    (lambda (acc form)
+      (define threaded
+        (if (list? form)
+          (call (cons (car form) (append (cdr form) (list '__some_val))))
+          (call (list form '__some_val))))
+      (call (list 'let (call (list (call (list '__some_val acc))))
+        (call (list 'if (call (list 'or (call (list 'is.null '__some_val))
+                                       (call (list 'identical '__some_val #f))))
+          '__some_val
+          threaded))))))
+  (Reduce build-step forms :init value))
+
+;;' @description Conditionally thread value through forms (first argument).
+;;' Each clause is (test form). If test is truthy, threads value through form;
+;;' otherwise passes value unchanged.
+;;' @param value Initial value
+;;' @param clauses Pairs of (test form) to conditionally apply
+;;' @examples
+;;' (cond-> 1 (#t (+ 1)) (#f (* 3)))  ; => 2
+;;' @assert
+;;' (assert-equal 2 (cond-> 1 (#t (+ 1)) (#f (* 3))))
+;;' @seealso ->, cond->>
+(defmacro cond-> (value . clauses)
+  (define build-step
+    (lambda (acc clause)
+      (define test (car clause))
+      (define form (car (cdr clause)))
+      (define threaded
+        (if (list? form)
+          (call (cons (car form) (cons '__cond_val (cdr form))))
+          (call (list form '__cond_val))))
+      (call (list 'let (call (list (call (list '__cond_val acc))))
+        (call (list 'if test threaded '__cond_val))))))
+  (Reduce build-step clauses :init value))
+
+;;' @description Conditionally thread value through forms (last argument).
+;;' Thread-last variant of cond->.
+;;' @param value Initial value
+;;' @param clauses Pairs of (test form) to conditionally apply
+;;' @examples
+;;' (cond->> 5 (#t (- 10)) (#f (* 100)))  ; => 5
+;;' @assert
+;;' (assert-equal 5 (cond->> 5 (#t (- 10)) (#f (* 100))))
+;;' @seealso ->>, cond->
+(defmacro cond->> (value . clauses)
+  (define build-step
+    (lambda (acc clause)
+      (define test (car clause))
+      (define form (car (cdr clause)))
+      (define threaded
+        (if (list? form)
+          (call (cons (car form) (append (cdr form) (list '__cond_val))))
+          (call (list form '__cond_val))))
+      (call (list 'let (call (list (call (list '__cond_val acc))))
+        (call (list 'if test threaded '__cond_val))))))
+  (Reduce build-step clauses :init value))
 )
