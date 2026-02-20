@@ -26,27 +26,28 @@ flag_management:
   default_rules:
     carryforward: true
     statuses:
-      - name_prefix: ""
+      - name_prefix: proj-
         type: project
         target: auto
         threshold: 2%
-
-# Individual flags
-flags:
-  # R implementation code coverage
-  r-code:
-    paths:
-      - R/
-    carryforward: true
-    after_n_builds: 1
-
-  # Arl language code coverage
-  arl-code:
-    paths:
-      - inst/arl/
-      - tests/native/
-    carryforward: true
-    after_n_builds: 1
+      - name_prefix: patch-
+        type: patch
+        target: 80%
+        threshold: 5%
+  individual_flags:
+    # R implementation code coverage
+    - name: r-code
+      paths:
+        - R/
+      carryforward: true
+      after_n_builds: 1
+    # Arl language code coverage
+    - name: arl-code
+      paths:
+        - inst/arl/
+        - tests/native/
+      carryforward: true
+      after_n_builds: 1
 
 # Component-level coverage tracking
 component_management:
