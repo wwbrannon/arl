@@ -463,3 +463,143 @@ test_that("VERIFY: and/or handle degenerate nested empty forms", {
   result <- engine$eval_text("(or 42)")
   expect_equal(result, 42)
 })
+
+# ==============================================================================
+# No-Folding Mode: Builtins Match R Semantics Without Constant Folding
+# ==============================================================================
+#
+# Constant folding evaluates pure expressions at compile time using base R.
+# When folding is disabled, the same expressions run through Arl's builtin
+# wrappers at runtime. These tests verify that builtins produce the same
+# results as base R, catching divergences like the NaN == NaN bug where
+# variadic_eq returned FALSE instead of NA.
+
+test_that("disable_constant_folding parameter works", {
+  e_fold <- Engine$new(load_prelude = FALSE)
+  e_nofold <- Engine$new(load_prelude = FALSE, disable_constant_folding = TRUE)
+
+  # With folding, (+ 1 2) should be a literal
+
+  out_fold <- e_fold$inspect_compilation("(+ 1 2)")
+  expect_true(is.numeric(out_fold$compiled))
+
+  # Without folding, (+ 1 2) should remain a call
+  out_nofold <- e_nofold$inspect_compilation("(+ 1 2)")
+  expect_true(is.call(out_nofold$compiled))
+
+  # Both should produce the same result
+  expect_equal(e_fold$eval_text("(+ 1 2)"), 3)
+  expect_equal(e_nofold$eval_text("(+ 1 2)"), 3)
+})
+
+test_that("disable_constant_folding via R option works", {
+  withr::local_options(list(arl.disable_constant_folding = TRUE))
+  e <- Engine$new(load_prelude = FALSE)
+  out <- e$inspect_compilation("(+ 1 2)")
+  expect_true(is.call(out$compiled))
+  expect_equal(e$eval_text("(+ 1 2)"), 3)
+})
+
+test_that("disable_constant_folding via env var works", {
+  withr::local_envvar(ARL_DISABLE_CONSTANT_FOLDING = "1")
+  e <- Engine$new(load_prelude = FALSE)
+  out <- e$inspect_compilation("(+ 1 2)")
+  expect_true(is.call(out$compiled))
+  expect_equal(e$eval_text("(+ 1 2)"), 3)
+})
+
+test_that("arithmetic builtins match R without folding", {
+  e <- Engine$new(disable_constant_folding = TRUE)
+
+  expect_equal(e$eval_text("(+ 1 2)"), 3)
+  expect_equal(e$eval_text("(- 10 3)"), 7)
+  expect_equal(e$eval_text("(* 4 5)"), 20)
+  expect_equal(e$eval_text("(/ 10 3)"), 10 / 3)
+  expect_equal(e$eval_text("(^ 2 10)"), 1024)
+  expect_equal(e$eval_text("(%% 10 3)"), 1)
+  expect_equal(e$eval_text("(%/% 10 3)"), 3)
+})
+
+test_that("comparison builtins match R without folding", {
+  e <- Engine$new(disable_constant_folding = TRUE)
+
+  expect_true(e$eval_text("(< 1 2)"))
+  expect_false(e$eval_text("(< 2 1)"))
+  expect_true(e$eval_text("(> 2 1)"))
+  expect_false(e$eval_text("(> 1 2)"))
+  expect_true(e$eval_text("(<= 1 1)"))
+  expect_true(e$eval_text("(>= 1 1)"))
+  expect_true(e$eval_text("(!= 1 2)"))
+  expect_false(e$eval_text("(!= 1 1)"))
+})
+
+test_that("equality builtins handle NaN/NA correctly without folding", {
+  e <- Engine$new(disable_constant_folding = TRUE)
+
+  # NaN == NaN should return NA (R semantics), not FALSE
+  result <- e$eval_text("(== NaN NaN)")
+  expect_true(is.na(result))
+
+  # NA == NA should also return NA
+  result <- e$eval_text("(== NA NA)")
+  expect_true(is.na(result))
+
+  # Normal equality should still work
+  expect_true(e$eval_text("(== 1 1)"))
+  expect_false(e$eval_text("(== 1 2)"))
+
+  # NULL equality (Arl-specific: NULL-safe)
+  expect_true(e$eval_text("(== NULL NULL)"))
+  expect_false(e$eval_text("(== 1 NULL)"))
+  expect_false(e$eval_text("(== NULL 1)"))
+
+  # != with NaN
+  result <- e$eval_text("(!= NaN NaN)")
+  expect_true(is.na(result))
+})
+
+test_that("logical builtins match R without folding", {
+  e <- Engine$new(disable_constant_folding = TRUE)
+
+  expect_true(e$eval_text("(& #t #t)"))
+  expect_false(e$eval_text("(& #t #f)"))
+  expect_true(e$eval_text("(| #f #t)"))
+  expect_false(e$eval_text("(| #f #f)"))
+  expect_false(e$eval_text("(! #t)"))
+  expect_true(e$eval_text("(! #f)"))
+})
+
+test_that("math builtins match R without folding", {
+  e <- Engine$new(disable_constant_folding = TRUE)
+
+  expect_equal(e$eval_text("(abs -5)"), 5)
+  expect_equal(e$eval_text("(sqrt 16)"), 4)
+  expect_equal(e$eval_text("(floor 3.7)"), 3)
+  expect_equal(e$eval_text("(ceiling 3.2)"), 4)
+  expect_equal(e$eval_text("(round 3.5)"), 4)
+
+  # Special values
+  expect_true(is.nan(suppressWarnings(e$eval_text("(sqrt -1)"))))
+  expect_equal(e$eval_text("(abs Inf)"), Inf)
+  expect_equal(e$eval_text("(log 1)"), 0)
+})
+
+test_that("folded and unfolded results agree on edge cases", {
+  e_fold <- Engine$new()
+  e_nofold <- Engine$new(disable_constant_folding = TRUE)
+
+  cases <- c(
+    "(+ 0 0)", "(* 0 1)", "(/ 1 0)", "(- 0 0)",
+    "(== 1 1)", "(== 1 2)", "(!= 1 1)", "(!= 1 2)",
+    "(< 1 1)", "(<= 1 1)", "(> 1 1)", "(>= 1 1)",
+    "(abs -0)", "(sqrt 0)", "(log Inf)"
+  )
+  for (expr in cases) {
+    r_fold <- e_fold$eval_text(expr)
+    r_nofold <- e_nofold$eval_text(expr)
+    # Use identical() to catch NA vs FALSE etc.
+    expect_identical(r_fold, r_nofold,
+      info = sprintf("Mismatch for %s: folded=%s, unfolded=%s",
+                     expr, deparse(r_fold), deparse(r_nofold)))
+  }
+})

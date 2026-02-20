@@ -23,6 +23,7 @@
 #'   R help lookup in \code{$help()}.
 #' @param load_prelude Logical; if TRUE (the default), load prelude modules.
 #' @param disable_tco Logical; if TRUE, disable self-tail-call optimization.
+#' @param disable_constant_folding Logical; if TRUE, disable compile-time constant folding.
 #' @param value Value to format for display.
 #' @param fn A zero-argument function to call with error context.
 #' @param file Connection to print to.
@@ -50,11 +51,16 @@ Engine <- R6::R6Class(
     #' @param disable_tco Optional logical. If TRUE, disables self-tail-call optimization
     #'   in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
     #'   which inherits from global option `getOption("arl.disable_tco", FALSE)`.
+    #' @param disable_constant_folding Optional logical. If TRUE, disables compile-time
+    #'   constant folding, forcing all expressions to be evaluated at runtime. Useful for
+    #'   testing that builtins match R semantics. Defaults to NULL, which inherits from
+    #'   global option `getOption("arl.disable_constant_folding", FALSE)`.
     #' @param r_packages Controls which R packages are visible to Arl code.
     #'   `"search_path"` (default) tracks R's `search()` dynamically;
     #'   a character vector pins a fixed set; `NULL` exposes only `baseenv()`.
     initialize = function(coverage_tracker = NULL, load_prelude = TRUE,
-                          disable_tco = NULL, r_packages = "search_path") {
+                          disable_tco = NULL, disable_constant_folding = NULL,
+                          r_packages = "search_path") {
       private$.env <- Env$new()
       private$.source_tracker <- SourceTracker$new()
       private$.tokenizer <- Tokenizer$new()
@@ -73,6 +79,14 @@ Engine <- R6::R6Class(
       # Disable constant folding when coverage is active — folding evaluates
       # via base:: and bypasses Arl function bodies, defeating instrumentation.
       if (!is.null(coverage_tracker)) {
+        private$.compiler$enable_constant_folding <- FALSE
+      }
+      # Disable constant folding when requested (useful for testing builtins).
+      # Priority: explicit parameter > R option > env var > default FALSE.
+      if (is.null(disable_constant_folding)) {
+        disable_constant_folding <- .pkg_option("disable_constant_folding", FALSE)
+      }
+      if (isTRUE(disable_constant_folding)) {
         private$.compiler$enable_constant_folding <- FALSE
       }
       # Disable self-TCO when requested (useful for debugging).
@@ -611,10 +625,13 @@ Engine <- R6::R6Class(
         args <- list(...)
         n <- length(args)
         if (n < 2L) return(TRUE)
+        result <- TRUE
         for (i in seq_len(n - 1L)) {
-          if (!isTRUE(null_safe_eq(args[[i]], args[[i + 1L]]))) return(FALSE)
+          cmp <- null_safe_eq(args[[i]], args[[i + 1L]])
+          if (isFALSE(cmp)) return(FALSE)
+          if (is.na(cmp)) result <- NA
         }
-        TRUE
+        result
       })
       builtins_env$`=` <- variadic_eq
       builtins_env$`==` <- variadic_eq
