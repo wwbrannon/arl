@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771620778743,
+  "lastUpdate": 1771624463946,
   "repoUrl": "https://github.com/wwbrannon/arl",
   "entries": {
     "Benchmark": [
@@ -6644,6 +6644,710 @@ window.BENCHMARK_DATA = {
           {
             "name": "e2e/real/macro-examples.arl",
             "value": 495.622,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "will.brannon@gmail.com",
+            "name": "William Brannon",
+            "username": "wwbrannon"
+          },
+          "committer": {
+            "email": "will.brannon@gmail.com",
+            "name": "William Brannon",
+            "username": "wwbrannon"
+          },
+          "distinct": true,
+          "id": "2ebf5489f1765368a084c652ef95cbb398ef77dd",
+          "message": "fix codecov upload configuration",
+          "timestamp": "2026-02-20T16:45:17-05:00",
+          "tree_id": "bcca4e6d174859ff6964e73eb69e521dbdd1fe1e",
+          "url": "https://github.com/wwbrannon/arl/commit/2ebf5489f1765368a084c652ef95cbb398ef77dd"
+        },
+        "date": 1771624463370,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "tokenizer/strings/10 chars",
+            "value": 0.04683807,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/strings/100 chars",
+            "value": 0.06713608,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/strings/1K chars",
+            "value": 0.2591331,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/strings/10K chars",
+            "value": 1.39377,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/nested/10 levels",
+            "value": 0.08319505,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/nested/50 levels",
+            "value": 0.2634409,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/nested/100 levels",
+            "value": 0.4880001,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/mixed/Small (3 exprs)",
+            "value": 0.201315,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/mixed/Medium (30 exprs)",
+            "value": 1.669173,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/mixed/Large (300 exprs)",
+            "value": 16.39219,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/escapes/No escapes",
+            "value": 0.04626706,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/escapes/Few escapes",
+            "value": 0.04736811,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/escapes/Many escapes",
+            "value": 0.09914511,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/real/fibonacci.arl",
+            "value": 5.025567,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/real/quicksort.arl",
+            "value": 7.644451,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/real/graph-paths.arl",
+            "value": 4.661584,
+            "unit": "ms"
+          },
+          {
+            "name": "tokenizer/real/macro-examples.arl",
+            "value": 5.867878,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/flat/10 elements",
+            "value": 0.2059251,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/flat/100 elements",
+            "value": 1.60844,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/flat/1000 elements",
+            "value": 16.28514,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/nested/Depth 5",
+            "value": 0.2360256,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/nested/Depth 10",
+            "value": 0.4505406,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/nested/Depth 20",
+            "value": 0.882771,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/sugar/Single quote expr",
+            "value": 0.2757251,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/sugar/10 quote exprs",
+            "value": 2.712679,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/nulls/Few NULLs",
+            "value": 0.144781,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/nulls/100 NULLs",
+            "value": 1.582161,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/real/fibonacci.arl",
+            "value": 10.94648,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/real/quicksort.arl",
+            "value": 15.85969,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/real/graph-paths.arl",
+            "value": 12.64667,
+            "unit": "ms"
+          },
+          {
+            "name": "parser/real/macro-examples.arl",
+            "value": 14.2227,
+            "unit": "ms"
+          },
+          {
+            "name": "macro/simple/Simple macro",
+            "value": 0.8427121,
+            "unit": "ms"
+          },
+          {
+            "name": "macro/complex/Complex macro",
+            "value": 1.355419,
+            "unit": "ms"
+          },
+          {
+            "name": "macro/nested/Nested macros",
+            "value": 3.02761,
+            "unit": "ms"
+          },
+          {
+            "name": "macro/hygiene/With hygiene",
+            "value": 1.823315,
+            "unit": "ms"
+          },
+          {
+            "name": "macro/heavy/Macro-heavy",
+            "value": 8.862657,
+            "unit": "ms"
+          },
+          {
+            "name": "macro/real/fibonacci.arl",
+            "value": 91.49977,
+            "unit": "ms"
+          },
+          {
+            "name": "macro/real/quicksort.arl",
+            "value": 129.7766,
+            "unit": "ms"
+          },
+          {
+            "name": "macro/real/graph-paths.arl",
+            "value": 22.37,
+            "unit": "ms"
+          },
+          {
+            "name": "macro/real/macro-examples.arl",
+            "value": 31.15645,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/arithmetic/Single add",
+            "value": 0.08838956,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/arithmetic/Nested adds",
+            "value": 0.219509,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/arithmetic/Many adds",
+            "value": 0.6048931,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/calls/1 arg",
+            "value": 0.0713981,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/calls/5 args",
+            "value": 0.1215971,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/calls/10 args",
+            "value": 0.1846596,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/special/if",
+            "value": 0.08433254,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/special/define",
+            "value": 0.08455309,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/special/lambda",
+            "value": 0.1551191,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/special/begin",
+            "value": 0.07786509,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/recursive/fibonacci(10)",
+            "value": 0.07174409,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/recursive/fibonacci(12)",
+            "value": 0.07047155,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/recursive/factorial(100)",
+            "value": 0.06950961,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/recursive/factorial(500)",
+            "value": 0.07126806,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/closures/Create closure",
+            "value": 0.0865066,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/real/fibonacci.arl",
+            "value": 15,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/real/quicksort.arl",
+            "value": 22,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/real/graph-paths.arl",
+            "value": 13,
+            "unit": "ms"
+          },
+          {
+            "name": "compile/real/macro-examples.arl",
+            "value": 16,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/arithmetic/Single add",
+            "value": 0.03587146,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/arithmetic/Nested adds",
+            "value": 0.03637816,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/arithmetic/Many adds",
+            "value": 0.02282759,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/calls/1 arg",
+            "value": 0.03792113,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/calls/5 args",
+            "value": 0.04621159,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/calls/10 args",
+            "value": 0.09941554,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/special/if",
+            "value": 0.03703457,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/special/define",
+            "value": 0.02836308,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/special/lambda",
+            "value": 0.02608856,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/special/begin",
+            "value": 0.03360806,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/recursive/fibonacci(10)",
+            "value": 1.786987,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/recursive/fibonacci(12)",
+            "value": 7.409161,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/recursive/factorial(100)",
+            "value": 1.321084,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/recursive/factorial(500)",
+            "value": 6.721574,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/closures/Create closure",
+            "value": 0.05683111,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/closures/Call closure",
+            "value": 0.05879003,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/real/fibonacci.arl",
+            "value": 153.5,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/real/quicksort.arl",
+            "value": 113,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/real/graph-paths.arl",
+            "value": 81.5,
+            "unit": "ms"
+          },
+          {
+            "name": "r-eval/real/macro-examples.arl",
+            "value": 140.5,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/list_ops/car (10)",
+            "value": 0.451802,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/list_ops/cdr (10)",
+            "value": 0.6354096,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/list_ops/length (10)",
+            "value": 0.4332281,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/list_ops/length (100)",
+            "value": 0.5988016,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/list_ops/length (1000)",
+            "value": 0.4344701,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/list_ops/reverse (10)",
+            "value": 0.6410601,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/list_ops/reverse (100)",
+            "value": 0.6462151,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/higher_order/map (10)",
+            "value": 0.8598281,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/higher_order/map (100)",
+            "value": 2.047508,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/higher_order/map (1000)",
+            "value": 12.54839,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/higher_order/filter (10)",
+            "value": 0.5680191,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/higher_order/filter (100)",
+            "value": 1.58479,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/higher_order/reduce (10)",
+            "value": 0.6758345,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/higher_order/reduce (100)",
+            "value": 1.85592,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/compose/Single function",
+            "value": 0.5027021,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/compose/Two composed",
+            "value": 0.5528761,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/compose/Three composed",
+            "value": 0.6678111,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/strings/string-concat (2 args)",
+            "value": 0.510472,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/strings/string-concat (5 args)",
+            "value": 0.6733556,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/strings/string-concat (10 args)",
+            "value": 0.9237376,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/predicates/null?",
+            "value": 0.3801491,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/predicates/list?",
+            "value": 0.6479681,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/predicates/number?",
+            "value": 0.4180596,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/predicates/string?",
+            "value": 0.407019,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/construction/cons (single)",
+            "value": 0.6502431,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/construction/append (2 lists)",
+            "value": 0.9024476,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/construction/append (large)",
+            "value": 1.172011,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/construction/range (10)",
+            "value": 0.5657896,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/construction/range (100)",
+            "value": 0.6996346,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/nested/map then filter",
+            "value": 0.7234986,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/nested/filter then map",
+            "value": 0.6894451,
+            "unit": "ms"
+          },
+          {
+            "name": "stdlib/nested/map, filter, reduce",
+            "value": 0.9788606,
+            "unit": "ms"
+          },
+          {
+            "name": "interop/calls/mean positional",
+            "value": 1.049873,
+            "unit": "ms"
+          },
+          {
+            "name": "interop/calls/mean named",
+            "value": 1.090564,
+            "unit": "ms"
+          },
+          {
+            "name": "interop/calls/seq positional",
+            "value": 0.5983011,
+            "unit": "ms"
+          },
+          {
+            "name": "interop/calls/seq named",
+            "value": 0.7036671,
+            "unit": "ms"
+          },
+          {
+            "name": "interop/objects/vector",
+            "value": 0.9226505,
+            "unit": "ms"
+          },
+          {
+            "name": "interop/objects/list",
+            "value": 0.9443261,
+            "unit": "ms"
+          },
+          {
+            "name": "interop/objects/data.frame",
+            "value": 1.221102,
+            "unit": "ms"
+          },
+          {
+            "name": "interop/objects/formula",
+            "value": 0.4630031,
+            "unit": "ms"
+          },
+          {
+            "name": "modules/import/import binding",
+            "value": 212.0171,
+            "unit": "ms"
+          },
+          {
+            "name": "modules/import/import control",
+            "value": 205.3873,
+            "unit": "ms"
+          },
+          {
+            "name": "modules/load_run/load",
+            "value": 208.7962,
+            "unit": "ms"
+          },
+          {
+            "name": "modules/load_run/run",
+            "value": 217.2057,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/synthetic/Micro",
+            "value": 188.7975,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/synthetic/Small",
+            "value": 238.1426,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/synthetic/Medium",
+            "value": 216.3577,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/synthetic/Deep recursion",
+            "value": 229.756,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/strings/1K string",
+            "value": 223.6005,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/strings/10K string",
+            "value": 209.6909,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/args/50 args",
+            "value": 220.5449,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/args/100 args",
+            "value": 213.5993,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/repl/REPL session",
+            "value": 201.5338,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/real/fibonacci.arl",
+            "value": 452.7015,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/real/quicksort.arl",
+            "value": 568.8694,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/real/graph-paths.arl",
+            "value": 284.7179,
+            "unit": "ms"
+          },
+          {
+            "name": "e2e/real/macro-examples.arl",
+            "value": 504.5993,
             "unit": "ms"
           }
         ]
