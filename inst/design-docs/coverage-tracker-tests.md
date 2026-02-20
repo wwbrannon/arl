@@ -271,4 +271,4 @@ Potential test additions:
 - **Implementation:** `R/coverage.R:50-601`
 - **Test File:** `tests/testthat/test-coverage.R`
 - **Validation Script:** `validate_tests.R`
-- **Related:** `EXECUTION_COVERAGE.md` for architecture overview
+- **Related:** `execution-coverage.md` for architecture overview

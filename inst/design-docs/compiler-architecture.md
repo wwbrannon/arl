@@ -21,7 +21,7 @@ over a bytecode VM:
 2. **Debuggability.** Compiled expressions can be inspected, deparsed, and
    printed before evaluation. Stack traces reference recognizable R constructs.
 3. **Caching.** Compiled expressions serialize naturally as `.rds` files via
-   the module cache (see `CACHE_INVALIDATION.md`).
+   the module cache (see `cache-invalidation.md`).
 4. **Source attribution.** R's built-in attribute system carries source
    metadata through compilation and execution for error reporting.
 

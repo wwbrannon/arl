@@ -9,7 +9,7 @@ Arl is a fully-functional Lisp dialect implemented in R with seamless R interope
 ## Project Structure
 
 Standard R package layout:
-- `R/` - Core implementation (~10,800 lines across 21 files)
+- `R/` - Core implementation (~11,000 lines across 21 files)
   - `tokenizer.R` - Lexical analysis
   - `parser.R` - S-expression parsing to R calls
   - `compiler.R` - Compiles Arl AST to R code; handles all special forms

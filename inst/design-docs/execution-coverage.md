@@ -110,7 +110,7 @@ Codecov-compatible JSON format for CI integration:
 
 2. **Arl Code Coverage** (`make coverage-arl`)
    - Uses `CoverageTracker`
-   - Tracks Arl language code in `inst/arl/stdlib/`
+   - Tracks Arl language code in `inst/arl/`
    - Runs the full testthat suite with coverage propagated to all test engines
 
 3. **Combined Coverage** (`make coverage-combined`)

@@ -22,7 +22,7 @@ Design choice: R6 over S3 for encapsulation and field access clarity. Cons cells
 **Parser** — dotted-pair literal syntax `(a . b)` produces nested `Cons$new()` calls. The parser accumulates elements before the dot into `dotted_heads`, reads one element after the dot as `dot_cdr`, then folds right:
 
 ```r
-# R/parser.R:215-220
+# R/parser.R — inside parse_list, dotted-pair folding
 result <- dot_cdr
 for (j in rev(seq_along(dotted_heads))) {
   result <- Cons$new(dotted_heads[[j]], result)
@@ -41,7 +41,7 @@ for (j in rev(seq_along(dotted_heads))) {
         (.__cons item lst)))))
 ```
 
-Only when `y` is neither a list nor a call does `cons` create a `Cons` cell via the `.__cons` builtin (defined in `R/engine.R:679`). This keeps the common case — prepending to a proper list — in native R.
+Only when `y` is neither a list nor a call does `cons` create a `Cons` cell via the `.__cons` builtin (defined in `R/engine.R`, `install_builtins`). This keeps the common case — prepending to a proper list — in native R.
 
 ## car/cdr Dispatch
 
@@ -70,7 +70,7 @@ This unifies the two representations under a single API. Both return `#nil` for 
 **Parameter lists** — When the compiler encounters a Cons in a lambda's parameter list, it decomposes it via `parts()` to extract the regular parameters (prefix) and rest parameter (tail):
 
 ```r
-# R/compiler.R:763-765
+# R/compiler.R — inside compile_lambda, parameter normalization
 } else if (r6_isinstance(args_expr, "Cons")) {
   parts <- args_expr$parts()
   c(parts$prefix, list(as.symbol(".")), list(parts$tail))
@@ -82,7 +82,7 @@ This unifies the two representations under a single API. Both return `#nil` for 
 
 ## Builtins
 
-Three Cons-related primitives are installed in `builtins_env` (`R/engine.R:679-683`):
+Three Cons-related primitives are installed in `builtins_env` (see `install_builtins` in `R/engine.R`):
 
 - `.__cons` — creates `Cons$new(car, cdr)`
 - `.__cons-as-list` — calls `as_list()` on a Cons (or returns empty list)
@@ -106,6 +106,6 @@ Three Cons-related primitives are installed in `builtins_env` (`R/engine.R:679-6
 - `R/cells.R` — Cons and Promise R6 classes
 - `inst/arl/list.arl` — car, cdr, cons, and composed accessors
 - `inst/arl/types.arl` — list?, pair?, list-or-pair?, null? predicates
-- `R/parser.R:214-220` — dotted-pair parsing
-- `R/compiler.R:763-772` — Cons decomposition in lambda params
-- `R/engine.R:676-683` — Cons builtin installation
+- `R/parser.R` — dotted-pair parsing (in `parse_list`)
+- `R/compiler.R` — Cons decomposition in lambda params (in `compile_lambda`)
+- `R/engine.R` — Cons builtin installation (in `install_builtins`)

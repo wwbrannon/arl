@@ -249,7 +249,7 @@ After body evaluation:
 ## Module Caching
 
 Compiled module expressions are cached in `.arl_cache/` directories (see
-`CACHE_INVALIDATION.md` for details). Key points for the module system:
+`cache-invalidation.md` for details). Key points for the module system:
 
 - **Deflation:** Before serialization, tagged function closures (marked
   `arl_resolved_from`) are replaced with symbolic placeholders

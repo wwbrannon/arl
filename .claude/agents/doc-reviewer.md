@@ -46,7 +46,7 @@ The project currently has:
 - `CONTRIBUTING.md` -- contribution guidelines
 - `AGENTS.md` -- project overview for AI agents (also useful for humans)
 - `NEWS.md` -- changelog
-- `inst/design-docs/` -- design documents (CACHE_INVALIDATION.md, EXECUTION_COVERAGE.md, COVERAGE_TRACKER_TESTS.md)
+- `inst/design-docs/` -- design documents (cache-invalidation.md, execution-coverage.md, coverage-tracker-tests.md)
 - `benchmarks/PERFORMANCE.md`, `benchmarks/README.md` -- performance documentation
 - `tests/README.md`, `tools/README.md` -- subsystem docs
 

@@ -49,13 +49,13 @@ source("benchmarks/profile-r-eval.R")
 - `bench-modules.R` - Module/import and load/run overhead benchmarks
 - `bench-e2e.R` - End-to-end pipeline benchmarks with component breakdown
 
-### Master Scripts (to be created)
+### Master Scripts
 - `run-all-benchmarks.R` - Run all benchmarks and save results
 - `run-all-profiles.R` - Generate profiling reports for all components
 - `analyze-results.R` - Analysis functions for benchmark results
 - `compare-results.R` - Compare two benchmark runs
 
-### Profiling Scripts (to be created)
+### Profiling Scripts
 - `profile-tokenizer.R` - Profile tokenizer with large strings
 - `profile-parser.R` - Profile parser with deep nesting
 - `profile-macro.R` - Profile macro expansion
@@ -167,7 +167,7 @@ Pre-defined workloads are available in `workloads.R`:
 
 ## Performance Issues Identified
 
-See `../performance-plan.md` for detailed analysis of performance issues found by code inspection.
+See `PERFORMANCE.md` for detailed analysis and optimization history.
 
 ## Dependencies
 

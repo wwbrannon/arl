@@ -30,7 +30,7 @@ Wrappers are applied during quasiquote expansion. When a macro uses `` `(let ((t
 ### Implementation
 
 ```r
-# R/macro.R:292-293
+# R/macro.R — hygiene_wrap (private method on MacroExpander)
 hygiene_wrap = function(expr, origin) {
   structure(list(expr = expr, origin = origin), class = "arl_syntax")
 }
@@ -39,13 +39,13 @@ hygiene_wrap = function(expr, origin) {
 The `wrap_fn` passed to `quasiquote_expand` (in `R/quasiquote.R`) tags each unquoted value:
 
 ```r
-# R/macro.R:124
+# R/macro.R — inside macroexpand_impl, where wrap_fn is constructed
 wrap_fn <- function(val) private$hygiene_wrap(val, "call_site")
 ```
 
 ## The Hygienization Pass
 
-After a macro function returns expanded code, `hygienize` walks the expression tree and renames macro-introduced bindings. The core logic is in `hygienize_expr` (`R/macro.R:356-445`).
+After a macro function returns expanded code, `hygienize` walks the expression tree and renames macro-introduced bindings. The core logic is in the `hygienize_expr` private method (`R/macro.R`).
 
 ### Renaming Rules
 
@@ -62,7 +62,7 @@ After a macro function returns expanded code, `hygienize` walks the expression t
 The pass maintains a substitution environment (`env`, an R named list) that maps original names to their `hygiene_gensym` replacements. This environment is threaded through recursive calls and extended at each binding site:
 
 ```r
-# R/macro.R:470-474 (inside hygienize_define)
+# R/macro.R — inside hygienize_define
 if (is.symbol(name_expr) && !identical(name_origin, "call_site")) {
   name <- as.character(name_expr)
   fresh <- private$hygiene_gensym(name)
@@ -86,20 +86,20 @@ For anaphoric macros — macros that intentionally introduce bindings for the ca
 
 ```scheme
 ;; Anaphoric if: binds `it` for the caller
-(defmacro (aif test then else)
+(defmacro aif (test then else)
   (capture 'it
     `(let ((it ,test))
        (if it ,then ,else))))
 ```
 
-Implementation in `capture_mark` (`R/macro.R:342-352`): walks the expression, finds symbols matching the given name, and wraps them with `"introduced"` origin. This prevents the hygienization pass from renaming them, so the caller can reference `it`.
+Implementation in the `capture_mark` private method (`R/macro.R`): walks the expression, finds symbols matching the given name, and wraps them with `"introduced"` origin. This prevents the hygienization pass from renaming them, so the caller can reference `it`.
 
 ## Cross-Module Macro Hygiene
 
 When a macro defined in module A is used in module B, free variables from A's scope need resolution. The `hygienize` method accepts `defining_env` and `use_site_env` parameters:
 
 ```r
-# R/macro.R:1007-1008 (in macroexpand_impl)
+# R/macro.R — in macroexpand_impl
 defining_env <- environment(macro_fn)$env
 expanded <- private$hygienize(expanded, defining_env, use_site_env = env)
 ```
@@ -107,7 +107,7 @@ expanded <- private$hygienize(expanded, defining_env, use_site_env = env)
 For unprotected symbols not in the substitution env, the pass checks if they exist in the defining module's env but NOT in the shared prelude/builtins chain. If so, the value is captured as an `arl_resolved_ref`:
 
 ```r
-# R/macro.R:1-15
+# R/macro.R — top-level helper function
 arl_resolved_ref <- function(value, source_symbol, module_name = NULL) {
   structure(
     list(value = value, source_symbol = source_symbol, module_name = module_name),
@@ -122,9 +122,9 @@ This ensures that a macro's internal helpers (defined in its module) are availab
 
 Two distinct symbol generators serve different purposes:
 
-- **`gensym`** (user-facing, `R/macro.R:278-286`) — generates `G__1`, `G__2`, etc. Checks the environment for collisions before returning. Exposed as a builtin for manual hygiene in macro bodies.
+- **`gensym`** (user-facing, `R/macro.R` public method) — generates `G__1`, `G__2`, etc. Checks the environment for collisions before returning. Exposed as a builtin for manual hygiene in macro bodies.
 
-- **`hygiene_gensym`** (internal, `R/macro.R:288-291`) — generates `H__h1`, `H__h2`, etc. Uses a monotonic counter with `__h` suffix, guaranteed unique without env checks. Used exclusively by the hygienization pass.
+- **`hygiene_gensym`** (internal, `R/macro.R` private method) — generates `H__h1`, `H__h2`, etc. Uses a monotonic counter with `__h` suffix, guaranteed unique without env checks. Used exclusively by the hygienization pass.
 
 ## End-to-End Flow
 
@@ -153,8 +153,8 @@ Two distinct symbol generators serve different purposes:
 
 ## Reference Files
 
-- `R/macro.R:288-728` — hygiene_gensym, hygiene_wrap, hygienize and all form-specific handlers
-- `R/macro.R:977-1009` — macroexpand_impl (where hygienize is called after expansion)
-- `R/quasiquote.R:30-42` — unquote handling with wrap_fn for origin tagging
-- `R/engine.R:696-698` — `capture` and `gensym` builtin installation
-- `R/macro.R:1-24` — arl_resolved_ref for cross-module references
+- `R/macro.R` — `hygiene_gensym`, `hygiene_wrap`, `hygienize` and all form-specific handlers (`hygienize_define`, `hygienize_lambda`, etc.)
+- `R/macro.R` — `macroexpand_impl` (where `hygienize` is called after expansion)
+- `R/quasiquote.R` — `quasiquote_expand` unquote handling with `wrap_fn` for origin tagging
+- `R/engine.R` — `capture` and `gensym` builtin installation (in `install_builtins`)
+- `R/macro.R` — `arl_resolved_ref` top-level helper for cross-module references
