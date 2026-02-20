@@ -50,19 +50,23 @@ jobs:
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: wwbrannon/arl
           files: coverage/r/coverage.xml
           flags: r-code
           name: R Coverage
           fail_ci_if_error: true
+          disable_search: true
 
       - name: Upload Arl coverage to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: wwbrannon/arl
           files: coverage/arl/coverage.json
           flags: arl-code
           name: Arl Coverage
           fail_ci_if_error: true
+          disable_search: true
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v6
