@@ -87,5 +87,5 @@
   (assert-equal (string->number "1010" 2) 10)))
 
 (define test-string-to-number-invalid (lambda ()
-  ;; Invalid number should return #nil or #f
+  ;; Invalid number should return #f
   (assert-false (string->number "not-a-number"))))
