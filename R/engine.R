@@ -24,6 +24,7 @@
 #' @param load_prelude Logical; if TRUE (the default), load prelude modules.
 #' @param disable_tco Logical; if TRUE, disable self-tail-call optimization.
 #' @param disable_constant_folding Logical; if TRUE, disable compile-time constant folding.
+#' @param disable_optimizations Logical; if TRUE, disable all non-essential compiler optimizations.
 #' @param value Value to format for display.
 #' @param fn A zero-argument function to call with error context.
 #' @param file Connection to print to.
@@ -55,11 +56,19 @@ Engine <- R6::R6Class(
     #'   constant folding, forcing all expressions to be evaluated at runtime. Useful for
     #'   testing that builtins match R semantics. Defaults to NULL, which inherits from
     #'   global option `getOption("arl.disable_constant_folding", FALSE)`.
+    #' @param disable_optimizations Optional logical. If TRUE, disables all non-essential
+    #'   compiler optimizations (constant folding, TCO, dead code elimination, strength
+    #'   reduction, identity elimination, truthiness optimization, begin simplification,
+    #'   and boolean flattening). Individual toggles like `disable_tco` and
+    #'   `disable_constant_folding` are applied after this and can override it.
+    #'   Defaults to NULL, which inherits from global option
+    #'   `getOption("arl.disable_optimizations", FALSE)`.
     #' @param r_packages Controls which R packages are visible to Arl code.
     #'   `"search_path"` (default) tracks R's `search()` dynamically;
     #'   a character vector pins a fixed set; `NULL` exposes only `baseenv()`.
     initialize = function(coverage_tracker = NULL, load_prelude = TRUE,
                           disable_tco = NULL, disable_constant_folding = NULL,
+                          disable_optimizations = NULL,
                           r_packages = "search_path") {
       private$.env <- Env$new()
       private$.source_tracker <- SourceTracker$new()
@@ -76,6 +85,21 @@ Engine <- R6::R6Class(
       context$macro_expander <- private$.macro_expander
 
       private$.compiler <- Compiler$new(context)
+      # Disable all optimizations when requested (applied first, then individual overrides).
+      # Priority: explicit parameter > R option > env var > default FALSE.
+      if (is.null(disable_optimizations)) {
+        disable_optimizations <- .pkg_option("disable_optimizations", FALSE)
+      }
+      if (isTRUE(disable_optimizations)) {
+        private$.compiler$enable_constant_folding <- FALSE
+        private$.compiler$enable_tco <- FALSE
+        private$.compiler$enable_dead_code_elim <- FALSE
+        private$.compiler$enable_strength_reduction <- FALSE
+        private$.compiler$enable_identity_elim <- FALSE
+        private$.compiler$enable_truthiness_opt <- FALSE
+        private$.compiler$enable_begin_simplify <- FALSE
+        private$.compiler$enable_boolean_flatten <- FALSE
+      }
       # Disable constant folding when coverage is active — folding evaluates
       # via base:: and bypasses Arl function bodies, defeating instrumentation.
       if (!is.null(coverage_tracker)) {

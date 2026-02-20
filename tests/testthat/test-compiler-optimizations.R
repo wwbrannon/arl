@@ -603,3 +603,172 @@ test_that("folded and unfolded results agree on edge cases", {
                      expr, deparse(r_fold), deparse(r_nofold)))
   }
 })
+
+# ==============================================================================
+# All-Optimizations-Disabled Mode
+# ==============================================================================
+#
+# These tests verify correctness when ALL compiler optimizations are disabled
+# via the disable_optimizations parameter, R option, or env var.
+
+test_that("disable_optimizations parameter works", {
+  e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
+  compiler <- e$.__enclos_env__$private$.compiler
+
+  expect_false(compiler$enable_constant_folding)
+  expect_false(compiler$enable_tco)
+  expect_false(compiler$enable_dead_code_elim)
+  expect_false(compiler$enable_strength_reduction)
+  expect_false(compiler$enable_identity_elim)
+  expect_false(compiler$enable_truthiness_opt)
+  expect_false(compiler$enable_begin_simplify)
+  expect_false(compiler$enable_boolean_flatten)
+})
+
+test_that("disable_optimizations via R option works", {
+  withr::local_options(list(arl.disable_optimizations = TRUE))
+  e <- Engine$new(load_prelude = FALSE)
+  compiler <- e$.__enclos_env__$private$.compiler
+
+  expect_false(compiler$enable_constant_folding)
+  expect_false(compiler$enable_tco)
+  expect_false(compiler$enable_dead_code_elim)
+  expect_false(compiler$enable_strength_reduction)
+  expect_false(compiler$enable_identity_elim)
+  expect_false(compiler$enable_truthiness_opt)
+  expect_false(compiler$enable_begin_simplify)
+  expect_false(compiler$enable_boolean_flatten)
+})
+
+test_that("disable_optimizations via env var works", {
+  withr::local_envvar(ARL_DISABLE_OPTIMIZATIONS = "1")
+  e <- Engine$new(load_prelude = FALSE)
+  compiler <- e$.__enclos_env__$private$.compiler
+
+  expect_false(compiler$enable_constant_folding)
+  expect_false(compiler$enable_dead_code_elim)
+})
+
+test_that("arithmetic and comparison correct without optimizations", {
+  e <- Engine$new(disable_optimizations = TRUE)
+
+  expect_equal(e$eval_text("(+ 1 2)"), 3)
+  expect_equal(e$eval_text("(- 10 3)"), 7)
+  expect_equal(e$eval_text("(* 4 5)"), 20)
+  expect_equal(e$eval_text("(/ 10 3)"), 10 / 3)
+  expect_true(e$eval_text("(< 1 2)"))
+  expect_false(e$eval_text("(> 1 2)"))
+  expect_true(e$eval_text("(== 1 1)"))
+  expect_false(e$eval_text("(== 1 2)"))
+})
+
+test_that("NaN/NA edge cases correct without optimizations", {
+  e <- Engine$new(disable_optimizations = TRUE)
+
+  result <- e$eval_text("(== NaN NaN)")
+  expect_true(is.na(result))
+
+  result <- e$eval_text("(== NA NA)")
+  expect_true(is.na(result))
+
+  result <- e$eval_text("(!= NaN NaN)")
+  expect_true(is.na(result))
+})
+
+test_that("if with constant tests works without dead code elimination", {
+  e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
+
+  # Should still produce correct results even without DCE
+  expect_equal(e$eval_text("(if #t 1 2)"), 1)
+  expect_equal(e$eval_text("(if #f 1 2)"), 2)
+  expect_equal(e$eval_text("(if #t 42 99)"), 42)
+
+  # Compiled output should retain the if structure (not eliminated)
+  out <- e$inspect_compilation("(if #t 1 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(grepl("if", compiled_str),
+    info = "if should not be eliminated when DCE is off")
+})
+
+test_that("strength reduction disabled produces correct results", {
+  e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
+  e$eval_text("(define x 5)")
+
+  # (* x 2) should still equal 10
+  expect_equal(e$eval_text("(* x 2)"), 10)
+
+  # (^ x 2) should still equal 25
+  expect_equal(e$eval_text("(^ x 2)"), 25)
+
+  # Compiled output should use original operators
+  out <- e$inspect_compilation("(* x 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(grepl("\\*", compiled_str),
+    info = "Should use multiplication when strength reduction is off")
+
+  out <- e$inspect_compilation("(^ x 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(grepl("\\^", compiled_str),
+    info = "Should use exponentiation when strength reduction is off")
+})
+
+test_that("identity elimination disabled produces correct results", {
+  e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
+
+  # ((lambda (x) x) 42) should still return 42
+  expect_equal(e$eval_text("((lambda (x) x) 42)"), 42)
+
+  # But the compiled output should be a function application, not inlined
+  out <- e$inspect_compilation("((lambda (x) x) 42)")
+  is_funcall <- is.call(out$compiled) && is.call(out$compiled[[1]]) &&
+                length(out$compiled[[1]]) > 0 &&
+                identical(out$compiled[[1]][[1]], quote(as.function))
+  expect_true(is_funcall,
+    info = "Identity lambda should remain as function call when elimination is off")
+})
+
+test_that("truthiness optimization disabled uses .__true_p wrapper", {
+  e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
+
+  # Even for known-boolean tests, .__true_p should be present
+  out <- e$inspect_compilation("(if (> x 5) 1 2)")
+  compiled_str <- paste(deparse(out$compiled), collapse = " ")
+  expect_true(grepl(".__true_p", compiled_str),
+    info = ".__true_p should be used when truthiness optimization is off")
+})
+
+test_that("begin simplification disabled keeps block wrapper", {
+  e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
+
+  # (begin expr) should keep the block wrapper
+  out <- e$inspect_compilation("(begin 42)")
+  expect_true(is.call(out$compiled) && identical(out$compiled[[1]], quote(`{`)),
+    info = "Single-expression begin should keep block when simplification is off")
+})
+
+test_that("boolean flatten disabled preserves nesting", {
+  e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
+
+  # (and (and a b) c) should NOT flatten when disabled
+  # The inner (and a b) should be compiled as its own short-circuit sequence
+  nested <- e$inspect_compilation("(and (and a b) c)")
+  flat <- e$inspect_compilation("(and a b c)")
+
+  # Nested and flat should produce different compiled structures
+  nested_str <- paste(deparse(nested$compiled), collapse = " ")
+  flat_str <- paste(deparse(flat$compiled), collapse = " ")
+  expect_false(identical(nested_str, flat_str),
+    info = "Nested and flat (and) should differ when flattening is off")
+})
+
+test_that("recursive functions work without TCO (small depth)", {
+  e <- Engine$new(disable_optimizations = TRUE)
+
+  # Small depth to avoid stack overflow without TCO
+  e$eval_text("
+    (define factorial
+      (lambda (n)
+        (if (<= n 1) 1 (* n (factorial (- n 1))))))
+  ")
+  expect_equal(e$eval_text("(factorial 10)"), 3628800)
+})

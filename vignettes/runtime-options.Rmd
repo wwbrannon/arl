@@ -65,6 +65,7 @@ For boolean settings, the environment variable values `1`, `true`, and
 | Macro debug output | `arl.debug_macro` | `ARL_DEBUG_MACRO` | `FALSE` | Print debug info during macro expansion |
 | Disable self-TCO | `arl.disable_tco` | `ARL_DISABLE_TCO` | `FALSE` | Disable self-tail-call optimization (for debugging) |
 | Disable constant folding | `arl.disable_constant_folding` | `ARL_DISABLE_CONSTANT_FOLDING` | `FALSE` | Disable compile-time constant folding (for testing) |
+| Disable all optimizations | `arl.disable_optimizations` | `ARL_DISABLE_OPTIMIZATIONS` | `FALSE` | Disable all non-essential compiler optimizations at once |
 | Display line limit | `arl.display.max.lines` | `ARL_DISPLAY_MAX_LINES` | `20` | Max lines for S3 object display (`Inf` to disable) |
 
 ## Shell-only settings

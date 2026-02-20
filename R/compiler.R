@@ -44,6 +44,18 @@ Compiler <- R6::R6Class(
     enable_constant_folding = TRUE,
     # When FALSE, disable self-tail-call optimization (useful for debugging).
     enable_tco = TRUE,
+    # When FALSE, disable dead code elimination in if/tail-if (constant-test early returns).
+    enable_dead_code_elim = TRUE,
+    # When FALSE, disable strength reduction (e.g., (* x 2) → (+ x x)).
+    enable_strength_reduction = TRUE,
+    # When FALSE, disable identity lambda elimination (e.g., ((lambda (x) x) v) → v).
+    enable_identity_elim = TRUE,
+    # When FALSE, always use .__true_p wrapper in if tests (skip returns_r_logical shortcut).
+    enable_truthiness_opt = TRUE,
+    # When FALSE, keep block wrapper for single-expression begin.
+    enable_begin_simplify = TRUE,
+    # When FALSE, skip flattening of nested and/or expressions.
+    enable_boolean_flatten = TRUE,
     # Nesting depth: 0 means top-level. Incremented inside lambda, if, while, etc.
     nesting_depth = 0L,
     # Last compilation error (message) when compile() returns NULL.
@@ -174,7 +186,16 @@ Compiler <- R6::R6Class(
         }
         result
       }
-      flat_args <- flatten(expr)
+      flat_args <- if (isTRUE(self$enable_boolean_flatten)) {
+        flatten(expr)
+      } else {
+        # Without flattening, just extract direct arguments
+        args_list <- list()
+        for (i in if (length(expr) >= 2) 2:length(expr) else integer(0)) {
+          args_list[[length(args_list) + 1L]] <- expr[[i]]
+        }
+        args_list
+      }
 
       # Compile all flattened arguments
       args <- vector("list", length(flat_args))
@@ -476,29 +497,31 @@ Compiler <- R6::R6Class(
       # Dead code elimination: if test is a compile-time constant, return only the taken branch.
       # Both branches are still compiled to catch structural errors (e.g., import in non-top-level
       # position) even in dead code.
-      constant_test <- private$eval_constant_test(test)
-      if (!is.null(constant_test)) {
-        if (isTRUE(constant_test)) {
-          # Test is TRUE - return then-branch, but still compile else for validation
-          then_expr <- private$compile_impl(expr[[3]])
-          if (is.null(then_expr)) {
-            return(private$fail("if then-branch could not be compiled"))
-          }
-          if (length(expr) == 4) {
-            private$compile_impl(expr[[4]])
-          }
-          return(then_expr)
-        } else {
-          # Test is FALSE or NULL - return else-branch, but still compile then for validation
-          private$compile_impl(expr[[3]])
-          if (length(expr) == 4) {
-            else_expr <- private$compile_impl(expr[[4]])
-            if (is.null(else_expr)) {
-              return(private$fail("if else-branch could not be compiled"))
+      if (isTRUE(self$enable_dead_code_elim)) {
+        constant_test <- private$eval_constant_test(test)
+        if (!is.null(constant_test)) {
+          if (isTRUE(constant_test)) {
+            # Test is TRUE - return then-branch, but still compile else for validation
+            then_expr <- private$compile_impl(expr[[3]])
+            if (is.null(then_expr)) {
+              return(private$fail("if then-branch could not be compiled"))
             }
-            return(else_expr)
+            if (length(expr) == 4) {
+              private$compile_impl(expr[[4]])
+            }
+            return(then_expr)
           } else {
-            return(private$compiled_nil())
+            # Test is FALSE or NULL - return else-branch, but still compile then for validation
+            private$compile_impl(expr[[3]])
+            if (length(expr) == 4) {
+              else_expr <- private$compile_impl(expr[[4]])
+              if (is.null(else_expr)) {
+                return(private$fail("if else-branch could not be compiled"))
+              }
+              return(else_expr)
+            } else {
+              return(private$compiled_nil())
+            }
           }
         }
       }
@@ -511,7 +534,7 @@ Compiler <- R6::R6Class(
       then_expr <- private$wrap_branch_coverage(then_expr, expr[[3]])
       # Arl: only #f and #nil are false
       # Skip .__true_p wrapper if test is known to return proper R logical
-      test_pred <- if (private$returns_r_logical(test)) {
+      test_pred <- if (isTRUE(self$enable_truthiness_opt) && private$returns_r_logical(test)) {
         test
       } else {
         as.call(list(as.symbol(".__true_p"), test))
@@ -535,7 +558,7 @@ Compiler <- R6::R6Class(
       parts <- as.list(expr)[-1]
 
       # Optimization: single expression doesn't need block wrapper
-      if (length(parts) == 1) {
+      if (isTRUE(self$enable_begin_simplify) && length(parts) == 1) {
         return(private$compile_impl(parts[[1]]))
       }
 
@@ -1369,14 +1392,16 @@ Compiler <- R6::R6Class(
       }
 
       # Attempt strength reduction: replace expensive ops with cheaper equivalents
-      strength_reduced <- private$try_strength_reduction(op, args)
-      if (!is.null(strength_reduced)) {
-        return(strength_reduced)
+      if (isTRUE(self$enable_strength_reduction)) {
+        strength_reduced <- private$try_strength_reduction(op, args)
+        if (!is.null(strength_reduced)) {
+          return(strength_reduced)
+        }
       }
 
       # Attempt identity elimination: detect ((lambda (x) x) value) and inline
       # Check the original expression to see if operator is a lambda
-      if (is.call(expr[[1]]) && length(expr[[1]]) >= 3) {
+      if (isTRUE(self$enable_identity_elim) && is.call(expr[[1]]) && length(expr[[1]]) >= 3) {
         if (is.symbol(expr[[1]][[1]]) && as.character(expr[[1]][[1]]) == "lambda") {
           identity_result <- private$try_identity_elimination(expr[[1]], args)
           if (!is.null(identity_result)) {
@@ -1838,17 +1863,19 @@ Compiler <- R6::R6Class(
         return(private$fail("if test could not be compiled"))
       }
       # Dead code elimination: if test is a compile-time constant
-      constant_test <- private$eval_constant_test(test)
-      if (!is.null(constant_test)) {
-        if (isTRUE(constant_test)) {
-          return(private$compile_tail_position(expr[[3]], self_name, param_names,
-                                               rest_param_name = rest_param_name))
-        } else {
-          if (length(expr) == 4) {
-            return(private$compile_tail_position(expr[[4]], self_name, param_names,
+      if (isTRUE(self$enable_dead_code_elim)) {
+        constant_test <- private$eval_constant_test(test)
+        if (!is.null(constant_test)) {
+          if (isTRUE(constant_test)) {
+            return(private$compile_tail_position(expr[[3]], self_name, param_names,
                                                  rest_param_name = rest_param_name))
           } else {
-            return(as.call(list(quote(return), private$compiled_nil())))
+            if (length(expr) == 4) {
+              return(private$compile_tail_position(expr[[4]], self_name, param_names,
+                                                   rest_param_name = rest_param_name))
+            } else {
+              return(as.call(list(quote(return), private$compiled_nil())))
+            }
           }
         }
       }
@@ -1858,7 +1885,7 @@ Compiler <- R6::R6Class(
         return(private$fail("if then-branch could not be compiled"))
       }
       then_expr <- private$wrap_branch_coverage(then_expr, expr[[3]])
-      test_pred <- if (private$returns_r_logical(test)) {
+      test_pred <- if (isTRUE(self$enable_truthiness_opt) && private$returns_r_logical(test)) {
         test
       } else {
         as.call(list(as.symbol(".__true_p"), test))

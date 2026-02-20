@@ -47,6 +47,8 @@ Initialize engine components and base environment.
   coverage_tracker = NULL,
   load_prelude = TRUE,
   disable_tco = NULL,
+  disable_constant_folding = NULL,
+  disable_optimizations = NULL,
   r_packages = "search_path"
 )}\if{html}{\out{</div>}}
 }
@@ -65,6 +67,19 @@ builtins — useful for testing or when you want to import specific modules.}
 \item{\code{disable_tco}}{Optional logical. If TRUE, disables self-tail-call optimization
 in the compiler, preserving natural call stacks for debugging. Defaults to NULL,
 which inherits from global option \code{getOption("arl.disable_tco", FALSE)}.}
+
+\item{\code{disable_constant_folding}}{Optional logical. If TRUE, disables compile-time
+constant folding, forcing all expressions to be evaluated at runtime. Useful for
+testing that builtins match R semantics. Defaults to NULL, which inherits from
+global option \code{getOption("arl.disable_constant_folding", FALSE)}.}
+
+\item{\code{disable_optimizations}}{Optional logical. If TRUE, disables all non-essential
+compiler optimizations (constant folding, TCO, dead code elimination, strength
+reduction, identity elimination, truthiness optimization, begin simplification,
+and boolean flattening). Individual toggles like \code{disable_tco} and
+\code{disable_constant_folding} are applied after this and can override it.
+Defaults to NULL, which inherits from global option
+\code{getOption("arl.disable_optimizations", FALSE)}.}
 
 \item{\code{r_packages}}{Controls which R packages are visible to Arl code.
 \code{"search_path"} (default) tracks R's \code{search()} dynamically;
