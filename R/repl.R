@@ -215,48 +215,52 @@ REPL <- R6::R6Class(
       if (!saved) {
         return(invisible(FALSE))
       }
+      entry_count <- 0L
       if (file.exists(path)) {
         lines <- readLines(path, warn = FALSE)
         if (length(lines) > private$history_max_entries) {
           lines <- lines[seq.int(length(lines) - private$history_max_entries + 1L, length(lines))]
-          writeLines(lines, path)
+          private$atomic_write_lines(lines, path)
         }
-        if (length(lines) > 0L) {
-          self$history_state$last_entry <- lines[length(lines)]
+        entry_count <- length(lines)
+        if (entry_count > 0L) {
+          self$history_state$last_entry <- lines[entry_count]
         }
         try(utils::loadhistory(path), silent = TRUE)
       }
       self$history_state$enabled <- TRUE
       self$history_state$path <- path
       self$history_state$snapshot <- snapshot
+      self$history_state$entry_count <- entry_count
+      self$history_state$dir_exists <- entry_count > 0L
       invisible(TRUE)
     },
     # @description Save readline history for the current session.
     save_history = function() {
-      if (!self$can_use_history()) {
-        return(invisible(NULL))
-      }
       if (!isTRUE(self$history_state$enabled)) {
         return(invisible(NULL))
       }
-      if (!is.null(self$history_state$snapshot)) {
-        try(utils::loadhistory(self$history_state$snapshot), silent = TRUE)
+      snapshot <- self$history_state$snapshot
+      if (!is.null(snapshot)) {
+        try(utils::loadhistory(snapshot), silent = TRUE)
+        unlink(snapshot)
       }
       self$history_state$enabled <- FALSE
       self$history_state$path <- NULL
       self$history_state$snapshot <- NULL
       self$history_state$last_entry <- NULL
+      self$history_state$entry_count <- 0L
+      self$history_state$dirty <- FALSE
+      self$history_state$dir_exists <- FALSE
       invisible(NULL)
     },
-    # @description Add a form to the readline history file and buffer.
+    # @description Add a form to the readline history file.
     # R's readline() does not automatically record lines in the history;
     # that is done by R's own console loop, which we bypass.  We append
-    # each evaluated form to the history file, then reload the file so
-    # the entry is available via up-arrow recall in the same session.
+    # each evaluated form to the history file and set a dirty flag;
+    # flush_history() reloads the file before the next input prompt so
+    # up-arrow recall reflects the latest entries.
     add_history = function(text) {
-      if (!self$can_use_history()) {
-        return(invisible(NULL))
-      }
       if (!isTRUE(self$history_state$enabled)) {
         return(invisible(NULL))
       }
@@ -270,14 +274,37 @@ REPL <- R6::R6Class(
       }
       path <- self$history_state$path
       if (!is.null(path)) {
-        hist_dir <- dirname(path)
-        if (!dir.exists(hist_dir)) dir.create(hist_dir, recursive = TRUE)
+        if (!isTRUE(self$history_state$dir_exists)) {
+          hist_dir <- dirname(path)
+          if (!dir.exists(hist_dir)) dir.create(hist_dir, recursive = TRUE)
+          self$history_state$dir_exists <- TRUE
+        }
         tryCatch({
           cat(entry, "\n", sep = "", file = path, append = TRUE)
-          utils::loadhistory(path)
+          self$history_state$entry_count <- self$history_state$entry_count + 1L
+          if (self$history_state$entry_count > private$history_max_entries) {
+            lines <- readLines(path, warn = FALSE)
+            lines <- lines[seq.int(length(lines) - private$history_max_entries + 1L, length(lines))]
+            private$atomic_write_lines(lines, path)
+            self$history_state$entry_count <- length(lines)
+          }
+          self$history_state$dirty <- TRUE
         }, error = function(...) NULL)
       }
       self$history_state$last_entry <- entry
+      invisible(NULL)
+    },
+    # @description Reload the history file into readline's buffer if dirty.
+    # Called before each input prompt so up-arrow reflects latest entries.
+    flush_history = function() {
+      if (!isTRUE(self$history_state$dirty)) {
+        return(invisible(NULL))
+      }
+      path <- self$history_state$path
+      if (!is.null(path)) {
+        try(utils::loadhistory(path), silent = TRUE)
+      }
+      self$history_state$dirty <- FALSE
       invisible(NULL)
     },
     # @description Run the interactive REPL loop.
@@ -315,6 +342,7 @@ REPL <- R6::R6Class(
       on.exit(self$save_history(), add = TRUE)
 
       repeat {
+        self$flush_history()
         form <- tryCatch(
           self$read_form(),
           error = function(e) {
@@ -355,6 +383,14 @@ REPL <- R6::R6Class(
         stop("Must provide Engine instance")
       }
     },
+    atomic_write_lines = function(lines, path) {
+      tmp <- tempfile(tmpdir = dirname(path))
+      writeLines(lines, tmp)
+      if (!isTRUE(file.rename(tmp, path))) {
+        file.copy(tmp, path, overwrite = TRUE)
+        unlink(tmp)
+      }
+    },
     ensure_history_state = function() {
       if (!exists("enabled", envir = self$history_state, inherits = FALSE)) {
         self$history_state$enabled <- FALSE
@@ -367,6 +403,15 @@ REPL <- R6::R6Class(
       }
       if (!exists("last_entry", envir = self$history_state, inherits = FALSE)) {
         self$history_state$last_entry <- NULL
+      }
+      if (!exists("entry_count", envir = self$history_state, inherits = FALSE)) {
+        self$history_state$entry_count <- 0L
+      }
+      if (!exists("dirty", envir = self$history_state, inherits = FALSE)) {
+        self$history_state$dirty <- FALSE
+      }
+      if (!exists("dir_exists", envir = self$history_state, inherits = FALSE)) {
+        self$history_state$dir_exists <- FALSE
       }
     }
   )

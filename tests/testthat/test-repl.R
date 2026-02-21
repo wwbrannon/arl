@@ -162,7 +162,6 @@ test_that("REPL save_history handles disabled state", {
   state$path <- NULL
   state$snapshot <- NULL
   repl <- arl:::REPL$new(engine = NULL, history_state = state)
-  withr::local_options(list(arl.repl_can_use_history_override = FALSE))
   result <- repl$save_history()
   expect_null(result)
 })
@@ -173,9 +172,9 @@ test_that("REPL save_history resets state even on restore errors", {
   state$path <- "dummy.txt"
   state$snapshot <- "dummy_snapshot"
   state$last_entry <- "(+ 1 2)"
+  state$entry_count <- 5L
   repl <- arl:::REPL$new(engine = NULL, history_state = state)
 
-  withr::local_options(list(arl.repl_can_use_history_override = TRUE))
   result <- testthat::with_mocked_bindings(
     repl$save_history(),
     loadhistory = function(...) stop("fail"),
@@ -186,6 +185,7 @@ test_that("REPL save_history resets state even on restore errors", {
   expect_null(state$path)
   expect_null(state$snapshot)
   expect_null(state$last_entry)
+  expect_equal(state$entry_count, 0L)
 })
 
 test_that("REPL add_history handles non-interactive mode", {
@@ -211,7 +211,7 @@ test_that("REPL add_history skips empty input", {
   expect_null(result)
 })
 
-test_that("REPL add_history appends to file and reloads buffer", {
+test_that("REPL add_history appends to file and sets dirty flag", {
   hist_file <- tempfile("arl_test_hist_")
   on.exit(unlink(hist_file), add = TRUE)
 
@@ -220,26 +220,96 @@ test_that("REPL add_history appends to file and reloads buffer", {
   state$path <- hist_file
   state$snapshot <- NULL
   state$last_entry <- NULL
+  state$entry_count <- 0L
+  state$dirty <- FALSE
+  state$dir_exists <- FALSE
   repl <- arl:::REPL$new(engine = NULL, history_state = state)
-  withr::local_options(list(arl.repl_can_use_history_override = TRUE))
 
-  loaded_from <- NULL
-  testthat::with_mocked_bindings(
-    {
-      repl$add_history("(+ 1 2)")
-      repl$add_history("(* 3 4)")
-      # Multi-line input should be collapsed to single line
-      repl$add_history("(define foo\n  (lambda (x)\n    (* x 2)))")
-    },
-    loadhistory = function(file) { loaded_from <<- file },
-    .package = "utils"
-  )
+  repl$add_history("(+ 1 2)")
+  repl$add_history("(* 3 4)")
+  # Multi-line input should be collapsed to single line
+  repl$add_history("(define foo\n  (lambda (x)\n    (* x 2)))")
 
   # Verify entries were appended to the file
   lines <- readLines(hist_file)
   expect_equal(lines, c("(+ 1 2)", "(* 3 4)", "(define foo   (lambda (x)     (* x 2)))"))
-  # Verify loadhistory was called with the history file
+  # Verify dirty flag is set (loadhistory deferred)
+  expect_true(state$dirty)
+  # Verify dir_exists cached
+  expect_true(state$dir_exists)
+})
+
+test_that("REPL flush_history reloads file and clears dirty flag", {
+  hist_file <- tempfile("arl_test_hist_flush_")
+  on.exit(unlink(hist_file), add = TRUE)
+  writeLines(c("(+ 1 2)"), hist_file)
+
+  state <- new.env(parent = emptyenv())
+  state$enabled <- TRUE
+  state$path <- hist_file
+  state$snapshot <- NULL
+  state$last_entry <- NULL
+  state$entry_count <- 1L
+  state$dirty <- TRUE
+  state$dir_exists <- TRUE
+  repl <- arl:::REPL$new(engine = NULL, history_state = state)
+
+  loaded_from <- NULL
+  testthat::with_mocked_bindings(
+    repl$flush_history(),
+    loadhistory = function(file) { loaded_from <<- file },
+    .package = "utils"
+  )
   expect_equal(loaded_from, hist_file)
+  expect_false(state$dirty)
+})
+
+test_that("REPL flush_history is no-op when not dirty", {
+  state <- new.env(parent = emptyenv())
+  state$enabled <- TRUE
+  state$path <- "dummy.txt"
+  state$snapshot <- NULL
+  state$last_entry <- NULL
+  state$entry_count <- 0L
+  state$dirty <- FALSE
+  state$dir_exists <- TRUE
+  repl <- arl:::REPL$new(engine = NULL, history_state = state)
+
+  loaded <- FALSE
+  testthat::with_mocked_bindings(
+    repl$flush_history(),
+    loadhistory = function(file) { loaded <<- TRUE },
+    .package = "utils"
+  )
+  expect_false(loaded)
+})
+
+test_that("REPL add_history works after load_history on fresh install (no dir)", {
+  hist_dir <- file.path(tempdir(), "arl_test_fresh_install")
+  if (dir.exists(hist_dir)) unlink(hist_dir, recursive = TRUE)
+  on.exit(unlink(hist_dir, recursive = TRUE), add = TRUE)
+
+  hist_file <- file.path(hist_dir, "arl_history")
+  repl <- arl:::REPL$new(engine = NULL, history_path = hist_file)
+  withr::local_options(list(arl.repl_can_use_history_override = TRUE))
+
+  testthat::with_mocked_bindings(
+    {
+      result <- repl$load_history(hist_file)
+    },
+    savehistory = function(...) TRUE,
+    loadhistory = function(...) invisible(NULL),
+    .package = "utils"
+  )
+  expect_true(result)
+  # Directory doesn't exist yet — load_history should not claim it does
+  expect_false(dir.exists(hist_dir))
+
+  # add_history must create the directory and write the file
+  repl$add_history("(+ 1 2)")
+  expect_true(dir.exists(hist_dir))
+  expect_true(file.exists(hist_file))
+  expect_equal(readLines(hist_file), "(+ 1 2)")
 })
 
 test_that("REPL add_history creates history directory if needed", {
@@ -251,13 +321,11 @@ test_that("REPL add_history creates history directory if needed", {
   state$enabled <- TRUE
   state$path <- file.path(hist_dir, "history")
   state$snapshot <- NULL
+  state$entry_count <- 0L
+  state$dirty <- FALSE
+  state$dir_exists <- FALSE
   repl <- arl:::REPL$new(engine = NULL, history_state = state)
-  withr::local_options(list(arl.repl_can_use_history_override = TRUE))
-  testthat::with_mocked_bindings(
-    repl$add_history("(+ 1 2)"),
-    loadhistory = function(file) invisible(NULL),
-    .package = "utils"
-  )
+  repl$add_history("(+ 1 2)")
   expect_true(dir.exists(hist_dir))
 })
 
@@ -536,6 +604,9 @@ test_that("REPL history_state is properly initialized", {
   expect_true(exists("path", envir = state, inherits = FALSE))
   expect_true(exists("snapshot", envir = state, inherits = FALSE))
   expect_true(exists("last_entry", envir = state, inherits = FALSE))
+  expect_true(exists("entry_count", envir = state, inherits = FALSE))
+  expect_true(exists("dirty", envir = state, inherits = FALSE))
+  expect_true(exists("dir_exists", envir = state, inherits = FALSE))
 })
 
 test_that("REPL load_history trims file to max entries", {
@@ -570,8 +641,9 @@ test_that("REPL load_history trims file to max entries", {
   # Should keep the last 1000 entries (501-1500)
   expect_equal(lines[1], "(expr-501)")
   expect_equal(lines[1000], "(expr-1500)")
-  # last_entry should be set
+  # last_entry and entry_count should be set
   expect_equal(state$last_entry, "(expr-1500)")
+  expect_equal(state$entry_count, 1000L)
 })
 
 test_that("REPL add_history deduplicates consecutive entries", {
@@ -583,21 +655,70 @@ test_that("REPL add_history deduplicates consecutive entries", {
   state$path <- hist_file
   state$snapshot <- NULL
   state$last_entry <- NULL
+  state$entry_count <- 0L
+  state$dirty <- FALSE
+  state$dir_exists <- FALSE
   repl <- arl:::REPL$new(engine = NULL, history_state = state)
-  withr::local_options(list(arl.repl_can_use_history_override = TRUE))
 
-  testthat::with_mocked_bindings(
-    {
-      repl$add_history("(+ 1 2)")
-      repl$add_history("(+ 1 2)")  # duplicate — should be skipped
-      repl$add_history("(* 3 4)")  # different — should be added
-      repl$add_history("(* 3 4)")  # duplicate — should be skipped
-      repl$add_history("(+ 1 2)")  # same as first but not consecutive — should be added
-    },
-    loadhistory = function(file) invisible(NULL),
-    .package = "utils"
-  )
+  repl$add_history("(+ 1 2)")
+  repl$add_history("(+ 1 2)")  # duplicate — should be skipped
+  repl$add_history("(* 3 4)")  # different — should be added
+  repl$add_history("(* 3 4)")  # duplicate — should be skipped
+  repl$add_history("(+ 1 2)")  # same as first but not consecutive — should be added
 
   lines <- readLines(hist_file)
   expect_equal(lines, c("(+ 1 2)", "(* 3 4)", "(+ 1 2)"))
+})
+
+test_that("REPL add_history trims file in-session when exceeding max", {
+  hist_file <- tempfile("arl_test_hist_insession_")
+  on.exit(unlink(hist_file), add = TRUE)
+
+  # Pre-populate with 999 entries
+  entries <- paste0("(old-", seq_len(999), ")")
+  writeLines(entries, hist_file)
+
+  state <- new.env(parent = emptyenv())
+  state$enabled <- TRUE
+  state$path <- hist_file
+  state$snapshot <- NULL
+  state$last_entry <- NULL
+  state$entry_count <- 999L
+  state$dirty <- FALSE
+  state$dir_exists <- TRUE
+  repl <- arl:::REPL$new(engine = NULL, history_state = state)
+
+  # Entry 1000 — no trim yet
+  repl$add_history("(new-1)")
+  # Entry 1001 — triggers trim
+  repl$add_history("(new-2)")
+
+  lines <- readLines(hist_file)
+  expect_equal(length(lines), 1000L)
+  # Oldest entries trimmed; newest kept
+  expect_equal(lines[999], "(new-1)")
+  expect_equal(lines[1000], "(new-2)")
+  expect_equal(state$entry_count, 1000L)
+})
+
+test_that("REPL save_history cleans up snapshot tempfile", {
+  snapshot <- tempfile("arl_rhistory_")
+  writeLines("old R history", snapshot)
+  expect_true(file.exists(snapshot))
+
+  state <- new.env(parent = emptyenv())
+  state$enabled <- TRUE
+  state$path <- "dummy.txt"
+  state$snapshot <- snapshot
+  state$last_entry <- NULL
+  state$entry_count <- 0L
+  repl <- arl:::REPL$new(engine = NULL, history_state = state)
+
+  testthat::with_mocked_bindings(
+    repl$save_history(),
+    loadhistory = function(...) invisible(NULL),
+    .package = "utils"
+  )
+
+  expect_false(file.exists(snapshot))
 })
