@@ -92,7 +92,7 @@ test_that("REPL history_path_default uses R_user_dir", {
 
 test_that("REPL can_use_history reflects interactive and readline", {
   repl <- arl:::REPL$new()
-  expected <- isTRUE(interactive()) && isTRUE(capabilities("readline"))
+  expected <- isTRUE(interactive()) && isTRUE(capabilities("cledit"))
   expect_equal(repl$can_use_history(), expected)
 })
 
@@ -102,7 +102,7 @@ test_that("REPL can_use_history respects override option", {
   can_use <- testthat::with_mocked_bindings(
     repl$can_use_history(),
     interactive = function() TRUE,
-    capabilities = function(...) c(readline = TRUE),
+    capabilities = function(...) c(cledit = TRUE),
     .package = "base"
   )
   expect_false(can_use)
@@ -111,7 +111,7 @@ test_that("REPL can_use_history respects override option", {
   can_use <- testthat::with_mocked_bindings(
     repl$can_use_history(),
     interactive = function() FALSE,
-    capabilities = function(...) c(readline = FALSE),
+    capabilities = function(...) c(cledit = FALSE),
     .package = "base"
   )
   expect_true(can_use)
@@ -123,7 +123,7 @@ test_that("REPL can_use_history is FALSE when arl.repl_use_history is FALSE", {
   can_use <- testthat::with_mocked_bindings(
     repl$can_use_history(),
     interactive = function() TRUE,
-    capabilities = function(...) c(readline = TRUE),
+    capabilities = function(...) c(cledit = TRUE),
     .package = "base"
   )
   expect_false(can_use)
@@ -167,17 +167,17 @@ test_that("REPL save_history handles disabled state", {
   expect_null(result)
 })
 
-test_that("REPL save_history resets state even on save errors", {
+test_that("REPL save_history resets state even on restore errors", {
   state <- new.env(parent = emptyenv())
   state$enabled <- TRUE
   state$path <- "dummy.txt"
   state$snapshot <- "dummy_snapshot"
+  state$last_entry <- "(+ 1 2)"
   repl <- arl:::REPL$new(engine = NULL, history_state = state)
 
   withr::local_options(list(arl.repl_can_use_history_override = TRUE))
   result <- testthat::with_mocked_bindings(
     repl$save_history(),
-    savehistory = function(...) stop("fail"),
     loadhistory = function(...) stop("fail"),
     .package = "utils"
   )
@@ -185,6 +185,7 @@ test_that("REPL save_history resets state even on save errors", {
   expect_false(isTRUE(state$enabled))
   expect_null(state$path)
   expect_null(state$snapshot)
+  expect_null(state$last_entry)
 })
 
 test_that("REPL add_history handles non-interactive mode", {
@@ -210,19 +211,54 @@ test_that("REPL add_history skips empty input", {
   expect_null(result)
 })
 
-test_that("REPL add_history handles missing addHistory", {
+test_that("REPL add_history appends to file and reloads buffer", {
+  hist_file <- tempfile("arl_test_hist_")
+  on.exit(unlink(hist_file), add = TRUE)
+
   state <- new.env(parent = emptyenv())
   state$enabled <- TRUE
-  state$path <- "dummy.txt"
-  state$snapshot <- "dummy_snapshot"
+  state$path <- hist_file
+  state$snapshot <- NULL
+  state$last_entry <- NULL
   repl <- arl:::REPL$new(engine = NULL, history_state = state)
   withr::local_options(list(arl.repl_can_use_history_override = TRUE))
-  result <- testthat::with_mocked_bindings(
-    repl$add_history("(+ 1 2)"),
-    getFromNamespace = function(...) NULL,
+
+  loaded_from <- NULL
+  testthat::with_mocked_bindings(
+    {
+      repl$add_history("(+ 1 2)")
+      repl$add_history("(* 3 4)")
+      # Multi-line input should be collapsed to single line
+      repl$add_history("(define foo\n  (lambda (x)\n    (* x 2)))")
+    },
+    loadhistory = function(file) { loaded_from <<- file },
     .package = "utils"
   )
-  expect_null(result)
+
+  # Verify entries were appended to the file
+  lines <- readLines(hist_file)
+  expect_equal(lines, c("(+ 1 2)", "(* 3 4)", "(define foo   (lambda (x)     (* x 2)))"))
+  # Verify loadhistory was called with the history file
+  expect_equal(loaded_from, hist_file)
+})
+
+test_that("REPL add_history creates history directory if needed", {
+  hist_dir <- file.path(tempdir(), "arl_test_hist_subdir")
+  if (dir.exists(hist_dir)) unlink(hist_dir, recursive = TRUE)
+  on.exit(unlink(hist_dir, recursive = TRUE), add = TRUE)
+
+  state <- new.env(parent = emptyenv())
+  state$enabled <- TRUE
+  state$path <- file.path(hist_dir, "history")
+  state$snapshot <- NULL
+  repl <- arl:::REPL$new(engine = NULL, history_state = state)
+  withr::local_options(list(arl.repl_can_use_history_override = TRUE))
+  testthat::with_mocked_bindings(
+    repl$add_history("(+ 1 2)"),
+    loadhistory = function(file) invisible(NULL),
+    .package = "utils"
+  )
+  expect_true(dir.exists(hist_dir))
 })
 
 # Print Value Function ----
@@ -456,7 +492,7 @@ test_that("REPL BPM enable sequence used when conditions met", {
   output <- testthat::with_mocked_bindings(
     capture.output(engine_test$repl(), type = "output"),
     interactive = function() TRUE,
-    capabilities = function(...) c(readline = TRUE),
+    capabilities = function(...) c(cledit = TRUE),
     .package = "base"
   )
 
@@ -499,4 +535,69 @@ test_that("REPL history_state is properly initialized", {
   expect_true(exists("enabled", envir = state, inherits = FALSE))
   expect_true(exists("path", envir = state, inherits = FALSE))
   expect_true(exists("snapshot", envir = state, inherits = FALSE))
+  expect_true(exists("last_entry", envir = state, inherits = FALSE))
+})
+
+test_that("REPL load_history trims file to max entries", {
+  hist_file <- tempfile("arl_test_hist_trim_")
+  on.exit(unlink(hist_file), add = TRUE)
+
+  # Write 1500 entries
+  entries <- paste0("(expr-", seq_len(1500), ")")
+  writeLines(entries, hist_file)
+
+  state <- new.env(parent = emptyenv())
+  state$enabled <- FALSE
+  state$path <- NULL
+  state$snapshot <- NULL
+  state$last_entry <- NULL
+  repl <- arl:::REPL$new(engine = NULL, history_state = state, history_path = hist_file)
+  withr::local_options(list(arl.repl_can_use_history_override = TRUE))
+
+  testthat::with_mocked_bindings(
+    {
+      result <- repl$load_history(hist_file)
+    },
+    savehistory = function(...) TRUE,
+    loadhistory = function(...) invisible(NULL),
+    .package = "utils"
+  )
+
+  expect_true(result)
+  # File should be trimmed to 1000 entries
+  lines <- readLines(hist_file)
+  expect_equal(length(lines), 1000L)
+  # Should keep the last 1000 entries (501-1500)
+  expect_equal(lines[1], "(expr-501)")
+  expect_equal(lines[1000], "(expr-1500)")
+  # last_entry should be set
+  expect_equal(state$last_entry, "(expr-1500)")
+})
+
+test_that("REPL add_history deduplicates consecutive entries", {
+  hist_file <- tempfile("arl_test_hist_dedup_")
+  on.exit(unlink(hist_file), add = TRUE)
+
+  state <- new.env(parent = emptyenv())
+  state$enabled <- TRUE
+  state$path <- hist_file
+  state$snapshot <- NULL
+  state$last_entry <- NULL
+  repl <- arl:::REPL$new(engine = NULL, history_state = state)
+  withr::local_options(list(arl.repl_can_use_history_override = TRUE))
+
+  testthat::with_mocked_bindings(
+    {
+      repl$add_history("(+ 1 2)")
+      repl$add_history("(+ 1 2)")  # duplicate — should be skipped
+      repl$add_history("(* 3 4)")  # different — should be added
+      repl$add_history("(* 3 4)")  # duplicate — should be skipped
+      repl$add_history("(+ 1 2)")  # same as first but not consecutive — should be added
+    },
+    loadhistory = function(file) invisible(NULL),
+    .package = "utils"
+  )
+
+  lines <- readLines(hist_file)
+  expect_equal(lines, c("(+ 1 2)", "(* 3 4)", "(+ 1 2)"))
 })

@@ -216,6 +216,14 @@ REPL <- R6::R6Class(
         return(invisible(FALSE))
       }
       if (file.exists(path)) {
+        lines <- readLines(path, warn = FALSE)
+        if (length(lines) > private$history_max_entries) {
+          lines <- lines[seq.int(length(lines) - private$history_max_entries + 1L, length(lines))]
+          writeLines(lines, path)
+        }
+        if (length(lines) > 0L) {
+          self$history_state$last_entry <- lines[length(lines)]
+        }
         try(utils::loadhistory(path), silent = TRUE)
       }
       self$history_state$enabled <- TRUE
@@ -231,18 +239,20 @@ REPL <- R6::R6Class(
       if (!isTRUE(self$history_state$enabled)) {
         return(invisible(NULL))
       }
-      hist_dir <- dirname(self$history_state$path)
-      if (!dir.exists(hist_dir)) dir.create(hist_dir, recursive = TRUE)
-      try(utils::savehistory(self$history_state$path), silent = TRUE)
       if (!is.null(self$history_state$snapshot)) {
         try(utils::loadhistory(self$history_state$snapshot), silent = TRUE)
       }
       self$history_state$enabled <- FALSE
       self$history_state$path <- NULL
       self$history_state$snapshot <- NULL
+      self$history_state$last_entry <- NULL
       invisible(NULL)
     },
-    # @description Add a line of input to readline history.
+    # @description Add a form to the readline history file and buffer.
+    # R's readline() does not automatically record lines in the history;
+    # that is done by R's own console loop, which we bypass.  We append
+    # each evaluated form to the history file, then reload the file so
+    # the entry is available via up-arrow recall in the same session.
     add_history = function(text) {
       if (!self$can_use_history()) {
         return(invisible(NULL))
@@ -253,20 +263,21 @@ REPL <- R6::R6Class(
       if (trimws(text) == "") { # nolint: object_usage_linter
         return(invisible(NULL))
       }
-      add_history_fn <- self$history_state$add_history_fn
-      if (is.null(add_history_fn)) {
-        add_history_fn <- tryCatch(
-          utils::getFromNamespace("addHistory", "utils"),
-          error = function(...) NULL
-        )
-        if (!is.null(add_history_fn)) {
-          self$history_state$add_history_fn <- add_history_fn
-        }
-      }
-      if (is.null(add_history_fn)) {
+      entry <- gsub("\n", " ", text)
+      if (!is.null(self$history_state$last_entry) &&
+          identical(entry, self$history_state$last_entry)) {
         return(invisible(NULL))
       }
-      try(add_history_fn(text), silent = TRUE)
+      path <- self$history_state$path
+      if (!is.null(path)) {
+        hist_dir <- dirname(path)
+        if (!dir.exists(hist_dir)) dir.create(hist_dir, recursive = TRUE)
+        tryCatch({
+          cat(entry, "\n", sep = "", file = path, append = TRUE)
+          utils::loadhistory(path)
+        }, error = function(...) NULL)
+      }
+      self$history_state$last_entry <- entry
       invisible(NULL)
     },
     # @description Run the interactive REPL loop.
@@ -338,6 +349,7 @@ REPL <- R6::R6Class(
     }
   ),
   private = list(
+    history_max_entries = 1000L,
     require_engine = function() {
       if (is.null(self$engine)) {
         stop("Must provide Engine instance")
@@ -352,6 +364,9 @@ REPL <- R6::R6Class(
       }
       if (!exists("snapshot", envir = self$history_state, inherits = FALSE)) {
         self$history_state$snapshot <- NULL
+      }
+      if (!exists("last_entry", envir = self$history_state, inherits = FALSE)) {
+        self$history_state$last_entry <- NULL
       }
     }
   )
