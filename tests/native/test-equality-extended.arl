@@ -37,6 +37,13 @@
   ;; Single object always matches
   (assert-true (check-s3-type-match v1))))
 
+(define test-equal-type-guard-fires (lambda ()
+  ;; Regression: equal? must pass a and b as separate args to check-s3-type-match,
+  ;; not wrapped in (list a b). The old code `(check-s3-type-match (list a b))`
+  ;; passed a single list arg, so the guard never rejected mismatched types.
+  (assert-false (equal? 1 "a"))
+  (assert-false (equal? (r-call "c" (list 1 2)) (r-call "c" (list "a" "b"))))))
+
 (define test-equal-with-strict (lambda ()
   ;; Test equal? with strict parameter
   (assert-true (equal? '(1 2 3) '(1 2 3) #t))

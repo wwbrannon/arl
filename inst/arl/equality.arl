@@ -39,7 +39,7 @@
   ;;' @seealso identical?, eq?, eqv?, set-method!
   (define equal?
     (lambda (a b (strict #f))
-       (if (not (check-s3-type-match (list a b)))
+       (if (not (check-s3-type-match a b))
          #f
         (if (identical? a b)
           #t
@@ -184,9 +184,19 @@
             (define cand-types (unique (lapply rest s3-type)))
             (if (> (length cand-types) 1)
               #f
-              (if (!= type-a ([[ cand-types 1))
-                #f
-                #t)))))))
+              (begin
+                (define type-b ([[ cand-types 1))
+                (if (identical? type-a type-b)
+                  #t
+                  ;; integer and numeric are compatible in R
+                  (if (and (r-call "is.numeric" (list obj))
+                           (r-call "is.numeric" (list ([[ rest 1))))
+                    #t
+                    ;; list and call are compatible (quasiquote produces calls)
+                    (if (and (r-call "is.recursive" (list obj))
+                             (r-call "is.recursive" (list ([[ rest 1))))
+                      #t
+                      #f))))))))))
 
   ;;' @description Register an S3-style method.
   ;;' Example: (set-method! 'equal? 'my-class (lambda (a b strict) ...)).
