@@ -42,7 +42,12 @@ local({
 
   # Load arl package and run CLI
   suppressPackageStartupMessages(library(arl))
-  cli(args = commandArgs(trailingOnly = TRUE))
+  tryCatch(
+    cli(args = commandArgs(trailingOnly = TRUE)),
+    arl_cli_error = function(e) {
+      q(save = "no", status = 1)
+    }
+  )
 })
 RPROFILE
 

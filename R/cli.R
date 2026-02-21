@@ -1,3 +1,13 @@
+# Condition constructor for CLI errors. Signalled instead of quit() so that
+# CRAN policy ("packages must not terminate the R process") is satisfied.
+# The exec/arl wrapper script catches this and exits with status 1.
+arl_cli_error <- function(message, show_help = FALSE) {
+  structure(
+    class = c("arl_cli_error", "error", "condition"),
+    list(message = message, show_help = show_help)
+  )
+}
+
 CLI_HELP_TEXT <- paste(
   "Arl: A Lisp dialect for R.",
   "",
@@ -41,7 +51,7 @@ CLI <- R6::R6Class(
     initialize = function(args = commandArgs(trailingOnly = TRUE)) {
       self$args <- args
     },
-    # @description Print error and optionally help text; exit via arl.cli_exit_fn or quit().
+    # @description Print error and optionally help text; exit via arl.cli_exit_fn or error condition.
     # @param message Error message string.
     # @param show_help If TRUE, print CLI help after the message.
     cli_exit_with_error = function(message, show_help = TRUE) {
@@ -54,7 +64,7 @@ CLI <- R6::R6Class(
       if (isTRUE(show_help)) {
         cat(CLI_HELP_TEXT, "\n", sep = "")
       }
-      quit(save = "no", status = 1)
+      stop(arl_cli_error(message, show_help))
     },
     # @description Parse remaining args for --eval/-e, --quiet/-q, and positional args.
     # @param args Character vector of arguments (after -f/--file extraction).
@@ -359,7 +369,7 @@ CLI <- R6::R6Class(
         if (!is.null(exit_fn) && is.function(exit_fn)) {
           exit_fn(paste(parsed$errors, collapse = "; "), TRUE)
         } else {
-          quit(save = "no", status = 1)
+          stop(arl_cli_error(paste(parsed$errors, collapse = "; "), show_help = TRUE))
         }
         return(invisible(NULL))
       }

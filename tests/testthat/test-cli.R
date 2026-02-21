@@ -416,6 +416,32 @@ test_that("cli_exit_with_error produces visible error message", {
   expect_equal(error_msg, "test error message")
 })
 
+test_that("cli_exit_with_error signals arl_cli_error when no exit_fn set", {
+  cli_obj <- arl:::CLI$new()
+  err <- NULL
+  suppressMessages(capture.output(
+    err <- tryCatch(
+      cli_obj$cli_exit_with_error("bad input", show_help = FALSE),
+      arl_cli_error = function(e) e
+    )
+  ))
+  expect_s3_class(err, "arl_cli_error")
+  expect_equal(err$message, "bad input")
+  expect_false(err$show_help)
+})
+
+test_that("run() signals arl_cli_error on parse errors when no exit_fn set", {
+  err <- NULL
+  suppressMessages(capture.output(
+    err <- tryCatch(
+      arl:::cli(c("--unknown-flag")),
+      arl_cli_error = function(e) e
+    )
+  ))
+  expect_s3_class(err, "arl_cli_error")
+  expect_true(grepl("unknown", err$message, ignore.case = TRUE))
+})
+
 test_that("run() displays parse errors to user", {
   exit_messages <- character(0)
   withr::local_options(list(
