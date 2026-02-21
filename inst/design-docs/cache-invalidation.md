@@ -19,8 +19,7 @@ This document describes the cache invalidation strategy.
 Example: `list.arl.a651f6218b6e130f.code.rds`
 
 ### Hash Algorithm
-- **Primary**: xxhash64 (via `digest` package)
-- **Fallback**: MD5 (via `tools::md5sum`)
+- **Algorithm**: MD5 (via `tools::md5sum`)
 - **Input**: Raw file content (bytes)
 - **Properties**: Deterministic, fast, collision-resistant
 
@@ -213,9 +212,10 @@ is_safe_to_cache <- function(module_env, engine_env) {
 4. If no, full compilation -> ~500-1500ms
 
 ### Storage
-- Multiple versions stored simultaneously
-- No cleanup needed (old hashes pruned by filesystem)
-- `.gitignore` should include `.arl_cache/`
+- All caches stored under `tools::R_user_dir("arl", "cache")/modules/`
+- Each source directory gets a unique subdirectory keyed by `<basename>-<dir_hash>`
+- Multiple versions can coexist in cache directory
+- Clean with `make clean-cache` or `unlink(file.path(tools::R_user_dir("arl", "cache"), "modules"), recursive = TRUE)`
 
 ## Test Results
 
@@ -304,7 +304,7 @@ Benchmark improvement:    ~20x for module-heavy workloads
 
 - See `R/module-cache.R` for detailed implementation
 - See `tests/` for cache invalidation tests
-- See `.arl_cache/*.code.R` for human-readable compiled output
+- See `*.code.R` files under `tools::R_user_dir("arl", "cache")/modules/` for human-readable compiled output (requires `options(arl.debug_cache = TRUE)`)
 
 ## Conclusion
 

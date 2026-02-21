@@ -188,8 +188,8 @@ cran-comments: check ## help: Generate cran-comments and CRAN-SUBMISSION
 #
 
 .PHONY: clean-cache
-clean-cache: ## help: Remove .arl_cache directories (auto-runs before dev targets)
-	find . -type d -name ".arl_cache" -exec rm -rf {} + 2>/dev/null || true
+clean-cache: ## help: Remove module cache under R_user_dir (auto-runs before dev targets)
+	Rscript -e 'unlink(file.path(tools::R_user_dir("arl", "cache"), "modules"), recursive = TRUE)'
 
 .PHONY: clean-coverage
 clean-coverage: ## help: Remove coverage output files

@@ -24,13 +24,12 @@ ModuleCache <- R6::R6Class(
       # Use MD5 for file content hashing (fast and adequate for cache invalidation)
       file_hash <- tools::md5sum(src_file)
 
-      cache_dir <- file.path(dirname(src_file), paste0(".", .pkg_name, "_cache"))
-      if (is_in_library_tree(src_file)) {
-        src_dir <- normalizePath(dirname(src_file), mustWork = FALSE, winslash = "/")
-        dir_hash <- md5_string(src_dir)
-        safe_dir <- paste0(basename(src_dir), "-", substr(dir_hash, 1, 12))
-        cache_dir <- file.path(tools::R_user_dir(.pkg_name, "cache"), "modules", safe_dir)
-      }
+      # Always cache under tools::R_user_dir() to avoid writing next to source
+      # files (CRAN policy: no writes outside tempdir/R_user_dir)
+      src_dir <- normalizePath(dirname(src_file), mustWork = FALSE, winslash = "/")
+      dir_hash <- md5_string(src_dir)
+      safe_dir <- paste0(basename(src_dir), "-", substr(dir_hash, 1, 12))
+      cache_dir <- file.path(tools::R_user_dir(.pkg_name, "cache"), "modules", safe_dir)
       base_name <- basename(src_file)
 
       list(

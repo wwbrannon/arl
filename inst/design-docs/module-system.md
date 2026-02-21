@@ -248,8 +248,7 @@ After body evaluation:
 
 ## Module Caching
 
-Compiled module expressions are cached in `.arl_cache/` directories (see
-`cache-invalidation.md` for details). Key points for the module system:
+Compiled module expressions are cached under `tools::R_user_dir("arl", "cache")/modules/` (see `cache-invalidation.md` for details). Each source directory gets a unique cache subdirectory keyed by its path hash. Key points for the module system:
 
 - **Deflation:** Before serialization, tagged function closures (marked
   `arl_resolved_from`) are replaced with symbolic placeholders

@@ -25,7 +25,9 @@ test_that("get_paths() returns expected structure", {
 
   expect_type(paths, "list")
   expect_true(all(c("cache_dir", "code_cache", "code_r", "file_hash") %in% names(paths)))
-  expect_true(grepl("\\.arl_cache$", paths$cache_dir))
+  user_cache <- tools::R_user_dir("arl", "cache")
+  expect_true(startsWith(normalizePath(paths$cache_dir, mustWork = FALSE, winslash = "/"),
+                         normalizePath(user_cache, mustWork = FALSE, winslash = "/")))
   expect_true(grepl("\\.code\\.rds$", paths$code_cache))
   expect_true(grepl("\\.code\\.R$", paths$code_r))
   expect_true(nchar(paths$file_hash) == 32) # MD5 hash length
@@ -153,11 +155,7 @@ test_that("load_code() returns NULL for version mismatch", {
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
 
-  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
-  on.exit({
-    unlink(tmp_file)
-    unlink(cache_dir, recursive = TRUE)
-  }, add = TRUE)
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
@@ -179,11 +177,7 @@ test_that("load_code() returns NULL for coverage mismatch", {
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
 
-  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
-  on.exit({
-    unlink(tmp_file)
-    unlink(cache_dir, recursive = TRUE)
-  }, add = TRUE)
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
@@ -201,11 +195,7 @@ test_that("load_code() returns NULL for missing coverage field (pre-upgrade cach
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
 
-  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
-  on.exit({
-    unlink(tmp_file)
-    unlink(cache_dir, recursive = TRUE)
-  }, add = TRUE)
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
@@ -225,11 +215,7 @@ test_that("load_code() returns NULL for hash mismatch", {
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
 
-  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
-  on.exit({
-    unlink(tmp_file)
-    unlink(cache_dir, recursive = TRUE)
-  }, add = TRUE)
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths1 <- cache$get_paths(tmp_file)
@@ -287,10 +273,7 @@ test_that("write_code() stores compiler_flags in cache data", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit({
-    unlink(tmp_file)
-    unlink(file.path(dirname(tmp_file), ".arl_cache"), recursive = TRUE)
-  })
+  on.exit(unlink(tmp_file))
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
@@ -310,10 +293,7 @@ test_that("load_code() rejects cache with mismatched compiler_flags", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit({
-    unlink(tmp_file)
-    unlink(file.path(dirname(tmp_file), ".arl_cache"), recursive = TRUE)
-  })
+  on.exit(unlink(tmp_file))
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
@@ -344,10 +324,7 @@ test_that("load_code() rejects cache with NULL compiler_flags (pre-upgrade)", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit({
-    unlink(tmp_file)
-    unlink(file.path(dirname(tmp_file), ".arl_cache"), recursive = TRUE)
-  })
+  on.exit(unlink(tmp_file))
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
@@ -375,10 +352,7 @@ test_that("load_code() rejects cache with NULL default_packages (pre-upgrade)", 
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit({
-    unlink(tmp_file)
-    unlink(file.path(dirname(tmp_file), ".arl_cache"), recursive = TRUE)
-  })
+  on.exit(unlink(tmp_file))
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
@@ -401,11 +375,7 @@ test_that("write_code() cleans up old cache files for same source", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
-  on.exit({
-    unlink(tmp_file)
-    unlink(cache_dir, recursive = TRUE)
-  })
+  on.exit(unlink(tmp_file))
 
   # Write cache for hash H1 (with debug_cache to test .code.R cleanup)
   options(arl.debug_cache = TRUE)
@@ -435,11 +405,7 @@ test_that("write_code() uses provided cache_paths instead of recomputing", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("content version 1", tmp_file)
-  cache_dir <- file.path(dirname(tmp_file), ".arl_cache")
-  on.exit({
-    unlink(tmp_file)
-    unlink(cache_dir, recursive = TRUE)
-  })
+  on.exit(unlink(tmp_file))
 
   # Get paths for the original content
   paths_v1 <- cache$get_paths(tmp_file)
@@ -481,11 +447,12 @@ test_that("code cache is written for loaded modules", {
   # Load module (should write code cache)
   engine$load_file_in_env(module_file)
 
-  # Verify: .code.rds written
-  cache_dir <- file.path(temp_dir, ".arl_cache")
-  expect_true(dir.exists(cache_dir))
+  # Verify: .code.rds written under R_user_dir
+  cache <- arl:::ModuleCache$new()
+  paths <- cache$get_paths(module_file)
+  expect_true(dir.exists(paths$cache_dir))
 
-  cache_files <- list.files(cache_dir, pattern = "\\.rds$", full.names = FALSE)
+  cache_files <- list.files(paths$cache_dir, pattern = "\\.rds$", full.names = FALSE)
   code_cache_exists <- any(grepl("\\.code\\.rds$", cache_files))
 
   expect_true(code_cache_exists, "expr cache (.code.rds) should be written")
@@ -543,28 +510,7 @@ test_that("code cache reused across engine instances", {
 
 # --- library-tree redirect ---
 
-test_that("get_paths() redirects cache to R_user_dir when source is in .libPaths()", {
-  cache <- arl:::ModuleCache$new()
-
-  # Create a temp file inside a .libPaths() directory
-  lib_dir <- .libPaths()[1]
-  tmp_file <- tempfile(tmpdir = lib_dir, fileext = ".arl")
-  writeLines("(module lib-test (export x) (define x 1))", tmp_file)
-  on.exit(unlink(tmp_file), add = TRUE)
-
-  paths <- cache$get_paths(tmp_file)
-  expect_false(is.null(paths))
-
-  # Cache dir should be under R_user_dir, not next to the source
-  user_cache <- tools::R_user_dir("arl", "cache")
-  expect_true(startsWith(normalizePath(paths$cache_dir, mustWork = FALSE, winslash = "/"),
-                         normalizePath(user_cache, mustWork = FALSE, winslash = "/")),
-              info = "cache_dir should be under R_user_dir for library-tree sources")
-  expect_true(grepl("/modules/", paths$cache_dir),
-              info = "cache_dir should contain /modules/ subdirectory")
-})
-
-test_that("get_paths() uses local cache for non-library-tree sources", {
+test_that("get_paths() always uses R_user_dir for cache", {
   cache <- arl:::ModuleCache$new()
 
   tmp_file <- tempfile(fileext = ".arl")
@@ -574,7 +520,11 @@ test_that("get_paths() uses local cache for non-library-tree sources", {
   paths <- cache$get_paths(tmp_file)
   expect_false(is.null(paths))
 
-  # Cache dir should be next to the source file
-  expect_equal(paths$cache_dir,
-               file.path(dirname(tmp_file), ".arl_cache"))
+  # Cache dir should always be under R_user_dir
+  user_cache <- tools::R_user_dir("arl", "cache")
+  expect_true(startsWith(normalizePath(paths$cache_dir, mustWork = FALSE, winslash = "/"),
+                         normalizePath(user_cache, mustWork = FALSE, winslash = "/")),
+              info = "cache_dir should be under R_user_dir")
+  expect_true(grepl("/modules/", paths$cache_dir),
+              info = "cache_dir should contain /modules/ subdirectory")
 })
