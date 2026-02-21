@@ -100,61 +100,49 @@ test_that("cli returns formatted help", {
   expect_true(any(grepl("Examples:", output)))
 })
 
-test_that("install_cli installs wrapper to target dir", {
-  temp_dir <- tempfile("arl-cli-")
-  dir.create(temp_dir)
-  source <- file.path(temp_dir, "arl-src")
-  writeLines(c("#!/usr/bin/env sh", "echo arl"), source)
+# install_cli ----
 
-  result <- testthat::with_mocked_bindings(
-    {
-      suppressMessages(
-        installed <- arl::install_cli(target_dir = temp_dir, overwrite = TRUE)
-      )
-      installed
-    },
-    system.file = function(..., package = NULL) {
-      if (!is.null(package) && package == "arl") {
-        return(source)
-      }
-      base::system.file(..., package = package)
-    },
-    .package = "base"
-  )
-
-  expected <- file.path(temp_dir, "arl")
-  expect_true(file.exists(expected))
-  expect_equal(
-    normalizePath(result, winslash = "/", mustWork = FALSE),
-    normalizePath(expected, winslash = "/", mustWork = FALSE)
-  )
-})
-
-test_that("install_cli warns when target dir is not on PATH", {
-  temp_dir <- tempfile("arl-cli-notinpath-")
-  dir.create(temp_dir)
-  source <- file.path(temp_dir, "arl-src")
-  writeLines(c("#!/usr/bin/env sh", "echo arl"), source)
-
+test_that("install_cli prints platform-appropriate instructions", {
   messages <- character()
   withCallingHandlers(
-    testthat::with_mocked_bindings(
-      arl::install_cli(target_dir = temp_dir, overwrite = TRUE),
-      system.file = function(..., package = NULL) {
-        if (!is.null(package) && package == "arl") {
-          return(source)
-        }
-        base::system.file(..., package = package)
-      },
-      .package = "base"
-    ),
+    arl::install_cli(),
     message = function(m) {
       messages[[length(messages) + 1L]] <<- conditionMessage(m)
       invokeRestart("muffleMessage")
     }
   )
+  all_msg <- paste(messages, collapse = " ")
+  expect_true(grepl("CLI wrapper script:", all_msg))
+  expect_true(grepl("PATH", all_msg))
+  if (.Platform$OS.type == "windows") {
+    expect_true(grepl("copy", all_msg))
+  } else {
+    expect_true(grepl("ln -s", all_msg))
+  }
+})
 
-  expect_true(any(grepl("PATH", messages)))
+test_that("install_cli(quiet = TRUE) returns script path silently", {
+  messages <- character()
+  result <- withCallingHandlers(
+    arl::install_cli(quiet = TRUE),
+    message = function(m) {
+      messages[[length(messages) + 1L]] <<- conditionMessage(m)
+      invokeRestart("muffleMessage")
+    }
+  )
+  expect_length(messages, 0)
+  expect_true(nzchar(result))
+  expect_true(file.exists(result))
+})
+
+test_that("POSIX wrapper script runs --version", {
+  skip_on_os("windows")
+  script <- system.file("bin", "posix", "arl", package = "arl")
+  skip_if(!nzchar(script), "POSIX script not found (not installed)")
+  skip_if(!file.exists(script))
+
+  result <- system2(script, args = "--version", stdout = TRUE, stderr = TRUE)
+  expect_true(any(grepl("^arl ", result)))
 })
 
 # Environment Loading ----

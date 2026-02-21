@@ -4,19 +4,17 @@
 \alias{install_cli}
 \title{Install the Arl CLI wrapper}
 \usage{
-install_cli(target_dir = .pkg_option("bin_dir", ""), overwrite = FALSE)
+install_cli(quiet = FALSE)
 }
 \arguments{
-\item{target_dir}{Directory for the \code{arl} executable. Defaults to the
-\code{arl.bin_dir} option or \code{ARL_BIN_DIR} environment variable,
-then \code{~/.local/bin}, then \code{~/bin}.}
-
-\item{overwrite}{Whether to overwrite an existing \code{arl} executable.}
+\item{quiet}{If \code{TRUE}, suppress printed instructions and return
+the script path invisibly.}
 }
 \value{
-The installed path, invisibly.
+The path to the CLI wrapper script, invisibly.
 }
 \description{
-Copies the packaged CLI wrapper into a writable bin directory and makes it
-executable so it can be run from the shell.
+Prints platform-appropriate instructions for making the packaged CLI
+wrapper available from the shell.  No files are written or copied --
+the user follows the printed instructions themselves.
 }

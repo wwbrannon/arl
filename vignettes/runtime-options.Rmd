@@ -56,7 +56,6 @@ For boolean settings, the environment variable values `1`, `true`, and
 | Setting | R option | Env var | Default | Description |
 |---------|----------|---------|---------|-------------|
 | Suppress display/trace | `arl.quiet` | `ARL_QUIET` | `FALSE` | Silence `display` and `trace` output |
-| CLI install directory | `arl.bin_dir` | `ARL_BIN_DIR` | `""` | Target directory for `install_cli()` |
 | REPL quiet/banner | `arl.repl_quiet` | `ARL_REPL_QUIET` | `FALSE` | Start REPL without the startup banner |
 | REPL history | `arl.repl_use_history` | `ARL_REPL_USE_HISTORY` | `TRUE` | Enable REPL command history |
 | REPL bracketed paste | `arl.repl_bracketed_paste` | `ARL_REPL_BRACKETED_PASTE` | `TRUE` | Enable bracketed-paste mode in the REPL |
@@ -100,15 +99,6 @@ Start the REPL without a banner:
 ```r
 options(arl.repl_quiet = TRUE)
 # or: Sys.setenv(ARL_REPL_QUIET = "1")
-```
-
-Install the CLI to a custom directory:
-
-```r
-options(arl.bin_dir = "~/my-bin")
-# or: Sys.setenv(ARL_BIN_DIR = "~/my-bin")
-
-arl::install_cli()
 ```
 
 ## Internal settings

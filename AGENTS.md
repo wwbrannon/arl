@@ -34,7 +34,8 @@ Standard R package layout:
   - `arl/` - Modular stdlib (23 modules: core, control, functional, binding, looping, threading, struct, assert, r-interop, list, sequences, strings, math, logic, io, conversions, types, dict, display, equality, set, sort, _utils); 10 "prelude" modules are loaded at startup (see `prelude-modules.txt`), others require explicit `(import ...)`
   - `examples/` - Complete working programs (fibonacci, quicksort, data-analysis, macros, fizzbuzz, graph-paths, log-parser, pipeline-macros, sales-report, task-runner)
   - `design-docs/` - Design documentation for internal subsystems
-- `exec/arl` - Command-line executable (shell script wrapper)
+- `inst/bin/posix/arl` - POSIX shell CLI wrapper
+- `inst/bin/windows/arl.bat` - Windows batch CLI wrapper
 - `tests/`
   - `testthat/` - Comprehensive test suite (74 test files plus helpers)
   - `native/` - Native Arl test files (18 `.arl` tests run via `make test-native`)
@@ -88,7 +89,7 @@ Arl leverages R's existing eval/quote/environment system rather than reimplement
 
 8. **REPL** (`repl.R`) - Interactive shell with error handling and history
 
-9. **CLI** (`cli.R`, `exec/arl`) - Command-line tool supporting `--file`, `--eval`, positional script execution, and interactive mode
+9. **CLI** (`cli.R`, `inst/bin/posix/arl`, `inst/bin/windows/arl.bat`) - Command-line tool supporting `--file`, `--eval`, positional script execution, and interactive mode
 
 ## Language Design
 

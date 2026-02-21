@@ -70,6 +70,7 @@ check: build ## help: Check the package (includes tests)
 .PHONY: lint
 lint: clean-cache stdlib-order ## help: Run linter checks
 	R -q -e "devtools::load_all(); lintr::lint_dir(path='.')"
+	shellcheck inst/bin/posix/arl
 
 .PHONY: test
 test: clean-cache stdlib-order lang-docs ## help: Run tests

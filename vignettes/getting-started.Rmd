@@ -71,10 +71,18 @@ options](runtime-options.html) for more.
 
 ## Run from the command line
 
-Install the CLI wrapper once after installing the package:
+Run `arl::install_cli()` to see how to put the CLI wrapper on your PATH:
 
 ```{r eval=FALSE}
 arl::install_cli()
+#> Arl CLI wrapper script: /path/to/arl/bin/posix/arl
+#>
+#> To make it available on your PATH, create a symlink:
+#>
+#>   mkdir -p ~/.local/bin
+#>   ln -s "/path/to/arl/bin/posix/arl" ~/.local/bin/arl
+#>
+#> Then ensure ~/.local/bin is on your PATH.
 ```
 
 Then you can evaluate code without opening R:

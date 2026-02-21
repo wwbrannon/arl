@@ -406,123 +406,52 @@ cli <- function(args = commandArgs(trailingOnly = TRUE)) {
   CLI$new(args)$run()
 }
 
-# Check if two file paths refer to the same file (handles symlinks and hardlinks)
-# @param path1 First file path
-# @param path2 Second file path
-# @return TRUE if both paths refer to the same file, FALSE otherwise
-# @keywords internal
-# @noRd
-same_file <- function(path1, path2) {
-  # If either file doesn't exist, they can't be the same
-  if (!file.exists(path1) || !file.exists(path2)) {
-    return(FALSE)
-  }
-
-  # Resolve symlinks and compare canonical paths
-  path1_real <- normalizePath(path1, winslash = "/", mustWork = TRUE)
-  path2_real <- normalizePath(path2, winslash = "/", mustWork = TRUE)
-
-  if (path1_real == path2_real) {
-    return(TRUE)
-  }
-
-  # Also check inodes for hardlinks (Unix-like systems only)
-  info1 <- file.info(path1_real)
-  info2 <- file.info(path2_real)
-
-  if (!is.null(info1$inode) && !is.null(info2$inode)) {
-    return(info1$inode == info2$inode)
-  }
-
-  FALSE
-}
-
-# Warn if the given directory is not on the current PATH.
-# @param dir_path Expanded directory path.
-# @keywords internal
-# @noRd
-install_cli_path_warning <- function(dir_path) {
-  path_entries <- strsplit(Sys.getenv("PATH"), .Platform$path.sep, fixed = TRUE)[[1]]
-  normalized_entries <- normalizePath(path_entries, winslash = "/", mustWork = FALSE)
-  normalized_target <- normalizePath(dir_path, winslash = "/", mustWork = FALSE)
-  if (!any(normalized_entries == normalized_target)) {
-    message("Add ", dir_path, " to your PATH to run `arl` from the shell.")
-  }
-}
-
 #' Install the Arl CLI wrapper
 #'
-#' Copies the packaged CLI wrapper into a writable bin directory and makes it
-#' executable so it can be run from the shell.
+#' Prints platform-appropriate instructions for making the packaged CLI
+#' wrapper available from the shell.  No files are written or copied --
+#' the user follows the printed instructions themselves.
 #'
-#' @param target_dir Directory for the `arl` executable. Defaults to the
-#'   \code{arl.bin_dir} option or \code{ARL_BIN_DIR} environment variable,
-#'   then \code{~/.local/bin}, then \code{~/bin}.
-#' @param overwrite Whether to overwrite an existing `arl` executable.
-#' @return The installed path, invisibly.
+#' @param quiet If \code{TRUE}, suppress printed instructions and return
+#'   the script path invisibly.
+#' @return The path to the CLI wrapper script, invisibly.
 #' @export
-install_cli <- function(target_dir = .pkg_option("bin_dir", ""), overwrite = FALSE) {
-  source <- system.file("exec", .pkg_name, package = .pkg_name)
-  if (!nzchar(source)) {
-    stop(paste0("CLI script not found. Is the ", .pkg_name, " package installed?"))
-  }
+install_cli <- function(quiet = FALSE) {
+  is_windows <- .Platform$OS.type == "windows"
 
-  candidates <- if (nzchar(target_dir)) {
-    target_dir
+  script <- if (is_windows) {
+    system.file("bin", "windows", "arl.bat", package = .pkg_name)
   } else {
-    c("~/.local/bin", "~/bin")
+    system.file("bin", "posix", "arl", package = .pkg_name)
   }
 
-  chosen <- NULL
-  for (dir in candidates) {
-    dir_path <- path.expand(dir)
-    if (!dir.exists(dir_path)) {
-      dir.create(dir_path, recursive = TRUE, showWarnings = FALSE)
-    }
-    if (dir.exists(dir_path) && file.access(dir_path, 2) == 0) {
-      chosen <- dir_path
-      break
-    }
+  if (!nzchar(script)) {
+    stop("CLI script not found. Is the ", .pkg_name, " package installed?")
   }
 
-  if (is.null(chosen)) {
-    stop(
-      "No writable bin directory found. Set the arl.bin_dir option or ",
-      "ARL_BIN_DIR env var, or create one of: ",
-      paste(candidates, collapse = ", ")
-    )
+  if (isTRUE(quiet)) {
+    return(invisible(script))
   }
 
-  target <- file.path(chosen, .pkg_name)
-
-  # Check if source and target are the same file (can happen in dev mode)
-  # This includes symlinks and hardlinks
-  if (same_file(source, target)) {
-    message("Target already points to source, skipping copy")
-    message("Already installed at ", target)
-    install_cli_path_warning(chosen)
-    return(invisible(target))
+  if (is_windows) {
+    message("Arl CLI wrapper script: ", script)
+    message("")
+    message("To make it available on your PATH, copy it to a directory on")
+    message("your PATH or add its directory to PATH:")
+    message("")
+    message("  copy \"", script, "\" \"%USERPROFILE%\\bin\\arl.bat\"")
+    message("")
+    message("Then ensure %USERPROFILE%\\bin is on your PATH.")
+  } else {
+    message("Arl CLI wrapper script: ", script)
+    message("")
+    message("To make it available on your PATH, create a symlink:")
+    message("")
+    message("  mkdir -p ~/.local/bin")
+    message("  ln -s \"", script, "\" ~/.local/bin/arl")
+    message("")
+    message("Then ensure ~/.local/bin is on your PATH.")
   }
 
-  if (file.exists(target) && !isTRUE(overwrite)) {
-    stop("CLI already exists at ", target, ". Use overwrite = TRUE to replace it.")
-  }
-
-  # If target is a symlink, remove it first to avoid following the link
-  # and overwriting the source file
-  if (file.exists(target)) {
-    file.remove(target)
-  }
-
-  if (!file.copy(source, target, overwrite = FALSE)) {
-    stop("Failed to install CLI to ", target)
-  }
-
-  Sys.chmod(target, mode = "0755")
-
-  message("Installed ", .pkg_name, " CLI to ", target)
-
-  install_cli_path_warning(chosen)
-
-  invisible(target)
+  invisible(script)
 }
