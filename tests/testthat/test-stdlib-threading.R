@@ -149,6 +149,17 @@ test_that("some-> short-circuits on false", {
   expect_false(result)
 })
 
+test_that("some-> short-circuits on 0 (falsy in Arl)", {
+  env <- new.env(parent = baseenv())
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("threading"), env = env)
+
+  # 0 is falsy in Arl, so some-> should short-circuit
+  result <- engine$eval(
+    engine$read("(some-> 0 (+ 3))")[[1]], env = env)
+  expect_equal(result, 0)
+})
+
 # ============================================================================
 # some->>
 # ============================================================================
@@ -167,6 +178,17 @@ test_that("some->> threads last with short-circuit", {
   result <- engine$eval(
     engine$read("(some->> #nil (- 10))")[[1]], env = env)
   expect_null(result)
+})
+
+test_that("some->> short-circuits on 0 (falsy in Arl)", {
+  env <- new.env(parent = baseenv())
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("threading"), env = env)
+
+  # 0 is falsy in Arl, so some->> should short-circuit
+  result <- engine$eval(
+    engine$read("(some->> 0 (- 10))")[[1]], env = env)
+  expect_equal(result, 0)
 })
 
 # ============================================================================
