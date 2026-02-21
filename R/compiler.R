@@ -64,17 +64,6 @@ Compiler <- R6::R6Class(
     annotations = NULL,
     # Raw source text for annotation parsing when no file is available (set by eval_text).
     source_text = NULL,
-    # Monotonic counter for generating unique symbols when macro expander is unavailable.
-    gensym_counter = 0L,
-    # Generate a unique symbol. Delegates to the macro expander's gensym when
-    # available (for globally unique names); falls back to an instance counter.
-    gensym = function(prefix) {
-      if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-        return(self$context$macro_expander$gensym(prefix))
-      }
-      self$gensym_counter <- self$gensym_counter + 1L
-      as.symbol(paste0(prefix, self$gensym_counter))
-    },
     # @param context EvalContext (for source_tracker).
     initialize = function(context) {
       if (!inherits(context, "ArlEvalContext")) {
@@ -145,6 +134,10 @@ Compiler <- R6::R6Class(
     }
   ),
   private = list(
+    # Generate a unique symbol via the macro expander's gensym.
+    gensym = function(prefix) {
+      self$context$macro_expander$gensym(prefix)
+    },
     # Parse a list of symbols from an import modifier value.
     # Returns a character vector of symbol names, or "ERROR:..." on failure.
     parse_symbol_list = function(val, modifier_name) {
@@ -232,7 +225,7 @@ Compiler <- R6::R6Class(
         args[[i]] <- compiled
       }
 
-      gensym_tmp <- function() self$gensym(".__tmp")
+      gensym_tmp <- function() private$gensym(".__tmp")
 
       build <- function(idx) {
         if (idx == length(args)) return(args[[idx]])
@@ -621,7 +614,7 @@ Compiler <- R6::R6Class(
       is_simple <- is.symbol(name)
       pattern_arg <- if (is_simple) as.character(name) else as.call(list(as.symbol(".__quote"), name))
 
-      tmp_sym <- self$gensym(".__define_value")
+      tmp_sym <- private$gensym(".__define_value")
       assign_tmp <- as.call(list(quote(`<-`), tmp_sym, val))
 
       if (is_simple) {
@@ -721,7 +714,7 @@ Compiler <- R6::R6Class(
         # For pattern rest params, generate a temp name for collection
         if (is.null(rest_param_name) && !is.null(params$rest_param_spec) &&
             identical(params$rest_param_spec$type, "pattern")) {
-          rest_param_name <- as.character(self$gensym(".__rest"))
+          rest_param_name <- as.character(private$gensym(".__rest"))
         }
         if (private$has_self_tail_calls(body_exprs, self_name)) {
           use_tco <- TRUE
@@ -931,7 +924,7 @@ Compiler <- R6::R6Class(
               return(private$fail("pattern wrapper must be (pattern <pat>) or (pattern <pat> <default>)"))
             }
             pattern <- arg[[2]]
-            tmp_sym <- self$gensym(".__arg")
+            tmp_sym <- private$gensym(".__arg")
             tmp_name <- as.character(tmp_sym)
             if (length(arg) == 3) {
               default_expr <- private$compile_impl(arg[[3]])
