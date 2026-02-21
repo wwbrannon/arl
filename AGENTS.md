@@ -31,13 +31,13 @@ Standard R package layout:
   - `source-tracker.R` - Source location tracking
   - `utils.R` - Utilities
 - `inst/` - Installed package files
-  - `arl/` - Modular stdlib (23 modules: core, control, functional, binding, looping, threading, struct, assert, r-interop, list, sequences, strings, math, logic, io, conversions, types, dict, display, equality, set, sort, _utils); 10 "prelude" modules are loaded at startup (see `prelude-modules.txt`), others require explicit `(import ...)`
+  - `arl/` - Modular stdlib (22 modules: core, control, functional, binding, looping, threading, struct, assert, r-interop, list, sequences, strings, math, logic, io, conversions, types, dict, display, equality, set, sort); 10 "prelude" modules are loaded at startup (see `prelude-modules.txt`), others require explicit `(import ...)`
   - `examples/` - Complete working programs (fibonacci, quicksort, data-analysis, macros, fizzbuzz, graph-paths, log-parser, pipeline-macros, sales-report, task-runner)
   - `design-docs/` - Design documentation for internal subsystems
 - `inst/bin/posix/arl` - POSIX shell CLI wrapper
 - `inst/bin/windows/arl.bat` - Windows batch CLI wrapper
 - `tests/`
-  - `testthat/` - Comprehensive test suite (74 test files plus helpers)
+  - `testthat/` - Comprehensive test suite (61 test files plus helpers)
   - `native/` - Native Arl test files (18 `.arl` tests run via `make test-native`)
 - `benchmarks/` - Performance benchmarking suite (component benchmarks, profiling scripts)
 - `tools/` - Build helpers (stdlib load-order generation, dependency analysis, CRAN submission tools, doc generators)

@@ -54,7 +54,7 @@ This is simpler and avoids extra environment objects for bindings that are
 always present.
 
 Non-prelude modules (`math`, `looping`, `sort`, `strings`, `dict`, `set`,
-`io`, `display`, `assert`, `struct`, `conversions`, `r-interop`, `_utils`)
+`io`, `display`, `assert`, `struct`, `conversions`, `r-interop`)
 require explicit `(import ...)`.
 
 ## Import Modes: Squash vs Proxy

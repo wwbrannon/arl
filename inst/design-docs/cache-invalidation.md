@@ -2,9 +2,8 @@
 
 ## Overview
 
-Arl implements a dual-cache system for module loading with content-based invalidation:
-- **env cache**: Full environment cache (`.env.rds`) - fast, ~50ms per module
-- **expr cache**: Compiled expressions cache (`.code.rds`) - safe fallback, ~200ms per module
+Arl implements a code cache for module loading with content-based invalidation:
+- **code cache**: Compiled expressions cache (`.code.rds`)
 - **Inspection**: Human-readable code (`.code.R`) - for debugging
 
 This document describes the cache invalidation strategy.
@@ -28,11 +27,10 @@ Example: `list.arl.a651f6218b6e130f.code.rds`
 ```r
 get_cache_paths <- function(src_file) {
   # Hash raw file content for speed and simplicity
-  file_hash <- digest::digest(file = src_file, algo = "xxhash64")
+  file_hash <- tools::md5sum(src_file)
 
   # Cache files include hash in name
   list(
-    env_cache = file.path(cache_dir, paste0(base_name, ".", file_hash, ".env.rds")),
     code_cache = file.path(cache_dir, paste0(base_name, ".", file_hash, ".code.rds")),
     code_r = file.path(cache_dir, paste0(base_name, ".", file_hash, ".code.R"))
   )
@@ -85,88 +83,11 @@ Hash changed? FALSE
 Hash is mtime-independent
 ```
 
-## Env Cache Safety and Configuration
-
-### Default Behavior: Env Cache Disabled
-
-**As of Arl 0.1.0, the env cache is disabled by default** to ensure correctness during active development.
-
-**Why disabled by default:**
-- The env cache saves evaluated environment state including imported bindings
-- When dependencies change, dependent modules loaded from the env cache have stale references
-- The expr cache is always safe because imports are resolved dynamically at load time
-
-### When is the Env Cache Safe?
-
-The env cache is **only safe** in these scenarios:
-- Running stable production code (no active development)
-- Performance testing / benchmarking (read-only workloads)
-- After verifying no dependency changes will occur
-- Immutable codebases (no writes to imported modules)
-
-The env cache is **unsafe** when:
-- Actively developing with changing dependencies
-- Hot-reloading workflows
-- Any imported modules might be modified
-- Working in multi-developer environments with ongoing changes
-
-### Enabling the Env Cache
-
-**Global setting** (affects all new engines):
-```r
-# In .Rprofile or at session start
-options(arl.use_env_cache = TRUE)
-```
-
-**Per-engine setting** (overrides global):
-```r
-engine <- Engine$new(use_env_cache = TRUE)
-```
-
-**Warning**: When the env cache is enabled, a one-time warning is displayed:
-```
-Note: Environment cache is enabled. This provides 4x speedup but is
-only safe when dependencies don't change. Disable with
-options(arl.use_env_cache = FALSE) if working with changing code.
-```
-
-### Performance Tradeoff
-
-| Configuration | Load Time | Safety | Use Case |
-|---------------|-----------|--------|----------|
-| Default (`use_env_cache = FALSE`) | ~200ms | Always safe | Development, changing code |
-| Enabled (`use_env_cache = TRUE`) | ~50ms | Only safe without writes | Production, benchmarks |
-
-**Speedup**: ~4x faster module loading when the env cache is enabled and safe to use.
-
-### Technical Details
-
-**Expr cache (always safe)**:
-```r
-# Cached compiled expressions with dynamic lookups
-(import a)
-(define y (+ a:x 1))  # a:x resolved at runtime
-```
-When loaded: `import` re-resolves module `a`, so changes to `a` are automatically picked up.
-
-**Env cache (unsafe with changing dependencies)**:
-```r
-# Cached environment includes evaluated bindings
-y = 2  # Captured value based on a:x at cache time
-```
-When loaded: `y` has the stale value; changes to `a` are not reflected.
-
-### Recommendation
-
-**For most users**: Keep the env cache disabled (default). The 150ms difference per module is negligible compared to development iteration time, and correctness is paramount.
-
-**For advanced users**: Enable the env cache in production/benchmark scenarios where code is stable and you've verified no dependency changes will occur.
-
 ## Dependency Handling
 
-**Why the expr cache works without explicit dependency tracking:**
+**Why the code cache works without explicit dependency tracking:**
 
-1. The **expr cache** uses dynamic lookups at runtime
+1. The **code cache** uses dynamic lookups at runtime
 2. When dependency changes, its own cache is invalidated
 3. Dependent modules automatically use new version on next load
 
@@ -178,38 +99,20 @@ Step 2: A loads from cache -> compiled code: import(B) + call(B$func)
 Step 3: B loads fresh (new version) -> A gets new B automatically
 ```
 
-This strategy applies to the expr cache, which is always used regardless of the `use_env_cache` setting.
-
-### Safety Checker Prevents Stale References
-
-Modules with **captured functions** from other modules:
-- Flagged as unsafe for env caching
-- Use the expr cache instead
-- Dynamic lookups prevent stale function references
-
-**Safety check logic:**
-```r
-is_safe_to_cache <- function(module_env, engine_env) {
-  # Check for external pointers, connections (unsafe)
-  # Check for functions captured from other modules
-  # Whitelist: .__* helpers, __r wrappers, module functions
-}
-```
-
 ## Performance Characteristics
 
 ### Hash Computation Cost
-- xxhash64: ~500 MB/s (very fast)
-- Typical module (12KB): ~0.075ms per file
-- For 20 modules: ~1.5ms total overhead
-- Negligible compared to cache load time (50-200ms)
-- Negligible compared to full compile time (500-1500ms)
+- MD5 via `tools::md5sum`: fast for typical module sizes
+- Typical module (12KB): sub-millisecond per file
+- For 20 modules: negligible total overhead
+- Negligible compared to cache load time
+- Negligible compared to full compile time
 
 ### Cache Lookup Flow
-1. Compute hash of source file -> ~1-2ms (parse + hash)
-2. Check if `.cache/<file>.<hash>.rds` exists -> O(1)
-3. If yes, load and validate version -> ~50-200ms
-4. If no, full compilation -> ~500-1500ms
+1. Compute hash of source file via `tools::md5sum`
+2. Check if `.cache/<file>.<hash>.code.rds` exists -> O(1)
+3. If yes, load and validate version
+4. If no, full compilation
 
 ### Storage
 - All caches stored under `tools::R_user_dir("arl", "cache")/modules/`
@@ -267,7 +170,7 @@ Benchmark improvement:    ~20x for module-heavy workloads
 - Multiple versions coexist
 
 ### Symbolic Links
-- `digest::digest(file = ...)` follows symlinks
+- `tools::md5sum()` follows symlinks
 - Hash based on target content
 - Works correctly
 
@@ -320,7 +223,6 @@ Benchmark improvement:    ~20x for module-heavy workloads
 The combination of:
 - Raw content hashing (fast, simple, correct)
 - Version tracking
-- Safety-checked dual cache
 - Dynamic module loading
 
 ...provides optimal performance while maintaining correctness. Formatting/comment changes invalidate caches, but these are rare after initial development and the simplicity is worth the trade-off.

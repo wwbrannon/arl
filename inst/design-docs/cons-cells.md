@@ -29,29 +29,27 @@ for (j in rev(seq_along(dotted_heads))) {
 }
 ```
 
-**Runtime** — `(cons x y)` in `inst/arl/list.arl` is smart about which representation to use:
+**Runtime** — `cons` is a byte-compiled builtin defined in `R/engine.R` that is smart about which representation to use:
 
-```scheme
-(define cons
-  (lambda (item lst)
-    (if (is.call lst)
-      (as.call (c (list item) (as.list lst)))
-      (if (is.list lst)
-        (c (list item) lst)
-        (.__cons item lst)))))
+```r
+builtins_env$cons <- compiler::cmpfun(function(item, lst) {
+  if (is.call(lst)) return(as.call(c(list(item), as.list(lst))))
+  if (is.list(lst)) return(c(list(item), lst))
+  Cons$new(item, lst)
+})
 ```
 
-Only when `y` is neither a list nor a call does `cons` create a `Cons` cell via the `.__cons` builtin (defined in `R/engine.R`, `install_builtins`). This keeps the common case — prepending to a proper list — in native R.
+Only when `lst` is neither a list nor a call does `cons` create a `Cons` cell. This keeps the common case — prepending to a proper list — in native R.
 
 ## car/cdr Dispatch
 
-Both `car` and `cdr` in `inst/arl/list.arl` use three-way type dispatch:
+Both `car` and `cdr` are byte-compiled builtins defined in `R/engine.R` that use three-way type dispatch:
 
-1. **Cons** (`pair?` is true) — field access via `(r-call "[[" (list lst "car"))` / `"cdr"`
+1. **Cons** (`r6_isinstance(lst, "Cons")`) — field access via `lst$car` / `lst$cdr`
 2. **R call** (`is.call`) — element extraction with `[[` for car, sublist `[` for cdr
 3. **R list** (`is.list`) — same element extraction pattern
 
-This unifies the two representations under a single API. Both return `#nil` for empty inputs.
+This unifies the two representations under a single API. Both return `NULL` for empty inputs.
 
 ## Predicate Design
 
@@ -82,9 +80,12 @@ This unifies the two representations under a single API. Both return `#nil` for 
 
 ## Builtins
 
-Three Cons-related primitives are installed in `builtins_env` (see `install_builtins` in `R/engine.R`):
+The following Cons-related primitives are installed in `builtins_env` (see `R/engine.R`):
 
-- `.__cons` — creates `Cons$new(car, cdr)`
+- `cons` — byte-compiled; dispatches on cdr type (call, list, or Cons)
+- `car` — byte-compiled; three-way type dispatch
+- `cdr` — byte-compiled; three-way type dispatch
+- `.__cons` — creates `Cons$new(car, cdr)` directly
 - `.__cons-as-list` — calls `as_list()` on a Cons (or returns empty list)
 - `.__cons-parts` — calls `parts()` on a Cons (or returns trivial prefix/tail)
 - `pair?` — tests `r6_isinstance(x, "Cons")`
@@ -99,13 +100,13 @@ Three Cons-related primitives are installed in `builtins_env` (see `install_buil
 **Cons**:
 - Two representations means every list-processing function in the stdlib must handle both (or delegate to `car`/`cdr`)
 - `base::is.list()` returns `FALSE` for R calls (quoted forms), which can surprise R interop code — `list?` in Arl returns `#t` for calls, but R's `is.list` does not
-- The `_as-list` utility (from `_utils.arl`) is needed throughout the stdlib to normalize calls to lists before R operations
+- The `_as-list` builtin is needed throughout the stdlib to normalize calls to lists before R operations
 
 ## Reference Files
 
 - `R/cells.R` — Cons and Promise R6 classes
-- `inst/arl/list.arl` — car, cdr, cons, and composed accessors
+- `R/engine.R` — car, cdr, cons builtins and Cons-related internal builtins
+- `inst/arl/list.arl` — composed accessors (caar, cadr, cddr, etc.)
 - `inst/arl/types.arl` — list?, pair?, list-or-pair?, null? predicates
 - `R/parser.R` — dotted-pair parsing (in `parse_list`)
 - `R/compiler.R` — Cons decomposition in lambda params (in `compile_lambda`)
-- `R/engine.R` — Cons builtin installation (in `install_builtins`)
