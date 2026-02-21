@@ -1,8 +1,4 @@
 # Remaining edge case tests for Arl standard library
-# List operation edge cases moved to test-stdlib-edge-list.R
-# Higher-order function edge cases moved to test-stdlib-edge-functions.R
-# Sequence operation edge cases moved to test-stdlib-edge-sequences.R
-# Predicates edge cases moved to test-stdlib-edge-predicates.R
 # String edge cases moved to test-stdlib-strings.R
 # Math boundary conditions moved to test-stdlib-math.R
 

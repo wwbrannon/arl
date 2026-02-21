@@ -616,3 +616,115 @@ test_that("identity elimination preserves evaluation order", {
 })
 
 # Note: Optimization verification tests moved to test-compiler-optimizations.R
+
+# ============================================================================
+# Integration: factorial recursion
+# ============================================================================
+
+test_that("factorial function works", {
+  engine <- make_engine()
+  env <- new.env()
+
+  # Define factorial using recursion
+  factorial_def <- "
+    (define factorial
+      (lambda (n)
+        (if (< n 2)
+          1
+          (* n (factorial (- n 1))))))
+  "
+
+  engine$eval(engine$read(factorial_def)[[1]], env = env)
+
+  # Test factorial
+  result <- engine$eval(engine$read("(factorial 5)")[[1]], env = env)
+  expect_equal(result, 120)
+
+  result <- engine$eval(engine$read("(factorial 0)")[[1]], env = env)
+  expect_equal(result, 1)
+
+  result <- engine$eval(engine$read("(factorial 1)")[[1]], env = env)
+  expect_equal(result, 1)
+
+  result <- engine$eval(engine$read("(factorial 10)")[[1]], env = env)
+  expect_equal(result, 3628800)
+})
+
+# ============================================================================
+# inspect_compilation
+# ============================================================================
+
+test_that("inspect_compilation returns a list with expected names", {
+  engine <- Engine$new(load_prelude = FALSE)
+  out <- engine$inspect_compilation("(+ 1 2)")
+  expect_named(out, c("parsed", "expanded", "compiled", "compiled_deparsed"))
+})
+
+test_that("inspect_compilation on compilable expression returns right-shaped results", {
+  engine <- Engine$new(load_prelude = FALSE)
+  out <- engine$inspect_compilation("(+ 1 2)")
+  expect_true(is.language(out$parsed))
+  expect_true(is.language(out$expanded))
+  # Compiled can be a language object or a literal (if constant-folded)
+  expect_true(is.language(out$compiled) || is.atomic(out$compiled))
+  expect_type(out$compiled_deparsed, "character")
+  expect_true(length(out$compiled_deparsed) >= 1L)
+  expect_false(any(is.na(out$compiled_deparsed)))
+})
+
+test_that("inspect_compilation keeps compiled and compiled_deparsed in sync", {
+  engine <- Engine$new(load_prelude = FALSE)
+  # By design: no expression -> no compiled form. When there is one, both are set or both NULL.
+  out_empty <- engine$inspect_compilation("")
+  expect_null(out_empty$compiled)
+  expect_null(out_empty$compiled_deparsed)
+  out_simple <- engine$inspect_compilation("(+ 1 2)")
+  if (!is.null(out_simple$compiled)) {
+    expect_false(is.null(out_simple$compiled_deparsed))
+  } else {
+    expect_true(is.null(out_simple$compiled_deparsed))
+  }
+})
+
+test_that("inspect_compilation on empty text returns all NULL", {
+  engine <- Engine$new(load_prelude = FALSE)
+  out <- engine$inspect_compilation("")
+  expect_null(out$parsed)
+  expect_null(out$expanded)
+  expect_null(out$compiled)
+  expect_null(out$compiled_deparsed)
+})
+
+test_that("inspect_compilation accepts env and uses it for expansion", {
+  engine <- Engine$new(load_prelude = FALSE)
+  env <- new.env(parent = baseenv())
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("control"), env = env)
+  # With control loaded, (when x 42) is a real macro that expands to (if x (begin 42) #nil)
+  out <- engine$inspect_compilation("(when x 42)", env = env)
+  expect_named(out, c("parsed", "expanded", "compiled", "compiled_deparsed"))
+  expect_true(is.language(out$parsed))
+  expect_true(is.language(out$expanded))
+  # Expanded form should differ from parsed since when is a macro
+  expect_true(is.language(out$compiled) || is.null(out$compiled))
+  if (!is.null(out$compiled_deparsed)) {
+    expect_type(out$compiled_deparsed, "character")
+    expect_true(length(out$compiled_deparsed) >= 1L)
+  }
+})
+
+test_that("inspect_compilation with env = NULL uses engine environment", {
+  engine <- Engine$new(load_prelude = FALSE)
+  out <- engine$inspect_compilation("(* 2 3)", env = NULL)
+  # Compiled can be a language object or a literal (if constant-folded)
+  expect_true(is.language(out$compiled) || is.atomic(out$compiled))
+  expect_type(out$compiled_deparsed, "character")
+})
+
+test_that("compiled_deparsed when present is parseable R code", {
+  engine <- Engine$new(load_prelude = FALSE)
+  out <- engine$inspect_compilation("(if #t 1 2)")
+  skip_if(is.null(out$compiled), "Compiler returned NULL for this expression")
+  parsed_back <- tryCatch(parse(text = out$compiled_deparsed), error = function(e) NULL)
+  expect_true(is.language(parsed_back), info = "compiled_deparsed should parse as valid R")
+})

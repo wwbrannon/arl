@@ -369,3 +369,325 @@ test_that("curry with 3-arg function enables multi-step partial application", {
   result <- engine$eval(engine$read("(((add3 1) 2) 3)")[[1]], env = env)
   expect_equal(result, 6)
 })
+
+# ============================================================================
+# Multi-list map
+# ============================================================================
+
+test_that("map works with multiple lists", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Two lists with +
+  result <- engine$eval(
+    engine$read("(map + '(1 2 3) '(4 5 6))")[[1]], env = env)
+  expect_equal(result, list(5, 7, 9))
+
+  # Three lists
+  result <- engine$eval(
+    engine$read("(map + '(1 2 3) '(4 5 6) '(7 8 9))")[[1]], env = env)
+  expect_equal(result, list(12, 15, 18))
+
+  # Single list still works (backward compat)
+  result <- engine$eval(
+    engine$read("(map (lambda (x) (* x 2)) '(1 2 3))")[[1]], env = env)
+  expect_equal(result, list(2, 4, 6))
+
+  # Multi-list with lambda
+  result <- engine$eval(
+    engine$read("(map (lambda (a b) (list a b)) '(1 2 3) '(x y z))")[[1]], env = env)
+  expect_equal(result, list(list(1, quote(x)), list(2, quote(y)), list(3, quote(z))))
+})
+
+test_that("multi-list map with empty lists", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  result <- engine$eval(
+    engine$read("(map + '() '())")[[1]], env = env)
+  expect_equal(result, list())
+})
+
+# ============================================================================
+# for-each
+# ============================================================================
+
+test_that("for-each applies side effects and returns nil", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Side effects happen, returns nil
+  result <- engine$eval(engine$read("
+    (begin
+      (define acc (list))
+      (for-each (lambda (x) (set! acc (c acc (list (* x 2))))) '(1 2 3))
+      acc)
+  ")[[1]], env = env)
+  expect_equal(result, list(2, 4, 6))
+
+  # Returns nil
+  result <- engine$eval(engine$read("
+    (for-each (lambda (x) x) '(1 2 3))
+  ")[[1]], env = env)
+  expect_null(result)
+})
+
+test_that("for-each works with multiple lists", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  result <- engine$eval(engine$read("
+    (begin
+      (define acc (list))
+      (for-each (lambda (a b) (set! acc (c acc (list (+ a b))))) '(1 2 3) '(10 20 30))
+      acc)
+  ")[[1]], env = env)
+  expect_equal(result, list(11, 22, 33))
+})
+
+# ============================================================================
+# count
+# ============================================================================
+
+test_that("count counts matching elements", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  result <- engine$eval(
+    engine$read("(count even? '(1 2 3 4 5 6))")[[1]], env = env)
+  expect_equal(result, 3)
+
+  # None match
+  result <- engine$eval(
+    engine$read("(count even? '(1 3 5))")[[1]], env = env)
+  expect_equal(result, 0)
+
+  # All match
+  result <- engine$eval(
+    engine$read("(count even? '(2 4 6))")[[1]], env = env)
+  expect_equal(result, 3)
+
+  # Empty list
+  result <- engine$eval(
+    engine$read("(count even? '())")[[1]], env = env)
+  expect_equal(result, 0)
+})
+
+# ============================================================================
+# map-indexed
+# ============================================================================
+
+test_that("map-indexed passes index and element", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  result <- engine$eval(
+    engine$read("(map-indexed list '(a b c))")[[1]], env = env)
+  expect_equal(result, list(list(0, quote(a)), list(1, quote(b)), list(2, quote(c))))
+
+  # Empty list
+  result <- engine$eval(
+    engine$read("(map-indexed list '())")[[1]], env = env)
+  expect_equal(result, list())
+})
+
+test_that("map-indexed with computation", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  result <- engine$eval(
+    engine$read("(map-indexed (lambda (i x) (+ i x)) '(10 20 30))")[[1]], env = env)
+  expect_equal(result, list(10, 21, 32))
+})
+
+# ============================================================================
+# group-by
+# ============================================================================
+
+test_that("group-by groups by key function", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("dict"), env = env)
+
+  result <- engine$eval(engine$read("(group-by even? '(1 2 3 4 5 6))")[[1]], env = env)
+
+  # Result should be a dict
+  expect_true(get("dict?", envir = env)(result))
+
+  # Check grouped values
+  true_group <- get("dict-get", envir = env)(result, "TRUE")
+  false_group <- get("dict-get", envir = env)(result, "FALSE")
+  expect_equal(true_group, list(2, 4, 6))
+  expect_equal(false_group, list(1, 3, 5))
+})
+
+test_that("group-by with string key function", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("dict", "strings"), env = env)
+
+  result <- engine$eval(engine$read("
+    (group-by string-length '(\"hi\" \"hey\" \"ok\" \"foo\" \"a\"))
+  ")[[1]], env = env)
+
+  expect_true(get("dict?", envir = env)(result))
+  expect_equal(get("dict-get", envir = env)(result, "2"), list("hi", "ok"))
+  expect_equal(get("dict-get", envir = env)(result, "3"), list("hey", "foo"))
+  expect_equal(get("dict-get", envir = env)(result, "1"), list("a"))
+})
+
+test_that("group-by with empty list", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("dict"), env = env)
+
+  result <- engine$eval(engine$read("(group-by even? '())")[[1]], env = env)
+  expect_true(get("dict?", envir = env)(result))
+  expect_equal(get("dict-keys", envir = env)(result), list())
+})
+
+# ============================================================================
+# frequencies
+# ============================================================================
+
+test_that("frequencies counts element occurrences", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("dict"), env = env)
+
+  result <- engine$eval(engine$read("(frequencies '(a b a c b a))")[[1]], env = env)
+
+  expect_true(get("dict?", envir = env)(result))
+  expect_equal(get("dict-get", envir = env)(result, "a"), 3)
+  expect_equal(get("dict-get", envir = env)(result, "b"), 2)
+  expect_equal(get("dict-get", envir = env)(result, "c"), 1)
+})
+
+test_that("frequencies with empty list", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("dict"), env = env)
+
+  result <- engine$eval(engine$read("(frequencies '())")[[1]], env = env)
+  expect_true(get("dict?", envir = env)(result))
+  expect_equal(get("dict-keys", envir = env)(result), list())
+})
+
+test_that("frequencies with numbers", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+  import_stdlib_modules(engine, c("dict"), env = env)
+
+  result <- engine$eval(engine$read("(frequencies '(1 2 1 1 3 2))")[[1]], env = env)
+  expect_true(get("dict?", envir = env)(result))
+  expect_equal(get("dict-get", envir = env)(result, "1"), 3)
+  expect_equal(get("dict-get", envir = env)(result, "2"), 2)
+  expect_equal(get("dict-get", envir = env)(result, "3"), 1)
+})
+
+# ============================================================================
+# Edge cases: higher-order functions
+# ============================================================================
+
+test_that("map handles edge cases", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Empty list
+  expect_equal(get("map", envir = env)(function(x) x * 2, list()), list())
+
+  # Single element
+  expect_equal(get("map", envir = env)(function(x) x * 2, list(5)), list(10))
+
+  # Function returning NULL
+  result <- get("map", envir = env)(function(x) NULL, list(1, 2, 3))
+  expect_equal(length(result), 3)
+  expect_null(result[[1]])
+
+  # Identity function
+  expect_equal(get("map", envir = env)(function(x) x, list(1, 2, 3)), list(1, 2, 3))
+})
+
+test_that("filter handles edge cases", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Empty list
+  expect_equal(get("filter", envir = env)(function(x) TRUE, list()), list())
+
+  # All match
+  expect_equal(get("filter", envir = env)(function(x) TRUE, list(1, 2, 3)), list(1, 2, 3))
+
+  # None match
+  expect_equal(get("filter", envir = env)(function(x) FALSE, list(1, 2, 3)), list())
+
+  # Single element matches
+  expect_equal(get("filter", envir = env)(function(x) x == 2, list(1, 2, 3)), list(2))
+})
+
+test_that("reduce handles edge cases", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Single element
+  expect_equal(get("reduce", envir = env)(`+`, list(42)), 42)
+
+  # Two elements
+  expect_equal(get("reduce", envir = env)(`+`, list(1, 2)), 3)
+
+  # String concatenation
+  concat <- function(a, b) paste0(a, b)
+  expect_equal(get("reduce", envir = env)(concat, list("a", "b", "c")), "abc")
+})
+
+test_that("mapcat handles edge cases", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Empty list
+  expect_equal(get("mapcat", envir = env)(function(x) list(x), list()), list())
+
+  # Function returning empty lists
+  expect_equal(get("mapcat", envir = env)(function(x) list(), list(1, 2, 3)), list())
+
+  # Function returning single element
+  expect_equal(get("mapcat", envir = env)(function(x) list(x), list(1, 2)), list(1, 2))
+
+  # Mixed result sizes
+  result <- get("mapcat", envir = env)(function(x) if (x == 1) list(x) else list(x, x), list(1, 2, 3))
+  expect_equal(result, list(1, 2, 2, 3, 3))
+})
+
+test_that("every? and any? handle edge cases", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Empty list - every? should be TRUE (vacuous truth)
+  expect_true(get("every?", envir = env)(function(x) FALSE, list()))
+
+  # Empty list - any? should be FALSE
+  expect_false(get("any?", envir = env)(function(x) TRUE, list()))
+
+  # Single element
+  expect_true(get("every?", envir = env)(function(x) x > 0, list(5)))
+  expect_true(get("any?", envir = env)(function(x) x > 0, list(5)))
+
+  # All same value
+  expect_true(get("every?", envir = env)(function(x) x == 1, list(1, 1, 1)))
+})
+
+test_that("apply handles edge cases", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  # Single argument
+  expect_equal(get("funcall", envir = env)(identity, list(42)), 42)
+
+  # Empty list (should work if function accepts no args)
+  zero_arg_fn <- function() 42
+  expect_equal(get("funcall", envir = env)(zero_arg_fn, list()), 42)
+
+  # Many arguments
+  many_sum <- function(...) sum(...)
+  expect_equal(get("funcall", envir = env)(many_sum, as.list(1:100)), 5050)
+})

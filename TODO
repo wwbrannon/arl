@@ -1,14 +1,10 @@
-o) enable actions / get non-pkgdown workflows running
-
-o) review all the docs
-
 words to write yourself
 o) figure out citation
 o) top couple paras of Getting Started, README and index.md need updating
-o) DESCRIPTION title and description
+o) DESCRIPTION title and description fields
 
-o) logo?
-
+o) review all the docs
 o) figure out how to host the docs
+o) add url, links
 
 o) run other cran submission steps and submit

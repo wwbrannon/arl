@@ -1,7 +1,47 @@
-# Tests for new set.arl additions:
-# set->list, list->set, set-size, set-map, set-filter
+# Set operation tests
 
 engine <- make_engine()
+
+# ============================================================================
+# Basic set operations (from collections)
+# ============================================================================
+
+test_that("basic set operations work", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  set_values <- function(set) {
+    keys <- ls(envir = set, all.names = TRUE, sorted = FALSE)
+    if (length(keys) == 0) {
+      return(list())
+    }
+    as.list(mget(keys, envir = set, inherits = FALSE))
+  }
+  set <- get("set", envir = env)(1, 2, 2, 3)
+  expect_true(get("set?", envir = env)(set))
+  expect_true(get("set-contains?", envir = env)(set, 2))
+  expect_false(get("set-contains?", envir = env)(set, 4))
+
+  updated_set <- get("set-add", envir = env)(set, 4)
+  expect_true(get("set-contains?", envir = env)(updated_set, 4))
+
+  removed_set <- get("set-remove", envir = env)(set, 2)
+  expect_false(get("set-contains?", envir = env)(removed_set, 2))
+
+  union_set <- get("set-union", envir = env)(get("set", envir = env)(1, 2), get("set", envir = env)(2, 3))
+  expect_true(get("set-contains?", envir = env)(union_set, 1))
+  expect_true(get("set-contains?", envir = env)(union_set, 2))
+  expect_true(get("set-contains?", envir = env)(union_set, 3))
+
+  intersection_set <- get("set-intersection", envir = env)(get("set", envir = env)(1, 2), get("set", envir = env)(2, 3))
+  expect_true(get("set-contains?", envir = env)(intersection_set, 2))
+  expect_false(get("set-contains?", envir = env)(intersection_set, 1))
+
+  difference_set <- get("set-difference", envir = env)(get("set", envir = env)(1, 2), get("set", envir = env)(2, 3))
+  expect_true(get("set-contains?", envir = env)(difference_set, 1))
+  expect_false(get("set-contains?", envir = env)(difference_set, 2))
+  expect_equal(length(set_values(difference_set)), 1)
+})
 
 # ============================================================================
 # set->list

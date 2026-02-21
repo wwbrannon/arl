@@ -1,7 +1,33 @@
-# Tests for new dict.arl additions:
-# dict-update, dict-map, dict-filter, dict-for-each, dict->alist, alist->dict
+# Dict operation tests
 
 engine <- make_engine()
+
+# ============================================================================
+# Basic dict operations (from collections)
+# ============================================================================
+
+test_that("basic dict operations work", {
+  env <- new.env()
+  toplevel_env(engine, env = env)
+
+  dict <- get("dict", envir = env)(a = 1, b = 2)
+  expect_equal(get("dict-get", envir = env)(dict, "a"), 1)
+  expect_equal(get("dict-get", envir = env)(dict, "missing", 99), 99)
+  expect_true(get("dict-has?", envir = env)(dict, "b"))
+  expect_false(get("dict-has?", envir = env)(dict, "c"))
+  expect_equal(get("dict-keys", envir = env)(dict), list("a", "b"))
+  expect_equal(get("dict-values", envir = env)(dict), list(1, 2))
+
+  updated <- get("dict-set", envir = env)(dict, "c", 3)
+  expect_equal(get("dict-get", envir = env)(updated, "c"), 3)
+  removed <- get("dict-remove", envir = env)(updated, "a")
+  expect_false(get("dict-has?", envir = env)(removed, "a"))
+
+  merged <- get("dict-merge", envir = env)(get("dict", envir = env)(a = 1, b = 2), get("dict", envir = env)(b = 3, c = 4))
+  expect_equal(get("dict-get", envir = env)(merged, "a"), 1)
+  expect_equal(get("dict-get", envir = env)(merged, "b"), 3)
+  expect_equal(get("dict-get", envir = env)(merged, "c"), 4)
+})
 
 # ============================================================================
 # dict-update
