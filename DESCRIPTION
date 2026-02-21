@@ -13,7 +13,7 @@ Description: Arl is a Scheme-inspired Lisp embedded in R. It provides macros,
     data structures. Implemented in pure R with no compiled code.
 License: MIT + file LICENSE
 Depends:
-    R (>= 3.6)
+    R (>= 4.0)
 Imports:
     R6 (>= 2.5.0)
 Suggests:

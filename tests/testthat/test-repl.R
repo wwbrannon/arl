@@ -81,11 +81,11 @@ test_that("REPL read_form returns NULL on EOF", {
 
 # Version and History Path Functions ----
 
-test_that("REPL history_path_default returns home directory path", {
+test_that("REPL history_path_default uses R_user_dir", {
   repl <- arl:::REPL$new()
   path <- repl$history_path_default()
-  expect_match(path, "\\.arl_history$")
-  expect_type(path, "character")
+  expect_match(path, "arl_history$")
+  expect_equal(path, file.path(tools::R_user_dir("arl", "data"), "arl_history"))
 })
 
 # History Management Functions ----

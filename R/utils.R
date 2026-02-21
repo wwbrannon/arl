@@ -1,3 +1,22 @@
+# Check whether a path lives under any directory in .libPaths().
+is_in_library_tree <- function(path) {
+  path <- normalizePath(path, mustWork = FALSE, winslash = "/")
+  for (lib in .libPaths()) {
+    lib <- normalizePath(lib, mustWork = FALSE, winslash = "/")
+    if (startsWith(path, paste0(lib, "/"))) return(TRUE)
+  }
+  FALSE
+}
+
+# Compute the MD5 hash of a character string via a tempfile.
+# (tools::md5sum(bytes=) requires R >= 4.5; we target R >= 4.0.)
+md5_string <- function(s) {
+  tf <- tempfile()
+  on.exit(unlink(tf))
+  writeLines(s, tf, useBytes = TRUE)
+  unname(tools::md5sum(tf))
+}
+
 # Package identity -- change this single value when renaming the package.
 # Used to derive option names (e.g. "arl.disable_tco") and filesystem
 # paths (e.g. ".arl_cache", "~/.arl_history").

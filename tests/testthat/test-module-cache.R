@@ -540,3 +540,41 @@ test_that("code cache reused across engine instances", {
   registry2 <- arl_env2$module_registry
   expect_true(registry2$exists("test-module"))
 })
+
+# --- library-tree redirect ---
+
+test_that("get_paths() redirects cache to R_user_dir when source is in .libPaths()", {
+  cache <- arl:::ModuleCache$new()
+
+  # Create a temp file inside a .libPaths() directory
+  lib_dir <- .libPaths()[1]
+  tmp_file <- tempfile(tmpdir = lib_dir, fileext = ".arl")
+  writeLines("(module lib-test (export x) (define x 1))", tmp_file)
+  on.exit(unlink(tmp_file), add = TRUE)
+
+  paths <- cache$get_paths(tmp_file)
+  expect_false(is.null(paths))
+
+  # Cache dir should be under R_user_dir, not next to the source
+  user_cache <- tools::R_user_dir("arl", "cache")
+  expect_true(startsWith(normalizePath(paths$cache_dir, mustWork = FALSE, winslash = "/"),
+                         normalizePath(user_cache, mustWork = FALSE, winslash = "/")),
+              info = "cache_dir should be under R_user_dir for library-tree sources")
+  expect_true(grepl("/modules/", paths$cache_dir),
+              info = "cache_dir should contain /modules/ subdirectory")
+})
+
+test_that("get_paths() uses local cache for non-library-tree sources", {
+  cache <- arl:::ModuleCache$new()
+
+  tmp_file <- tempfile(fileext = ".arl")
+  writeLines("(module tmp-test (export x) (define x 1))", tmp_file)
+  on.exit(unlink(tmp_file), add = TRUE)
+
+  paths <- cache$get_paths(tmp_file)
+  expect_false(is.null(paths))
+
+  # Cache dir should be next to the source file
+  expect_equal(paths$cache_dir,
+               file.path(dirname(tmp_file), ".arl_cache"))
+})

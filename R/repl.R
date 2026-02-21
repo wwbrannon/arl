@@ -111,7 +111,7 @@ REPL <- R6::R6Class(
     },
     # @description Return the default history file path.
     history_path_default = function() {
-      path.expand(paste0("~/.", .pkg_name, "_history"))
+      file.path(tools::R_user_dir(.pkg_name, "data"), paste0(.pkg_name, "_history"))
     },
     # @description Determine whether readline history can be used.
     can_use_history = function() {
@@ -231,6 +231,8 @@ REPL <- R6::R6Class(
       if (!isTRUE(self$history_state$enabled)) {
         return(invisible(NULL))
       }
+      hist_dir <- dirname(self$history_state$path)
+      if (!dir.exists(hist_dir)) dir.create(hist_dir, recursive = TRUE)
       try(utils::savehistory(self$history_state$path), silent = TRUE)
       if (!is.null(self$history_state$snapshot)) {
         try(utils::loadhistory(self$history_state$snapshot), silent = TRUE)

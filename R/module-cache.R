@@ -25,6 +25,12 @@ ModuleCache <- R6::R6Class(
       file_hash <- tools::md5sum(src_file)
 
       cache_dir <- file.path(dirname(src_file), paste0(".", .pkg_name, "_cache"))
+      if (is_in_library_tree(src_file)) {
+        src_dir <- normalizePath(dirname(src_file), mustWork = FALSE, winslash = "/")
+        dir_hash <- md5_string(src_dir)
+        safe_dir <- paste0(basename(src_dir), "-", substr(dir_hash, 1, 12))
+        cache_dir <- file.path(tools::R_user_dir(.pkg_name, "cache"), "modules", safe_dir)
+      }
       base_name <- basename(src_file)
 
       list(
@@ -108,7 +114,11 @@ ModuleCache <- R6::R6Class(
 
         TRUE
       }, error = function(e) {
-        warning(sprintf("Failed to write code cache for %s: %s", module_name, conditionMessage(e)))
+        cd <- paths$cache_dir
+        if (!(cd %in% private$.warned_dirs)) {
+          warning(sprintf("Failed to write code cache in %s: %s", cd, conditionMessage(e)))
+          private$.warned_dirs <- c(private$.warned_dirs, cd)
+        }
         FALSE
       })
     },
@@ -150,6 +160,7 @@ ModuleCache <- R6::R6Class(
   ),
 
   private = list(
+    .warned_dirs = character(0),
     #' @description Walk compiled expression tree, replace tagged closures with
     #' symbolic placeholders so they can be serialized without capturing entire
     #' environments.
