@@ -64,12 +64,33 @@ Compiler <- R6::R6Class(
     annotations = NULL,
     # Raw source text for annotation parsing when no file is available (set by eval_text).
     source_text = NULL,
+    # Monotonic counter for generating unique symbols when macro expander is unavailable.
+    gensym_counter = 0L,
+    # Generate a unique symbol using the instance counter (avoids package-global state).
+    compiler_gensym = function(prefix) {
+      self$gensym_counter <- self$gensym_counter + 1L
+      as.symbol(paste0(prefix, self$gensym_counter))
+    },
     # @param context EvalContext (for source_tracker).
     initialize = function(context) {
       if (!inherits(context, "ArlEvalContext")) {
         stop("Compiler requires an EvalContext")
       }
       self$context <- context
+    },
+    # @description Get compiler optimization flags as a named logical vector.
+    # @return Named logical vector of compiler flags.
+    get_flags = function() {
+      c(
+        enable_tco = self$enable_tco,
+        enable_constant_folding = self$enable_constant_folding,
+        enable_dead_code_elim = self$enable_dead_code_elim,
+        enable_strength_reduction = self$enable_strength_reduction,
+        enable_identity_elim = self$enable_identity_elim,
+        enable_truthiness_opt = self$enable_truthiness_opt,
+        enable_begin_simplify = self$enable_begin_simplify,
+        enable_boolean_flatten = self$enable_boolean_flatten
+      )
     },
     # @description Compile one expression. Returns R expression or NULL (cannot compile).
     # @param expr Macro-expanded Arl expression.
@@ -211,7 +232,7 @@ Compiler <- R6::R6Class(
         if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
           return(self$context$macro_expander$gensym(".__tmp"))
         }
-        as.symbol(paste0(".__tmp", as.integer(stats::runif(1, 1, 1e9))))
+        self$compiler_gensym(".__tmp")
       }
 
       build <- function(idx) {
@@ -380,6 +401,21 @@ Compiler <- R6::R6Class(
       }
       # Inner has code that needs evaluation — build (form_name <inner>) at runtime
       as.call(list(quote(as.call), as.call(list(quote(list), as.call(list(quote(quote), sym)), inner))))
+    },
+    # Check if a compiled R expression references the env var (.__env).
+    # Used to skip the .__env <- environment() preamble in simple lambdas.
+    references_env_var = function(expr) {
+      env_sym <- self$env_var_name
+      check <- function(x) {
+        if (is.symbol(x)) return(identical(as.character(x), env_sym))
+        if (is.call(x) || is.pairlist(x)) {
+          for (i in seq_along(x)) {
+            if (!is.null(x[[i]]) && check(x[[i]])) return(TRUE)
+          }
+        }
+        FALSE
+      }
+      check(expr)
     },
     compile_quasiquote_impl = function(template, depth) {
       env_sym <- as.symbol(self$env_var_name)
@@ -589,7 +625,7 @@ Compiler <- R6::R6Class(
       tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
         self$context$macro_expander$gensym(".__define_value")
       } else {
-        as.symbol(paste0(".__define_value", as.integer(stats::runif(1, 1, 1e9))))
+        self$compiler_gensym(".__define_value")
       }
       assign_tmp <- as.call(list(quote(`<-`), tmp_sym, val))
 
@@ -693,7 +729,7 @@ Compiler <- R6::R6Class(
           rest_param_name <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
             as.character(self$context$macro_expander$gensym(".__rest"))
           } else {
-            paste0(".__rest", as.integer(stats::runif(1, 1, 1e9)))
+            as.character(self$compiler_gensym(".__rest"))
           }
         }
         if (private$has_self_tail_calls(body_exprs, self_name)) {
@@ -773,7 +809,8 @@ Compiler <- R6::R6Class(
         # Interleave coverage tracking calls (fires at call time, not definition time)
         compiled_body <- private$interleave_coverage(body_exprs, compiled_body)
       }
-      # Prepend .__env <- environment() so closure body sees correct current env
+      # Prepend .__env <- environment() so closure body sees correct current env.
+      # Skip this for simple lambdas whose body never references .__env (avoids overhead).
       env_bind <- as.call(list(quote(`<-`), as.symbol(self$env_var_name), quote(environment())))
       # When use_tco is TRUE, rest binding and param_bindings are already handled
       # inside/around the TCO loop, so skip them here.
@@ -782,11 +819,20 @@ Compiler <- R6::R6Class(
       has_rest_pattern <- !use_tco && !is.null(params$rest_param_spec) &&
         identical(params$rest_param_spec$type, "pattern")
       n_rest_spec <- if (has_rest_pattern) 1L else 0L
-      size <- 1L + n_rest + n_bindings + n_rest_spec + length(compiled_body)
+      # Check if body (or param bindings) reference .__env; if not, skip the assignment
+      needs_env <- n_bindings > 0L || n_rest_spec > 0L || use_tco
+      if (!needs_env) {
+        body_block <- as.call(c(list(quote(`{`)), compiled_body))
+        needs_env <- private$references_env_var(body_block)
+      }
+      n_env <- if (needs_env) 1L else 0L
+      size <- n_env + n_rest + n_bindings + n_rest_spec + length(compiled_body)
       body_parts <- vector("list", size)
       idx <- 1
-      body_parts[[idx]] <- env_bind
-      idx <- idx + 1
+      if (needs_env) {
+        body_parts[[idx]] <- env_bind
+        idx <- idx + 1
+      }
       if (n_rest > 0L) {
         body_parts[[idx]] <- as.call(list(quote(`<-`), as.symbol(params$rest_param), quote(list(...))))
         idx <- idx + 1
@@ -897,7 +943,7 @@ Compiler <- R6::R6Class(
             tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
               self$context$macro_expander$gensym(".__arg")
             } else {
-              as.symbol(paste0(".__arg", as.integer(stats::runif(1, 1, 1e9))))
+              self$compiler_gensym(".__arg")
             }
             tmp_name <- as.character(tmp_sym)
             if (length(arg) == 3) {

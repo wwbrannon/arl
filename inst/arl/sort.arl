@@ -33,24 +33,25 @@
   (define list-sort
     (lambda (lst comparator)
       (define items (_as-list lst))
-      (if (<= (length items) 1)
+      (define n (length items))
+      (if (<= n 1)
         items
         (begin
-          ;; Simple quicksort
-          (define pivot (car items))
-          (define rest-items (cdr items))
-          ;; Partition into less and greater
+          ;; Simple quicksort with index-based partitioning
+          (define pivot ([[ items 1))
+          ;; Partition into less and greater using cons + reverse (O(n))
           (define less (list))
           (define greater (list))
-          (define remaining rest-items)
-          (while (not (null? remaining))
-            (if (comparator (car remaining) pivot)
-              (set! less (append less (list (car remaining))))
-              (set! greater (append greater (list (car remaining)))))
-            (set! remaining (cdr remaining)))
-          (append (list-sort less comparator)
+          (define i 2)
+          (while (<= i n)
+            (define elem ([[ items i))
+            (if (comparator elem pivot)
+              (set! less (cons elem less))
+              (set! greater (cons elem greater)))
+            (set! i (+ i 1)))
+          (append (list-sort (rev less) comparator)
                   (list pivot)
-                  (list-sort greater comparator))))))
+                  (list-sort (rev greater) comparator))))))
 
   ;;' @description Sort list by applying key-fn to each element, then comparing.
   ;;' @param lst List to sort
@@ -93,19 +94,28 @@
     (lambda (list1 list2 comparator)
       (define l1 (_as-list list1))
       (define l2 (_as-list list2))
+      (define n1 (length l1))
+      (define n2 (length l2))
+      ;; Build result in reverse using cons, then reverse at end (O(n))
       (define acc (list))
-      (while (and (not (null? l1)) (not (null? l2)))
+      (define i1 1)
+      (define i2 1)
+      (while (and (<= i1 n1) (<= i2 n2))
         ;; Take from l2 only when l2 is strictly less than l1; otherwise take from l1 (stable)
-        (if (comparator (car l2) (car l1))
+        (if (comparator ([[ l2 i2) ([[ l1 i1))
           (begin
-            (set! acc (cons (car l2) acc))
-            (set! l2 (cdr l2)))
+            (set! acc (cons ([[ l2 i2) acc))
+            (set! i2 (+ i2 1)))
           (begin
-            (set! acc (cons (car l1) acc))
-            (set! l1 (cdr l1)))))
-      (if (null? l1)
-        (append (reverse acc) l2)
-        (append (reverse acc) l1))))
+            (set! acc (cons ([[ l1 i1) acc))
+            (set! i1 (+ i1 1)))))
+      (while (<= i1 n1)
+        (set! acc (cons ([[ l1 i1) acc))
+        (set! i1 (+ i1 1)))
+      (while (<= i2 n2)
+        (set! acc (cons ([[ l2 i2) acc))
+        (set! i2 (+ i2 1)))
+      (rev acc)))
 
   ;;' @description Stable sort - preserves order of equal elements. Uses merge sort internally.
   ;;' @param lst List to sort

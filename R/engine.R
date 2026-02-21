@@ -140,6 +140,7 @@ Engine <- R6::R6Class(
     #' @description
     #' Tokenize and parse source into expressions. The format returned by this
     #' method is not guaranteed to be stable across package versions.
+    #' @return A list of parsed Arl expressions (R language objects).
     read = function(source, source_name = NULL) {
       tokens <- private$.tokenizer$tokenize(source)
       private$.parser$parse(tokens, source_name = source_name)
@@ -149,12 +150,14 @@ Engine <- R6::R6Class(
     #' Convert an Arl expression to its string representation. Inverse of read().
     #' The format returned by this method is not guaranteed to be stable across
     #' package versions.
+    #' @return A character string of the Arl source representation.
     write = function(expr) {
       private$.parser$write(expr)
     },
 
     #' @description
     #' Evaluate one or more expressions.
+    #' @return The result of the last evaluated expression.
     eval = function(expr, ..., env = NULL) {
       private$.refresh_pkg_chain_if_needed()
       target_env <- private$resolve_env_arg(env)
@@ -202,6 +205,7 @@ Engine <- R6::R6Class(
     #' @description
     #' Read and evaluate Arl source text. Convenience wrapper around
     #' \code{read()} and \code{eval()}.
+    #' @return The result of the last evaluated expression.
     eval_text = function(text, env = NULL, source_name = "<eval>") {
       exprs <- self$read(text, source_name = source_name)
       if (length(exprs) == 0L) return(invisible(NULL))
@@ -213,6 +217,7 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Alias for \code{eval_text()}.
+    #' @return The result of the last evaluated expression.
     eval_string = function(text, env = NULL, source_name = "<eval>") {
       self$eval_text(text, env = env, source_name = source_name)
     },
@@ -222,6 +227,7 @@ Engine <- R6::R6Class(
     #' and imports in the file are visible in \code{env}. To evaluate in an
     #' isolated child scope, create one explicitly:
     #' \code{load_file_in_env(path, new.env(parent = env))}.
+    #' @return The result of the last evaluated expression (invisibly).
     load_file_in_env = function(path, env = NULL, cache = TRUE) {
       if (!is.character(path) || length(path) != 1) {
         stop("load requires a single file path string")
@@ -367,6 +373,7 @@ Engine <- R6::R6Class(
     #' @param env Optional environment/Env to resolve Arl bindings against.
     #' @param package Optional package name (string or symbol) to force R help
     #'   lookup in a specific package.
+    #' @return Help text (invisibly), or NULL if topic not found.
     help = function(topic, env = NULL, package = NULL) {
       target_env <- private$resolve_env_arg(env)
       private$.help_system$help_in_env(topic, target_env, package = package)
@@ -374,6 +381,7 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Start the Arl REPL using this engine.
+    #' @return NULL (invisibly); called for side effects.
     repl = function() {
       REPL$new(engine = self)$run()
     },
@@ -383,11 +391,8 @@ Engine <- R6::R6Class(
     #'
     #' Creates a coverage tracker and installs it in the eval context.
     #' Should be called before running code you want to track.
+    #' @return The engine (invisibly), for method chaining.
     enable_coverage = function() {
-      if (!requireNamespace("R6", quietly = TRUE)) {
-        stop("R6 package required for coverage tracking")
-      }
-
       # Create tracker if needed
       if (is.null(private$.compiled_runtime$context$coverage_tracker)) {
         private$.compiled_runtime$context$coverage_tracker <- CoverageTracker$new()
@@ -399,6 +404,7 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Disable coverage tracking.
+    #' @return The engine (invisibly), for method chaining.
     disable_coverage = function() {
       if (!is.null(private$.compiled_runtime$context$coverage_tracker)) {
         private$.compiled_runtime$context$coverage_tracker$set_enabled(FALSE)
@@ -489,6 +495,7 @@ Engine <- R6::R6Class(
 
     #' @description
     #' Reset coverage data.
+    #' @return The engine (invisibly), for method chaining.
     reset_coverage = function() {
       if (!is.null(private$.compiled_runtime$context$coverage_tracker)) {
         private$.compiled_runtime$context$coverage_tracker$reset()
@@ -545,6 +552,7 @@ Engine <- R6::R6Class(
     #' Format and print an Arl error with source context.
     #' @param e A condition object.
     #' @param file Connection to print to (default \code{stderr()}).
+    #' @return NULL (invisibly); called for side effects.
     print_error = function(e, file = stderr()) {
       private$.source_tracker$print_error(e, file = file)
     }
@@ -568,17 +576,7 @@ Engine <- R6::R6Class(
     },
 
     get_compiler_flags = function() {
-      comp <- private$.compiler
-      c(
-        enable_tco = comp$enable_tco,
-        enable_constant_folding = comp$enable_constant_folding,
-        enable_dead_code_elim = comp$enable_dead_code_elim,
-        enable_strength_reduction = comp$enable_strength_reduction,
-        enable_identity_elim = comp$enable_identity_elim,
-        enable_truthiness_opt = comp$enable_truthiness_opt,
-        enable_begin_simplify = comp$enable_begin_simplify,
-        enable_boolean_flatten = comp$enable_boolean_flatten
-      )
+      private$.compiler$get_flags()
     },
 
     .build_pkgs_chain = function(pkg_names) {
@@ -801,6 +799,15 @@ Engine <- R6::R6Class(
         if (is.call(lst)) return(as.call(c(list(item), as.list(lst))))
         if (is.list(lst)) return(c(list(item), lst))
         Cons$new(item, lst)
+      })
+
+      # _as-list: R-level coercion for stdlib hot path (avoids Arl function call overhead)
+      builtins_env$`_as-list` <- compiler::cmpfun(function(x) {
+        if (is.list(x)) return(x)
+        if (is.call(x)) return(as.list(x))
+        if (inherits(x, "ArlCons")) return(x$as_list())
+        if (length(x) == 0L) return(list())
+        as.list(x)
       })
 
       #

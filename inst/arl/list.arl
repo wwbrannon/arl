@@ -136,11 +136,13 @@
   ;;' @seealso cons, list*
   (define append
     (lambda (. lists)
+      (define items (_as-list lists))
+      (define n (length items))
       (define result (list))
-      (define remaining (_as-list lists))
-      (while (> (length remaining) 0)
-        (set! result (c result (_as-list (car remaining))))
-        (set! remaining (cdr remaining)))
+      (define i 1)
+      (while (<= i n)
+        (set! result (c result (_as-list ([[ items i))))
+        (set! i (+ i 1)))
       result))
 
   ;;' @description Reverse list.
@@ -271,17 +273,19 @@
   ;;' @description Find first alist entry with matching key using given predicate.
   (define _assoc-by-pred
     (lambda (key alist pred)
+      (define items (_as-list alist))
+      (define n (length items))
       (define result #nil)
-      (define remaining (_as-list alist))
-      (while (and (not (null? remaining)) (not result))
+      (define i 1)
+      (while (and (<= i n) (null? result))
         (begin
-          (define pair (car remaining))
+          (define pair ([[ items i))
           (if (and (list? pair) (>= (length pair) 1))
             (if (pred (car pair) key)
               (set! result pair)
               #nil)
             #nil)
-          (set! remaining (cdr remaining))))
+          (set! i (+ i 1))))
       result))
 
   ;;' @description Find first alist entry (list or dotted pair) with matching key (uses ==).
@@ -352,17 +356,19 @@
   ;;' @seealso assoc, rassoc-by-equal?
   (define rassoc
     (lambda (value alist)
+      (define items (_as-list alist))
+      (define n (length items))
       (define result #nil)
-      (define remaining (_as-list alist))
-      (while (and (not (null? remaining)) (not result))
+      (define i 1)
+      (while (and (<= i n) (null? result))
         (begin
-          (define pair (car remaining))
+          (define pair ([[ items i))
           (if (and (list? pair) (>= (length pair) 2))
             (if (= (cadr pair) value)
               (set! result pair)
               #nil)
             #nil)
-          (set! remaining (cdr remaining))))
+          (set! i (+ i 1))))
       result))
 
   ;;' @description Alias for rassoc: find first alist entry with value matching under equal?.

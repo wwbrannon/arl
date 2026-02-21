@@ -33,7 +33,7 @@
 
 ## Standard Library
 
-* **Sorting module:** `sort`, `sort-by`, `merge`, and `stable-sort` functions.
+* **Sorting module:** `list-sort`, `sort-by`, `merge-sorted`, and `stable-sort` functions.
 * **Dict and set modules:** Hash-backed `dict` and `set` data structures with
   full helper suites (`dict-get`, `dict-set`, `dict-merge`, `set-union`, etc.).
 * **Struct module:** `defstruct` macro for S3-backed struct constructors,

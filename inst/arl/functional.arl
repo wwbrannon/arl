@@ -318,12 +318,12 @@
       (define done #f)
       (while (not done)
         (begin
-          (set! acc (c acc current))
+          (set! acc (cons current acc))
           (define next (fn current))
           (if (pred next)
             (set! done #t)
             (set! current next))))
-      acc))
+      (rev acc)))
 
   ;;' @description Memoize function - cache results for previously seen arguments.
   ;;' @param fn Function whose results to cache by arguments
@@ -413,13 +413,14 @@
   (define group-by
     (lambda (key-fn lst)
       (define items (_as-list lst))
+      (define n (length items))
       (define result (r-call "new.env" (list :hash #t :parent (r-call "emptyenv" (list)))))
       (r-call "class<-" (list result (c (list "arl_dict") (r-call "class" (list result)))))
       (define keys-order (list))
-      (define remaining items)
-      (while (> (length remaining) 0)
+      (define i 1)
+      (while (<= i n)
         (begin
-          (define elem (car remaining))
+          (define elem ([[ items i))
           (define key (r-call "as.character" (list (key-fn elem))))
           (if (r-call "exists" (list key :envir result :inherits #f))
             (begin
@@ -428,7 +429,7 @@
             (begin
               (set! keys-order (c keys-order (list key)))
               (r-call "assign" (list key (list elem) :envir result))))
-          (set! remaining (cdr remaining))))
+          (set! i (+ i 1))))
       (r-call "assign" (list ".__keys" (r-call "as.character" (list keys-order)) :envir result))
       result))
 
@@ -441,13 +442,14 @@
   (define frequencies
     (lambda (lst)
       (define items (_as-list lst))
+      (define n (length items))
       (define result (r-call "new.env" (list :hash #t :parent (r-call "emptyenv" (list)))))
       (r-call "class<-" (list result (c (list "arl_dict") (r-call "class" (list result)))))
       (define keys-order (list))
-      (define remaining items)
-      (while (> (length remaining) 0)
+      (define i 1)
+      (while (<= i n)
         (begin
-          (define elem (car remaining))
+          (define elem ([[ items i))
           (define key (r-call "as.character" (list elem)))
           (if (r-call "exists" (list key :envir result :inherits #f))
             (begin
@@ -456,7 +458,7 @@
             (begin
               (set! keys-order (c keys-order (list key)))
               (r-call "assign" (list key 1 :envir result))))
-          (set! remaining (cdr remaining))))
+          (set! i (+ i 1))))
       (r-call "assign" (list ".__keys" (r-call "as.character" (list keys-order)) :envir result))
       result))
 

@@ -280,7 +280,7 @@ MacroExpander <- R6::R6Class(
       repeat {
         private$gensym_counter <- private$gensym_counter + 1
         candidate <- paste0(prefix, "__", private$gensym_counter)
-        if (is.null(env) || !exists(candidate, envir = env, inherits = TRUE)) {
+        if (is.null(env) || !exists(candidate, envir = if (inherits(env, "ArlEnv")) env$env else env, inherits = TRUE)) {
           return(as.symbol(candidate))
         }
       }

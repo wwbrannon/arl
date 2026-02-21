@@ -225,12 +225,15 @@ The engine loads the **prelude** automatically — 10 modules (`logic`, `core`,
 `threading`) whose exports are available immediately. Functions like `when`,
 `let`, `do-list`, `->`, and `try` come from the prelude and need no import.
 
-Non-prelude modules must be loaded explicitly with `import`:
+Non-prelude modules must be loaded explicitly with `import`. A bare
+`(import X)` makes the module available for qualified access (e.g.
+`math/inc`); add `:refer :all` to also import all exports unqualified:
 
 ```{arl, eval=FALSE}
-(import math :refer :all)      ; inc/dec/abs/clamp/...
+(import math)                  ; math/inc, math/dec, ...
+(import math :refer :all)      ; inc/dec/abs/clamp/... (unqualified)
 (import looping :refer :all)   ; loop/recur/until
-(import sort :refer :all)      ; sort/sort-by/...
+(import sort :refer :all)      ; list-sort/sort-by/...
 (import strings :refer :all)   ; string-split/string-join/...
 ```
 

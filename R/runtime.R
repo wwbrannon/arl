@@ -216,15 +216,13 @@ CompiledRuntime <- R6::R6Class(
           return(invisible(NULL))
         }
 
-        assign(name, value, envir = env)
-        # Only set arl_doc on non-primitive functions (primitives can't have attributes)
+        # Set arl_doc on value before assigning (avoids get+reassign cycle)
         if (is.function(value) && !is.primitive(value)) {
-          obj <- get(name, envir = env)
-          attr(obj, "arl_doc") <- list(
+          attr(value, "arl_doc") <- list(
             description = paste0("INTERNAL: ", description, " This is part of Arl's compiled code implementation. Direct use is unsupported and may break in future versions.")
           )
-          assign(name, obj, envir = env)
         }
+        assign(name, value, envir = env)
         lockBinding(name, env)
       }
 
@@ -236,9 +234,8 @@ CompiledRuntime <- R6::R6Class(
       assign_and_lock(".__true_p", .__true_p, "Truthiness checker.")
 
       # Core helpers
-      assign_and_lock(".__assign_pattern", function(env, pattern, value, mode) {
-        .__assign_pattern(env, pattern, value, mode)
-      }, "Pattern assignment for define/set! (destructuring).")
+      assign_and_lock(".__assign_pattern", .__assign_pattern,
+        "Pattern assignment for define/set! (destructuring).")
 
       assign_and_lock(".__define", .__define,
         "Fast-path define for simple symbol names.")
@@ -718,16 +715,7 @@ CompiledRuntime <- R6::R6Class(
           compiler_flags <- NULL
           comp <- self$context$compiler
           if (!is.null(comp)) {
-            compiler_flags <- c(
-              enable_tco = comp$enable_tco,
-              enable_constant_folding = comp$enable_constant_folding,
-              enable_dead_code_elim = comp$enable_dead_code_elim,
-              enable_strength_reduction = comp$enable_strength_reduction,
-              enable_identity_elim = comp$enable_identity_elim,
-              enable_truthiness_opt = comp$enable_truthiness_opt,
-              enable_begin_simplify = comp$enable_begin_simplify,
-              enable_boolean_flatten = comp$enable_boolean_flatten
-            )
+            compiler_flags <- comp$get_flags()
           }
           # Always write expr cache (safe fallback)
           self$module_cache$write_code(module_name, compiled_body, exports, export_all, re_export, src_file, cache_paths$file_hash, cache_paths = cache_paths, compiler_flags = compiler_flags)

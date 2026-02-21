@@ -72,13 +72,12 @@
   (define take-while
     (lambda (pred lst)
       (define items (_as-list lst))
-      (define acc (list))
-      (define remaining items)
-      (while (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
-        (begin
-          (set! acc (c acc (list (car remaining))))
-          (set! remaining (cdr remaining))))
-      acc))
+      (define n (length items))
+      (define i 1)
+      (while (and (<= i n) (isTRUE (pred ([[ items i))))
+        (set! i (+ i 1)))
+      (if (= i 1) (list)
+        (r-call "[" (list items (seq_len (- i 1)))))))
 
   ;;' @description Drop items while predicate is true.
   ;;' @param pred Predicate function; dropping stops at first #f
@@ -93,10 +92,12 @@
   (define drop-while
     (lambda (pred lst)
       (define items (_as-list lst))
-      (define remaining items)
-      (while (and (> (length remaining) 0) (isTRUE (pred (car remaining))))
-        (set! remaining (cdr remaining)))
-      remaining))
+      (define n (length items))
+      (define i 1)
+      (while (and (<= i n) (isTRUE (pred ([[ items i))))
+        (set! i (+ i 1)))
+      (if (> i n) (list)
+        (r-call "[" (list items (seq i n))))))
 
   ;;' @description Split list into chunks of size n.
   ;;' @param n Chunk size
@@ -142,15 +143,18 @@
   (define flatten
     (lambda (lst)
       (define items (_as-list lst))
-      (define acc (list))
-      (define remaining items)
-      (while (> (length remaining) 0)
-        (define item (car remaining))
-        (if (list? item)
-          (set! acc (c acc (flatten item)))
-          (set! acc (c acc (list item))))
-        (set! remaining (cdr remaining)))
-      acc))
+      (define n (length items))
+      (if (= n 0) (list)
+        (begin
+          (define acc (list))
+          (define i 1)
+          (while (<= i n)
+            (define item ([[ items i))
+            (if (list? item)
+              (set! acc (c acc (flatten item)))
+              (set! acc (c acc (list item))))
+            (set! i (+ i 1)))
+          acc))))
 
   ;;' @description Call fn n times collecting results.
   ;;' @param n Number of times to call fn
@@ -218,16 +222,16 @@
   (define member
     (lambda (x lst (use-identical #f))
       (define items (_as-list lst))
+      (define n (length items))
       (define result #f)
-      (define remaining items)
-      (while (and (> (length remaining) 0) (not result))
-        (begin
-          (if (if use-identical
-                  (identical (car remaining) x)
-                  (equal? (car remaining) x))
-            (set! result remaining)
-            #nil)
-          (set! remaining (cdr remaining))))
+      (define i 1)
+      (while (and (<= i n) (not result))
+        (if (if use-identical
+                (identical ([[ items i) x)
+                (equal? ([[ items i) x))
+          (set! result (r-call "[" (list items (seq i n))))
+          #nil)
+        (set! i (+ i 1)))
       result))
 
   ;;' @description Return #t if lst contains element equal to x.
@@ -309,14 +313,15 @@
   (define find
     (lambda (pred lst)
       (define items (_as-list lst))
+      (define n (length items))
       (define result #f)
-      (define remaining items)
-      (while (and (> (length remaining) 0) (not result))
+      (define i 1)
+      (while (and (<= i n) (not result))
         (begin
-          (if (isTRUE (pred (car remaining)))
-            (set! result (car remaining)))
-          (if (not result)
-            (set! remaining (cdr remaining)))))
+          (define elem ([[ items i))
+          (if (isTRUE (pred elem))
+            (set! result elem))
+          (set! i (+ i 1))))
       result))
 
   ;;' @description Remove duplicates preserving first-occurrence order.
@@ -330,22 +335,26 @@
   (define distinct
     (lambda (lst)
       (define items (_as-list lst))
-      (define acc (list))
-      (define remaining items)
-      (while (> (length remaining) 0)
+      (define n (length items))
+      (if (= n 0) (list)
         (begin
-          (define elem (car remaining))
-          (define found #f)
-          (define check acc)
-          (while (and (> (length check) 0) (not found))
-            (begin
-              (if (identical (car check) elem)
+          ;; Use an env as a seen-set for O(n) dedup of hashable values,
+          ;; with fallback linear scan for non-character keys
+          (define acc (list))
+          (define i 1)
+          (while (<= i n)
+            (define elem ([[ items i))
+            (define found #f)
+            (define j 1)
+            (define acc-len (length acc))
+            (while (and (<= j acc-len) (not found))
+              (if (identical ([[ acc j) elem)
                 (set! found #t))
-              (set! check (cdr check))))
-          (if (not found)
-            (set! acc (c acc (list elem))))
-          (set! remaining (cdr remaining))))
-      acc))
+              (set! j (+ j 1)))
+            (if (not found)
+              (set! acc (c acc (list elem))))
+            (set! i (+ i 1)))
+          acc))))
 
   ;; ============================================================================
   ;; Splitting
@@ -395,12 +404,14 @@
       (if (<= n 1)
         items
         (begin
-          (define acc (list (car items)))
-          (define remaining (cdr items))
-          (while (> (length remaining) 0)
-            (begin
-              (set! acc (c acc (list sep (car remaining))))
-              (set! remaining (cdr remaining))))
+          ;; Build in reverse with cons, then reverse (O(n))
+          (define acc (list))
+          (define i n)
+          (while (>= i 1)
+            (set! acc (cons ([[ items i) acc))
+            (if (> i 1)
+              (set! acc (cons sep acc)))
+            (set! i (- i 1)))
           acc))))
 
   ;;' @description Split list into runs of consecutive elements producing
@@ -415,16 +426,17 @@
   (define partition-by
     (lambda (fn lst)
       (define items (_as-list lst))
-      (if (= (length items) 0)
+      (define n (length items))
+      (if (= n 0)
         (list)
         (begin
           (define acc (list))
-          (define current-run (list (car items)))
-          (define current-key (fn (car items)))
-          (define remaining (cdr items))
-          (while (> (length remaining) 0)
+          (define current-run (list ([[ items 1)))
+          (define current-key (fn ([[ items 1)))
+          (define i 2)
+          (while (<= i n)
             (begin
-              (define elem (car remaining))
+              (define elem ([[ items i))
               (define key (fn elem))
               (if (identical key current-key)
                 (set! current-run (c current-run (list elem)))
@@ -432,6 +444,6 @@
                   (set! acc (c acc (list current-run)))
                   (set! current-run (list elem))
                   (set! current-key key)))
-              (set! remaining (cdr remaining))))
+              (set! i (+ i 1))))
           (c acc (list current-run))))))
 )

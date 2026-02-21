@@ -93,12 +93,13 @@ test_that("r-eval without env parameter works correctly", {
 })
 
 test_that(".__env is documented as internal", {
-  # This test documents that .__env still exists in lambda bodies
-  # but is clearly internal (not part of public API)
+  # This test documents that .__env exists in lambda bodies that use define/set!
+  # but is clearly internal (not part of public API).
+  # Simple lambdas that don't use define/set! may skip .__env as an optimization.
   engine <- make_engine()
 
-  # .__env exists in compiled lambda bodies for internal use
-  fn <- engine$eval_text('(lambda (x) (r-eval (quote (environment))))')
+  # .__env exists in compiled lambda bodies that use define (needs .__env)
+  fn <- engine$eval_text('(lambda (x) (define y x) (r-eval (quote (environment))))')
   env <- fn(42)
 
   # It should have .__env bound
@@ -108,6 +109,11 @@ test_that(".__env is documented as internal", {
   # But it's documented as internal and may change
   arl_env_val <- get(".__env", envir = env)
   expect_true(is.environment(arl_env_val))
+
+  # Simple lambdas may skip .__env for performance
+  fn2 <- engine$eval_text('(lambda (x) (r-eval (quote (environment))))')
+  env2 <- fn2(42)
+  # Not guaranteed to have .__env - this is an optimization detail
 })
 
 test_that("module registry entries are truly immutable", {

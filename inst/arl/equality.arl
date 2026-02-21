@@ -104,14 +104,15 @@
         ;; Same names - recursively compare values
         (begin
           (define result #t)
-          (define remaining names1)
-          (while (and (not (null? remaining)) result)
+          (define n-names (length names1))
+          (define ni 1)
+          (while (and (<= ni n-names) result)
             (begin
-              (if (not (equal? (r-call "get" (list (car remaining) :envir env1))
-                               (r-call "get" (list (car remaining) :envir env2))))
+              (if (not (equal? (r-call "get" (list ([[ names1 ni) :envir env1))
+                               (r-call "get" (list ([[ names1 ni) :envir env2))))
                 (set! result #f)
                 #nil)
-              (set! remaining (cdr remaining))))
+              (set! ni (+ ni 1))))
           result)
         #f)))
 
