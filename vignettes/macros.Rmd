@@ -385,6 +385,8 @@ telling the hygienizer to leave it alone.
 Usage:
 
 ```{arl}
+(import display :refer (string-concat))
+
 (aif (+ 2 3)
      (string-concat "result is " it)   ; it => 5
      "no result")  ; => "result is 5"
@@ -609,6 +611,8 @@ The `loop` macro rewrites `recur` calls into a `while` loop with flag
 variables, all using `gensym` to avoid conflicts:
 
 ```{arl}
+(import looping :refer (loop recur))
+
 (loop ((n 5) (acc 1))
   (if (= n 0)
     acc

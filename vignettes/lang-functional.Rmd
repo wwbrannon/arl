@@ -17,6 +17,12 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
 
+*Examples on this page may reference functions from other stdlib modules
+without showing explicit `(import ...)` statements. In the REPL or your
+own code, you will need to import non-prelude modules before using their
+exports — see [Importing modules](lang-reference.html#importing-modules).*
+
+
 ## Core Higher-Order Functions {#section-core-higher-order-functions}
 
 The fundamental building blocks for functional programming in Arl.

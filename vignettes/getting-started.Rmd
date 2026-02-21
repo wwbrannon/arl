@@ -373,7 +373,7 @@ binding:
 
 ; when is a one-armed conditional (no else branch)
 (when (> 3 2)
-  (display "3 is greater\n"))
+  (print "3 is greater"))
 ```
 
 ```{arl, include=FALSE}

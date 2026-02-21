@@ -214,7 +214,10 @@ HelpSystem <- R6::R6Class(
         ),
         help = list(
           usage = "(help topic) or (help topic :package pkg)",
-          description = "Show help for a topic without evaluating it. Use :package to force R help from a specific package."
+          description = paste0(
+            "Show help for a topic without evaluating it. ",
+            "Use :package to force R help from a specific package."
+          )
         ),
         begin = list(
           usage = "(begin expr...)",
@@ -226,11 +229,19 @@ HelpSystem <- R6::R6Class(
         ),
         module = list(
           usage = "(module name (export ...) body...)",
-          description = "Define a module with explicit exports. Use (export-all) to export all definitions (names starting with _ are excluded as private)."
+          description = paste0(
+            "Define a module with explicit exports. ",
+            "Use (export-all) to export all definitions ",
+            "(names starting with _ are excluded as private)."
+          )
         ),
         import = list(
           usage = "(import name) or (import name :refer :all) or (import name :as alias)",
-          description = "Load a module and bind it as a first-class value. Use :refer to bring exports into scope unqualified, :as to alias. Qualified access via name/sym."
+          description = paste0(
+            "Load a module and bind it as a first-class value. ",
+            "Use :refer to bring exports into scope unqualified, ",
+            ":as to alias. Qualified access via name/sym."
+          )
         ),
         macroexpand = list(
           description = "Recursively expand macros in expr."
@@ -435,7 +446,9 @@ HelpSystem <- R6::R6Class(
       if (length(notes) > 0) {
         doc$note <- paste(notes, collapse = "\n")
       }
-      has_content <- any(vapply(doc[c("usage", "description", "arguments", "seealso", "examples", "note")], function(x) {
+      fields <- c("usage", "description", "arguments",
+                   "seealso", "examples", "note")
+      has_content <- any(vapply(doc[fields], function(x) {
         !is.null(x) && nzchar(x)
       }, logical(1)))
       if (!has_content) {

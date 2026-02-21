@@ -285,7 +285,11 @@ Engine <- R6::R6Class(
 
           # Expr cache (compiled expressions)
           if (file.exists(cache_paths$code_cache)) {
-            cache_data <- private$.module_cache$load_code(cache_paths$code_cache, path, file_hash = cache_paths$file_hash, compiler_flags = compiler_flags)
+            cache_data <- private$.module_cache$load_code(
+              cache_paths$code_cache, path,
+              file_hash = cache_paths$file_hash,
+              compiler_flags = compiler_flags
+            )
             if (!is.null(cache_data)) {
               # Recreate module environment (like module_compiled does)
               module_name <- cache_data$module_name
@@ -375,7 +379,9 @@ Engine <- R6::R6Class(
     #' @param text Character; Arl source (single expression or multiple).
     #' @param env Environment or NULL (use engine env). Must have macros/stdlib if needed.
     #' @param source_name Name for parse errors.
-    #' @return List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr or NULL), \code{compiled_deparsed} (character, or NULL).
+    #' @return List with \code{parsed} (first expr), \code{expanded},
+    #'   \code{compiled} (R expr or NULL), \code{compiled_deparsed}
+    #'   (character, or NULL).
     inspect_compilation = function(text, env = NULL, source_name = "<inspect>") {
       target_env <- private$resolve_env_arg(env)
       exprs <- self$read(text, source_name = source_name)
@@ -790,7 +796,9 @@ Engine <- R6::R6Class(
 
       builtins_env$`.__cons` <- function(car, cdr) Cons$new(car, cdr)
       builtins_env$`.__cons-as-list` <- function(x) if (inherits(x, "ArlCons")) x$as_list() else list()
-      builtins_env$`.__cons-parts` <- function(x) if (inherits(x, "ArlCons")) x$parts() else list(prefix = list(), tail = x)
+      builtins_env$`.__cons-parts` <- function(x) {
+        if (inherits(x, "ArlCons")) x$parts() else list(prefix = list(), tail = x)
+      }
 
       builtins_env$`pair?` <- function(x) inherits(x, "ArlCons")
 

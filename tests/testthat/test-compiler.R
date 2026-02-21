@@ -171,7 +171,7 @@ make_env <- function(engine, init = NULL) {
   if (is.function(init)) {
     init(env)
   }
-  env = env
+  env
 }
 
 eval_compiled_in_env <- function(engine, expr, env) {

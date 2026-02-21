@@ -212,7 +212,11 @@ CompiledRuntime <- R6::R6Class(
         # Set arl_doc on value before assigning (avoids get+reassign cycle)
         if (is.function(value) && !is.primitive(value)) {
           attr(value, "arl_doc") <- list(
-            description = paste0("INTERNAL: ", description, " This is part of Arl's compiled code implementation. Direct use is unsupported and may break in future versions.")
+            description = paste0(
+              "INTERNAL: ", description,
+              " This is part of Arl's compiled code implementation.",
+              " Direct use is unsupported and may break in future versions."
+            )
           )
         }
         assign(name, value, envir = env)
@@ -288,7 +292,9 @@ CompiledRuntime <- R6::R6Class(
         self$module_compiled(module_name, exports, export_all, re_export, body_exprs, src_file, env)
       }, "Module definition handler.")
 
-      assign_and_lock(".__import", function(arg_value, env, rename = NULL, reload = FALSE, as_alias = NULL, refer = NULL) {
+      assign_and_lock(".__import", function(arg_value, env, rename = NULL,
+                                            reload = FALSE, as_alias = NULL,
+                                            refer = NULL) {
         self$import_compiled(arg_value, env, rename = rename, reload = reload, as_alias = as_alias, refer = refer)
       }, "Module import handler.")
 
@@ -693,7 +699,11 @@ CompiledRuntime <- R6::R6Class(
             compiler_flags <- comp$get_flags()
           }
           # Always write expr cache (safe fallback)
-          self$module_cache$write_code(module_name, compiled_body, exports, export_all, re_export, src_file, cache_paths$file_hash, cache_paths = cache_paths, compiler_flags = compiler_flags)
+          self$module_cache$write_code(
+            module_name, compiled_body, exports, export_all,
+            re_export, src_file, cache_paths$file_hash,
+            cache_paths = cache_paths, compiler_flags = compiler_flags
+          )
 
           # Env cache disabled: proxy-based imports use active bindings in
           # the parent chain which can't survive serialization/deserialization.

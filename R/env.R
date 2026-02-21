@@ -241,7 +241,8 @@ Env <- R6::R6Class(
       }
       stop(sprintf("%s requires a symbol or list pattern as the first argument", context))
     },
-    # @description Recursively bind pattern to value (list/call with optional . rest). Used by define/set! destructuring.
+    # @description Recursively bind pattern to value (list/call with
+    # optional . rest). Used by define/set! destructuring.
     # @param pattern Symbol, list, or call (may contain . for rest).
     # @param value Value or list of values.
     # @param mode "define" or "set".

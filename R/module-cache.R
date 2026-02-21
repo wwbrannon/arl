@@ -42,7 +42,9 @@ ModuleCache <- R6::R6Class(
     #' @param export_all Export all flag
     #' @param src_file Source file path
     #' @param file_hash File hash
-    write_code = function(module_name, compiled_body, exports, export_all, re_export, src_file, file_hash, coverage = FALSE, cache_paths = NULL, compiler_flags = NULL) {
+    write_code = function(module_name, compiled_body, exports, export_all,
+                          re_export, src_file, file_hash, coverage = FALSE,
+                          cache_paths = NULL, compiler_flags = NULL) {
       paths <- if (!is.null(cache_paths)) cache_paths else self$get_paths(src_file)
       if (is.null(paths)) return(FALSE)
 
@@ -133,7 +135,9 @@ ModuleCache <- R6::R6Class(
       }
 
       # Validate cache (pass file_hash to avoid recomputing MD5)
-      if (!private$is_valid(cache_data, src_file, coverage = coverage, file_hash = file_hash, compiler_flags = compiler_flags)) {
+      if (!private$is_valid(cache_data, src_file, coverage = coverage,
+                           file_hash = file_hash,
+                           compiler_flags = compiler_flags)) {
         # Invalid cache, delete related cache files (use dirname to avoid get_paths)
         unlink(cache_file)
         code_r <- sub("\\.code\\.rds$", ".code.R", cache_file)

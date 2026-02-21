@@ -1215,7 +1215,10 @@ Compiler <- R6::R6Class(
     },
     compile_module = function(expr) {
       if (length(expr) < 2) {
-        return(private$fail("module requires at least: (module name (export ...) body...) or (module (export ...) body...)"))
+        return(private$fail(paste0(
+          "module requires at least: (module name (export ...) body...)",
+          " or (module (export ...) body...)"
+        )))
       }
 
       # Detect nameless form: (module (export ...) body...)

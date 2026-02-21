@@ -5,7 +5,8 @@
 #   \item{\code{arl.repl_quiet}}{If TRUE, show minimal startup banner (e.g. set by CLI \code{-q}/\code{--quiet}).}
 #   \item{\code{arl.repl_use_history}}{If FALSE, do not load, save, or add to readline history.}
 #   \item{\code{arl.repl_bracketed_paste}}{If TRUE (default), enable bracketed paste mode.}
-#   \item{\code{arl.repl_read_form_override}}{Override \code{read_form()}: function(input_fn, prompt, cont_prompt) -> list(text, exprs, error?) or NULL.}
+#   \item{\code{arl.repl_read_form_override}}{Override \code{read_form()}:
+#     function(input_fn, prompt, cont_prompt) -> list(text, exprs, error?) or NULL.}
 #   \item{\code{arl.repl_can_use_history_override}}{Override for \code{can_use_history()}: function or logical.}
 # }
 #

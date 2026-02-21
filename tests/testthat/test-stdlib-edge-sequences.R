@@ -6,7 +6,7 @@ engine <- make_engine()
 setup_env <- function() {
   env <- new.env()
   toplevel_env(engine, env) # nolint: object_usage_linter.
-  env = env
+  env
 }
 
 test_that("take handles edge cases", {

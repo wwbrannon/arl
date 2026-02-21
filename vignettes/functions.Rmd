@@ -73,6 +73,8 @@ in `defmacro` parameters.
 Wrap a parameter in a pair `(name default)`:
 
 ```{arl}
+(import strings :refer (string-append))
+
 (define greet
   (lambda ((name "world"))
     (string-append "hello, " name)))
@@ -370,6 +372,8 @@ For explicit looping or patterns where self-TCO does not apply, use
 `loop`/`recur`:
 
 ```{arl}
+(import looping :refer (loop recur))
+
 (loop ((i 5) (acc 1))
   (if (< i 2)
     acc
