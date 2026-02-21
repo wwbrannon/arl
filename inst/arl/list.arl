@@ -135,14 +135,7 @@
   ;;' @seealso cons, list*
   (define append
     (lambda (. lists)
-      (define items (_as-list lists))
-      (define n (length items))
-      (define result (list))
-      (define i 1)
-      (while (<= i n)
-        (set! result (c result (_as-list ([[ items i))))
-        (set! i (+ i 1)))
-      result))
+      (do.call c (lapply (_as-list lists) _as-list))))
 
   ;;' @description Reverse list.
   ;;' @param x List to reverse.
@@ -444,15 +437,7 @@
     (lambda (n value)
       (if (<= n 0)
         (list)
-        ;; Use explicit loop to avoid stack overflow and handle symbols
-        (begin
-          (define result (list))
-          (define i 0)
-          (while (< i n)
-            (begin
-              (set! result (cons value result))
-              (set! i (+ i 1))))
-          result))))
+        (replicate n value :simplify #f))))
 
   ;;' @section Additional List Accessors
 

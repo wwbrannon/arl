@@ -145,17 +145,15 @@
       (define n (length items))
       (if (= n 0) (list)
         (begin
-          (define acc (list))
+          (define parts (list))
           (define i 1)
           (while (<= i n)
             (define item ([[ items i))
             (if (list? item)
-              ;; c(acc, flatten(item)) is unavoidable for nested structure,
-              ;; but each element is visited once across all recursion levels
-              (set! acc (c acc (flatten item)))
-              (set! acc (c acc (list item))))
+              (set! parts (cons (flatten item) parts))
+              (set! parts (cons (list item) parts)))
             (set! i (+ i 1)))
-          acc))))
+          (do.call c (rev parts))))))
 
   ;;' @description Call fn n times collecting results.
   ;;' @param n Number of times to call fn
