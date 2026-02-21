@@ -12,6 +12,30 @@ missing_default <- function() {
 
 # Wrapper for define/set! from compiled code (including pattern destructuring).
 # pattern can be a symbol, a string (converted to symbol for simple binding), or a list for destructuring.
+# Shared set! assignment logic. Given the origin env, the target env where the
+# binding was found, name, and value, performs the correct assignment handling
+# proxy imports, squash-mode active bindings, locked bindings, and regular bindings.
+.__set_into <- compiler::cmpfun(function(env, target, name, value) {
+  if (bindingIsActive(name, target)) {
+    if (isTRUE(get0(".__import_proxy", envir = target, inherits = FALSE))) {
+      # Proxy env (import) — create local shadow, don't mutate module
+      base::assign(name, value, envir = env)
+    } else {
+      # Active binding in same env (squash mode) — remove and replace
+      unlock_binding(name, target)
+      rm(list = name, envir = target)
+      base::assign(name, value, envir = target)
+    }
+  } else if (bindingIsLocked(name, target)) {
+    unlock_binding(name, target)
+    base::assign(name, value, envir = target)
+    lockBinding(as.symbol(name), target)
+  } else {
+    base::assign(name, value, envir = target)
+  }
+  invisible(NULL)
+})
+
 .__assign_pattern <- compiler::cmpfun(function(env, pattern, value, mode) {
   if (is.character(pattern) && length(pattern) == 1L) {
     pattern <- as.symbol(pattern)
@@ -24,17 +48,21 @@ missing_default <- function() {
                    mode, name), call. = FALSE)
     }
     if (identical(mode, "define")) {
-      # Active bindings (from proxy imports) are read-only zero-arg functions;
-      # base::assign on them triggers the binding function with the value as arg.
-      # Remove active binding first to allow regular assignment.
-      if (exists(name, envir = env, inherits = FALSE) &&
-          bindingIsActive(name, env)) {
-        unlock_binding(name, env)
-        rm(list = name, envir = env)
+      if (exists(name, envir = env, inherits = FALSE)) {
+        if (bindingIsActive(name, env)) {
+          # Active bindings (from proxy imports) are read-only zero-arg functions;
+          # base::assign on them triggers the binding function with the value as arg.
+          # Remove active binding first to allow regular assignment.
+          unlock_binding(name, env)
+          rm(list = name, envir = env)
+        } else if (bindingIsLocked(name, env)) {
+          # Locked bindings must be unlocked before reassignment
+          unlock_binding(name, env)
+        }
       }
       base::assign(name, value, envir = env)
     } else {
-      # set! — walk parent chain (replicates Env$find_existing_env)
+      # set! — walk parent chain to find existing binding, then delegate
       if (!exists(name, envir = env, inherits = TRUE)) {
         stop(sprintf("set!: variable '%s' is not defined", name), call. = FALSE)
       }
@@ -42,26 +70,7 @@ missing_default <- function() {
       while (!exists(name, envir = target, inherits = FALSE)) {
         target <- parent.env(target)
       }
-      # If the binding lives in a proxy env (active binding from import),
-      # create a local shadow in the current env rather than mutating the proxy.
-      if (bindingIsActive(name, target) &&
-          isTRUE(get0(".__import_proxy", envir = target, inherits = FALSE))) {
-        base::assign(name, value, envir = env)
-      } else if (bindingIsActive(name, target)) {
-        # Active binding in same env (squash mode) — remove and replace
-        unlock_binding(name, target)
-        rm(list = name, envir = target)
-        base::assign(name, value, envir = target)
-      } else {
-        # Handle locked bindings (module bindings are locked after load)
-        if (bindingIsLocked(name, target)) {
-          unlock_binding(name, target)
-          base::assign(name, value, envir = target)
-          lockBinding(as.symbol(name), target)
-        } else {
-          base::assign(name, value, envir = target)
-        }
-      }
+      .__set_into(env, target, name, value)
     }
     return(invisible(NULL))
   }
@@ -73,11 +82,15 @@ missing_default <- function() {
 # Fast-path define for simple symbol names (no destructuring, no reserved-name check,
 # no mode dispatch). The compiler emits calls to this directly for (define x val).
 .__define <- compiler::cmpfun(function(env, name, value) {
-  # Active bindings (from proxy imports) must be removed before assignment
-  if (exists(name, envir = env, inherits = FALSE) &&
-      bindingIsActive(name, env)) {
-    unlock_binding(name, env)
-    rm(list = name, envir = env)
+  if (exists(name, envir = env, inherits = FALSE)) {
+    if (bindingIsActive(name, env)) {
+      # Active bindings (from proxy imports) must be removed before assignment
+      unlock_binding(name, env)
+      rm(list = name, envir = env)
+    } else if (bindingIsLocked(name, env)) {
+      # Locked bindings (module bindings) must be unlocked before reassignment
+      unlock_binding(name, env)
+    }
   }
   base::assign(name, value, envir = env)
   invisible(NULL)
@@ -89,27 +102,7 @@ missing_default <- function() {
   target <- env
   while (!identical(target, boundary) && !identical(target, emptyenv())) {
     if (exists(name, envir = target, inherits = FALSE)) {
-      # If the binding lives in a proxy env (active binding from import),
-      # create a local shadow in the current env rather than mutating the proxy.
-      if (bindingIsActive(name, target)) {
-        if (isTRUE(get0(".__import_proxy", envir = target, inherits = FALSE))) {
-          base::assign(name, value, envir = env)
-        } else {
-          # Active binding in same env (squash mode) — remove and replace
-          unlock_binding(name, target)
-          rm(list = name, envir = target)
-          base::assign(name, value, envir = target)
-        }
-      } else {
-        # Handle locked bindings (module bindings are locked after load)
-        if (bindingIsLocked(name, target)) {
-          unlock_binding(name, target)
-          base::assign(name, value, envir = target)
-          lockBinding(as.symbol(name), target)
-        } else {
-          base::assign(name, value, envir = target)
-        }
-      }
+      .__set_into(env, target, name, value)
       return(invisible(NULL))
     }
     target <- parent.env(target)
