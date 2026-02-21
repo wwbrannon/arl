@@ -21,41 +21,17 @@
 #' @keywords internal
 #'
 #' @examples
-#' \dontrun{
-#' # Default usage: Track Arl stdlib
-#' tracker <- arl::CoverageTracker$new()
-#' engine <- arl::Engine$new(coverage_tracker = tracker)
+#' # Create a tracker and engine, then evaluate some Arl code
+#' tracker <- CoverageTracker$new()
+#' engine <- Engine$new(coverage_tracker = tracker)
 #' engine$eval(engine$read("(+ 1 2)"))
+#'
+#' # Console report shows which stdlib lines were hit
 #' tracker$report_console()
-#' tracker$report_html()  # Outputs to coverage/arl/index.html
 #'
-#' # Track custom directories
-#' tracker <- CoverageTracker$new(
-#'   search_paths = c("src/arl", "lib/arl"),
-#'   output_prefix = "myproject",
-#'   report_title = "My Project Coverage"
-#' )
-#' tracker$discover_files()
-#' tracker$report_html()  # Outputs to coverage/myproject/index.html
-#'
-#' # Include test files in coverage
-#' tracker <- CoverageTracker$new(
-#'   search_paths = "src",
-#'   include_tests = TRUE
-#' )
-#'
-#' # Custom path display in reports
-#' tracker <- CoverageTracker$new(
-#'   search_paths = "/home/user/myproject/arl",
-#'   path_strip_patterns = c(".*/myproject/arl/", ".*/myproject/tests/")
-#' )
-#'
-#' # Custom comment syntax (e.g., # instead of ;)
-#' tracker <- CoverageTracker$new(
-#'   search_paths = "src",
-#'   code_line_pattern = "^\\s*[^[:space:]#]"
-#' )
-#' }
+#' # HTML report written to a temp directory
+#' outfile <- file.path(tempdir(), "arl-coverage", "index.html")
+#' tracker$report_html(output_file = outfile)
 #' @export
 CoverageTracker <- R6::R6Class(
   "ArlCoverageTracker",
