@@ -21,7 +21,7 @@
 #' @keywords internal
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Default usage: Track Arl stdlib
 #' engine <- arl::Engine$new()
 #' tracker <- engine$enable_coverage()

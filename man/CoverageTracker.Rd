@@ -18,7 +18,7 @@ Most users should interact with coverage through the
 \code{get_coverage()}, and \code{reset_coverage()} instead.
 }
 \examples{
-\dontrun{
+\donttest{
 # Default usage: Track Arl stdlib
 engine <- arl::Engine$new()
 tracker <- engine$enable_coverage()

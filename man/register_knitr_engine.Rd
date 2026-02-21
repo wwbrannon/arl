@@ -12,7 +12,7 @@ chunks.  The engine evaluates Arl code using a shared \code{Engine}
 instance that persists across chunks within a single document.
 }
 \examples{
-\dontrun{
+\donttest{
 # In a vignette setup chunk:
 arl::register_knitr_engine()
 }

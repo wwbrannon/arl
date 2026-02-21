@@ -231,7 +231,7 @@ evaluate_arl_code <- function(engine, code) {
 #'
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # In a vignette setup chunk:
 #' arl::register_knitr_engine()
 #' }
@@ -266,7 +266,8 @@ arl_html_vignette <- function(pandoc_args = NULL, check_title = TRUE, ...) {
   }
 
   if (!check_title) {
-    options(rmarkdown.html_vignette.check_title = FALSE)
+    old_opt <- options(rmarkdown.html_vignette.check_title = FALSE)
+    on.exit(options(old_opt), add = TRUE)
   }
 
   rmarkdown::html_vignette(pandoc_args = pandoc_args, ...)
