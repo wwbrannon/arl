@@ -14,9 +14,10 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 arl::register_knitr_engine()
 ```
 
-Arl is a Lisp dialect implemented in and with access to R. This vignette
-walks through installing Arl, running the REPL, and evaluating a few
-expressions.
+Arl is a Lisp dialect that compiles to R. Every R function and data structure
+is available directly, and the macro system lets you transform code at compile
+time. This vignette walks through installing Arl, running the REPL, and
+writing your first expressions.
 
 ## Installation
 

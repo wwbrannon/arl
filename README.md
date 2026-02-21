@@ -23,20 +23,15 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 [![pkgdown](https://img.shields.io/badge/pkgdown-site-blue.svg)][pkgdown-site]
 --> <!-- badges: end -->
 
-A Lisp dialect implemented in and with access to R, leveraging R’s
-Scheme heritage.
+A Lisp dialect that compiles to R — write macros, use every R function
+directly, and get tail-call optimization out of the box.
 
 ## Overview
 
-Arl is a Lisp dialect that seamlessly integrates with R. It provides:
-
-- **Homoiconic syntax**: Code as data, data as code
-- **Powerful macros**: Transform code at compile-time with `defmacro`
-  and quasiquote
-- **R interoperability**: Call any R function, use R data structures
-- **Lexical scoping**: Clean, predictable variable binding
-- **First-class functions**: Functions are values, closures work
-  naturally
+Arl compiles to R and evaluates with R’s own `eval()`, so every R
+function and data structure is available with no bridging or FFI. On top
+of that, you get Lisp’s macro system for compile-time code
+transformation and self-tail-call optimization for stack-safe recursion.
 
 ## Installation
 
