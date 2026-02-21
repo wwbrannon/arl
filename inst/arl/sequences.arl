@@ -124,12 +124,13 @@
               (define acc (list))
               (define idx 1)
               (define n-items (length items))
+              ;; Build in reverse with cons, then rev — O(n) total
               (while (<= idx n-items)
                 (define end (+ idx (- n 1)))
                 (if (<= end n-items)
-                  (set! acc (c acc (list (r-call "[" (list items (seq idx end)))))))
+                  (set! acc (cons (r-call "[" (list items (seq idx end))) acc)))
                 (set! idx (+ idx step)))
-              acc))))))
+              (rev acc)))))))
 
   ;;' @description Flatten nested lists.
   ;;' @param lst Possibly nested list to flatten into a single-level list
@@ -151,6 +152,8 @@
           (while (<= i n)
             (define item ([[ items i))
             (if (list? item)
+              ;; c(acc, flatten(item)) is unavoidable for nested structure,
+              ;; but each element is visited once across all recursion levels
               (set! acc (c acc (flatten item)))
               (set! acc (c acc (list item))))
             (set! i (+ i 1)))
@@ -338,23 +341,21 @@
       (define n (length items))
       (if (= n 0) (list)
         (begin
-          ;; Use an env as a seen-set for O(n) dedup of hashable values,
-          ;; with fallback linear scan for non-character keys
+          ;; Use an env as a seen-set for O(n) dedup via hashing.
+          ;; Keys are type-prefixed to avoid collisions (e.g. 1 vs "1").
+          (define seen (r-call "new.env" (list :hash #t :parent (emptyenv))))
           (define acc (list))
           (define i 1)
+          ;; Iterate forward with cons, rev at end — preserves first-occurrence order, O(n) total
           (while (<= i n)
             (define elem ([[ items i))
-            (define found #f)
-            (define j 1)
-            (define acc-len (length acc))
-            (while (and (<= j acc-len) (not found))
-              (if (identical ([[ acc j) elem)
-                (set! found #t))
-              (set! j (+ j 1)))
-            (if (not found)
-              (set! acc (c acc (list elem))))
+            (define key (r-call "paste0" (list (r-call "typeof" (list elem)) ":" (r-call "as.character" (list elem)))))
+            (if (not (r-call "exists" (list key :envir seen :inherits #f)))
+              (begin
+                (r-call "assign" (list key #t :envir seen))
+                (set! acc (cons elem acc))))
             (set! i (+ i 1)))
-          acc))))
+          (rev acc)))))
 
   ;; ============================================================================
   ;; Splitting
@@ -430,6 +431,8 @@
       (if (= n 0)
         (list)
         (begin
+          ;; Build runs in reverse with cons, rev when finishing each run.
+          ;; Collect runs in reverse with cons, rev at end — O(n) total.
           (define acc (list))
           (define current-run (list ([[ items 1)))
           (define current-key (fn ([[ items 1)))
@@ -439,11 +442,11 @@
               (define elem ([[ items i))
               (define key (fn elem))
               (if (identical key current-key)
-                (set! current-run (c current-run (list elem)))
+                (set! current-run (cons elem current-run))
                 (begin
-                  (set! acc (c acc (list current-run)))
+                  (set! acc (cons (rev current-run) acc))
                   (set! current-run (list elem))
                   (set! current-key key)))
               (set! i (+ i 1))))
-          (c acc (list current-run))))))
+          (rev (cons (rev current-run) acc))))))
 )
