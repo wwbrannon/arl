@@ -40,6 +40,17 @@ local({
     }
   }
 
+  # Load default packages (stats, utils, datasets, etc.). Normally .First.sys()
+  # does this after profiles return, but since we block in the REPL and never
+  # return, .First.sys() never runs. Without this, functions like lm() and
+  # datasets like mtcars are invisible to the Arl engine.
+  for (pkg in getOption("defaultPackages")) {
+    tryCatch(
+      suppressPackageStartupMessages(library(pkg, character.only = TRUE)),
+      error = function(e) NULL
+    )
+  }
+
   # Load arl package and run CLI
   suppressPackageStartupMessages(library(arl))
   tryCatch(

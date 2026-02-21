@@ -28,6 +28,12 @@ echo         warning("Error loading ~/.Rprofile: ", conditionMessage(e^)^)
 echo       }^)
 echo     }
 echo   }
+echo   for (pkg in getOption("defaultPackages"^)^) {
+echo     tryCatch(
+echo       suppressPackageStartupMessages(library(pkg, character.only = TRUE^)^),
+echo       error = function(e^) NULL
+echo     ^)
+echo   }
 echo   suppressPackageStartupMessages(library(arl^)^)
 echo   tryCatch(
 echo     cli(args = commandArgs(trailingOnly = TRUE^)^),
