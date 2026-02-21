@@ -66,8 +66,12 @@ Compiler <- R6::R6Class(
     source_text = NULL,
     # Monotonic counter for generating unique symbols when macro expander is unavailable.
     gensym_counter = 0L,
-    # Generate a unique symbol using the instance counter (avoids package-global state).
-    compiler_gensym = function(prefix) {
+    # Generate a unique symbol. Delegates to the macro expander's gensym when
+    # available (for globally unique names); falls back to an instance counter.
+    gensym = function(prefix) {
+      if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
+        return(self$context$macro_expander$gensym(prefix))
+      }
       self$gensym_counter <- self$gensym_counter + 1L
       as.symbol(paste0(prefix, self$gensym_counter))
     },
@@ -228,12 +232,7 @@ Compiler <- R6::R6Class(
         args[[i]] <- compiled
       }
 
-      gensym_tmp <- function() {
-        if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-          return(self$context$macro_expander$gensym(".__tmp"))
-        }
-        self$compiler_gensym(".__tmp")
-      }
+      gensym_tmp <- function() self$gensym(".__tmp")
 
       build <- function(idx) {
         if (idx == length(args)) return(args[[idx]])
@@ -622,11 +621,7 @@ Compiler <- R6::R6Class(
       is_simple <- is.symbol(name)
       pattern_arg <- if (is_simple) as.character(name) else as.call(list(as.symbol(".__quote"), name))
 
-      tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-        self$context$macro_expander$gensym(".__define_value")
-      } else {
-        self$compiler_gensym(".__define_value")
-      }
+      tmp_sym <- self$gensym(".__define_value")
       assign_tmp <- as.call(list(quote(`<-`), tmp_sym, val))
 
       if (is_simple) {
@@ -726,11 +721,7 @@ Compiler <- R6::R6Class(
         # For pattern rest params, generate a temp name for collection
         if (is.null(rest_param_name) && !is.null(params$rest_param_spec) &&
             identical(params$rest_param_spec$type, "pattern")) {
-          rest_param_name <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-            as.character(self$context$macro_expander$gensym(".__rest"))
-          } else {
-            as.character(self$compiler_gensym(".__rest"))
-          }
+          rest_param_name <- as.character(self$gensym(".__rest"))
         }
         if (private$has_self_tail_calls(body_exprs, self_name)) {
           use_tco <- TRUE
@@ -940,11 +931,7 @@ Compiler <- R6::R6Class(
               return(private$fail("pattern wrapper must be (pattern <pat>) or (pattern <pat> <default>)"))
             }
             pattern <- arg[[2]]
-            tmp_sym <- if (!is.null(self$context) && !is.null(self$context$macro_expander)) {
-              self$context$macro_expander$gensym(".__arg")
-            } else {
-              self$compiler_gensym(".__arg")
-            }
+            tmp_sym <- self$gensym(".__arg")
             tmp_name <- as.character(tmp_sym)
             if (length(arg) == 3) {
               default_expr <- private$compile_impl(arg[[3]])
