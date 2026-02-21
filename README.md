@@ -222,21 +222,24 @@ the `looping` module is still available:
 Prelude modules are loaded automatically; non-prelude modules require
 explicit `(import ...)`. Key areas include:
 
-- **Lists**: `car`, `cdr`, `cons`, `append`, `reverse`, `nth`, `list*`
-- **Higher-order**: `map`, `filter`, `reduce`, `compose`, `partial`,
-  `every?`, `any?`
-- **Sequences**: `take`, `drop`, `take-while`, `drop-while`,
+- **Lists** (prelude): `car`, `cdr`, `cons`, `append`, `reverse`, `nth`,
+  `list*`
+- **Higher-order** (prelude): `map`, `filter`, `reduce`, `compose`,
+  `partial`, `every?`, `any?`
+- **Sequences** (prelude): `take`, `drop`, `take-while`, `drop-while`,
   `partition`, `flatten`, `zip`
-- **Control flow**: `when`, `unless`, `cond`, `case`
-- **Bindings**: `let`, `let*`, `letrec`, `destructuring-bind`
-- **Looping**: `do-list`, `loop`/`recur`, `until`
-- **Threading**: `->`, `->>`
-- **Error handling**: `try`/`catch`/`finally`, `assert`
-- **Strings & I/O**: `str`, `string-join`, `string-split`, `display`,
-  `format`
+- **Control flow** (prelude): `when`, `unless`, `cond`, `case`
+- **Bindings** (prelude): `let`, `let*`, `letrec`, `destructuring-bind`
+- **Threading** (prelude): `->`, `->>`
+- **Looping** (import looping): `do-list`, `loop`/`recur`, `until`
+- **Error handling** (prelude/import assert): `try`, `try-catch`
+  (prelude); `assert`, `assert-equal` (import assert)
+- **Strings & display** (import strings/display): `string-join`,
+  `string-split`, `string-append` (import strings); `display`,
+  `println`, `format-value` (import display)
 - **Macros**: `gensym`, `macroexpand`, `eval`
-- **Predicates**: `null?`, `list?`, `number?`, `string?`, `fn?`, and
-  more
+- **Predicates** (prelude): `null?`, `list?`, `number?`, `string?`,
+  `fn?`, and more
 
 For the complete function reference, see the [Standard Library
 Reference](articles/lang-reference.html).
@@ -248,7 +251,7 @@ use `Engine$new(load_prelude = FALSE)` for a completely bare engine):
 ``` lisp
 (import math)      ; inc/dec/abs/min/max/floor/ceiling/round/square/...
 (import looping)   ; until/do-list/loop/recur
-(import sort)      ; sort/sort-by
+(import sort)      ; list-sort/sort-by
 (import strings)   ; str/string-join/string-split/...
 ```
 
@@ -271,7 +274,9 @@ Imports](articles/modules.html) guide for defining your own modules.
 - **Truthiness**: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsey;
   everything else is truthy (same as R).
 - **Lists**: Arl lists are backed by R lists or calls; `car` returns the
-  head and `cdr` returns the tail as a list.
+  head and `cdr` returns the tail as a list. Dotted pairs (`cons` with
+  non-list cdr) are also supported; see the [Arl vs
+  Scheme](articles/arl-vs-scheme.html) vignette.
 - **Keywords**: `:kw` tokens are self-evaluating and become named
   arguments in function calls.
 

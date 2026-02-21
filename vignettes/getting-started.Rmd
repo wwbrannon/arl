@@ -223,7 +223,8 @@ toplevel environment.
 The engine loads the **prelude** automatically — 10 modules (`logic`, `core`,
 `types`, `list`, `equality`, `functional`, `control`, `sequences`, `binding`,
 `threading`) whose exports are available immediately. Functions like `when`,
-`let`, `do-list`, `->`, and `try` come from the prelude and need no import.
+`let`, `->`, and `try` come from the prelude and need no import.
+`do-list` requires `(import looping :refer :all)`.
 
 Non-prelude modules must be loaded explicitly with `import`. A bare
 `(import X)` makes the module available for qualified access (e.g.

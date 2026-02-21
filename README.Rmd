@@ -228,8 +228,8 @@ explicit `(import ...)`. Key areas include:
 - **Bindings** (prelude): `let`, `let*`, `letrec`, `destructuring-bind`
 - **Threading** (prelude): `->`, `->>`
 - **Looping** (import looping): `do-list`, `loop`/`recur`, `until`
-- **Error handling** (import assertions): `try`/`catch`/`finally`, `assert`
-- **Strings & I/O** (import strings/io): `str`, `string-join`, `string-split`, `display`, `format`
+- **Error handling** (prelude/import assert): `try`, `try-catch` (prelude); `assert`, `assert-equal` (import assert)
+- **Strings & display** (import strings/display): `string-join`, `string-split`, `string-append` (import strings); `display`, `println`, `format-value` (import display)
 - **Macros**: `gensym`, `macroexpand`, `eval`
 - **Predicates** (prelude): `null?`, `list?`, `number?`, `string?`, `fn?`, and more
 

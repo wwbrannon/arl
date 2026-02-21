@@ -221,8 +221,8 @@ a loop. To debug:
 
 1. Use `engine$inspect_compilation()` to see the compiled R code.
 2. Temporarily add `(print ...)` statements inside the function body.
-3. Or disable TCO temporarily with `engine$set_compiler_option("enable_tco", FALSE)`
-   to get full stack traces during debugging.
+3. Or disable TCO temporarily with `Engine$new(disable_tco = TRUE)` or
+   `options(arl.disable_tco = TRUE)` to get full stack traces during debugging.
 
 ## Related guides
 

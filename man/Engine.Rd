@@ -107,6 +107,9 @@ method is not guaranteed to be stable across package versions.
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+A list of parsed Arl expressions (R language objects).
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ArlEngine-write"></a>}}
@@ -125,6 +128,9 @@ package versions.
 \item{\code{expr}}{Arl expression (symbol/call/atomic value).}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A character string of the Arl source representation.
 }
 }
 \if{html}{\out{<hr>}}
@@ -146,6 +152,9 @@ Evaluate one or more expressions.
 \item{\code{env}}{Optional environment or Env used as the engine base.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The result of the last evaluated expression.
 }
 }
 \if{html}{\out{<hr>}}
@@ -169,6 +178,9 @@ Read and evaluate Arl source text. Convenience wrapper around
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+The result of the last evaluated expression.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ArlEngine-eval_string"></a>}}
@@ -189,6 +201,9 @@ Alias for \code{eval_text()}.
 \item{\code{source_name}}{Optional source name for error reporting.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The result of the last evaluated expression.
 }
 }
 \if{html}{\out{<hr>}}
@@ -213,6 +228,9 @@ isolated child scope, create one explicitly:
 \item{\code{cache}}{Logical; if TRUE (the default), use the module cache.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The result of the last evaluated expression (invisibly).
 }
 }
 \if{html}{\out{<hr>}}
@@ -287,6 +305,9 @@ lookup in a specific package.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+Help text (invisibly), or NULL if topic not found.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ArlEngine-repl"></a>}}
@@ -297,6 +318,9 @@ Start the Arl REPL using this engine.
 \if{html}{\out{<div class="r">}}\preformatted{Engine$repl()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+NULL (invisibly); called for side effects.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ArlEngine-enable_coverage"></a>}}
@@ -310,6 +334,9 @@ Should be called before running code you want to track.
 \if{html}{\out{<div class="r">}}\preformatted{Engine$enable_coverage()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+The engine (invisibly), for method chaining.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ArlEngine-disable_coverage"></a>}}
@@ -320,6 +347,9 @@ Disable coverage tracking.
 \if{html}{\out{<div class="r">}}\preformatted{Engine$disable_coverage()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+The engine (invisibly), for method chaining.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ArlEngine-get_coverage"></a>}}
@@ -346,6 +376,9 @@ Reset coverage data.
 \if{html}{\out{<div class="r">}}\preformatted{Engine$reset_coverage()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+The engine (invisibly), for method chaining.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ArlEngine-get_env"></a>}}
@@ -440,6 +473,9 @@ Format and print an Arl error with source context.
 \item{\code{file}}{Connection to print to (default \code{stderr()}).}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+NULL (invisibly); called for side effects.
 }
 }
 }
