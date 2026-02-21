@@ -49,7 +49,7 @@ Env <- R6::R6Class(
     #   with baseenv() as parent.
     initialize = function(env = NULL) {
       if (is.null(env)) {
-        env <- new.env(parent = baseenv())
+        env <- arl_new_env(parent = baseenv())
       }
       if (!is.environment(env)) {
         stop("Env requires an environment")
@@ -169,7 +169,7 @@ Env <- R6::R6Class(
       target_env <- if (is.null(env)) self$env else env
       registry <- get0(name, envir = target_env, inherits = TRUE)
       if (is.null(registry) && create) {
-        registry <- new.env(parent = emptyenv())
+        registry <- arl_new_env(parent = emptyenv())
         assign(name, registry, envir = target_env)
         lockBinding(name, target_env)
       }

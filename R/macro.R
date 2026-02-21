@@ -159,7 +159,7 @@ MacroExpander <- R6::R6Class(
     local_macro_registry = function(env) {
       registry <- get0(".__macros", envir = env, inherits = FALSE)
       if (is.null(registry)) {
-        registry <- new.env(parent = emptyenv())
+        registry <- arl_new_env(parent = emptyenv())
         assign(".__macros", registry, envir = env)
         lockBinding(".__macros", env)
       }

@@ -4,7 +4,7 @@
 # Create a namespace node: a locked environment representing a hierarchical module prefix.
 # Used for qualified access like collections/sorted-set where "collections" is a namespace.
 make_namespace_node <- function(prefix) {
-  ns <- new.env(parent = emptyenv())
+  ns <- arl_new_env(parent = emptyenv())
   assign(".__namespace_prefix", prefix, envir = ns)
   class(ns) <- "arl_namespace"
   lockEnvironment(ns, bindings = TRUE)
@@ -35,7 +35,7 @@ squash_active_bindings <- function(module_env, orig_names, target_names,
   if (!is.null(module_macro_registry)) {
     target_macro_registry <- get0(".__macros", envir = target_env, inherits = FALSE)
     if (is.null(target_macro_registry)) {
-      target_macro_registry <- new.env(parent = emptyenv())
+      target_macro_registry <- arl_new_env(parent = emptyenv())
       base::assign(".__macros", target_macro_registry, envir = target_env)
       lockBinding(".__macros", target_env)
     }
@@ -132,7 +132,7 @@ ModuleRegistry <- R6::R6Class(
         stop(sprintf("module '%s' is already defined", name))
       }
       # Create locked environment entry instead of list for true immutability
-      entry_env <- new.env(parent = emptyenv())
+      entry_env <- arl_new_env(parent = emptyenv())
       entry_env$env <- env
       entry_env$exports <- exports
       entry_env$path <- path
@@ -157,7 +157,7 @@ ModuleRegistry <- R6::R6Class(
         exports <- as.character(exports)
       }
       # Create new locked environment with updated exports (can't mutate old one)
-      entry_env <- new.env(parent = emptyenv())
+      entry_env <- arl_new_env(parent = emptyenv())
       entry_env$env <- old_entry$env
       entry_env$exports <- exports
       entry_env$path <- old_entry$path
@@ -360,7 +360,7 @@ ModuleRegistry <- R6::R6Class(
         # These need to go into the target's own macro registry
         target_macro_registry <- get0(".__macros", envir = target_env, inherits = FALSE)
         if (is.null(target_macro_registry)) {
-          target_macro_registry <- new.env(parent = emptyenv())
+          target_macro_registry <- arl_new_env(parent = emptyenv())
           base::assign(".__macros", target_macro_registry, envir = target_env)
           lockBinding(".__macros", target_env)
         }
@@ -417,7 +417,7 @@ ModuleRegistry <- R6::R6Class(
     # and splice it into target_env's parent chain.
     create_import_proxy = function(module_env, orig_names, target_names,
                                    module_macro_registry, target_env, module_name) {
-      proxy <- new.env(parent = parent.env(target_env))
+      proxy <- arl_new_env(parent = parent.env(target_env))
       assign(".__import_proxy", TRUE, envir = proxy)
       lockBinding(".__import_proxy", proxy)
       assign(".__import_module_name", module_name, envir = proxy)
@@ -441,7 +441,7 @@ ModuleRegistry <- R6::R6Class(
 
       # Create macro registry in proxy for exported macros
       if (!is.null(module_macro_registry)) {
-        proxy_macro_registry <- new.env(parent = emptyenv())
+        proxy_macro_registry <- arl_new_env(parent = emptyenv())
         has_macros <- FALSE
         for (i in seq_along(orig_names)) {
           local({
@@ -542,7 +542,7 @@ ModuleRegistry <- R6::R6Class(
       proxy_macro_reg <- get0(".__macros", envir = proxy, inherits = FALSE)
       if (!is.null(module_macro_registry)) {
         if (is.null(proxy_macro_reg)) {
-          proxy_macro_reg <- new.env(parent = emptyenv())
+          proxy_macro_reg <- arl_new_env(parent = emptyenv())
           assign(".__macros", proxy_macro_reg, envir = proxy)
           lockBinding(".__macros", proxy)
         }

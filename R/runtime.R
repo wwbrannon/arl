@@ -608,7 +608,7 @@ CompiledRuntime <- R6::R6Class(
         assign(".__module", TRUE, envir = module_env)
         lockBinding(".__module", module_env)
       } else {
-        module_env <- new.env(parent = module_parent)
+        module_env <- arl_new_env(parent = module_parent)
         assign(".__module", TRUE, envir = module_env)
         lockBinding(".__module", module_env)
       }
@@ -878,7 +878,7 @@ create_reexport_forwardings <- function(module_env, names, module_name) {
           if (exists(nm, envir = proxy_macros, inherits = FALSE)) {
             # Ensure module has its own macro registry
             if (is.null(module_macro_registry)) {
-              module_macro_registry <- new.env(parent = emptyenv())
+              module_macro_registry <- arl_new_env(parent = emptyenv())
               base::assign(".__macros", module_macro_registry, envir = module_env)
               lockBinding(".__macros", module_env)
             }

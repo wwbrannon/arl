@@ -44,10 +44,21 @@
   do.call("options", opt)
 }
 
-# Wrapper for unlockBinding to avoid R CMD check NOTE
-# R CMD check flags direct calls to unlockBinding as "possibly unsafe"
-# unlockBinding is a no-op on already-unlocked bindings, so no guard needed.
+# Create a new environment tagged as Arl-owned.
+# Drop-in replacement for new.env(); unlock_binding() requires this tag.
+arl_new_env <- function(hash = TRUE, parent = emptyenv(), size = 29L) {
+  env <- new.env(hash = hash, parent = parent, size = size)
+  attr(env, ".arl_owned") <- TRUE
+  env
+}
+
+# Unlock a binding, guarding against environments we didn't create.
+# All Arl-managed environments are tagged via arl_new_env().
 unlock_binding <- function(sym, env) {
+  if (!isTRUE(attr(env, ".arl_owned", exact = TRUE))) {
+    stop("unlock_binding: refusing to unlock binding '", sym,
+         "' in non-Arl environment", call. = FALSE)
+  }
   do.call("unlockBinding", list(sym, env))
 }
 

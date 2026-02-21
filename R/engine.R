@@ -304,7 +304,7 @@ Engine <- R6::R6Class(
               module_parent <- if (!is.null(prelude_env)) prelude_env
                                else if (!is.null(builtins_env)) builtins_env
                                else target_env
-              module_env <- new.env(parent = module_parent)
+              module_env <- arl_new_env(parent = module_parent)
               assign(".__module", TRUE, envir = module_env)
               lockBinding(".__module", module_env)
 
@@ -668,8 +668,8 @@ Engine <- R6::R6Class(
       # Always build on baseenv(), even if the user passed an explicit env
       # with a different parent.
       private$.r_pkg_names <- private$.resolve_r_packages()
-      builtins_env <- new.env(parent = private$.build_pkgs_chain(private$.r_pkg_names))
-      prelude_env <- new.env(parent = builtins_env)
+      builtins_env <- arl_new_env(parent = private$.build_pkgs_chain(private$.r_pkg_names))
+      prelude_env <- arl_new_env(parent = builtins_env)
       parent.env(env) <- prelude_env
 
       # Move registries from engine_env to builtins_env so module envs
