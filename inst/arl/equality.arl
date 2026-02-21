@@ -9,7 +9,6 @@
 
   (import core :refer (r-call funcall get error))
   (import types :refer (environment? list? nil? null?))
-  (import _utils :refer (_as-list))
 
 
   ;;' @section Equality Predicates

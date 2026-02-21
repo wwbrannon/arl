@@ -186,12 +186,9 @@ test_that("list? is false but pair? is true for dotted pair (Cons)", {
 })
 
 test_that("_as-list on improper list returns proper prefix only", {
-  env <- toplevel_env(engine, new.env())
-  # _as-list is module-private in _utils; access it via the module registry
-  arl_env <- arl:::Env$new(engine$get_env())
-  registry <- arl_env$module_registry
-  utils_entry <- registry$get("_utils")
-  as_list_fn <- get("_as-list", envir = utils_entry$env)
+  # _as-list is an R builtin in builtins_env
+  builtins_env <- parent.env(parent.env(engine$get_env()))
+  as_list_fn <- get("_as-list", envir = builtins_env, inherits = FALSE)
   pl <- engine$read("'(a b . c)")[[1]][[2]]
   expect_true(inherits(pl, "ArlCons"))
   prefix <- as_list_fn(pl)

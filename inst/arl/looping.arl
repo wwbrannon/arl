@@ -4,7 +4,6 @@
   (export until do-list loop recur)
 
   (import functional :refer (map every?))
-  (import _utils :refer (_as-list))
   (import list :refer (call))
   (import types :refer (symbol? list-or-pair? list? null?))
   (import sequences :refer (zip))

@@ -5,8 +5,6 @@
           dict-has? dict-merge
           dict-update dict-map dict-filter dict-for-each dict->alist alist->dict)
 
-  (import _utils :refer (_as-list))
-
   (import core :refer (r-call error))
   (import functional :refer (filter))
 

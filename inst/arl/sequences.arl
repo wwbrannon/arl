@@ -7,8 +7,6 @@
           length= length> length<
           find distinct split-at split-with interpose partition-by)
 
-  (import _utils :refer (_as-list))
-
   (import types :refer (list?))
   (import core :refer (r-call))
   (import equality :refer (equal?))

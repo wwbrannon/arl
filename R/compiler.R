@@ -56,6 +56,8 @@ Compiler <- R6::R6Class(
     enable_begin_simplify = TRUE,
     # When FALSE, skip flattening of nested and/or expressions.
     enable_boolean_flatten = TRUE,
+    # When TRUE, compile 2-arg +/-/*// to R infix instead of function call.
+    enable_arithmetic_infix = TRUE,
     # Nesting depth: 0 means top-level. Incremented inside lambda, if, while, etc.
     nesting_depth = 0L,
     # Last compilation error (message) when compile() returns NULL.
@@ -82,7 +84,8 @@ Compiler <- R6::R6Class(
         enable_identity_elim = self$enable_identity_elim,
         enable_truthiness_opt = self$enable_truthiness_opt,
         enable_begin_simplify = self$enable_begin_simplify,
-        enable_boolean_flatten = self$enable_boolean_flatten
+        enable_boolean_flatten = self$enable_boolean_flatten,
+        enable_arithmetic_infix = self$enable_arithmetic_infix
       )
     },
     # @description Compile one expression. Returns R expression or NULL (cannot compile).
@@ -1378,6 +1381,14 @@ Compiler <- R6::R6Class(
           if (!is.null(identity_result)) {
             return(identity_result)
           }
+        }
+      }
+
+      # Emit R infix for common 2-arg arithmetic (avoids variadic builtin overhead)
+      if (isTRUE(self$enable_arithmetic_infix) && is.symbol(op) && length(args) == 2L) {
+        op_name <- as.character(op)
+        if (op_name %in% c("+", "-", "*", "/")) {
+          return(as.call(list(op, args[[1L]], args[[2L]])))
         }
       }
 

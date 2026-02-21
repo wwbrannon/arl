@@ -3,8 +3,6 @@
 (module display
   (export format-value display println string-concat trace)
 
-  (import _utils :refer (_as-list))
-
   (import strings :refer (string-join))
   (import dict :refer (dict? dict-keys dict-get))
   (import set :refer (set?))

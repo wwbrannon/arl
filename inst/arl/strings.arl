@@ -11,8 +11,6 @@
           number->string string->number
           string-prefix? string-suffix? string-empty? string-repeat)
 
-  (import _utils :refer (_as-list))
-
   (import math :refer (quotient))
   (import core :refer (r-call))
 

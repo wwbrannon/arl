@@ -5,7 +5,6 @@
           curry juxt constantly iterate iterate-until memoize
           for-each count map-indexed group-by frequencies)
 
-  (import _utils :refer (_as-list))
   (import list :refer (append))
   (import types :refer (null?))
   (import core :refer (r-call))

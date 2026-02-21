@@ -65,21 +65,24 @@ test_that("write_code() creates cache files", {
 
   expect_true(result)
   expect_true(file.exists(paths$code_cache))
-  expect_true(file.exists(paths$code_r))
+  # .code.R only written when debug_cache is TRUE
+  expect_false(file.exists(paths$code_r))
 })
 
-test_that("write_code() creates human-readable .code.R file", {
+test_that("write_code() creates human-readable .code.R file when debug_cache is TRUE", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
   on.exit({
     unlink(tmp_file)
     unlink(dirname(tmp_file), recursive = TRUE)
+    options(arl.debug_cache = NULL)
   })
 
   compiled_body <- list(quote(foo <- 42), quote(bar <- "test"))
   paths <- cache$get_paths(tmp_file)
 
+  options(arl.debug_cache = TRUE)
   cache$write_code("test", compiled_body, c("foo", "bar"), TRUE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags)
 
   r_code <- readLines(paths$code_r)
@@ -404,7 +407,9 @@ test_that("write_code() cleans up old cache files for same source", {
     unlink(cache_dir, recursive = TRUE)
   })
 
-  # Write cache for hash H1
+  # Write cache for hash H1 (with debug_cache to test .code.R cleanup)
+  options(arl.debug_cache = TRUE)
+  on.exit(options(arl.debug_cache = NULL), add = TRUE)
   paths1 <- cache$get_paths(tmp_file)
   cache$write_code("test", list(quote(foo <- 42)), c("foo"), FALSE, FALSE,
                    tmp_file, paths1$file_hash)

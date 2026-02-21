@@ -25,6 +25,8 @@
 #' @param disable_tco Logical; if TRUE, disable self-tail-call optimization.
 #' @param disable_constant_folding Logical; if TRUE, disable compile-time constant folding.
 #' @param disable_optimizations Logical; if TRUE, disable all non-essential compiler optimizations.
+#' @param disable_arithmetic_infix Logical; if TRUE, disable 2-arg arithmetic infix compilation.
+#' @param disable_bytecode Logical; if TRUE, disable bytecode compilation of cached modules.
 #' @param value Value to format for display.
 #' @param fn A zero-argument function to call with error context.
 #' @param file Connection to print to.
@@ -69,6 +71,8 @@ Engine <- R6::R6Class(
     initialize = function(coverage_tracker = NULL, load_prelude = TRUE,
                           disable_tco = NULL, disable_constant_folding = NULL,
                           disable_optimizations = NULL,
+                          disable_arithmetic_infix = NULL,
+                          disable_bytecode = NULL,
                           r_packages = "search_path") {
       private$.env <- Env$new()
       private$.source_tracker <- SourceTracker$new()
@@ -99,6 +103,8 @@ Engine <- R6::R6Class(
         private$.compiler$enable_truthiness_opt <- FALSE
         private$.compiler$enable_begin_simplify <- FALSE
         private$.compiler$enable_boolean_flatten <- FALSE
+        private$.compiler$enable_arithmetic_infix <- FALSE
+        private$.enable_bytecode <- FALSE
       }
       # Disable constant folding when coverage is active — folding evaluates
       # via base:: and bypasses Arl function bodies, defeating instrumentation.
@@ -120,6 +126,22 @@ Engine <- R6::R6Class(
       }
       if (isTRUE(disable_tco)) {
         private$.compiler$enable_tco <- FALSE
+      }
+      # Disable 2-arg arithmetic infix when requested.
+      # Priority: explicit parameter > R option > env var > default FALSE.
+      if (is.null(disable_arithmetic_infix)) {
+        disable_arithmetic_infix <- .pkg_option("disable_arithmetic_infix", FALSE)
+      }
+      if (isTRUE(disable_arithmetic_infix)) {
+        private$.compiler$enable_arithmetic_infix <- FALSE
+      }
+      # Disable bytecode compilation of cached modules when requested.
+      # Priority: explicit parameter > R option > env var > default FALSE.
+      if (is.null(disable_bytecode)) {
+        disable_bytecode <- .pkg_option("disable_bytecode", FALSE)
+      }
+      if (isTRUE(disable_bytecode)) {
+        private$.enable_bytecode <- FALSE
       }
       context$compiler <- private$.compiler
 
@@ -299,11 +321,14 @@ Engine <- R6::R6Class(
 
               # Evaluate cached compiled expressions in module environment
               if (length(cache_data$compiled_body) == 1L) {
-                result <- private$.compiled_runtime$eval_compiled(cache_data$compiled_body[[1L]], module_env)
+                compiled_expr <- cache_data$compiled_body[[1L]]
               } else {
-                block <- as.call(c(list(quote(`{`)), cache_data$compiled_body))
-                result <- private$.compiled_runtime$eval_compiled(block, module_env)
+                compiled_expr <- as.call(c(list(quote(`{`)), cache_data$compiled_body))
               }
+              if (isTRUE(private$.enable_bytecode)) {
+                compiled_expr <- compiler::compile(compiled_expr, env = module_env)
+              }
+              result <- private$.compiled_runtime$eval_compiled(compiled_expr, module_env)
 
               finalize_module_env(module_env, module_name, exports, export_all,
                                  re_export, module_registry)
@@ -570,6 +595,7 @@ Engine <- R6::R6Class(
     .module_cache = NULL,
     .r_packages_mode = NULL,
     .r_pkg_names = NULL,
+    .enable_bytecode = TRUE,
 
     resolve_env_arg = function(env) {
       resolve_env(env, private$.env$env)

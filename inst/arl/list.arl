@@ -13,7 +13,6 @@
           range iota make-list
           list-ref list-tail)
 
-  (import _utils :refer (_as-list))
   (import core :refer (r-call error))
   (import types :refer (null? list?))
 

@@ -73,34 +73,36 @@ ModuleCache <- R6::R6Class(
 
         saveRDS(cache_data, paths$code_cache, compress = FALSE)
 
-        # Also write human-readable .code.R file for inspection
-        tryCatch({
-          r_code <- c(
-            paste0("# Compiled code for module: ", module_name),
-            paste0("# Source: ", basename(src_file)),
-            paste0("# Hash: ", file_hash),
-            paste0("# Arl version: ", utils::packageVersion("arl")),
-            paste0("# Exports: ", paste(exports, collapse = ", ")),
-            paste0("# Export all: ", export_all),
-            "",
-            "# === Compiled Body Expressions ==="
-          )
-
-          for (i in seq_along(compiled_body)) {
-            expr <- compiled_body[[i]]
+        # Write human-readable .code.R file for inspection (debug only)
+        if (isTRUE(.pkg_option("debug_cache", FALSE))) {
+          tryCatch({
             r_code <- c(
-              r_code,
+              paste0("# Compiled code for module: ", module_name),
+              paste0("# Source: ", basename(src_file)),
+              paste0("# Hash: ", file_hash),
+              paste0("# Arl version: ", utils::packageVersion("arl")),
+              paste0("# Exports: ", paste(exports, collapse = ", ")),
+              paste0("# Export all: ", export_all),
               "",
-              paste0("# --- Expression ", i, " ---"),
-              deparse(expr, width.cutoff = 80)
+              "# === Compiled Body Expressions ==="
             )
-          }
 
-          writeLines(r_code, paths$code_r)
-        }, error = function(e) {
-          # Non-fatal - .code.R is just for inspection
-          warning(sprintf("Failed to write .code.R for %s: %s", module_name, conditionMessage(e)))
-        })
+            for (i in seq_along(compiled_body)) {
+              expr <- compiled_body[[i]]
+              r_code <- c(
+                r_code,
+                "",
+                paste0("# --- Expression ", i, " ---"),
+                deparse(expr, width.cutoff = 80)
+              )
+            }
+
+            writeLines(r_code, paths$code_r)
+          }, error = function(e) {
+            # Non-fatal - .code.R is just for inspection
+            warning(sprintf("Failed to write .code.R for %s: %s", module_name, conditionMessage(e)))
+          })
+        }
 
         TRUE
       }, error = function(e) {
