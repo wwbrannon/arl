@@ -1104,30 +1104,6 @@ Compiler <- R6::R6Class(
     compile_import_runtime = function(expr) {
       private$fail("import-runtime is reserved for future use and not yet implemented")
     },
-    compile_help = function(expr) {
-      if (!(length(expr) == 2 || length(expr) == 4)) {
-        return(private$fail("help requires (help topic) or (help topic :package pkg)"))
-      }
-      topic_quoted <- as.call(list(quote(quote), expr[[2]]))
-      if (length(expr) == 2) {
-        return(as.call(list(
-          as.symbol(".__help"),
-          topic_quoted,
-          as.symbol(self$env_var_name)
-        )))
-      }
-      package_kw <- expr[[3]]
-      if (!inherits(package_kw, "arl_keyword") || !identical(as.character(package_kw), "package")) {
-        return(private$fail("help keyword form requires :package: (help topic :package pkg)"))
-      }
-      package_quoted <- as.call(list(quote(quote), expr[[4]]))
-      as.call(list(
-        as.symbol(".__help"),
-        topic_quoted,
-        as.symbol(self$env_var_name),
-        package_quoted
-      ))
-    },
     compile_while = function(expr) {
       if (length(expr) < 3) {
         return(private$fail("while requires at least 2 arguments: (while test body...)"))
@@ -1331,37 +1307,6 @@ Compiler <- R6::R6Class(
         re_export,
         compiled_body_quoted,
         src_file,
-        as.symbol(self$env_var_name)
-      ))
-    },
-    compile_formula = function(expr) {
-      formula_parts <- list(as.symbol("~"))
-      if (length(expr) > 1) {
-        for (i in 2:length(expr)) {
-          formula_parts <- c(formula_parts, list(expr[[i]]))
-        }
-      }
-      as.call(formula_parts)
-    },
-    compile_package_access = function(expr) {
-      if (length(expr) != 3) {
-        op <- as.character(expr[[1]])
-        return(private$fail(sprintf("%s requires exactly 2 arguments: (%s pkg name)", op, op)))
-      }
-      # Pass package and name as strings so lookup works without namespace in env
-      pkg_str <- private$as_name_string(expr[[2]])
-      name_str <- private$as_name_string(expr[[3]])
-      if (is.null(pkg_str)) {
-        return(private$fail("Package name must be a symbol or string"))
-      }
-      if (is.null(name_str)) {
-        return(private$fail("Function/object name must be a symbol or string"))
-      }
-      as.call(list(
-        as.symbol(".__pkg_access"),
-        as.character(expr[[1]]),
-        pkg_str,
-        name_str,
         as.symbol(self$env_var_name)
       ))
     },

@@ -205,53 +205,6 @@ FileDeps <- R6::R6Class(
             edges[[length(edges) + 1L]] <- list(from = nm, to = imp)
       }
       list(vertices = vertices, edges = edges)
-    },
-    strip_strings = function(text) {
-      # Replace string literal contents with spaces so tokenization ignores them.
-      n <- nchar(text)
-      if (n == 0L) return(text)
-      result <- character(n)
-      in_str <- FALSE
-      quote_char <- ""
-      for (i in seq_len(n)) {
-        c <- substr(text, i, i)
-        if (in_str) {
-          if (c == quote_char && (i == 1L || substr(text, i - 1L, i - 1L) != "\\"))
-            in_str <- FALSE
-          result[i] <- " "
-          next
-        }
-        if (c %in% c('"', "'")) {
-          in_str <- TRUE
-          quote_char <- c
-          result[i] <- " "
-          next
-        }
-        result[i] <- c
-      }
-      paste(result, collapse = "")
-    },
-    find_undeclared_deps = function(module_name, body_text, all_exports, declared_imports) {
-      other_exports <- list()
-      for (nm in names(all_exports))
-        if (nm != module_name && !nm %in% declared_imports)
-          for (sym in all_exports[[nm]])
-            other_exports[[sym]] <- c(other_exports[[sym]], nm)
-      body_no_strings <- private$strip_strings(body_text)
-      tokens <- unique(
-        regmatches(body_no_strings, gregexpr("[a-zA-Z0-9_.?-]+", body_no_strings))[[1]]
-      )
-      reported <- character()
-      for (sym in tokens) {
-        builtins <- c("lambda", "define", "defmacro", "if", "begin", "quote",
-          "set!", "import", "export", "module", "list", "not", "and", "or")
-        if (sym %in% builtins) next
-        if (!sym %in% names(other_exports)) next
-        from_modules <- other_exports[[sym]]
-        for (k in from_modules)
-          reported <- c(reported, paste0(module_name, " uses ", k, " but does not import ", k))
-      }
-      unique(reported)
     }
   )
 )

@@ -299,10 +299,6 @@ CompiledRuntime <- R6::R6Class(
         self$import_compiled(arg_value, env, rename = rename, reload = reload, as_alias = as_alias, refer = refer)
       }, "Module import handler.")
 
-      assign_and_lock(".__pkg_access", function(op_name, pkg, name, env) {
-        self$pkg_access_compiled(op_name, pkg, name, env)
-      }, "R package access handler (r/pkg::fn).")
-
       # Coverage tracking hook: installed when coverage is enabled
       tracker <- self$context$coverage_tracker
       if (!is.null(tracker)) {
@@ -549,20 +545,6 @@ CompiledRuntime <- R6::R6Class(
       }
       invisible(NULL)
     },
-    # Package access (:: / :::) for compiled code. pkg and name are strings from the compiler.
-    pkg_access_compiled = function(op_name, pkg_name, obj_name, env) {
-      if (!is.character(pkg_name) || length(pkg_name) != 1 ||
-          !is.character(obj_name) || length(obj_name) != 1) {
-        stop("Package and object names must be length-1 character")
-      }
-      if (identical(op_name, "::")) {
-        getExportedValue(pkg_name, obj_name)
-      } else if (identical(op_name, ":::")) {
-        getFromNamespace(obj_name, pkg_name)
-      } else {
-        stop("Unknown package access operator: ", op_name)
-      }
-    },
     subscript_call_compiled = function(op_name, args, env) {
       if (!is.character(op_name) || length(op_name) != 1) {
         stop("subscript operator name must be a single string")
@@ -737,37 +719,6 @@ CompiledRuntime <- R6::R6Class(
         return(as.call(list(as.symbol("quote"), value)))
       }
       value
-    },
-    eval_seq = function(exprs, env) {
-      if (is.null(exprs) || length(exprs) == 0) {
-        return(invisible(NULL))
-      }
-      if (!is.list(exprs)) {
-        exprs <- list(exprs)
-      }
-      # Cache R6 method references to avoid repeated context lookups in loop
-      macro_expander <- self$context$macro_expander
-      compiler <- self$context$compiler
-      coverage_tracker <- self$context$coverage_tracker
-      source_tracker <- self$context$source_tracker
-      result <- NULL
-      for (expr in exprs) {
-        # Track top-level expression start line only (don't paint body ranges)
-        if (!is.null(coverage_tracker) && coverage_tracker$enabled && !is.null(source_tracker)) {
-          arl_src <- source_tracker$src_get(expr)
-          if (!is.null(arl_src) && !is.null(arl_src$file) && !is.null(arl_src$start_line)) {
-            coverage_tracker$track(list(
-              file = arl_src$file,
-              start_line = arl_src$start_line,
-              end_line = arl_src$start_line
-            ))
-          }
-        }
-        expanded <- macro_expander$macroexpand(expr, env = env, preserve_src = TRUE)
-        compiled <- compiler$compile(expanded, env, strict = TRUE)
-        result <- self$eval_compiled(compiled, env)
-      }
-      result
     },
     derive_module_name_from_path = function(src_file) {
       # Try to derive relative to stdlib root

@@ -11,7 +11,7 @@ test_that("install_helpers() creates all required helpers", {
     ".__env", ".__quote", ".__true_p", ".__assign_pattern",
     ".__help", ".__subscript_call", "quasiquote",
     ".__delay", ".__defmacro", ".__macro_quasiquote",
-    ".__module", ".__import", ".__pkg_access"
+    ".__module", ".__import"
   )
 
   for (helper in expected_helpers) {
@@ -343,52 +343,6 @@ test_that("import_compiled() attaches exports to target environment", {
   expect_true(is.function(get("number?", envir = test_env)))
   expect_true(is.function(get("string?", envir = test_env)))
   expect_true(is.function(get("list?", envir = test_env)))
-})
-
-# Package access tests
-test_that("pkg_access_compiled() with :: gets exported value", {
-  eng <- make_engine()
-
-  result <- engine_field(eng, "compiled_runtime")$pkg_access_compiled("::", "base", "identity", eng$get_env())
-
-  expect_identical(result, base::identity)
-})
-
-test_that("pkg_access_compiled() with ::: gets internal value", {
-  eng <- make_engine()
-
-  # Get an internal function from base (example: .deparseOpts)
-  result <- engine_field(eng, "compiled_runtime")$pkg_access_compiled(":::", "base", ".deparseOpts", eng$get_env())
-
-  expect_true(is.function(result))
-})
-
-test_that("pkg_access_compiled() errors on invalid operator", {
-  eng <- make_engine()
-
-  expect_error(
-    engine_field(eng, "compiled_runtime")$pkg_access_compiled(":::", "base", "identity", eng$get_env()),
-    NA  # Should not error for ::: (it's valid)
-  )
-
-  expect_error(
-    engine_field(eng, "compiled_runtime")$pkg_access_compiled("unknown", "base", "identity", eng$get_env()),
-    "Unknown package access operator"
-  )
-})
-
-test_that("pkg_access_compiled() requires string arguments", {
-  eng <- make_engine()
-
-  expect_error(
-    engine_field(eng, "compiled_runtime")$pkg_access_compiled("::", 123, "identity", eng$get_env()),
-    "must be length-1 character"
-  )
-
-  expect_error(
-    engine_field(eng, "compiled_runtime")$pkg_access_compiled("::", "base", 123, eng$get_env()),
-    "must be length-1 character"
-  )
 })
 
 # Quasiquote tests
