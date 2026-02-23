@@ -28,6 +28,7 @@ Suggests:
     jinjar (>= 0.3.0)
 URL: https://github.com/wwbrannon/arl
 BugReports: https://github.com/wwbrannon/arl/issues
+Language: en-US
 Encoding: UTF-8
 ByteCompile: true
 NeedsCompilation: no
