@@ -19,12 +19,12 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R CMD check](https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/check.yaml)
-[![Codecov](https://codecov.io/gh/wwbrannon/arl/graph/badge.svg?token=7pxGM6lI73)](https://codecov.io/gh/wwbrannon/arl)
+[![Codecov](https://app.codecov.io/gh/wwbrannon/arl/graph/badge.svg?token=7pxGM6lI73)](https://app.codecov.io/gh/wwbrannon/arl)
 [![CRAN status](https://www.r-pkg.org/badges/version/arl)](https://CRAN.R-project.org/package=arl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!--
-[![R Coverage](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=r-code)](https://codecov.io/gh/wwbrannon/arl?flags%5B0%5D=r-code)
-[![Arl Coverage](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=arl-code)](https://codecov.io/gh/wwbrannon/arl?flags%5B0%5D=arl-code)
+[![R Coverage](https://app.codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=r-code)](https://app.codecov.io/gh/wwbrannon/arl?flags%5B0%5D=r-code)
+[![Arl Coverage](https://app.codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=arl-code)](https://app.codecov.io/gh/wwbrannon/arl?flags%5B0%5D=arl-code)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-red.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/arl)](https://CRAN.R-project.org/package=arl)
 [![R-universe](https://wwbrannon.r-universe.dev/badges/arl)](https://wwbrannon.r-universe.dev/arl)

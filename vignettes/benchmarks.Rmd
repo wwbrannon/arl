@@ -37,7 +37,7 @@ if (!is.null(bench_json)) {
 has_bench_data <- !is.null(bench_json)
 ```
 
-This page summarises Arl's performance characteristics.
+This page summarizes Arl's performance characteristics.
 For full profiling details and optimization history, see
 [`benchmarks/PERFORMANCE.md`](https://github.com/wwbrannon/arl/blob/main/benchmarks/PERFORMANCE.md)
 in the repository.
