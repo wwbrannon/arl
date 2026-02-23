@@ -6,6 +6,9 @@
 \usage{
 register_knitr_engine()
 }
+\value{
+NULL (invisibly); called for its side effect of registering the engine.
+}
 \description{
 Call this function in a vignette's setup chunk to enable \code{{arl}} code
 chunks.  The engine evaluates Arl code using a shared \code{Engine}

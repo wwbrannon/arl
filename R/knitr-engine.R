@@ -229,6 +229,7 @@ evaluate_arl_code <- function(engine, code) {
 #' chunks.  The engine evaluates Arl code using a shared \code{Engine}
 #' instance that persists across chunks within a single document.
 #'
+#' @return NULL (invisibly); called for its side effect of registering the engine.
 #' @export
 #' @examples
 #' \donttest{
