@@ -80,3 +80,6 @@ benchmarks/profiles/
 
 # Coverage output directories
 /coverage/
+
+# misc
+/TODO
