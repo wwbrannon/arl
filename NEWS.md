@@ -1,54 +1,92 @@
 # arl 0.1.0
 
+Initial CRAN release of arl, a Scheme-inspired Lisp dialect embedded in R.
+
+## Language
+
+* **Special forms:** `quote`, `if`, `define`, `set!`, `lambda`, `begin`,
+  `defmacro`, `quasiquote`/`unquote`/`unquote-splicing`, `and`, `or`,
+  `while`, `delay`, `import`, and `module`.
+* **Truthiness:** `#f`, `#nil`, and `0` are falsy; everything else is truthy.
+* **Cons cells:** First-class dotted pairs, with both cons-cell and R-native
+  list representations.
+* **Destructuring:** Pattern destructuring in `define`, `set!`, `let`,
+  and `lambda`, including nested patterns, rest parameters, and defaults.
+* **Multiple values:** `values` and `call-with-values`.
+* **Continuations:** `call-cc` via R's native `callCC`.
+
+## Macro System
+
+* Compile-time code transformation with quasiquotation templates.
+* Hygiene via `gensym` and `capture`.
+* Introspection with `macro?`, `macroexpand`, `macroexpand-1`, and
+  `macroexpand-all`.
+* Documentation attachment via `;;'` comments.
+
 ## Module System
 
-* **Qualified access via `/`:** Import a module and access its exports with
-  `mod/sym` syntax (e.g. `math/inc`). The `/` is reader sugar for the new
-  `module-ref` builtin.
-* **Symbol renames:** `r/call` → `r-call`, `r/eval` → `r-eval`,
-  `call/cc` → `call-cc` (freeing `/` for namespace use).
-* **New import modifiers:** `:refer` and `:as` replace the old `:only`,
-  `:except`, and `:prefix` modifiers. Bare `(import X)` now binds the module
-  without dumping exports; use `(import X :refer :all)` for unqualified access.
-* **First-class modules:** Modules are bound as first-class environment objects.
-  Use `:as` to alias, `:refer` to selectively import, and qualified access for
-  everything else.
-* **Nameless modules:** `(module (export ...) body...)` derives its name from
-  the source filename.
-* **Binding locking:** Module bindings are locked after load (immutable from
-  outside).
-* **`export-all :re-export`:** Facade modules can re-export imported symbols.
-* **`_` prefix convention:** Names starting with `_` are excluded from
-  `export-all` (private by convention).
-* **New builtins:** `module-ref`, `module?`, `namespace?`, `module-exports`,
-  `module-name` for module introspection.
+* Named and anonymous modules with explicit or `export-all` exports.
+* Qualified access via `/` syntax (e.g. `math/inc`).
+* Import modifiers: `:refer`, `:as`, `:rename`, `:reload`.
+* Modules are first-class environment objects with locked bindings.
+* Re-export support, circular dependency detection, and module caching.
+* Introspection: `module?`, `module-name`, `module-exports`, `module-ref`.
 
 ## Compiler
 
-* **Self-tail-call optimization (self-TCO):** The compiler detects
-  `(define name (lambda ...))` with self-calls in tail position and rewrites
-  them as `while` loops, avoiding stack overflow. Works through `if`, `begin`,
-  `cond`, `let`, `let*`, and `letrec`, and supports destructuring params,
-  keyword args, and rest params.
+* Single-pass compilation from Arl to R expressions.
+* Self-tail-call optimization: rewrites self-recursive functions in tail
+  position as `while` loops.
+* Constant folding, dead code elimination, strength reduction, identity
+  lambda elimination, boolean flattening, and arithmetic infix compilation.
 
 ## Standard Library
 
-* **Sorting module:** `list-sort`, `sort-by`, `merge-sorted`, and `stable-sort` functions.
-* **Dict and set modules:** Hash-backed `dict` and `set` data structures with
-  full helper suites (`dict-get`, `dict-set`, `dict-merge`, `set-union`, etc.).
-* **Struct module:** `defstruct` macro for S3-backed struct constructors,
-  predicates, and accessors.
-* **Help and docstring system:** `(help "topic")` dispatches to specials,
-  macros, function docstrings, or R help. `(doc fn)` / `(doc! fn "text")` for
-  programmatic docstring access.
-* **Continuations:** `call-cc` and `call-with-current-continuation` via R's
-  native `callCC`.
-* **Arl code coverage:** A coverage-tracking facility instruments Arl stdlib
-  and user code, tracking line-level and branch-level (`if`) coverage. Reports
-  in console, HTML, and JSON formats; integrates with Codecov via flags.
+22 modules (~800 definitions) auto-loaded via a prelude:
+
+* **Core and logic:** `when`, `unless`, `cond`, error handling, identity.
+* **Types and equality:** Full suite of type predicates; `equal?`, `eqv?`,
+  `eq?`.
+* **List and sequences:** `append`, `reverse`, `take`, `drop`, `nth`,
+  `range`, `repeat`, `cycle`, `zip`, and more.
+* **Functional:** `map`, `filter`, `reduce`, `fold`, `compose`, `partial`,
+  `juxt`, `complement`, `constantly`.
+* **Control flow:** `try-catch`, `finally`, condition signaling and handling.
+* **Binding forms:** `let`, `let*`, `letrec` with destructuring.
+* **Threading macros:** `->`, `->>`, `as->`, `some->`, `some->>`,
+  `cond->`, `cond->>`.
+* **Looping:** `until`, `do-list`, Clojure-style `loop`/`recur`.
+* **Math:** `inc`, `dec`, `abs`, `sqrt`, trigonometric functions, and more.
+* **Strings:** `str`, `string-concat`, `string-split`, and friends.
+* **I/O:** File reading/writing, display, and formatting.
+* **Data structures:** Hash-backed `dict` and `set` types with full
+  operation suites; `defstruct` macro for S3-backed record types.
+* **Sorting:** `list-sort`, `sort-by`, `merge-sorted`, `stable-sort`.
+* **Assertions:** `assert-equal`, `assert-true`, `assert-false`, and others.
+
+## R Interoperability
+
+* Direct access to all R base and default-package functions.
+* Keyword arguments (`:name value`), formulas, `$`, `[`, `[[`, and `@`.
+* `r-eval` and `r-call` for dynamic R evaluation.
+* Bidirectional data exchange: define R objects into Arl, extract results
+  back to R.
+* Configurable R package visibility.
+
+## Developer Tools
+
+* **REPL:** Interactive prompt with multi-line input, readline history,
+  bracketed paste, and error recovery.
+* **CLI:** Script execution, `--eval` expressions, quiet mode, bare engine
+  mode, and stdin support.
+* **Help system:** `(help topic)` dispatches to special forms, builtins,
+  stdlib docstrings, or R help. `doc` and `doc!` for programmatic access.
+* **Coverage tracking:** Line-level and branch-level instrumentation with
+  console, HTML, and JSON reports.
+* **Knitr engine:** `{arl}` code chunks in R Markdown with persistent
+  engine state and syntax highlighting.
 
 ## Documentation
 
-* Getting-started, stdlib reference, compiler/internals, and troubleshooting
-  vignettes.
-* Per-function documentation for dict, set, sorting, and help/docstring APIs.
+* Vignettes: getting started, standard library reference, compiler and
+  internals, and troubleshooting.
