@@ -1,10 +1,9 @@
-words to write yourself
-o) figure out citation
 o) top couple paras of Getting Started, README and index.md need updating
-o) DESCRIPTION title and description fields
+
+o) figure out citation
 
 o) review all the docs
+o) run other cran submission steps and submit
+
 o) figure out how to host the docs
 o) add url, links
-
-o) run other cran submission steps and submit

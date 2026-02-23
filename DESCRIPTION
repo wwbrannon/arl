@@ -3,7 +3,7 @@ Type: Package
 Title: Embedded Lisp Dialect for R
 Version: 0.1.0
 Authors@R:
-    person("William", "Brannon", email = "will.brannon@gmail.com",
+    person("William", "Brannon", email = "will.brannon+cran@gmail.com",
            role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-1435-8535"))
 Description: Provides a Scheme-inspired Lisp dialect embedded in R, with
