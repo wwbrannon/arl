@@ -31,3 +31,6 @@
 ^codecov\.yml$
 ^.*\.log$
 ^vignettes/articles$
+^tools$
+^TODO$
+^build$
