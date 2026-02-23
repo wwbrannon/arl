@@ -1,0 +1,9 @@
+bibentry(
+  bibtype  = "Manual",
+  title    = "Arl: Embedded Lisp Dialect for R",
+  author   = person("William", "Brannon",
+                    comment = c(ORCID = "0000-0002-1435-8535")),
+  year     = "2026",
+  url      = "https://github.com/wwbrannon/arl",
+  note     = "R package version 0.1.0"
+)
