@@ -8,9 +8,11 @@ Provides class-based organization for tokenization, parsing, macro expansion,
 evaluation, and environment management.
 }
 \examples{
+\donttest{
 engine <- Engine$new()
 engine$eval_text("(+ 1 2 3)")
 engine$eval_string("(+ 4 5)")
+}
 }
 \section{Methods}{
 \subsection{Public methods}{

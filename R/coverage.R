@@ -21,6 +21,7 @@
 #' @keywords internal
 #'
 #' @examples
+#' \donttest{
 #' # Create a tracker and engine, then evaluate some Arl code
 #' tracker <- CoverageTracker$new()
 #' engine <- Engine$new(coverage_tracker = tracker)
@@ -32,6 +33,7 @@
 #' # HTML report written to a temp directory
 #' outfile <- file.path(tempdir(), "arl-coverage", "index.html")
 #' tracker$report_html(output_file = outfile)
+#' }
 #' @export
 CoverageTracker <- R6::R6Class(
   "ArlCoverageTracker",

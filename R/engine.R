@@ -32,9 +32,11 @@
 #' @param file Connection to print to.
 #' @param e A condition object.
 #' @examples
+#' \donttest{
 #' engine <- Engine$new()
 #' engine$eval_text("(+ 1 2 3)")
 #' engine$eval_string("(+ 4 5)")
+#' }
 #' @export
 Engine <- R6::R6Class(
   "ArlEngine",

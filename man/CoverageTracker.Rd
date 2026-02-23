@@ -18,6 +18,7 @@ Most users should interact with coverage through the
 \code{get_coverage()}, and \code{reset_coverage()} instead.
 }
 \examples{
+\donttest{
 # Create a tracker and engine, then evaluate some Arl code
 tracker <- CoverageTracker$new()
 engine <- Engine$new(coverage_tracker = tracker)
@@ -29,6 +30,7 @@ tracker$report_console()
 # HTML report written to a temp directory
 outfile <- file.path(tempdir(), "arl-coverage", "index.html")
 tracker$report_html(output_file = outfile)
+}
 }
 \keyword{internal}
 \section{Public fields}{
