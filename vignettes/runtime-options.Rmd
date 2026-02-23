@@ -57,7 +57,6 @@ For boolean settings, the environment variable values `1`, `true`, and
 |---------|----------|---------|---------|-------------|
 | Suppress display/trace | `arl.quiet` | `ARL_QUIET` | `FALSE` | Silence `display` and `trace` output |
 | CLI install directory | `arl.bin_dir` | `ARL_BIN_DIR` | `""` | Target directory for `install_cli()` |
-| Module env cache | `arl.use_env_cache` | `ARL_USE_ENV_CACHE` | `FALSE` | Cache module environments across loads |
 | REPL quiet/banner | `arl.repl_quiet` | `ARL_REPL_QUIET` | `FALSE` | Start REPL without the startup banner |
 | REPL history | `arl.repl_use_history` | `ARL_REPL_USE_HISTORY` | `TRUE` | Enable REPL command history |
 | REPL bracketed paste | `arl.repl_bracketed_paste` | `ARL_REPL_BRACKETED_PASTE` | `TRUE` | Enable bracketed-paste mode in the REPL |
