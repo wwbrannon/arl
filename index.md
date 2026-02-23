@@ -3,7 +3,7 @@
 
 # Arl
 
-**An embeeded Lisp dialect for R** — a true Lisp macro system, tail-call
+**An embedded Lisp dialect for R**: a true Lisp macro system, tail-call
 optimization, and other features new to R, but with seamless R interoperability.
 
 Arl compiles to R and evaluates with R's native `eval()`, so every R function
