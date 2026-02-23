@@ -1,14 +1,15 @@
 Package: arl
 Type: Package
-Title: A Lisp for R
+Title: Embedded Lisp Dialect for R
 Version: 0.1.0
 Authors@R:
     person("William", "Brannon", email = "will.brannon@gmail.com",
            role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-1435-8535"))
-Description: Arl is a Scheme-inspired Lisp embedded in R. It provides macros,
-    tail-call optimization, and first-class interoperability with R functions and
-    data structures. Implemented in pure R with no compiled code.
+Description: Provides a Scheme-inspired Lisp dialect embedded in R, with
+    macros, tail-call optimization, and first-class interoperability with R
+    functions and data structures. (The name 'arl' is short for 'A Lisp for
+    R'.) Implemented in pure R with no compiled code.
 License: MIT + file LICENSE
 Depends:
     R (>= 4.0)
