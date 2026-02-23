@@ -49,6 +49,8 @@ Initialize engine components and base environment.
   disable_tco = NULL,
   disable_constant_folding = NULL,
   disable_optimizations = NULL,
+  disable_arithmetic_infix = NULL,
+  disable_bytecode = NULL,
   r_packages = "search_path"
 )}\if{html}{\out{</div>}}
 }
@@ -80,6 +82,10 @@ and boolean flattening). Individual toggles like \code{disable_tco} and
 \code{disable_constant_folding} are applied after this and can override it.
 Defaults to NULL, which inherits from global option
 \code{getOption("arl.disable_optimizations", FALSE)}.}
+
+\item{\code{disable_arithmetic_infix}}{Logical; if TRUE, disable 2-arg arithmetic infix compilation.}
+
+\item{\code{disable_bytecode}}{Logical; if TRUE, disable bytecode compilation of cached modules.}
 
 \item{\code{r_packages}}{Controls which R packages are visible to Arl code.
 \code{"search_path"} (default) tracks R's \code{search()} dynamically;
@@ -281,7 +287,9 @@ deparsed R code so you can see exactly what an Arl program becomes.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-List with \code{parsed} (first expr), \code{expanded}, \code{compiled} (R expr or NULL), \code{compiled_deparsed} (character, or NULL).
+List with \code{parsed} (first expr), \code{expanded},
+\code{compiled} (R expr or NULL), \code{compiled_deparsed}
+(character, or NULL).
 }
 }
 \if{html}{\out{<hr>}}
