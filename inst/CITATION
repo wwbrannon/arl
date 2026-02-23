@@ -5,5 +5,6 @@ bibentry(
                     comment = c(ORCID = "0000-0002-1435-8535")),
   year     = "2026",
   url      = "https://github.com/wwbrannon/arl",
+  doi      = "10.5281/zenodo.18740488",
   note     = "R package version 0.1.0"
 )
