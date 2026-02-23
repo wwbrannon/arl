@@ -5,6 +5,10 @@ output:
     check_title: false
 pkgdown:
   as_is: true
+vignette: >
+  %\VignetteIndexEntry{Example: Task Runner}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include = FALSE}
