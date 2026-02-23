@@ -1,9 +1,7 @@
-o) top couple paras of Getting Started, README and index.md need updating
-
+o) make clean && make document && make profile && make bench && make coverage && make check
+o) git push and wait for tests to complete
 o) figure out citation
-
-o) review all the docs
-o) run other cran submission steps and submit
+o) devtools::release
 
 o) figure out how to host the docs
 o) add url, links

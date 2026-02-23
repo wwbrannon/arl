@@ -3,12 +3,18 @@
 
 # Arl
 
-**A Lisp dialect for R** — powerful macros, seamless R interop, and tail-call optimization out of the box.
+**An embeeded Lisp dialect for R** — a true Lisp macro system, tail-call
+optimization, and other features new to R, but with seamless R interoperability.
 
-Arl compiles to R and evaluates with R's native `eval()`, so every R function and data structure is available directly — no FFI or bridging needed. The macro system gives you compile-time code transformation, and self-tail-call optimization lets you write deep recursion without stack overflow.
+Arl compiles to R and evaluates with R's native `eval()`, so every R function
+and data structure is available directly — no compatibility layers needed. The
+macro system lets you transform code at compile time, and support for self-tail-call
+optimization allows deep recursive patterns without stack overflow. Both of
+these (and other features!) go beyond what R natively provides.
 
-- [**Getting Started**](articles/getting-started.html) — installation, REPL basics, core syntax
-- [**Examples**](articles/examples.html) — complete working programs from fibonacci to data analysis
+To get started, see the [installation and core syntax
+guide](articles/getting-started.html) or jump straight to the
+[examples](articles/examples.html) for complete working programs.
 
 ## Quick Examples
 
