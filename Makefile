@@ -65,7 +65,7 @@ document: devdoc readme vignettes site ## help: Generate all documentation
 
 .PHONY: check
 check: build ## help: Check the package (includes tests)
-	R -q -e 'devtools::check(args="--as-cran", check_dir=".")'
+	R -q -e 'devtools::check(args=c("--as-cran","--run-donttest"), check_dir=".")'
 
 .PHONY: lint
 lint: clean-cache stdlib-order ## help: Run linter checks
