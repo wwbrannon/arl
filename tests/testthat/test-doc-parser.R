@@ -251,7 +251,7 @@ test_that("annotation-based docs are available via compiler", {
   env <- engine$get_env()
 
   # Load the module from file (triggers annotation parsing in compiler)
-  engine$eval(engine$read(sprintf('(load "%s")', tmp))[[1]], env = env)
+  engine$eval(engine$read(sprintf('(load "%s")', arl_path(tmp)))[[1]], env = env)
   engine$eval(engine$read("(import test-ann-mod :refer :all)")[[1]], env = env)
 
   # The function should have annotation-based arl_doc
@@ -336,7 +336,7 @@ test_that("@param tags produce arl_doc$arguments via compiler", {
 
   engine <- make_engine()
   env <- engine$get_env()
-  engine$eval(engine$read(sprintf('(load "%s")', tmp))[[1]], env = env)
+  engine$eval(engine$read(sprintf('(load "%s")', arl_path(tmp)))[[1]], env = env)
   engine$eval(engine$read("(import param-compiler-test :refer :all)")[[1]], env = env)
 
   fn <- engine$eval(engine$read("add")[[1]], env = env)

@@ -1,3 +1,10 @@
+# Normalize a path for embedding in Arl source strings.
+# On Windows, backslashes in paths like D:\temp would be interpreted
+# as escape sequences (\t -> tab) by the Arl parser.
+arl_path <- function(path) {
+  gsub("\\\\", "/", path)
+}
+
 make_engine <- function(..., coverage_tracker = getOption("arl.coverage_tracker")) {
   if (!is.null(coverage_tracker)) {
     Engine$new(..., coverage_tracker = coverage_tracker)

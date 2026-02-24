@@ -469,7 +469,7 @@ test_that("code cache is safe with file changes", {
 
   # Load
   engine1 <- Engine$new()
-  engine1$eval_text(sprintf('(load "%s")', test_file))
+  engine1$eval_text(sprintf('(load "%s")', arl_path(test_file)))
 
   # Verify initial value
   expect_equal(engine1$eval_text("test-value"), 42)
@@ -479,7 +479,7 @@ test_that("code cache is safe with file changes", {
 
   # Reload in new engine (simulating fresh session)
   engine2 <- Engine$new()
-  engine2$eval_text(sprintf('(load "%s")', test_file))
+  engine2$eval_text(sprintf('(load "%s")', arl_path(test_file)))
 
   # Verify the change is picked up (cache was invalidated by content hash)
   expect_equal(engine2$eval_text("test-value"), 100)

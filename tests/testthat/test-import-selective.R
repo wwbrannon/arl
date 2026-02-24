@@ -237,7 +237,7 @@ test_that("import with path string supports modifiers", {
   old_wd <- setwd(m$dir)
   on.exit(setwd(old_wd), add = TRUE)
 
-  engine$eval_text(sprintf('(import "%s" :refer (square))', m$file))
+  engine$eval_text(sprintf('(import "%s" :refer (square))', arl_path(m$file)))
   expect_equal(engine$eval_text("(square 5)"), 25L)
   expect_error(engine$eval_text("(cube 3)"), "not found|could not find|object .* not found")
 })

@@ -200,7 +200,7 @@ test_that("(import \"path\") loads module by path and attaches exports", {
     "  (define double (lambda (x) (* x 2))))"
   ), module_file)
 
-  exprs <- engine$read(sprintf('(import "%s" :refer :all)', module_file))
+  exprs <- engine$read(sprintf('(import "%s" :refer :all)', arl_path(module_file)))
   engine$eval(exprs[[1]], env = env)
 
   exprs <- engine$read("(double 7)")
@@ -276,7 +276,7 @@ test_that("(import symbol) is module name, (import \"string\") is path", {
   missing_path <- tempfile(fileext = ".arl")
   expect_false(file.exists(missing_path))
   expect_error(
-    engine$eval(engine$read(sprintf('(import "%s")', missing_path))[[1]], env = env),
+    engine$eval(engine$read(sprintf('(import "%s")', arl_path(missing_path)))[[1]], env = env),
     "Module not found"
   )
 })

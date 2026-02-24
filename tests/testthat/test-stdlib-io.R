@@ -16,11 +16,11 @@ test_that("read-file and write-file work with strings", {
 
   # Write string content
   engine$eval(
-    engine$read(sprintf('(write-file "%s" "hello world")', tmp))[[1]], env = env)
+    engine$read(sprintf('(write-file "%s" "hello world")', arl_path(tmp)))[[1]], env = env)
 
   # Read it back
   result <- engine$eval(
-    engine$read(sprintf('(read-file "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(read-file "%s")', arl_path(tmp)))[[1]], env = env)
   expect_equal(result, "hello world")
 })
 
@@ -34,11 +34,11 @@ test_that("read-lines and write-lines work with lists", {
 
   # Write lines as list
   engine$eval(
-    engine$read(sprintf('(write-lines "%s" (list "line1" "line2" "line3"))', tmp))[[1]], env = env)
+    engine$read(sprintf('(write-lines "%s" (list "line1" "line2" "line3"))', arl_path(tmp)))[[1]], env = env)
 
   # Read as list
   result <- engine$eval(
-    engine$read(sprintf('(read-lines "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(read-lines "%s")', arl_path(tmp)))[[1]], env = env)
   expect_equal(result, list("line1", "line2", "line3"))
 })
 
@@ -52,11 +52,11 @@ test_that("write-file works with lists converted to lines", {
 
   # Write list as lines with newline separator
   engine$eval(
-    engine$read(sprintf('(write-file "%s" (list "line1" "line2"))', tmp))[[1]], env = env)
+    engine$read(sprintf('(write-file "%s" (list "line1" "line2"))', arl_path(tmp)))[[1]], env = env)
 
   # Read it back as string
   result <- engine$eval(
-    engine$read(sprintf('(read-file "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(read-file "%s")', arl_path(tmp)))[[1]], env = env)
   expect_equal(result, "line1\nline2")
 })
 
@@ -70,15 +70,15 @@ test_that("append-file adds content to existing file", {
 
   # Write initial content
   engine$eval(
-    engine$read(sprintf('(write-file "%s" "first")', tmp))[[1]], env = env)
+    engine$read(sprintf('(write-file "%s" "first")', arl_path(tmp)))[[1]], env = env)
 
   # Append more content
   engine$eval(
-    engine$read(sprintf('(append-file "%s" "second")', tmp))[[1]], env = env)
+    engine$read(sprintf('(append-file "%s" "second")', arl_path(tmp)))[[1]], env = env)
 
   # Read back
   result <- engine$eval(
-    engine$read(sprintf('(read-file "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(read-file "%s")', arl_path(tmp)))[[1]], env = env)
   expect_match(result, "first.*second")
 })
 
@@ -92,7 +92,7 @@ test_that("file-exists? checks file existence", {
 
   # File doesn't exist yet
   result <- engine$eval(
-    engine$read(sprintf('(file-exists? "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(file-exists? "%s")', arl_path(tmp)))[[1]], env = env)
   expect_false(result)
 
   # Create file
@@ -100,7 +100,7 @@ test_that("file-exists? checks file existence", {
 
   # Now it exists
   result <- engine$eval(
-    engine$read(sprintf('(file-exists? "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(file-exists? "%s")', arl_path(tmp)))[[1]], env = env)
   expect_true(result)
 })
 
@@ -117,7 +117,7 @@ test_that("file-size returns file size in bytes", {
   expected_size <- file.size(tmp)
 
   result <- engine$eval(
-    engine$read(sprintf('(file-size "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(file-size "%s")', arl_path(tmp)))[[1]], env = env)
   expect_equal(result, expected_size)
 })
 
@@ -130,7 +130,7 @@ test_that("file-size errors on non-existent file", {
 
   expect_error(
     engine$eval(
-      engine$read(sprintf('(file-size "%s")', tmp))[[1]], env = env),
+      engine$read(sprintf('(file-size "%s")', arl_path(tmp)))[[1]], env = env),
     "file does not exist")
 })
 
@@ -146,7 +146,7 @@ test_that("file-modified-time returns modification timestamp", {
   writeLines("test", tmp)
 
   result <- engine$eval(
-    engine$read(sprintf('(file-modified-time "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(file-modified-time "%s")', arl_path(tmp)))[[1]], env = env)
 
   # Should be numeric timestamp close to now
   expect_true(is.numeric(result))
@@ -164,7 +164,7 @@ test_that("file-delete removes file", {
 
   # Delete it
   result <- engine$eval(
-    engine$read(sprintf('(file-delete "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(file-delete "%s")', arl_path(tmp)))[[1]], env = env)
   expect_true(result)
   expect_false(file.exists(tmp))
 })
@@ -178,7 +178,7 @@ test_that("file-delete errors on non-existent file", {
 
   expect_error(
     engine$eval(
-      engine$read(sprintf('(file-delete "%s")', tmp))[[1]], env = env),
+      engine$read(sprintf('(file-delete "%s")', arl_path(tmp)))[[1]], env = env),
     "file does not exist")
 })
 
@@ -196,7 +196,7 @@ test_that("directory-exists? checks directory existence", {
 
   # Directory doesn't exist yet
   result <- engine$eval(
-    engine$read(sprintf('(directory-exists? "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(directory-exists? "%s")', arl_path(tmp)))[[1]], env = env)
   expect_false(result)
 
   # Create directory
@@ -204,7 +204,7 @@ test_that("directory-exists? checks directory existence", {
 
   # Now it exists
   result <- engine$eval(
-    engine$read(sprintf('(directory-exists? "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(directory-exists? "%s")', arl_path(tmp)))[[1]], env = env)
   expect_true(result)
 })
 
@@ -222,7 +222,7 @@ test_that("directory-list returns list of filenames", {
   writeLines("test", file.path(tmp, "file2.txt"))
 
   result <- engine$eval(
-    engine$read(sprintf('(directory-list "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(directory-list "%s")', arl_path(tmp)))[[1]], env = env)
 
   expect_true(is.list(result))
   expect_equal(length(result), 2)
@@ -242,7 +242,7 @@ test_that("directory-list with full.names returns full paths", {
   writeLines("test", file.path(tmp, "file1.txt"))
 
   result <- engine$eval(
-    engine$read(sprintf('(directory-list "%s" #t)', tmp))[[1]], env = env)
+    engine$read(sprintf('(directory-list "%s" #t)', arl_path(tmp)))[[1]], env = env)
 
   expect_true(is.list(result))
   expect_match(result[[1]], "file1.txt$")
@@ -258,7 +258,7 @@ test_that("directory-list errors on non-existent directory", {
 
   expect_error(
     engine$eval(
-      engine$read(sprintf('(directory-list "%s")', tmp))[[1]], env = env),
+      engine$read(sprintf('(directory-list "%s")', arl_path(tmp)))[[1]], env = env),
     "directory does not exist")
 })
 
@@ -274,7 +274,7 @@ test_that("directory-delete removes directory", {
 
   # Delete it (recursive = #t by default)
   result <- engine$eval(
-    engine$read(sprintf('(directory-delete "%s")', tmp))[[1]], env = env)
+    engine$read(sprintf('(directory-delete "%s")', arl_path(tmp)))[[1]], env = env)
   expect_true(result)
   expect_false(dir.exists(tmp))
 })
@@ -288,7 +288,7 @@ test_that("directory-delete errors on non-existent directory", {
 
   expect_error(
     engine$eval(
-      engine$read(sprintf('(directory-delete "%s")', tmp))[[1]], env = env),
+      engine$read(sprintf('(directory-delete "%s")', arl_path(tmp)))[[1]], env = env),
     "directory does not exist")
 })
 
