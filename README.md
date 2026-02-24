@@ -7,15 +7,15 @@
 
 [![R CMD
 check](https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/check.yaml)
-[![Codecov](https://codecov.io/gh/wwbrannon/arl/graph/badge.svg?token=7pxGM6lI73)](https://codecov.io/gh/wwbrannon/arl)
+[![Codecov](https://app.codecov.io/gh/wwbrannon/arl/graph/badge.svg?token=7pxGM6lI73)](https://app.codecov.io/gh/wwbrannon/arl)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/arl)](https://CRAN.R-project.org/package=arl)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18740488.svg)](https://doi.org/10.5281/zenodo.18740488)
 <!--
-[![R Coverage](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=r-code)](https://codecov.io/gh/wwbrannon/arl?flags%5B0%5D=r-code)
-[![Arl Coverage](https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=arl-code)](https://codecov.io/gh/wwbrannon/arl?flags%5B0%5D=arl-code)
+[![R Coverage](https://app.codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=r-code)](https://app.codecov.io/gh/wwbrannon/arl?flags%5B0%5D=r-code)
+[![Arl Coverage](https://app.codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=arl-code)](https://app.codecov.io/gh/wwbrannon/arl?flags%5B0%5D=arl-code)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-red.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/arl)](https://CRAN.R-project.org/package=arl)
 [![R-universe](https://wwbrannon.r-universe.dev/badges/arl)](https://wwbrannon.r-universe.dev/arl)
@@ -170,8 +170,9 @@ load (and if stdlib loading is disabled), including: `eval`, `read`,
 `toplevel-env`, `current-env`, `r-eval`, `help`, `doc`, `doc!`,
 `module-ref`, `module?`, `module-exports`, and `module-name`. Unlike
 special forms, these are ordinary functions and can be passed as values.
-See the [Language Reference](articles/lang-reference.html) for the full
-list.
+See the [Language
+Reference](https://github.com/wwbrannon/arl/blob/main/vignettes/lang-reference.Rmd)
+vignette for the full list.
 
 ### Continuations
 
@@ -242,8 +243,9 @@ explicit `(import ...)`. Key areas include:
 - **Predicates** (prelude): `null?`, `list?`, `number?`, `string?`,
   `fn?`, and more
 
-For the complete function reference, see the [Standard Library
-Reference](articles/lang-reference.html).
+For the complete function reference, see the [Language
+Reference](https://github.com/wwbrannon/arl/blob/main/vignettes/lang-reference.Rmd)
+vignette.
 
 The stdlib is organized into modules under `inst/arl/`. Prelude modules
 are always available; non-prelude modules require explicit import (or
@@ -268,7 +270,8 @@ use `Engine$new(load_prelude = FALSE)` for a completely bare engine):
 From R: `engine$load_file_in_env(path)` corresponds to `load`;
 `engine$load_file_in_env(path, new.env(parent = engine$get_env()))`
 corresponds to `run`. See the [Modules and
-Imports](articles/modules.html) guide for defining your own modules.
+Imports](https://github.com/wwbrannon/arl/blob/main/vignettes/modules.Rmd)
+vignette for defining your own modules.
 
 ### Semantics
 
@@ -277,7 +280,8 @@ Imports](articles/modules.html) guide for defining your own modules.
 - **Lists**: Arl lists are backed by R lists or calls; `car` returns the
   head and `cdr` returns the tail as a list. Dotted pairs (`cons` with
   non-list cdr) are also supported; see the [Arl vs
-  Scheme](articles/arl-vs-scheme.html) vignette.
+  Scheme](https://github.com/wwbrannon/arl/blob/main/vignettes/arl-vs-scheme.Rmd)
+  vignette.
 - **Keywords**: `:kw` tokens are self-evaluating and become named
   arguments in function calls.
 
@@ -299,30 +303,33 @@ All R functions are accessible directly:
 
 ### Examples
 
-Check out the [examples](articles/examples.html) page for complete
-working programs with syntax highlighting. They range from small
-algorithms to macro techniques, data pipelines, and report outputs:
+Check out the
+[examples](https://github.com/wwbrannon/arl/tree/main/inst/examples) for
+complete working programs with syntax highlighting. They range from
+small algorithms to macro techniques, data pipelines, and report
+outputs:
 
-- **[fibonacci.arl](articles/examples.html#fibonacci)** - Multiple
-  Fibonacci implementations (recursive, iterative, sequence generation)
-- **[quicksort.arl](articles/examples.html#quicksort)** - Quicksort and
-  mergesort demonstrating list operations
-- **[fizzbuzz.arl](articles/examples.html#fizzbuzz)** - Various FizzBuzz
-  implementations showcasing control flow
-- **[macro-examples.arl](articles/examples.html#macro-examples)** -
+- **[fibonacci.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/fibonacci.arl)** -
+  Multiple Fibonacci implementations (recursive, iterative, sequence
+  generation)
+- **[quicksort.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/quicksort.arl)** -
+  Quicksort and mergesort demonstrating list operations
+- **[fizzbuzz.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/fizzbuzz.arl)** -
+  Various FizzBuzz implementations showcasing control flow
+- **[macro-examples.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/macro-examples.arl)** -
   Comprehensive macro system demonstrations
-- **[pipeline-macros.arl](articles/examples.html#pipeline-macros)** -
+- **[pipeline-macros.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/pipeline-macros.arl)** -
   Macro-driven pipeline expansion and data flow
-- **[data-analysis.arl](articles/examples.html#data-analysis)** - R
-  interop for data processing and statistics
-- **[graph-paths.arl](articles/examples.html#graph-paths)** - BFS
-  traversal and Dijkstra shortest paths with report output
-- **[log-parser.arl](articles/examples.html#log-parser)** - Text parsing
-  and summary stats from log lines
-- **[sales-report.arl](articles/examples.html#sales-report)** - R
-  interop for data wrangling and CSV report generation
-- **[task-runner.arl](articles/examples.html#task-runner)** - Dependency
-  resolution and execution ordering
+- **[data-analysis.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/data-analysis.arl)** -
+  R interop for data processing and statistics
+- **[graph-paths.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/graph-paths.arl)** -
+  BFS traversal and Dijkstra shortest paths with report output
+- **[log-parser.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/log-parser.arl)** -
+  Text parsing and summary stats from log lines
+- **[sales-report.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/sales-report.arl)** -
+  R interop for data wrangling and CSV report generation
+- **[task-runner.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/task-runner.arl)** -
+  Dependency resolution and execution ordering
 
 ## Architecture
 
@@ -356,7 +363,8 @@ rather than a more complex implementation with flex and bison.
 
 ## Development
 
-See the [Makefile](Makefile) for common development commands:
+See the [Makefile](https://github.com/wwbrannon/arl/blob/main/Makefile)
+for common development commands:
 
 ``` bash
 # Run tests
