@@ -28,7 +28,11 @@ run_tests_with_coverage <- function(engine) {
     testthat::test_dir(
       "tests/testthat",
       reporter = testthat::ProgressReporter$new(max_failures = Inf),
-      stop_on_failure = FALSE
+
+      # don't keep going through failures as coverage tracking usually does, so
+      # that if our coverage tracker doesn't instrument correctly and causes
+      # failures, that issue will be caught when trying to run coverage
+      stop_on_failure = TRUE
     )
   })
 
