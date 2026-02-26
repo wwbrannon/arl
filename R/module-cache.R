@@ -49,7 +49,8 @@ ModuleCache <- R6::R6Class(
     #' @param file_hash File hash
     write_code = function(module_name, compiled_body, exports, export_all,
                           re_export, src_file, file_hash, coverage = FALSE,
-                          cache_paths = NULL, compiler_flags = NULL) {
+                          cache_paths = NULL, compiler_flags = NULL,
+                          ambient_macro_hash = NULL) {
       paths <- if (!is.null(cache_paths)) cache_paths else self$get_paths(src_file)
       if (is.null(paths)) return(FALSE)
 
@@ -71,6 +72,7 @@ ModuleCache <- R6::R6Class(
           coverage = coverage,
           default_packages = sort(getOption("defaultPackages", character(0))),
           compiler_flags = compiler_flags,
+          ambient_macro_hash = ambient_macro_hash,
           module_name = module_name,
           exports = exports,
           export_all = export_all,
@@ -126,7 +128,8 @@ ModuleCache <- R6::R6Class(
     #' @param cache_file Path to .code.rds cache file
     #' @param src_file Source file for validation
     #' @return Cache data or NULL if invalid
-    load_code = function(cache_file, src_file, coverage = FALSE, file_hash = NULL, compiler_flags = NULL) {
+    load_code = function(cache_file, src_file, coverage = FALSE, file_hash = NULL,
+                         compiler_flags = NULL, ambient_macro_hash = NULL) {
       if (!file.exists(cache_file)) {
         return(NULL)
       }
@@ -146,7 +149,8 @@ ModuleCache <- R6::R6Class(
       # Validate cache (pass file_hash to avoid recomputing MD5)
       if (!private$is_valid(cache_data, src_file, coverage = coverage,
                            file_hash = file_hash,
-                           compiler_flags = compiler_flags)) {
+                           compiler_flags = compiler_flags,
+                           ambient_macro_hash = ambient_macro_hash)) {
         # Invalid cache, delete related cache files (use dirname to avoid get_paths)
         unlink(cache_file)
         code_r <- sub("\\.code\\.rds$", ".code.R", cache_file)
@@ -186,7 +190,8 @@ ModuleCache <- R6::R6Class(
     #' @param cache_data Deserialized cache data
     #' @param src_file Source file path
     #' @return TRUE if valid, FALSE otherwise
-    is_valid = function(cache_data, src_file, coverage = FALSE, file_hash = NULL, compiler_flags = NULL) {
+    is_valid = function(cache_data, src_file, coverage = FALSE, file_hash = NULL,
+                        compiler_flags = NULL, ambient_macro_hash = NULL) {
       if (!is.list(cache_data)) return(FALSE)
 
       # Check version
@@ -236,6 +241,16 @@ ModuleCache <- R6::R6Class(
         return(FALSE)
       }
 
+      # Check ambient macro hash — different macro environments produce different
+      # compiled output (macros expand at compile time). The field must be present
+      # (not NULL); caches from before this field was added are invalidated.
+      if (is.null(cache_data$ambient_macro_hash)) {
+        return(FALSE)
+      }
+      if (!is.null(ambient_macro_hash) && !identical(cache_data$ambient_macro_hash, ambient_macro_hash)) {
+        return(FALSE)
+      }
+
       TRUE
     },
     #' @description Clean up stale cache files for a source file
@@ -258,6 +273,51 @@ ModuleCache <- R6::R6Class(
     }
   )
 )
+
+# Compute an MD5 hash capturing which macros are available in a module's
+# ambient (parent chain) environment and their source identity.  Two modules
+# compiled with different macro sets will get different hashes, preventing
+# stale caches from being reused when macros change.
+#
+# @param module_parent_env The parent env that will be (or was) used for the
+#   module being compiled (typically prelude_env or builtins_env).
+# @param module_registry A ModuleRegistry instance used to look up source
+#   paths for each macro's defining module.
+# @return An MD5 hash string.
+compute_ambient_macro_hash <- function(module_parent_env, module_registry) {
+  tuples <- character(0)
+
+  env <- module_parent_env
+  while (!identical(env, emptyenv())) {
+    macro_reg <- get0(".__macros", envir = env, inherits = FALSE)
+    if (!is.null(macro_reg) && is.environment(macro_reg)) {
+      macro_names <- ls(macro_reg, all.names = TRUE)
+      if (length(macro_names) > 0) {
+        # Identify this env's module (if any) for source path lookup
+        mod_name <- get0(".__import_module_name", envir = env, inherits = FALSE)
+        src_path <- ""
+        src_hash <- ""
+        if (!is.null(mod_name) && is.character(mod_name) && length(mod_name) == 1L) {
+          entry <- tryCatch(module_registry$get(mod_name), error = function(e) NULL)
+          if (!is.null(entry) && !is.null(entry$path) && file.exists(entry$path)) {
+            src_path <- entry$path
+            src_hash <- unname(tools::md5sum(entry$path))
+          }
+        }
+        for (nm in macro_names) {
+          tuples <- c(tuples, paste0(nm, "|", src_path, "|", src_hash))
+        }
+      }
+    }
+    env <- parent.env(env)
+  }
+
+  if (length(tuples) == 0L) {
+    return(md5_string(""))
+  }
+
+  md5_string(paste(sort(tuples), collapse = "\n"))
+}
 
 # Walk compiled expression tree, replace .__resolve_ref placeholders with
 # actual values looked up from the module registry.

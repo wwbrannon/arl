@@ -698,11 +698,16 @@ CompiledRuntime <- R6::R6Class(
           if (!is.null(comp)) {
             compiler_flags <- comp$get_flags()
           }
+          # Compute ambient macro hash for cache key
+          ambient_macro_hash <- compute_ambient_macro_hash(
+            module_parent, self$context$env$module_registry
+          )
           # Always write expr cache (safe fallback)
           self$module_cache$write_code(
             module_name, compiled_body, exports, export_all,
             re_export, src_file, cache_paths$file_hash,
-            cache_paths = cache_paths, compiler_flags = compiler_flags
+            cache_paths = cache_paths, compiler_flags = compiler_flags,
+            ambient_macro_hash = ambient_macro_hash
           )
 
           # Env cache disabled: proxy-based imports use active bindings in
