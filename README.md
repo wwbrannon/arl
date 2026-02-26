@@ -12,7 +12,7 @@ check](https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?b
 status](https://www.r-pkg.org/badges/version/arl)](https://CRAN.R-project.org/package=arl)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18740488.svg)](https://doi.org/10.5281/zenodo.18740488)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18740487.svg)](https://doi.org/10.5281/zenodo.18740487)
 <!--
 [![R Coverage](https://app.codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=r-code)](https://app.codecov.io/gh/wwbrannon/arl?flags%5B0%5D=r-code)
 [![Arl Coverage](https://app.codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=arl-code)](https://app.codecov.io/gh/wwbrannon/arl?flags%5B0%5D=arl-code)
