@@ -107,6 +107,14 @@ coverage-r: clean-cache stdlib-order ## help: Run R code coverage only
 coverage-arl: clean-cache stdlib-order ## help: Run Arl code coverage only
 	Rscript tools/coverage/arl-coverage.R
 
+.PHONY: coverage-test-file
+coverage-test-file: clean-cache stdlib-order ## help: Run a single test file with Arl coverage instrumentation (usage: make coverage-test-file FILE=test-parser)
+	@if [ -z "$(FILE)" ]; then \
+		echo "Error: FILE parameter required. Usage: make coverage-test-file FILE=test-parser"; \
+		exit 1; \
+	fi
+	Rscript tools/coverage/run-test-file.R "tests/testthat/$(FILE).R"
+
 .PHONY: coverage-combined
 coverage-combined: ## help: Generate combined coverage summary
 	Rscript tools/coverage/coverage-combine.R

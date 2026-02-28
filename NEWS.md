@@ -1,6 +1,25 @@
+# arl 0.1.1
+
+## Bug Fixes
+
+* Fixed stale module cache poisoning when ambient macros differ between
+  sessions. The module cache now computes a fingerprint of all macros
+  visible in a module's parent environment chain (not just the prelude)
+  and invalidates entries when macros change.
+* Fixed missing dependency declaration in `looping.arl`.
+* Fixed Windows backslash path handling in tests.
+* Fixed `FileDeps` tests to work during `R CMD check`.
+* Fixed bad URLs in README and vignettes.
+* Included vignette files in built tarballs (`.Rbuildignore` fix).
+
+## Testing
+
+* Tests now disallow unexpected/unhandled warnings.
+* Added `make coverage-test-file` target for single-file coverage testing.
+
 # arl 0.1.0
 
-Initial CRAN release of arl, a Scheme-inspired Lisp dialect embedded in R.
+Initial release of arl, a Scheme-inspired Lisp dialect embedded in R.
 
 ## Language
 

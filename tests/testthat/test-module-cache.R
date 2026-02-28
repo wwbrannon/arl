@@ -1,5 +1,8 @@
 # Tests for ModuleCache (R/module-cache.R): module caching system
 
+# Default ambient macro hash for cache tests
+.test_ambient_hash <- "00000000000000000000000000000000"
+
 # Default compiler flags for cache tests (all TRUE = default compiler state)
 .test_compiler_flags <- c(
   enable_tco = TRUE, enable_constant_folding = TRUE,
@@ -63,7 +66,7 @@ test_that("write_code() creates cache files", {
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
 
-  result <- cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags)
+  result <- cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
   expect_true(result)
   expect_true(file.exists(paths$code_cache))
@@ -85,7 +88,7 @@ test_that("write_code() creates human-readable .code.R file when debug_cache is 
   paths <- cache$get_paths(tmp_file)
 
   options(arl.debug_cache = TRUE)
-  cache$write_code("test", compiled_body, c("foo", "bar"), TRUE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags)
+  cache$write_code("test", compiled_body, c("foo", "bar"), TRUE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
   r_code <- readLines(paths$code_r)
   expect_true(any(grepl("module: test", r_code)))
@@ -105,7 +108,7 @@ test_that("write_code() includes metadata", {
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
 
-  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
   cache_data <- readRDS(paths$code_cache)
   expect_equal(cache_data$version, as.character(utils::packageVersion("arl")))
@@ -139,9 +142,9 @@ test_that("load_code() loads cache data", {
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
 
-  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
-  loaded <- cache$load_code(paths$code_cache, tmp_file)
+  loaded <- cache$load_code(paths$code_cache, tmp_file, ambient_macro_hash = .test_ambient_hash)
 
   expect_false(is.null(loaded))
   expect_equal(loaded$module_name, "test")
@@ -160,7 +163,7 @@ test_that("load_code() returns NULL for version mismatch", {
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
 
-  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
   # Modify version in cache
   cache_data <- readRDS(paths$code_cache)
@@ -183,7 +186,7 @@ test_that("load_code() returns NULL for coverage mismatch", {
   paths <- cache$get_paths(tmp_file)
 
   # Write cache with coverage = TRUE
-  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, coverage = TRUE, compiler_flags = .test_compiler_flags)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, coverage = TRUE, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
   # Loading without coverage should reject it
   result <- cache$load_code(paths$code_cache, tmp_file, coverage = FALSE)
@@ -201,7 +204,7 @@ test_that("load_code() returns NULL for missing coverage field (pre-upgrade cach
   paths <- cache$get_paths(tmp_file)
 
   # Write a cache, then strip the coverage field to simulate old format
-  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
   cache_data <- readRDS(paths$code_cache)
   cache_data$coverage <- NULL
   saveRDS(cache_data, paths$code_cache)
@@ -220,7 +223,7 @@ test_that("load_code() returns NULL for hash mismatch", {
   compiled_body <- list(quote(foo <- 42))
   paths1 <- cache$get_paths(tmp_file)
 
-  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths1$file_hash, compiler_flags = .test_compiler_flags)
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths1$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
   # Modify file content - changes hash
   writeLines("(module test (export foo bar))", tmp_file)
@@ -307,11 +310,13 @@ test_that("load_code() rejects cache with mismatched compiler_flags", {
               enable_begin_simplify = TRUE, enable_boolean_flatten = TRUE)
 
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file,
-                   paths$file_hash, compiler_flags = flags1)
+                   paths$file_hash, compiler_flags = flags1,
+                   ambient_macro_hash = .test_ambient_hash)
 
   # Load with same flags — should succeed
   result_same <- cache$load_code(paths$code_cache, tmp_file, file_hash = paths$file_hash,
-                                 compiler_flags = flags1)
+                                 compiler_flags = flags1,
+                                 ambient_macro_hash = .test_ambient_hash)
   expect_false(is.null(result_same))
 
   # Load with different flags — should reject (and deletes cache file)
@@ -334,7 +339,8 @@ test_that("load_code() rejects cache with NULL compiler_flags (pre-upgrade)", {
              enable_begin_simplify = TRUE, enable_boolean_flatten = TRUE)
 
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file,
-                   paths$file_hash, compiler_flags = flags)
+                   paths$file_hash, compiler_flags = flags,
+                   ambient_macro_hash = .test_ambient_hash)
 
   # Strip compiler_flags to simulate old cache format
   cache_data <- readRDS(paths$code_cache)
@@ -358,7 +364,7 @@ test_that("load_code() rejects cache with NULL default_packages (pre-upgrade)", 
   paths <- cache$get_paths(tmp_file)
 
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file,
-                   paths$file_hash, compiler_flags = .test_compiler_flags)
+                   paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
   # Set default_packages to NULL to simulate old cache format
   cache_data <- readRDS(paths$code_cache)
@@ -469,7 +475,7 @@ test_that("code cache is safe with file changes", {
 
   # Load
   engine1 <- Engine$new()
-  engine1$eval_text(sprintf('(load "%s")', test_file))
+  engine1$eval_text(sprintf('(load "%s")', arl_path(test_file)))
 
   # Verify initial value
   expect_equal(engine1$eval_text("test-value"), 42)
@@ -479,7 +485,7 @@ test_that("code cache is safe with file changes", {
 
   # Reload in new engine (simulating fresh session)
   engine2 <- Engine$new()
-  engine2$eval_text(sprintf('(load "%s")', test_file))
+  engine2$eval_text(sprintf('(load "%s")', arl_path(test_file)))
 
   # Verify the change is picked up (cache was invalidated by content hash)
   expect_equal(engine2$eval_text("test-value"), 100)
@@ -527,4 +533,139 @@ test_that("get_paths() always uses R_user_dir for cache", {
               info = "cache_dir should be under R_user_dir")
   expect_true(grepl("/modules/", paths$cache_dir),
               info = "cache_dir should contain /modules/ subdirectory")
+})
+
+# ============================================================================
+# Macro phase guard tests
+# ============================================================================
+
+test_that("macro transformer errors when called at runtime (phase guard)", {
+  eng <- make_engine()
+  # Define a macro via eval_text
+
+  eng$eval_text("(defmacro test-phase-guard (x) x)")
+
+  # Get the macro function directly from the macro registry
+  eng_env <- eng$get_env()
+  macro_reg <- get(".__macros", envir = eng_env, inherits = TRUE)
+  macro_fn <- get("test-phase-guard", envir = macro_reg, inherits = FALSE)
+
+  # Calling it directly (without .arl_phase = "expand") should error
+
+  expect_error(
+    macro_fn(quote(42)),
+    "called as a function at runtime"
+  )
+
+  # Calling it with .arl_phase = "expand" should work (as macroexpand does)
+  result <- do.call(macro_fn, c(list(quote(42)), list(.arl_phase = "expand")))
+  expect_equal(result, 42)
+})
+
+test_that("macro phase guard fires when macro is called as regular function", {
+  # Simulate what happens when compiled code calls a macro at runtime:
+  # the macro_fn receives evaluated arguments (not syntax) and .arl_phase
+  # defaults to "eval", triggering the guard.
+  eng <- make_engine()
+
+  eng$eval_text("(defmacro phase-guard-test (x) x)")
+
+  # Retrieve the macro and call it as a regular R function (simulating
+  # runtime dispatch through the env chain)
+  macro_fn <- eng$eval_text("phase-guard-test")
+  expect_error(
+    macro_fn(42),
+    "called as a function at runtime"
+  )
+})
+
+# ============================================================================
+# Ambient macro hash tests
+# ============================================================================
+
+test_that("compute_ambient_macro_hash returns consistent hash for same env", {
+  eng <- make_engine()
+  ctx <- engine_field(eng, "compiled_runtime")$context
+  module_parent <- ctx$prelude_env
+  registry <- ctx$env$module_registry
+
+  hash1 <- arl:::compute_ambient_macro_hash(module_parent, registry)
+  hash2 <- arl:::compute_ambient_macro_hash(module_parent, registry)
+
+  expect_equal(hash1, hash2)
+  expect_true(nchar(hash1) == 32)  # MD5 length
+})
+
+test_that("compute_ambient_macro_hash differs with/without prelude macros", {
+  # Engine with prelude (has macros like cond, when, etc.)
+  eng_prelude <- make_engine()
+  ctx_prelude <- engine_field(eng_prelude, "compiled_runtime")$context
+  hash_prelude <- arl:::compute_ambient_macro_hash(
+    ctx_prelude$prelude_env, ctx_prelude$env$module_registry
+  )
+
+  # Engine without prelude (no macros in parent chain)
+  eng_bare <- make_engine(load_prelude = FALSE)
+  ctx_bare <- engine_field(eng_bare, "compiled_runtime")$context
+  parent_bare <- ctx_bare$builtins_env
+  hash_bare <- arl:::compute_ambient_macro_hash(
+    parent_bare, ctx_bare$env$module_registry
+  )
+
+  expect_false(identical(hash_prelude, hash_bare),
+               info = "prelude and bare engines should have different ambient macro hashes")
+})
+
+test_that("load_code() rejects cache with mismatched ambient_macro_hash", {
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
+  writeLines("(module test (export foo))", tmp_file)
+  on.exit(unlink(tmp_file))
+
+  compiled_body <- list(quote(foo <- 42))
+  paths <- cache$get_paths(tmp_file)
+
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file,
+                   paths$file_hash, compiler_flags = .test_compiler_flags,
+                   ambient_macro_hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+  # Same hash — should succeed
+  result_same <- cache$load_code(paths$code_cache, tmp_file,
+                                 file_hash = paths$file_hash,
+                                 compiler_flags = .test_compiler_flags,
+                                 ambient_macro_hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+  expect_false(is.null(result_same))
+
+  # Different hash — should reject
+  result_diff <- cache$load_code(paths$code_cache, tmp_file,
+                                 file_hash = paths$file_hash,
+                                 compiler_flags = .test_compiler_flags,
+                                 ambient_macro_hash = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+  expect_null(result_diff)
+})
+
+test_that("load_code() rejects cache with NULL ambient_macro_hash (pre-upgrade)", {
+  cache <- arl:::ModuleCache$new()
+  tmp_file <- tempfile(fileext = ".arl")
+  writeLines("(module test (export foo))", tmp_file)
+  on.exit(unlink(tmp_file))
+
+  compiled_body <- list(quote(foo <- 42))
+  paths <- cache$get_paths(tmp_file)
+
+  # Write cache with ambient_macro_hash
+  cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file,
+                   paths$file_hash, compiler_flags = .test_compiler_flags,
+                   ambient_macro_hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+  # Strip ambient_macro_hash to simulate pre-upgrade cache
+  cache_data <- readRDS(paths$code_cache)
+  cache_data$ambient_macro_hash <- NULL
+  saveRDS(cache_data, paths$code_cache)
+
+  result <- cache$load_code(paths$code_cache, tmp_file,
+                            file_hash = paths$file_hash,
+                            compiler_flags = .test_compiler_flags,
+                            ambient_macro_hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+  expect_null(result)
 })

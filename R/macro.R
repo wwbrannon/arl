@@ -983,7 +983,13 @@ MacroExpander <- R6::R6Class(
         }
       }
 
-      macro_fn <- function(...) {
+      macro_fn <- function(..., .arl_phase = "eval") {
+        if (!identical(.arl_phase, "expand")) {
+          stop(sprintf(
+            "macro '%s' was called as a function at runtime (did you forget to import it?)",
+            as.character(name)
+          ), call. = FALSE)
+        }
         macro_env <- new.env(parent = env)
         assign(".__macroexpanding", TRUE, envir = macro_env)
         args <- match.call(expand.dots = FALSE)$...
@@ -1068,7 +1074,7 @@ MacroExpander <- R6::R6Class(
         macro_fn <- if (!is.null(resolved_macro_fn)) resolved_macro_fn else private$get_macro_impl(op, env)
         args <- as.list(expr[-1])
         expanded <- tryCatch(
-          do.call(macro_fn, args),
+          do.call(macro_fn, c(args, list(.arl_phase = "expand"))),
           error = function(e) {
             if (isTRUE(.pkg_option("debug_macro", FALSE))) {
               op_name <- if (is.symbol(op)) as.character(op) else "<macro>"

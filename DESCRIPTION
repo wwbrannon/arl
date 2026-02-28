@@ -1,7 +1,7 @@
 Package: arl
 Type: Package
 Title: Embedded Lisp Dialect for R
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     person("William", "Brannon", email = "will.brannon+cran@gmail.com",
            role = c("aut", "cre", "cph"),
@@ -27,7 +27,7 @@ Suggests:
     rmarkdown (>= 2.30),
     jinjar (>= 0.3.0)
 URL: https://github.com/wwbrannon/arl,
-    https://doi.org/10.5281/zenodo.18740488
+    https://doi.org/10.5281/zenodo.18740487
 BugReports: https://github.com/wwbrannon/arl/issues
 Language: en-US
 Encoding: UTF-8

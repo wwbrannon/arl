@@ -33,7 +33,6 @@
 ^vignettes/articles$
 ^tools$
 ^TODO$
-^build$
 ^inst/design-docs$
 ^CITATION.cff$
 ^.zenodo.json$

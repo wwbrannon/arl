@@ -285,12 +285,21 @@ Engine <- R6::R6Class(
           # in the parent chain which can't survive serialization/deserialization.
           # Code cache continues to work since it re-evaluates .__import() calls.
 
+          # Compute ambient macro hash for cache validation
+          ambient_macro_hash <- compute_ambient_macro_hash(
+            if (!is.null(ctx$prelude_env)) ctx$prelude_env
+            else if (!is.null(ctx$builtins_env)) ctx$builtins_env
+            else target_env,
+            module_registry
+          )
+
           # Expr cache (compiled expressions)
           if (file.exists(cache_paths$code_cache)) {
             cache_data <- private$.module_cache$load_code(
               cache_paths$code_cache, path,
               file_hash = cache_paths$file_hash,
-              compiler_flags = compiler_flags
+              compiler_flags = compiler_flags,
+              ambient_macro_hash = ambient_macro_hash
             )
             if (!is.null(cache_data)) {
               # Recreate module environment (like module_compiled does)

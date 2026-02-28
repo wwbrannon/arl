@@ -64,7 +64,7 @@ test_that("module is cached after first load", {
   env <- toplevel_env(engine)
 
   # First load
-  engine$eval_text(sprintf('(load "%s")', module_path))
+  engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
   first_result <- engine$eval_text("cached-var")
   expect_equal(first_result, 42)
 
@@ -73,7 +73,7 @@ test_that("module is cached after first load", {
 
   # Second load - should still get cached value
   # (Note: actual caching behavior depends on implementation)
-  engine$eval_text(sprintf('(load "%s")', module_path))
+  engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
 
   # Clean up
   unlink(module_path)
@@ -90,7 +90,7 @@ test_that("load returns last value from module", {
   ), module_path)
 
   engine <- make_engine()
-  result <- engine$eval_text(sprintf('(load "%s")', module_path))
+  result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
 
   # Should return 30 (the last expression)
   expect_equal(result, 30)
@@ -111,7 +111,7 @@ test_that("load with syntax error in module", {
   engine <- make_engine()
 
   expect_error(
-    engine$eval_text(sprintf('(load "%s")', module_path)),
+    engine$eval_text(sprintf('(load "%s")', arl_path(module_path))),
     "Unclosed|parse|syntax|EOF|incomplete"
   )
 
@@ -131,7 +131,7 @@ test_that("load with runtime error in module", {
   engine <- make_engine()
 
   expect_error(
-    engine$eval_text(sprintf('(load "%s")', module_path)),
+    engine$eval_text(sprintf('(load "%s")', arl_path(module_path))),
     "deliberate runtime error"
   )
 
@@ -148,9 +148,9 @@ test_that("multiple loads of same module", {
   engine <- make_engine()
 
   # Load multiple times
-  engine$eval_text(sprintf('(load "%s")', module_path))
-  engine$eval_text(sprintf('(load "%s")', module_path))
-  engine$eval_text(sprintf('(load "%s")', module_path))
+  engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
+  engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
+  engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
 
   result <- engine$eval_text("multi-load-var")
   expect_equal(result, 123)
@@ -172,7 +172,7 @@ test_that("load can access previously defined symbols", {
   engine$eval_text("(define existing-x 5)")
 
   # Load module that uses it
-  result <- engine$eval_text(sprintf('(load "%s")', module_path))
+  result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
   expect_equal(result, 15)
 
   # Clean up
@@ -189,7 +189,7 @@ test_that("nested module loads", {
   # Create module A that loads B
   module_a_path <- file.path(temp_dir, "test_module_a.arl")
   writeLines(c(
-    sprintf('(load "%s")', module_b_path),
+    sprintf('(load "%s")', arl_path(module_b_path)),
     '(define a-var (+ b-var 10))'
   ), module_a_path)
 
@@ -197,7 +197,7 @@ test_that("nested module loads", {
   env <- toplevel_env(engine)
 
   # Load module A (which loads B)
-  engine$eval_text(sprintf('(load "%s")', module_a_path))
+  engine$eval_text(sprintf('(load "%s")', arl_path(module_a_path)))
 
   # Should have both variables
   result_a <- engine$eval_text("a-var")
@@ -262,7 +262,7 @@ test_that("load with relative path", {
   engine <- make_engine()
   env <- toplevel_env(engine)
 
-  result <- engine$eval_text(sprintf('(load "%s")', module_path))
+  result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
   var_result <- engine$eval_text("relative-var")
   expect_equal(var_result, 777)
 
@@ -279,7 +279,7 @@ test_that("load empty module", {
   engine <- make_engine()
 
   # Loading empty module should succeed and return NULL or similar
-  result <- engine$eval_text(sprintf('(load "%s")', module_path))
+  result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
   # Result behavior may vary - just ensure no crash
   expect_no_error(result)
 
@@ -299,7 +299,7 @@ test_that("load module with only comments", {
   engine <- make_engine()
 
   # Should succeed
-  result <- engine$eval_text(sprintf('(load "%s")', module_path))
+  result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
   expect_no_error(result)
 
   # Clean up
@@ -317,7 +317,7 @@ test_that("module defines macro", {
   env <- toplevel_env(engine)
 
   # Load module with macro
-  engine$eval_text(sprintf('(load "%s")', module_path))
+  engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
 
   # Use the macro
   result <- engine$eval_text("(triple 7)")
@@ -325,4 +325,35 @@ test_that("module defines macro", {
 
   # Clean up
   unlink(module_path)
+})
+
+# ============================================================================
+# Windows backslash path regression tests
+# ============================================================================
+
+test_that("Windows-style backslash paths work when properly normalized", {
+  engine <- make_engine()
+
+  # Create a temp file in a directory whose name would trigger escape issues
+  # if backslashes weren't normalized (e.g. contains 't', 'n', 'r' after separator)
+  tmp <- tempfile(pattern = "test_path")
+  writeLines("(define win-path-test 42)", tmp)
+  on.exit(unlink(tmp))
+
+  # arl_path should convert backslashes to forward slashes
+  safe <- arl_path(tmp)
+  expect_false(grepl("\\\\", safe))
+
+  # Engine should successfully load via the normalized path
+  result <- engine$eval_text(sprintf('(load "%s")', safe))
+  expect_equal(engine$eval_text("win-path-test"), 42)
+})
+
+test_that("backslash escapes in Arl strings produce correct characters", {
+  engine <- make_engine()
+
+  # Verify \t, \n, \\ are processed as escape sequences (standard behavior)
+  expect_equal(engine$eval_text('"hello\\tworld"'), "hello\tworld")
+  expect_equal(engine$eval_text('"hello\\nworld"'), "hello\nworld")
+  expect_equal(engine$eval_text('"back\\\\slash"'), "back\\slash")
 })

@@ -3,6 +3,7 @@
 (module looping
   (export until do-list loop recur)
 
+  (import control :refer (cond))
   (import functional :refer (map every?))
   (import list :refer (call))
   (import types :refer (symbol? list-or-pair? list? null?))

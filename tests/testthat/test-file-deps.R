@@ -1,15 +1,5 @@
 # Tests for FileDeps (R/file-deps.R): module/import extraction and load order
 
-# Find package root (DESCRIPTION lives there). In R CMD check, cwd is pkg/tests/testthat.
-pkg_root <- function() {
-  wd <- getwd()
-  for (root in c(wd, file.path(wd, ".."), file.path(wd, "..", ".."))) {
-    if (file.exists(file.path(root, "DESCRIPTION")))
-      return(normalizePath(root, winslash = "/"))
-  }
-  wd
-}
-
 test_that("FileDeps is loadable and returns structure", {
   stdlib_dir <- system.file("arl", package = "arl")
   skip_if_not(dir.exists(stdlib_dir))
@@ -21,8 +11,7 @@ test_that("FileDeps is loadable and returns structure", {
 })
 
 test_that("stdlib modules are discovered and have valid topsort", {
-  pkg <- pkg_root()
-  stdlib_dir <- file.path(pkg, "inst", "arl")
+  stdlib_dir <- system.file("arl", package = "arl")
   skip_if_not(dir.exists(stdlib_dir))
   d <- arl:::FileDeps$new(dir = stdlib_dir)
   modules <- d$get_modules()
@@ -45,8 +34,7 @@ test_that("stdlib modules are discovered and have valid topsort", {
 })
 
 test_that("no cycle in stdlib dependency graph", {
-  pkg <- pkg_root()
-  stdlib_dir <- file.path(pkg, "inst", "arl")
+  stdlib_dir <- system.file("arl", package = "arl")
   skip_if_not(dir.exists(stdlib_dir))
   d <- arl:::FileDeps$new(dir = stdlib_dir)
   load_order <- d$get_load_order()

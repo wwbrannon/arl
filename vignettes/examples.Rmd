@@ -15,7 +15,7 @@ arl::register_knitr_engine()
 ```
 
 These examples are complete Arl programs from
-[`inst/examples`](https://github.com/wwbrannon/arl/blob/main/inst/examples/).
+[`inst/examples`](https://github.com/wwbrannon/arl/tree/main/inst/examples/).
 Each section pulls in the full source from the corresponding file, with syntax
 highlighting, and links back to the repository version.
 
