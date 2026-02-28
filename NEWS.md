@@ -2,9 +2,10 @@
 
 ## Bug Fixes
 
-* Fixed stale module cache poisoning when prelude macros differ between
-  sessions. The module cache now tracks a prelude fingerprint and
-  invalidates entries when macros change.
+* Fixed stale module cache poisoning when ambient macros differ between
+  sessions. The module cache now computes a fingerprint of all macros
+  visible in a module's parent environment chain (not just the prelude)
+  and invalidates entries when macros change.
 * Fixed missing dependency declaration in `looping.arl`.
 * Fixed Windows backslash path handling in tests.
 * Fixed `FileDeps` tests to work during `R CMD check`.
