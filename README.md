@@ -7,7 +7,7 @@
 
 [![R CMD
 check](https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/check.yaml)
-[![codecov](https://codecov.io/gh/wwbrannon/arl/graph/badge.svg?token=7pxGM6lI73)](https://codecov.io/gh/wwbrannon/arl)
+[![codecov](https://codecov.io/gh/wwbrannon/arl/graph/badge.svg?token=7pxGM6lI73)](https://app.codecov.io/gh/wwbrannon/arl)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/arl)](https://CRAN.R-project.org/package=arl)
 [![License:

@@ -4,34 +4,14 @@ SHELL := /bin/bash
 ## Build/install targets
 #
 
+.PHONY: clean-cache
+clean-cache: ## help: Remove module cache under R_user_dir (auto-runs before dev targets)
+	Rscript -e 'unlink(file.path(tools::R_user_dir("arl", "cache"), "modules"), recursive = TRUE)'
+
 # Keep inst/arl/load-order.txt up to date (must run before build/install)
 .PHONY: stdlib-order
 stdlib-order: ## help: Build stdlib load order cache (inst/arl/load-order.txt)
 	Rscript tools/build-stdlib-order.R
-
-.PHONY: install
-install: clean-cache stdlib-order ## help: Install the package
-	R -q -e "devtools::install()"
-
-.PHONY: build
-build: clean-cache stdlib-order ## help: Build the package tarball
-	R -q -e "devtools::build()"
-
-#
-## Documentation targets
-#
-
-.PHONY: lang-docs
-lang-docs: clean-cache stdlib-order ## help: Generate stdlib reference vignettes from .arl source
-	R -q -e "devtools::load_all(); source('tools/docs/generate-lang-docs.R')"
-
-.PHONY: devdoc
-devdoc: clean-cache stdlib-order ## help: Generate roxygen documentation
-	R -q -e "devtools::document()"
-
-.PHONY: readme
-readme: clean-cache stdlib-order ## help: Render README from README.Rmd
-	R -q -e "devtools::load_all(); rmarkdown::render('README.Rmd')"
 
 .PHONY: bench-data
 bench-data: ## help: Check out benchmark data from gh-pages branch
@@ -39,25 +19,32 @@ bench-data: ## help: Check out benchmark data from gh-pages branch
 	@git show gh-pages:dev/bench/data.js > benchmarks/results/data.js 2>/dev/null \
 		|| echo "Warning: could not fetch benchmark data from gh-pages branch"
 
+.PHONY: roxygen
+roxygen: clean-cache stdlib-order ## help: Generate man/ pages and NAMESPACE from roxygen2
+	R -q -e "devtools::document()"
+
+.PHONY: lang-docs
+lang-docs: clean-cache stdlib-order ## help: Generate stdlib reference vignettes from .arl source
+	R -q -e "devtools::load_all(); source('tools/docs/generate-lang-docs.R')"
+
+.PHONY: readme
+readme: clean-cache stdlib-order ## help: Render README from README.Rmd
+	R -q -e "devtools::load_all(); rmarkdown::render('README.Rmd')"
+
 .PHONY: vignettes
-vignettes: clean-cache stdlib-order lang-docs bench-data ## help: Build vignettes
+vignettes: lang-docs bench-data ## help: Build vignettes
 	R -q -e "devtools::build_vignettes()"
 
-.PHONY: site
-site: clean-cache stdlib-order ## help: Build pkgdown site
-	@tmp=$$(mktemp -d) && \
-	rsync -a --delete \
-	  --exclude 'AGENTS.md' \
-	  --exclude 'CLAUDE.md' \
-	  --exclude '.git/' \
-	  ./ $$tmp/ && \
-	Rscript -e "pkgdown::build_site(pkg='$$tmp')" && \
-	rm -rf site && \
-	mv $$tmp/site site && \
-	rm -rf $$tmp
-
 .PHONY: document
-document: devdoc readme vignettes site ## help: Generate all documentation
+document: roxygen lang-docs readme vignettes ## help: Generate all documentation
+
+.PHONY: install
+install: clean-cache stdlib-order ## help: Install the package
+	R -q -e "devtools::install()"
+
+.PHONY: build
+build: roxygen lang-docs ## help: Build the package tarball
+	R -q -e "devtools::build(path='.')"
 
 #
 ## Test running, lint, R CMD check
@@ -65,7 +52,7 @@ document: devdoc readme vignettes site ## help: Generate all documentation
 
 .PHONY: check
 check: build ## help: Check the package (includes tests)
-	R -q -e 'devtools::check(args=c("--as-cran","--run-donttest"), check_dir=".")'
+	R -q -e 'p <- read.dcf("DESCRIPTION"); tb <- sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]); devtools::check_built(tb, args=c("--as-cran","--run-donttest"), check_dir=".")'
 
 .PHONY: lint
 lint: clean-cache stdlib-order ## help: Run linter checks
@@ -185,19 +172,39 @@ bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD
 #
 
 .PHONY: cran
-cran: devdoc readme vignettes cran-comments ## help: Run full CRAN prep/check/comments
+cran: check ## help: Run full CRAN prep/check/comments
+	Rscript tools/cran/comments.R
+	@echo "You should also make check-winbuilder and check-macbuilder targets"
 
-.PHONY: cran-comments
-cran-comments: check ## help: Generate cran-comments and CRAN-SUBMISSION
-	Rscript tools/cran/cran_comments.R
+.PHONY: check-winbuilder
+check-winbuilder: ## help: Submit to win-builder (devel + release)
+	R -q -e "devtools::check_win_devel()"
+	R -q -e "devtools::check_win_release()"
+
+.PHONY: check-macbuilder
+check-macbuilder: ## help: Submit to mac-builder (release)
+	R -q -e "devtools::check_mac_release()"
+
+#
+## Pkgdown site
+#
+
+.PHONY: site
+site: clean-cache stdlib-order lang-docs bench-data ## help: Build pkgdown site
+	@tmp=$$(mktemp -d) && \
+	rsync -a --delete \
+	  --exclude 'AGENTS.md' \
+	  --exclude 'CLAUDE.md' \
+	  --exclude '.git/' \
+	  ./ $$tmp/ && \
+	Rscript -e "pkgdown::build_site(pkg='$$tmp')" && \
+	rm -rf site && \
+	mv $$tmp/site site && \
+	rm -rf $$tmp
 
 #
 ## Cleanup
 #
-
-.PHONY: clean-cache
-clean-cache: ## help: Remove module cache under R_user_dir (auto-runs before dev targets)
-	Rscript -e 'unlink(file.path(tools::R_user_dir("arl", "cache"), "modules"), recursive = TRUE)'
 
 .PHONY: clean-coverage
 clean-coverage: ## help: Remove coverage output files

@@ -81,5 +81,8 @@ benchmarks/profiles/
 # Coverage output directories
 /coverage/
 
+# CRAN submission ephemeral files
+/CRAN-SUBMISSION
+
 # misc
 /TODO

@@ -6,6 +6,7 @@
 ^.*\.Rproj$
 ^index.md$
 ^README\.Rmd$
+^README\.md$
 ^README\.html$
 ^CLAUDE\.md$
 ^AGENTS.md$
@@ -36,3 +37,4 @@
 ^inst/design-docs$
 ^CITATION.cff$
 ^.zenodo.json$
+^.*\.tar\.gz$
