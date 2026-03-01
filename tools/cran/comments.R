@@ -83,14 +83,25 @@ if (length(parsed$notes) > 0) {
 
 writeLines(cran_comments, "cran-comments.md")
 
-# URL check
+# URL check — run against an extracted copy of the built tarball so that
+# files outside the package (tools/, benchmarks/, etc.) don't trigger
+# spurious warnings.
+tarball <- sprintf("%s_%s.tar.gz", pkg, version)
+if (!file.exists(tarball)) {
+  stop("Built tarball not found: ", tarball, "\nRun 'make build' first.")
+}
+
 cat("Running urlchecker::url_check()...\n")
 url_issues <- tryCatch({
   if (!requireNamespace("urlchecker", quietly = TRUE)) {
     message("urlchecker not installed, skipping URL check.")
     NULL
   } else {
-    urlchecker::url_check(".")
+    tmp <- tempfile()
+    dir.create(tmp)
+    on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+    utils::untar(tarball, exdir = tmp)
+    urlchecker::url_check(file.path(tmp, pkg))
   }
 }, error = function(e) {
   message("urlchecker failed: ", conditionMessage(e))
