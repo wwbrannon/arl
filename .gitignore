@@ -83,6 +83,7 @@ benchmarks/profiles/
 
 # CRAN submission ephemeral files
 /CRAN-SUBMISSION
+/cran-comments.md
 
 # misc
 /TODO
