@@ -26,6 +26,11 @@ trap 'rm -f "$TEMP_PROFILE"' EXIT
 cat > "$TEMP_PROFILE" <<'RPROFILE'
 # Arl CLI launcher - auto-generated temporary profile
 local({
+  # Clean up the temporary profile file. The shell trap can't fire because
+  # exec replaced the shell process with R. By the time this code runs,
+  # source() has already read the file into memory so unlinking is safe.
+  tryCatch(unlink(Sys.getenv("R_PROFILE_USER")), error = function(e) NULL)
+
   # Ensure we exit R even if interrupted (Ctrl-C) or on error
   on.exit(q(save = "no", status = 0), add = TRUE)
 
