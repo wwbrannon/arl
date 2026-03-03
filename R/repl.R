@@ -213,6 +213,7 @@ REPL <- R6::R6Class(
         TRUE
       }, error = function(...) FALSE)
       if (!saved) {
+        unlink(snapshot)
         return(invisible(FALSE))
       }
       entry_count <- 0L
