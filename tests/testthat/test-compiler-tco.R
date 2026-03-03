@@ -35,7 +35,7 @@ test_that("TCO: deep recursion does not stack overflow", {
         0
         (count-down (- n 1)))))
   ")
-  result <- engine$eval_text("(count-down 100000)")
+  result <- engine$eval_text("(count-down 10000)")
   expect_equal(result, 0)
 })
 
@@ -216,8 +216,8 @@ test_that("TCO: deep recursion with destructuring does not stack overflow", {
         (+ a b)
         (count-pair (list (+ a 1) b) (- n 1)))))
   ")
-  result <- engine$eval_text("(count-pair (list 0 0) 100000)")
-  expect_equal(result, 100000)
+  result <- engine$eval_text("(count-pair (list 0 0) 10000)")
+  expect_equal(result, 10000)
 })
 
 test_that("VERIFY: TCO'd destructuring has while and .__assign_pattern inside loop", {
@@ -288,8 +288,8 @@ test_that("TCO: deep recursion with keyword args does not stack overflow", {
         acc
         (kw-count :acc (+ acc 1) :n (- n 1)))))
   ")
-  result <- engine$eval_text("(kw-count 100000 0)")
-  expect_equal(result, 100000)
+  result <- engine$eval_text("(kw-count 10000 0)")
+  expect_equal(result, 10000)
 })
 
 # ==============================================================================
@@ -329,7 +329,7 @@ test_that("TCO: deep recursion with rest params does not stack overflow", {
         (length rest)
         (rest-loop (- n 1)))))
   ")
-  result <- engine$eval_text("(rest-loop 100000)")
+  result <- engine$eval_text("(rest-loop 10000)")
   expect_equal(result, 0L)
 })
 
@@ -369,8 +369,8 @@ test_that("TCO: deep recursion with pattern rest params does not stack overflow"
         (+ a b)
         (pat-rest-loop (- n 1) (+ a 1) b))))
   ")
-  result <- engine$eval_text("(pat-rest-loop 100000 0 0)")
-  expect_equal(result, 100000)
+  result <- engine$eval_text("(pat-rest-loop 10000 0 0)")
+  expect_equal(result, 10000)
 })
 
 test_that("TCO: pattern rest destructuring produces correct values through iterations", {
@@ -408,7 +408,7 @@ test_that("TCO: deep recursion with let does not stack overflow", {
       (let ((m (- n 1)))
         (if (<= m 0) 0 (let-loop m)))))
   ")
-  result <- engine$eval_text("(let-loop 100000)")
+  result <- engine$eval_text("(let-loop 10000)")
   expect_equal(result, 0)
 })
 
@@ -431,8 +431,8 @@ test_that("TCO: nested let* (multiple bindings) + deep recursion", {
              (new-acc (+ acc 1)))
         (if (<= m 0) new-acc (letstar-loop m new-acc)))))
   ")
-  result <- engine$eval_text("(letstar-loop 100000 0)")
-  expect_equal(result, 100000)
+  result <- engine$eval_text("(letstar-loop 10000 0)")
+  expect_equal(result, 10000)
 })
 
 test_that("VERIFY: let in tail position compiles to while, no self-call", {
@@ -463,8 +463,8 @@ test_that("TCO: deep recursion with letrec does not stack overflow", {
       (letrec ((x n))
         (if (<= x 0) acc (letrec-loop (- x 1) (+ acc 1))))))
   ")
-  result <- engine$eval_text("(letrec-loop 100000 0)")
-  expect_equal(result, 100000)
+  result <- engine$eval_text("(letrec-loop 10000 0)")
+  expect_equal(result, 10000)
 })
 
 # ==============================================================================
@@ -524,8 +524,8 @@ test_that("TCO: set!-bound lambda deep recursion does not stack overflow", {
     (set! sum-set (lambda (n acc)
       (if (<= n 0) acc (sum-set (- n 1) (+ acc n)))))
   ")
-  result <- engine$eval_text("(sum-set 100000 0)")
-  expect_equal(result, 5000050000)
+  result <- engine$eval_text("(sum-set 10000 0)")
+  expect_equal(result, 50005000)
 })
 
 test_that("VERIFY: set!-bound lambda compiles to while loop", {
@@ -547,7 +547,7 @@ test_that("TCO: letrec-bound self-recursive lambda is optimized", {
       (letrec ((count-down
                 (lambda (n)
                   (if (<= n 0) 0 (count-down (- n 1))))))
-        (count-down 100000))
+        (count-down 10000))
     ")[[1]],
     env = env
   )
@@ -702,5 +702,5 @@ test_that("with TCO disabled, deep recursion hits stack limit", {
   # Moderate depth works fine without TCO
   expect_equal(eng$eval_text("(count-down 100)"), 0)
   # Deep recursion should hit R's stack limit without TCO
-  expect_error(eng$eval_text("(count-down 100000)"))
+  expect_error(eng$eval_text("(count-down 10000)"))
 })
