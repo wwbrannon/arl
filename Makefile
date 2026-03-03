@@ -54,6 +54,22 @@ build: roxygen lang-docs ## help: Build the package tarball
 check: build ## help: Check the package (includes tests)
 	R -q -e 'p <- read.dcf("DESCRIPTION"); tb <- sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]); devtools::check_built(tb, args=c("--as-cran","--run-donttest"), check_dir=".")'
 
+# Extra env vars beyond what --as-cran already sets, to match CRAN's
+# incoming-check configuration more closely. See "R Internals" manual,
+# section 8 (Tools) for the full list of _R_CHECK_ variables.
+# --as-cran already turns on ~40 variables including temp-dir checks,
+# URL validation, bashisms, orphaned deps, etc. The variables below are
+# the ones CRAN uses that --as-cran does NOT set.
+CRAN_CHECK_ENV := \
+	_R_CHECK_FORCE_SUGGESTS_=FALSE \
+	_R_CHECK_LENGTH_1_CONDITION_=abort,verbose \
+	_R_CHECK_LENGTH_1_LOGIC2_=abort,verbose \
+	_R_CHECK_EXCESSIVE_IMPORTS_=20
+
+.PHONY: check-cran
+check-cran: build ## help: Check the package replicating CRAN's incoming checks
+	$(CRAN_CHECK_ENV) R -q -e 'p <- read.dcf("DESCRIPTION"); tb <- sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]); devtools::check_built(tb, args=c("--as-cran","--run-donttest"), check_dir=".")'
+
 .PHONY: lint
 lint: clean-cache stdlib-order ## help: Run linter checks
 	R -q -e "devtools::load_all(); lintr::lint_dir(path='.')"
@@ -172,7 +188,7 @@ bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD
 #
 
 .PHONY: cran
-cran: check ## help: Run full CRAN prep/check/comments
+cran: check-cran ## help: Run full CRAN prep/check/comments
 	Rscript tools/cran/comments.R
 	@echo "You should also make check-winbuilder and check-macbuilder targets"
 
