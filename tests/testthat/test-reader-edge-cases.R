@@ -2,7 +2,7 @@
 # Covers unicode, partial input, numeric edge cases, escape sequences
 
 test_that("unicode characters in symbols", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Should handle unicode in symbols
   result <- engine$eval_text("(define café 42)")
@@ -13,7 +13,7 @@ test_that("unicode characters in symbols", {
 })
 
 test_that("unicode in strings", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text('"Hello 世界"')
   expect_equal(result, "Hello 世界")
@@ -23,7 +23,7 @@ test_that("unicode in strings", {
 })
 
 test_that("escape sequences in strings", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text('"Hello\\nWorld"')
   expect_equal(result, "Hello\nWorld")
@@ -39,7 +39,7 @@ test_that("escape sequences in strings", {
 })
 
 test_that("numeric literals - integers", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text("42")
   expect_equal(result, 42)
@@ -52,7 +52,7 @@ test_that("numeric literals - integers", {
 })
 
 test_that("numeric literals - floats", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text("3.14")
   expect_equal(result, 3.14)
@@ -65,7 +65,7 @@ test_that("numeric literals - floats", {
 })
 
 test_that("numeric literals - scientific notation", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Basic scientific notation
   result <- engine$eval_text("1e5")
@@ -127,7 +127,7 @@ test_that("numeric literals - scientific notation", {
 })
 
 test_that("scientific notation - more edge cases", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Multiple digit exponents
   result <- engine$eval_text("1e10")
@@ -158,7 +158,7 @@ test_that("scientific notation - more edge cases", {
 })
 
 test_that("scientific notation - invalid formats treated as symbols", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # These should be parsed as symbols, not numbers
 
@@ -181,7 +181,7 @@ test_that("scientific notation - invalid formats treated as symbols", {
 })
 
 test_that("numeric edge cases - very large numbers", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Very large numbers using scientific notation
   result <- engine$eval_text("1e100")
@@ -207,7 +207,7 @@ test_that("numeric edge cases - very large numbers", {
 })
 
 test_that("numeric edge cases - very small numbers", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Very small numbers using scientific notation
   result <- engine$eval_text("1e-100")
@@ -234,7 +234,7 @@ test_that("numeric edge cases - very small numbers", {
 })
 
 test_that("special numeric values", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Inf
   result <- engine$eval_text("(/ 1 0)")
@@ -250,14 +250,14 @@ test_that("special numeric values", {
 })
 
 test_that("empty list", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text("'()")
   expect_equal(length(result), 0)
 })
 
 test_that("whitespace handling", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Multiple spaces
   result <- engine$eval_text("(+    1    2)")
@@ -273,7 +273,7 @@ test_that("whitespace handling", {
 })
 
 test_that("comment handling", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Line comment
   result <- engine$eval_text("; comment\n(+ 1 2)")
@@ -290,7 +290,7 @@ test_that("comment handling", {
 })
 
 test_that("partial input errors", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Unclosed paren - should error
   expect_error(engine$eval_text("(+ 1 2"))
@@ -303,7 +303,7 @@ test_that("partial input errors", {
 })
 
 test_that("symbols with special characters", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Symbols can have hyphens
   engine$eval_text("(define test-var 42)")
@@ -323,7 +323,7 @@ test_that("symbols with special characters", {
 })
 
 test_that("keywords", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Keywords start with colon and are self-evaluating
   result <- engine$eval_text(":keyword")
@@ -343,7 +343,7 @@ test_that("keywords", {
 })
 
 test_that("dotted pairs / improper lists", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # This may not be supported, but test that it doesn't crash
   expect_error(
@@ -353,7 +353,7 @@ test_that("dotted pairs / improper lists", {
 })
 
 test_that("nested quotes", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text("''x")
   # Should be (quote x) - the outer quote is evaluated, returning the inner quote form
@@ -361,14 +361,14 @@ test_that("nested quotes", {
 })
 
 test_that("empty string", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text('""')
   expect_equal(result, "")
 })
 
 test_that("string with only whitespace", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text('"   "')
   expect_equal(result, "   ")
@@ -378,7 +378,7 @@ test_that("string with only whitespace", {
 })
 
 test_that("very long symbol names", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   long_name <- paste(rep("a", 1000), collapse = "")
   code <- sprintf("(define %s 42)", long_name)
@@ -389,7 +389,7 @@ test_that("very long symbol names", {
 })
 
 test_that("very long strings", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   long_string <- paste(rep("a", 10000), collapse = "")
   code <- sprintf('"%s"', long_string)
@@ -398,7 +398,7 @@ test_that("very long strings", {
 })
 
 test_that("deeply nested lists", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Create deeply nested list
   nested <- "'("

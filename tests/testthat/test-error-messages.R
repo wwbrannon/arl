@@ -2,7 +2,7 @@
 # Validates that errors contain expected content and source locations
 
 test_that("undefined variable error contains variable name", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("undefined_var"),
     "undefined_var"
@@ -10,7 +10,7 @@ test_that("undefined variable error contains variable name", {
 })
 
 test_that("wrong number of arguments error", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   # (+) with 0 args returns identity element 0
   result <- engine$eval_text("(+)")
   expect_equal(result, 0)
@@ -22,7 +22,7 @@ test_that("wrong number of arguments error", {
 })
 
 test_that("invalid define syntax", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   # Test that incomplete expressions error (define needs 2 args)
   expect_error(
     engine$eval_text("(define x)"),  # No value
@@ -31,7 +31,7 @@ test_that("invalid define syntax", {
 })
 
 test_that("invalid function call", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("(5)"),  # Can't call a number
     "call|function|apply"
@@ -39,7 +39,7 @@ test_that("invalid function call", {
 })
 
 test_that("undefined function error", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("(undefined-function 1 2)"),
     "undefined-function|not found"
@@ -47,7 +47,7 @@ test_that("undefined function error", {
 })
 
 test_that("arity mismatch in user function", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   engine$eval_text("(define test-fn (lambda (x y) (+ x y)))")
   expect_error(
     engine$eval_text("(test-fn 1)"),  # Too few args
@@ -56,7 +56,7 @@ test_that("arity mismatch in user function", {
 })
 
 test_that("type error in arithmetic", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text('(+ 1 "string")'),
     "type|numeric|character"
@@ -64,7 +64,7 @@ test_that("type error in arithmetic", {
 })
 
 test_that("malformed quasiquote", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   # Unquote outside quasiquote - Arl may handle this differently
   # Just test that it doesn't crash
   tryCatch(
@@ -74,7 +74,7 @@ test_that("malformed quasiquote", {
 })
 
 test_that("malformed define", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("(define)"),  # No name
     "define|syntax|name|argument"
@@ -82,7 +82,7 @@ test_that("malformed define", {
 })
 
 test_that("invalid lambda", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("(lambda)"),  # No params or body
     "lambda|syntax|parameters|argument"
@@ -90,7 +90,7 @@ test_that("invalid lambda", {
 })
 
 test_that("set! on undefined variable", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   # set! should error if variable doesn't exist
   expect_error(
     engine$eval_text("(set! undefined-x 5)"),
@@ -99,7 +99,7 @@ test_that("set! on undefined variable", {
 })
 
 test_that("import non-existent module", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text('(import "non_existent_module")'),
     "not found|import|module|load"

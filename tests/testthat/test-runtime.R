@@ -2,7 +2,7 @@
 
 # Helper installation tests
 test_that("install_helpers() creates all required helpers", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
   engine_field(eng, "compiled_runtime")$install_helpers(test_env)
 
@@ -21,7 +21,7 @@ test_that("install_helpers() creates all required helpers", {
 })
 
 test_that("install_helpers() locks all bindings", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
   engine_field(eng, "compiled_runtime")$install_helpers(test_env)
 
@@ -34,7 +34,7 @@ test_that("install_helpers() locks all bindings", {
 })
 
 test_that("install_helpers() skips already locked bindings", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
 
   # Pre-lock a binding
@@ -49,7 +49,7 @@ test_that("install_helpers() skips already locked bindings", {
 })
 
 test_that("install_helpers() sets arl_doc attributes", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
   engine_field(eng, "compiled_runtime")$install_helpers(test_env)
 
@@ -61,7 +61,7 @@ test_that("install_helpers() sets arl_doc attributes", {
 })
 
 test_that(".__true_p helper handles truthiness correctly", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
   engine_field(eng, "compiled_runtime")$install_helpers(test_env)
 
@@ -82,7 +82,7 @@ test_that(".__true_p helper handles truthiness correctly", {
 })
 
 test_that(".__env helper points to current environment", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
   engine_field(eng, "compiled_runtime")$install_helpers(test_env)
 
@@ -90,7 +90,7 @@ test_that(".__env helper points to current environment", {
 })
 
 test_that(".__quote helper wraps base::quote", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
   engine_field(eng, "compiled_runtime")$install_helpers(test_env)
 
@@ -99,7 +99,7 @@ test_that(".__quote helper wraps base::quote", {
 
 # Module compilation tests
 test_that("module_compiled() creates and registers module", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   engine_field(eng, "compiled_runtime")$module_compiled(
     "test-mod",
     c("foo"),
@@ -116,7 +116,7 @@ test_that("module_compiled() creates and registers module", {
 })
 
 test_that("module_compiled() evaluates body expressions", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   engine_field(eng, "compiled_runtime")$module_compiled(
     "test-mod",
     c("foo", "bar"),
@@ -133,7 +133,7 @@ test_that("module_compiled() evaluates body expressions", {
 })
 
 test_that("module_compiled() handles export_all flag", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   engine_field(eng, "compiled_runtime")$module_compiled(
     "test-mod",
     character(0),
@@ -154,7 +154,7 @@ test_that("module_compiled() handles export_all flag", {
 })
 
 test_that("export-all excludes symbols imported from other modules", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
 
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -191,7 +191,7 @@ test_that("export-all excludes symbols imported from other modules", {
 })
 
 test_that("module_compiled() marks module environment", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   engine_field(eng, "compiled_runtime")$module_compiled(
     "test-mod",
     c("foo"),
@@ -208,7 +208,7 @@ test_that("module_compiled() marks module environment", {
 })
 
 test_that("module_compiled() creates path alias when src_file provided", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo) (define foo 42))", tmp_file)
   on.exit(unlink(tmp_file))
@@ -230,7 +230,7 @@ test_that("module_compiled() creates path alias when src_file provided", {
 })
 
 test_that("module_compiled() installs helpers in module environment", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   engine_field(eng, "compiled_runtime")$module_compiled(
     "test-mod",
     c("foo"),
@@ -278,7 +278,7 @@ test_that("import_compiled() by module name as symbol", {
 })
 
 test_that("import_compiled() errors on missing module", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env(parent = eng$get_env())
 
   expect_error(
@@ -306,7 +306,7 @@ test_that("import_compiled() loads module only once", {
 })
 
 test_that("import_compiled() by path loads and attaches exports", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
 
   # Create a temporary .arl file with a simple module
   tmp_file <- tempfile(fileext = ".arl")
@@ -347,7 +347,7 @@ test_that("import_compiled() attaches exports to target environment", {
 
 # Quasiquote tests
 test_that("quasiquote_compiled() returns simple values unchanged", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
 
   expect_equal(engine_field(eng, "compiled_runtime")$quasiquote_compiled(42, eng$get_env()), 42)
   expect_equal(engine_field(eng, "compiled_runtime")$quasiquote_compiled("test", eng$get_env()), "test")
@@ -355,7 +355,7 @@ test_that("quasiquote_compiled() returns simple values unchanged", {
 })
 
 test_that("quasiquote_compiled() handles unquote", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   env <- eng$get_env()
   env$x <- 42
 
@@ -368,7 +368,7 @@ test_that("quasiquote_compiled() handles unquote", {
 })
 
 test_that("quasiquote_compiled() handles unquote-splicing", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   env <- eng$get_env()
   env$lst <- list(1, 2, 3)
 
@@ -387,7 +387,7 @@ test_that("quasiquote_compiled() handles unquote-splicing", {
 })
 
 test_that("quasiquote_compiled() handles nested quasiquote", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
 
   expr <- as.call(list(
     as.symbol("quasiquote"),
@@ -401,7 +401,7 @@ test_that("quasiquote_compiled() handles nested quasiquote", {
 })
 
 test_that("quasiquote_compiled() errors on misplaced unquote-splicing", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
 
   # unquote-splicing not in list context should error
   expr <- as.call(list(as.symbol("unquote-splicing"), as.symbol("x")))
@@ -413,7 +413,7 @@ test_that("quasiquote_compiled() errors on misplaced unquote-splicing", {
 })
 
 test_that("quasiquote_compiled() requires exactly one argument", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
 
   # quasiquote with wrong number of args
   expr <- as.call(list(as.symbol("quasiquote")))
@@ -424,7 +424,7 @@ test_that("quasiquote_compiled() requires exactly one argument", {
 })
 
 test_that("quasiquote_compiled() preserves quoted expressions", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
 
   expr <- quote(quote(foo))
   result <- engine_field(eng, "compiled_runtime")$quasiquote_compiled(expr, eng$get_env())
@@ -435,7 +435,7 @@ test_that("quasiquote_compiled() preserves quoted expressions", {
 
 # Macro definition tests
 test_that("defmacro_compiled() creates macro in macro registry", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- eng$get_env()
 
   engine_field(eng, "compiled_runtime")$defmacro_compiled(
@@ -451,7 +451,7 @@ test_that("defmacro_compiled() creates macro in macro registry", {
 })
 
 test_that("defmacro_compiled() handles begin body", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- eng$get_env()
 
   body <- as.call(list(as.symbol("begin"), quote(x), quote(y)))
@@ -469,7 +469,7 @@ test_that("defmacro_compiled() handles begin body", {
 })
 
 test_that("defmacro_compiled() handles non-begin body", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- eng$get_env()
 
   engine_field(eng, "compiled_runtime")$defmacro_compiled(
@@ -485,7 +485,7 @@ test_that("defmacro_compiled() handles non-begin body", {
 })
 
 test_that("defmacro_compiled() preserves doc list", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- eng$get_env()
 
   engine_field(eng, "compiled_runtime")$defmacro_compiled(
@@ -510,7 +510,7 @@ test_that("defmacro_compiled() preserves doc list", {
 
 # Promise/delay tests
 test_that("promise_new_compiled() creates Promise", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
 
   promise <- engine_field(eng, "compiled_runtime")$promise_new_compiled(quote(1 + 1), eng$get_env())
 
@@ -518,7 +518,7 @@ test_that("promise_new_compiled() creates Promise", {
 })
 
 test_that("promise_new_compiled() delays evaluation", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   env <- eng$get_env()
   env$side_effect <- 0
 
@@ -532,7 +532,7 @@ test_that("promise_new_compiled() delays evaluation", {
 })
 
 test_that("promise_new_compiled() evaluates when forced", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   env <- eng$get_env()
   env$x <- 42
 
@@ -543,7 +543,7 @@ test_that("promise_new_compiled() evaluates when forced", {
 })
 
 test_that("promise_new_compiled() caches result", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   env <- eng$get_env()
   env$counter <- 0
 
@@ -563,7 +563,7 @@ test_that("promise_new_compiled() caches result", {
 
 # eval_compiled tests
 test_that("eval_compiled() evaluates compiled expressions", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
 
   result <- engine_field(eng, "compiled_runtime")$eval_compiled(quote(1 + 1), test_env)
@@ -572,7 +572,7 @@ test_that("eval_compiled() evaluates compiled expressions", {
 })
 
 test_that("eval_compiled() installs helpers", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
 
   engine_field(eng, "compiled_runtime")$eval_compiled(quote(NULL), test_env)
@@ -582,7 +582,7 @@ test_that("eval_compiled() installs helpers", {
 })
 
 test_that("eval_compiled() handles visibility", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
 
   # Visible result
@@ -595,7 +595,7 @@ test_that("eval_compiled() handles visibility", {
 })
 
 test_that("eval_compiled() manages environment stack", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
 
   # Stack should be empty initially
@@ -610,7 +610,7 @@ test_that("eval_compiled() manages environment stack", {
 
 # subscript_call_compiled tests
 test_that("subscript_call_compiled() handles $ operator", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
   obj <- list(foo = 42)
 
@@ -620,7 +620,7 @@ test_that("subscript_call_compiled() handles $ operator", {
 })
 
 test_that("subscript_call_compiled() handles [ operator", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
   vec <- c(1, 2, 3)
 
@@ -630,7 +630,7 @@ test_that("subscript_call_compiled() handles [ operator", {
 })
 
 test_that("subscript_call_compiled() handles [[ operator", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
   lst <- list(a = 10, b = 20)
 
@@ -640,7 +640,7 @@ test_that("subscript_call_compiled() handles [[ operator", {
 })
 
 test_that("subscript_call_compiled() requires valid operator name", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   test_env <- new.env()
 
   expect_error(

@@ -1,5 +1,5 @@
 test_that("doc! macro attaches docstrings to functions", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   # Create a test function
@@ -14,7 +14,7 @@ test_that("doc! macro attaches docstrings to functions", {
 })
 
 test_that("doc returns NULL for undocumented functions", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define no-doc-fn (lambda (x) x))')[[1]], env = env)
@@ -24,7 +24,7 @@ test_that("doc returns NULL for undocumented functions", {
 })
 
 test_that("doc! works with direct assignment functions", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   # Direct assignment from R function
@@ -36,7 +36,7 @@ test_that("doc! works with direct assignment functions", {
 })
 
 test_that("doc! updates existing docstrings", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define fn-with-doc (lambda (x) (+ x 1)))')[[1]], env = env)
@@ -53,7 +53,7 @@ test_that("doc! updates existing docstrings", {
 })
 
 test_that("inline strings in lambda body are not stripped as docstrings", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   # Lambda with a string as first body expression — not treated as docstring
@@ -155,7 +155,7 @@ test_that("docstrings survive nested imports across multiple modules", {
 # --- New tests for expanded doc!/doc API ---
 
 test_that("doc! sets specific fields with keyword args", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define my-fn (lambda (x) (* x 2)))')[[1]], env = env)
@@ -170,7 +170,7 @@ test_that("doc! sets specific fields with keyword args", {
 })
 
 test_that("doc! sets multiple fields with keyword args", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define my-fn (lambda (x) (* x 2)))')[[1]], env = env)
@@ -182,7 +182,7 @@ test_that("doc! sets multiple fields with keyword args", {
 })
 
 test_that("doc! merges fields — setting description then examples preserves both", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define my-fn (lambda (x) (* x 2)))')[[1]], env = env)
@@ -198,7 +198,7 @@ test_that("doc! merges fields — setting description then examples preserves bo
 })
 
 test_that("doc with 'all' returns full named list", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define my-fn (lambda (x) (* x 2)))')[[1]], env = env)
@@ -211,7 +211,7 @@ test_that("doc with 'all' returns full named list", {
 })
 
 test_that("doc returns NULL for non-existent field", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define my-fn (lambda (x) x))')[[1]], env = env)
@@ -222,7 +222,7 @@ test_that("doc returns NULL for non-existent field", {
 })
 
 test_that("doc! works on primitives", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define my-sum sum)')[[1]], env = env)
@@ -236,7 +236,7 @@ test_that("doc! works on primitives", {
 })
 
 test_that("doc! errors when targeting a base R function not defined in Arl", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   # `paste` lives in base R, not in any Arl environment — doc! must refuse
@@ -247,7 +247,7 @@ test_that("doc! errors when targeting a base R function not defined in Arl", {
 })
 
 test_that("@internal flag is present in arl_doc at runtime", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   code <- '(module int-test-mod
@@ -275,7 +275,7 @@ test_that("@internal flag is present in arl_doc at runtime", {
 })
 
 test_that("@noeval flag is present in arl_doc at runtime", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   code <- '(module noeval-test-mod
@@ -306,7 +306,7 @@ test_that("@noeval flag is present in arl_doc at runtime", {
 })
 
 test_that("@noeval flag round-trips through doc/doc!", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define my-fn (lambda (x) x))')[[1]], env = env)
@@ -326,7 +326,7 @@ test_that("stdlib @noeval functions carry the flag at runtime", {
 })
 
 test_that("doc! keyword args evaluate variable values", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   engine$eval(engine$read('(define my-fn (lambda (x) x))')[[1]], env = env)
@@ -338,7 +338,7 @@ test_that("doc! keyword args evaluate variable values", {
 })
 
 test_that("annotation docs attach complete arl_doc for functions and macros", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   code <- '(module doc-complete-mod
