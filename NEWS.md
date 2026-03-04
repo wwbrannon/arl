@@ -1,3 +1,28 @@
+# arl 0.1.2
+
+## Performance
+
+* Pre-build vignettes in the tarball using the `.Rmd.orig` + stub pattern,
+  cutting ~110s from `R CMD check` vignette rebuild time.
+* Speed up test suite by avoiding stdlib prelude loading in tests that don't
+  need it.
+* Reduce TCO test recursion depth to reduce runtime while still checking deeper
+  recursion than R's defaults allow.
+
+## Bug Fixes
+
+* Fix multiple temporary file and connection leaks uncovered by stricter
+  CRAN-like checking.
+* `make install` now ships pre-built vignettes (previously installed without
+  them).
+
+## Infrastructure
+
+* `make check` now mirrors CRAN settings more closely and prints wall-clock
+  time for the `R CMD check` step.
+* CI fetches `gh-pages` branch so benchmark data is available during vignette
+  rendering.
+
 # arl 0.1.1
 
 ## Bug Fixes
