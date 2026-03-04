@@ -39,12 +39,12 @@ vignettes: lang-docs bench-data ## help: Build vignettes
 document: roxygen lang-docs readme vignettes ## help: Generate all documentation
 
 .PHONY: install
-install: clean-cache stdlib-order ## help: Install the package
-	R -q -e "devtools::install()"
+install: clean-cache stdlib-order lang-docs bench-data ## help: Install the package (with pre-built vignettes)
+	Rscript tools/build/install-pkg.R
 
 .PHONY: build
-build: roxygen lang-docs ## help: Build the package tarball
-	R -q -e "devtools::build(path='.')"
+build: roxygen lang-docs bench-data ## help: Build the package tarball (with pre-built vignettes)
+	Rscript tools/build/build-pkg.R
 
 #
 ## Test running, lint, R CMD check
@@ -52,9 +52,14 @@ build: roxygen lang-docs ## help: Build the package tarball
 
 .PHONY: check
 check: build ## help: Check the package (includes tests)
+	@start=$$(date +%s); \
 	env $$(cat tools/check.env | grep -v '^\#' | xargs) \
 	R CMD check --as-cran --run-donttest \
-		$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]))')
+		$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]))'); \
+	rc=$$?; \
+	elapsed=$$(( $$(date +%s) - $$start )); \
+	printf '\nR CMD check completed in %dm %ds\n' $$((elapsed/60)) $$((elapsed%60)); \
+	exit $$rc
 
 .PHONY: lint
 lint: clean-cache stdlib-order ## help: Run linter checks
@@ -224,7 +229,7 @@ clean-cran: ## help: Remove CRAN check artifacts
 .PHONY: clean
 clean: clean-cache clean-coverage clean-bench-profile clean-cran ## help: Remove build artifacts and all make document output
 	rm -f arl_*.tar.gz
-	rm -rf site/ doc/ Meta/
+	rm -rf site/ doc/ Meta/ inst/doc/
 	rm -f README.knit.md
 	rm -f vignettes/*.html vignettes/*.R vignettes/*.knit.md
 	rm -f vignettes/articles/*.html vignettes/articles/*.knit.md
