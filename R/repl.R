@@ -386,6 +386,7 @@ REPL <- R6::R6Class(
     },
     atomic_write_lines = function(lines, path) {
       tmp <- tempfile(tmpdir = dirname(path))
+      on.exit(unlink(tmp, force = TRUE), add = TRUE)
       writeLines(lines, tmp)
       if (!isTRUE(file.rename(tmp, path))) {
         file.copy(tmp, path, overwrite = TRUE)

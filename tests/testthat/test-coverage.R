@@ -91,7 +91,7 @@ test_that("track() handles missing fields", {
 
 test_that("track() does nothing when enabled=FALSE", {
   tmp <- create_arl_file(c("(define x 1)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
   tracker$set_enabled(FALSE)
@@ -114,7 +114,7 @@ test_that("track() handles non-existent file gracefully", {
 
 test_that("track() marks single line as executed", {
   tmp <- create_arl_file(c(";; comment", "(define x 1)", "(define y 2)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
   arl_src <- make_arl_src(tmp, start_line = 2, end_line = 2)
@@ -128,7 +128,7 @@ test_that("track() marks single line as executed", {
 
 test_that("track() marks multi-line range", {
   tmp <- create_arl_file(c("(define x 1)", "(define y 2)", "(define z 3)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
   arl_src <- make_arl_src(tmp, start_line = 1, end_line = 3)
@@ -143,7 +143,7 @@ test_that("track() marks multi-line range", {
 
 test_that("track() increments count on multiple executions", {
   tmp <- create_arl_file(c("(define x 1)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
   arl_src <- make_arl_src(tmp, start_line = 1, end_line = 1)
@@ -158,7 +158,7 @@ test_that("track() increments count on multiple executions", {
 
 test_that("track() lazy-loads code_lines cache", {
   tmp <- create_arl_file(c(";; comment", "(define x 1)", "", "(define y 2)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
 
@@ -186,7 +186,7 @@ test_that("track() filters comment and blank lines", {
     "  ;; Another comment",
     "(define y 2)"
   ))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
 
@@ -210,7 +210,7 @@ test_that("track() respects custom code_line_pattern", {
     "def foo():",
     "    pass"
   ))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   # Use pattern that matches non-comment lines in Python-style
   tracker <- CoverageTracker$new(code_line_pattern = "^\\s*[^#\\s]")
@@ -244,7 +244,7 @@ test_that("discover_files() with NULL search_paths uses stdlib", {
 test_that("discover_files() with custom search_paths", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   writeLines("(define x 1)", file.path(tmp_dir, "test1.arl"))
   writeLines("(define y 2)", file.path(tmp_dir, "test2.arl"))
@@ -259,7 +259,7 @@ test_that("discover_files() with custom search_paths", {
 test_that("discover_files() searches recursively", {
   tmp_dir <- tempfile()
   dir.create(file.path(tmp_dir, "subdir", "nested"), recursive = TRUE)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   writeLines("(define x 1)", file.path(tmp_dir, "test1.arl"))
   writeLines("(define y 2)", file.path(tmp_dir, "subdir", "test2.arl"))
@@ -275,7 +275,7 @@ test_that("discover_files() excludes test directories by default", {
   tmp_dir <- tempfile()
   dir.create(file.path(tmp_dir, "src"), recursive = TRUE)
   dir.create(file.path(tmp_dir, "tests"), recursive = TRUE)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   writeLines("(define x 1)", file.path(tmp_dir, "src", "code.arl"))
   writeLines("(define test 1)", file.path(tmp_dir, "tests", "test.arl"))
@@ -292,7 +292,7 @@ test_that("discover_files() includes test directories when include_tests=TRUE", 
   tmp_dir <- tempfile()
   dir.create(file.path(tmp_dir, "src"), recursive = TRUE)
   dir.create(file.path(tmp_dir, "tests"), recursive = TRUE)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   writeLines("(define x 1)", file.path(tmp_dir, "src", "code.arl"))
   writeLines("(define test 1)", file.path(tmp_dir, "tests", "test.arl"))
@@ -334,7 +334,7 @@ test_that("discover_files() handles multiple search_paths", {
 test_that("discover_files() deduplicates files", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   writeLines("(define x 1)", file.path(tmp_dir, "test.arl"))
 
@@ -349,7 +349,7 @@ test_that("discover_files() deduplicates files", {
 test_that("discover_files() populates code_lines cache", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   tmp_file <- norm_path(file.path(tmp_dir, "test.arl"))
   writeLines(c(";; comment", "(define x 1)", "", "(define y 2)"), tmp_file)
@@ -369,7 +369,7 @@ test_that("discover_files() populates code_lines cache", {
 test_that("discover_files() handles empty directory", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = tmp_dir)
   tracker$discover_files()
@@ -388,7 +388,7 @@ test_that("get_summary() returns empty list for empty coverage", {
 
 test_that("get_summary() returns single file/line structure", {
   tmp <- create_arl_file(c("(define x 1)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
   arl_src <- make_arl_src(tmp, start_line = 1, end_line = 1)
@@ -424,7 +424,7 @@ test_that("get_summary() returns multiple files/lines structure", {
 
 test_that("get_summary() handles malformed keys gracefully", {
   tmp <- create_arl_file(c("(define x 1)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
 
@@ -440,7 +440,7 @@ test_that("get_summary() handles malformed keys gracefully", {
 
 test_that("get_summary() creates nested list structure correctly", {
   tmp <- create_arl_file(c("(define x 1)", "(define y 2)", "(define z 3)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
   tracker$track(make_arl_src(tmp, 1, 1))
@@ -465,7 +465,7 @@ test_that("reset() clears empty coverage", {
 
 test_that("reset() clears populated coverage", {
   tmp <- create_arl_file(c("(define x 1)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
   tracker$track(make_arl_src(tmp, 1, 1))
@@ -480,7 +480,7 @@ test_that("reset() clears populated coverage", {
 test_that("reset() preserves all_files and code_lines", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   tmp_file <- file.path(tmp_dir, "test.arl")
   writeLines(c("(define x 1)"), tmp_file)
@@ -504,7 +504,7 @@ test_that("reset() preserves all_files and code_lines", {
 
 test_that("set_enabled() toggles tracking", {
   tmp <- create_arl_file(c("(define x 1)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
 
@@ -519,7 +519,7 @@ test_that("set_enabled() toggles tracking", {
 
 test_that("disabled tracker ignores track() calls", {
   tmp <- create_arl_file(c("(define x 1)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
   tracker$set_enabled(FALSE)
@@ -531,7 +531,7 @@ test_that("disabled tracker ignores track() calls", {
 
 test_that("re-enabling resumes tracking", {
   tmp <- create_arl_file(c("(define x 1)", "(define y 2)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
 
@@ -566,7 +566,7 @@ test_that("report_console() discovers files if all_files empty", {
   # Use custom path so we know what to expect
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   tmp_file <- file.path(tmp_dir, "test.arl")
   writeLines("(define x 1)", tmp_file)
@@ -587,7 +587,7 @@ test_that("report_console() discovers files if all_files empty", {
 test_that("report_console() shows single file with partial coverage", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   tmp_file <- file.path(tmp_dir, "test.arl")
   writeLines(c("(define x 1)", "(define y 2)", "(define z 3)"), tmp_file)
@@ -611,7 +611,7 @@ test_that("report_console() shows single file with partial coverage", {
 test_that("report_console() shows multiple files sorted alphabetically", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file_z <- file.path(tmp_dir, "z.arl")
   file_a <- file.path(tmp_dir, "a.arl")
@@ -648,7 +648,7 @@ test_that("report_console() shows multiple files sorted alphabetically", {
 test_that("report_console() calculates total lines correctly", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file1 <- file.path(tmp_dir, "file1.arl")
   file2 <- file.path(tmp_dir, "file2.arl")
@@ -699,7 +699,7 @@ test_that("report_console() writes to file when output_file specified", {
 test_that("report_console() outputs to console when no output_file", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file <- file.path(tmp_dir, "test.arl")
   writeLines("(define x 1)", file)
@@ -721,7 +721,7 @@ test_that("report_console() outputs to console when no output_file", {
 test_that("report_html() uses default output path", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file <- file.path(tmp_dir, "test.arl")
   writeLines("(define x 1)", file)
@@ -767,7 +767,7 @@ test_that("report_html() auto-creates output directory", {
   dir.create(tmp_dir)
   output_dir <- file.path(tmp_dir, "deep", "nested", "dir")
   html_file <- file.path(output_dir, "report.html")
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file <- file.path(tmp_dir, "test.arl")
   writeLines("(define x 1)", file)
@@ -1046,7 +1046,7 @@ test_that("report_html() generates valid HTML for empty coverage", {
 test_that("report_json() uses default output path", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file <- file.path(tmp_dir, "test.arl")
   writeLines("(define x 1)", file)
@@ -1091,7 +1091,7 @@ test_that("report_json() auto-creates output directory", {
   dir.create(tmp_dir)
   output_dir <- file.path(tmp_dir, "deep", "nested", "dir")
   json_file <- file.path(output_dir, "coverage.json")
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file <- file.path(tmp_dir, "test.arl")
   writeLines("(define x 1)", file)
@@ -1272,7 +1272,7 @@ test_that("Engine tracks coverage for executed code", {
     "(define add (lambda (x y) (+ x y)))",
     "(define result (add 1 2))"
   ), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)
@@ -1291,7 +1291,7 @@ test_that("Engine tracks coverage for executed code", {
 test_that("disabled coverage tracker doesn't track", {
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c("(define x 1)"), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   tracker$set_enabled(FALSE)
@@ -1313,7 +1313,7 @@ test_that("coverage tracking persists across multiple evaluations", {
     "(define counter 0)",
     "(define inc (lambda () (set! counter (+ counter 1))))"
   ), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)
@@ -1344,7 +1344,7 @@ test_that("Engine$get_coverage() returns NULL when coverage not enabled", {
 test_that("Engine$get_coverage() returns data frame with correct structure", {
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c("(define x 1)", "(define y 2)"), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)
@@ -1369,7 +1369,7 @@ test_that("Engine$get_coverage() returns data frame with correct structure", {
 test_that("Engine$get_coverage() reports correct coverage stats", {
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c("(define x 1)", "(define y 2)", "(define z 3)"), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)
@@ -1396,7 +1396,7 @@ test_that("Engine$get_coverage() reports correct coverage stats", {
 test_that("handles empty files", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file <- norm_path(file.path(tmp_dir, "empty.arl"))
   writeLines(character(0), file)
@@ -1415,7 +1415,7 @@ test_that("handles empty files", {
 test_that("handles files with only comments and blanks", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file <- file.path(tmp_dir, "comments.arl")
   writeLines(c(";; Comment 1", "", ";; Comment 2", ""), file)
@@ -1434,7 +1434,7 @@ test_that("handles files with only comments and blanks", {
 test_that("handles 100% coverage", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE))
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
 
   file <- file.path(tmp_dir, "full.arl")
   writeLines(c("(define x 1)", "(define y 2)"), file)
@@ -1454,7 +1454,7 @@ test_that("handles 100% coverage", {
 
 test_that("handles very large execution counts", {
   tmp <- create_arl_file(c("(define x 1)"))
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new()
   arl_src <- make_arl_src(tmp, 1, 1)
@@ -1521,7 +1521,7 @@ test_that("uncalled function body is NOT covered", {
     "    (+ x 1)",
     "    (* x 2)))"
   ), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)
@@ -1549,7 +1549,7 @@ test_that("called function body IS covered", {
     "    (* x 2)))",
     "(f 5)"
   ), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)
@@ -1584,7 +1584,7 @@ test_that("module loading does not mark entire file as covered", {
     "    (lambda (x)",
     "      (- x 1))))"
   ), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)
@@ -1617,7 +1617,7 @@ test_that("if expression only covers taken then-branch", {
     "      (* x 2))))",
     "(f 5)"
   ), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)
@@ -1644,7 +1644,7 @@ test_that("if expression only covers taken else-branch", {
     "      (* x 2))))",
     "(f -3)"
   ), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)
@@ -1672,7 +1672,7 @@ test_that("if expression covers both branches when both are taken", {
     "(f 5)",
     "(f -3)"
   ), tmp)
-  on.exit(unlink(tmp))
+  on.exit(unlink(tmp), add = TRUE)
 
   tracker <- CoverageTracker$new(search_paths = dirname(tmp))
   engine <- Engine$new(coverage_tracker = tracker)

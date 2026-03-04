@@ -261,6 +261,9 @@ test_that("compiler conformance for core constructs", {
     expect_equal(compiled_out$result$value, expected$value, info = case$name)
     expect_identical(compiled_out$result$visible, expected$visible, info = case$name)
   }
+  # Clean up temp files created by init functions (e.g. "load" case)
+  if (exists("load_path", envir = env_eval)) unlink(get("load_path", envir = env_eval))
+  if (exists("load_path", envir = env_compiled)) unlink(get("load_path", envir = env_compiled))
 })
 
 test_that("compiler output is pure R code (no evaluator references)", {
