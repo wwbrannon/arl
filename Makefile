@@ -181,16 +181,11 @@ bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD
 .PHONY: cran
 cran: check ## help: Run full CRAN prep/check/comments
 	Rscript tools/cran/comments.R
-	@echo "You should also make check-winbuilder and check-macbuilder targets"
+	@echo "You should also `make check-remote` to check on win-builder and mac-builder
 
-.PHONY: check-winbuilder
-check-winbuilder: ## help: Submit to win-builder (devel + release)
-	R -q -e "devtools::check_win_devel()"
-	R -q -e "devtools::check_win_release()"
-
-.PHONY: check-macbuilder
-check-macbuilder: ## help: Submit to mac-builder (release)
-	R -q -e "devtools::check_mac_release()"
+.PHONY: check-remote
+check-remote: ## help: Submit to win-builder (devel + release) and mac-builder (release)
+	Rscript tools/build/check-remote.R win_devel win_release mac_release
 
 #
 ## Pkgdown site
