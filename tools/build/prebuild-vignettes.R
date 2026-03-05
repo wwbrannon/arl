@@ -26,13 +26,22 @@ prebuild_vignettes <- function(pkg_dir) {
 
   ## benchmarks.Rmd needs benchmarks/results/data.js -- make sure it
   ## is findable from the vignettes/ working directory.
+  ## Use a directory junction on Windows (symlinks need elevated privileges)
+  ## and a symlink elsewhere.
   bench_src <- file.path(pkg_dir, "benchmarks", "results", "data.js")
   bench_link <- file.path(vig_dir, "benchmarks")
   if (file.exists(bench_src) && !file.exists(bench_link)) {
-    file.symlink(
-      file.path(pkg_dir, "benchmarks"),
-      bench_link
-    )
+    if (.Platform$OS.type == "windows") {
+      shell(sprintf('mklink /J "%s" "%s"',
+                    normalizePath(bench_link, mustWork = FALSE),
+                    normalizePath(file.path(pkg_dir, "benchmarks"))),
+            intern = TRUE)
+    } else {
+      file.symlink(
+        file.path(pkg_dir, "benchmarks"),
+        bench_link
+      )
+    }
   }
 
   message("Rendering ", length(rmds), " vignettes...")
@@ -49,9 +58,13 @@ prebuild_vignettes <- function(pkg_dir) {
     message(" done")
   }
 
-  ## Clean up symlink if we created it
-  if (is.symlink(bench_link)) {
-    unlink(bench_link)
+  ## Clean up symlink/junction if we created it
+  if (file.exists(bench_link)) {
+    if (.Platform$OS.type == "windows") {
+      shell(sprintf('rmdir "%s"', normalizePath(bench_link)), intern = TRUE)
+    } else if (is.symlink(bench_link)) {
+      unlink(bench_link)
+    }
   }
 
   ## Now set up the .Rmd.orig + stub pattern
