@@ -35,6 +35,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch gh-pages branch (for benchmark data)
+        run: git fetch origin gh-pages:gh-pages
 
       - uses: r-lib/actions/setup-pandoc@v2
 
@@ -43,13 +48,26 @@ jobs:
           r-version: ${{ matrix.config.r }}
           use-public-rspm: true
 
+      - uses: r-lib/actions/setup-tinytex@v2
+        env:
+          TINYTEX_INSTALLER: TinyTeX
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aspell aspell-en tidy qpdf
+
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install aspell tidy-html5 qpdf
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::devtools
           needs: check
 
-      - uses: r-lib/actions/check-r-package@v2
-        with:
-          args: 'c("--no-manual", "--as-cran")'
-          error-on: '"warning"'
+      - name: R CMD check
+        run: make check
 

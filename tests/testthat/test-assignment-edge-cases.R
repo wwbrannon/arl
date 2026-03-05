@@ -24,7 +24,7 @@ make_locked_module <- function(name = "lockmod", exports = c("a", "b", "c")) {
 # --- Destructuring set! (no existing coverage) ---
 
 test_that("basic destructuring set! assigns multiple variables", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   engine$eval_text("(define a 0)")
   engine$eval_text("(define b 0)")
   engine$eval_text("(set! (a b) (list 1 2))")
@@ -33,7 +33,7 @@ test_that("basic destructuring set! assigns multiple variables", {
 })
 
 test_that("destructuring set! with rest pattern", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   engine$eval_text("(define a 0)")
   engine$eval_text("(define b 0)")
   engine$eval_text("(define rest '())")
@@ -44,7 +44,7 @@ test_that("destructuring set! with rest pattern", {
 })
 
 test_that("destructuring set! errors on undefined variable", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   engine$eval_text("(define a 0)")
   # 'nonexistent' is not defined, so set! should error
   expect_error(
@@ -82,7 +82,7 @@ test_that("destructuring set! on locked binding succeeds", {
   # This exercises the bug #2 path: destructuring set! goes through
   # Env$assign_existing which does NOT handle locked bindings.
   # After the fix, this should pass.
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Create a binding and lock it at the R level
   eng_env <- engine$get_env()
@@ -101,7 +101,7 @@ test_that("destructuring set! on locked binding succeeds", {
 # --- Locked binding interactions (no existing coverage) ---
 
 test_that("simple set! on a locked binding succeeds", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   eng_env <- engine$get_env()
   assign("locked_var", 42L, envir = eng_env)
@@ -116,7 +116,7 @@ test_that("simple set! on a locked binding succeeds", {
 })
 
 test_that("define over a locked binding replaces it", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   eng_env <- engine$get_env()
   assign("locked_def", 42L, envir = eng_env)
@@ -134,12 +134,12 @@ test_that("define over a locked binding replaces it", {
 
 test_that("simple set! and destructuring set! produce identical results on regular bindings", {
   # Fast path: simple set!
-  eng1 <- make_engine()
+  eng1 <- make_engine(load_prelude = FALSE)
   eng1$eval_text("(define x 0)")
   eng1$eval_text("(set! x 42)")
 
   # Slow path: destructuring set! with single element
-  eng2 <- make_engine()
+  eng2 <- make_engine(load_prelude = FALSE)
   eng2$eval_text("(define x 0)")
   eng2$eval_text("(set! (x) (list 42))")
 
@@ -175,14 +175,14 @@ test_that("simple set! and destructuring set! produce identical results on proxy
 
 test_that("simple set! and destructuring set! produce identical results on locked bindings", {
   # Fast path
-  eng1 <- make_engine()
+  eng1 <- make_engine(load_prelude = FALSE)
   env1 <- eng1$get_env()
   assign("lk", 10L, envir = env1)
   lockBinding(as.symbol("lk"), env1)
   eng1$eval_text("(set! lk 99)")
 
   # Slow path (destructuring)
-  eng2 <- make_engine()
+  eng2 <- make_engine(load_prelude = FALSE)
   env2 <- eng2$get_env()
   assign("lk", 10L, envir = env2)
   lockBinding(as.symbol("lk"), env2)

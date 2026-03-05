@@ -500,6 +500,7 @@ test_that("engine$repl handles evaluation errors gracefully", {
     arl.repl_can_use_history_override = FALSE
   ))
   tf <- tempfile()
+  on.exit(unlink(tf), add = TRUE)
   con <- file(tf, open = "w")
   sink(con)
   sink(con, type = "message")
@@ -508,7 +509,6 @@ test_that("engine$repl handles evaluation errors gracefully", {
   sink()
   close(con)
   output <- readLines(tf, warn = FALSE)
-  unlink(tf)
   expect_true(any(grepl("Error", output)))
 })
 

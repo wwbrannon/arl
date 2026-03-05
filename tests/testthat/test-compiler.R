@@ -261,6 +261,9 @@ test_that("compiler conformance for core constructs", {
     expect_equal(compiled_out$result$value, expected$value, info = case$name)
     expect_identical(compiled_out$result$visible, expected$visible, info = case$name)
   }
+  # Clean up temp files created by init functions (e.g. "load" case)
+  if (exists("load_path", envir = env_eval)) unlink(get("load_path", envir = env_eval))
+  if (exists("load_path", envir = env_compiled)) unlink(get("load_path", envir = env_compiled))
 })
 
 test_that("compiler output is pure R code (no evaluator references)", {
@@ -336,7 +339,7 @@ test_that("macro pipeline matches engine eval", {
 
 # Optimization Tests: Constant Folding
 test_that("compiler performs constant folding for arithmetic operations", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Test that pure arithmetic with literals gets folded
   # We verify by checking the result is correct (semantic test)
@@ -351,7 +354,7 @@ test_that("compiler performs constant folding for arithmetic operations", {
 })
 
 test_that("compiler performs constant folding for comparison operations", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Comparison operators should fold
   expect_true(engine$eval(engine$read("(< 1 2)")[[1]]))
@@ -363,7 +366,7 @@ test_that("compiler performs constant folding for comparison operations", {
 })
 
 test_that("compiler performs constant folding for logical operations", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Logical operators should fold
   expect_true(engine$eval(engine$read("(& #t #t)")[[1]]))
@@ -375,7 +378,7 @@ test_that("compiler performs constant folding for logical operations", {
 })
 
 test_that("compiler does NOT fold when arguments have side effects", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
 
   # Define a function with side effects
@@ -389,7 +392,7 @@ test_that("compiler does NOT fold when arguments have side effects", {
 })
 
 test_that("compiler does NOT fold when operators are not pure", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Non-literal arguments should not fold
   env <- new.env(parent = baseenv())
@@ -404,7 +407,7 @@ test_that("compiler does NOT fold when operators are not pure", {
 })
 
 test_that("compiler performs constant folding for math functions", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Math functions with literal arguments should fold
   expect_equal(engine$eval(engine$read("(abs -5)")[[1]]), 5)
@@ -415,7 +418,7 @@ test_that("compiler performs constant folding for math functions", {
 })
 
 test_that("compiler handles constant folding edge cases", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Division by zero produces Inf (R behavior)
   expect_equal(engine$eval(engine$read("(/ 1 0)")[[1]]), Inf)
@@ -430,7 +433,7 @@ test_that("compiler handles constant folding edge cases", {
 
 # Optimization Tests: Truthiness Optimization
 test_that("compiler optimizes truthiness checks for literal booleans", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Literal TRUE/FALSE should work without .__true_p wrapper
   expect_equal(engine$eval(engine$read("(if #t 1 2)")[[1]]), 1)
@@ -439,7 +442,7 @@ test_that("compiler optimizes truthiness checks for literal booleans", {
 })
 
 test_that("compiler optimizes truthiness checks for comparison operators", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Comparison operators return proper R logicals - no wrapper needed
   expect_equal(engine$eval(engine$read("(if (< 1 2) 1 2)")[[1]]), 1)
@@ -451,7 +454,7 @@ test_that("compiler optimizes truthiness checks for comparison operators", {
 })
 
 test_that("compiler optimizes truthiness checks for logical operators", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Logical operators return proper R logicals - no wrapper needed
   expect_equal(engine$eval(engine$read("(if (& #t #t) 1 2)")[[1]]), 1)
@@ -460,7 +463,7 @@ test_that("compiler optimizes truthiness checks for logical operators", {
 })
 
 test_that("compiler preserves Arl truthiness semantics", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # #f, #nil, and 0 are false in Arl (0 follows R semantics)
   # Strings, empty lists, etc. are truthy
@@ -474,7 +477,7 @@ test_that("compiler preserves Arl truthiness semantics", {
 })
 
 test_that("compiler handles constant-folded boolean tests", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # When constant folding produces a boolean literal, skip wrapper
   expect_equal(engine$eval(engine$read("(if (< 1 2) 1 2)")[[1]]), 1)
@@ -483,7 +486,7 @@ test_that("compiler handles constant-folded boolean tests", {
 
 # Optimization Tests: Dead Code Elimination
 test_that("compiler eliminates dead branches for constant true test", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # When test is literally TRUE, only then-branch should remain
   expect_equal(engine$eval(engine$read("(if #t 42 99)")[[1]]), 42)
@@ -494,7 +497,7 @@ test_that("compiler eliminates dead branches for constant true test", {
 })
 
 test_that("compiler eliminates dead branches for constant false test", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # When test is literally FALSE, only else-branch should remain
   expect_equal(engine$eval(engine$read("(if #f 42 99)")[[1]]), 99)
@@ -504,14 +507,14 @@ test_that("compiler eliminates dead branches for constant false test", {
 })
 
 test_that("compiler eliminates dead branches for null test", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # NULL is falsy in Arl, so else-branch is taken
   expect_equal(engine$eval(engine$read("(if #nil 42 99)")[[1]]), 99)
 })
 
 test_that("compiler handles missing else branch with constant test", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # (if #t a) should become just a
   expect_equal(engine$eval(engine$read("(if #t 42)")[[1]]), 42)
@@ -521,7 +524,7 @@ test_that("compiler handles missing else branch with constant test", {
 })
 
 test_that("dead code elimination preserves side effects in taken branch", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
   env$x <- 0
 
@@ -538,7 +541,7 @@ test_that("dead code elimination preserves side effects in taken branch", {
 })
 
 test_that("dead code elimination does NOT eliminate for variable tests", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
   env$x <- TRUE
 
@@ -553,7 +556,7 @@ test_that("dead code elimination does NOT eliminate for variable tests", {
 
 # Optimization Tests: Begin Simplification
 test_that("compiler simplifies single-expression begin blocks", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Single expression should not have block wrapper
   expect_equal(engine$eval(engine$read("(begin 42)")[[1]]), 42)
@@ -561,7 +564,7 @@ test_that("compiler simplifies single-expression begin blocks", {
 })
 
 test_that("compiler preserves multi-expression begin blocks", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
   env$x <- 0
 
@@ -571,7 +574,7 @@ test_that("compiler preserves multi-expression begin blocks", {
 })
 
 test_that("compiler handles empty begin", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Empty begin should return NULL (invisible)
   result <- engine$eval(engine$read("(begin)")[[1]])
@@ -580,7 +583,7 @@ test_that("compiler handles empty begin", {
 
 # Optimization Tests: Identity Elimination
 test_that("compiler eliminates simple identity lambda", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # ((lambda (x) x) value) should become just value
   expect_equal(engine$eval(engine$read("((lambda (x) x) 42)")[[1]]), 42)
@@ -588,7 +591,7 @@ test_that("compiler eliminates simple identity lambda", {
 })
 
 test_that("compiler eliminates identity lambda selecting first arg", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # ((lambda (a b) a) v1 v2) should become just v1
   expect_equal(engine$eval(engine$read("((lambda (a b) a) 10 20)")[[1]]), 10)
@@ -596,7 +599,7 @@ test_that("compiler eliminates identity lambda selecting first arg", {
 })
 
 test_that("compiler does NOT eliminate non-identity lambdas", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # These are not identity functions - should not be optimized away
   expect_equal(engine$eval(engine$read("((lambda (x) (+ x 1)) 5)")[[1]]), 6)
@@ -604,7 +607,7 @@ test_that("compiler does NOT eliminate non-identity lambdas", {
 })
 
 test_that("identity elimination preserves evaluation order", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
   env$counter <- 0
   engine$eval(engine$read("(define inc! (lambda () (set! counter (+ counter 1)) counter))")[[1]], env = env)
@@ -622,7 +625,7 @@ test_that("identity elimination preserves evaluation order", {
 # ============================================================================
 
 test_that("factorial function works", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- new.env()
 
   # Define factorial using recursion

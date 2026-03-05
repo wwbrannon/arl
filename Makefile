@@ -39,12 +39,12 @@ vignettes: lang-docs bench-data ## help: Build vignettes
 document: roxygen lang-docs readme vignettes ## help: Generate all documentation
 
 .PHONY: install
-install: clean-cache stdlib-order ## help: Install the package
-	R -q -e "devtools::install()"
+install: clean-cache stdlib-order lang-docs bench-data ## help: Install the package (with pre-built vignettes)
+	Rscript tools/build/install-pkg.R
 
 .PHONY: build
-build: roxygen lang-docs ## help: Build the package tarball
-	R -q -e "devtools::build(path='.')"
+build: roxygen lang-docs bench-data ## help: Build the package tarball (with pre-built vignettes)
+	Rscript tools/build/build-pkg.R
 
 #
 ## Test running, lint, R CMD check
@@ -52,7 +52,24 @@ build: roxygen lang-docs ## help: Build the package tarball
 
 .PHONY: check
 check: build ## help: Check the package (includes tests)
-	R -q -e 'p <- read.dcf("DESCRIPTION"); tb <- sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]); devtools::check_built(tb, args=c("--as-cran","--run-donttest"), check_dir=".")'
+	@pkg=$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(p[1,"Package"])'); \
+	start=$$(date +%s); \
+	check_tmpdir=$$(mktemp -d); \
+	win_overrides=; \
+	if Rscript -e 'cat(.Platform$$OS.type)' | grep -q windows; then win_overrides="_R_CHECK_CRAN_INCOMING_USE_ASPELL_=false"; fi; \
+	TMPDIR="$$check_tmpdir" env $$(cat tools/check.env | grep -v '^\#' | xargs) $$win_overrides \
+	R CMD check --as-cran --run-donttest \
+		$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]))'); \
+	rc=$$?; \
+	elapsed=$$(( $$(date +%s) - $$start )); \
+	printf '\nR CMD check completed in %dm %ds\n' $$((elapsed/60)) $$((elapsed%60)); \
+	rm -rf "$$check_tmpdir"; \
+	if [ $$rc -ne 0 ]; then exit $$rc; fi; \
+	if ! grep -q '^Status: OK' "$$pkg.Rcheck/00check.log"; then \
+		echo "R CMD check finished with warnings or notes:"; \
+		grep '^Status:' "$$pkg.Rcheck/00check.log"; \
+		exit 1; \
+	fi
 
 .PHONY: lint
 lint: clean-cache stdlib-order ## help: Run linter checks
@@ -174,16 +191,11 @@ bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD
 .PHONY: cran
 cran: check ## help: Run full CRAN prep/check/comments
 	Rscript tools/cran/comments.R
-	@echo "You should also make check-winbuilder and check-macbuilder targets"
+	@echo "You should also run 'make check-remote' to check on win-builder and mac-builder"
 
-.PHONY: check-winbuilder
-check-winbuilder: ## help: Submit to win-builder (devel + release)
-	R -q -e "devtools::check_win_devel()"
-	R -q -e "devtools::check_win_release()"
-
-.PHONY: check-macbuilder
-check-macbuilder: ## help: Submit to mac-builder (release)
-	R -q -e "devtools::check_mac_release()"
+.PHONY: check-remote
+check-remote: ## help: Submit to win-builder (devel + release) and mac-builder (release)
+	Rscript tools/build/check-remote.R win_devel win_release mac_release
 
 #
 ## Pkgdown site
@@ -222,7 +234,7 @@ clean-cran: ## help: Remove CRAN check artifacts
 .PHONY: clean
 clean: clean-cache clean-coverage clean-bench-profile clean-cran ## help: Remove build artifacts and all make document output
 	rm -f arl_*.tar.gz
-	rm -rf site/ doc/ Meta/
+	rm -rf site/ doc/ Meta/ inst/doc/
 	rm -f README.knit.md
 	rm -f vignettes/*.html vignettes/*.R vignettes/*.knit.md
 	rm -f vignettes/articles/*.html vignettes/articles/*.knit.md

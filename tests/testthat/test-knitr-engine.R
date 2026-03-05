@@ -101,7 +101,7 @@ test_that("reset_arl_engine clears the cached engine", {
 # ---------------------------------------------------------------------------
 
 test_that("state persists across evaluate_arl_code calls on same engine", {
-  eng <- make_engine()
+  eng <- make_engine(load_prelude = FALSE)
   arl:::evaluate_arl_code(eng, "(define knitr-persist-var 99)")
   out <- arl:::evaluate_arl_code(eng, "knitr-persist-var")
   expect_match(out, "#> 99")

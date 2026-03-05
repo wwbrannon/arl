@@ -1,5 +1,5 @@
 test_that("eval_string is an alias for eval_text", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_string("(+ 2 3)")
 
@@ -7,7 +7,7 @@ test_that("eval_string is an alias for eval_text", {
 })
 
 test_that("Promise uses private fields", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Create a promise
   promise <- engine$eval_text('(delay (+ 1 2))')
@@ -28,7 +28,7 @@ test_that("Promise uses private fields", {
 })
 
 test_that("Promise caching works correctly", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Create a promise with side effect
   engine$eval_text('(define counter 0)')
@@ -48,7 +48,7 @@ test_that("Promise caching works correctly", {
 })
 
 test_that("module registry bindings are locked", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Create a test module
   engine$eval_text('(module testmod (export x) (define x 42))')
@@ -74,7 +74,7 @@ test_that("module registry bindings are locked", {
 })
 
 test_that("r-eval without env parameter works correctly", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # r-eval should work without explicit env parameter
   result <- engine$eval_text('
@@ -96,7 +96,7 @@ test_that(".__env is documented as internal", {
   # This test documents that .__env exists in lambda bodies that use define/set!
   # but is clearly internal (not part of public API).
   # Simple lambdas that don't use define/set! may skip .__env as an optimization.
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # .__env exists in compiled lambda bodies that use define (needs .__env)
   fn <- engine$eval_text('(lambda (x) (define y x) (r-eval (quote (environment))))')
@@ -117,7 +117,7 @@ test_that(".__env is documented as internal", {
 })
 
 test_that("module registry entries are truly immutable", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Create a module
   engine$eval_text('(module immutmod (export val) (define val 123))')
@@ -147,7 +147,7 @@ test_that("module registry entries are truly immutable", {
 })
 
 test_that("Env fields are read-only via active bindings", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Can read fields
   expect_true(is.environment(engine_field(engine, "env")$env))
@@ -173,7 +173,7 @@ test_that("Env fields are read-only via active bindings", {
 })
 
 test_that("Env internal operations still work with private fields", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
 
   # Test env stack operations
   test_env <- new.env()

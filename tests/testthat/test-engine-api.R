@@ -5,33 +5,33 @@
 # =============================================================================
 
 test_that("define() binds a value visible to Arl code", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   engine$define("my_val", 42)
   expect_equal(engine$eval_text("my_val"), 42)
 })
 
 test_that("define() works with complex R objects", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   engine$define("df", mtcars)
   expect_equal(engine$eval_text("(nrow df)"), nrow(mtcars))
   expect_equal(engine$eval_text("(median ($ df \"mpg\"))"), median(mtcars$mpg))
 })
 
 test_that("define() returns engine invisibly for chaining", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   result <- engine$define("x", 10)$define("y", 20)$eval_text("(+ x y)")
   expect_equal(result, 30)
 })
 
 test_that("define() validates name argument", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expect_error(engine$define(42, "val"), "non-empty character string")
   expect_error(engine$define("", "val"), "non-empty character string")
   expect_error(engine$define(c("a", "b"), "val"), "non-empty character string")
 })
 
 test_that("define() overwrites existing bindings", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   engine$define("x", 1)
   expect_equal(engine$eval_text("x"), 1)
   engine$define("x", 2)
@@ -43,7 +43,7 @@ test_that("define() overwrites existing bindings", {
 # =============================================================================
 
 test_that("get_env() provides access to engine bindings", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   engine$eval_text("(define test-binding 99)")
   env <- engine$get_env()
   expect_true(exists("test-binding", envir = env, inherits = FALSE))
@@ -55,19 +55,19 @@ test_that("get_env() provides access to engine bindings", {
 # =============================================================================
 
 test_that("eval_text returns last value of multiple expressions", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   result <- engine$eval_text("(define a 1) (define b 2) (+ a b)")
   expect_equal(result, 3)
 })
 
 test_that("eval_text with empty input returns NULL invisibly", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   result <- engine$eval_text("")
   expect_null(result)
 })
 
 test_that("eval_string is an alias for eval_text", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expect_equal(engine$eval_string("(+ 1 2)"), 3)
 })
 
@@ -76,13 +76,13 @@ test_that("eval_string is an alias for eval_text", {
 # =============================================================================
 
 test_that("read() parses source into expression list", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   exprs <- engine$read("(+ 1 2) (* 3 4)")
   expect_length(exprs, 2)
 })
 
 test_that("eval() evaluates multiple expressions sequentially", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   exprs <- engine$read("(define ea-x 10) (+ ea-x 5)")
   result <- engine$eval(exprs[[1]], exprs[[2]])
   expect_equal(result, 15)
@@ -93,7 +93,7 @@ test_that("eval() evaluates multiple expressions sequentially", {
 # =============================================================================
 
 test_that("format_value formats Arl values as strings", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   engine$eval_text("(define fv-lst (list 1 2 3))")
   result <- engine$format_value(engine$eval_text("fv-lst"))
   expect_true(is.character(result))
@@ -105,7 +105,7 @@ test_that("format_value formats Arl values as strings", {
 # =============================================================================
 
 test_that("inspect_compilation returns parsed, expanded, compiled, and deparsed", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   result <- engine$inspect_compilation("(+ 1 2)")
   expect_true(is.list(result))
   expect_named(result, c("parsed", "expanded", "compiled", "compiled_deparsed"))
@@ -115,7 +115,7 @@ test_that("inspect_compilation returns parsed, expanded, compiled, and deparsed"
 })
 
 test_that("inspect_compilation with empty input returns NULLs", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   result <- engine$inspect_compilation("")
   expect_true(all(vapply(result, is.null, logical(1))))
 })
@@ -125,7 +125,7 @@ test_that("inspect_compilation with empty input returns NULLs", {
 # =============================================================================
 
 test_that("write() converts expression to string", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   expr <- engine$read("(+ 1 2)")[[1]]
   result <- engine$write(expr)
   expect_equal(result, "(+ 1 2)")
@@ -149,7 +149,7 @@ test_that("macroexpand() expands macros in an expression", {
 # =============================================================================
 
 test_that("load_file_in_env evaluates a file in the engine env", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   path <- tempfile(fileext = ".arl")
   writeLines("(define lf-test-val 77)", path)
   on.exit(unlink(path))

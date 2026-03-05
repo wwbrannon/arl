@@ -81,6 +81,7 @@ test_that("benchmark helper functions work", {
   # save/load results should work with CSV format
   temp_dir <- tempfile()
   dir.create(temp_dir)
+  on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
 
   test_data <- data.frame(
     benchmark = c("test1", "test1"),
@@ -98,8 +99,6 @@ test_that("benchmark helper functions work", {
   loaded_data <- load_benchmark_results(saved_path)
   expect_equal(loaded_data$benchmark, test_data$benchmark)
   expect_equal(loaded_data$median_ms, test_data$median_ms)
-
-  unlink(temp_dir, recursive = TRUE)
 })
 
 test_that("benchmark scripts can be sourced", {
@@ -162,6 +161,7 @@ test_that("profiling helper functions work", {
   # Create temp output directory
   temp_dir <- tempfile()
   dir.create(temp_dir)
+  on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
 
   # profile_component should generate RDS file (profvis objects stay as RDS)
   output_path <- tryCatch({
@@ -177,9 +177,6 @@ test_that("profiling helper functions work", {
 
   expect_true(file.exists(output_path))
   expect_match(output_path, "\\.rds$")
-
-  # Clean up
-  unlink(temp_dir, recursive = TRUE)
 })
 
 test_that("analysis functions work with mock data", {
@@ -228,6 +225,7 @@ test_that("comparison functions work with mock data", {
   # Create two mock CSV files
   temp_dir <- tempfile()
   dir.create(temp_dir)
+  on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
 
   mock_old <- data.frame(
     benchmark = c("strings", "strings"),
@@ -261,9 +259,6 @@ test_that("comparison functions work with mock data", {
 
   # Should show improvements (2.0 -> 1.0 is 2x speedup)
   expect_gt(max(comparison$speedup), 1.5)
-
-  # Clean up
-  unlink(temp_dir, recursive = TRUE)
 })
 
 test_that("write_ci_json produces valid JSON", {
@@ -285,6 +280,7 @@ test_that("write_ci_json produces valid JSON", {
   )
 
   json_file <- tempfile(fileext = ".json")
+  on.exit(unlink(json_file), add = TRUE)
   write_ci_json(mock_df, json_file)
 
   expect_true(file.exists(json_file))
@@ -300,8 +296,6 @@ test_that("write_ci_json produces valid JSON", {
   # Should contain expected entries
   expect_match(json_text, "tokenizer/strings/10 chars")
   expect_match(json_text, '"unit": "ms"')
-
-  unlink(json_file)
 })
 
 test_that("flatten_bench_results works with bench_mark objects", {
@@ -345,6 +339,7 @@ test_that("benchmark results directory can be created", {
   }
 
   dir.create(test_dir, recursive = TRUE)
+  on.exit(unlink(test_dir, recursive = TRUE), add = TRUE)
   expect_true(dir.exists(test_dir))
 
   # Should be able to save results there
@@ -356,9 +351,6 @@ test_that("benchmark results directory can be created", {
   saved_path <- save_benchmark_results(test_data, "test", test_dir)
 
   expect_true(file.exists(saved_path))
-
-  # Clean up
-  unlink(test_dir, recursive = TRUE)
 })
 
 test_that("benchmark scripts handle missing packages gracefully", {

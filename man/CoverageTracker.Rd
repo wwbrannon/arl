@@ -19,17 +19,13 @@ Most users should interact with coverage through the
 }
 \examples{
 \donttest{
-# Create a tracker and engine, then evaluate some Arl code
+# Track coverage of a single stdlib file (logic.arl)
 tracker <- CoverageTracker$new()
-engine <- Engine$new(coverage_tracker = tracker)
-engine$eval(engine$read("(+ 1 2)"))
-
-# Console report shows which stdlib lines were hit
+engine <- Engine$new(coverage_tracker = tracker, load_prelude = FALSE)
+logic_file <- system.file("arl", "logic.arl", package = "arl")
+engine$load_file_in_env(logic_file, engine$get_env())
+engine$eval(engine$read("(not #t)"))
 tracker$report_console()
-
-# HTML report written to a temp directory
-outfile <- file.path(tempdir(), "arl-coverage", "index.html")
-tracker$report_html(output_file = outfile)
 }
 }
 \keyword{internal}

@@ -22,7 +22,7 @@ test_that("get_paths() returns expected structure", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   paths <- cache$get_paths(tmp_file)
 
@@ -40,7 +40,7 @@ test_that("get_paths() hash changes when file content changes", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   paths1 <- cache$get_paths(tmp_file)
   hash1 <- paths1$file_hash
@@ -123,7 +123,7 @@ test_that("load_code() returns NULL for non-existent cache", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   result <- cache$load_code("/nonexistent/cache.code.rds", tmp_file)
 
@@ -162,6 +162,7 @@ test_that("load_code() returns NULL for version mismatch", {
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths$cache_dir, recursive = TRUE), add = TRUE)
 
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
@@ -184,6 +185,7 @@ test_that("load_code() returns NULL for coverage mismatch", {
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths$cache_dir, recursive = TRUE), add = TRUE)
 
   # Write cache with coverage = TRUE
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, coverage = TRUE, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
@@ -202,6 +204,7 @@ test_that("load_code() returns NULL for missing coverage field (pre-upgrade cach
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths$cache_dir, recursive = TRUE), add = TRUE)
 
   # Write a cache, then strip the coverage field to simulate old format
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
@@ -222,6 +225,7 @@ test_that("load_code() returns NULL for hash mismatch", {
 
   compiled_body <- list(quote(foo <- 42))
   paths1 <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths1$cache_dir, recursive = TRUE), add = TRUE)
 
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file, paths1$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
 
@@ -276,10 +280,11 @@ test_that("write_code() stores compiler_flags in cache data", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths$cache_dir, recursive = TRUE), add = TRUE)
   flags <- c(enable_tco = TRUE, enable_constant_folding = FALSE,
              enable_dead_code_elim = TRUE, enable_strength_reduction = TRUE,
              enable_identity_elim = TRUE, enable_truthiness_opt = TRUE,
@@ -296,10 +301,11 @@ test_that("load_code() rejects cache with mismatched compiler_flags", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths$cache_dir, recursive = TRUE), add = TRUE)
   flags1 <- c(enable_tco = TRUE, enable_constant_folding = TRUE,
               enable_dead_code_elim = TRUE, enable_strength_reduction = TRUE,
               enable_identity_elim = TRUE, enable_truthiness_opt = TRUE,
@@ -329,10 +335,11 @@ test_that("load_code() rejects cache with NULL compiler_flags (pre-upgrade)", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths$cache_dir, recursive = TRUE), add = TRUE)
   flags <- c(enable_tco = TRUE, enable_constant_folding = TRUE,
              enable_dead_code_elim = TRUE, enable_strength_reduction = TRUE,
              enable_identity_elim = TRUE, enable_truthiness_opt = TRUE,
@@ -358,10 +365,11 @@ test_that("load_code() rejects cache with NULL default_packages (pre-upgrade)", 
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths$cache_dir, recursive = TRUE), add = TRUE)
 
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file,
                    paths$file_hash, compiler_flags = .test_compiler_flags, ambient_macro_hash = .test_ambient_hash)
@@ -381,12 +389,13 @@ test_that("write_code() cleans up old cache files for same source", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   # Write cache for hash H1 (with debug_cache to test .code.R cleanup)
   options(arl.debug_cache = TRUE)
   on.exit(options(arl.debug_cache = NULL), add = TRUE)
   paths1 <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths1$cache_dir, recursive = TRUE), add = TRUE)
   cache$write_code("test", list(quote(foo <- 42)), c("foo"), FALSE, FALSE,
                    tmp_file, paths1$file_hash)
   expect_true(file.exists(paths1$code_cache))
@@ -411,10 +420,11 @@ test_that("write_code() uses provided cache_paths instead of recomputing", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("content version 1", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   # Get paths for the original content
   paths_v1 <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths_v1$cache_dir, recursive = TRUE), add = TRUE)
 
   # Change file content (simulates TOCTOU: file changed between read and cache write)
   writeLines("content version 2", tmp_file)
@@ -620,10 +630,11 @@ test_that("load_code() rejects cache with mismatched ambient_macro_hash", {
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths$cache_dir, recursive = TRUE), add = TRUE)
 
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file,
                    paths$file_hash, compiler_flags = .test_compiler_flags,
@@ -648,10 +659,11 @@ test_that("load_code() rejects cache with NULL ambient_macro_hash (pre-upgrade)"
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
-  on.exit(unlink(tmp_file))
+  on.exit(unlink(tmp_file), add = TRUE)
 
   compiled_body <- list(quote(foo <- 42))
   paths <- cache$get_paths(tmp_file)
+  on.exit(unlink(paths$cache_dir, recursive = TRUE), add = TRUE)
 
   # Write cache with ambient_macro_hash
   cache$write_code("test", compiled_body, c("foo"), FALSE, FALSE, tmp_file,

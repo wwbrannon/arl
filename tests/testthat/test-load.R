@@ -1,5 +1,5 @@
 test_that("engine$load_file_in_env evaluates source into environment", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   path <- tempfile(fileext = ".arl")
@@ -13,7 +13,7 @@ test_that("engine$load_file_in_env evaluates source into environment", {
 })
 
 test_that("(load ...) evaluates file in current environment", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   path <- tempfile(fileext = ".arl")
@@ -28,7 +28,7 @@ test_that("(load ...) evaluates file in current environment", {
 })
 
 test_that("(load path env) evaluates file in the provided environment", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   caller_env <- engine$get_env()
   target_env <- new.env(parent = caller_env)
 
@@ -46,7 +46,7 @@ test_that("(load path env) evaluates file in the provided environment", {
 })
 
 test_that("(load ...) does not resolve stdlib by name", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   # load should NOT do stdlib lookup; that's import's job
@@ -57,7 +57,7 @@ test_that("(load ...) does not resolve stdlib by name", {
 })
 
 test_that("(load ...) re-evaluates on each call", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   path <- tempfile(fileext = ".arl")
@@ -90,7 +90,7 @@ test_that("stdlib modules register macros", {
 })
 
 test_that("(import ...) loads module exports into environment", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   module_name <- paste0("math", sample.int(100000, 1))
@@ -119,7 +119,7 @@ test_that("(import ...) loads module exports into environment", {
 })
 
 test_that("(import ...) does not re-evaluate loaded modules", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   module_name <- paste0("counter", sample.int(100000, 1))
@@ -153,7 +153,7 @@ test_that("(import ...) does not re-evaluate loaded modules", {
 })
 
 test_that("(import ...) errors on missing modules and exports", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   missing_name <- paste0("missing", sample.int(100000, 1))
@@ -181,7 +181,7 @@ test_that("(import ...) errors on missing modules and exports", {
 })
 
 test_that("(import \"path\") loads module by path and attaches exports", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   tmp_dir <- tempfile()
@@ -208,7 +208,7 @@ test_that("(import \"path\") loads module by path and attaches exports", {
 })
 
 test_that("second (import \"path\") does not reload module", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   tmp_dir <- tempfile()
@@ -237,7 +237,7 @@ test_that("second (import \"path\") does not reload module", {
 })
 
 test_that("relative import paths resolve from importing file's directory", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
   # Create nested directory structure

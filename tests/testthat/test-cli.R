@@ -157,7 +157,7 @@ test_that("Engine initializes environment with stdlib", {
 # Evaluation Functions ----
 
 test_that("cli_eval_text prints non-NULL results", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   cli <- arl:::CLI$new()
   output <- capture.output(result <- cli$cli_eval_text("(+ 2 3)", engine))
   expect_equal(result, 5)
@@ -165,7 +165,7 @@ test_that("cli_eval_text prints non-NULL results", {
 })
 
 test_that("cli_eval_text does not print define results", {
-  engine <- make_engine()
+  engine <- make_engine(load_prelude = FALSE)
   cli <- arl:::CLI$new()
   output <- capture.output(result <- cli$cli_eval_text("(define y 10)", engine))
   expect_equal(result, 10)  # define returns the value (invisibly)

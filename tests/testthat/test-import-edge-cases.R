@@ -59,6 +59,7 @@ test_that("module is cached after first load", {
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_cache_module.arl")
   writeLines('(define cached-var 42)', module_path)
+  on.exit(unlink(module_path), add = TRUE)
 
   engine <- make_engine()
   env <- toplevel_env(engine)
@@ -74,9 +75,6 @@ test_that("module is cached after first load", {
   # Second load - should still get cached value
   # (Note: actual caching behavior depends on implementation)
   engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
-
-  # Clean up
-  unlink(module_path)
 })
 
 test_that("load returns last value from module", {
@@ -88,15 +86,13 @@ test_that("load returns last value from module", {
     '(define y 20)',
     '(+ x y)'
   ), module_path)
+  on.exit(unlink(module_path), add = TRUE)
 
   engine <- make_engine()
   result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
 
   # Should return 30 (the last expression)
   expect_equal(result, 30)
-
-  # Clean up
-  unlink(module_path)
 })
 
 test_that("load with syntax error in module", {
@@ -107,6 +103,7 @@ test_that("load with syntax error in module", {
     '(define x 10',  # Unclosed paren
     '(+ x 5)'
   ), module_path)
+  on.exit(unlink(module_path), add = TRUE)
 
   engine <- make_engine()
 
@@ -114,9 +111,6 @@ test_that("load with syntax error in module", {
     engine$eval_text(sprintf('(load "%s")', arl_path(module_path))),
     "Unclosed|parse|syntax|EOF|incomplete"
   )
-
-  # Clean up
-  unlink(module_path)
 })
 
 test_that("load with runtime error in module", {
@@ -127,6 +121,7 @@ test_that("load with runtime error in module", {
     '(define x 10)',
     '(stop "deliberate runtime error")'
   ), module_path)
+  on.exit(unlink(module_path), add = TRUE)
 
   engine <- make_engine()
 
@@ -134,9 +129,6 @@ test_that("load with runtime error in module", {
     engine$eval_text(sprintf('(load "%s")', arl_path(module_path))),
     "deliberate runtime error"
   )
-
-  # Clean up
-  unlink(module_path)
 })
 
 test_that("multiple loads of same module", {
@@ -144,6 +136,7 @@ test_that("multiple loads of same module", {
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_multiple_load.arl")
   writeLines('(define multi-load-var 123)', module_path)
+  on.exit(unlink(module_path), add = TRUE)
 
   engine <- make_engine()
 
@@ -154,9 +147,6 @@ test_that("multiple loads of same module", {
 
   result <- engine$eval_text("multi-load-var")
   expect_equal(result, 123)
-
-  # Clean up
-  unlink(module_path)
 })
 
 test_that("load can access previously defined symbols", {
@@ -164,6 +154,7 @@ test_that("load can access previously defined symbols", {
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_access_symbols.arl")
   writeLines('(+ existing-x 10)', module_path)
+  on.exit(unlink(module_path), add = TRUE)
 
   engine <- make_engine()
   env <- toplevel_env(engine)
@@ -174,9 +165,6 @@ test_that("load can access previously defined symbols", {
   # Load module that uses it
   result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
   expect_equal(result, 15)
-
-  # Clean up
-  unlink(module_path)
 })
 
 test_that("nested module loads", {
@@ -185,6 +173,7 @@ test_that("nested module loads", {
   # Create module B
   module_b_path <- file.path(temp_dir, "test_module_b.arl")
   writeLines('(define b-var 20)', module_b_path)
+  on.exit(unlink(module_b_path), add = TRUE)
 
   # Create module A that loads B
   module_a_path <- file.path(temp_dir, "test_module_a.arl")
@@ -192,6 +181,7 @@ test_that("nested module loads", {
     sprintf('(load "%s")', arl_path(module_b_path)),
     '(define a-var (+ b-var 10))'
   ), module_a_path)
+  on.exit(unlink(module_a_path), add = TRUE)
 
   engine <- make_engine()
   env <- toplevel_env(engine)
@@ -205,10 +195,6 @@ test_that("nested module loads", {
 
   result_b <- engine$eval_text("b-var")
   expect_equal(result_b, 20)
-
-  # Clean up
-  unlink(module_a_path)
-  unlink(module_b_path)
 })
 
 test_that("circular import dependency produces clear error", {
@@ -255,9 +241,11 @@ test_that("load with relative path", {
   temp_dir <- tempdir()
   old_wd <- getwd()
   setwd(temp_dir)
+  on.exit(setwd(old_wd), add = TRUE)
 
   module_path <- "test_relative.arl"
   writeLines('(define relative-var 777)', module_path)
+  on.exit(unlink(file.path(temp_dir, module_path)), add = TRUE)
 
   engine <- make_engine()
   env <- toplevel_env(engine)
@@ -265,16 +253,13 @@ test_that("load with relative path", {
   result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
   var_result <- engine$eval_text("relative-var")
   expect_equal(var_result, 777)
-
-  # Clean up
-  setwd(old_wd)
-  unlink(file.path(temp_dir, module_path))
 })
 
 test_that("load empty module", {
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_empty.arl")
   writeLines('', module_path)
+  on.exit(unlink(module_path), add = TRUE)
 
   engine <- make_engine()
 
@@ -282,9 +267,6 @@ test_that("load empty module", {
   result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
   # Result behavior may vary - just ensure no crash
   expect_no_error(result)
-
-  # Clean up
-  unlink(module_path)
 })
 
 test_that("load module with only comments", {
@@ -295,15 +277,13 @@ test_that("load module with only comments", {
     '; Another comment',
     '; ; More comments'
   ), module_path)
+  on.exit(unlink(module_path), add = TRUE)
 
   engine <- make_engine()
 
   # Should succeed
   result <- engine$eval_text(sprintf('(load "%s")', arl_path(module_path)))
   expect_no_error(result)
-
-  # Clean up
-  unlink(module_path)
 })
 
 test_that("module defines macro", {
@@ -312,6 +292,7 @@ test_that("module defines macro", {
   writeLines(c(
     '(defmacro triple (x) `(* 3 ,x))'
   ), module_path)
+  on.exit(unlink(module_path), add = TRUE)
 
   engine <- make_engine()
   env <- toplevel_env(engine)
@@ -322,9 +303,6 @@ test_that("module defines macro", {
   # Use the macro
   result <- engine$eval_text("(triple 7)")
   expect_equal(result, 21)
-
-  # Clean up
-  unlink(module_path)
 })
 
 # ============================================================================
