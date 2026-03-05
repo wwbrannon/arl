@@ -61,7 +61,7 @@ prebuild_vignettes <- function(pkg_dir) {
   ## Clean up symlink/junction if we created it
   if (file.exists(bench_link)) {
     if (.Platform$OS.type == "windows") {
-      shell(sprintf('rmdir "%s"', normalizePath(bench_link)), intern = TRUE)
+      shell(sprintf('rmdir "%s"', gsub("/", "\\\\", bench_link)), intern = TRUE)
     } else if (is.symlink(bench_link)) {
       unlink(bench_link)
     }

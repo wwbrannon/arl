@@ -54,7 +54,9 @@ build: roxygen lang-docs bench-data ## help: Build the package tarball (with pre
 check: build ## help: Check the package (includes tests)
 	@pkg=$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(p[1,"Package"])'); \
 	start=$$(date +%s); \
-	env $$(cat tools/check.env | grep -v '^\#' | xargs) \
+	win_overrides=; \
+	if Rscript -e 'cat(.Platform$$OS.type)' | grep -q windows; then win_overrides="_R_CHECK_CRAN_INCOMING_USE_ASPELL_=false"; fi; \
+	env $$(cat tools/check.env | grep -v '^\#' | xargs) $$win_overrides \
 	R CMD check --as-cran --run-donttest \
 		$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]))'); \
 	rc=$$?; \
