@@ -52,14 +52,20 @@ build: roxygen lang-docs bench-data ## help: Build the package tarball (with pre
 
 .PHONY: check
 check: build ## help: Check the package (includes tests)
-	@start=$$(date +%s); \
+	@pkg=$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(p[1,"Package"])'); \
+	start=$$(date +%s); \
 	env $$(cat tools/check.env | grep -v '^\#' | xargs) \
 	R CMD check --as-cran --run-donttest \
 		$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]))'); \
 	rc=$$?; \
 	elapsed=$$(( $$(date +%s) - $$start )); \
 	printf '\nR CMD check completed in %dm %ds\n' $$((elapsed/60)) $$((elapsed%60)); \
-	exit $$rc
+	if [ $$rc -ne 0 ]; then exit $$rc; fi; \
+	if ! grep -q '^Status: OK' "$$pkg.Rcheck/00check.log"; then \
+		echo "R CMD check finished with warnings or notes:"; \
+		grep '^Status:' "$$pkg.Rcheck/00check.log"; \
+		exit 1; \
+	fi
 
 .PHONY: lint
 lint: clean-cache stdlib-order ## help: Run linter checks
