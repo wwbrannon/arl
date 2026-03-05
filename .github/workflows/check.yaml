@@ -49,6 +49,8 @@ jobs:
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-tinytex@v2
+        env:
+          TINYTEX_INSTALLER: TinyTeX
 
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
