@@ -181,7 +181,7 @@ bench-compare: ## help: Compare benchmark results (usage: make bench-compare OLD
 .PHONY: cran
 cran: check ## help: Run full CRAN prep/check/comments
 	Rscript tools/cran/comments.R
-	@echo "You should also `make check-remote` to check on win-builder and mac-builder"
+	@echo "You should also run 'make check-remote' to check on win-builder and mac-builder"
 
 .PHONY: check-remote
 check-remote: ## help: Submit to win-builder (devel + release) and mac-builder (release)
