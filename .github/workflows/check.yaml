@@ -39,7 +39,7 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch gh-pages branch (for benchmark data)
-        run: git fetch origin gh-pages
+        run: git fetch origin gh-pages:gh-pages
 
       - uses: r-lib/actions/setup-pandoc@v2
 
