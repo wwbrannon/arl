@@ -1,0 +1,29 @@
+{
+  "name": "Claude Code Sandbox",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": {
+        "BASE_IMAGE": "ghcr.io/wwbrannon/claude-sandbox-r:latest"
+    }
+  },
+  "containerEnv": {
+    "GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME}",
+    "GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}",
+    "GIT_COMMITTER_NAME": "${localEnv:GIT_COMMITTER_NAME}",
+    "GIT_COMMITTER_EMAIL": "${localEnv:GIT_COMMITTER_EMAIL}"
+  },
+  "remoteUser": "agent",
+  "updateRemoteUserUID": true,
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/agent/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.ssh/git-signing/key,target=/home/agent/.ssh/git-signing/key,type=bind,readonly"
+  ],
+  "postCreateCommand": "sudo find /home/agent -not -path /home/agent/.ssh/git-signing/key -exec chown -h agent:agent {} +",
+  "postStartCommand": "bash .devcontainer/bin/post-start.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["anthropic.claude-code"]
+    }
+  }
+}

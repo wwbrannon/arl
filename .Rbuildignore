@@ -2,6 +2,7 @@
 ^\.gitignore$
 ^\.github$
 ^\.claude$
+^\.devcontainer$
 ^\.Rproj\.user$
 ^.*\.Rproj$
 ^index.md$
