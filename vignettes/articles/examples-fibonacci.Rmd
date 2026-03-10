@@ -20,10 +20,5 @@ Recursive, iterative, and sequence-based Fibonacci implementations.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/fibonacci.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "fibonacci.arl", package = "arl")
-if (path == "") path <- file.path("..", "..", "inst", "examples", "fibonacci.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "fibonacci.arl", package = "arl"))}
 ```

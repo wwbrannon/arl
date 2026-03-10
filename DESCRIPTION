@@ -1,6 +1,6 @@
 Package: arl
 Type: Package
-Title: Embedded Lisp Dialect for R
+Title: Embedded Lisp Dialect
 Version: 0.1.2
 Authors@R:
     person("William", "Brannon", email = "will.brannon+cran@gmail.com",

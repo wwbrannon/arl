@@ -8,6 +8,17 @@ arl_cli_error <- function(message, show_help = FALSE) {
   )
 }
 
+# S3 class for CLI text output. CRAN allows cat() inside print() methods.
+arl_cli_output <- function(text) {
+  structure(list(text = text), class = "arl_cli_output")
+}
+
+#' @export
+print.arl_cli_output <- function(x, ...) {
+  cat(x$text, "\n", sep = "")
+  invisible(x)
+}
+
 CLI_HELP_TEXT <- paste(
   "Arl: A Lisp dialect for R.",
   "",
@@ -62,7 +73,7 @@ CLI <- R6::R6Class(
       }
       message("Error: ", message)
       if (isTRUE(show_help)) {
-        cat(CLI_HELP_TEXT, "\n", sep = "")
+        print(arl_cli_output(CLI_HELP_TEXT))
       }
       stop(arl_cli_error(message, show_help))
     },
@@ -242,7 +253,7 @@ CLI <- R6::R6Class(
     },
     # @description Print CLI help text and exit.
     do_help = function() {
-      cat(CLI_HELP_TEXT, "\n", sep = "")
+      print(arl_cli_output(CLI_HELP_TEXT))
       invisible(NULL)
     },
     # @description Print package version and exit.
@@ -251,7 +262,7 @@ CLI <- R6::R6Class(
         as.character(utils::packageVersion(.pkg_name)),
         error = function(...) "unknown"
       )
-      cat(.pkg_name, " ", version, "\n", sep = "")
+      print(arl_cli_output(paste0(.pkg_name, " ", version)))
       invisible(NULL)
     },
     # @description Start the Arl REPL (interactive loop).
@@ -307,7 +318,7 @@ CLI <- R6::R6Class(
       )
       result <- result_with_vis$value
       if (!is.null(result) && result_with_vis$visible) {
-        cat(engine$format_value(result), "\n", sep = "")
+        print(arl_cli_output(engine$format_value(result)))
       }
       invisible(result)
     },
@@ -363,7 +374,7 @@ CLI <- R6::R6Class(
           for (err in parsed$errors) {
             message("Error: ", err)
           }
-          cat(CLI_HELP_TEXT, "\n", sep = "")
+          print(arl_cli_output(CLI_HELP_TEXT))
         }
         exit_fn <- .pkg_option("cli_exit_fn")
         if (!is.null(exit_fn) && is.function(exit_fn)) {

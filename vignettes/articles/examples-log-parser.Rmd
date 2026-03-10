@@ -20,10 +20,5 @@ Parsing logs, aggregating status counts, and computing averages.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/log-parser.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "log-parser.arl", package = "arl")
-if (path == "") path <- file.path("..", "..", "inst", "examples", "log-parser.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "log-parser.arl", package = "arl"))}
 ```

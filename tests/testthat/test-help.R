@@ -173,8 +173,10 @@ test_that("help prints explicit message for unknown topics", {
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
-  output <- capture.output(engine$eval_text("(help \"nonexistent_topic_arl_foo\")", env = env))
-  expect_true(any(grepl("No help found for topic: nonexistent_topic_arl_foo", output)))
+  expect_message(
+    engine$eval_text("(help \"nonexistent_topic_arl_foo\")", env = env),
+    "No help found for topic: nonexistent_topic_arl_foo"
+  )
 })
 
 test_that("help notes other package matches when available", {

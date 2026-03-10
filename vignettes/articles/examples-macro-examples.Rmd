@@ -20,10 +20,5 @@ Macro definitions, quasiquote, expansion, and DSL-style helpers.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/macro-examples.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "macro-examples.arl", package = "arl")
-if (path == "") path <- file.path("..", "..", "inst", "examples", "macro-examples.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "macro-examples.arl", package = "arl"))}
 ```
