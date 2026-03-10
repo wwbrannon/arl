@@ -1,3 +1,16 @@
+# arl 0.1.3
+
+## CRAN Compliance
+
+* Remove "for R" from package title per CRAN policy.
+* Replace bare `cat()` calls with S3 print methods (`arl_cli_output`,
+  `arl_help_doc`, `arl_coverage_report`) so console output follows CRAN
+  guidelines.
+* Require explicit `output_file` argument in `report_html()` and
+  `report_json()` — no longer write to the working directory by default.
+* Convert example vignette code chunks from `{r}` read-and-cat wrappers
+  to `{arl}` chunks that execute via the knitr engine.
+
 # arl 0.1.2
 
 ## Performance
