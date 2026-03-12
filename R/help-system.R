@@ -1,3 +1,14 @@
+# S3 class for help document output. CRAN allows cat() inside print() methods.
+arl_help_doc <- function(text) {
+  structure(list(text = text), class = "arl_help_doc")
+}
+
+#' @export
+print.arl_help_doc <- function(x, ...) {
+  cat(x$text, "\n", sep = "")
+  invisible(x)
+}
+
 # HelpSystem: Dispatches (help topic) to language special-form docs, macro docstrings,
 # env docs, or structured R help.
 #
@@ -305,13 +316,13 @@ HelpSystem <- R6::R6Class(
       if (!is.null(doc$seealso) && nchar(doc$seealso) > 0) {
         lines <- c(lines, "", paste0("See also: ", doc$seealso))
       }
-      cat(paste(lines, collapse = "\n"), "\n")
+      print(arl_help_doc(paste(lines, collapse = "\n")))
     },
     print_help_not_found = function(topic, package = NULL) {
       if (is.null(package)) {
-        cat(paste0("No help found for topic: ", topic), "\n")
+        message("No help found for topic: ", topic)
       } else {
-        cat(paste0("No help found for topic: ", topic, " in package: ", package), "\n")
+        message("No help found for topic: ", topic, " in package: ", package)
       }
     },
     find_binding_env = function(name, env) {

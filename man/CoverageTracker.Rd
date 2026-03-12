@@ -205,13 +205,13 @@ Generate console coverage report
 \subsection{Method \code{report_html()}}{
 Generate HTML coverage report
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CoverageTracker$report_html(output_file = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CoverageTracker$report_html(output_file)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{output_file}}{Path to output HTML file (NULL = use default based on output_prefix)}
+\item{\code{output_file}}{Path to output HTML file (required)}
 }
 \if{html}{\out{</div>}}
 }
@@ -222,13 +222,13 @@ Generate HTML coverage report
 \subsection{Method \code{report_json()}}{
 Generate codecov-compatible JSON format
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CoverageTracker$report_json(output_file = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CoverageTracker$report_json(output_file)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{output_file}}{Path to output JSON file (NULL = use default based on output_prefix)}
+\item{\code{output_file}}{Path to output JSON file (required)}
 }
 \if{html}{\out{</div>}}
 }

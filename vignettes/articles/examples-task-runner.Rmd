@@ -20,10 +20,5 @@ Dependency ordering and execution sequencing.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/task-runner.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "task-runner.arl", package = "arl")
-if (path == "") path <- file.path("..", "..", "inst", "examples", "task-runner.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "task-runner.arl", package = "arl"))}
 ```

@@ -25,12 +25,7 @@ Recursive, iterative, and sequence-based Fibonacci implementations.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/fibonacci.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "fibonacci.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "fibonacci.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "fibonacci.arl", package = "arl"))}
 ```
 
 
@@ -40,12 +35,7 @@ Quicksort and mergesort, with list operations and helpers.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/quicksort.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "quicksort.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "quicksort.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "quicksort.arl", package = "arl"))}
 ```
 
 
@@ -55,12 +45,7 @@ Multiple FizzBuzz variations showing control flow and list processing.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/fizzbuzz.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "fizzbuzz.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "fizzbuzz.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "fizzbuzz.arl", package = "arl"))}
 ```
 
 
@@ -70,12 +55,7 @@ Macro definitions, quasiquote, expansion, and DSL-style helpers.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/macro-examples.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "macro-examples.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "macro-examples.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "macro-examples.arl", package = "arl"))}
 ```
 
 
@@ -85,12 +65,7 @@ Threading a value through a custom pipeline macro.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/pipeline-macros.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "pipeline-macros.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "pipeline-macros.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "pipeline-macros.arl", package = "arl"))}
 ```
 
 
@@ -100,12 +75,7 @@ R interoperability and data transformations.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/data-analysis.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "data-analysis.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "data-analysis.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "data-analysis.arl", package = "arl"))}
 ```
 
 
@@ -115,12 +85,7 @@ BFS traversal and Dijkstra shortest paths.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/graph-paths.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "graph-paths.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "graph-paths.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "graph-paths.arl", package = "arl"))}
 ```
 
 
@@ -130,12 +95,7 @@ Parsing logs, aggregating status counts, and computing averages.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/log-parser.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "log-parser.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "log-parser.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "log-parser.arl", package = "arl"))}
 ```
 
 
@@ -145,12 +105,7 @@ Data wrangling and CSV output using R interop.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/sales-report.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "sales-report.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "sales-report.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "sales-report.arl", package = "arl"))}
 ```
 
 
@@ -160,11 +115,5 @@ Dependency ordering and execution sequencing.
 
 Source: <https://github.com/wwbrannon/arl/blob/main/inst/examples/task-runner.arl>
 
-```{r echo=FALSE, results='asis'}
-path <- system.file("examples", "task-runner.arl", package = "arl")
-if (path == "") path <- file.path("..", "inst", "examples", "task-runner.arl")
-cat("```arl\n")
-cat(readLines(path, warn = FALSE), sep = "\n")
-cat("\n```\n")
+```{arl, code=readLines(system.file("examples", "task-runner.arl", package = "arl"))}
 ```
-

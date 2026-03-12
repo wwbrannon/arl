@@ -718,7 +718,7 @@ test_that("report_console() outputs to console when no output_file", {
 # Phase 4: Advanced Reporting (HTML & JSON)
 # ============================================================================
 
-test_that("report_html() uses default output path", {
+test_that("report_html() errors when output_file is missing", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -732,15 +732,7 @@ test_that("report_html() uses default output path", {
   )
   tracker$discover_files()
 
-  # Change working directory temporarily
-  old_wd <- getwd()
-  setwd(tmp_dir)
-  on.exit(setwd(old_wd), add = TRUE)
-
-  suppressMessages(tracker$report_html())
-
-  # Default path should be coverage/{prefix}/index.html
-  expect_true(file.exists(file.path("coverage", "test_prefix", "index.html")))
+  expect_error(tracker$report_html(), "output_file is required")
 })
 
 test_that("report_html() uses custom output path", {
@@ -1043,7 +1035,7 @@ test_that("report_html() generates valid HTML for empty coverage", {
   expect_true(grepl("<title>", html_content))
 })
 
-test_that("report_json() uses default output path", {
+test_that("report_json() errors when output_file is missing", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -1057,14 +1049,7 @@ test_that("report_json() uses default output path", {
   )
   tracker$discover_files()
 
-  old_wd <- getwd()
-  setwd(tmp_dir)
-  on.exit(setwd(old_wd), add = TRUE)
-
-  suppressMessages(tracker$report_json())
-
-  # Default path should be coverage/{prefix}/coverage.json
-  expect_true(file.exists(file.path("coverage", "test_json", "coverage.json")))
+  expect_error(tracker$report_json(), "output_file is required")
 })
 
 test_that("report_json() uses custom output path", {

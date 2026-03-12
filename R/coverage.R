@@ -1,3 +1,14 @@
+# S3 class for coverage report output. CRAN allows cat() inside print() methods.
+arl_coverage_report <- function(text) {
+  structure(list(text = text), class = "arl_coverage_report")
+}
+
+#' @export
+print.arl_coverage_report <- function(x, ...) {
+  cat(x$text, "\n", sep = "")
+  invisible(x)
+}
+
 #' R6 class for tracking and reporting Arl code execution coverage
 #'
 #' @description Tracks which lines of .arl source files actually execute during runtime.
@@ -227,7 +238,7 @@ CoverageTracker <- R6::R6Class(
         if (!is.null(output_file)) {
           writeLines(lines, output_file)
         } else {
-          cat(paste0(lines, collapse = "\n"), "\n")
+          print(arl_coverage_report(paste0(lines, collapse = "\n")))
         }
         return(invisible(self))
       }
@@ -299,18 +310,17 @@ CoverageTracker <- R6::R6Class(
       if (!is.null(output_file)) {
         writeLines(lines, output_file)
       } else {
-        cat(paste0(lines, collapse = "\n"), "\n")
+        print(arl_coverage_report(paste0(lines, collapse = "\n")))
       }
 
       invisible(self)
     },
 
     #' @description Generate HTML coverage report
-    #' @param output_file Path to output HTML file (NULL = use default based on output_prefix)
-    report_html = function(output_file = NULL) {
-      # Set default output file if not provided
-      if (is.null(output_file)) {
-        output_file <- sprintf("coverage/%s/index.html", private$output_prefix)
+    #' @param output_file Path to output HTML file (required)
+    report_html = function(output_file) {
+      if (missing(output_file) || is.null(output_file)) {
+        stop("output_file is required (CRAN policy: no default writes to working directory)")
       }
 
       # Create output directory
@@ -510,11 +520,10 @@ CoverageTracker <- R6::R6Class(
     },
 
     #' @description Generate codecov-compatible JSON format
-    #' @param output_file Path to output JSON file (NULL = use default based on output_prefix)
-    report_json = function(output_file = NULL) {
-      # Set default output file if not provided
-      if (is.null(output_file)) {
-        output_file <- sprintf("coverage/%s/coverage.json", private$output_prefix)
+    #' @param output_file Path to output JSON file (required)
+    report_json = function(output_file) {
+      if (missing(output_file) || is.null(output_file)) {
+        stop("output_file is required (CRAN policy: no default writes to working directory)")
       }
 
       # Create output directory
