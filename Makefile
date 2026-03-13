@@ -80,6 +80,10 @@ lint: clean-cache stdlib-order ## help: Run linter checks
 test: clean-cache stdlib-order lang-docs ## help: Run tests
 	R -q -e "testthat::set_max_fails(Inf); devtools::test()"
 
+.PHONY: test-cran
+test-cran: clean-cache stdlib-order lang-docs ## help: Run tests with CRAN thinning enabled
+	R -q -e "testthat::set_max_fails(Inf); devtools::load_all(); testthat::test_dir('tests/testthat', env_vars = c(NOT_CRAN = 'false'))"
+
 .PHONY: test-file
 test-file: clean-cache stdlib-order ## help: Run a single test file (usage: make test-file FILE=test-parser)
 	@if [ -z "$(FILE)" ]; then \
