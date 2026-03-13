@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("list-sort works with comparator function", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env = env)
 
@@ -27,6 +30,7 @@ test_that("list-sort works with comparator function", {
 })
 
 test_that("sort-by works with key function and comparator", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env = env)
 
@@ -42,6 +46,7 @@ test_that("sort-by works with key function and comparator", {
 })
 
 test_that("stable-sort preserves order of equal elements", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env = env)
 
@@ -63,6 +68,7 @@ test_that("stable-sort preserves order of equal elements", {
 })
 
 test_that("stable-sort handles edge cases", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env = env)
 
@@ -109,6 +115,7 @@ test_that("stable-sort handles edge cases", {
 })
 
 test_that("stable-sort stability across various patterns", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env = env)
 
@@ -144,6 +151,7 @@ test_that("stable-sort stability across various patterns", {
 })
 
 test_that("merge-sorted combines two sorted lists", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("sort"), env = env)
 

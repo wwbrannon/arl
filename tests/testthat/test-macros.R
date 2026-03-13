@@ -1,6 +1,9 @@
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("gensym generates unique symbols", {
+  thin()
   s1 <- engine_field(engine, "macro_expander")$gensym()
   s2 <- engine_field(engine, "macro_expander")$gensym()
   expect_true(is.symbol(s1))
@@ -9,11 +12,13 @@ test_that("gensym generates unique symbols", {
 })
 
 test_that("gensym accepts prefix", {
+  thin()
   s <- engine_field(engine, "macro_expander")$gensym("temp")
   expect_true(grepl("^temp__", as.character(s)))
 })
 
 test_that("quasiquote returns template", {
+  thin()
   env <- new.env()
   env$x <- 5
 
@@ -24,6 +29,7 @@ test_that("quasiquote returns template", {
 })
 
 test_that("unquote evaluates within quasiquote", {
+  thin()
   env <- new.env()
   env$x <- 5
 
@@ -33,6 +39,7 @@ test_that("unquote evaluates within quasiquote", {
 })
 
 test_that("unquote-splicing splices lists", {
+  thin()
   env <- new.env()
   env$nums <- quote(c(2, 3, 4))
 
@@ -43,6 +50,7 @@ test_that("unquote-splicing splices lists", {
 })
 
 test_that("defmacro defines macros", {
+  thin()
   env <- new.env()
 
   # Define a simple macro
@@ -53,6 +61,7 @@ test_that("defmacro defines macros", {
 })
 
 test_that("get_macro returns registered macro function", {
+  thin()
   env <- new.env()
   engine$eval(engine$read("(defmacro when (test body) `(if ,test ,body #nil))")[[1]], env = env)
 
@@ -61,6 +70,7 @@ test_that("get_macro returns registered macro function", {
 })
 
 test_that("defmacro validates dotted parameter lists", {
+  thin()
   env <- new.env()
   params_multi_dot <- list(as.symbol("a"), as.symbol("."), as.symbol("b"), as.symbol("."), as.symbol("c"))
   expect_error(
@@ -74,6 +84,7 @@ test_that("defmacro validates dotted parameter lists", {
 })
 
 test_that("macros expand correctly", {
+  thin()
   env <- new.env()
 
   # Define when macro
@@ -90,6 +101,7 @@ test_that("macros expand correctly", {
 })
 
 test_that("macros evaluate correctly", {
+  thin()
   env <- new.env()
 
   # Define when macro
@@ -104,6 +116,7 @@ test_that("macros evaluate correctly", {
 })
 
 test_that("when macro with print works", {
+  thin()
   env <- new.env()
 
   # Define when macro
@@ -118,6 +131,7 @@ test_that("when macro with print works", {
 })
 
 test_that("unless macro works", {
+  thin()
   env <- new.env()
 
   # Define unless macro - just swap the branches of if
@@ -131,6 +145,7 @@ test_that("unless macro works", {
 })
 
 test_that("nested quasiquote works", {
+  thin()
   env <- new.env()
   env$x <- 5
 
@@ -155,6 +170,7 @@ test_that("nested quasiquote works", {
 })
 
 test_that("macros can compose", {
+  thin()
   env <- new.env()
 
   # Define a macro that uses begin
@@ -165,6 +181,7 @@ test_that("macros can compose", {
 })
 
 test_that("macros with unquote-splicing work", {
+  thin()
   env <- new.env()
 
   # Define a list for splicing
@@ -184,6 +201,7 @@ test_that("macros with unquote-splicing work", {
 })
 
 test_that("macro-introduced bindings are hygienic", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -196,6 +214,7 @@ test_that("macro-introduced bindings are hygienic", {
 })
 
 test_that("capture allows intentional binding capture", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -213,6 +232,7 @@ test_that("capture allows intentional binding capture", {
 })
 
 test_that("stdlib macros from files work", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("control", "binding", "looping", "threading"), env = env)
@@ -265,6 +285,7 @@ test_that("stdlib macros from files work", {
 })
 
 test_that("letrec supports mutual recursion", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -282,6 +303,7 @@ test_that("letrec supports mutual recursion", {
 })
 
 test_that("destructuring bindings work for define and let forms", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -318,6 +340,7 @@ test_that("destructuring bindings work for define and let forms", {
 })
 
 test_that("destructuring errors on arity mismatch", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -333,6 +356,7 @@ test_that("destructuring errors on arity mismatch", {
 # ==============================================================================
 
 test_that("defmacro supports single optional parameter", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro opt-test ((x 42)) x)")[[1]],
@@ -346,6 +370,7 @@ test_that("defmacro supports single optional parameter", {
 })
 
 test_that("defmacro mixed required and optional", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro mix (a (b 10)) `(+ ,a ,b))")[[1]],
@@ -359,6 +384,7 @@ test_that("defmacro mixed required and optional", {
 })
 
 test_that("defmacro all optional parameters", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro all-opt ((a 1) (b 2) (c 3)) `(list ,a ,b ,c))")[[1]],
@@ -379,6 +405,7 @@ test_that("defmacro all optional parameters", {
 })
 
 test_that("defmacro optional at different positions", {
+  thin()
   env <- new.env()
   # Optional in middle
   engine$eval(
@@ -397,6 +424,7 @@ test_that("defmacro optional at different positions", {
 })
 
 test_that("defmacro optional with rest", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro opt-rest ((x 1) . rest) `(list ,x ,@rest))")[[1]],
@@ -414,6 +442,7 @@ test_that("defmacro optional with rest", {
 })
 
 test_that("defmacro defaults see definition environment", {
+  thin()
   env <- new.env()
   env$default_val <- 42
   engine$eval(
@@ -425,6 +454,7 @@ test_that("defmacro defaults see definition environment", {
 })
 
 test_that("defmacro defaults can be complex expressions", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro complex-default ((x (list 1 2 3))) x)")[[1]],
@@ -439,6 +469,7 @@ test_that("defmacro defaults can be complex expressions", {
 # ==============================================================================
 
 test_that("defmacro basic pattern destructuring", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro let-pair ((pattern (name value))) `(define ,name ,value))")[[1]],
@@ -450,6 +481,7 @@ test_that("defmacro basic pattern destructuring", {
 })
 
 test_that("defmacro empty list pattern", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro empty-pat ((pattern ())) `'empty)")[[1]],
@@ -460,6 +492,7 @@ test_that("defmacro empty list pattern", {
 })
 
 test_that("defmacro single element pattern", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro single ((pattern (x))) x)")[[1]],
@@ -470,6 +503,7 @@ test_that("defmacro single element pattern", {
 })
 
 test_that("defmacro nested patterns", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro nested ((pattern (a (b c)))) `(list ,a ,b ,c))")[[1]],
@@ -483,6 +517,7 @@ test_that("defmacro nested patterns", {
 })
 
 test_that("defmacro deeply nested patterns", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro deep ((pattern (a (b (c d))))) `(list ,a ,b ,c ,d))")[[1]],
@@ -496,6 +531,7 @@ test_that("defmacro deeply nested patterns", {
 })
 
 test_that("defmacro pattern with internal rest", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro head-rest ((pattern (first . rest))) `(list ,first ,rest))")[[1]],
@@ -509,6 +545,7 @@ test_that("defmacro pattern with internal rest", {
 })
 
 test_that("defmacro multiple patterns", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro two-pairs ((pattern (a b)) (pattern (c d))) `(list ,a ,b ,c ,d))")[[1]],
@@ -522,6 +559,7 @@ test_that("defmacro multiple patterns", {
 })
 
 test_that("defmacro pattern with default", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro with-point ((pattern (x y) (list 0 0))) `(+ ,x ,y))")[[1]],
@@ -536,6 +574,7 @@ test_that("defmacro pattern with default", {
 })
 
 test_that("defmacro pattern with evaluated default", {
+  thin()
   env <- new.env()
   env$make_pair <- function() list(5, 10)
   engine$eval(
@@ -547,6 +586,7 @@ test_that("defmacro pattern with evaluated default", {
 })
 
 test_that("defmacro mixed patterns and simple params", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro complex (a (pattern (b c)) d) `(list ,a ,b ,c ,d))")[[1]],
@@ -564,6 +604,7 @@ test_that("defmacro mixed patterns and simple params", {
 # ==============================================================================
 
 test_that("defmacro pattern rest parameter", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro collect-pair (x . (pattern (a b))) `(list ,x ,a ,b))")[[1]],
@@ -577,6 +618,7 @@ test_that("defmacro pattern rest parameter", {
 })
 
 test_that("defmacro pattern rest with nesting", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro nest-rest (x . (pattern ((a b) c))) `(list ,x ,a ,b ,c))")[[1]],
@@ -590,6 +632,7 @@ test_that("defmacro pattern rest with nesting", {
 })
 
 test_that("defmacro optional with pattern rest", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro opt-pat-rest ((x 0) . (pattern (a b))) `(list ,x ,a ,b))")[[1]],
@@ -604,6 +647,7 @@ test_that("defmacro optional with pattern rest", {
 })
 
 test_that("defmacro pattern rest with internal rest", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro double-rest (x . (pattern (a . rest))) `(list ,x ,a ,rest))")[[1]],
@@ -617,6 +661,7 @@ test_that("defmacro pattern rest with internal rest", {
 })
 
 test_that("defmacro empty pattern rest", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro empty-rest (x . (pattern ())) `'empty)")[[1]],
@@ -631,6 +676,7 @@ test_that("defmacro empty pattern rest", {
 # ==============================================================================
 
 test_that("defmacro all patterns all defaults", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro all-default ((pattern (a b) (list 1 2)) (pattern (c d) (list 3 4))) `(list ,a ,b ,c ,d))")[[1]],
@@ -648,6 +694,7 @@ test_that("defmacro all patterns all defaults", {
 })
 
 test_that("defmacro complex parameter mixing", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro mega-mix (req (opt 10) (pattern (a b)) (pattern (c d) (list 5 6))) `(list ,req ,opt ,a ,b ,c ,d))")[[1]],
@@ -662,6 +709,7 @@ test_that("defmacro complex parameter mixing", {
 })
 
 test_that("defmacro realistic let macro", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("core", "list", "functional", "binding"), env = env)
@@ -679,6 +727,7 @@ test_that("defmacro realistic let macro", {
 })
 
 test_that("defmacro realistic cond with default", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro when-else ((pattern (test then) (list #t `'nothing))) `(if ,test ,then #nil))")[[1]],
@@ -693,6 +742,7 @@ test_that("defmacro realistic cond with default", {
 })
 
 test_that("defmacro pattern optional and rest together", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro everything (req (pattern (a b) (list 1 2)) (opt 10) . rest) `(list ,req ,a ,b ,opt ,@rest))")[[1]],
@@ -711,6 +761,7 @@ test_that("defmacro pattern optional and rest together", {
 # ==============================================================================
 
 test_that("defmacro error on missing required", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro needs-req (a (b 5)) `(+ ,a ,b))")[[1]],
@@ -723,6 +774,7 @@ test_that("defmacro error on missing required", {
 })
 
 test_that("defmacro error on pattern too many elements", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro pair-only ((pattern (a b))) `(+ ,a ,b))")[[1]],
@@ -735,6 +787,7 @@ test_that("defmacro error on pattern too many elements", {
 })
 
 test_that("defmacro error on pattern too few elements", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro triple ((pattern (a b c))) `(+ ,a ,b ,c))")[[1]],
@@ -747,6 +800,7 @@ test_that("defmacro error on pattern too few elements", {
 })
 
 test_that("defmacro error on too many arguments", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro two-only (a b) `(+ ,a ,b))")[[1]],
@@ -759,6 +813,7 @@ test_that("defmacro error on too many arguments", {
 })
 
 test_that("defmacro error on invalid parameter syntax", {
+  thin()
   env <- new.env()
   expect_error(
     engine$eval(
@@ -770,6 +825,7 @@ test_that("defmacro error on invalid parameter syntax", {
 })
 
 test_that("defmacro error on invalid pattern wrapper", {
+  thin()
   env <- new.env()
   expect_error(
     engine$eval(
@@ -781,6 +837,7 @@ test_that("defmacro error on invalid pattern wrapper", {
 })
 
 test_that("defmacro error on empty pattern rest with args", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro empty-only (x . (pattern ())) x)")[[1]],
@@ -793,6 +850,7 @@ test_that("defmacro error on empty pattern rest with args", {
 })
 
 test_that("defmacro error pattern rest arity", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro pair-rest (x . (pattern (a b))) `(list ,x ,a ,b))")[[1]],
@@ -809,6 +867,7 @@ test_that("defmacro error pattern rest arity", {
 # ==============================================================================
 
 test_that("defmacro with empty parameter list", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro always-42 () 42)")[[1]],
@@ -819,6 +878,7 @@ test_that("defmacro with empty parameter list", {
 })
 
 test_that("defmacro backward compatible simple symbols", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro old-style (a b) `(+ ,a ,b))")[[1]],
@@ -829,6 +889,7 @@ test_that("defmacro backward compatible simple symbols", {
 })
 
 test_that("defmacro backward compatible simple rest", {
+  thin()
   env <- new.env()
   engine$eval(
     engine$read("(defmacro old-rest (a . rest) `(list ,a ,@rest))")[[1]],

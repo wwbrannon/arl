@@ -2,11 +2,19 @@
 
 engine <- make_engine()
 
+# On CRAN, use a reduced recursion depth to cut runtime. 6000 still validates
+# TCO (R's default stack limit is ~5000 frames, so 6000 proves the optimized
+# loop isn't consuming stack). Off CRAN we use the full 10000.
+tco_depth <- if (identical(Sys.getenv("NOT_CRAN"), "true")) 10000L else 6000L
+
 # ==============================================================================
 # Core correctness tests
 # ==============================================================================
 
+thin <- make_cran_thinner()
+
 test_that("TCO: factorial with accumulator", {
+  thin()
   engine$eval_text("
     (define fact (lambda (n acc)
       (if (<= n 1)
@@ -18,6 +26,7 @@ test_that("TCO: factorial with accumulator", {
 })
 
 test_that("TCO: iterate pattern (fn applied n times)", {
+  thin()
   engine$eval_text("
     (define my-iterate (lambda (fn n init)
       (if (<= n 0)
@@ -29,17 +38,19 @@ test_that("TCO: iterate pattern (fn applied n times)", {
 })
 
 test_that("TCO: deep recursion does not stack overflow", {
+  thin()
   engine$eval_text("
     (define count-down (lambda (n)
       (if (<= n 0)
         0
         (count-down (- n 1)))))
   ")
-  result <- engine$eval_text("(count-down 10000)")
+  result <- engine$eval_text(paste0("(count-down ", tco_depth, ")"))
   expect_equal(result, 0)
 })
 
 test_that("TCO: GCD (swap pattern tests temp correctness)", {
+  thin()
   engine$eval_text("
     (import math :refer (modulo))
     (define gcd (lambda (a b)
@@ -54,6 +65,7 @@ test_that("TCO: GCD (swap pattern tests temp correctness)", {
 })
 
 test_that("TCO: works with cond (macro-expands to nested if)", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("control"), env = env)
@@ -72,6 +84,7 @@ test_that("TCO: works with cond (macro-expands to nested if)", {
 })
 
 test_that("TCO: sum-to with two-param self-call", {
+  thin()
   engine$eval_text("
     (define sum-to (lambda (n acc)
       (if (<= n 0)
@@ -83,6 +96,7 @@ test_that("TCO: sum-to with two-param self-call", {
 })
 
 test_that("TCO: unchanged param is not reassigned", {
+  thin()
   # fn stays the same in recursive call - should be optimized away
   engine$eval_text("
     (define apply-n (lambda (fn n val)
@@ -99,12 +113,14 @@ test_that("TCO: unchanged param is not reassigned", {
 # ==============================================================================
 
 test_that("TCO: non-recursive function is not affected", {
+  thin()
   out <- engine$inspect_compilation("(define add (lambda (a b) (+ a b)))")
   deparsed <- paste(out$compiled_deparsed, collapse = "\n")
   expect_false(grepl("while", deparsed, fixed = TRUE))
 })
 
 test_that("TCO: non-tail-recursive function (fib) is not TCO'd", {
+  thin()
   engine$eval_text("
     (define fib (lambda (n)
       (if (<= n 1)
@@ -125,6 +141,7 @@ test_that("TCO: non-tail-recursive function (fib) is not TCO'd", {
 })
 
 test_that("TCO: rest-param function with apply (not direct self-call) is not TCO'd", {
+  thin()
   engine$eval_text("
     (define my-sum (lambda (. args)
       (if (null? args)
@@ -146,6 +163,7 @@ test_that("TCO: rest-param function with apply (not direct self-call) is not TCO
 # ==============================================================================
 
 test_that("VERIFY: TCO'd function has while-loop and return, no self-call", {
+  thin()
   out <- engine$inspect_compilation("
     (define fact (lambda (n acc)
       (if (<= n 1)
@@ -160,12 +178,14 @@ test_that("VERIFY: TCO'd function has while-loop and return, no self-call", {
 })
 
 test_that("VERIFY: non-TCO'd function has no repeat", {
+  thin()
   out <- engine$inspect_compilation("(define add (lambda (a b) (+ a b)))")
   deparsed <- paste(out$compiled_deparsed, collapse = "\n")
   expect_false(grepl("while", deparsed, fixed = TRUE))
 })
 
 test_that("VERIFY: TCO with temp variables for multi-param swap", {
+  thin()
   out <- engine$inspect_compilation("
     (define gcd (lambda (a b)
       (if (== b 0)
@@ -178,6 +198,7 @@ test_that("VERIFY: TCO with temp variables for multi-param swap", {
 })
 
 test_that("TCO: begin in tail position", {
+  thin()
   engine$eval_text("
     (define count-with-side-effect (lambda (n acc)
       (if (<= n 0)
@@ -195,6 +216,7 @@ test_that("TCO: begin in tail position", {
 # ==============================================================================
 
 test_that("TCO: destructuring params with self-tail-call", {
+  thin()
   engine$eval_text("
     (define sum-pairs (lambda ((pattern (a b)) n acc)
       (if (<= n 0)
@@ -210,17 +232,19 @@ test_that("TCO: destructuring params with self-tail-call", {
 })
 
 test_that("TCO: deep recursion with destructuring does not stack overflow", {
+  thin()
   engine$eval_text("
     (define count-pair (lambda ((pattern (a b)) n)
       (if (<= n 0)
         (+ a b)
         (count-pair (list (+ a 1) b) (- n 1)))))
   ")
-  result <- engine$eval_text("(count-pair (list 0 0) 10000)")
-  expect_equal(result, 10000)
+  result <- engine$eval_text(paste0("(count-pair (list 0 0) ", tco_depth, ")"))
+  expect_equal(result, tco_depth)
 })
 
 test_that("VERIFY: TCO'd destructuring has while and .__assign_pattern inside loop", {
+  thin()
   out <- engine$inspect_compilation("
     (define sum-pairs (lambda ((pattern (a b)) n acc)
       (if (<= n 0)
@@ -239,6 +263,7 @@ test_that("VERIFY: TCO'd destructuring has while and .__assign_pattern inside lo
 # ==============================================================================
 
 test_that("TCO: keyword args in self-tail-call", {
+  thin()
   engine$eval_text("
     (define kw-sum (lambda (x y acc)
       (if (<= x 0)
@@ -254,6 +279,7 @@ test_that("TCO: keyword args in self-tail-call", {
 })
 
 test_that("TCO: mixed positional + keyword self-tail-call", {
+  thin()
   engine$eval_text("
     (define mixed-fn (lambda (x y)
       (if (<= x 0)
@@ -266,6 +292,7 @@ test_that("TCO: mixed positional + keyword self-tail-call", {
 })
 
 test_that("TCO: unknown keyword in self-call bails to normal call", {
+  thin()
   # Self-call uses :z which doesn't match any param — compile_self_tail_call
   # bails, so the self-call remains as a normal recursive call in the output
   out <- engine$inspect_compilation("
@@ -282,14 +309,15 @@ test_that("TCO: unknown keyword in self-call bails to normal call", {
 })
 
 test_that("TCO: deep recursion with keyword args does not stack overflow", {
+  thin()
   engine$eval_text("
     (define kw-count (lambda (n acc)
       (if (<= n 0)
         acc
         (kw-count :acc (+ acc 1) :n (- n 1)))))
   ")
-  result <- engine$eval_text("(kw-count 10000 0)")
-  expect_equal(result, 10000)
+  result <- engine$eval_text(paste0("(kw-count ", tco_depth, " 0)"))
+  expect_equal(result, tco_depth)
 })
 
 # ==============================================================================
@@ -297,6 +325,7 @@ test_that("TCO: deep recursion with keyword args does not stack overflow", {
 # ==============================================================================
 
 test_that("TCO: rest param with direct self-tail-call", {
+  thin()
   engine$eval_text("
     (define rest-count (lambda (n . rest)
       (if (<= n 0)
@@ -308,6 +337,7 @@ test_that("TCO: rest param with direct self-tail-call", {
 })
 
 test_that("TCO: rest param with varying arg counts in self-calls", {
+  thin()
   engine$eval_text("
     (define collect-loop (lambda (n . args)
       (if (<= n 0)
@@ -323,17 +353,19 @@ test_that("TCO: rest param with varying arg counts in self-calls", {
 })
 
 test_that("TCO: deep recursion with rest params does not stack overflow", {
+  thin()
   engine$eval_text("
     (define rest-loop (lambda (n . rest)
       (if (<= n 0)
         (length rest)
         (rest-loop (- n 1)))))
   ")
-  result <- engine$eval_text("(rest-loop 10000)")
+  result <- engine$eval_text(paste0("(rest-loop ", tco_depth, ")"))
   expect_equal(result, 0L)
 })
 
 test_that("VERIFY: TCO'd rest-param function has while, no self-call", {
+  thin()
   out <- engine$inspect_compilation("
     (define rest-loop (lambda (n . rest)
       (if (<= n 0)
@@ -350,6 +382,7 @@ test_that("VERIFY: TCO'd rest-param function has while, no self-call", {
 # ==============================================================================
 
 test_that("TCO: pattern rest params are TCO'd", {
+  thin()
   out <- engine$inspect_compilation("
     (define pat-rest-fn (lambda (n . (pattern (a b)))
       (if (<= n 0)
@@ -363,17 +396,19 @@ test_that("TCO: pattern rest params are TCO'd", {
 })
 
 test_that("TCO: deep recursion with pattern rest params does not stack overflow", {
+  thin()
   engine$eval_text("
     (define pat-rest-loop (lambda (n . (pattern (a b)))
       (if (<= n 0)
         (+ a b)
         (pat-rest-loop (- n 1) (+ a 1) b))))
   ")
-  result <- engine$eval_text("(pat-rest-loop 10000 0 0)")
-  expect_equal(result, 10000)
+  result <- engine$eval_text(paste0("(pat-rest-loop ", tco_depth, " 0 0)"))
+  expect_equal(result, tco_depth)
 })
 
 test_that("TCO: pattern rest destructuring produces correct values through iterations", {
+  thin()
   engine$eval_text("
     (define pat-rest-acc (lambda (n acc . (pattern (a b)))
       (if (<= n 0)
@@ -393,6 +428,7 @@ test_that("TCO: pattern rest destructuring produces correct values through itera
 # ==============================================================================
 
 test_that("TCO: basic let in tail position", {
+  thin()
   engine$eval_text("
     (define let-count (lambda (n)
       (let ((m (- n 1)))
@@ -403,16 +439,18 @@ test_that("TCO: basic let in tail position", {
 })
 
 test_that("TCO: deep recursion with let does not stack overflow", {
+  thin()
   engine$eval_text("
     (define let-loop (lambda (n)
       (let ((m (- n 1)))
         (if (<= m 0) 0 (let-loop m)))))
   ")
-  result <- engine$eval_text("(let-loop 10000)")
+  result <- engine$eval_text(paste0("(let-loop ", tco_depth, ")"))
   expect_equal(result, 0)
 })
 
 test_that("TCO: let* with sequential bindings + self-tail-call", {
+  thin()
   engine$eval_text("
     (define letstar-fn (lambda (n acc)
       (let* ((m (- n 1))
@@ -425,17 +463,19 @@ test_that("TCO: let* with sequential bindings + self-tail-call", {
 })
 
 test_that("TCO: nested let* (multiple bindings) + deep recursion", {
+  thin()
   engine$eval_text("
     (define letstar-loop (lambda (n acc)
       (let* ((m (- n 1))
              (new-acc (+ acc 1)))
         (if (<= m 0) new-acc (letstar-loop m new-acc)))))
   ")
-  result <- engine$eval_text("(letstar-loop 10000 0)")
-  expect_equal(result, 10000)
+  result <- engine$eval_text(paste0("(letstar-loop ", tco_depth, " 0)"))
+  expect_equal(result, tco_depth)
 })
 
 test_that("VERIFY: let in tail position compiles to while, no self-call", {
+  thin()
   out <- engine$inspect_compilation("
     (define let-count (lambda (n)
       (let ((m (- n 1)))
@@ -447,6 +487,7 @@ test_that("VERIFY: let in tail position compiles to while, no self-call", {
 })
 
 test_that("TCO: letrec in tail position", {
+  thin()
   engine$eval_text("
     (define letrec-fn (lambda (n acc)
       (letrec ((x n))
@@ -458,13 +499,14 @@ test_that("TCO: letrec in tail position", {
 })
 
 test_that("TCO: deep recursion with letrec does not stack overflow", {
+  thin()
   engine$eval_text("
     (define letrec-loop (lambda (n acc)
       (letrec ((x n))
         (if (<= x 0) acc (letrec-loop (- x 1) (+ acc 1))))))
   ")
-  result <- engine$eval_text("(letrec-loop 10000 0)")
-  expect_equal(result, 10000)
+  result <- engine$eval_text(paste0("(letrec-loop ", tco_depth, " 0)"))
+  expect_equal(result, tco_depth)
 })
 
 # ==============================================================================
@@ -472,6 +514,7 @@ test_that("TCO: deep recursion with letrec does not stack overflow", {
 # ==============================================================================
 
 test_that("TCO: let where self-call is NOT in tail position is not TCO'd", {
+  thin()
   out <- engine$inspect_compilation("
     (define not-tail (lambda (n)
       (let ((m (- n 1)))
@@ -482,6 +525,7 @@ test_that("TCO: let where self-call is NOT in tail position is not TCO'd", {
 })
 
 test_that("TCO: IIFE with complex params bails on inlining", {
+  thin()
   # Hand-written IIFE with rest param in tail position — compile_tail_iife
   # should bail, leaving the self-call in compiled output
   out <- engine$inspect_compilation("
@@ -496,6 +540,7 @@ test_that("TCO: IIFE with complex params bails on inlining", {
 })
 
 test_that("TCO: IIFE with complex params still works at runtime", {
+  thin()
   engine$eval_text("
     (define iife-rest-fn2 (lambda (n)
       ((lambda (m . rest) (if (<= m 0) 0 (iife-rest-fn2 m))) (- n 1))))
@@ -509,6 +554,7 @@ test_that("TCO: IIFE with complex params still works at runtime", {
 # ==============================================================================
 
 test_that("TCO: set!-bound lambda with self-tail-call", {
+  thin()
   engine$eval_text("
     (define count-set #f)
     (set! count-set (lambda (n)
@@ -519,16 +565,18 @@ test_that("TCO: set!-bound lambda with self-tail-call", {
 })
 
 test_that("TCO: set!-bound lambda deep recursion does not stack overflow", {
+  thin()
   engine$eval_text("
     (define sum-set #f)
     (set! sum-set (lambda (n acc)
       (if (<= n 0) acc (sum-set (- n 1) (+ acc n)))))
   ")
-  result <- engine$eval_text("(sum-set 10000 0)")
-  expect_equal(result, 50005000)
+  result <- engine$eval_text(paste0("(sum-set ", tco_depth, " 0)"))
+  expect_equal(result, tco_depth * (tco_depth + 1L) / 2L)
 })
 
 test_that("VERIFY: set!-bound lambda compiles to while loop", {
+  thin()
   out <- engine$inspect_compilation("
     (set! f (lambda (n acc)
       (if (<= n 0) acc (f (- n 1) (+ acc n)))))
@@ -539,22 +587,24 @@ test_that("VERIFY: set!-bound lambda compiles to while loop", {
 })
 
 test_that("TCO: letrec-bound self-recursive lambda is optimized", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
   result <- engine$eval(
-    engine$read("
+    engine$read(paste0("
       (letrec ((count-down
                 (lambda (n)
                   (if (<= n 0) 0 (count-down (- n 1))))))
-        (count-down 10000))
-    ")[[1]],
+        (count-down ", tco_depth, "))
+    "))[[1]],
     env = env
   )
   expect_equal(result, 0)
 })
 
 test_that("TCO: letrec-bound accumulator pattern", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -575,6 +625,7 @@ test_that("TCO: letrec-bound accumulator pattern", {
 # ==============================================================================
 
 test_that("TCO: error in base case includes source location", {
+  thin()
   err <- tryCatch(
     engine$eval_text("
       (define tco-err-base (lambda (n)
@@ -591,6 +642,7 @@ test_that("TCO: error in base case includes source location", {
 })
 
 test_that("TCO: error in tail-call argument includes source location", {
+  thin()
   err <- tryCatch(
     engine$eval_text("
       (define tco-err-arg (lambda (n acc)
@@ -607,6 +659,7 @@ test_that("TCO: error in tail-call argument includes source location", {
 })
 
 test_that("TCO: error inside let body includes source location", {
+  thin()
   err <- tryCatch(
     engine$eval_text("
       (define tco-err-let (lambda (n)
@@ -628,24 +681,28 @@ test_that("TCO: error inside let body includes source location", {
 # ==============================================================================
 
 test_that("TCO is enabled by default", {
+  thin()
   eng <- make_engine(load_prelude = FALSE)
   compiler <- eng$.__enclos_env__$private$.compiler
   expect_true(compiler$enable_tco)
 })
 
 test_that("disable_tco parameter disables TCO", {
+  thin()
   eng <- make_engine(disable_tco = TRUE, load_prelude = FALSE)
   compiler <- eng$.__enclos_env__$private$.compiler
   expect_false(compiler$enable_tco)
 })
 
 test_that("disable_tco = FALSE keeps TCO enabled", {
+  thin()
   eng <- make_engine(disable_tco = FALSE, load_prelude = FALSE)
   compiler <- eng$.__enclos_env__$private$.compiler
   expect_true(compiler$enable_tco)
 })
 
 test_that("R option arl.disable_tco disables TCO", {
+  thin()
   withr::local_options(arl.disable_tco = TRUE)
   eng <- make_engine(load_prelude = FALSE)
   compiler <- eng$.__enclos_env__$private$.compiler
@@ -653,6 +710,7 @@ test_that("R option arl.disable_tco disables TCO", {
 })
 
 test_that("disable_tco parameter overrides R option", {
+  thin()
   # Parameter FALSE overrides option TRUE
   withr::local_options(arl.disable_tco = TRUE)
   eng <- make_engine(disable_tco = FALSE, load_prelude = FALSE)
@@ -667,6 +725,7 @@ test_that("disable_tco parameter overrides R option", {
 })
 
 test_that("env var ARL_DISABLE_TCO disables TCO", {
+  thin()
   withr::local_envvar(ARL_DISABLE_TCO = "1")
   withr::local_options(arl.disable_tco = NULL)
   eng <- make_engine(load_prelude = FALSE)
@@ -675,6 +734,7 @@ test_that("env var ARL_DISABLE_TCO disables TCO", {
 })
 
 test_that("R option overrides env var for disable_tco", {
+  thin()
   withr::local_envvar(ARL_DISABLE_TCO = "1")
   withr::local_options(arl.disable_tco = FALSE)
   eng <- make_engine(load_prelude = FALSE)
@@ -683,6 +743,7 @@ test_that("R option overrides env var for disable_tco", {
 })
 
 test_that("with TCO disabled, self-recursive functions still produce correct results", {
+  thin()
   eng <- make_engine(disable_tco = TRUE)
   eng$eval_text("
     (define fact (lambda (n acc)
@@ -694,6 +755,7 @@ test_that("with TCO disabled, self-recursive functions still produce correct res
 })
 
 test_that("with TCO disabled, deep recursion hits stack limit", {
+  thin()
   eng <- make_engine(disable_tco = TRUE)
   eng$eval_text("
     (define count-down (lambda (n)

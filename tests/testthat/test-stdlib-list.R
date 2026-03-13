@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("car returns first element", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -15,6 +18,7 @@ test_that("car returns first element", {
 })
 
 test_that("cdr returns rest of list", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -26,6 +30,7 @@ test_that("cdr returns rest of list", {
 })
 
 test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", {
+  thin()
   env <- toplevel_env(engine, new.env())
 
   # From list values
@@ -61,6 +66,7 @@ test_that("common composed list accessors work (cadr, caddr, caar, cdar, ...)", 
 })
 
 test_that("ordinal list accessors work (second, third, fourth)", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -74,6 +80,7 @@ test_that("ordinal list accessors work (second, third, fourth)", {
 })
 
 test_that("first is an alias for car", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -83,6 +90,7 @@ test_that("first is an alias for car", {
 })
 
 test_that("rest is an alias for cdr", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -92,6 +100,7 @@ test_that("rest is an alias for cdr", {
 })
 
 test_that("last returns last element", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -102,6 +111,7 @@ test_that("last returns last element", {
 })
 
 test_that("nth returns element at index", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -119,6 +129,7 @@ test_that("nth returns element at index", {
 })
 
 test_that("assoc family: assoc, assoc-by-equal?, assoc-by-identical?, assoc-by-==, rassoc, rassoc-by-equal?", {
+  thin()
   env <- toplevel_env(engine, new.env())
 
   # assoc (equal?) and assoc-by-equal? (alias)
@@ -142,6 +153,7 @@ test_that("assoc family: assoc, assoc-by-equal?, assoc-by-identical?, assoc-by-=
 })
 
 test_that("assq and assv error (cannot implement eq?/eqv? in R)", {
+  thin()
   env <- toplevel_env(engine, new.env())
   expect_error(
     engine$eval(engine$read("(assq 'x (list (list 'x 1)))")[[1]], env = env),
@@ -154,6 +166,7 @@ test_that("assq and assv error (cannot implement eq?/eqv? in R)", {
 })
 
 test_that("cons adds element to front", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -164,6 +177,7 @@ test_that("cons adds element to front", {
 })
 
 test_that("cons with non-list cdr produces dotted pair (arl_cons)", {
+  thin()
   env <- toplevel_env(engine, new.env())
   result <- engine$eval(engine$read("(cons 'a 'b)")[[1]], env = env)
   expect_true(inherits(result, "ArlCons"))
@@ -172,6 +186,7 @@ test_that("cons with non-list cdr produces dotted pair (arl_cons)", {
 })
 
 test_that("car and cdr on dotted pair", {
+  thin()
   env <- toplevel_env(engine, new.env())
   pair <- engine$eval(engine$read("'(a . 42)")[[1]], env = env)
   expect_equal(as.character(get("car", envir = env)(pair)), "a")
@@ -179,6 +194,7 @@ test_that("car and cdr on dotted pair", {
 })
 
 test_that("list? is false but pair? is true for dotted pair (Cons)", {
+  thin()
   env <- toplevel_env(engine, new.env())
   pair <- engine$eval(engine$read("(cons 1 2)")[[1]], env = env)
   expect_false(get("list?", envir = env)(pair))
@@ -186,6 +202,7 @@ test_that("list? is false but pair? is true for dotted pair (Cons)", {
 })
 
 test_that("_as-list on improper list returns proper prefix only", {
+  thin()
   # _as-list is an R builtin in builtins_env
   builtins_env <- parent.env(parent.env(engine$get_env()))
   as_list_fn <- get("_as-list", envir = builtins_env, inherits = FALSE)
@@ -198,6 +215,7 @@ test_that("_as-list on improper list returns proper prefix only", {
 })
 
 test_that("append combines lists", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -205,6 +223,7 @@ test_that("append combines lists", {
 })
 
 test_that("reverse reverses list order", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -212,6 +231,7 @@ test_that("reverse reverses list order", {
 })
 
 test_that("list* constructs list with final element as tail", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -223,6 +243,7 @@ test_that("list* constructs list with final element as tail", {
 # ============================================================================
 
 test_that("range generates numeric sequences", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env = env)
 
@@ -253,6 +274,7 @@ test_that("range generates numeric sequences", {
 })
 
 test_that("iota generates sequences with count", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env = env)
 
@@ -283,6 +305,7 @@ test_that("iota generates sequences with count", {
 })
 
 test_that("make-list creates repeated values", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env = env)
 
@@ -308,6 +331,7 @@ test_that("make-list creates repeated values", {
 })
 
 test_that("list-ref accesses list by index", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env = env)
 
@@ -327,6 +351,7 @@ test_that("list-ref accesses list by index", {
 })
 
 test_that("list-tail returns list without first k elements", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env = env)
 
@@ -356,6 +381,7 @@ test_that("list-tail returns list without first k elements", {
 # ============================================================================
 
 test_that("range errors when step is zero", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("list"), env = env)
 
@@ -365,6 +391,7 @@ test_that("range errors when step is zero", {
 })
 
 test_that("nth errors on negative index", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -376,6 +403,7 @@ test_that("nth errors on negative index", {
 # ============================================================================
 
 test_that("car handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -393,6 +421,7 @@ test_that("car handles edge cases", {
 })
 
 test_that("cdr handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -412,6 +441,7 @@ test_that("cdr handles edge cases", {
 })
 
 test_that("cons handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -428,6 +458,7 @@ test_that("cons handles edge cases", {
 })
 
 test_that("append handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -445,6 +476,7 @@ test_that("append handles edge cases", {
 })
 
 test_that("reverse handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -461,6 +493,7 @@ test_that("reverse handles edge cases", {
 })
 
 test_that("list* handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -479,6 +512,7 @@ test_that("list* handles edge cases", {
 # ============================================================================
 
 test_that("stdlib handles deeply nested structures", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 

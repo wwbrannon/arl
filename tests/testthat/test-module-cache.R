@@ -12,13 +12,17 @@
 )
 
 # Cache path generation tests
+thin <- make_cran_thinner()
+
 test_that("get_paths() returns NULL for non-existent file", {
+  thin()
   cache <- arl:::ModuleCache$new()
   paths <- cache$get_paths("/nonexistent/file.arl")
   expect_null(paths)
 })
 
 test_that("get_paths() returns expected structure", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -37,6 +41,7 @@ test_that("get_paths() returns expected structure", {
 })
 
 test_that("get_paths() hash changes when file content changes", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -55,6 +60,7 @@ test_that("get_paths() hash changes when file content changes", {
 
 # expr cache tests
 test_that("write_code() creates cache files", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -75,6 +81,7 @@ test_that("write_code() creates cache files", {
 })
 
 test_that("write_code() creates human-readable .code.R file when debug_cache is TRUE", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -97,6 +104,7 @@ test_that("write_code() creates human-readable .code.R file when debug_cache is 
 })
 
 test_that("write_code() includes metadata", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -120,6 +128,7 @@ test_that("write_code() includes metadata", {
 })
 
 test_that("load_code() returns NULL for non-existent cache", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -131,6 +140,7 @@ test_that("load_code() returns NULL for non-existent cache", {
 })
 
 test_that("load_code() loads cache data", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -154,6 +164,7 @@ test_that("load_code() loads cache data", {
 })
 
 test_that("load_code() returns NULL for version mismatch", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -177,6 +188,7 @@ test_that("load_code() returns NULL for version mismatch", {
 })
 
 test_that("load_code() returns NULL for coverage mismatch", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -196,6 +208,7 @@ test_that("load_code() returns NULL for coverage mismatch", {
 })
 
 test_that("load_code() returns NULL for missing coverage field (pre-upgrade cache)", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -217,6 +230,7 @@ test_that("load_code() returns NULL for missing coverage field (pre-upgrade cach
 })
 
 test_that("load_code() returns NULL for hash mismatch", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -241,6 +255,7 @@ test_that("load_code() returns NULL for hash mismatch", {
 
 # Integration test: cache hit path excludes _-prefixed names from export-all
 test_that("cache hit path excludes _-prefixed names from export-all exports", {
+  thin()
   tmp_dir <- tempfile("cache_underscore_test")
   dir.create(tmp_dir, recursive = TRUE)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -277,6 +292,7 @@ test_that("cache hit path excludes _-prefixed names from export-all exports", {
 # --- compiler_flags tests ---
 
 test_that("write_code() stores compiler_flags in cache data", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -298,6 +314,7 @@ test_that("write_code() stores compiler_flags in cache data", {
 })
 
 test_that("load_code() rejects cache with mismatched compiler_flags", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -332,6 +349,7 @@ test_that("load_code() rejects cache with mismatched compiler_flags", {
 })
 
 test_that("load_code() rejects cache with NULL compiler_flags (pre-upgrade)", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -362,6 +380,7 @@ test_that("load_code() rejects cache with NULL compiler_flags (pre-upgrade)", {
 # --- default_packages NULL rejection ---
 
 test_that("load_code() rejects cache with NULL default_packages (pre-upgrade)", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -386,6 +405,7 @@ test_that("load_code() rejects cache with NULL default_packages (pre-upgrade)", 
 # --- stale cache cleanup ---
 
 test_that("write_code() cleans up old cache files for same source", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -417,6 +437,7 @@ test_that("write_code() cleans up old cache files for same source", {
 # --- TOCTOU: write_code uses provided cache_paths, not fresh get_paths ---
 
 test_that("write_code() uses provided cache_paths instead of recomputing", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("content version 1", tmp_file)
@@ -449,6 +470,7 @@ test_that("write_code() uses provided cache_paths instead of recomputing", {
 # ============================================================================
 
 test_that("code cache is written for loaded modules", {
+  thin()
   # Setup: temporary module file
   temp_dir <- withr::local_tempdir()
   module_file <- file.path(temp_dir, "test-module.arl")
@@ -475,6 +497,7 @@ test_that("code cache is written for loaded modules", {
 })
 
 test_that("code cache is safe with file changes", {
+  thin()
   # The expr cache (compiled expressions) is the safe default.
   # It verifies that changes to module files are properly detected through cache invalidation.
   temp_dir <- withr::local_tempdir()
@@ -502,6 +525,7 @@ test_that("code cache is safe with file changes", {
 })
 
 test_that("code cache reused across engine instances", {
+  thin()
   temp_dir <- withr::local_tempdir()
   module_file <- file.path(temp_dir, "test-module.arl")
   writeLines(c(
@@ -527,6 +551,7 @@ test_that("code cache reused across engine instances", {
 # --- library-tree redirect ---
 
 test_that("get_paths() always uses R_user_dir for cache", {
+  thin()
   cache <- arl:::ModuleCache$new()
 
   tmp_file <- tempfile(fileext = ".arl")
@@ -550,6 +575,7 @@ test_that("get_paths() always uses R_user_dir for cache", {
 # ============================================================================
 
 test_that("macro transformer errors when called at runtime (phase guard)", {
+  thin()
   eng <- make_engine()
   # Define a macro via eval_text
 
@@ -573,6 +599,7 @@ test_that("macro transformer errors when called at runtime (phase guard)", {
 })
 
 test_that("macro phase guard fires when macro is called as regular function", {
+  thin()
   # Simulate what happens when compiled code calls a macro at runtime:
   # the macro_fn receives evaluated arguments (not syntax) and .arl_phase
   # defaults to "eval", triggering the guard.
@@ -594,6 +621,7 @@ test_that("macro phase guard fires when macro is called as regular function", {
 # ============================================================================
 
 test_that("compute_ambient_macro_hash returns consistent hash for same env", {
+  thin()
   eng <- make_engine()
   ctx <- engine_field(eng, "compiled_runtime")$context
   module_parent <- ctx$prelude_env
@@ -607,6 +635,7 @@ test_that("compute_ambient_macro_hash returns consistent hash for same env", {
 })
 
 test_that("compute_ambient_macro_hash differs with/without prelude macros", {
+  thin()
   # Engine with prelude (has macros like cond, when, etc.)
   eng_prelude <- make_engine()
   ctx_prelude <- engine_field(eng_prelude, "compiled_runtime")$context
@@ -627,6 +656,7 @@ test_that("compute_ambient_macro_hash differs with/without prelude macros", {
 })
 
 test_that("load_code() rejects cache with mismatched ambient_macro_hash", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)
@@ -656,6 +686,7 @@ test_that("load_code() rejects cache with mismatched ambient_macro_hash", {
 })
 
 test_that("load_code() rejects cache with NULL ambient_macro_hash (pre-upgrade)", {
+  thin()
   cache <- arl:::ModuleCache$new()
   tmp_file <- tempfile(fileext = ".arl")
   writeLines("(module test (export foo))", tmp_file)

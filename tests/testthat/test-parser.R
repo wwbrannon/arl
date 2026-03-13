@@ -1,6 +1,9 @@
 engine <- make_engine(load_prelude = FALSE)
 
+thin <- make_cran_thinner()
+
 test_that("parser handles simple expressions", {
+  thin()
   exprs <- engine$read("(+ 1 2)")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
@@ -8,6 +11,7 @@ test_that("parser handles simple expressions", {
 })
 
 test_that("parser handles nested expressions", {
+  thin()
   exprs <- engine$read("(+ 1 (* 2 3))")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
@@ -15,6 +19,7 @@ test_that("parser handles nested expressions", {
 })
 
 test_that("parser handles quote sugar", {
+  thin()
   exprs <- engine$read("'x")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
@@ -23,6 +28,7 @@ test_that("parser handles quote sugar", {
 })
 
 test_that("parser converts :: sugar to function call", {
+  thin()
   exprs <- engine$read("base::mean")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
@@ -32,6 +38,7 @@ test_that("parser converts :: sugar to function call", {
 })
 
 test_that("parser converts ::: sugar to function call", {
+  thin()
   exprs <- engine$read("stats:::fitted.default")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
@@ -41,6 +48,7 @@ test_that("parser converts ::: sugar to function call", {
 })
 
 test_that(":: can still be used in explicit form", {
+  thin()
   exprs <- engine$read("(:: base mean)")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
@@ -48,6 +56,7 @@ test_that(":: can still be used in explicit form", {
 })
 
 test_that(":: sugar works in expressions", {
+  thin()
   exprs <- engine$read("(base::mean (c 1 2 3))")
   expect_equal(length(exprs), 1)
   expect_true(is.call(exprs[[1]]))
@@ -57,6 +66,7 @@ test_that(":: sugar works in expressions", {
 })
 
 test_that("parser handles integer literals", {
+  thin()
   exprs <- engine$read("4L")
   expect_equal(length(exprs), 1)
   expect_equal(as.vector(exprs[[1]]), 4L)
@@ -64,6 +74,7 @@ test_that("parser handles integer literals", {
 })
 
 test_that("parser handles pure imaginary numbers", {
+  thin()
   exprs <- engine$read("4i")
   expect_equal(length(exprs), 1)
   expect_equal(as.vector(exprs[[1]]), 0+4i)
@@ -71,6 +82,7 @@ test_that("parser handles pure imaginary numbers", {
 })
 
 test_that("parser handles full complex number syntax", {
+  thin()
   exprs <- engine$read("2+4i")
   expect_equal(length(exprs), 1)
   expect_equal(as.vector(exprs[[1]]), 2+4i)
@@ -88,6 +100,7 @@ test_that("parser handles full complex number syntax", {
 })
 
 test_that("parser handles NA values", {
+  thin()
   exprs <- engine$read("NA")
   expect_equal(length(exprs), 1)
   expect_true(is.na(exprs[[1]]))
@@ -108,6 +121,7 @@ test_that("parser handles NA values", {
 # =============================================================================
 
 test_that("single dotted pair parses to arl_cons", {
+  thin()
   exprs <- engine$read("'(a . b)")
   expect_equal(length(exprs), 1)
   pair <- exprs[[1]][[2]]
@@ -117,6 +131,7 @@ test_that("single dotted pair parses to arl_cons", {
 })
 
 test_that("improper list parses to arl_cons chain", {
+  thin()
   exprs <- engine$read("'(a b . c)")
   expect_equal(length(exprs), 1)
   improper <- exprs[[1]][[2]]
@@ -128,6 +143,7 @@ test_that("improper list parses to arl_cons chain", {
 })
 
 test_that("normal list unchanged (still call)", {
+  thin()
   exprs <- engine$read("'(a b c)")
   expect_equal(length(exprs), 1)
   lst <- exprs[[1]][[2]]
@@ -137,6 +153,7 @@ test_that("normal list unchanged (still call)", {
 })
 
 test_that("( . b) parses as two-element list (rest-param form)", {
+  thin()
   # ( . b) parses as list of . and b; invalid as dotted pair but valid as formals
   exprs <- engine$read("'( . b)")
   expect_equal(length(exprs), 1)

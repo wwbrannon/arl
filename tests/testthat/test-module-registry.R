@@ -1,6 +1,9 @@
 # Tests for ModuleRegistry (R/module-registry.R): module registration, retrieval, aliasing, attachment
 
+thin <- make_cran_thinner()
+
 test_that("ModuleRegistry requires a Env", {
+  thin()
   expect_error(
     arl:::ModuleRegistry$new(NULL),
     "ModuleRegistry requires a Env"
@@ -12,6 +15,7 @@ test_that("ModuleRegistry requires a Env", {
 })
 
 test_that("ModuleRegistry initializes with Env", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -27,6 +31,7 @@ test_that("ModuleRegistry initializes with Env", {
 
 # Module registration tests
 test_that("register() requires valid name", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -47,6 +52,7 @@ test_that("register() requires valid name", {
 })
 
 test_that("register() creates module entry", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -62,6 +68,7 @@ test_that("register() creates module entry", {
 })
 
 test_that("register() locks the entry environment", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -77,6 +84,7 @@ test_that("register() locks the entry environment", {
 })
 
 test_that("register() prevents duplicate registration", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -91,6 +99,7 @@ test_that("register() prevents duplicate registration", {
 })
 
 test_that("register() locks binding in registry", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -103,6 +112,7 @@ test_that("register() locks binding in registry", {
 })
 
 test_that("register() handles empty exports", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -114,6 +124,7 @@ test_that("register() handles empty exports", {
 })
 
 test_that("register() handles NULL path", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -126,6 +137,7 @@ test_that("register() handles NULL path", {
 
 # Module retrieval tests
 test_that("exists() returns FALSE for missing modules", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -134,6 +146,7 @@ test_that("exists() returns FALSE for missing modules", {
 })
 
 test_that("exists() returns TRUE for registered modules", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -145,6 +158,7 @@ test_that("exists() returns TRUE for registered modules", {
 })
 
 test_that("exists() handles invalid input gracefully", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -155,6 +169,7 @@ test_that("exists() handles invalid input gracefully", {
 })
 
 test_that("get() returns NULL for missing modules", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -163,6 +178,7 @@ test_that("get() returns NULL for missing modules", {
 })
 
 test_that("get() returns entry for registered modules", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -180,6 +196,7 @@ test_that("get() returns entry for registered modules", {
 
 # Export management tests
 test_that("update_exports() requires valid name", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -191,6 +208,7 @@ test_that("update_exports() requires valid name", {
 })
 
 test_that("update_exports() fails for non-existent module", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -202,6 +220,7 @@ test_that("update_exports() fails for non-existent module", {
 })
 
 test_that("update_exports() updates exports list", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -214,6 +233,7 @@ test_that("update_exports() updates exports list", {
 })
 
 test_that("update_exports() preserves environment and path", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -227,6 +247,7 @@ test_that("update_exports() preserves environment and path", {
 })
 
 test_that("update_exports() maintains locking", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -242,6 +263,7 @@ test_that("update_exports() maintains locking", {
 
 # Path aliasing tests
 test_that("alias() requires valid path and name", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -261,6 +283,7 @@ test_that("alias() requires valid path and name", {
 })
 
 test_that("alias() fails for non-existent module", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -272,6 +295,7 @@ test_that("alias() fails for non-existent module", {
 })
 
 test_that("alias() creates path lookup", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -288,6 +312,7 @@ test_that("alias() creates path lookup", {
 })
 
 test_that("alias() is idempotent for same module", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -301,6 +326,7 @@ test_that("alias() is idempotent for same module", {
 })
 
 test_that("alias() prevents conflicting paths", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -318,6 +344,7 @@ test_that("alias() prevents conflicting paths", {
 })
 
 test_that("alias() locks the path binding", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -331,6 +358,7 @@ test_that("alias() locks the path binding", {
 })
 
 test_that("exists() works with aliased paths", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -344,6 +372,7 @@ test_that("exists() works with aliased paths", {
 
 # Module attachment tests
 test_that("attach() fails for missing module", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -355,6 +384,7 @@ test_that("attach() fails for missing module", {
 })
 
 test_that("attach() makes exports accessible via proxy", {
+  thin()
   test_env <- new.env(parent = emptyenv())
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -371,6 +401,7 @@ test_that("attach() makes exports accessible via proxy", {
 })
 
 test_that("attach() handles macro exports via proxy", {
+  thin()
   test_env <- new.env(parent = emptyenv())
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -392,6 +423,7 @@ test_that("attach() handles macro exports via proxy", {
 })
 
 test_that("attach() errors on missing export", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -407,6 +439,7 @@ test_that("attach() errors on missing export", {
 })
 
 test_that("attach_into() fails for missing module", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -419,6 +452,7 @@ test_that("attach_into() fails for missing module", {
 })
 
 test_that("attach_into() makes exports accessible via proxy", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -436,6 +470,7 @@ test_that("attach_into() makes exports accessible via proxy", {
 })
 
 test_that("attach_into() handles macros via proxy's macro registry", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -459,6 +494,7 @@ test_that("attach_into() handles macros via proxy's macro registry", {
 })
 
 test_that("attach_into() is idempotent for same module", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -484,6 +520,7 @@ test_that("attach_into() is idempotent for same module", {
 })
 
 test_that("attach_into() errors on missing export", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -501,6 +538,7 @@ test_that("attach_into() errors on missing export", {
 
 # Cleanup tests
 test_that("unregister() requires valid name", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -512,6 +550,7 @@ test_that("unregister() requires valid name", {
 })
 
 test_that("unregister() removes module from registry", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -525,6 +564,7 @@ test_that("unregister() removes module from registry", {
 })
 
 test_that("unregister() is safe for non-existent modules", {
+  thin()
   test_env <- new.env()
   arl_env <- arl:::Env$new(test_env)
   registry <- arl:::ModuleRegistry$new(arl_env)
@@ -538,6 +578,7 @@ test_that("unregister() is safe for non-existent modules", {
 # ============================================================================
 
 test_that("namespace? predicate", {
+  thin()
   engine <- make_engine()
   ns <- arl:::make_namespace_node("collections")
   expect_true(inherits(ns, "arl_namespace"))
@@ -546,6 +587,7 @@ test_that("namespace? predicate", {
 })
 
 test_that("make_namespace_node creates locked env with prefix", {
+  thin()
   ns <- arl:::make_namespace_node("collections")
   expect_true(environmentIsLocked(ns))
   expect_equal(get(".__namespace_prefix", envir = ns), "collections")
@@ -553,6 +595,7 @@ test_that("make_namespace_node creates locked env with prefix", {
 })
 
 test_that("module-ref on namespace node returns module if registered", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
   # Create a module with a hierarchical name using a string literal

@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("let binds variables in parallel", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -30,6 +33,7 @@ test_that("let binds variables in parallel", {
 })
 
 test_that("let* binds variables sequentially", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -56,6 +60,7 @@ test_that("let* binds variables sequentially", {
 })
 
 test_that("letrec allows recursive bindings", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -81,6 +86,7 @@ test_that("letrec allows recursive bindings", {
 })
 
 test_that("destructuring-bind unpacks structures", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -102,6 +108,7 @@ test_that("destructuring-bind unpacks structures", {
 })
 
 test_that("pattern-symbols extracts symbols from patterns", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)
@@ -127,6 +134,7 @@ test_that("pattern-symbols extracts symbols from patterns", {
 })
 
 test_that("binding macros when-let and if-let work", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("binding"), env = env)

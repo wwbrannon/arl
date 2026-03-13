@@ -42,7 +42,10 @@ make_arl_src <- function(file, start_line, end_line) {
 # Phase 1: Foundation Tests (Initialize + Track)
 # ============================================================================
 
+thin <- make_cran_thinner()
+
 test_that("initialize() creates default coverage tracker", {
+  thin()
   tracker <- CoverageTracker$new()
 
   expect_type(tracker$coverage, "environment")
@@ -52,6 +55,7 @@ test_that("initialize() creates default coverage tracker", {
 })
 
 test_that("initialize() creates coverage environment with correct properties", {
+  thin()
   tracker <- CoverageTracker$new()
 
   # Check environment properties
@@ -60,6 +64,7 @@ test_that("initialize() creates coverage environment with correct properties", {
 })
 
 test_that("initialize() creates code_lines environment with correct properties", {
+  thin()
   tracker <- CoverageTracker$new()
 
   expect_false(environmentIsLocked(tracker$code_lines))
@@ -67,6 +72,7 @@ test_that("initialize() creates code_lines environment with correct properties",
 })
 
 test_that("track() handles NULL arl_src", {
+  thin()
   tracker <- CoverageTracker$new()
 
   # Should not error
@@ -75,6 +81,7 @@ test_that("track() handles NULL arl_src", {
 })
 
 test_that("track() handles missing fields", {
+  thin()
   tracker <- CoverageTracker$new()
 
   # Missing file
@@ -90,6 +97,7 @@ test_that("track() handles missing fields", {
 })
 
 test_that("track() does nothing when enabled=FALSE", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -103,6 +111,7 @@ test_that("track() does nothing when enabled=FALSE", {
 })
 
 test_that("track() handles non-existent file gracefully", {
+  thin()
   tracker <- CoverageTracker$new()
 
   arl_src <- make_arl_src("/nonexistent/file.arl", start_line = 1, end_line = 1)
@@ -113,6 +122,7 @@ test_that("track() handles non-existent file gracefully", {
 })
 
 test_that("track() marks single line as executed", {
+  thin()
   tmp <- create_arl_file(c(";; comment", "(define x 1)", "(define y 2)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -127,6 +137,7 @@ test_that("track() marks single line as executed", {
 })
 
 test_that("track() marks multi-line range", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)", "(define y 2)", "(define z 3)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -142,6 +153,7 @@ test_that("track() marks multi-line range", {
 })
 
 test_that("track() increments count on multiple executions", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -157,6 +169,7 @@ test_that("track() increments count on multiple executions", {
 })
 
 test_that("track() lazy-loads code_lines cache", {
+  thin()
   tmp <- create_arl_file(c(";; comment", "(define x 1)", "", "(define y 2)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -179,6 +192,7 @@ test_that("track() lazy-loads code_lines cache", {
 })
 
 test_that("track() filters comment and blank lines", {
+  thin()
   tmp <- create_arl_file(c(
     ";; This is a comment",
     "",
@@ -204,6 +218,7 @@ test_that("track() filters comment and blank lines", {
 })
 
 test_that("track() respects custom code_line_pattern", {
+  thin()
   tmp <- create_arl_file(c(
     "# Python-style comment",
     "",
@@ -231,6 +246,7 @@ test_that("track() respects custom code_line_pattern", {
 # ============================================================================
 
 test_that("discover_files() with NULL search_paths uses stdlib", {
+  thin()
   tracker <- CoverageTracker$new(search_paths = NULL)
   tracker$discover_files()
 
@@ -242,6 +258,7 @@ test_that("discover_files() with NULL search_paths uses stdlib", {
 })
 
 test_that("discover_files() with custom search_paths", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -257,6 +274,7 @@ test_that("discover_files() with custom search_paths", {
 })
 
 test_that("discover_files() searches recursively", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(file.path(tmp_dir, "subdir", "nested"), recursive = TRUE)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -272,6 +290,7 @@ test_that("discover_files() searches recursively", {
 })
 
 test_that("discover_files() excludes test directories by default", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(file.path(tmp_dir, "src"), recursive = TRUE)
   dir.create(file.path(tmp_dir, "tests"), recursive = TRUE)
@@ -289,6 +308,7 @@ test_that("discover_files() excludes test directories by default", {
 })
 
 test_that("discover_files() includes test directories when include_tests=TRUE", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(file.path(tmp_dir, "src"), recursive = TRUE)
   dir.create(file.path(tmp_dir, "tests"), recursive = TRUE)
@@ -305,6 +325,7 @@ test_that("discover_files() includes test directories when include_tests=TRUE", 
 })
 
 test_that("discover_files() handles non-existent directory", {
+  thin()
   tracker <- CoverageTracker$new(search_paths = "/nonexistent/directory")
 
   # Should not error, just return empty
@@ -313,6 +334,7 @@ test_that("discover_files() handles non-existent directory", {
 })
 
 test_that("discover_files() handles multiple search_paths", {
+  thin()
   tmp_dir1 <- tempfile()
   tmp_dir2 <- tempfile()
   dir.create(tmp_dir1)
@@ -332,6 +354,7 @@ test_that("discover_files() handles multiple search_paths", {
 })
 
 test_that("discover_files() deduplicates files", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -347,6 +370,7 @@ test_that("discover_files() deduplicates files", {
 })
 
 test_that("discover_files() populates code_lines cache", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -367,6 +391,7 @@ test_that("discover_files() populates code_lines cache", {
 })
 
 test_that("discover_files() handles empty directory", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -378,6 +403,7 @@ test_that("discover_files() handles empty directory", {
 })
 
 test_that("get_summary() returns empty list for empty coverage", {
+  thin()
   tracker <- CoverageTracker$new()
 
   summary <- tracker$get_summary()
@@ -387,6 +413,7 @@ test_that("get_summary() returns empty list for empty coverage", {
 })
 
 test_that("get_summary() returns single file/line structure", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -402,6 +429,7 @@ test_that("get_summary() returns single file/line structure", {
 })
 
 test_that("get_summary() returns multiple files/lines structure", {
+  thin()
   tmp1 <- create_arl_file(c("(define x 1)", "(define y 2)"))
   tmp2 <- create_arl_file(c("(define z 3)"))
   on.exit({
@@ -423,6 +451,7 @@ test_that("get_summary() returns multiple files/lines structure", {
 })
 
 test_that("get_summary() handles malformed keys gracefully", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -439,6 +468,7 @@ test_that("get_summary() handles malformed keys gracefully", {
 })
 
 test_that("get_summary() creates nested list structure correctly", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)", "(define y 2)", "(define z 3)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -456,6 +486,7 @@ test_that("get_summary() creates nested list structure correctly", {
 })
 
 test_that("reset() clears empty coverage", {
+  thin()
   tracker <- CoverageTracker$new()
 
   tracker$reset()
@@ -464,6 +495,7 @@ test_that("reset() clears empty coverage", {
 })
 
 test_that("reset() clears populated coverage", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -478,6 +510,7 @@ test_that("reset() clears populated coverage", {
 })
 
 test_that("reset() preserves all_files and code_lines", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -503,6 +536,7 @@ test_that("reset() preserves all_files and code_lines", {
 })
 
 test_that("set_enabled() toggles tracking", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -518,6 +552,7 @@ test_that("set_enabled() toggles tracking", {
 })
 
 test_that("disabled tracker ignores track() calls", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -530,6 +565,7 @@ test_that("disabled tracker ignores track() calls", {
 })
 
 test_that("re-enabling resumes tracking", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)", "(define y 2)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -555,6 +591,7 @@ test_that("re-enabling resumes tracking", {
 # ============================================================================
 
 test_that("report_console() shows message for empty coverage", {
+  thin()
   tracker <- CoverageTracker$new()
 
   output <- capture.output(tracker$report_console())
@@ -563,6 +600,7 @@ test_that("report_console() shows message for empty coverage", {
 })
 
 test_that("report_console() discovers files if all_files empty", {
+  thin()
   # Use custom path so we know what to expect
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -585,6 +623,7 @@ test_that("report_console() discovers files if all_files empty", {
 })
 
 test_that("report_console() shows single file with partial coverage", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -609,6 +648,7 @@ test_that("report_console() shows single file with partial coverage", {
 })
 
 test_that("report_console() shows multiple files sorted alphabetically", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -646,6 +686,7 @@ test_that("report_console() shows multiple files sorted alphabetically", {
 })
 
 test_that("report_console() calculates total lines correctly", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -671,6 +712,7 @@ test_that("report_console() calculates total lines correctly", {
 })
 
 test_that("report_console() writes to file when output_file specified", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   out_file <- tempfile(fileext = ".txt")
@@ -697,6 +739,7 @@ test_that("report_console() writes to file when output_file specified", {
 })
 
 test_that("report_console() outputs to console when no output_file", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -719,6 +762,7 @@ test_that("report_console() outputs to console when no output_file", {
 # ============================================================================
 
 test_that("report_html() errors when output_file is missing", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -736,6 +780,7 @@ test_that("report_html() errors when output_file is missing", {
 })
 
 test_that("report_html() uses custom output path", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -755,6 +800,7 @@ test_that("report_html() uses custom output path", {
 })
 
 test_that("report_html() auto-creates output directory", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   output_dir <- file.path(tmp_dir, "deep", "nested", "dir")
@@ -776,6 +822,7 @@ test_that("report_html() auto-creates output directory", {
 })
 
 test_that("report_html() auto-discovers files if needed", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -800,6 +847,7 @@ test_that("report_html() auto-discovers files if needed", {
 })
 
 test_that("report_html() generates valid HTML structure", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -823,6 +871,7 @@ test_that("report_html() generates valid HTML structure", {
 })
 
 test_that("report_html() uses custom report_title", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -848,6 +897,7 @@ test_that("report_html() uses custom report_title", {
 })
 
 test_that("report_html() includes summary table", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -874,6 +924,7 @@ test_that("report_html() includes summary table", {
 })
 
 test_that("report_html() uses coverage percentage CSS classes", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -901,6 +952,7 @@ test_that("report_html() uses coverage percentage CSS classes", {
 })
 
 test_that("report_html() includes detailed file view sections", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -927,6 +979,7 @@ test_that("report_html() includes detailed file view sections", {
 })
 
 test_that("report_html() shows line-by-line coverage with classes", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -954,6 +1007,7 @@ test_that("report_html() shows line-by-line coverage with classes", {
 })
 
 test_that("report_html() displays hit counts", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -982,6 +1036,7 @@ test_that("report_html() displays hit counts", {
 })
 
 test_that("report_html() properly escapes HTML special characters", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -1011,6 +1066,7 @@ test_that("report_html() properly escapes HTML special characters", {
 })
 
 test_that("report_html() generates valid HTML for empty coverage", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -1036,6 +1092,7 @@ test_that("report_html() generates valid HTML for empty coverage", {
 })
 
 test_that("report_json() errors when output_file is missing", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -1053,6 +1110,7 @@ test_that("report_json() errors when output_file is missing", {
 })
 
 test_that("report_json() uses custom output path", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   json_file <- tempfile(fileext = ".json")
@@ -1072,6 +1130,7 @@ test_that("report_json() uses custom output path", {
 })
 
 test_that("report_json() auto-creates output directory", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   output_dir <- file.path(tmp_dir, "deep", "nested", "dir")
@@ -1093,6 +1152,7 @@ test_that("report_json() auto-creates output directory", {
 })
 
 test_that("report_json() auto-discovers files if needed", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   json_file <- tempfile(fileext = ".json")
@@ -1115,6 +1175,7 @@ test_that("report_json() auto-discovers files if needed", {
 })
 
 test_that("report_json() generates codecov structure", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   json_file <- tempfile(fileext = ".json")
@@ -1138,6 +1199,7 @@ test_that("report_json() generates codecov structure", {
 })
 
 test_that("report_json() uses line coverage list format", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   json_file <- tempfile(fileext = ".json")
@@ -1173,6 +1235,7 @@ test_that("report_json() uses line coverage list format", {
 })
 
 test_that("report_json() uses null for non-code lines", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   json_file <- tempfile(fileext = ".json")
@@ -1209,6 +1272,7 @@ test_that("report_json() uses null for non-code lines", {
 })
 
 test_that("report_json() shows 0 for uncovered code lines", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   json_file <- tempfile(fileext = ".json")
@@ -1245,6 +1309,7 @@ test_that("report_json() shows 0 for uncovered code lines", {
 # ============================================================================
 
 test_that("Engine accepts coverage_tracker parameter", {
+  thin()
   tracker <- CoverageTracker$new()
   engine <- Engine$new(coverage_tracker = tracker)
 
@@ -1252,6 +1317,7 @@ test_that("Engine accepts coverage_tracker parameter", {
 })
 
 test_that("Engine tracks coverage for executed code", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define add (lambda (x y) (+ x y)))",
@@ -1274,6 +1340,7 @@ test_that("Engine tracks coverage for executed code", {
 })
 
 test_that("disabled coverage tracker doesn't track", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c("(define x 1)"), tmp)
   on.exit(unlink(tmp), add = TRUE)
@@ -1293,6 +1360,7 @@ test_that("disabled coverage tracker doesn't track", {
 })
 
 test_that("coverage tracking persists across multiple evaluations", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define counter 0)",
@@ -1320,6 +1388,7 @@ test_that("coverage tracking persists across multiple evaluations", {
 })
 
 test_that("Engine$get_coverage() returns NULL when coverage not enabled", {
+  thin()
   # Explicitly create engine without coverage tracker to avoid inheriting
   # one from getOption("arl.coverage_tracker") under covr instrumentation
   engine <- Engine$new()
@@ -1327,6 +1396,7 @@ test_that("Engine$get_coverage() returns NULL when coverage not enabled", {
 })
 
 test_that("Engine$get_coverage() returns data frame with correct structure", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c("(define x 1)", "(define y 2)"), tmp)
   on.exit(unlink(tmp), add = TRUE)
@@ -1352,6 +1422,7 @@ test_that("Engine$get_coverage() returns data frame with correct structure", {
 })
 
 test_that("Engine$get_coverage() reports correct coverage stats", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c("(define x 1)", "(define y 2)", "(define z 3)"), tmp)
   on.exit(unlink(tmp), add = TRUE)
@@ -1379,6 +1450,7 @@ test_that("Engine$get_coverage() reports correct coverage stats", {
 # ============================================================================
 
 test_that("handles empty files", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -1398,6 +1470,7 @@ test_that("handles empty files", {
 })
 
 test_that("handles files with only comments and blanks", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -1417,6 +1490,7 @@ test_that("handles files with only comments and blanks", {
 })
 
 test_that("handles 100% coverage", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
@@ -1438,6 +1512,7 @@ test_that("handles 100% coverage", {
 })
 
 test_that("handles very large execution counts", {
+  thin()
   tmp <- create_arl_file(c("(define x 1)"))
   on.exit(unlink(tmp), add = TRUE)
 
@@ -1461,6 +1536,7 @@ test_that("handles very large execution counts", {
 })
 
 test_that("HTML escaping prevents XSS", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   html_file <- tempfile(fileext = ".html")
@@ -1499,6 +1575,7 @@ test_that("HTML escaping prevents XSS", {
 # ============================================================================
 
 test_that("uncalled function body is NOT covered", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",
@@ -1526,6 +1603,7 @@ test_that("uncalled function body is NOT covered", {
 })
 
 test_that("called function body IS covered", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",
@@ -1556,6 +1634,7 @@ test_that("called function body IS covered", {
 })
 
 test_that("module loading does not mark entire file as covered", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(module test-cov-mod (export f g)",
@@ -1593,6 +1672,7 @@ test_that("module loading does not mark entire file as covered", {
 # ============================================================================
 
 test_that("if expression only covers taken then-branch", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",
@@ -1620,6 +1700,7 @@ test_that("if expression only covers taken then-branch", {
 })
 
 test_that("if expression only covers taken else-branch", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",
@@ -1647,6 +1728,7 @@ test_that("if expression only covers taken else-branch", {
 })
 
 test_that("if expression covers both branches when both are taken", {
+  thin()
   tmp <- norm_path(tempfile(fileext = ".arl"))
   writeLines(c(
     "(define f",

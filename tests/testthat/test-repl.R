@@ -11,7 +11,10 @@ make_repl_input <- function(lines) {
   }
 }
 
+thin <- make_cran_thinner()
+
 test_that("REPL detects incomplete parse errors", {
+  thin()
   repl <- arl:::REPL$new()
   expect_true(repl$is_incomplete_error(simpleError("Unexpected end of input")))
   expect_true(repl$is_incomplete_error(simpleError("Unclosed parenthesis at line 1, column 1")))
@@ -20,6 +23,7 @@ test_that("REPL detects incomplete parse errors", {
 })
 
 test_that("REPL read_form collects multiline input", {
+  thin()
   input_fn <- make_repl_input(c("(+ 1", "2)"))
   repl <- arl:::REPL$new(engine = engine, input_fn = input_fn)
   form <- repl$read_form()
@@ -29,6 +33,7 @@ test_that("REPL read_form collects multiline input", {
 })
 
 test_that("REPL read_form accepts multi-line first chunk (e.g. from paste)", {
+  thin()
   multi_line <- "(+ 1 2)\n(* 3 4)"
   input_fn <- make_repl_input(multi_line)
   repl <- arl:::REPL$new(engine = engine, input_fn = input_fn)
@@ -38,6 +43,7 @@ test_that("REPL read_form accepts multi-line first chunk (e.g. from paste)", {
 })
 
 test_that("REPL read_form skips leading blank lines", {
+  thin()
   input_fn <- make_repl_input(c("", "(+ 1 2)"))
   repl <- arl:::REPL$new(engine = engine, input_fn = input_fn)
   form <- repl$read_form()
@@ -47,12 +53,14 @@ test_that("REPL read_form skips leading blank lines", {
 })
 
 test_that("REPL read_form surfaces non-incomplete parse errors", {
+  thin()
   input_fn <- make_repl_input(c(")"))
   repl <- arl:::REPL$new(engine = engine, input_fn = input_fn)
   expect_error(repl$read_form(), "Unexpected")
 })
 
 test_that("REPL read_form continues on Unterminated string (incomplete input)", {
+  thin()
   input_fn <- make_repl_input(c('(define x "', 'hello")'))
   repl <- arl:::REPL$new(engine = engine, input_fn = input_fn)
   form <- repl$read_form()
@@ -61,6 +69,7 @@ test_that("REPL read_form continues on Unterminated string (incomplete input)", 
 })
 
 test_that("REPL read_form supports override option", {
+  thin()
   withr::local_options(list(
     arl.repl_read_form_override = function(...) list(text = "override", exprs = list(quote(1)))
   ))
@@ -74,6 +83,7 @@ test_that("REPL read_form supports override option", {
 })
 
 test_that("REPL read_form returns NULL on EOF", {
+  thin()
   input_fn <- function(...) NULL
   repl <- arl:::REPL$new(engine = engine, input_fn = input_fn)
   expect_null(repl$read_form())
@@ -82,6 +92,7 @@ test_that("REPL read_form returns NULL on EOF", {
 # Version and History Path Functions ----
 
 test_that("REPL history_path_default uses R_user_dir", {
+  thin()
   repl <- arl:::REPL$new()
   path <- repl$history_path_default()
   expect_match(path, "arl_history$")
@@ -91,12 +102,14 @@ test_that("REPL history_path_default uses R_user_dir", {
 # History Management Functions ----
 
 test_that("REPL can_use_history reflects interactive and readline", {
+  thin()
   repl <- arl:::REPL$new()
   expected <- isTRUE(interactive()) && isTRUE(capabilities("cledit"))
   expect_equal(repl$can_use_history(), expected)
 })
 
 test_that("REPL can_use_history respects override option", {
+  thin()
   repl <- arl:::REPL$new()
   withr::local_options(list(arl.repl_can_use_history_override = FALSE))
   can_use <- testthat::with_mocked_bindings(
@@ -118,6 +131,7 @@ test_that("REPL can_use_history respects override option", {
 })
 
 test_that("REPL can_use_history is FALSE when arl.repl_use_history is FALSE", {
+  thin()
   repl <- arl:::REPL$new()
   withr::local_options(list(arl.repl_use_history = FALSE))
   can_use <- testthat::with_mocked_bindings(
@@ -130,6 +144,7 @@ test_that("REPL can_use_history is FALSE when arl.repl_use_history is FALSE", {
 })
 
 test_that("REPL load_history handles non-interactive mode", {
+  thin()
   state <- new.env(parent = emptyenv())
   state$enabled <- FALSE
   state$path <- NULL
@@ -141,6 +156,7 @@ test_that("REPL load_history handles non-interactive mode", {
 })
 
 test_that("REPL load_history returns FALSE when savehistory fails", {
+  thin()
   state <- new.env(parent = emptyenv())
   state$enabled <- FALSE
   state$path <- NULL
@@ -157,6 +173,7 @@ test_that("REPL load_history returns FALSE when savehistory fails", {
 })
 
 test_that("REPL save_history handles disabled state", {
+  thin()
   state <- new.env(parent = emptyenv())
   state$enabled <- FALSE
   state$path <- NULL
@@ -167,6 +184,7 @@ test_that("REPL save_history handles disabled state", {
 })
 
 test_that("REPL save_history resets state even on restore errors", {
+  thin()
   state <- new.env(parent = emptyenv())
   state$enabled <- TRUE
   state$path <- "dummy.txt"
@@ -189,6 +207,7 @@ test_that("REPL save_history resets state even on restore errors", {
 })
 
 test_that("REPL add_history handles non-interactive mode", {
+  thin()
   state <- new.env(parent = emptyenv())
   state$enabled <- FALSE
   state$path <- NULL
@@ -200,6 +219,7 @@ test_that("REPL add_history handles non-interactive mode", {
 })
 
 test_that("REPL add_history skips empty input", {
+  thin()
   # Test that empty/whitespace-only input is not added
   state <- new.env(parent = emptyenv())
   state$enabled <- TRUE
@@ -212,6 +232,7 @@ test_that("REPL add_history skips empty input", {
 })
 
 test_that("REPL add_history appends to file and sets dirty flag", {
+  thin()
   hist_file <- tempfile("arl_test_hist_")
   on.exit(unlink(hist_file), add = TRUE)
 
@@ -240,6 +261,7 @@ test_that("REPL add_history appends to file and sets dirty flag", {
 })
 
 test_that("REPL flush_history reloads file and clears dirty flag", {
+  thin()
   hist_file <- tempfile("arl_test_hist_flush_")
   on.exit(unlink(hist_file), add = TRUE)
   writeLines(c("(+ 1 2)"), hist_file)
@@ -265,6 +287,7 @@ test_that("REPL flush_history reloads file and clears dirty flag", {
 })
 
 test_that("REPL flush_history is no-op when not dirty", {
+  thin()
   state <- new.env(parent = emptyenv())
   state$enabled <- TRUE
   state$path <- "dummy.txt"
@@ -285,6 +308,7 @@ test_that("REPL flush_history is no-op when not dirty", {
 })
 
 test_that("REPL add_history works after load_history on fresh install (no dir)", {
+  thin()
   hist_dir <- file.path(tempdir(), "arl_test_fresh_install")
   if (dir.exists(hist_dir)) unlink(hist_dir, recursive = TRUE)
   on.exit(unlink(hist_dir, recursive = TRUE), add = TRUE)
@@ -313,6 +337,7 @@ test_that("REPL add_history works after load_history on fresh install (no dir)",
 })
 
 test_that("REPL add_history creates history directory if needed", {
+  thin()
   hist_dir <- file.path(tempdir(), "arl_test_hist_subdir")
   if (dir.exists(hist_dir)) unlink(hist_dir, recursive = TRUE)
   on.exit(unlink(hist_dir, recursive = TRUE), add = TRUE)
@@ -332,6 +357,7 @@ test_that("REPL add_history creates history directory if needed", {
 # Print Value Function ----
 
 test_that("REPL print_value handles NULL", {
+  thin()
   env <- make_engine()
   repl <- arl:::REPL$new(engine = env)
   result <- capture.output(val <- repl$print_value(NULL))
@@ -340,6 +366,7 @@ test_that("REPL print_value handles NULL", {
 })
 
 test_that("REPL print_value handles calls with str", {
+  thin()
   env <- make_engine()
   repl <- arl:::REPL$new(engine = env)
   call_obj <- quote(f(a, b))
@@ -349,6 +376,7 @@ test_that("REPL print_value handles calls with str", {
 })
 
 test_that("REPL print_value handles lists with str", {
+  thin()
   engine <- make_engine()
   repl <- arl:::REPL$new(engine = engine)
   list_obj <- list(a = 1, b = 2)
@@ -358,6 +386,7 @@ test_that("REPL print_value handles lists with str", {
 })
 
 test_that("REPL print_value handles vectors with print", {
+  thin()
   engine <- make_engine()
   repl <- arl:::REPL$new(engine = engine)
   output <- capture.output(val <- repl$print_value(c(1, 2, 3)))
@@ -368,6 +397,7 @@ test_that("REPL print_value handles vectors with print", {
 # Main REPL Loop (engine$repl) ----
 
 test_that("engine$repl exits on (quit) command", {
+  thin()
   call_count <- 0
   withr::local_options(list(
     arl.repl_quiet = FALSE,
@@ -385,6 +415,7 @@ test_that("engine$repl exits on (quit) command", {
 })
 
 test_that("engine$repl exits on (exit) command", {
+  thin()
   call_count <- 0
   withr::local_options(list(
     arl.repl_quiet = FALSE,
@@ -402,6 +433,7 @@ test_that("engine$repl exits on (exit) command", {
 })
 
 test_that("engine$repl exits on quit command", {
+  thin()
   call_count <- 0
   withr::local_options(list(
     arl.repl_quiet = FALSE,
@@ -419,6 +451,7 @@ test_that("engine$repl exits on quit command", {
 })
 
 test_that("engine$repl exits on NULL from read_form", {
+  thin()
   withr::local_options(list(
     arl.repl_quiet = FALSE,
     arl.repl_read_form_override = function(...) NULL,
@@ -429,6 +462,7 @@ test_that("engine$repl exits on NULL from read_form", {
 })
 
 test_that("engine$repl with arl.repl_quiet prints no banner", {
+  thin()
   withr::local_options(list(
     arl.repl_quiet = TRUE,
     arl.repl_read_form_override = function(...) NULL,
@@ -439,6 +473,7 @@ test_that("engine$repl with arl.repl_quiet prints no banner", {
 })
 
 test_that("engine$repl handles parse errors gracefully", {
+  thin()
   call_count <- 0
   withr::local_options(list(
     arl.repl_quiet = FALSE,
@@ -456,6 +491,7 @@ test_that("engine$repl handles parse errors gracefully", {
 })
 
 test_that("engine$repl evaluates expressions and prints results", {
+  thin()
   call_count <- 0
   withr::local_options(list(
     arl.repl_read_form_override = function(...) {
@@ -472,6 +508,7 @@ test_that("engine$repl evaluates expressions and prints results", {
 })
 
 test_that("engine$repl prints each expression result in input", {
+  thin()
   call_count <- 0
   withr::local_options(list(
     arl.repl_read_form_override = function(...) {
@@ -488,6 +525,7 @@ test_that("engine$repl prints each expression result in input", {
 })
 
 test_that("engine$repl handles evaluation errors gracefully", {
+  thin()
   call_count <- 0
   withr::local_options(list(
     arl.repl_read_form_override = function(...) {
@@ -515,16 +553,19 @@ test_that("engine$repl handles evaluation errors gracefully", {
 # Bracketed Paste Mode tests ----
 
 test_that("REPL BPM option defaults to TRUE", {
+  thin()
   withr::local_options(list(arl.repl_bracketed_paste = NULL))
   expect_true(isTRUE(getOption("arl.repl_bracketed_paste", TRUE)))
 })
 
 test_that("REPL BPM can be disabled via option", {
+  thin()
   withr::local_options(list(arl.repl_bracketed_paste = FALSE))
   expect_false(isTRUE(getOption("arl.repl_bracketed_paste", TRUE)))
 })
 
 test_that("REPL BPM sequences are defined correctly", {
+  thin()
   # Verify BPM escape sequences are correct (checked in input_line code)
   bpm_start <- "\033[200~"
   bpm_end <- "\033[201~"
@@ -536,6 +577,7 @@ test_that("REPL BPM sequences are defined correctly", {
 })
 
 test_that("REPL read_form works with multi-line paste (BPM simulation)", {
+  thin()
   # Simulate what BPM would provide: multi-line input in first chunk
   multi_line <- "(define foo\n  (lambda (x)\n    (* x 2)))"
   input_fn <- make_repl_input(multi_line)
@@ -547,6 +589,7 @@ test_that("REPL read_form works with multi-line paste (BPM simulation)", {
 })
 
 test_that("REPL BPM enable sequence used when conditions met", {
+  thin()
   # Test that BPM enable sequence would be emitted with correct options
   engine_test <- make_engine()
 
@@ -572,6 +615,7 @@ test_that("REPL BPM enable sequence used when conditions met", {
 # Additional REPL feature tests ----
 
 test_that("REPL uses custom prompt in read_form", {
+  thin()
   input_fn <- make_repl_input(c("(+ 1 2)"))
   repl <- arl:::REPL$new(
     engine = engine,
@@ -588,6 +632,7 @@ test_that("REPL uses custom prompt in read_form", {
 })
 
 test_that("REPL input_fn defaults to input_line", {
+  thin()
   repl <- arl:::REPL$new(engine = engine)
 
   # When no input_fn provided, should use input_line method
@@ -595,6 +640,7 @@ test_that("REPL input_fn defaults to input_line", {
 })
 
 test_that("REPL history_state is properly initialized", {
+  thin()
   repl <- arl:::REPL$new(engine = engine)
 
   # History state should be an environment with required fields
@@ -610,6 +656,7 @@ test_that("REPL history_state is properly initialized", {
 })
 
 test_that("REPL load_history trims file to max entries", {
+  thin()
   hist_file <- tempfile("arl_test_hist_trim_")
   on.exit(unlink(hist_file), add = TRUE)
 
@@ -647,6 +694,7 @@ test_that("REPL load_history trims file to max entries", {
 })
 
 test_that("REPL add_history deduplicates consecutive entries", {
+  thin()
   hist_file <- tempfile("arl_test_hist_dedup_")
   on.exit(unlink(hist_file), add = TRUE)
 
@@ -671,6 +719,7 @@ test_that("REPL add_history deduplicates consecutive entries", {
 })
 
 test_that("REPL add_history trims file in-session when exceeding max", {
+  thin()
   hist_file <- tempfile("arl_test_hist_insession_")
   on.exit(unlink(hist_file), add = TRUE)
 
@@ -702,6 +751,7 @@ test_that("REPL add_history trims file in-session when exceeding max", {
 })
 
 test_that("REPL save_history cleans up snapshot tempfile", {
+  thin()
   snapshot <- tempfile("arl_rhistory_")
   writeLines("old R history", snapshot)
   expect_true(file.exists(snapshot))

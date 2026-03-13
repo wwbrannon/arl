@@ -6,7 +6,10 @@ engine <- make_engine()
 # Numeric Helpers
 # ============================================================================
 
+thin <- make_cran_thinner()
+
 test_that("numeric helpers inc/dec/clamp/within? work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -29,6 +32,7 @@ test_that("numeric helpers inc/dec/clamp/within? work", {
 # ============================================================================
 
 test_that("type coercion functions work", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -39,6 +43,7 @@ test_that("type coercion functions work", {
 })
 
 test_that("complex number utilities work", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -56,6 +61,7 @@ test_that("complex number utilities work", {
 # ============================================================================
 
 test_that("numeric operations handle boundary conditions", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -75,6 +81,7 @@ test_that("numeric operations handle boundary conditions", {
 })
 
 test_that("division by zero returns Inf", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -88,6 +95,7 @@ test_that("division by zero returns Inf", {
 # ============================================================================
 
 test_that("variadic comparison operators return #t with 0 or 1 arguments (vacuously true)", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -111,6 +119,7 @@ test_that("variadic comparison operators return #t with 0 or 1 arguments (vacuou
 # ============================================================================
 
 test_that("variadic arithmetic operators error with 0 arguments", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -136,6 +145,7 @@ test_that("variadic arithmetic operators error with 0 arguments", {
 # ============================================================================
 
 test_that("number predicate edge cases cover remaining lines", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -160,6 +170,7 @@ test_that("number predicate edge cases cover remaining lines", {
 # ============================================================================
 
 test_that("expt and atan2 work", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 

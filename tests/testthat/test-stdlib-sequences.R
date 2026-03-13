@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("sequence helpers work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -15,6 +18,7 @@ test_that("sequence helpers work", {
 })
 
 test_that("member and contains? sequence helpers work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -35,6 +39,7 @@ test_that("member and contains? sequence helpers work", {
 })
 
 test_that("length= checks exact length", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -43,6 +48,7 @@ test_that("length= checks exact length", {
 })
 
 test_that("length> checks greater length", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -51,6 +57,7 @@ test_that("length> checks greater length", {
 })
 
 test_that("length< checks less length", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -59,6 +66,7 @@ test_that("length< checks less length", {
 })
 
 test_that("length predicates work with empty sequences", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -67,6 +75,7 @@ test_that("length predicates work with empty sequences", {
 })
 
 test_that("length predicates work with vectors", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -77,6 +86,7 @@ test_that("length predicates work with vectors", {
 })
 
 test_that("length predicates handle boundaries", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -90,6 +100,7 @@ test_that("length predicates handle boundaries", {
 # ============================================================================
 
 test_that("partition errors when n is zero", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -99,6 +110,7 @@ test_that("partition errors when n is zero", {
 })
 
 test_that("flatten handles deeply nested lists", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -108,6 +120,7 @@ test_that("flatten handles deeply nested lists", {
 })
 
 test_that("zip with no arguments returns empty list", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -120,6 +133,7 @@ test_that("zip with no arguments returns empty list", {
 # ============================================================================
 
 test_that("find returns first matching element", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -148,6 +162,7 @@ test_that("find returns first matching element", {
 # ============================================================================
 
 test_that("distinct removes duplicates preserving order", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -172,6 +187,7 @@ test_that("distinct removes duplicates preserving order", {
 })
 
 test_that("distinct works with symbols", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -185,6 +201,7 @@ test_that("distinct works with symbols", {
 # ============================================================================
 
 test_that("split-at splits list at index", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -213,6 +230,7 @@ test_that("split-at splits list at index", {
 # ============================================================================
 
 test_that("split-with splits at first non-matching element", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -241,6 +259,7 @@ test_that("split-with splits at first non-matching element", {
 # ============================================================================
 
 test_that("interpose inserts separator between elements", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -269,6 +288,7 @@ test_that("interpose inserts separator between elements", {
 # ============================================================================
 
 test_that("partition-by splits into runs by key", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -302,6 +322,7 @@ test_that("partition-by splits into runs by key", {
 # ============================================================================
 
 test_that("take handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -322,6 +343,7 @@ test_that("take handles edge cases", {
 })
 
 test_that("drop handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -342,6 +364,7 @@ test_that("drop handles edge cases", {
 })
 
 test_that("take-while handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -362,6 +385,7 @@ test_that("take-while handles edge cases", {
 })
 
 test_that("drop-while handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -379,6 +403,7 @@ test_that("drop-while handles edge cases", {
 })
 
 test_that("partition handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -405,6 +430,7 @@ test_that("partition handles edge cases", {
 })
 
 test_that("partition with step parameter handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -427,6 +453,7 @@ test_that("partition with step parameter handles edge cases", {
 })
 
 test_that("flatten handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 

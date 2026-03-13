@@ -23,7 +23,10 @@ find_bench_dir <- function() {
   return(NULL)
 }
 
+thin <- make_cran_thinner()
+
 test_that("benchmark infrastructure can be loaded", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -41,6 +44,7 @@ test_that("benchmark infrastructure can be loaded", {
 })
 
 test_that("workload generation produces valid arl code", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -66,6 +70,7 @@ test_that("workload generation produces valid arl code", {
 })
 
 test_that("benchmark helper functions work", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -102,6 +107,7 @@ test_that("benchmark helper functions work", {
 })
 
 test_that("benchmark scripts can be sourced", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -130,6 +136,7 @@ test_that("benchmark scripts can be sourced", {
 })
 
 test_that("profiling scripts exist", {
+  thin()
   skip_if_not_installed("profvis")
 
   bench_dir <- find_bench_dir()
@@ -151,6 +158,7 @@ test_that("profiling scripts exist", {
 })
 
 test_that("profiling helper functions work", {
+  thin()
   skip_if_not_installed("profvis")
 
   bench_dir <- find_bench_dir()
@@ -180,6 +188,7 @@ test_that("profiling helper functions work", {
 })
 
 test_that("analysis functions work with mock data", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -215,6 +224,7 @@ test_that("analysis functions work with mock data", {
 })
 
 test_that("comparison functions work with mock data", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -262,6 +272,7 @@ test_that("comparison functions work with mock data", {
 })
 
 test_that("write_ci_json produces valid JSON", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -299,6 +310,7 @@ test_that("write_ci_json produces valid JSON", {
 })
 
 test_that("flatten_bench_results works with bench_mark objects", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -326,6 +338,7 @@ test_that("flatten_bench_results works with bench_mark objects", {
 })
 
 test_that("benchmark results directory can be created", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -354,6 +367,7 @@ test_that("benchmark results directory can be created", {
 })
 
 test_that("benchmark scripts handle missing packages gracefully", {
+  thin()
   bench_dir <- find_bench_dir()
   if (is.null(bench_dir)) skip("Benchmark infrastructure not found")
 
@@ -375,6 +389,7 @@ test_that("benchmark scripts handle missing packages gracefully", {
 })
 
 test_that("real workloads can be loaded", {
+  thin()
   skip_if_not_installed("bench")
 
   bench_dir <- find_bench_dir()
@@ -401,6 +416,7 @@ test_that("real workloads can be loaded", {
 })
 
 test_that("documentation files exist", {
+  thin()
   bench_dir <- find_bench_dir()
   if (is.null(bench_dir)) skip("Benchmark infrastructure not found")
 

@@ -1,6 +1,9 @@
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("named arguments work with keywords", {
+  thin()
   env <- new.env()
 
   # Create a simple test function
@@ -17,6 +20,7 @@ test_that("named arguments work with keywords", {
 })
 
 test_that("multiple keyword arguments", {
+  thin()
   env <- new.env()
 
   env$test_fn <- function(a = 1, b = 2, c = 3, d = 4) {
@@ -32,6 +36,7 @@ test_that("multiple keyword arguments", {
 })
 
 test_that("mixing positional and keyword arguments", {
+  thin()
   env <- new.env()
 
   env$test_fn <- function(a, b, c = 3) {
@@ -46,6 +51,7 @@ test_that("mixing positional and keyword arguments", {
 })
 
 test_that("dollar operator for list access", {
+  thin()
   env <- new.env()
   env$mylist <- list(x = 10, y = 20)
 
@@ -54,6 +60,7 @@ test_that("dollar operator for list access", {
 })
 
 test_that("bracket operator for vector access", {
+  thin()
   env <- new.env()
   env$vec <- c(10, 20, 30, 40)
 
@@ -62,6 +69,7 @@ test_that("bracket operator for vector access", {
 })
 
 test_that("double bracket operator for list extraction", {
+  thin()
   env <- new.env()
   env$mylist <- list(a = 1, b = 2, c = 3)
 
@@ -70,6 +78,7 @@ test_that("double bracket operator for list extraction", {
 })
 
 test_that("tilde operator for formulas", {
+  thin()
   env <- new.env()
   # Variables need to exist or be quoted for formula
   env$y <- 1:10
@@ -82,6 +91,7 @@ test_that("tilde operator for formulas", {
 })
 
 test_that("lm with formula and data argument", {
+  thin()
   env <- new.env()
 
   # Create test data
@@ -95,6 +105,7 @@ test_that("lm with formula and data argument", {
 })
 
 test_that("R functions with named arguments", {
+  thin()
   # Test seq with named arguments
   result <- engine$eval(engine$read("(seq :from 1 :to 10 :by 2)")[[1]])
 
@@ -102,6 +113,7 @@ test_that("R functions with named arguments", {
 })
 
 test_that("plot with named arguments would work", {
+  thin()
   # Just test that the expression parses and evaluates without error
   # Don't actually create a plot
   env <- new.env()

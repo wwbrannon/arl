@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("assert passes on true condition", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -24,6 +27,7 @@ test_that("assert passes on true condition", {
 })
 
 test_that("assert fails on false condition", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -38,6 +42,7 @@ test_that("assert fails on false condition", {
 })
 
 test_that("assert accepts custom error message", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -49,6 +54,7 @@ test_that("assert accepts custom error message", {
 })
 
 test_that("assert-equal compares values with equal?", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -70,6 +76,7 @@ test_that("assert-equal compares values with equal?", {
 })
 
 test_that("assert-equal fails on unequal values", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -90,6 +97,7 @@ test_that("assert-equal fails on unequal values", {
 })
 
 test_that("assert-true passes on truthy values", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -111,6 +119,7 @@ test_that("assert-true passes on truthy values", {
 })
 
 test_that("assert-true fails on falsy values", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -125,6 +134,7 @@ test_that("assert-true fails on falsy values", {
 })
 
 test_that("assert-false passes on falsy values", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -141,6 +151,7 @@ test_that("assert-false passes on falsy values", {
 })
 
 test_that("assert-false fails on truthy values", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -159,6 +170,7 @@ test_that("assert-false fails on truthy values", {
 })
 
 test_that("assert-eq compares identity with identical?", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -181,6 +193,7 @@ test_that("assert-eq compares identity with identical?", {
 })
 
 test_that("assert-eq passes for structurally identical lists", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -197,6 +210,7 @@ test_that("assert-eq passes for structurally identical lists", {
 })
 
 test_that("assert-eq fails on non-identical values", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -215,6 +229,7 @@ test_that("assert-eq fails on non-identical values", {
 })
 
 test_that("assert-error passes when function throws error", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -231,6 +246,7 @@ test_that("assert-error passes when function throws error", {
 })
 
 test_that("assert-error fails when function doesn't throw", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -247,6 +263,7 @@ test_that("assert-error fails when function doesn't throw", {
 })
 
 test_that("assert-no-error passes when function doesn't throw", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -268,6 +285,7 @@ test_that("assert-no-error passes when function doesn't throw", {
 })
 
 test_that("assert-no-error fails when function throws error", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -284,6 +302,7 @@ test_that("assert-no-error fails when function throws error", {
 })
 
 test_that("assert functions work with expressions", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -310,6 +329,7 @@ test_that("assert functions work with expressions", {
 })
 
 test_that("assert functions work in combination", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)
@@ -325,6 +345,7 @@ test_that("assert functions work in combination", {
 })
 
 test_that("assert functions short-circuit on first failure", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("assert"), env = env)

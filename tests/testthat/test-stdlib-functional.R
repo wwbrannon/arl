@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("map applies function to list", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -15,6 +18,7 @@ test_that("map applies function to list", {
 })
 
 test_that("map works from Arl code", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -30,6 +34,7 @@ test_that("map works from Arl code", {
 })
 
 test_that("filter selects matching elements", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -43,6 +48,7 @@ test_that("filter selects matching elements", {
 })
 
 test_that("filter works from Arl code", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -56,6 +62,7 @@ test_that("filter works from Arl code", {
 })
 
 test_that("reduce combines list elements", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -67,6 +74,7 @@ test_that("reduce combines list elements", {
 })
 
 test_that("foldl and foldr work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -75,6 +83,7 @@ test_that("foldl and foldr work", {
 })
 
 test_that("every? checks all elements match predicate", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -83,6 +92,7 @@ test_that("every? checks all elements match predicate", {
 })
 
 test_that("any? checks if any element matches predicate", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -91,6 +101,7 @@ test_that("any? checks if any element matches predicate", {
 })
 
 test_that("mapcat maps and concatenates results", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -99,6 +110,7 @@ test_that("mapcat maps and concatenates results", {
 })
 
 test_that("remove filters out matching elements", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -107,6 +119,7 @@ test_that("remove filters out matching elements", {
 })
 
 test_that("complement negates predicate", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -124,6 +137,7 @@ test_that("complement negates predicate", {
 })
 
 test_that("compose combines functions", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -141,6 +155,7 @@ test_that("compose combines functions", {
 })
 
 test_that("partial applies arguments partially", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -160,6 +175,7 @@ test_that("partial applies arguments partially", {
 })
 
 test_that("repeat creates list with repeated value", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -179,6 +195,7 @@ test_that("repeat creates list with repeated value", {
 })
 
 test_that("zip combines lists element-wise", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -209,6 +226,7 @@ test_that("zip combines lists element-wise", {
 # ============================================================================
 
 test_that("curry creates curried functions", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("functional"), env = env)
 
@@ -232,6 +250,7 @@ test_that("curry creates curried functions", {
 })
 
 test_that("memoize caches function results", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("functional"), env = env)
 
@@ -263,6 +282,7 @@ test_that("memoize caches function results", {
 })
 
 test_that("juxt applies multiple functions to same arguments", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("functional", "list"), env = env)
 
@@ -279,6 +299,7 @@ test_that("juxt applies multiple functions to same arguments", {
 })
 
 test_that("constantly returns function that always returns same value", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("functional"), env = env)
 
@@ -296,6 +317,7 @@ test_that("constantly returns function that always returns same value", {
 })
 
 test_that("iterate applies function n times", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("functional"), env = env)
 
@@ -314,6 +336,7 @@ test_that("iterate applies function n times", {
 })
 
 test_that("iterate-until collects values until predicate is true", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("functional"), env = env)
 
@@ -336,6 +359,7 @@ test_that("iterate-until collects values until predicate is true", {
 # ============================================================================
 
 test_that("mapcat with empty results returns empty list", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("functional"), env = env)
@@ -346,6 +370,7 @@ test_that("mapcat with empty results returns empty list", {
 })
 
 test_that("foldl and foldr with no init value from Arl code", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("functional"), env = env)
@@ -362,6 +387,7 @@ test_that("foldl and foldr with no init value from Arl code", {
 })
 
 test_that("curry with 3-arg function enables multi-step partial application", {
+  thin()
   env <- toplevel_env(engine, new.env())
   import_stdlib_modules(engine, c("functional"), env = env)
 
@@ -375,6 +401,7 @@ test_that("curry with 3-arg function enables multi-step partial application", {
 # ============================================================================
 
 test_that("map works with multiple lists", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -400,6 +427,7 @@ test_that("map works with multiple lists", {
 })
 
 test_that("multi-list map with empty lists", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -413,6 +441,7 @@ test_that("multi-list map with empty lists", {
 # ============================================================================
 
 test_that("for-each applies side effects and returns nil", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -433,6 +462,7 @@ test_that("for-each applies side effects and returns nil", {
 })
 
 test_that("for-each works with multiple lists", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -450,6 +480,7 @@ test_that("for-each works with multiple lists", {
 # ============================================================================
 
 test_that("count counts matching elements", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -478,6 +509,7 @@ test_that("count counts matching elements", {
 # ============================================================================
 
 test_that("map-indexed passes index and element", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -492,6 +524,7 @@ test_that("map-indexed passes index and element", {
 })
 
 test_that("map-indexed with computation", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -505,6 +538,7 @@ test_that("map-indexed with computation", {
 # ============================================================================
 
 test_that("group-by groups by key function", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -522,6 +556,7 @@ test_that("group-by groups by key function", {
 })
 
 test_that("group-by with string key function", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict", "strings"), env = env)
@@ -537,6 +572,7 @@ test_that("group-by with string key function", {
 })
 
 test_that("group-by with empty list", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -551,6 +587,7 @@ test_that("group-by with empty list", {
 # ============================================================================
 
 test_that("frequencies counts element occurrences", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -564,6 +601,7 @@ test_that("frequencies counts element occurrences", {
 })
 
 test_that("frequencies with empty list", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -574,6 +612,7 @@ test_that("frequencies with empty list", {
 })
 
 test_that("frequencies with numbers", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -590,6 +629,7 @@ test_that("frequencies with numbers", {
 # ============================================================================
 
 test_that("map handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -609,6 +649,7 @@ test_that("map handles edge cases", {
 })
 
 test_that("filter handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -626,6 +667,7 @@ test_that("filter handles edge cases", {
 })
 
 test_that("reduce handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -641,6 +683,7 @@ test_that("reduce handles edge cases", {
 })
 
 test_that("mapcat handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -659,6 +702,7 @@ test_that("mapcat handles edge cases", {
 })
 
 test_that("every? and any? handle edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -677,6 +721,7 @@ test_that("every? and any? handle edge cases", {
 })
 
 test_that("apply handles edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 

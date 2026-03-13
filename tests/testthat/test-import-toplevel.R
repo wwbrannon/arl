@@ -2,7 +2,10 @@
 # import should only be allowed at the top level of a program or module body,
 # not nested inside lambda, if, while, define value, etc.
 
+thin <- make_cran_thinner()
+
 test_that("import at top level works", {
+  thin()
   engine <- make_engine()
 
   # Top-level import should succeed (stdlib modules are available)
@@ -10,6 +13,7 @@ test_that("import at top level works", {
 })
 
 test_that("import inside module body works", {
+  thin()
   temp_dir <- tempfile()
   dir.create(temp_dir)
   on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
@@ -29,6 +33,7 @@ test_that("import inside module body works", {
 })
 
 test_that("import inside lambda is a compile error", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -38,6 +43,7 @@ test_that("import inside lambda is a compile error", {
 })
 
 test_that("import inside if condition is a compile error", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -47,6 +53,7 @@ test_that("import inside if condition is a compile error", {
 })
 
 test_that("import inside if consequent is a compile error", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -56,6 +63,7 @@ test_that("import inside if consequent is a compile error", {
 })
 
 test_that("import inside if alternate is a compile error", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -65,6 +73,7 @@ test_that("import inside if alternate is a compile error", {
 })
 
 test_that("import inside while body is a compile error", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -74,6 +83,7 @@ test_that("import inside while body is a compile error", {
 })
 
 test_that("import inside define value position is a compile error", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -83,6 +93,7 @@ test_that("import inside define value position is a compile error", {
 })
 
 test_that("import inside nested begin (inside lambda) is a compile error", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -92,6 +103,7 @@ test_that("import inside nested begin (inside lambda) is a compile error", {
 })
 
 test_that("import inside top-level begin is allowed", {
+  thin()
   engine <- make_engine()
 
   # A top-level begin is just sequencing, import should be fine
@@ -99,6 +111,7 @@ test_that("import inside top-level begin is allowed", {
 })
 
 test_that("import inside set! value is a compile error", {
+  thin()
   engine <- make_engine()
 
   expect_error(

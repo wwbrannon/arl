@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("equal? dispatches on class of first argument", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -42,6 +45,7 @@ test_that("equal? dispatches on class of first argument", {
 })
 
 test_that("use-method dispatches using generic-name parameter (not hardcoded to equal?)", {
+  thin()
   eng <- make_engine()
   env <- toplevel_env(eng)
 
@@ -66,6 +70,7 @@ test_that("use-method dispatches using generic-name parameter (not hardcoded to 
 })
 
 test_that("set-method! registers and overwrites methods", {
+  thin()
   # Fresh engine so equal? and set-method! share one env (no prior test env / copy)
   eng <- make_engine()
   env <- toplevel_env(eng)

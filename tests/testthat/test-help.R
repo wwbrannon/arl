@@ -1,4 +1,7 @@
+thin <- make_cran_thinner()
+
 test_that("help accepts symbol and string topics", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
   expect_error(capture.output(engine$eval_text("(help mean)", env = env)), NA)
@@ -6,6 +9,7 @@ test_that("help accepts symbol and string topics", {
 })
 
 test_that("help shows Arl special-form docs", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
   output <- capture.output(engine$eval_text("(help if)", env = env))
@@ -15,6 +19,7 @@ test_that("help shows Arl special-form docs", {
 })
 
 test_that("help shows Arl stdlib docs via attributes", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
   output <- capture.output(engine$eval_text("(help funcall)", env = env))
@@ -22,6 +27,7 @@ test_that("help shows Arl stdlib docs via attributes", {
 })
 
 test_that("help shows builtin load docs via attributes", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
   output <- capture.output(engine$eval_text("(help load)", env = env))
@@ -31,6 +37,7 @@ test_that("help shows builtin load docs via attributes", {
 })
 
 test_that("help shows Arl macro docs from stdlib files", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
   import_stdlib_modules(engine, c("control"))
@@ -40,6 +47,7 @@ test_that("help shows Arl macro docs from stdlib files", {
 })
 
 test_that("help shows usage for lambda without docstring", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
   engine$eval_text("(define add (lambda (x y) (+ x y)))", env = env)
@@ -49,6 +57,7 @@ test_that("help shows usage for lambda without docstring", {
 
 # Initialization tests
 test_that("HelpSystem initialization requires Env and MacroExpander", {
+  thin()
   env <- new.env()
   arl_env <- arl:::Env$new(env)
 
@@ -61,6 +70,7 @@ test_that("HelpSystem initialization requires Env and MacroExpander", {
 })
 
 test_that("HelpSystem builds special forms help on init", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   help_sys <- engine_field(engine, "help_system")
 
@@ -74,6 +84,7 @@ test_that("HelpSystem builds special forms help on init", {
 
 # Help lookup chain tests
 test_that("help shows all special forms", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -88,6 +99,7 @@ test_that("help shows all special forms", {
 })
 
 test_that("help shows macro usage", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -100,6 +112,7 @@ test_that("help shows macro usage", {
 })
 
 test_that("help shows R function signatures", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -112,6 +125,7 @@ test_that("help shows R function signatures", {
 })
 
 test_that("help handles functions without formals", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -124,6 +138,7 @@ test_that("help handles functions without formals", {
 })
 
 test_that("help shows arl_doc attribute on functions", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -140,6 +155,7 @@ test_that("help shows arl_doc attribute on functions", {
 })
 
 test_that("help shows structured R docs for non-Arl topics", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -150,6 +166,7 @@ test_that("help shows structured R docs for non-Arl topics", {
 })
 
 test_that("help supports package-qualified R help", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -160,6 +177,7 @@ test_that("help supports package-qualified R help", {
 })
 
 test_that("help package-qualified form validates keyword syntax", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -170,6 +188,7 @@ test_that("help package-qualified form validates keyword syntax", {
 })
 
 test_that("help prints explicit message for unknown topics", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -180,6 +199,7 @@ test_that("help prints explicit message for unknown topics", {
 })
 
 test_that("help notes other package matches when available", {
+  thin()
   candidates <- c("lag", "filter", "time", "plot", "window")
   counts <- vapply(candidates, function(topic) {
     length(suppressWarnings(utils::help(topic, help_type = "text", try.all.packages = TRUE)))
@@ -197,6 +217,7 @@ test_that("help notes other package matches when available", {
 })
 
 test_that("help R fallback is robust to user bindings named like base helpers", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -209,6 +230,7 @@ test_that("help R fallback is robust to user bindings named like base helpers", 
 })
 
 test_that("help package argument accepts symbol package names", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -218,6 +240,7 @@ test_that("help package argument accepts symbol package names", {
 })
 
 test_that("help R doc rendering does not emit warnings", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
   warning_count <- 0L
@@ -235,6 +258,7 @@ test_that("help R doc rendering does not emit warnings", {
 })
 
 test_that("help prioritizes specials over macros", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -247,6 +271,7 @@ test_that("help prioritizes specials over macros", {
 })
 
 test_that("help handles arl_closure with param_specs", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -258,6 +283,7 @@ test_that("help handles arl_closure with param_specs", {
 })
 
 test_that("help handles arl_closure with defaults", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
 
@@ -270,6 +296,7 @@ test_that("help handles arl_closure with defaults", {
 })
 
 test_that("help handles arl_closure with rest params", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -284,6 +311,7 @@ test_that("help handles arl_closure with rest params", {
 
 # Usage generation tests
 test_that("usage_from_closure handles empty params", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -294,6 +322,7 @@ test_that("usage_from_closure handles empty params", {
 })
 
 test_that("usage_from_formals formats R function signatures", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -305,6 +334,7 @@ test_that("usage_from_formals formats R function signatures", {
 })
 
 test_that("usage_from_macro shows macro parameters", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 

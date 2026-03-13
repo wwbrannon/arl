@@ -1,4 +1,7 @@
+thin <- make_cran_thinner()
+
 test_that("engine$load_file_in_env evaluates source into environment", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -13,6 +16,7 @@ test_that("engine$load_file_in_env evaluates source into environment", {
 })
 
 test_that("(load ...) evaluates file in current environment", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -28,6 +32,7 @@ test_that("(load ...) evaluates file in current environment", {
 })
 
 test_that("(load path env) evaluates file in the provided environment", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   caller_env <- engine$get_env()
   target_env <- new.env(parent = caller_env)
@@ -46,6 +51,7 @@ test_that("(load path env) evaluates file in the provided environment", {
 })
 
 test_that("(load ...) does not resolve stdlib by name", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -57,6 +63,7 @@ test_that("(load ...) does not resolve stdlib by name", {
 })
 
 test_that("(load ...) re-evaluates on each call", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -78,6 +85,7 @@ test_that("(load ...) re-evaluates on each call", {
 })
 
 test_that("stdlib modules register macros", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
   import_stdlib_modules(engine, c("control", "binding", "threading"))
@@ -90,6 +98,7 @@ test_that("stdlib modules register macros", {
 })
 
 test_that("(import ...) loads module exports into environment", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -119,6 +128,7 @@ test_that("(import ...) loads module exports into environment", {
 })
 
 test_that("(import ...) does not re-evaluate loaded modules", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -153,6 +163,7 @@ test_that("(import ...) does not re-evaluate loaded modules", {
 })
 
 test_that("(import ...) errors on missing modules and exports", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -181,6 +192,7 @@ test_that("(import ...) errors on missing modules and exports", {
 })
 
 test_that("(import \"path\") loads module by path and attaches exports", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -208,6 +220,7 @@ test_that("(import \"path\") loads module by path and attaches exports", {
 })
 
 test_that("second (import \"path\") does not reload module", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -237,6 +250,7 @@ test_that("second (import \"path\") does not reload module", {
 })
 
 test_that("relative import paths resolve from importing file's directory", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -267,6 +281,7 @@ test_that("relative import paths resolve from importing file's directory", {
 })
 
 test_that("(import symbol) is module name, (import \"string\") is path", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
 
