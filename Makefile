@@ -52,24 +52,11 @@ build: roxygen lang-docs bench-data ## help: Build the package tarball (with pre
 
 .PHONY: check
 check: build ## help: Check the package (includes tests)
-	@pkg=$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(p[1,"Package"])'); \
-	start=$$(date +%s); \
-	check_tmpdir=$$(mktemp -d); \
-	win_overrides=; \
-	if Rscript -e 'cat(.Platform$$OS.type)' | grep -q windows; then win_overrides="_R_CHECK_CRAN_INCOMING_USE_ASPELL_=false"; fi; \
-	TMPDIR="$$check_tmpdir" env $$(cat tools/check.env | grep -v '^\#' | xargs) $$win_overrides \
-	R CMD check --as-cran --run-donttest \
-		$$(Rscript -e 'p <- read.dcf("DESCRIPTION"); cat(sprintf("%s_%s.tar.gz", p[1,"Package"], p[1,"Version"]))'); \
-	rc=$$?; \
-	elapsed=$$(( $$(date +%s) - $$start )); \
-	printf '\nR CMD check completed in %dm %ds\n' $$((elapsed/60)) $$((elapsed%60)); \
-	rm -rf "$$check_tmpdir"; \
-	if [ $$rc -ne 0 ]; then exit $$rc; fi; \
-	if ! grep -q '^Status: OK' "$$pkg.Rcheck/00check.log"; then \
-		echo "R CMD check finished with warnings or notes:"; \
-		grep '^Status:' "$$pkg.Rcheck/00check.log"; \
-		exit 1; \
-	fi
+	@tools/build/check-local.sh true
+
+.PHONY: check-cran
+check-cran: build ## help: Check the package with CRAN test thinning enabled
+	@tools/build/check-local.sh false
 
 .PHONY: lint
 lint: clean-cache stdlib-order ## help: Run linter checks

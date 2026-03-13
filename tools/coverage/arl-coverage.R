@@ -24,6 +24,7 @@ run_tests_with_coverage <- function(engine) {
 
   # Use testthat to run tests, which will call native test infrastructure
   # This properly executes all tests and calls stdlib functions
+  Sys.setenv(NOT_CRAN = "true")
   suppressMessages({
     testthat::test_dir(
       "tests/testthat",
