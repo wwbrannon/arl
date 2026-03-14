@@ -6,7 +6,10 @@ engine <- make_engine()
 # Basic set operations (from collections)
 # ============================================================================
 
+thin <- make_cran_thinner()
+
 test_that("basic set operations work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -48,6 +51,7 @@ test_that("basic set operations work", {
 # ============================================================================
 
 test_that("set->list extracts elements as a list", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)
@@ -58,6 +62,7 @@ test_that("set->list extracts elements as a list", {
 })
 
 test_that("set->list on empty set", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)
@@ -72,6 +77,7 @@ test_that("set->list on empty set", {
 # ============================================================================
 
 test_that("list->set creates set from list", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)
@@ -85,6 +91,7 @@ test_that("list->set creates set from list", {
 })
 
 test_that("list->set deduplicates", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)
@@ -100,6 +107,7 @@ test_that("list->set deduplicates", {
 # ============================================================================
 
 test_that("set-size returns number of elements", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)
@@ -123,6 +131,7 @@ test_that("set-size returns number of elements", {
 # ============================================================================
 
 test_that("set-map transforms elements", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set", "math"), env = env)
@@ -137,6 +146,7 @@ test_that("set-map transforms elements", {
 })
 
 test_that("set-map returns a set", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)
@@ -148,6 +158,7 @@ test_that("set-map returns a set", {
 })
 
 test_that("set-map on empty set", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)
@@ -163,6 +174,7 @@ test_that("set-map on empty set", {
 # ============================================================================
 
 test_that("set-filter keeps matching elements", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)
@@ -177,6 +189,7 @@ test_that("set-filter keeps matching elements", {
 })
 
 test_that("set-filter returns a set", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)
@@ -188,6 +201,7 @@ test_that("set-filter returns a set", {
 })
 
 test_that("set-filter with no matches", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("set"), env = env)

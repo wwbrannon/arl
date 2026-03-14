@@ -9,7 +9,10 @@ write_module <- function(path, name, body) {
   writeLines(lines, path)
 }
 
+thin <- make_cran_thinner()
+
 test_that("explicit re-export: imported symbol available to consumers", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -42,6 +45,7 @@ test_that("explicit re-export: imported symbol available to consumers", {
 })
 
 test_that("export-all :re-export includes imported symbols", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -75,6 +79,7 @@ test_that("export-all :re-export includes imported symbols", {
 })
 
 test_that("export-all without :re-export excludes imports (unchanged behavior)", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -103,6 +108,7 @@ test_that("export-all without :re-export excludes imports (unchanged behavior)",
 })
 
 test_that("re-export with :only modifier", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -133,6 +139,7 @@ test_that("re-export with :only modifier", {
 })
 
 test_that("re-export with :as modifier for qualified access", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -158,6 +165,7 @@ test_that("re-export with :as modifier for qualified access", {
 })
 
 test_that("re-export with :rename modifier", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -183,6 +191,7 @@ test_that("re-export with :rename modifier", {
 })
 
 test_that("macro re-export: consumer can use macro from transitive module", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -212,6 +221,7 @@ test_that("macro re-export: consumer can use macro from transitive module", {
 })
 
 test_that("transitive re-export: A -> B -> C -> D", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -242,6 +252,7 @@ test_that("transitive re-export: A -> B -> C -> D", {
 })
 
 test_that("reload value change reflected through re-export (live forwarding)", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -279,6 +290,7 @@ test_that("reload value change reflected through re-export (live forwarding)", {
 })
 
 test_that("reload does not cascade: facade export set unchanged after source reload", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -319,6 +331,7 @@ test_that("reload does not cascade: facade export set unchanged after source rel
 })
 
 test_that("error: exporting undefined/unimported name", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -340,6 +353,7 @@ test_that("error: exporting undefined/unimported name", {
 })
 
 test_that("export-all excludes _-prefixed names (private convention)", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -367,6 +381,7 @@ test_that("export-all excludes _-prefixed names (private convention)", {
 })
 
 test_that("export-all :re-export still excludes _-prefixed own bindings", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -397,6 +412,7 @@ test_that("export-all :re-export still excludes _-prefixed own bindings", {
 })
 
 test_that("explicit export of _-prefixed name still works", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -420,6 +436,7 @@ test_that("explicit export of _-prefixed name still works", {
 })
 
 test_that("compile error: export-all with bad modifier", {
+  thin()
   eng <- make_engine()
   expect_error(
     eng$eval_text("(module bad (export-all :bad-modifier) (define x 1))"),

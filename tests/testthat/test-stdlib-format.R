@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("format-value handles environments correctly", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -38,6 +41,7 @@ test_that("format-value handles environments correctly", {
 })
 
 test_that("format-value wraps lists and calls in parentheses", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -58,6 +62,7 @@ test_that("format-value wraps lists and calls in parentheses", {
 })
 
 test_that("format-value for dotted pair (arl_cons) shows dotted form", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   pair <- engine$read("'(a . b)")[[1]][[2]]
@@ -69,6 +74,7 @@ test_that("format-value for dotted pair (arl_cons) shows dotted form", {
 })
 
 test_that("format-value for improper list shows dotted tail", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   improper <- engine$read("'(a b . c)")[[1]][[2]]
@@ -81,6 +87,7 @@ test_that("format-value for improper list shows dotted tail", {
 })
 
 test_that("format-value displays named lists with names", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -100,6 +107,7 @@ test_that("format-value displays named lists with names", {
 })
 
 test_that("format-value displays S3 objects using R print output", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -118,6 +126,7 @@ test_that("format-value displays S3 objects using R print output", {
 })
 
 test_that("format-value truncates long S3 output with configurable limit", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -148,6 +157,7 @@ test_that("format-value truncates long S3 output with configurable limit", {
 })
 
 test_that("ARL_DISPLAY_MAX_LINES env var controls S3 truncation", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -178,6 +188,7 @@ test_that("ARL_DISPLAY_MAX_LINES env var controls S3 truncation", {
 })
 
 test_that("format-value displays call objects from quasiquote as s-expressions", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -191,6 +202,7 @@ test_that("format-value displays call objects from quasiquote as s-expressions",
 })
 
 test_that("format-value displays lists containing symbols with parens", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -204,6 +216,7 @@ test_that("format-value displays lists containing symbols with parens", {
 })
 
 test_that("format_value fallback warns on format-value error", {
+  thin()
   # Create an env with a broken format-value to test the fallback
   test_env <- new.env(parent = baseenv())
   test_env$`format-value` <- function(x) stop("intentional test error")
@@ -218,6 +231,7 @@ test_that("format_value fallback warns on format-value error", {
 })
 
 test_that("format_value does not evaluate call objects passed as values", {
+  thin()
   # Call with too many args for +: would error if evaluated
   val1 <- quote(`+`(1, 2, 3, 4))
   expect_no_warning(result1 <- engine$format_value(val1))

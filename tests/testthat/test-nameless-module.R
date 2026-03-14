@@ -18,7 +18,10 @@ write_nameless_module <- function(path, body) {
   writeLines(lines, path)
 }
 
+thin <- make_cran_thinner()
+
 test_that("file-backed nameless module derives name from path", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
@@ -39,6 +42,7 @@ test_that("file-backed nameless module derives name from path", {
 })
 
 test_that("named module in eval_text works as before", {
+  thin()
   eng <- make_engine()
   eng$eval_text("(module test-named (export x) (define x 1))")
   eng$eval_text("(import test-named :refer :all)")
@@ -46,6 +50,7 @@ test_that("named module in eval_text works as before", {
 })
 
 test_that("nameless module in eval_text with no file context errors", {
+  thin()
   eng <- make_engine()
   expect_error(
     eng$eval_text("(module (export x) (define x 1))"),
@@ -54,6 +59,7 @@ test_that("nameless module in eval_text with no file context errors", {
 })
 
 test_that("nameless module with hierarchical file path derives correct name", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   sub_dir <- file.path(tmp_dir, "sub")
@@ -76,6 +82,7 @@ test_that("nameless module with hierarchical file path derives correct name", {
 })
 
 test_that("nameless module with export-all works", {
+  thin()
   eng <- make_engine()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)

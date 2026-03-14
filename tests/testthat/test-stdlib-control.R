@@ -6,7 +6,10 @@ engine <- make_engine()
 # NEW: Comprehensive control flow macro tests
 # ============================================================================
 
+thin <- make_cran_thinner()
+
 test_that("when evaluates body when test is truthy", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("control"), env = env)
@@ -40,6 +43,7 @@ test_that("when evaluates body when test is truthy", {
 })
 
 test_that("unless evaluates body when test is falsy", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("control"), env = env)
@@ -73,6 +77,7 @@ test_that("unless evaluates body when test is falsy", {
 })
 
 test_that("cond selects first matching clause", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("control"), env = env)
@@ -108,6 +113,7 @@ test_that("cond selects first matching clause", {
 })
 
 test_that("case branches on key equality (Scheme syntax)", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("control"), env = env)
@@ -175,6 +181,7 @@ test_that("case branches on key equality (Scheme syntax)", {
 
 
 test_that("and macro works", {
+  thin()
   env <- new.env()
 
   # Define and macro
@@ -191,6 +198,7 @@ test_that("and macro works", {
 })
 
 test_that("or macro works", {
+  thin()
   env <- new.env()
 
   # Define or macro
@@ -207,6 +215,7 @@ test_that("or macro works", {
 })
 
 test_that("and/or with zero arguments return identity values", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
 
@@ -218,6 +227,7 @@ test_that("and/or with zero arguments return identity values", {
 })
 
 test_that("variadic and/or short-circuit correctly", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("control"), env = env)
@@ -239,6 +249,7 @@ test_that("variadic and/or short-circuit correctly", {
 })
 
 test_that("not function works", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -248,6 +259,7 @@ test_that("not function works", {
 })
 
 test_that("try with only error handler works", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -267,6 +279,7 @@ test_that("try with only error handler works", {
 })
 
 test_that("try with only finally handler works", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -295,6 +308,7 @@ test_that("try with only finally handler works", {
 })
 
 test_that("try with both handlers works", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -326,6 +340,7 @@ test_that("try with both handlers works", {
 # ============================================================================
 
 test_that("try with no handlers (thunk only)", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -335,6 +350,7 @@ test_that("try with no handlers (thunk only)", {
 })
 
 test_that("try errors when thunk is not a function", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -342,6 +358,7 @@ test_that("try errors when thunk is not a function", {
 })
 
 test_that("try errors when error handler is not a function", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -349,6 +366,7 @@ test_that("try errors when error handler is not a function", {
 })
 
 test_that("try errors when finally handler is not a function", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -360,6 +378,7 @@ test_that("try errors when finally handler is not a function", {
 # ============================================================================
 
 test_that("until macro repeats until test is truthy", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("looping"), env = env)
@@ -372,6 +391,7 @@ test_that("until macro repeats until test is truthy", {
 })
 
 test_that("loop/recur iterates with rebinding", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("looping"), env = env)
@@ -408,6 +428,7 @@ test_that("loop/recur iterates with rebinding", {
 })
 
 test_that("recur errors outside loop", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("looping"), env = env)

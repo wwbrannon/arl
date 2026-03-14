@@ -1,4 +1,7 @@
+thin <- make_cran_thinner()
+
 test_that("DocParser parses @description annotations", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -25,6 +28,7 @@ test_that("DocParser parses @description annotations", {
 })
 
 test_that("DocParser parses @section annotations", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -51,6 +55,7 @@ test_that("DocParser parses @section annotations", {
 })
 
 test_that("DocParser parses @note and @signature", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -73,6 +78,7 @@ test_that("DocParser parses @note and @signature", {
 })
 
 test_that("DocParser get_exports extracts module exports", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -93,6 +99,7 @@ test_that("DocParser get_exports extracts module exports", {
 })
 
 test_that("DocParser handles defmacro definitions", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -116,6 +123,7 @@ test_that("DocParser handles defmacro definitions", {
 })
 
 test_that("DocParser skips standalone sections without definitions", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -140,6 +148,7 @@ test_that("DocParser skips standalone sections without definitions", {
 })
 
 test_that("parse_text parses annotations from string input", {
+  thin()
   code <- "(module str-mod
   (export add)
 
@@ -160,6 +169,7 @@ test_that("parse_text parses annotations from string input", {
 })
 
 test_that("string-input modules get annotation-based docs via eval_text", {
+  thin()
   code <- "(module str-ann-mod
   (export greet)
 
@@ -182,6 +192,7 @@ test_that("string-input modules get annotation-based docs via eval_text", {
 })
 
 test_that("DocParser parses @internal tag", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -205,6 +216,7 @@ test_that("DocParser parses @internal tag", {
 })
 
 test_that("DocParser parses @noeval tag", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -232,6 +244,7 @@ test_that("DocParser parses @noeval tag", {
 })
 
 test_that("annotation-based docs are available via compiler", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(
@@ -264,6 +277,7 @@ test_that("annotation-based docs are available via compiler", {
 })
 
 test_that("DocParser loads reference docs and filters by kind", {
+  thin()
   parser <- DocParser$new()
   docs_path <- system.file("reference-docs.dcf", package = "arl")
   expect_true(nzchar(docs_path))
@@ -280,6 +294,7 @@ test_that("DocParser loads reference docs and filters by kind", {
 })
 
 test_that("@param tags are parsed correctly", {
+  thin()
   parser <- DocParser$new()
   result <- parser$parse_text(paste(
     "(module param-test",
@@ -303,6 +318,7 @@ test_that("@param tags are parsed correctly", {
 })
 
 test_that("unknown @ tags emit a warning", {
+  thin()
   parser <- DocParser$new()
   expect_warning(
     parser$parse_text(paste(
@@ -320,6 +336,7 @@ test_that("unknown @ tags emit a warning", {
 })
 
 test_that("@param tags produce arl_doc$arguments via compiler", {
+  thin()
   tmp <- tempfile(fileext = ".arl")
   on.exit(unlink(tmp))
   writeLines(c(

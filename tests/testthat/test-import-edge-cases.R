@@ -1,7 +1,10 @@
 # Tests for import/module edge cases
 # Covers circular imports, module caching, error cleanup
 
+thin <- make_cran_thinner()
+
 test_that("import non-existent module fails gracefully", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -11,6 +14,7 @@ test_that("import non-existent module fails gracefully", {
 })
 
 test_that("import with invalid path", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -20,6 +24,7 @@ test_that("import with invalid path", {
 })
 
 test_that("same file imported with different path strings uses one module (absolute path alias)", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
 
@@ -55,6 +60,7 @@ test_that("same file imported with different path strings uses one module (absol
 })
 
 test_that("module is cached after first load", {
+  thin()
   # Create a temporary module file
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_cache_module.arl")
@@ -78,6 +84,7 @@ test_that("module is cached after first load", {
 })
 
 test_that("load returns last value from module", {
+  thin()
   # Create a temporary module
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_return_module.arl")
@@ -96,6 +103,7 @@ test_that("load returns last value from module", {
 })
 
 test_that("load with syntax error in module", {
+  thin()
   # Create a module with syntax error
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_syntax_error.arl")
@@ -114,6 +122,7 @@ test_that("load with syntax error in module", {
 })
 
 test_that("load with runtime error in module", {
+  thin()
   # Create a module that errors at runtime
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_runtime_error.arl")
@@ -132,6 +141,7 @@ test_that("load with runtime error in module", {
 })
 
 test_that("multiple loads of same module", {
+  thin()
   # Create a simple module
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_multiple_load.arl")
@@ -150,6 +160,7 @@ test_that("multiple loads of same module", {
 })
 
 test_that("load can access previously defined symbols", {
+  thin()
   # Create a module that uses predefined symbols
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_access_symbols.arl")
@@ -168,6 +179,7 @@ test_that("load can access previously defined symbols", {
 })
 
 test_that("nested module loads", {
+  thin()
   temp_dir <- tempdir()
 
   # Create module B
@@ -198,6 +210,7 @@ test_that("nested module loads", {
 })
 
 test_that("circular import dependency produces clear error", {
+  thin()
   temp_dir <- tempfile()
   dir.create(temp_dir)
   on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
@@ -228,6 +241,7 @@ test_that("circular import dependency produces clear error", {
 })
 
 test_that("import-runtime is reserved and errors", {
+  thin()
   engine <- make_engine()
 
   expect_error(
@@ -237,6 +251,7 @@ test_that("import-runtime is reserved and errors", {
 })
 
 test_that("load with relative path", {
+  thin()
   # Create a module in current directory
   temp_dir <- tempdir()
   old_wd <- getwd()
@@ -256,6 +271,7 @@ test_that("load with relative path", {
 })
 
 test_that("load empty module", {
+  thin()
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_empty.arl")
   writeLines('', module_path)
@@ -270,6 +286,7 @@ test_that("load empty module", {
 })
 
 test_that("load module with only comments", {
+  thin()
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_comments_only.arl")
   writeLines(c(
@@ -287,6 +304,7 @@ test_that("load module with only comments", {
 })
 
 test_that("module defines macro", {
+  thin()
   temp_dir <- tempdir()
   module_path <- file.path(temp_dir, "test_macro_module.arl")
   writeLines(c(
@@ -310,6 +328,7 @@ test_that("module defines macro", {
 # ============================================================================
 
 test_that("Windows-style backslash paths work when properly normalized", {
+  thin()
   engine <- make_engine()
 
   # Create a temp file in a directory whose name would trigger escape issues
@@ -328,6 +347,7 @@ test_that("Windows-style backslash paths work when properly normalized", {
 })
 
 test_that("backslash escapes in Arl strings produce correct characters", {
+  thin()
   engine <- make_engine()
 
   # Verify \t, \n, \\ are processed as escape sequences (standard behavior)

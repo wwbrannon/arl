@@ -4,12 +4,16 @@ engine <- make_engine(load_prelude = FALSE)
 # Atoms
 # =============================================================================
 
+thin <- make_cran_thinner()
+
 test_that("write handles integers", {
+  thin()
   expr <- engine$read("42L")[[1]]
   expect_equal(engine$write(expr), "42L")
 })
 
 test_that("write handles doubles", {
+  thin()
   expr <- engine$read("3.14")[[1]]
   expect_equal(engine$write(expr), "3.14")
 
@@ -18,6 +22,7 @@ test_that("write handles doubles", {
 })
 
 test_that("write handles Inf and NaN", {
+  thin()
   expr <- engine$read("Inf")[[1]]
   expect_equal(engine$write(expr), "Inf")
 
@@ -29,6 +34,7 @@ test_that("write handles Inf and NaN", {
 })
 
 test_that("write handles complex numbers", {
+  thin()
   expr <- engine$read("2+3i")[[1]]
   expect_equal(engine$write(expr), "2+3i")
 
@@ -37,11 +43,13 @@ test_that("write handles complex numbers", {
 })
 
 test_that("write handles strings", {
+  thin()
   expr <- engine$read('"hello"')[[1]]
   expect_equal(engine$write(expr), '"hello"')
 })
 
 test_that("write handles strings with escapes", {
+  thin()
   expr <- engine$read('"line1\\nline2"')[[1]]
   expect_equal(engine$write(expr), '"line1\\nline2"')
 
@@ -56,6 +64,7 @@ test_that("write handles strings with escapes", {
 })
 
 test_that("write handles booleans", {
+  thin()
   expr <- engine$read("#t")[[1]]
   expect_equal(engine$write(expr), "#t")
 
@@ -64,6 +73,7 @@ test_that("write handles booleans", {
 })
 
 test_that("write handles NA variants", {
+  thin()
   expr <- engine$read("NA")[[1]]
   expect_equal(engine$write(expr), "NA")
 
@@ -81,6 +91,7 @@ test_that("write handles NA variants", {
 })
 
 test_that("write handles #nil", {
+  thin()
   expr <- engine$read("#nil")[[1]]
   expect_equal(engine$write(expr), "#nil")
 })
@@ -90,6 +101,7 @@ test_that("write handles #nil", {
 # =============================================================================
 
 test_that("write handles plain symbols", {
+  thin()
   expr <- engine$read("foo")[[1]]
   expect_equal(engine$write(expr), "foo")
 
@@ -98,11 +110,13 @@ test_that("write handles plain symbols", {
 })
 
 test_that("write handles hyphenated symbols", {
+  thin()
   expr <- engine$read("my-func")[[1]]
   expect_equal(engine$write(expr), "my-func")
 })
 
 test_that("write handles predicate symbols", {
+  thin()
   expr <- engine$read("null?")[[1]]
   expect_equal(engine$write(expr), "null?")
 
@@ -115,6 +129,7 @@ test_that("write handles predicate symbols", {
 # =============================================================================
 
 test_that("write handles keywords", {
+  thin()
   expr <- engine$read(":foo")[[1]]
   expect_equal(engine$write(expr), ":foo")
 
@@ -127,16 +142,19 @@ test_that("write handles keywords", {
 # =============================================================================
 
 test_that("write handles simple calls", {
+  thin()
   expr <- engine$read("(+ 1 2)")[[1]]
   expect_equal(engine$write(expr), "(+ 1 2)")
 })
 
 test_that("write handles nested calls", {
+  thin()
   expr <- engine$read("(+ 1 (* 2 3))")[[1]]
   expect_equal(engine$write(expr), "(+ 1 (* 2 3))")
 })
 
 test_that("write handles empty list", {
+  thin()
   expr <- engine$read("()")[[1]]
   expect_equal(engine$write(expr), "()")
 })
@@ -146,21 +164,25 @@ test_that("write handles empty list", {
 # =============================================================================
 
 test_that("write restores quote sugar", {
+  thin()
   expr <- engine$read("'x")[[1]]
   expect_equal(engine$write(expr), "'x")
 })
 
 test_that("write restores quasiquote sugar", {
+  thin()
   expr <- engine$read("`x")[[1]]
   expect_equal(engine$write(expr), "`x")
 })
 
 test_that("write restores unquote sugar", {
+  thin()
   expr <- engine$read(",x")[[1]]
   expect_equal(engine$write(expr), ",x")
 })
 
 test_that("write restores unquote-splicing sugar", {
+  thin()
   expr <- engine$read(",@x")[[1]]
   expect_equal(engine$write(expr), ",@x")
 })
@@ -170,11 +192,13 @@ test_that("write restores unquote-splicing sugar", {
 # =============================================================================
 
 test_that("write restores :: sugar", {
+  thin()
   expr <- engine$read("base::mean")[[1]]
   expect_equal(engine$write(expr), "base::mean")
 })
 
 test_that("write restores ::: sugar", {
+  thin()
   expr <- engine$read("stats:::fitted.default")[[1]]
   expect_equal(engine$write(expr), "stats:::fitted.default")
 })
@@ -184,11 +208,13 @@ test_that("write restores ::: sugar", {
 # =============================================================================
 
 test_that("write handles simple dotted pair", {
+  thin()
   expr <- engine$read("'(a . b)")[[1]][[2]]
   expect_equal(engine$write(expr), "(a . b)")
 })
 
 test_that("write handles improper list", {
+  thin()
   expr <- engine$read("'(a b . c)")[[1]][[2]]
   expect_equal(engine$write(expr), "(a b . c)")
 })
@@ -198,6 +224,7 @@ test_that("write handles improper list", {
 # =============================================================================
 
 test_that("round-trip property holds for various inputs", {
+  thin()
   cases <- c(
     "42L", "3.14", '"hello"', "#t", "#f", "#nil", "NA",
     "foo", ":bar",
@@ -218,11 +245,13 @@ test_that("round-trip property holds for various inputs", {
 # =============================================================================
 
 test_that("write is accessible as a Arl builtin", {
+  thin()
   result <- engine$eval_text("(write '(+ 1 2))")
   expect_equal(result, "(+ 1 2)")
 })
 
 test_that("write works with atoms from Arl", {
+  thin()
   expect_equal(engine$eval_text('(write 42)'), "42")
   expect_equal(engine$eval_text('(write "hello")'), '"hello"')
   expect_equal(engine$eval_text('(write #t)'), "#t")

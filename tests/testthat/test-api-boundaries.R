@@ -1,4 +1,7 @@
+thin <- make_cran_thinner()
+
 test_that("eval_string is an alias for eval_text", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_string("(+ 2 3)")
@@ -7,6 +10,7 @@ test_that("eval_string is an alias for eval_text", {
 })
 
 test_that("Promise uses private fields", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Create a promise
@@ -28,6 +32,7 @@ test_that("Promise uses private fields", {
 })
 
 test_that("Promise caching works correctly", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Create a promise with side effect
@@ -48,6 +53,7 @@ test_that("Promise caching works correctly", {
 })
 
 test_that("module registry bindings are locked", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Create a test module
@@ -74,6 +80,7 @@ test_that("module registry bindings are locked", {
 })
 
 test_that("r-eval without env parameter works correctly", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # r-eval should work without explicit env parameter
@@ -93,6 +100,7 @@ test_that("r-eval without env parameter works correctly", {
 })
 
 test_that(".__env is documented as internal", {
+  thin()
   # This test documents that .__env exists in lambda bodies that use define/set!
   # but is clearly internal (not part of public API).
   # Simple lambdas that don't use define/set! may skip .__env as an optimization.
@@ -117,6 +125,7 @@ test_that(".__env is documented as internal", {
 })
 
 test_that("module registry entries are truly immutable", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Create a module
@@ -147,6 +156,7 @@ test_that("module registry entries are truly immutable", {
 })
 
 test_that("Env fields are read-only via active bindings", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Can read fields
@@ -173,6 +183,7 @@ test_that("Env fields are read-only via active bindings", {
 })
 
 test_that("Env internal operations still work with private fields", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Test env stack operations

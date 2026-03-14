@@ -1,3 +1,14 @@
+# arl 0.1.4
+
+## Performance
+
+* Reduce CRAN test runtime via uniform test thinning: on CRAN, run every 3rd
+  test block per file (controlled by `make_cran_thinner(keep_every = 3L)`),
+  cutting ~67% of per-test work while keeping full coverage off CRAN.
+* Reduce TCO test recursion depth on CRAN (6000 vs 10000) to further cut
+  runtime while still validating tail-call optimization well beyond R's default
+  stack limit.
+
 # arl 0.1.3
 
 ## CRAN Compliance

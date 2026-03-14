@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("string-slice extracts string portions", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -14,6 +17,7 @@ test_that("string-slice extracts string portions", {
 })
 
 test_that("string case conversion works", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -29,6 +33,7 @@ test_that("string case conversion works", {
 })
 
 test_that("char-at and string-ref access characters", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -41,6 +46,7 @@ test_that("char-at and string-ref access characters", {
 })
 
 test_that("string-length returns character count", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -50,6 +56,7 @@ test_that("string-length returns character count", {
 })
 
 test_that("number->string converts with bases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -67,6 +74,7 @@ test_that("number->string converts with bases", {
 })
 
 test_that("string->number parses numbers", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -79,6 +87,7 @@ test_that("string->number parses numbers", {
 })
 
 test_that("string comparison operators work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -104,6 +113,7 @@ test_that("string comparison operators work", {
 })
 
 test_that("string->list and list->string convert between representations", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -126,6 +136,7 @@ test_that("string->list and list->string convert between representations", {
 })
 
 test_that("string-append concatenates strings", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -155,6 +166,7 @@ test_that("string-append concatenates strings", {
 # ============================================================================
 
 test_that("string and io helpers work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -176,6 +188,7 @@ test_that("string and io helpers work", {
 })
 
 test_that("string match helpers work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -204,6 +217,7 @@ test_that("string match helpers work", {
 # ============================================================================
 
 test_that("string operations handle edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -245,6 +259,7 @@ test_that("string operations handle edge cases", {
 # ============================================================================
 
 test_that("string-find returns #nil when pattern not found", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -254,6 +269,7 @@ test_that("string-find returns #nil when pattern not found", {
 })
 
 test_that("string-slice errors on negative start", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -263,6 +279,7 @@ test_that("string-slice errors on negative start", {
 })
 
 test_that("number->string errors on base out of range", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -280,6 +297,7 @@ test_that("number->string errors on base out of range", {
 # ============================================================================
 
 test_that("string-prefix? checks string prefix", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -312,6 +330,7 @@ test_that("string-prefix? checks string prefix", {
 # ============================================================================
 
 test_that("string-suffix? checks string suffix", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -339,6 +358,7 @@ test_that("string-suffix? checks string suffix", {
 # ============================================================================
 
 test_that("string-empty? checks for empty string", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -365,6 +385,7 @@ test_that("string-empty? checks for empty string", {
 # ============================================================================
 
 test_that("string-repeat repeats string n times", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 

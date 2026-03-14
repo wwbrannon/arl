@@ -1,6 +1,9 @@
 engine <- make_engine(load_prelude = FALSE)
 
+thin <- make_cran_thinner()
+
 test_that("tokenizer handles basic tokens", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("(+ 1 2)")
   expect_equal(length(tokens), 5)
   expect_equal(tokens[[1]]$type, "LPAREN")
@@ -14,6 +17,7 @@ test_that("tokenizer handles basic tokens", {
 })
 
 test_that("tokenizer handles strings", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize('"hello world"')
   expect_equal(length(tokens), 1)
   expect_equal(tokens[[1]]$type, "STRING")
@@ -21,16 +25,19 @@ test_that("tokenizer handles strings", {
 })
 
 test_that("tokenizer handles escape sequences", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize('"hello\\nworld"')
   expect_equal(tokens[[1]]$value, "hello\nworld")
 })
 
 test_that("tokenizer preserves unknown escapes", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize('"C:\\\\Users\\\\runner\\\\file.arl"')
   expect_equal(tokens[[1]]$value, "C:\\Users\\runner\\file.arl")
 })
 
 test_that("tokenizer handles booleans and nil", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("#t #f #nil")
   expect_equal(tokens[[1]]$type, "BOOLEAN")
   expect_equal(tokens[[1]]$value, TRUE)
@@ -41,12 +48,14 @@ test_that("tokenizer handles booleans and nil", {
 })
 
 test_that("tokenizer handles comments", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("; comment\n(+ 1 2)")
   expect_equal(length(tokens), 5)
   expect_equal(tokens[[1]]$type, "LPAREN")
 })
 
 test_that("tokenizer handles quote syntax", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("'x")
   expect_equal(tokens[[1]]$type, "QUOTE")
   expect_equal(tokens[[2]]$type, "SYMBOL")
@@ -54,6 +63,7 @@ test_that("tokenizer handles quote syntax", {
 })
 
 test_that("tokenizer handles :: operator in symbols", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("base::mean")
   expect_equal(length(tokens), 1)
   expect_equal(tokens[[1]]$type, "SYMBOL")
@@ -61,6 +71,7 @@ test_that("tokenizer handles :: operator in symbols", {
 })
 
 test_that("tokenizer handles ::: operator in symbols", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("pkg:::internal")
   expect_equal(length(tokens), 1)
   expect_equal(tokens[[1]]$type, "SYMBOL")
@@ -68,6 +79,7 @@ test_that("tokenizer handles ::: operator in symbols", {
 })
 
 test_that("keywords are tokenized correctly", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize(":data")
   expect_equal(length(tokens), 1)
   expect_equal(tokens[[1]]$type, "KEYWORD")
@@ -75,12 +87,14 @@ test_that("keywords are tokenized correctly", {
 })
 
 test_that("keywords in expressions", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("(plot x y :col \"red\")")
   expect_equal(tokens[[5]]$type, "KEYWORD")
   expect_equal(tokens[[5]]$value, "col")
 })
 
 test_that("tokenizer handles integer literals", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("4L 42L -10L")
   expect_equal(length(tokens), 3)
   expect_equal(tokens[[1]]$type, "NUMBER")
@@ -95,6 +109,7 @@ test_that("tokenizer handles integer literals", {
 })
 
 test_that("tokenizer handles pure imaginary numbers", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("4i 3.14i -2.5i")
   expect_equal(length(tokens), 3)
   expect_equal(tokens[[1]]$type, "NUMBER")
@@ -109,6 +124,7 @@ test_that("tokenizer handles pure imaginary numbers", {
 })
 
 test_that("tokenizer handles full complex number syntax", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("2+4i 3.14-2.5i -1+2i -5-3i")
   expect_equal(length(tokens), 4)
   # 2+4i
@@ -130,6 +146,7 @@ test_that("tokenizer handles full complex number syntax", {
 })
 
 test_that("tokenizer handles NA values", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("NA NA_real_ NA_integer_ NA_character_ NA_complex_")
   expect_equal(length(tokens), 5)
   expect_equal(tokens[[1]]$type, "NA")
@@ -153,6 +170,7 @@ test_that("tokenizer handles NA values", {
 # =============================================================================
 
 test_that("standalone dot in dotted-pair syntax yields DOT token", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("(a . b)")
   expect_equal(length(tokens), 5)
   expect_equal(tokens[[1]]$type, "LPAREN")
@@ -166,6 +184,7 @@ test_that("standalone dot in dotted-pair syntax yields DOT token", {
 })
 
 test_that("dot with no surrounding space is part of symbol", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("(a.b)")
   expect_equal(length(tokens), 3)
   expect_equal(tokens[[1]]$type, "LPAREN")
@@ -175,6 +194,7 @@ test_that("dot with no surrounding space is part of symbol", {
 })
 
 test_that("dot at start of list yields DOT token", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("( . b)")
   expect_equal(length(tokens), 4)
   expect_equal(tokens[[2]]$type, "DOT")
@@ -182,6 +202,7 @@ test_that("dot at start of list yields DOT token", {
 })
 
 test_that("dot before closing paren yields DOT token", {
+  thin()
   tokens <- engine_field(engine, "tokenizer")$tokenize("(a . )")
   expect_equal(length(tokens), 4)
   expect_equal(tokens[[3]]$type, "DOT")

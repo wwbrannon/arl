@@ -10,6 +10,7 @@ if (!file.exists(test_file)) {
   stop(sprintf("Test file not found: %s", test_file))
 }
 
+Sys.setenv(NOT_CRAN = "true")
 devtools::load_all(".", quiet = TRUE)
 
 tracker <- arl::CoverageTracker$new()

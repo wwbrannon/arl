@@ -21,7 +21,10 @@ make_binding_module <- function(name = "bindmod", body = NULL) {
 
 # --- Gap 1: define overwriting a proxy-imported binding ---
 
+thin <- make_cran_thinner()
+
 test_that("define shadows a proxy-imported value binding", {
+  thin()
   m <- make_binding_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -40,6 +43,7 @@ test_that("define shadows a proxy-imported value binding", {
 })
 
 test_that("define shadows a proxy-imported function binding", {
+  thin()
   m <- make_binding_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -56,6 +60,7 @@ test_that("define shadows a proxy-imported function binding", {
 })
 
 test_that("define on imported name does not mutate the module", {
+  thin()
   m <- make_binding_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -76,6 +81,7 @@ test_that("define on imported name does not mutate the module", {
 # --- Gap 2: set! on a proxy-imported binding (local shadowing) ---
 
 test_that("set! on a proxy-imported binding creates a local shadow", {
+  thin()
   m <- make_binding_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -92,6 +98,7 @@ test_that("set! on a proxy-imported binding creates a local shadow", {
 })
 
 test_that("set! on a proxy-imported binding does not mutate the module", {
+  thin()
   m <- make_binding_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -110,6 +117,7 @@ test_that("set! on a proxy-imported binding does not mutate the module", {
 })
 
 test_that("set! local shadow is visible on subsequent reads", {
+  thin()
   m <- make_binding_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -126,6 +134,7 @@ test_that("set! local shadow is visible on subsequent reads", {
 # --- Gap 3: set! on a squash-mode active binding ---
 
 test_that("set! on a squash-mode (prelude) binding replaces it in place", {
+  thin()
   engine <- make_engine()
 
   # map is a prelude import (squash mode) — it should be accessible
@@ -137,6 +146,7 @@ test_that("set! on a squash-mode (prelude) binding replaces it in place", {
 })
 
 test_that("set! on a squash-mode binding allows subsequent set!", {
+  thin()
   engine <- make_engine()
 
   # filter is a prelude import (squash mode)
@@ -151,6 +161,7 @@ test_that("set! on a squash-mode binding allows subsequent set!", {
 # --- Gap 4: doc! interaction with active bindings ---
 
 test_that("doc! on a proxy-imported function works", {
+  thin()
   m <- make_binding_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -172,6 +183,7 @@ test_that("doc! on a proxy-imported function works", {
 })
 
 test_that("doc! on a proxy-imported function does not mutate the module", {
+  thin()
   m <- make_binding_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 

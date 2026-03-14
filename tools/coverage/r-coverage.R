@@ -3,6 +3,7 @@
 
 dir.create("coverage/r", showWarnings = FALSE, recursive = TRUE)
 
+Sys.setenv(NOT_CRAN = "true")
 cov <- covr::package_coverage(type = "all", quiet = FALSE)
 pct <- covr::percent_coverage(cov)
 

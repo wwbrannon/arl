@@ -1,7 +1,10 @@
 # Import scoping, load (source-like), and run (isolated) tests.
 # Written first (TDD); implementation follows.
 
+thin <- make_cran_thinner()
+
 test_that("imports are not visible across distinct child environments", {
+  thin()
   # Each load runs in a fresh child env; file B must not see file A's imports.
   engine <- make_engine()
   parent_env <- engine$get_env()
@@ -35,6 +38,7 @@ test_that("imports are not visible across distinct child environments", {
 })
 
 test_that("imports are visible in the same file", {
+  thin()
   engine <- make_engine()
   parent_env <- engine$get_env()
   tmp_dir <- tempfile()
@@ -54,6 +58,7 @@ test_that("imports are visible in the same file", {
 })
 
 test_that("(load path) runs in caller env - definitions visible", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
   tmp_dir <- tempfile()
@@ -74,6 +79,7 @@ test_that("(load path) runs in caller env - definitions visible", {
 })
 
 test_that("(load path) runs in caller env - imports visible to caller", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
   tmp_dir <- tempfile()
@@ -94,6 +100,7 @@ test_that("(load path) runs in caller env - imports visible to caller", {
 })
 
 test_that("(run path) runs in child env - definitions not visible in caller", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
   tmp_dir <- tempfile()
@@ -113,6 +120,7 @@ test_that("(run path) runs in child env - definitions not visible in caller", {
 })
 
 test_that("(run path) runs in child env - imports not visible in caller", {
+  thin()
   # Use a custom module with a unique export; the engine env already has stdlib (e.g. cadr).
   engine <- make_engine()
   env <- engine$get_env()
@@ -140,6 +148,7 @@ test_that("(run path) runs in child env - imports not visible in caller", {
 })
 
 test_that("(run path parent) uses parent for lookup and stays isolated", {
+  thin()
   engine <- make_engine()
   caller_env <- engine$get_env()
   parent_env <- new.env(parent = caller_env)
@@ -165,6 +174,7 @@ test_that("(run path parent) uses parent for lookup and stays isolated", {
 })
 
 test_that("global module cache: same module loaded once per engine, shared across child envs", {
+  thin()
   # Module with side effect (counter); two files each import it and call tick.
   # With global cache, module runs once so counter is shared: file_a returns 1, file_b returns 2.
   engine <- make_engine()

@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("-> threads value as first argument", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -24,6 +27,7 @@ test_that("-> threads value as first argument", {
 })
 
 test_that("->> threads value as last argument", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading", "list", "functional"), env = env)
@@ -40,6 +44,7 @@ test_that("->> threads value as last argument", {
 })
 
 test_that("threading macros work with nested forms", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -56,6 +61,7 @@ test_that("threading macros work with nested forms", {
 })
 
 test_that("threading macros handle single operations", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -72,6 +78,7 @@ test_that("threading macros handle single operations", {
 })
 
 test_that("threading can be combined with other macros", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading", "binding"), env = env)
@@ -92,6 +99,7 @@ test_that("threading can be combined with other macros", {
 # ============================================================================
 
 test_that("as-> threads with named binding", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -117,6 +125,7 @@ test_that("as-> threads with named binding", {
 # ============================================================================
 
 test_that("some-> threads through truthy values", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -128,6 +137,7 @@ test_that("some-> threads through truthy values", {
 })
 
 test_that("some-> short-circuits on nil", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -139,6 +149,7 @@ test_that("some-> short-circuits on nil", {
 })
 
 test_that("some-> short-circuits on false", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -150,6 +161,7 @@ test_that("some-> short-circuits on false", {
 })
 
 test_that("some-> short-circuits on 0 (falsy in Arl)", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -165,6 +177,7 @@ test_that("some-> short-circuits on 0 (falsy in Arl)", {
 # ============================================================================
 
 test_that("some->> threads last with short-circuit", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -181,6 +194,7 @@ test_that("some->> threads last with short-circuit", {
 })
 
 test_that("some->> short-circuits on 0 (falsy in Arl)", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -196,6 +210,7 @@ test_that("some->> short-circuits on 0 (falsy in Arl)", {
 # ============================================================================
 
 test_that("cond-> conditionally applies steps", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -217,6 +232,7 @@ test_that("cond-> conditionally applies steps", {
 })
 
 test_that("cond-> with computed conditions", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)
@@ -231,6 +247,7 @@ test_that("cond-> with computed conditions", {
 # ============================================================================
 
 test_that("cond->> conditionally applies steps (thread-last)", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("threading"), env = env)

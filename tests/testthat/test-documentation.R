@@ -1,4 +1,7 @@
+thin <- make_cran_thinner()
+
 test_that("doc! macro attaches docstrings to functions", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -14,6 +17,7 @@ test_that("doc! macro attaches docstrings to functions", {
 })
 
 test_that("doc returns NULL for undocumented functions", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -24,6 +28,7 @@ test_that("doc returns NULL for undocumented functions", {
 })
 
 test_that("doc! works with direct assignment functions", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -36,6 +41,7 @@ test_that("doc! works with direct assignment functions", {
 })
 
 test_that("doc! updates existing docstrings", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -53,6 +59,7 @@ test_that("doc! updates existing docstrings", {
 })
 
 test_that("inline strings in lambda body are not stripped as docstrings", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -70,6 +77,7 @@ test_that("inline strings in lambda body are not stripped as docstrings", {
 })
 
 test_that("optimized math functions have docstrings", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
 
@@ -87,6 +95,7 @@ test_that("optimized math functions have docstrings", {
 })
 
 test_that("optimized predicate functions have docstrings", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
 
@@ -100,6 +109,7 @@ test_that("optimized predicate functions have docstrings", {
 })
 
 test_that("optimized string functions have docstrings", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
 
@@ -117,6 +127,7 @@ test_that("optimized string functions have docstrings", {
 # their own ;;' doc comments attached to their exported functions.
 
 test_that("docstrings survive nested imports (strings imports list, math, core)", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
   engine$eval(engine$read('(import strings :refer :all)')[[1]], env = env)
@@ -134,6 +145,7 @@ test_that("docstrings survive nested imports (strings imports list, math, core)"
 })
 
 test_that("docstrings survive nested imports across multiple modules", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
 
@@ -155,6 +167,7 @@ test_that("docstrings survive nested imports across multiple modules", {
 # --- New tests for expanded doc!/doc API ---
 
 test_that("doc! sets specific fields with keyword args", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -170,6 +183,7 @@ test_that("doc! sets specific fields with keyword args", {
 })
 
 test_that("doc! sets multiple fields with keyword args", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -182,6 +196,7 @@ test_that("doc! sets multiple fields with keyword args", {
 })
 
 test_that("doc! merges fields — setting description then examples preserves both", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -198,6 +213,7 @@ test_that("doc! merges fields — setting description then examples preserves bo
 })
 
 test_that("doc with 'all' returns full named list", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -211,6 +227,7 @@ test_that("doc with 'all' returns full named list", {
 })
 
 test_that("doc returns NULL for non-existent field", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -222,6 +239,7 @@ test_that("doc returns NULL for non-existent field", {
 })
 
 test_that("doc! works on primitives", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -236,6 +254,7 @@ test_that("doc! works on primitives", {
 })
 
 test_that("doc! errors when targeting a base R function not defined in Arl", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -247,6 +266,7 @@ test_that("doc! errors when targeting a base R function not defined in Arl", {
 })
 
 test_that("@internal flag is present in arl_doc at runtime", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -275,6 +295,7 @@ test_that("@internal flag is present in arl_doc at runtime", {
 })
 
 test_that("@noeval flag is present in arl_doc at runtime", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -306,6 +327,7 @@ test_that("@noeval flag is present in arl_doc at runtime", {
 })
 
 test_that("@noeval flag round-trips through doc/doc!", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -317,6 +339,7 @@ test_that("@noeval flag round-trips through doc/doc!", {
 })
 
 test_that("stdlib @noeval functions carry the flag at runtime", {
+  thin()
   engine <- make_engine()
   env <- toplevel_env(engine)
 
@@ -326,6 +349,7 @@ test_that("stdlib @noeval functions carry the flag at runtime", {
 })
 
 test_that("doc! keyword args evaluate variable values", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 
@@ -338,6 +362,7 @@ test_that("doc! keyword args evaluate variable values", {
 })
 
 test_that("annotation docs attach complete arl_doc for functions and macros", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- engine$get_env()
 

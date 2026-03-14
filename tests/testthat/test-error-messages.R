@@ -1,7 +1,10 @@
 # Tests for error messages
 # Validates that errors contain expected content and source locations
 
+thin <- make_cran_thinner()
+
 test_that("undefined variable error contains variable name", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("undefined_var"),
@@ -10,6 +13,7 @@ test_that("undefined variable error contains variable name", {
 })
 
 test_that("wrong number of arguments error", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   # (+) with 0 args returns identity element 0
   result <- engine$eval_text("(+)")
@@ -22,6 +26,7 @@ test_that("wrong number of arguments error", {
 })
 
 test_that("invalid define syntax", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   # Test that incomplete expressions error (define needs 2 args)
   expect_error(
@@ -31,6 +36,7 @@ test_that("invalid define syntax", {
 })
 
 test_that("invalid function call", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("(5)"),  # Can't call a number
@@ -39,6 +45,7 @@ test_that("invalid function call", {
 })
 
 test_that("undefined function error", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("(undefined-function 1 2)"),
@@ -47,6 +54,7 @@ test_that("undefined function error", {
 })
 
 test_that("arity mismatch in user function", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   engine$eval_text("(define test-fn (lambda (x y) (+ x y)))")
   expect_error(
@@ -56,6 +64,7 @@ test_that("arity mismatch in user function", {
 })
 
 test_that("type error in arithmetic", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text('(+ 1 "string")'),
@@ -64,6 +73,7 @@ test_that("type error in arithmetic", {
 })
 
 test_that("malformed quasiquote", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   # Unquote outside quasiquote - Arl may handle this differently
   # Just test that it doesn't crash
@@ -74,6 +84,7 @@ test_that("malformed quasiquote", {
 })
 
 test_that("malformed define", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("(define)"),  # No name
@@ -82,6 +93,7 @@ test_that("malformed define", {
 })
 
 test_that("invalid lambda", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text("(lambda)"),  # No params or body
@@ -90,6 +102,7 @@ test_that("invalid lambda", {
 })
 
 test_that("set! on undefined variable", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   # set! should error if variable doesn't exist
   expect_error(
@@ -99,6 +112,7 @@ test_that("set! on undefined variable", {
 })
 
 test_that("import non-existent module", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   expect_error(
     engine$eval_text('(import "non_existent_module")'),

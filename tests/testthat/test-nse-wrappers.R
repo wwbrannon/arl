@@ -1,6 +1,9 @@
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("suppressWarnings suppresses warnings", {
+  thin()
   env <- toplevel_env(engine)
 
   # Without suppressWarnings, this would generate a warning
@@ -15,6 +18,7 @@ test_that("suppressWarnings suppresses warnings", {
 })
 
 test_that("suppressWarnings returns the value", {
+  thin()
   env <- toplevel_env(engine)
 
   result <- engine$eval_text("(suppressWarnings (+ 1 2))", env = env)
@@ -22,6 +26,7 @@ test_that("suppressWarnings returns the value", {
 })
 
 test_that("suppressMessages suppresses messages", {
+  thin()
   env <- toplevel_env(engine)
 
   # Create an R function in global env that generates a message
@@ -39,6 +44,7 @@ test_that("suppressMessages suppresses messages", {
 })
 
 test_that("with evaluates expression in data context", {
+  thin()
   env <- toplevel_env(engine)
 
   # Create a simple test with a named list (easier than data.frame)
@@ -54,6 +60,7 @@ test_that("with evaluates expression in data context", {
 })
 
 test_that("within modifies and returns data", {
+  thin()
   env <- toplevel_env(engine)
 
   # Create a data frame in global env
@@ -69,6 +76,7 @@ test_that("within modifies and returns data", {
 })
 
 test_that("subset filters rows with NSE condition", {
+  thin()
   env <- toplevel_env(engine)
 
   # Create a data frame in global env
@@ -83,6 +91,7 @@ test_that("subset filters rows with NSE condition", {
 })
 
 test_that("subset works with complex conditions", {
+  thin()
   env <- toplevel_env(engine)
 
   test_df <- data.frame(a = 1:4, b = 5:8)
@@ -96,6 +105,7 @@ test_that("subset works with complex conditions", {
 })
 
 test_that("transform raises helpful error", {
+  thin()
   env <- toplevel_env(engine)
 
   expect_error(
@@ -105,6 +115,7 @@ test_that("transform raises helpful error", {
 })
 
 test_that("NSE wrappers work with R's base functions correctly", {
+  thin()
   env <- toplevel_env(engine)
 
   test_df <- data.frame(a = 1:3)
@@ -118,6 +129,7 @@ test_that("NSE wrappers work with R's base functions correctly", {
 })
 
 test_that("NSE wrappers handle nested expressions", {
+  thin()
   env <- toplevel_env(engine)
 
   test_df <- data.frame(x = 1:3, y = 4:6)
@@ -134,6 +146,7 @@ test_that("NSE wrappers handle nested expressions", {
 })
 
 test_that("promise-expr extracts expression from delay", {
+  thin()
   env <- toplevel_env(engine)
 
   # Create a delayed expression
@@ -148,6 +161,7 @@ test_that("promise-expr extracts expression from delay", {
 })
 
 test_that("promise-expr errors on non-promise", {
+  thin()
   env <- toplevel_env(engine)
 
   expect_error(
@@ -157,6 +171,7 @@ test_that("promise-expr errors on non-promise", {
 })
 
 test_that("substitute with 1 arg gives helpful error", {
+  thin()
   env <- toplevel_env(engine)
 
   expect_error(
@@ -166,6 +181,7 @@ test_that("substitute with 1 arg gives helpful error", {
 })
 
 test_that("substitute with 2 args performs substitution", {
+  thin()
   env <- toplevel_env(engine)
 
   result <- engine$eval_text("
@@ -179,6 +195,7 @@ test_that("substitute with 2 args performs substitution", {
 })
 
 test_that("substitute with wrong number of args errors", {
+  thin()
   env <- toplevel_env(engine)
 
   expect_error(

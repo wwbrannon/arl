@@ -1,7 +1,10 @@
 # Tests for reader/tokenizer edge cases
 # Covers unicode, partial input, numeric edge cases, escape sequences
 
+thin <- make_cran_thinner()
+
 test_that("unicode characters in symbols", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Should handle unicode in symbols
@@ -13,6 +16,7 @@ test_that("unicode characters in symbols", {
 })
 
 test_that("unicode in strings", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text('"Hello 世界"')
@@ -23,6 +27,7 @@ test_that("unicode in strings", {
 })
 
 test_that("escape sequences in strings", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text('"Hello\\nWorld"')
@@ -39,6 +44,7 @@ test_that("escape sequences in strings", {
 })
 
 test_that("numeric literals - integers", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text("42")
@@ -52,6 +58,7 @@ test_that("numeric literals - integers", {
 })
 
 test_that("numeric literals - floats", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text("3.14")
@@ -65,6 +72,7 @@ test_that("numeric literals - floats", {
 })
 
 test_that("numeric literals - scientific notation", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Basic scientific notation
@@ -127,6 +135,7 @@ test_that("numeric literals - scientific notation", {
 })
 
 test_that("scientific notation - more edge cases", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Multiple digit exponents
@@ -158,6 +167,7 @@ test_that("scientific notation - more edge cases", {
 })
 
 test_that("scientific notation - invalid formats treated as symbols", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # These should be parsed as symbols, not numbers
@@ -181,6 +191,7 @@ test_that("scientific notation - invalid formats treated as symbols", {
 })
 
 test_that("numeric edge cases - very large numbers", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Very large numbers using scientific notation
@@ -207,6 +218,7 @@ test_that("numeric edge cases - very large numbers", {
 })
 
 test_that("numeric edge cases - very small numbers", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Very small numbers using scientific notation
@@ -234,6 +246,7 @@ test_that("numeric edge cases - very small numbers", {
 })
 
 test_that("special numeric values", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Inf
@@ -250,6 +263,7 @@ test_that("special numeric values", {
 })
 
 test_that("empty list", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text("'()")
@@ -257,6 +271,7 @@ test_that("empty list", {
 })
 
 test_that("whitespace handling", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Multiple spaces
@@ -273,6 +288,7 @@ test_that("whitespace handling", {
 })
 
 test_that("comment handling", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Line comment
@@ -290,6 +306,7 @@ test_that("comment handling", {
 })
 
 test_that("partial input errors", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Unclosed paren - should error
@@ -303,6 +320,7 @@ test_that("partial input errors", {
 })
 
 test_that("symbols with special characters", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Symbols can have hyphens
@@ -323,6 +341,7 @@ test_that("symbols with special characters", {
 })
 
 test_that("keywords", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Keywords start with colon and are self-evaluating
@@ -343,6 +362,7 @@ test_that("keywords", {
 })
 
 test_that("dotted pairs / improper lists", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # This may not be supported, but test that it doesn't crash
@@ -353,6 +373,7 @@ test_that("dotted pairs / improper lists", {
 })
 
 test_that("nested quotes", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text("''x")
@@ -361,6 +382,7 @@ test_that("nested quotes", {
 })
 
 test_that("empty string", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text('""')
@@ -368,6 +390,7 @@ test_that("empty string", {
 })
 
 test_that("string with only whitespace", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   result <- engine$eval_text('"   "')
@@ -378,6 +401,7 @@ test_that("string with only whitespace", {
 })
 
 test_that("very long symbol names", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   long_name <- paste(rep("a", 1000), collapse = "")
@@ -389,6 +413,7 @@ test_that("very long symbol names", {
 })
 
 test_that("very long strings", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   long_string <- paste(rep("a", 10000), collapse = "")
@@ -398,6 +423,7 @@ test_that("very long strings", {
 })
 
 test_that("deeply nested lists", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Create deeply nested list

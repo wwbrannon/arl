@@ -4,7 +4,10 @@
 #   2. Module bodies compile/eval interleaved (not batch)
 # These tests ensure those fixes don't regress.
 
+thin <- make_cran_thinner()
+
 test_that("variadic arithmetic operators are present as builtins without stdlib", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
@@ -21,6 +24,7 @@ test_that("variadic arithmetic operators are present as builtins without stdlib"
 })
 
 test_that("variadic comparison operators are present as builtins without stdlib", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
@@ -37,6 +41,7 @@ test_that("variadic comparison operators are present as builtins without stdlib"
 })
 
 test_that("modules cannot use non-prelude stdlib functions without importing them", {
+  thin()
   engine <- make_engine()
   # dict is non-prelude — modules should not have it without explicit import
   expect_error(
@@ -51,6 +56,7 @@ test_that("modules cannot use non-prelude stdlib functions without importing the
 })
 
 test_that("macros from imported modules are available in subsequent module body expressions", {
+  thin()
   engine <- make_engine()
   result <- engine$eval_text("
     (module __scoping_macro
@@ -63,6 +69,7 @@ test_that("macros from imported modules are available in subsequent module body 
 })
 
 test_that("module env chain is module_env -> prelude_env -> builtins_env -> baseenv()", {
+  thin()
   engine <- make_engine()
   engine$eval_text("
     (module __scoping_chain
@@ -93,6 +100,7 @@ test_that("module env chain is module_env -> prelude_env -> builtins_env -> base
 # =============================================================================
 
 test_that("toplevel-env returns engine_env, not builtins_env", {
+  thin()
   engine <- make_engine()
   tl <- engine$eval_text("(toplevel-env)")
   engine_env <- engine$get_env()
@@ -103,6 +111,7 @@ test_that("toplevel-env returns engine_env, not builtins_env", {
 })
 
 test_that("builtins-env returns builtins_env", {
+  thin()
   engine <- make_engine()
   be <- engine$eval_text("(builtins-env)")
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
@@ -117,6 +126,7 @@ test_that("builtins-env returns builtins_env", {
 })
 
 test_that("builtins-env is accessible from inside a module", {
+  thin()
   engine <- make_engine()
   result <- engine$eval_text("
     (module __be_test
@@ -128,6 +138,7 @@ test_that("builtins-env is accessible from inside a module", {
 })
 
 test_that("r-eval works correctly inside a module function", {
+  thin()
   engine <- make_engine()
   # r-eval in a module should see the module's local bindings
   result <- engine$eval_text("
@@ -145,6 +156,7 @@ test_that("r-eval works correctly inside a module function", {
 # =============================================================================
 
 test_that("R default package functions are visible without qualification", {
+  thin()
   engine <- make_engine()
   # One export from each of the 6 default packages:
   # datasets, utils, grDevices, graphics, stats, methods
@@ -164,12 +176,14 @@ test_that("R default package functions are visible without qualification", {
 })
 
 test_that("Arl builtins still shadow R default package functions", {
+  thin()
   engine <- make_engine()
   # Arl's + is variadic (not base R's binary +)
   expect_equal(engine$eval_text("(+ 1 2 3)"), 6)
 })
 
 test_that("default-packages chain structure between builtins_env and baseenv()", {
+  thin()
   engine <- make_engine()
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
@@ -187,6 +201,7 @@ test_that("default-packages chain structure between builtins_env and baseenv()",
 })
 
 test_that("empty defaultPackages skips the package chain", {
+  thin()
   old <- options(defaultPackages = character(0))
   on.exit(options(old))
 
@@ -198,6 +213,7 @@ test_that("empty defaultPackages skips the package chain", {
 })
 
 test_that("custom defaultPackages changes which packages are in the chain", {
+  thin()
   old <- options(defaultPackages = c("stats"))
   on.exit(options(old))
 
@@ -216,6 +232,7 @@ test_that("custom defaultPackages changes which packages are in the chain", {
 })
 
 test_that("modules can use default package functions without importing them", {
+  thin()
   engine <- make_engine()
   result <- engine$eval_text("
     (module __dpkg_test
@@ -231,6 +248,7 @@ test_that("modules can use default package functions without importing them", {
 # =============================================================================
 
 test_that("cross-module macro with private helper function", {
+  thin()
   engine <- make_engine()
   result <- engine$eval_text("
     (module __xmacro_helper
@@ -244,6 +262,7 @@ test_that("cross-module macro with private helper function", {
 })
 
 test_that("cross-module macro with private constant", {
+  thin()
   engine <- make_engine()
   result <- engine$eval_text("
     (module __xmacro_const
@@ -257,6 +276,7 @@ test_that("cross-module macro with private constant", {
 })
 
 test_that("prelude symbols are NOT resolved as refs (they're universally available)", {
+  thin()
   engine <- make_engine()
   # A macro that uses prelude symbols like car, + should NOT create resolved refs
   # because those are available everywhere via the prelude chain
@@ -271,6 +291,7 @@ test_that("prelude symbols are NOT resolved as refs (they're universally availab
 })
 
 test_that("hygiene still works alongside resolved refs", {
+  thin()
   engine <- make_engine()
   # Macro introduces both a local binding (should be gensym'd)
   # and a free reference to a private helper (should be resolved)
@@ -290,6 +311,7 @@ test_that("hygiene still works alongside resolved refs", {
 })
 
 test_that("nested macros across modules resolve correctly", {
+  thin()
   engine <- make_engine()
   result <- engine$eval_text("
     (module __xmacro_inner
@@ -311,6 +333,7 @@ test_that("nested macros across modules resolve correctly", {
 })
 
 test_that("cross-module macro works with lambda reference", {
+  thin()
   engine <- make_engine()
   # Macro references a private lambda directly (not via define)
   result <- engine$eval_text("
@@ -329,6 +352,7 @@ test_that("cross-module macro works with lambda reference", {
 # =============================================================================
 
 test_that("r_packages = NULL exposes only baseenv()", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE, r_packages = NULL)
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
@@ -341,6 +365,7 @@ test_that("r_packages = NULL exposes only baseenv()", {
 })
 
 test_that("r_packages = c('stats') gives exactly one package env", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE, r_packages = c("stats"))
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
@@ -359,6 +384,7 @@ test_that("r_packages = c('stats') gives exactly one package env", {
 })
 
 test_that("r_packages = 'search_path' picks up current search path", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE, r_packages = "search_path")
   builtins_env <- engine$.__enclos_env__$private$.compiled_runtime$context$builtins_env
 
@@ -375,6 +401,7 @@ test_that("r_packages = 'search_path' picks up current search path", {
 })
 
 test_that("search_path mode dynamically tracks library() calls", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE, r_packages = "search_path")
 
   # tools is not typically in defaultPackages; ensure it's not loaded
@@ -398,6 +425,7 @@ test_that("search_path mode dynamically tracks library() calls", {
 # ============================================================================
 
 test_that("module? predicate works on module envs", {
+  thin()
   engine <- make_engine()
   engine$eval_text("(import math :refer :all)")
   result <- engine$eval_text("(module? math)")
@@ -405,12 +433,14 @@ test_that("module? predicate works on module envs", {
 })
 
 test_that("module? returns false for non-modules", {
+  thin()
   engine <- make_engine()
   expect_false(engine$eval_text("(module? 42)"))
   expect_false(engine$eval_text("(module? +)"))
 })
 
 test_that("module-exports returns export list", {
+  thin()
   engine <- make_engine()
   engine$eval_text("(import math :refer :all)")
   exports <- engine$eval_text("(module-exports math)")
@@ -419,6 +449,7 @@ test_that("module-exports returns export list", {
 })
 
 test_that("module-name returns canonical name", {
+  thin()
   engine <- make_engine()
   engine$eval_text("(import math :refer :all)")
   name <- engine$eval_text("(module-name math)")
@@ -426,6 +457,7 @@ test_that("module-name returns canonical name", {
 })
 
 test_that("module bindings are locked (immutable from outside)", {
+  thin()
   engine <- make_engine()
   engine$eval_text("(import math :refer :all)")
   mod_env <- engine$eval_text("math")
@@ -434,6 +466,7 @@ test_that("module bindings are locked (immutable from outside)", {
 })
 
 test_that("bare import binds module env but does not dump exports", {
+  thin()
   engine <- make_engine()
   engine$eval_text("(import math)")
   # Module env is bound
@@ -446,6 +479,7 @@ test_that("bare import binds module env but does not dump exports", {
 })
 
 test_that(":refer :all dumps exports into scope", {
+  thin()
   engine <- make_engine()
   engine$eval_text("(import math :refer :all)")
   # Module env is bound

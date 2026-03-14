@@ -3,7 +3,10 @@
 engine <- make_engine()
 
 # Type conversion tests
+thin <- make_cran_thinner()
+
 test_that("->symbol converts to symbols", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -12,6 +15,7 @@ test_that("->symbol converts to symbols", {
 })
 
 test_that("->number converts to numbers", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -19,6 +23,7 @@ test_that("->number converts to numbers", {
 })
 
 test_that("->integer converts to integers", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -27,6 +32,7 @@ test_that("->integer converts to integers", {
 })
 
 test_that("->double converts to doubles", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -34,6 +40,7 @@ test_that("->double converts to doubles", {
 })
 
 test_that("->complex converts to complex", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -42,6 +49,7 @@ test_that("->complex converts to complex", {
 })
 
 test_that("symbol->string and string->symbol work", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -51,6 +59,7 @@ test_that("symbol->string and string->symbol work", {
 })
 
 test_that("->list converts vectors to lists", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -59,6 +68,7 @@ test_that("->list converts vectors to lists", {
 })
 
 test_that("->vector converts lists to vectors", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -67,6 +77,7 @@ test_that("->vector converts lists to vectors", {
 })
 
 test_that("exact->inexact converts integers to doubles", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -74,6 +85,7 @@ test_that("exact->inexact converts integers to doubles", {
 })
 
 test_that("inexact->exact converts doubles to integers", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -82,6 +94,7 @@ test_that("inexact->exact converts doubles to integers", {
 })
 
 test_that("conversion roundtrips work", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -90,6 +103,7 @@ test_that("conversion roundtrips work", {
 })
 
 test_that("->integer truncates towards zero", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -102,6 +116,7 @@ test_that("->integer truncates towards zero", {
 # ============================================================================
 
 test_that("symbol->string errors on non-symbol", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -111,6 +126,7 @@ test_that("symbol->string errors on non-symbol", {
 })
 
 test_that("string->symbol errors on non-string", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -120,6 +136,7 @@ test_that("string->symbol errors on non-string", {
 })
 
 test_that("exact->inexact errors on non-number", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -129,6 +146,7 @@ test_that("exact->inexact errors on non-number", {
 })
 
 test_that("inexact->exact errors on non-number", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -142,6 +160,7 @@ test_that("inexact->exact errors on non-number", {
 # ============================================================================
 
 test_that("->integer string path and error paths", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -160,6 +179,7 @@ test_that("->integer string path and error paths", {
 })
 
 test_that("->double string path and error paths", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -178,6 +198,7 @@ test_that("->double string path and error paths", {
 })
 
 test_that("->complex string path and error paths", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 

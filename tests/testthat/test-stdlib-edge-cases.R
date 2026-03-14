@@ -15,7 +15,10 @@ setup_env <- function() {
 # Performance Tests (Large Lists)
 # ============================================================================
 
+thin <- make_cran_thinner()
+
 test_that("stdlib handles large lists efficiently", {
+  thin()
   env <- setup_env()
 
   # Large list (1000 elements)
@@ -46,6 +49,7 @@ test_that("stdlib handles large lists efficiently", {
 # ============================================================================
 
 test_that("stdlib handles mixed types correctly", {
+  thin()
   env <- setup_env()
 
   # List with mixed types
@@ -69,6 +73,7 @@ test_that("stdlib handles mixed types correctly", {
 # ============================================================================
 
 test_that("dict-set with symbol key works", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(
@@ -83,6 +88,7 @@ test_that("dict-set with symbol key works", {
 })
 
 test_that("dict-set errors on invalid key type", {
+  thin()
   env <- setup_env()
 
   expect_error(
@@ -91,6 +97,7 @@ test_that("dict-set errors on invalid key type", {
 })
 
 test_that("dict-set errors on non-dict", {
+  thin()
   env <- setup_env()
 
   expect_error(
@@ -99,6 +106,7 @@ test_that("dict-set errors on non-dict", {
 })
 
 test_that("dict-keys on empty dict returns empty list", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(engine$read("(dict-keys (dict))")[[1]], env = env)
@@ -106,6 +114,7 @@ test_that("dict-keys on empty dict returns empty list", {
 })
 
 test_that("dict-remove removes last key leaving empty dict", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(
@@ -120,6 +129,7 @@ test_that("dict-remove removes last key leaving empty dict", {
 })
 
 test_that("dict-has? on non-dict returns #f", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(
@@ -132,6 +142,7 @@ test_that("dict-has? on non-dict returns #f", {
 # ============================================================================
 
 test_that("set-add errors on non-set", {
+  thin()
   env <- setup_env()
 
   expect_error(
@@ -144,6 +155,7 @@ test_that("set-add errors on non-set", {
 # ============================================================================
 
 test_that("format-value with empty list returns parens", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(
@@ -156,6 +168,7 @@ test_that("format-value with empty list returns parens", {
 # ============================================================================
 
 test_that("eq? errors as not implementable in R", {
+  thin()
   env <- setup_env()
 
   expect_error(
@@ -164,6 +177,7 @@ test_that("eq? errors as not implementable in R", {
 })
 
 test_that("eqv? errors as not implementable in R", {
+  thin()
   env <- setup_env()
 
   expect_error(
@@ -172,6 +186,7 @@ test_that("eqv? errors as not implementable in R", {
 })
 
 test_that("equal? list vs non-list returns #f", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(
@@ -184,6 +199,7 @@ test_that("equal? list vs non-list returns #f", {
 # ============================================================================
 
 test_that("empty? works on lists", {
+  thin()
   env <- setup_env()
 
   expect_true(engine$eval(engine$read("(empty? (list))")[[1]], env = env))
@@ -195,6 +211,7 @@ test_that("empty? works on lists", {
 # ============================================================================
 
 test_that("dict-keys on non-dict returns empty list", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(engine$read("(dict-keys 42)")[[1]], env = env)
@@ -202,6 +219,7 @@ test_that("dict-keys on non-dict returns empty list", {
 })
 
 test_that("dict-values on non-dict returns empty list", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(engine$read("(dict-values 42)")[[1]], env = env)
@@ -213,6 +231,7 @@ test_that("dict-values on non-dict returns empty list", {
 # ============================================================================
 
 test_that("set-contains? on non-set returns #f", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(engine$read('(set-contains? 42 "x")')[[1]], env = env)
@@ -224,6 +243,7 @@ test_that("set-contains? on non-set returns #f", {
 # ============================================================================
 
 test_that("equal? on environment vs non-environment returns #f", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(
@@ -236,24 +256,28 @@ test_that("equal? on environment vs non-environment returns #f", {
 # ============================================================================
 
 test_that("integer? on non-numeric returns #f", {
+  thin()
   env <- setup_env()
 
   expect_false(engine$eval(engine$read('(integer? "hi")')[[1]], env = env))
 })
 
 test_that("natural? on non-integer returns #f", {
+  thin()
   env <- setup_env()
 
   expect_false(engine$eval(engine$read('(natural? "hi")')[[1]], env = env))
 })
 
 test_that("rational? on non-real returns #f", {
+  thin()
   env <- setup_env()
 
   expect_false(engine$eval(engine$read('(rational? "hi")')[[1]], env = env))
 })
 
 test_that("max with arguments works", {
+  thin()
   env <- setup_env()
 
   expect_equal(engine$eval(engine$read("(max 1 5 3)")[[1]], env = env), 5)
@@ -264,6 +288,7 @@ test_that("max with arguments works", {
 # ============================================================================
 
 test_that("string->list on empty string returns empty list", {
+  thin()
   env <- setup_env()
 
   result <- engine$eval(
@@ -272,6 +297,7 @@ test_that("string->list on empty string returns empty list", {
 })
 
 test_that("char-at errors on negative index", {
+  thin()
   env <- setup_env()
 
   expect_error(
@@ -284,6 +310,7 @@ test_that("char-at errors on negative index", {
 # ============================================================================
 
 test_that("foldl and foldr with init value from Arl", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("functional"), env = env)
@@ -298,6 +325,7 @@ test_that("foldl and foldr with init value from Arl", {
 })
 
 test_that("repeatedly from Arl code (sequences version, n fn order)", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -312,6 +340,7 @@ test_that("repeatedly from Arl code (sequences version, n fn order)", {
 # ============================================================================
 
 test_that("display outputs formatted value", {
+  thin()
   env <- setup_env()
 
   # Make sure ARL_QUIET is not set
@@ -325,6 +354,7 @@ test_that("display outputs formatted value", {
 })
 
 test_that("println outputs formatted value", {
+  thin()
   env <- setup_env()
 
   old <- Sys.getenv("ARL_QUIET")

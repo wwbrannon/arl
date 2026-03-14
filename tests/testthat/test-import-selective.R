@@ -21,7 +21,10 @@ make_temp_module <- function(name = "testmod", exports = c("square", "cube", "he
 
 # --- No modifiers (regression) ---
 
+thin <- make_cran_thinner()
+
 test_that("import with no modifiers imports all exports", {
+  thin()
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -38,6 +41,7 @@ test_that("import with no modifiers imports all exports", {
 # --- :refer ---
 
 test_that("import :refer imports only specified symbols", {
+  thin()
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -52,6 +56,7 @@ test_that("import :refer imports only specified symbols", {
 })
 
 test_that("import :refer errors on names not in module exports", {
+  thin()
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -66,6 +71,7 @@ test_that("import :refer errors on names not in module exports", {
 })
 
 test_that("import :refer :all imports all exports", {
+  thin()
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -82,6 +88,7 @@ test_that("import :refer :all imports all exports", {
 # --- :as ---
 
 test_that("import :as aliases the module binding", {
+  thin()
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -98,6 +105,7 @@ test_that("import :as aliases the module binding", {
 })
 
 test_that("import :as with :refer combines correctly", {
+  thin()
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -114,6 +122,7 @@ test_that("import :as with :refer combines correctly", {
 # --- :rename ---
 
 test_that("import :rename renames specified symbols", {
+  thin()
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -128,6 +137,7 @@ test_that("import :rename renames specified symbols", {
 })
 
 test_that("import :rename errors on names not in module exports", {
+  thin()
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -144,6 +154,7 @@ test_that("import :rename errors on names not in module exports", {
 # --- Composition ---
 
 test_that("import :refer + :rename composes correctly", {
+  thin()
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -160,6 +171,7 @@ test_that("import :refer + :rename composes correctly", {
 # --- Macros ---
 
 test_that("import :refer works with macros", {
+  thin()
   m <- make_temp_module(name = "macmod", exports = c("my-when", "my-unless"), body = c(
     "(module macmod",
     "  (export my-when my-unless)",
@@ -179,6 +191,7 @@ test_that("import :refer works with macros", {
 })
 
 test_that("import :refer works with macros", {
+  thin()
   m <- make_temp_module(name = "macmod2", exports = c("mw"), body = c(
     "(module macmod2",
     "  (export mw)",
@@ -195,6 +208,7 @@ test_that("import :refer works with macros", {
 })
 
 test_that("import :rename works with macros", {
+  thin()
   m <- make_temp_module(name = "macmod3", exports = c("mw3"), body = c(
     "(module macmod3",
     "  (export mw3)",
@@ -215,6 +229,7 @@ test_that("import :rename works with macros", {
 # --- Edge cases ---
 
 test_that("import with empty :refer imports nothing unqualified", {
+  thin()
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -230,6 +245,7 @@ test_that("import with empty :refer imports nothing unqualified", {
 })
 
 test_that("import with path string supports modifiers", {
+  thin()
   m <- make_temp_module()
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -243,6 +259,7 @@ test_that("import with path string supports modifiers", {
 })
 
 test_that("proxy-based imports are accessible via scoping but not in ls(env)", {
+  thin()
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -260,6 +277,7 @@ test_that("proxy-based imports are accessible via scoping but not in ls(env)", {
 })
 
 test_that("reference semantics: module bindings are locked", {
+  thin()
   m <- make_temp_module(exports = c("square", "cube"))
   on.exit(unlink(m$dir, recursive = TRUE), add = TRUE)
 
@@ -282,6 +300,7 @@ test_that("reference semantics: module bindings are locked", {
 # --- Compile-time errors ---
 
 test_that("import with unknown modifier errors", {
+  thin()
   engine <- make_engine()
   expect_error(
     engine$eval_text("(import testmod :foobar (x))"),
@@ -290,6 +309,7 @@ test_that("import with unknown modifier errors", {
 })
 
 test_that("import :as rejects non-symbol alias", {
+  thin()
   engine <- make_engine()
   # a/b is parsed as (module-ref a b), not a symbol
   expect_error(
@@ -303,6 +323,7 @@ test_that("import :as rejects non-symbol alias", {
 # ============================================================================
 
 test_that("parser: math/inc produces (module-ref math inc)", {
+  thin()
   engine <- make_engine()
   result <- engine$read("math/inc")
   expr <- result[[1]]
@@ -313,6 +334,7 @@ test_that("parser: math/inc produces (module-ref math inc)", {
 })
 
 test_that("parser: a/b/c produces nested module-ref", {
+  thin()
   engine <- make_engine()
   result <- engine$read("a/b/c")
   expr <- result[[1]]
@@ -328,6 +350,7 @@ test_that("parser: a/b/c produces nested module-ref", {
 })
 
 test_that("parser: bare / stays as division symbol", {
+  thin()
   engine <- make_engine()
   result <- engine$read("(/ 10 2)")
   expr <- result[[1]]
@@ -336,6 +359,7 @@ test_that("parser: bare / stays as division symbol", {
 })
 
 test_that("parser: round-trip math/inc -> write -> math/inc", {
+  thin()
   engine <- make_engine()
   result <- engine$read("math/inc")
   written <- engine$write(result[[1]])
@@ -343,6 +367,7 @@ test_that("parser: round-trip math/inc -> write -> math/inc", {
 })
 
 test_that("parser: round-trip a/b/c -> write -> a/b/c", {
+  thin()
   engine <- make_engine()
   result <- engine$read("a/b/c")
   written <- engine$write(result[[1]])
@@ -350,6 +375,7 @@ test_that("parser: round-trip a/b/c -> write -> a/b/c", {
 })
 
 test_that("parser: R infix operators %/% are not split", {
+  thin()
   engine <- make_engine()
   result <- engine$read("(%/% 10 3)")
   expr <- result[[1]]
@@ -358,6 +384,7 @@ test_that("parser: R infix operators %/% are not split", {
 })
 
 test_that("qualified access: import :refer then mod/sym resolves", {
+  thin()
   engine <- make_engine()
   engine$eval_text("(import math :refer (inc))")
   result <- engine$eval_text("math/inc")
@@ -365,6 +392,7 @@ test_that("qualified access: import :refer then mod/sym resolves", {
 })
 
 test_that("qualified access: import :as then alias/sym resolves", {
+  thin()
   engine <- make_engine()
   engine$eval_text("(import math :as m)")
   result <- engine$eval_text("m/inc")
@@ -372,6 +400,7 @@ test_that("qualified access: import :as then alias/sym resolves", {
 })
 
 test_that("bare / is still division", {
+  thin()
   engine <- make_engine()
   result <- engine$eval_text("(/ 10 2)")
   expect_equal(result, 5)

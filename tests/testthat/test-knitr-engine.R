@@ -4,13 +4,17 @@ engine <- make_engine()
 # evaluate_arl_code
 # ---------------------------------------------------------------------------
 
+thin <- make_cran_thinner()
+
 test_that("evaluate_arl_code returns REPL transcript with prompt and output", {
+  thin()
   out <- arl:::evaluate_arl_code(engine, "(+ 1 2)")
   expect_match(out, "^arl> \\(\\+ 1 2\\)")
   expect_match(out, "#> 3")
 })
 
 test_that("evaluate_arl_code interleaves output per expression", {
+  thin()
   out <- arl:::evaluate_arl_code(engine, "(+ 1 2)\n(* 3 4)")
   lines <- strsplit(out, "\n")[[1]]
   # Source and output should alternate: source, output, source, output
@@ -21,6 +25,7 @@ test_that("evaluate_arl_code interleaves output per expression", {
 })
 
 test_that("evaluate_arl_code suppresses invisible/NULL results", {
+  thin()
   # begin with only side-effect forms produces no visible output line
   out <- arl:::evaluate_arl_code(engine, '(begin (define knitr-test-x 42) #nil)')
   # Should have the prompted source but no #> output
@@ -29,11 +34,13 @@ test_that("evaluate_arl_code suppresses invisible/NULL results", {
 })
 
 test_that("evaluate_arl_code captures side-effect output", {
+  thin()
   out <- arl:::evaluate_arl_code(engine, '(import display :refer :all) (display "hello")')
   expect_match(out, '#> "hello"')
 })
 
 test_that("evaluate_arl_code propagates errors by default", {
+  thin()
   expect_error(
     arl:::evaluate_arl_code(engine, "(error \"boom\")"),
     "boom"
@@ -41,11 +48,13 @@ test_that("evaluate_arl_code propagates errors by default", {
 })
 
 test_that("evaluate_arl_code returns empty string for empty input", {
+  thin()
   out <- arl:::evaluate_arl_code(engine, "")
   expect_equal(out, "")
 })
 
 test_that("evaluate_arl_code handles comments as gap lines", {
+  thin()
   out <- arl:::evaluate_arl_code(engine, ";; a comment\n(+ 1 2)")
   lines <- strsplit(out, "\n")[[1]]
   expect_equal(lines[1], "arl> ;; a comment")
@@ -54,6 +63,7 @@ test_that("evaluate_arl_code handles comments as gap lines", {
 })
 
 test_that("evaluate_arl_code preserves blank lines without prompt", {
+  thin()
   out <- arl:::evaluate_arl_code(engine, "(+ 1 2)\n\n(* 3 4)")
   lines <- strsplit(out, "\n")[[1]]
   expect_equal(lines[1], "arl> (+ 1 2)")
@@ -64,6 +74,7 @@ test_that("evaluate_arl_code preserves blank lines without prompt", {
 })
 
 test_that("evaluate_arl_code handles multiline expressions", {
+  thin()
   out <- arl:::evaluate_arl_code(engine, "(define knitr-ml\n  42)")
   lines <- strsplit(out, "\n")[[1]]
   expect_equal(lines[1], "arl> (define knitr-ml")
@@ -75,6 +86,7 @@ test_that("evaluate_arl_code handles multiline expressions", {
 # ---------------------------------------------------------------------------
 
 test_that("get_arl_engine returns an Engine instance", {
+  thin()
   # Reset first to ensure clean state
   arl:::reset_arl_engine()
   eng <- arl:::get_arl_engine()
@@ -82,6 +94,7 @@ test_that("get_arl_engine returns an Engine instance", {
 })
 
 test_that("get_arl_engine returns the same instance on repeated calls", {
+  thin()
   arl:::reset_arl_engine()
   eng1 <- arl:::get_arl_engine()
   eng2 <- arl:::get_arl_engine()
@@ -89,6 +102,7 @@ test_that("get_arl_engine returns the same instance on repeated calls", {
 })
 
 test_that("reset_arl_engine clears the cached engine", {
+  thin()
   arl:::reset_arl_engine()
   eng1 <- arl:::get_arl_engine()
   arl:::reset_arl_engine()
@@ -101,6 +115,7 @@ test_that("reset_arl_engine clears the cached engine", {
 # ---------------------------------------------------------------------------
 
 test_that("state persists across evaluate_arl_code calls on same engine", {
+  thin()
   eng <- make_engine(load_prelude = FALSE)
   arl:::evaluate_arl_code(eng, "(define knitr-persist-var 99)")
   out <- arl:::evaluate_arl_code(eng, "knitr-persist-var")
@@ -112,6 +127,7 @@ test_that("state persists across evaluate_arl_code calls on same engine", {
 # ---------------------------------------------------------------------------
 
 test_that("register_knitr_engine registers the arl engine", {
+  thin()
   skip_if_not_installed("knitr")
   arl::register_knitr_engine()
   engines <- knitr::knit_engines$get()
@@ -124,6 +140,7 @@ test_that("register_knitr_engine registers the arl engine", {
 # ---------------------------------------------------------------------------
 
 test_that("eng_arl evaluates code and produces output", {
+  thin()
   skip_if_not_installed("knitr")
   arl:::reset_arl_engine()
 
@@ -143,6 +160,7 @@ test_that("eng_arl evaluates code and produces output", {
 })
 
 test_that("eng_arl respects eval=FALSE", {
+  thin()
   skip_if_not_installed("knitr")
   arl:::reset_arl_engine()
 
@@ -162,6 +180,7 @@ test_that("eng_arl respects eval=FALSE", {
 })
 
 test_that("eng_arl respects error=TRUE", {
+  thin()
   skip_if_not_installed("knitr")
   arl:::reset_arl_engine()
 
@@ -186,6 +205,7 @@ test_that("eng_arl respects error=TRUE", {
 # ---------------------------------------------------------------------------
 
 test_that("arl_html_vignette returns an rmarkdown output format", {
+  thin()
   skip_if_not_installed("rmarkdown")
   fmt <- arl::arl_html_vignette()
   expect_true(is.list(fmt))

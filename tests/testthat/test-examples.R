@@ -14,42 +14,54 @@ run_example <- function(example_name) {
   invisible(TRUE)
 }
 
+thin <- make_cran_thinner()
+
 test_that("fibonacci example runs end-to-end", {
+  thin()
   expect_no_error(run_example("fibonacci.arl"))
 })
 
 test_that("quicksort example runs end-to-end", {
+  thin()
   expect_no_error(run_example("quicksort.arl"))
 })
 
 test_that("fizzbuzz example runs end-to-end", {
+  thin()
   expect_no_error(run_example("fizzbuzz.arl"))
 })
 
 test_that("macro examples run end-to-end", {
+  thin()
   expect_no_error(run_example("macro-examples.arl"))
 })
 
 test_that("data analysis example runs end-to-end", {
+  thin()
   expect_no_error(run_example("data-analysis.arl"))
 })
 
 test_that("graph paths example runs end-to-end", {
+  thin()
   expect_no_error(run_example("graph-paths.arl"))
 })
 
 test_that("sales report example runs end-to-end", {
+  thin()
   expect_no_error(run_example("sales-report.arl"))
 })
 
 test_that("log parser example runs end-to-end", {
+  thin()
   expect_no_error(run_example("log-parser.arl"))
 })
 
 test_that("pipeline macros example runs end-to-end", {
+  thin()
   expect_no_error(run_example("pipeline-macros.arl"))
 })
 
 test_that("task runner example runs end-to-end", {
+  thin()
   expect_no_error(run_example("task-runner.arl"))
 })

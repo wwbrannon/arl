@@ -1,6 +1,9 @@
 # Tests for FileDeps (R/file-deps.R): module/import extraction and load order
 
+thin <- make_cran_thinner()
+
 test_that("FileDeps is loadable and returns structure", {
+  thin()
   stdlib_dir <- system.file("arl", package = "arl")
   skip_if_not(dir.exists(stdlib_dir))
   d <- arl:::FileDeps$new(dir = stdlib_dir)
@@ -11,6 +14,7 @@ test_that("FileDeps is loadable and returns structure", {
 })
 
 test_that("stdlib modules are discovered and have valid topsort", {
+  thin()
   stdlib_dir <- system.file("arl", package = "arl")
   skip_if_not(dir.exists(stdlib_dir))
   d <- arl:::FileDeps$new(dir = stdlib_dir)
@@ -34,6 +38,7 @@ test_that("stdlib modules are discovered and have valid topsort", {
 })
 
 test_that("no cycle in stdlib dependency graph", {
+  thin()
   stdlib_dir <- system.file("arl", package = "arl")
   skip_if_not(dir.exists(stdlib_dir))
   d <- arl:::FileDeps$new(dir = stdlib_dir)
@@ -44,6 +49,7 @@ test_that("no cycle in stdlib dependency graph", {
 
 # Error handling tests
 test_that("FileDeps errors on non-existent directory", {
+  thin()
   expect_error(
     arl:::FileDeps$new(dir = "/nonexistent/path/xyz"),
     "Directory not found"
@@ -51,6 +57,7 @@ test_that("FileDeps errors on non-existent directory", {
 })
 
 test_that("FileDeps handles empty directory", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -63,6 +70,7 @@ test_that("FileDeps handles empty directory", {
 })
 
 test_that("FileDeps skips files without module declaration", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -81,6 +89,7 @@ test_that("FileDeps skips files without module declaration", {
 })
 
 test_that("FileDeps handles malformed module declarations", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -95,6 +104,7 @@ test_that("FileDeps handles malformed module declarations", {
 })
 
 test_that("FileDeps excludes specified files", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -110,6 +120,7 @@ test_that("FileDeps excludes specified files", {
 })
 
 test_that("FileDeps handles custom pattern", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -130,6 +141,7 @@ test_that("FileDeps handles custom pattern", {
 
 # Parsing edge cases tests
 test_that("FileDeps parses quoted module names", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -142,6 +154,7 @@ test_that("FileDeps parses quoted module names", {
 })
 
 test_that("FileDeps parses quoted export names", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -157,6 +170,7 @@ test_that("FileDeps parses quoted export names", {
 })
 
 test_that("FileDeps handles modules with no exports", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -171,6 +185,7 @@ test_that("FileDeps handles modules with no exports", {
 })
 
 test_that("FileDeps handles comments in module forms", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -190,6 +205,7 @@ test_that("FileDeps handles comments in module forms", {
 })
 
 test_that("FileDeps handles string content with parentheses", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -206,6 +222,7 @@ test_that("FileDeps handles string content with parentheses", {
 })
 
 test_that("FileDeps handles nested parentheses in exports", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -220,6 +237,7 @@ test_that("FileDeps handles nested parentheses in exports", {
 })
 
 test_that("FileDeps extracts multiple imports", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -241,6 +259,7 @@ test_that("FileDeps extracts multiple imports", {
 })
 
 test_that("FileDeps handles quoted import names", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -261,6 +280,7 @@ test_that("FileDeps handles quoted import names", {
 
 # Dependency graph tests
 test_that("FileDeps builds correct dependency edges", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -286,6 +306,7 @@ test_that("FileDeps builds correct dependency edges", {
 })
 
 test_that("FileDeps detects cycles from self-imports", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -303,6 +324,7 @@ test_that("FileDeps detects cycles from self-imports", {
 })
 
 test_that("FileDeps ignores imports of non-existent modules", {
+  thin()
   tmp_dir <- tempfile()
   dir.create(tmp_dir)
   on.exit(unlink(tmp_dir, recursive = TRUE))
@@ -325,6 +347,7 @@ test_that("FileDeps ignores imports of non-existent modules", {
 # ============================================================================
 
 test_that("simple DAG returns valid order", {
+  thin()
   vertices <- c("a", "b", "c")
   edges <- list(
     list(from = "b", to = "a"),
@@ -339,6 +362,7 @@ test_that("simple DAG returns valid order", {
 })
 
 test_that("multiple components are all included", {
+  thin()
   vertices <- c("a", "b", "x", "y")
   edges <- list(
     list(from = "b", to = "a"),
@@ -353,6 +377,7 @@ test_that("multiple components are all included", {
 })
 
 test_that("cycle is detected and errors", {
+  thin()
   vertices <- c("a", "b", "c")
   edges <- list(
     list(from = "b", to = "a"),
@@ -363,14 +388,17 @@ test_that("cycle is detected and errors", {
 })
 
 test_that("empty vertices returns character(0)", {
+  thin()
   expect_identical(arl:::topsort(character(0), list()), character(0))
 })
 
 test_that("single node returns that node", {
+  thin()
   expect_identical(arl:::topsort("x", list()), "x")
 })
 
 test_that("edges only among vertices are respected", {
+  thin()
   vertices <- c("a", "b")
   edges <- list(
     list(from = "b", to = "a"),

@@ -13,7 +13,10 @@ engine <- Engine$new(load_prelude = FALSE)
 # Constant Folding Verification
 # ==============================================================================
 
+thin <- make_cran_thinner()
+
 test_that("VERIFY: constant folding produces literals", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # Simple arithmetic should fold to literal
@@ -38,6 +41,7 @@ test_that("VERIFY: constant folding produces literals", {
 })
 
 test_that("VERIFY: constant folding does NOT fold non-constants", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # Variable expressions should NOT fold
@@ -55,6 +59,7 @@ test_that("VERIFY: constant folding does NOT fold non-constants", {
 # ==============================================================================
 
 test_that("VERIFY: truthiness optimization skips wrapper for known booleans", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # Literal TRUE should not have .__true_p wrapper
@@ -78,6 +83,7 @@ test_that("VERIFY: truthiness optimization skips wrapper for known booleans", {
 # ==============================================================================
 
 test_that("VERIFY: dead code elimination removes unreachable branches", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # (if #t a b) should be just a, not an if statement
@@ -105,6 +111,7 @@ test_that("VERIFY: dead code elimination removes unreachable branches", {
 # ==============================================================================
 
 test_that("VERIFY: begin simplification removes single-expression blocks", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # (begin x) should be just x, not a block
@@ -127,6 +134,7 @@ test_that("VERIFY: begin simplification removes single-expression blocks", {
 # ==============================================================================
 
 test_that("VERIFY: identity elimination inlines identity lambdas", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # ((lambda (x) x) 42) should be just 42, not a function application
@@ -167,6 +175,7 @@ test_that("VERIFY: identity elimination inlines identity lambdas", {
 # ==============================================================================
 
 test_that("VERIFY: optimizations compose correctly", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # Constant folding + dead code elimination
@@ -191,6 +200,7 @@ test_that("VERIFY: optimizations compose correctly", {
 # ==============================================================================
 
 test_that("VERIFY: and/or skip temps for simple values", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # Simple literals should NOT generate temporary variables
@@ -216,6 +226,7 @@ test_that("VERIFY: and/or skip temps for simple values", {
 })
 
 test_that("VERIFY: nested boolean chains flatten", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # Nested AND should flatten: (and (and a b) c) behaves like (and a b c)
@@ -247,6 +258,7 @@ test_that("VERIFY: nested boolean chains flatten", {
 # ==============================================================================
 
 test_that("VERIFY: quasiquote with no unquotes simplifies", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # Pure quoted template (no unquotes) should be simple
@@ -267,6 +279,7 @@ test_that("VERIFY: quasiquote with no unquotes simplifies", {
 })
 
 test_that("VERIFY: quasiquote with unquotes preserves correctness", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # With unquotes, correctness is paramount
@@ -284,6 +297,7 @@ test_that("VERIFY: quasiquote with unquotes preserves correctness", {
 })
 
 test_that("VERIFY: quasiquote code complexity reduction", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # Measure complexity of compiled quasiquote
@@ -305,6 +319,7 @@ test_that("VERIFY: quasiquote code complexity reduction", {
 # ==============================================================================
 
 test_that("VERIFY: multiplication by 2 reduces to addition", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # (* x 2) should become (+ x x)
@@ -319,6 +334,7 @@ test_that("VERIFY: multiplication by 2 reduces to addition", {
 })
 
 test_that("VERIFY: power of 2 reduces to multiplication", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # (^ x 2) should become (* x x)
@@ -333,6 +349,7 @@ test_that("VERIFY: power of 2 reduces to multiplication", {
 })
 
 test_that("VERIFY: strength reduction preserves semantics", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # Test that optimized code produces same results
@@ -348,6 +365,7 @@ test_that("VERIFY: strength reduction preserves semantics", {
 })
 
 test_that("VERIFY: strength reduction only applies to safe cases", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # (* x 3) should NOT reduce (not power of 2)
@@ -364,6 +382,7 @@ test_that("VERIFY: strength reduction only applies to safe cases", {
 })
 
 test_that("VERIFY: strength reduction does not duplicate side-effectful expressions", {
+  thin()
   engine <- Engine$new(load_prelude = TRUE)
 
   # (* (begin (set! x (+ x 1)) x) 2) should NOT be reduced to addition,
@@ -406,6 +425,7 @@ test_that("VERIFY: strength reduction does not duplicate side-effectful expressi
 # ==============================================================================
 
 test_that("VERIFY: nesting_depth is restored after compilation errors in define", {
+  thin()
   # The observable effect of corrupted nesting_depth is that top-level import
   # compilation would fail (compile_import checks nesting_depth > 0).
   # We test that after a failed define, subsequent compilations still work.
@@ -428,6 +448,7 @@ test_that("VERIFY: nesting_depth is restored after compilation errors in define"
 })
 
 test_that("VERIFY: nesting_depth is restored after compilation errors in set!", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   engine$eval_text("(define x 1)")
 
@@ -447,6 +468,7 @@ test_that("VERIFY: nesting_depth is restored after compilation errors in set!", 
 # ==============================================================================
 
 test_that("VERIFY: and/or handle degenerate nested empty forms", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
 
   # (and) with no args should return #t (identity for and)
@@ -475,6 +497,7 @@ test_that("VERIFY: and/or handle degenerate nested empty forms", {
 # variadic_eq returned FALSE instead of NA.
 
 test_that("disable_constant_folding parameter works", {
+  thin()
   e_fold <- Engine$new(load_prelude = FALSE)
   e_nofold <- Engine$new(load_prelude = FALSE, disable_constant_folding = TRUE)
 
@@ -493,6 +516,7 @@ test_that("disable_constant_folding parameter works", {
 })
 
 test_that("disable_constant_folding via R option works", {
+  thin()
   withr::local_options(list(arl.disable_constant_folding = TRUE))
   e <- Engine$new(load_prelude = FALSE)
   out <- e$inspect_compilation("(+ 1 2)")
@@ -501,6 +525,7 @@ test_that("disable_constant_folding via R option works", {
 })
 
 test_that("disable_constant_folding via env var works", {
+  thin()
   withr::local_envvar(ARL_DISABLE_CONSTANT_FOLDING = "1")
   e <- Engine$new(load_prelude = FALSE)
   out <- e$inspect_compilation("(+ 1 2)")
@@ -509,6 +534,7 @@ test_that("disable_constant_folding via env var works", {
 })
 
 test_that("arithmetic builtins match R without folding", {
+  thin()
   e <- Engine$new(disable_constant_folding = TRUE)
 
   expect_equal(e$eval_text("(+ 1 2)"), 3)
@@ -521,6 +547,7 @@ test_that("arithmetic builtins match R without folding", {
 })
 
 test_that("comparison builtins match R without folding", {
+  thin()
   e <- Engine$new(disable_constant_folding = TRUE)
 
   expect_true(e$eval_text("(< 1 2)"))
@@ -534,6 +561,7 @@ test_that("comparison builtins match R without folding", {
 })
 
 test_that("equality builtins handle NaN/NA correctly without folding", {
+  thin()
   e <- Engine$new(disable_constant_folding = TRUE)
 
   # NaN == NaN should return NA (R semantics), not FALSE
@@ -559,6 +587,7 @@ test_that("equality builtins handle NaN/NA correctly without folding", {
 })
 
 test_that("logical builtins match R without folding", {
+  thin()
   e <- Engine$new(disable_constant_folding = TRUE)
 
   expect_true(e$eval_text("(& #t #t)"))
@@ -570,6 +599,7 @@ test_that("logical builtins match R without folding", {
 })
 
 test_that("math builtins match R without folding", {
+  thin()
   e <- Engine$new(disable_constant_folding = TRUE)
 
   expect_equal(e$eval_text("(abs -5)"), 5)
@@ -585,6 +615,7 @@ test_that("math builtins match R without folding", {
 })
 
 test_that("folded and unfolded results agree on edge cases", {
+  thin()
   e_fold <- Engine$new()
   e_nofold <- Engine$new(disable_constant_folding = TRUE)
 
@@ -612,6 +643,7 @@ test_that("folded and unfolded results agree on edge cases", {
 # via the disable_optimizations parameter, R option, or env var.
 
 test_that("disable_optimizations parameter works", {
+  thin()
   e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
   compiler <- e$.__enclos_env__$private$.compiler
 
@@ -626,6 +658,7 @@ test_that("disable_optimizations parameter works", {
 })
 
 test_that("disable_optimizations via R option works", {
+  thin()
   withr::local_options(list(arl.disable_optimizations = TRUE))
   e <- Engine$new(load_prelude = FALSE)
   compiler <- e$.__enclos_env__$private$.compiler
@@ -641,6 +674,7 @@ test_that("disable_optimizations via R option works", {
 })
 
 test_that("disable_optimizations via env var works", {
+  thin()
   withr::local_envvar(ARL_DISABLE_OPTIMIZATIONS = "1")
   e <- Engine$new(load_prelude = FALSE)
   compiler <- e$.__enclos_env__$private$.compiler
@@ -650,6 +684,7 @@ test_that("disable_optimizations via env var works", {
 })
 
 test_that("arithmetic and comparison correct without optimizations", {
+  thin()
   e <- Engine$new(disable_optimizations = TRUE)
 
   expect_equal(e$eval_text("(+ 1 2)"), 3)
@@ -663,6 +698,7 @@ test_that("arithmetic and comparison correct without optimizations", {
 })
 
 test_that("NaN/NA edge cases correct without optimizations", {
+  thin()
   e <- Engine$new(disable_optimizations = TRUE)
 
   result <- e$eval_text("(== NaN NaN)")
@@ -676,6 +712,7 @@ test_that("NaN/NA edge cases correct without optimizations", {
 })
 
 test_that("if with constant tests works without dead code elimination", {
+  thin()
   e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
 
   # Should still produce correct results even without DCE
@@ -691,6 +728,7 @@ test_that("if with constant tests works without dead code elimination", {
 })
 
 test_that("strength reduction disabled produces correct results", {
+  thin()
   e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
   e$eval_text("(define x 5)")
 
@@ -713,6 +751,7 @@ test_that("strength reduction disabled produces correct results", {
 })
 
 test_that("identity elimination disabled produces correct results", {
+  thin()
   e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
 
   # ((lambda (x) x) 42) should still return 42
@@ -728,6 +767,7 @@ test_that("identity elimination disabled produces correct results", {
 })
 
 test_that("truthiness optimization disabled uses .__true_p wrapper", {
+  thin()
   e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
 
   # Even for known-boolean tests, .__true_p should be present
@@ -738,6 +778,7 @@ test_that("truthiness optimization disabled uses .__true_p wrapper", {
 })
 
 test_that("begin simplification disabled keeps block wrapper", {
+  thin()
   e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
 
   # (begin expr) should keep the block wrapper
@@ -747,6 +788,7 @@ test_that("begin simplification disabled keeps block wrapper", {
 })
 
 test_that("boolean flatten disabled preserves nesting", {
+  thin()
   e <- Engine$new(load_prelude = FALSE, disable_optimizations = TRUE)
 
   # (and (and a b) c) should NOT flatten when disabled
@@ -762,6 +804,7 @@ test_that("boolean flatten disabled preserves nesting", {
 })
 
 test_that("recursive functions work without TCO (small depth)", {
+  thin()
   e <- Engine$new(disable_optimizations = TRUE)
 
   # Small depth to avoid stack overflow without TCO

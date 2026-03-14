@@ -3,7 +3,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("stdlib loads successfully", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -15,12 +18,14 @@ test_that("stdlib loads successfully", {
 })
 
 test_that("force evaluates promises", {
+  thin()
   env <- toplevel_env(engine, new.env())
   forced <- engine$eval(engine$read("(force (delay (+ 1 2)))")[[1]], env = env)
   expect_equal(forced, 3)
 })
 
 test_that("force memoizes delayed expressions", {
+  thin()
   env <- toplevel_env(engine, new.env())
   engine$eval(
     engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  (force p)\n  (force p)\n  counter)")[[1]],
@@ -30,12 +35,14 @@ test_that("force memoizes delayed expressions", {
 })
 
 test_that("force returns non-promises unchanged", {
+  thin()
   env <- toplevel_env(engine)
   result <- engine$eval(engine$read("(force 42)")[[1]], env = env)
   expect_equal(result, 42)
 })
 
 test_that("call-cc exits to current continuation", {
+  thin()
   env <- toplevel_env(engine)
   result <- engine$eval(
     engine$read("(call-cc (lambda (k) (+ 1 (k 42) 3)))")[[1]],
@@ -45,6 +52,7 @@ test_that("call-cc exits to current continuation", {
 })
 
 test_that("call-cc is downward-only (R's callCC behavior)", {
+  thin()
   env <- toplevel_env(engine)
   # R's callCC is one-shot and downward-only
   result <- engine$eval(
@@ -62,6 +70,7 @@ test_that("call-cc is downward-only (R's callCC behavior)", {
 })
 
 test_that("call-cc is first-class and has an alias", {
+  thin()
   env <- toplevel_env(engine)
   engine$eval(engine$read("(define cc call-cc)")[[1]], env = env)
   result <- engine$eval(engine$read("(cc (lambda (k) (k 7)))")[[1]], env = env)
@@ -74,6 +83,7 @@ test_that("call-cc is first-class and has an alias", {
 })
 
 test_that("call-cc returns receiver's value when continuation is not invoked", {
+  thin()
   env <- toplevel_env(engine)
   result <- engine$eval(
     engine$read("(call-cc (lambda (k) 99))")[[1]],
@@ -83,6 +93,7 @@ test_that("call-cc returns receiver's value when continuation is not invoked", {
 })
 
 test_that("call-cc can return complex values", {
+  thin()
   env <- toplevel_env(engine)
   result <- engine$eval(
     engine$read("(call-cc (lambda (k) (k (list 1 2 3))))")[[1]],
@@ -92,6 +103,7 @@ test_that("call-cc can return complex values", {
 })
 
 test_that("call-cc preserves side effects before escape", {
+  thin()
   env <- toplevel_env(engine)
   engine$eval(engine$read("(define x 0)")[[1]], env = env)
   engine$eval(
@@ -103,6 +115,7 @@ test_that("call-cc preserves side effects before escape", {
 })
 
 test_that("nested call-cc works correctly", {
+  thin()
   env <- toplevel_env(engine)
   result <- engine$eval(
     engine$read("(call-cc (lambda (outer) (+ 1 (call-cc (lambda (inner) (inner 10))))))")[[1]],
@@ -119,6 +132,7 @@ test_that("nested call-cc works correctly", {
 })
 
 test_that("call-cc can simulate early return from nested computation", {
+  thin()
   env <- toplevel_env(engine)
   # Use call-cc to bail out of a deep computation early
   result <- engine$eval(engine$read("
@@ -142,6 +156,7 @@ test_that("call-cc can simulate early return from nested computation", {
 })
 
 test_that("funcall applies function to list of arguments", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -149,6 +164,7 @@ test_that("funcall applies function to list of arguments", {
 })
 
 test_that("values and call-with-values work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -166,6 +182,7 @@ test_that("values and call-with-values work", {
 })
 
 test_that("identity returns its argument", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -176,6 +193,7 @@ test_that("identity returns its argument", {
 })
 
 test_that("r-call invokes R functions with arguments", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -197,6 +215,7 @@ test_that("r-call invokes R functions with arguments", {
 })
 
 test_that("call function converts lists to calls", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -217,6 +236,7 @@ test_that("call function converts lists to calls", {
 })
 
 test_that("eval function evaluates Arl expressions", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -236,6 +256,7 @@ test_that("eval function evaluates Arl expressions", {
 })
 
 test_that("gensym generates unique symbols", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -254,6 +275,7 @@ test_that("gensym generates unique symbols", {
 })
 
 test_that("gensym avoids shadowing existing bindings", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -276,6 +298,7 @@ test_that("gensym avoids shadowing existing bindings", {
 })
 
 test_that("read is available as engine builtin without importing io", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -302,6 +325,7 @@ test_that("read is available as engine builtin without importing io", {
 # ============================================================================
 
 test_that("call-with-values errors when producer is not a function", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -311,6 +335,7 @@ test_that("call-with-values errors when producer is not a function", {
 })
 
 test_that("call-with-values errors when consumer is not a function", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -328,6 +353,7 @@ test_that("call-with-values errors when consumer is not a function", {
 # ============================================================================
 
 test_that("unbind-variable removes a binding from current env", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -339,6 +365,7 @@ test_that("unbind-variable removes a binding from current env", {
 })
 
 test_that("unbind-variable accepts symbol name", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -348,6 +375,7 @@ test_that("unbind-variable accepts symbol name", {
 })
 
 test_that("unbind-variable makes variable inaccessible", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -361,6 +389,7 @@ test_that("unbind-variable makes variable inaccessible", {
 })
 
 test_that("unbind-variable warns on nonexistent binding", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -375,6 +404,7 @@ test_that("unbind-variable warns on nonexistent binding", {
 # ============================================================================
 
 test_that("license function executes without error", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -389,6 +419,7 @@ test_that("license function executes without error", {
 # ============================================================================
 
 test_that("error and debug helpers work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -406,6 +437,7 @@ test_that("error and debug helpers work", {
 # ============================================================================
 
 test_that("defstruct macro defines constructor and accessors", {
+  thin()
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("struct"), env = env)

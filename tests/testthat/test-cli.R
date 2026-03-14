@@ -1,4 +1,7 @@
+thin <- make_cran_thinner()
+
 test_that("CLI parse defaults to repl", {
+  thin()
   parsed <- arl:::CLI$new(character(0))$parse()
   expect_equal(parsed$action, "repl")
   expect_length(parsed$files, 0)
@@ -7,6 +10,7 @@ test_that("CLI parse defaults to repl", {
 })
 
 test_that("CLI parse handles file and eval", {
+  thin()
   parsed <- arl:::CLI$new(c("--file", "script.arl"))$parse()
   expect_equal(parsed$action, "file")
   expect_equal(parsed$files, "script.arl")
@@ -19,6 +23,7 @@ test_that("CLI parse handles file and eval", {
 })
 
 test_that("CLI parse handles help and version", {
+  thin()
   parsed <- arl:::CLI$new(c("--help"))$parse()
   expect_equal(parsed$action, "help")
   expect_length(parsed$errors, 0)
@@ -29,6 +34,7 @@ test_that("CLI parse handles help and version", {
 })
 
 test_that("CLI parse errors on invalid input", {
+  thin()
   parsed <- arl:::CLI$new(c("--file", "a.arl", "--eval", "(+ 1 2)"))$parse()
   expect_true(any(grepl("Use only one of --file/files or --eval", parsed$errors)))
 
@@ -37,6 +43,7 @@ test_that("CLI parse errors on invalid input", {
 })
 
 test_that("CLI parse supports short options", {
+  thin()
   parsed <- arl:::CLI$new(c("-f", "a.arl"))$parse()
   expect_equal(parsed$action, "file")
   expect_equal(parsed$files, "a.arl")
@@ -53,18 +60,21 @@ test_that("CLI parse supports short options", {
 })
 
 test_that("CLI parse treats positional args as files", {
+  thin()
   parsed <- arl:::CLI$new(c("a.arl", "b.arl"))$parse()
   expect_equal(parsed$action, "file")
   expect_equal(parsed$files, c("a.arl", "b.arl"))
 })
 
 test_that("CLI parse ignores --args from wrappers", {
+  thin()
   parsed <- arl:::CLI$new(c("--args", "--eval", "(+ 1 2)"))$parse()
   expect_equal(parsed$action, "eval")
   expect_equal(parsed$expr, "(+ 1 2)")
 })
 
 test_that("cli executes files in order", {
+  thin()
   file_a <- tempfile(fileext = ".arl")
   file_b <- tempfile(fileext = ".arl")
   writeLines("(define x 2)", file_a)
@@ -78,6 +88,7 @@ test_that("cli executes files in order", {
 })
 
 test_that("cli reads from stdin when not a tty", {
+  thin()
   withr::local_options(list(
     arl.cli_isatty_override = FALSE,
     arl.cli_read_stdin_override = function() "(+ 1 2)"
@@ -91,6 +102,7 @@ test_that("cli reads from stdin when not a tty", {
 # Help and Version Functions ----
 
 test_that("cli returns formatted help", {
+  thin()
   output <- capture.output(arl:::cli(c("--help")))
   expect_true(any(grepl("Usage:", output)))
   expect_true(any(grepl("--file", output)))
@@ -103,6 +115,7 @@ test_that("cli returns formatted help", {
 # install_cli ----
 
 test_that("install_cli prints platform-appropriate instructions", {
+  thin()
   messages <- character()
   withCallingHandlers(
     arl::install_cli(),
@@ -122,6 +135,7 @@ test_that("install_cli prints platform-appropriate instructions", {
 })
 
 test_that("install_cli(quiet = TRUE) returns script path silently", {
+  thin()
   messages <- character()
   result <- withCallingHandlers(
     arl::install_cli(quiet = TRUE),
@@ -136,6 +150,7 @@ test_that("install_cli(quiet = TRUE) returns script path silently", {
 })
 
 test_that("POSIX wrapper script runs --version", {
+  thin()
   skip_on_os("windows")
   script <- system.file("bin", "posix", "arl", package = "arl")
   skip_if(!nzchar(script), "POSIX script not found (not installed)")
@@ -148,6 +163,7 @@ test_that("POSIX wrapper script runs --version", {
 # Environment Loading ----
 
 test_that("Engine initializes environment with stdlib", {
+  thin()
   engine <- make_engine()
   env <- engine$get_env()
   expect_true(is.environment(env))
@@ -157,6 +173,7 @@ test_that("Engine initializes environment with stdlib", {
 # Evaluation Functions ----
 
 test_that("cli_eval_text prints non-NULL results", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   cli <- arl:::CLI$new()
   output <- capture.output(result <- cli$cli_eval_text("(+ 2 3)", engine))
@@ -165,6 +182,7 @@ test_that("cli_eval_text prints non-NULL results", {
 })
 
 test_that("cli_eval_text does not print define results", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   cli <- arl:::CLI$new()
   output <- capture.output(result <- cli$cli_eval_text("(define y 10)", engine))
@@ -175,11 +193,13 @@ test_that("cli_eval_text does not print define results", {
 # I/O Helper Functions ----
 
 test_that("CLI cli_isatty wraps isatty", {
+  thin()
   result <- arl:::CLI$new()$cli_isatty()
   expect_type(result, "logical")
 })
 
 test_that("CLI cli_read_stdin reads from stdin", {
+  thin()
   # Test that the method exists and returns a character vector
   # Actual stdin testing requires process redirection
   expect_true(is.function(arl:::CLI$new()$cli_read_stdin))
@@ -188,26 +208,31 @@ test_that("CLI cli_read_stdin reads from stdin", {
 # Main CLI Function - Error Paths ----
 
 test_that("cli shows help with --help flag", {
+  thin()
   output <- capture.output(arl:::cli(c("--help")))
   expect_true(any(grepl("Usage:", output)))
 })
 
 test_that("cli shows help with -h flag", {
+  thin()
   output <- capture.output(arl:::cli(c("-h")))
   expect_true(any(grepl("Usage:", output)))
 })
 
 test_that("cli shows version with --version flag", {
+  thin()
   output <- capture.output(arl:::cli(c("--version")))
   expect_true(any(grepl("^arl", output)))
 })
 
 test_that("cli shows version with -v flag", {
+  thin()
   output <- capture.output(arl:::cli(c("-v")))
   expect_true(any(grepl("^arl", output)))
 })
 
 test_that("cli errors on missing file", {
+  thin()
   # Test that non-existent files are detected
   parsed <- arl:::CLI$new(c("--file", "nonexistent.arl"))$parse()
   expect_equal(parsed$action, "file")
@@ -218,6 +243,7 @@ test_that("cli errors on missing file", {
 })
 
 test_that("cli errors and shows help on invalid args", {
+  thin()
   exit_fn_called <- FALSE
   withr::local_options(list(
     arl.cli_quiet = TRUE,
@@ -230,16 +256,19 @@ test_that("cli errors and shows help on invalid args", {
 })
 
 test_that("cli handles --eval flag", {
+  thin()
   output <- capture.output(arl:::cli(c("--eval", "(+ 10 20)")))
   expect_true(any(grepl("30", output)))
 })
 
 test_that("cli handles -e flag", {
+  thin()
   output <- capture.output(arl:::cli(c("-e", "(* 3 4)")))
   expect_true(any(grepl("12", output)))
 })
 
 test_that("cli starts interactive REPL when tty", {
+  thin()
   withr::local_options(list(
     arl.cli_isatty_override = TRUE,
     arl.repl_read_form_override = function(...) NULL,
@@ -252,6 +281,7 @@ test_that("cli starts interactive REPL when tty", {
 })
 
 test_that("cli --quiet and -q set arl.repl_quiet and print no banner", {
+  thin()
   withr::local_options(list(
     arl.cli_isatty_override = TRUE,
     arl.repl_read_form_override = function(...) NULL,
@@ -267,6 +297,7 @@ test_that("cli --quiet and -q set arl.repl_quiet and print no banner", {
 })
 
 test_that("cli reads stdin when not tty with empty input", {
+  thin()
   withr::local_options(list(
     arl.cli_isatty_override = FALSE,
     arl.cli_read_stdin_override = function() "   "
@@ -278,6 +309,7 @@ test_that("cli reads stdin when not tty with empty input", {
 })
 
 test_that("cli handles multiple files", {
+  thin()
   file_a <- tempfile(fileext = ".arl")
   file_b <- tempfile(fileext = ".arl")
   file_c <- tempfile(fileext = ".arl")
@@ -292,22 +324,26 @@ test_that("cli handles multiple files", {
 })
 
 test_that("CLI parse handles -- argument terminator", {
+  thin()
   parsed <- arl:::CLI$new(c("--", "file1.arl", "-v"))$parse()
   expect_equal(parsed$files, c("file1.arl", "-v"))
   expect_equal(parsed$action, "file")
 })
 
 test_that("CLI parse errors on --file without path", {
+  thin()
   parsed <- arl:::CLI$new(c("--file"))$parse()
   expect_true(length(parsed$errors) > 0)
 })
 
 test_that("CLI parse errors on --eval without expression", {
+  thin()
   parsed <- arl:::CLI$new(c("--eval"))$parse()
   expect_true(length(parsed$errors) > 0)
 })
 
 test_that("CLI parse errors on multiple --eval flags", {
+  thin()
   parsed <- arl:::CLI$new(c("--eval", "(+ 1 2)", "--eval", "(+ 3 4)"))$parse()
   expect_true(length(parsed$errors) > 0)
 })
@@ -315,11 +351,13 @@ test_that("CLI parse errors on multiple --eval flags", {
 # Short option missing-value edge cases ----
 
 test_that("CLI parse errors on -e without expression", {
+  thin()
   parsed <- arl:::CLI$new(c("-e"))$parse()
   expect_true(length(parsed$errors) > 0)
 })
 
 test_that("CLI parse errors on -f without path", {
+  thin()
   parsed <- arl:::CLI$new(c("-f"))$parse()
   expect_true(length(parsed$errors) > 0)
 })
@@ -327,6 +365,7 @@ test_that("CLI parse errors on -f without path", {
 # Combined flag scenarios ----
 
 test_that("CLI parse handles -q with -e", {
+  thin()
   parsed <- arl:::CLI$new(c("-q", "-e", "(+ 1 2)"))$parse()
   expect_equal(parsed$action, "eval")
   expect_equal(parsed$expr, "(+ 1 2)")
@@ -334,6 +373,7 @@ test_that("CLI parse handles -q with -e", {
 })
 
 test_that("cli -q -e evaluates quietly", {
+  thin()
   withr::local_options(list(arl.repl_quiet = FALSE))
   output <- capture.output(arl:::cli(c("-q", "-e", "(+ 5 6)")))
   expect_true(any(grepl("11", output)))
@@ -341,6 +381,7 @@ test_that("cli -q -e evaluates quietly", {
 })
 
 test_that("CLI parse handles -q with positional file", {
+  thin()
   parsed <- arl:::CLI$new(c("-q", "script.arl"))$parse()
   expect_equal(parsed$action, "file")
   expect_equal(parsed$files, "script.arl")
@@ -348,6 +389,7 @@ test_that("CLI parse handles -q with positional file", {
 })
 
 test_that("cli -q with file evaluates quietly", {
+  thin()
   f <- tempfile(fileext = ".arl")
   writeLines("(+ 7 8)", f)
   withr::local_options(list(arl.repl_quiet = FALSE))
@@ -360,6 +402,7 @@ test_that("cli -q with file evaluates quietly", {
 # Flag ordering ----
 
 test_that("CLI parse handles flags after positional args", {
+  thin()
   parsed <- arl:::CLI$new(c("script.arl", "-q"))$parse()
   expect_equal(parsed$action, "file")
   expect_true("script.arl" %in% parsed$files)
@@ -369,6 +412,7 @@ test_that("CLI parse handles flags after positional args", {
 # Eval with spaces and special characters ----
 
 test_that("CLI parse handles -e with spaces in expression", {
+  thin()
   parsed <- arl:::CLI$new(c("-e", "(define x 42)"))$parse()
   expect_equal(parsed$action, "eval")
   expect_equal(parsed$expr, "(define x 42)")
@@ -376,6 +420,7 @@ test_that("CLI parse handles -e with spaces in expression", {
 })
 
 test_that("cli -e with multi-word expression evaluates correctly", {
+  thin()
   output <- capture.output(arl:::cli(c("-e", "(+ 100 200)")))
   expect_true(any(grepl("300", output)))
 })
@@ -383,6 +428,7 @@ test_that("cli -e with multi-word expression evaluates correctly", {
 # Unknown flag error content ----
 
 test_that("CLI parse reports unrecognized flag in error message", {
+  thin()
   parsed <- arl:::CLI$new(c("--bogus"))$parse()
   expect_true(length(parsed$errors) > 0)
   errors_text <- paste(parsed$errors, collapse = " ")
@@ -393,6 +439,7 @@ test_that("CLI parse reports unrecognized flag in error message", {
 # Error output paths ----
 
 test_that("cli_exit_with_error produces visible error message", {
+  thin()
   error_msg <- NULL
   withr::local_options(list(
     arl.cli_exit_fn = function(message, show_help) {
@@ -405,6 +452,7 @@ test_that("cli_exit_with_error produces visible error message", {
 })
 
 test_that("cli_exit_with_error signals arl_cli_error when no exit_fn set", {
+  thin()
   cli_obj <- arl:::CLI$new()
   err <- NULL
   suppressMessages(capture.output(
@@ -419,6 +467,7 @@ test_that("cli_exit_with_error signals arl_cli_error when no exit_fn set", {
 })
 
 test_that("run() signals arl_cli_error on parse errors when no exit_fn set", {
+  thin()
   err <- NULL
   suppressMessages(capture.output(
     err <- tryCatch(
@@ -431,6 +480,7 @@ test_that("run() signals arl_cli_error on parse errors when no exit_fn set", {
 })
 
 test_that("run() displays parse errors to user", {
+  thin()
   exit_messages <- character(0)
   withr::local_options(list(
     arl.cli_exit_fn = function(message, show_help) {

@@ -1,6 +1,9 @@
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("quote returns unevaluated expression", {
+  thin()
   result <- engine$eval(engine$read("(quote x)")[[1]])
   expect_true(is.symbol(result))
   expect_equal(as.character(result), "x")
@@ -11,6 +14,7 @@ test_that("quote returns unevaluated expression", {
 })
 
 test_that("quote sugar works", {
+  thin()
   result <- engine$eval(engine$read("'x")[[1]])
   expect_true(is.symbol(result))
   expect_equal(as.character(result), "x")
@@ -20,11 +24,13 @@ test_that("quote sugar works", {
 })
 
 test_that("delay creates a promise", {
+  thin()
   result <- engine$eval(engine$read("(delay (+ 1 2))")[[1]])
   expect_true(inherits(result, "ArlPromise"))
 })
 
 test_that("delay compiles to a promise", {
+  thin()
   info <- engine$inspect_compilation("(delay (+ 1 2))")
   expect_false(is.null(info$compiled))
   result <- engine_field(engine, "compiled_runtime")$eval_compiled(info$compiled, engine$get_env())
@@ -33,6 +39,7 @@ test_that("delay compiles to a promise", {
 })
 
 test_that("promise? detects promises", {
+  thin()
   env <- toplevel_env(engine)
   result <- engine$eval(engine$read("(promise? (delay 1))")[[1]], env = env)
   expect_true(isTRUE(result))
@@ -42,6 +49,7 @@ test_that("promise? detects promises", {
 })
 
 test_that("delay is lazy until forced", {
+  thin()
   env <- toplevel_env(engine)
   engine$eval(
     engine$read("(begin (define counter 0)\n  (define p (delay (begin (set! counter (+ counter 1)) counter)))\n  counter)")[[1]],
@@ -55,6 +63,7 @@ test_that("delay is lazy until forced", {
 
 
 test_that("if evaluates conditionally", {
+  thin()
   result <- engine$eval(engine$read("(if #t 1 2)")[[1]])
   expect_equal(result, 1)
 
@@ -66,11 +75,13 @@ test_that("if evaluates conditionally", {
 })
 
 test_that("if with no else branch returns NULL", {
+  thin()
   result <- engine$eval(engine$read("(if #f 1)")[[1]])
   expect_null(result)
 })
 
 test_that("if evaluates test expression", {
+  thin()
   result <- engine$eval(engine$read("(if (> 5 3) 'yes 'no)")[[1]])
   expect_equal(as.character(result), "yes")
 
@@ -79,6 +90,7 @@ test_that("if evaluates test expression", {
 })
 
 test_that("define creates variables", {
+  thin()
   env <- new.env()
   engine$eval(engine$read("(define x 42)")[[1]], env = env)
   expect_equal(env$x, 42)
@@ -88,6 +100,7 @@ test_that("define creates variables", {
 })
 
 test_that("lambda creates functions", {
+  thin()
   env <- new.env()
   engine$eval(engine$read("(define add (lambda (a b) (+ a b)))")[[1]], env = env)
   expect_true(is.function(env$add))
@@ -97,6 +110,7 @@ test_that("lambda creates functions", {
 })
 
 test_that("lambda with no arguments", {
+  thin()
   env <- new.env()
   engine$eval(engine$read("(define get-five (lambda () 5))")[[1]], env = env)
   result <- engine$eval(engine$read("(get-five)")[[1]], env = env)
@@ -104,6 +118,7 @@ test_that("lambda with no arguments", {
 })
 
 test_that("lambda supports default arguments", {
+  thin()
   env <- new.env()
   engine$eval(engine$read("(define add-default (lambda ((x 10) (y 5)) (+ x y)))")[[1]], env = env)
   expect_equal(engine$eval(engine$read("(add-default)")[[1]], env = env), 15)
@@ -112,6 +127,7 @@ test_that("lambda supports default arguments", {
 })
 
 test_that("lambda supports destructuring arguments", {
+  thin()
   env <- new.env()
   engine$eval(engine$read("(define sum-pair (lambda ((pattern (a b))) (+ a b)))")[[1]], env = env)
   expect_equal(engine$eval(engine$read("(sum-pair (list 2 3))")[[1]], env = env), 5)
@@ -128,6 +144,7 @@ test_that("lambda supports destructuring arguments", {
 })
 
 test_that("lambda supports dotted rest arguments", {
+  thin()
   env <- new.env()
   engine$eval(engine$read("(define count-rest (lambda (x . rest) (length rest)))")[[1]], env = env)
   expect_equal(engine$eval(engine$read("(count-rest 1)")[[1]], env = env), 0)
@@ -135,6 +152,7 @@ test_that("lambda supports dotted rest arguments", {
 })
 
 test_that("lambda with multiple body expressions", {
+  thin()
   env <- new.env()
   engine$eval(engine$read("(define f (lambda (x) (define y 10) (+ x y)))")[[1]], env = env)
   result <- engine$eval(engine$read("(f 5)")[[1]], env = env)
@@ -142,6 +160,7 @@ test_that("lambda with multiple body expressions", {
 })
 
 test_that("lambda captures environment", {
+  thin()
   env <- new.env()
   engine$eval(engine$read("(define x 10)")[[1]], env = env)
   engine$eval(engine$read("(define add-x (lambda (y) (+ x y)))")[[1]], env = env)
@@ -150,6 +169,7 @@ test_that("lambda captures environment", {
 })
 
 test_that("begin evaluates expressions in sequence", {
+  thin()
   env <- new.env()
   result <- engine$eval(engine$read("(begin (define x 1) (define y 2) (+ x y))")[[1]], env = env)
   expect_equal(result, 3)
@@ -158,11 +178,13 @@ test_that("begin evaluates expressions in sequence", {
 })
 
 test_that("begin returns last expression", {
+  thin()
   result <- engine$eval(engine$read("(begin 1 2 3)")[[1]])
   expect_equal(result, 3)
 })
 
 test_that("set! modifies existing bindings", {
+  thin()
   env <- new.env()
 
   # Define a variable

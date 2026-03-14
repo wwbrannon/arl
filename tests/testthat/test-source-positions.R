@@ -1,7 +1,10 @@
 # Tests for source position tracking
 # Verifies that line and column information is preserved through parsing and macro expansion
 
+thin <- make_cran_thinner()
+
 test_that("parsed expressions have source positions", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   parsed <- engine$read("(+ 1 2)")
 
@@ -15,6 +18,7 @@ test_that("parsed expressions have source positions", {
 })
 
 test_that("multiline expressions preserve line numbers", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   code <- "(define foo (lambda (x)
   (+ x 1)
@@ -28,6 +32,7 @@ test_that("multiline expressions preserve line numbers", {
 })
 
 test_that("nested expressions have positions", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   code <- "(* (+ 1 2) 3)"
 
@@ -40,6 +45,7 @@ test_that("nested expressions have positions", {
 })
 
 test_that("quoted expressions preserve positions", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   code <- "'(a b c)"
 
@@ -52,6 +58,7 @@ test_that("quoted expressions preserve positions", {
 })
 
 test_that("quasiquoted expressions preserve positions", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   code <- "`(a ,b c)"
 
@@ -65,6 +72,7 @@ test_that("quasiquoted expressions preserve positions", {
 })
 
 test_that("macro expansion preserves source info", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Define a simple macro
@@ -80,6 +88,7 @@ test_that("macro expansion preserves source info", {
 })
 
 test_that("error location is reported for syntax errors", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # This should error with location info
@@ -90,6 +99,7 @@ test_that("error location is reported for syntax errors", {
 })
 
 test_that("error location for runtime errors", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Division by zero returns Inf in R, not an error
@@ -101,6 +111,7 @@ test_that("error location for runtime errors", {
 })
 
 test_that("line numbers in multiline function definition", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   code <- "(define multi-line (lambda (a b c)
@@ -118,6 +129,7 @@ test_that("line numbers in multiline function definition", {
 })
 
 test_that("positions preserved through multiple forms", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   code <- "(define x 5)\n(define y 10)\n(+ x y)"
@@ -135,6 +147,7 @@ test_that("positions preserved through multiple forms", {
 })
 
 test_that("source positions in do blocks", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   code <- "(begin
@@ -148,6 +161,7 @@ test_that("source positions in do blocks", {
 })
 
 test_that("positions in nested function calls", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   code <- "(+ (* 2 3) (- 10 5))"
@@ -157,6 +171,7 @@ test_that("positions in nested function calls", {
 })
 
 test_that("comment positions don't break parsing", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   code <- "; This is a comment\n(+ 1 2) ; inline comment\n; another comment"

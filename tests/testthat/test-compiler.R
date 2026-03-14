@@ -1,6 +1,9 @@
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("compiled eval handles simple arithmetic", {
+  thin()
   expect_equal(engine$eval(engine$read("(+ 1 2)")[[1]]), 3)
   expect_equal(engine$eval(engine$read("(- 5 3)")[[1]]), 2)
   expect_equal(engine$eval(engine$read("(* 4 5)")[[1]]), 20)
@@ -8,16 +11,19 @@ test_that("compiled eval handles simple arithmetic", {
 })
 
 test_that("compiled eval handles R functions", {
+  thin()
   result <- engine$eval(engine$read("(mean (c 1 2 3 4 5))")[[1]])
   expect_equal(result, 3)
 })
 
 test_that("compiled eval handles nested calls", {
+  thin()
   result <- engine$eval(engine$read("(+ (* 2 3) (* 4 5))")[[1]])
   expect_equal(result, 26)
 })
 
 test_that("compiled eval evaluates arguments left-to-right", {
+  thin()
   env <- new.env(parent = baseenv())
   engine$eval(engine$read("(define x 0)")[[1]], env = env)
   engine$eval(engine$read("(define collect (lambda (a b) (list a b)))")[[1]], env = env)
@@ -32,16 +38,19 @@ test_that("compiled eval evaluates arguments left-to-right", {
 })
 
 test_that("compiled eval handles :: sugar", {
+  thin()
   result <- engine$eval(engine$read("(base::mean (c 1 2 3))")[[1]])
   expect_equal(result, 2)
 })
 
 test_that("calculator with nested expressions", {
+  thin()
   result <- engine$eval(engine$read("(+ 1 (* 2 3))")[[1]])
   expect_equal(result, 7)
 })
 
 test_that("compiled eval validates special form arity and types", {
+  thin()
   expect_error(engine$eval(engine$read("(quote 1 2)")[[1]]), "quote requires exactly 1 argument")
   expect_error(engine$eval(engine$read("(quasiquote)")[[1]]), "quasiquote requires exactly 1 argument")
   expect_error(engine$eval(engine$read("(if 1)")[[1]]), "if requires 2 or 3 arguments")
@@ -50,6 +59,7 @@ test_that("compiled eval validates special form arity and types", {
 })
 
 test_that("compiled eval handles set! scoping and missing bindings", {
+  thin()
   env <- new.env(parent = emptyenv())
   env$x <- 1
   child <- new.env(parent = env)
@@ -60,18 +70,21 @@ test_that("compiled eval handles set! scoping and missing bindings", {
 })
 
 test_that("define/set! reject reserved .__* names", {
+  thin()
   expect_error(engine$eval_text('(define .__foo 1)'), "reserved name.*internal")
   expect_error(engine$eval_text('(define .__env 1)'), "reserved name.*internal")
   expect_error(engine$eval_text('(set! .__bar 1)'), "reserved name.*internal")
 })
 
 test_that("compiled eval validates load arguments and missing files", {
+  thin()
   expect_error(engine$eval(engine$read("(load 1)")[[1]]), "load requires a single file path string")
   expect_error(engine$eval(engine$read('(load "a" 1 2)')[[1]]), "unused argument|argument")
   expect_error(engine$eval(engine$read('(load "missing-file.arl")')[[1]]), "File not found")
 })
 
 test_that("compiled eval builds formulas without evaluating arguments", {
+  thin()
   env <- new.env(parent = baseenv())
   env$x <- 10
   result <- engine$eval(engine$read("(~ x y)")[[1]], env = env)
@@ -81,21 +94,25 @@ test_that("compiled eval builds formulas without evaluating arguments", {
 })
 
 test_that("compiled eval validates package accessor arguments", {
+  thin()
   expect_error(engine$eval(engine$read("(:: base mean extra)")[[1]]), "requires 2")
   expect_error(engine$eval(engine$read("(:: 1 mean)")[[1]]))
   expect_error(engine$eval(engine$read("(:: base 1)")[[1]]))
 })
 
 test_that("compiled eval handles ::: explicit form", {
+  thin()
   result <- engine$eval(engine$read("(::: base .deparseOpts)")[[1]])
   expect_true(is.function(result))
 })
 
 test_that("compiled eval validates keyword usage", {
+  thin()
   expect_error(engine$eval(engine$read("(mean :trim)")[[1]]), "requires a value")
 })
 
 test_that("compiled eval validates lambda argument lists", {
+  thin()
   expect_error(engine$eval(engine$read("(lambda 1 2)")[[1]]), "lambda arguments must be a list")
   expect_error(
     engine$eval(engine$read("(lambda (1) 2)")[[1]]),
@@ -108,6 +125,7 @@ test_that("compiled eval validates lambda argument lists", {
 })
 
 test_that("eval text errors include source and stack context", {
+  thin()
   env <- new.env(parent = baseenv())
   err <- tryCatch(
     engine$eval_text("(+ 1 nope)", env = env, source_name = "test.arl"),
@@ -126,6 +144,7 @@ test_that("eval text errors include source and stack context", {
 # =============================================================================
 
 test_that("current-env returns the active evaluation environment", {
+  thin()
   engine$eval(engine$read("(define _ce_test 123)")[[1]])
   curr <- engine$eval(engine$read("(current-env)")[[1]])
   expect_true(is.environment(curr))
@@ -133,12 +152,14 @@ test_that("current-env returns the active evaluation environment", {
 })
 
 test_that("r-eval with no env uses current environment", {
+  thin()
   # + is in the env (from stdlib); r-eval (quote +) should return it
   result <- engine$eval(engine$read("(r-eval (quote +))")[[1]])
   expect_true(is.function(result))
 })
 
 test_that("r-eval with no env sees bindings from same evaluation context", {
+  thin()
   # current-env returns the active env (with bindings from previous evals in same engine)
   eng <- make_engine()
   eng$eval(eng$read("(define _reval_secret 99)")[[1]])
@@ -150,6 +171,7 @@ test_that("r-eval with no env sees bindings from same evaluation context", {
 })
 
 test_that("multiple engines have independent current-env", {
+  thin()
   engine_a <- make_engine()
   engine_b <- make_engine()
   engine_a$eval(engine_a$read("(define _eng_x 1)")[[1]])
@@ -187,6 +209,7 @@ eval_compiled_in_env <- function(engine, expr, env) {
 }
 
 test_that("compiler conformance for core constructs", {
+  thin()
   cases <- list(
     list(
       name = "quote",
@@ -267,6 +290,7 @@ test_that("compiler conformance for core constructs", {
 })
 
 test_that("compiler output is pure R code (no evaluator references)", {
+  thin()
   env <- make_env(engine)
   exprs <- list(
     engine$read("(begin (define x 1) (+ x 2))")[[1]],
@@ -285,6 +309,7 @@ test_that("compiler output is pure R code (no evaluator references)", {
 })
 
 test_that("compiled visibility contract matches engine eval", {
+  thin()
   env_eval <- make_env(engine)
   env_compiled <- make_env(engine)
 
@@ -310,6 +335,7 @@ test_that("compiled visibility contract matches engine eval", {
 })
 
 test_that("macro pipeline matches engine eval", {
+  thin()
   env_eval <- make_env(engine)
   env_compiled <- make_env(engine)
 
@@ -339,6 +365,7 @@ test_that("macro pipeline matches engine eval", {
 
 # Optimization Tests: Constant Folding
 test_that("compiler performs constant folding for arithmetic operations", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Test that pure arithmetic with literals gets folded
@@ -354,6 +381,7 @@ test_that("compiler performs constant folding for arithmetic operations", {
 })
 
 test_that("compiler performs constant folding for comparison operations", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Comparison operators should fold
@@ -366,6 +394,7 @@ test_that("compiler performs constant folding for comparison operations", {
 })
 
 test_that("compiler performs constant folding for logical operations", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Logical operators should fold
@@ -378,6 +407,7 @@ test_that("compiler performs constant folding for logical operations", {
 })
 
 test_that("compiler does NOT fold when arguments have side effects", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
 
@@ -392,6 +422,7 @@ test_that("compiler does NOT fold when arguments have side effects", {
 })
 
 test_that("compiler does NOT fold when operators are not pure", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Non-literal arguments should not fold
@@ -407,6 +438,7 @@ test_that("compiler does NOT fold when operators are not pure", {
 })
 
 test_that("compiler performs constant folding for math functions", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Math functions with literal arguments should fold
@@ -418,6 +450,7 @@ test_that("compiler performs constant folding for math functions", {
 })
 
 test_that("compiler handles constant folding edge cases", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Division by zero produces Inf (R behavior)
@@ -433,6 +466,7 @@ test_that("compiler handles constant folding edge cases", {
 
 # Optimization Tests: Truthiness Optimization
 test_that("compiler optimizes truthiness checks for literal booleans", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Literal TRUE/FALSE should work without .__true_p wrapper
@@ -442,6 +476,7 @@ test_that("compiler optimizes truthiness checks for literal booleans", {
 })
 
 test_that("compiler optimizes truthiness checks for comparison operators", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Comparison operators return proper R logicals - no wrapper needed
@@ -454,6 +489,7 @@ test_that("compiler optimizes truthiness checks for comparison operators", {
 })
 
 test_that("compiler optimizes truthiness checks for logical operators", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Logical operators return proper R logicals - no wrapper needed
@@ -463,6 +499,7 @@ test_that("compiler optimizes truthiness checks for logical operators", {
 })
 
 test_that("compiler preserves Arl truthiness semantics", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # #f, #nil, and 0 are false in Arl (0 follows R semantics)
@@ -477,6 +514,7 @@ test_that("compiler preserves Arl truthiness semantics", {
 })
 
 test_that("compiler handles constant-folded boolean tests", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # When constant folding produces a boolean literal, skip wrapper
@@ -486,6 +524,7 @@ test_that("compiler handles constant-folded boolean tests", {
 
 # Optimization Tests: Dead Code Elimination
 test_that("compiler eliminates dead branches for constant true test", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # When test is literally TRUE, only then-branch should remain
@@ -497,6 +536,7 @@ test_that("compiler eliminates dead branches for constant true test", {
 })
 
 test_that("compiler eliminates dead branches for constant false test", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # When test is literally FALSE, only else-branch should remain
@@ -507,6 +547,7 @@ test_that("compiler eliminates dead branches for constant false test", {
 })
 
 test_that("compiler eliminates dead branches for null test", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # NULL is falsy in Arl, so else-branch is taken
@@ -514,6 +555,7 @@ test_that("compiler eliminates dead branches for null test", {
 })
 
 test_that("compiler handles missing else branch with constant test", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # (if #t a) should become just a
@@ -524,6 +566,7 @@ test_that("compiler handles missing else branch with constant test", {
 })
 
 test_that("dead code elimination preserves side effects in taken branch", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
   env$x <- 0
@@ -541,6 +584,7 @@ test_that("dead code elimination preserves side effects in taken branch", {
 })
 
 test_that("dead code elimination does NOT eliminate for variable tests", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
   env$x <- TRUE
@@ -556,6 +600,7 @@ test_that("dead code elimination does NOT eliminate for variable tests", {
 
 # Optimization Tests: Begin Simplification
 test_that("compiler simplifies single-expression begin blocks", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Single expression should not have block wrapper
@@ -564,6 +609,7 @@ test_that("compiler simplifies single-expression begin blocks", {
 })
 
 test_that("compiler preserves multi-expression begin blocks", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
   env$x <- 0
@@ -574,6 +620,7 @@ test_that("compiler preserves multi-expression begin blocks", {
 })
 
 test_that("compiler handles empty begin", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # Empty begin should return NULL (invisible)
@@ -583,6 +630,7 @@ test_that("compiler handles empty begin", {
 
 # Optimization Tests: Identity Elimination
 test_that("compiler eliminates simple identity lambda", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # ((lambda (x) x) value) should become just value
@@ -591,6 +639,7 @@ test_that("compiler eliminates simple identity lambda", {
 })
 
 test_that("compiler eliminates identity lambda selecting first arg", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # ((lambda (a b) a) v1 v2) should become just v1
@@ -599,6 +648,7 @@ test_that("compiler eliminates identity lambda selecting first arg", {
 })
 
 test_that("compiler does NOT eliminate non-identity lambdas", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
 
   # These are not identity functions - should not be optimized away
@@ -607,6 +657,7 @@ test_that("compiler does NOT eliminate non-identity lambdas", {
 })
 
 test_that("identity elimination preserves evaluation order", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
   env$counter <- 0
@@ -625,6 +676,7 @@ test_that("identity elimination preserves evaluation order", {
 # ============================================================================
 
 test_that("factorial function works", {
+  thin()
   engine <- make_engine(load_prelude = FALSE)
   env <- new.env()
 
@@ -658,12 +710,14 @@ test_that("factorial function works", {
 # ============================================================================
 
 test_that("inspect_compilation returns a list with expected names", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   out <- engine$inspect_compilation("(+ 1 2)")
   expect_named(out, c("parsed", "expanded", "compiled", "compiled_deparsed"))
 })
 
 test_that("inspect_compilation on compilable expression returns right-shaped results", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   out <- engine$inspect_compilation("(+ 1 2)")
   expect_true(is.language(out$parsed))
@@ -676,6 +730,7 @@ test_that("inspect_compilation on compilable expression returns right-shaped res
 })
 
 test_that("inspect_compilation keeps compiled and compiled_deparsed in sync", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   # By design: no expression -> no compiled form. When there is one, both are set or both NULL.
   out_empty <- engine$inspect_compilation("")
@@ -690,6 +745,7 @@ test_that("inspect_compilation keeps compiled and compiled_deparsed in sync", {
 })
 
 test_that("inspect_compilation on empty text returns all NULL", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   out <- engine$inspect_compilation("")
   expect_null(out$parsed)
@@ -699,6 +755,7 @@ test_that("inspect_compilation on empty text returns all NULL", {
 })
 
 test_that("inspect_compilation accepts env and uses it for expansion", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   env <- new.env(parent = baseenv())
   toplevel_env(engine, env = env)
@@ -717,6 +774,7 @@ test_that("inspect_compilation accepts env and uses it for expansion", {
 })
 
 test_that("inspect_compilation with env = NULL uses engine environment", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   out <- engine$inspect_compilation("(* 2 3)", env = NULL)
   # Compiled can be a language object or a literal (if constant-folded)
@@ -725,6 +783,7 @@ test_that("inspect_compilation with env = NULL uses engine environment", {
 })
 
 test_that("compiled_deparsed when present is parseable R code", {
+  thin()
   engine <- Engine$new(load_prelude = FALSE)
   out <- engine$inspect_compilation("(if #t 1 2)")
   skip_if(is.null(out$compiled), "Compiler returned NULL for this expression")

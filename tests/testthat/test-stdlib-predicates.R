@@ -2,7 +2,10 @@
 
 engine <- make_engine()
 
+thin <- make_cran_thinner()
+
 test_that("predicates work correctly", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -17,6 +20,7 @@ test_that("predicates work correctly", {
 })
 
 test_that("extended predicates work correctly", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -64,6 +68,7 @@ test_that("extended predicates work correctly", {
 })
 
 test_that("numeric tower predicates work correctly", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -86,6 +91,7 @@ test_that("numeric tower predicates work correctly", {
 })
 
 test_that("list? identifies lists correctly", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -95,6 +101,7 @@ test_that("list? identifies lists correctly", {
 })
 
 test_that("symbol? identifies symbols correctly", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -103,6 +110,7 @@ test_that("symbol? identifies symbols correctly", {
 })
 
 test_that("number? identifies all numeric types", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -112,6 +120,7 @@ test_that("number? identifies all numeric types", {
 })
 
 test_that("string? identifies strings correctly", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -120,6 +129,7 @@ test_that("string? identifies strings correctly", {
 })
 
 test_that("vector? identifies R vectors", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -128,6 +138,7 @@ test_that("vector? identifies R vectors", {
 })
 
 test_that("boolean? identifies logical values", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -137,6 +148,7 @@ test_that("boolean? identifies logical values", {
 })
 
 test_that("atom? identifies non-compound values", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -145,6 +157,7 @@ test_that("atom? identifies non-compound values", {
 })
 
 test_that("empty? identifies zero-length collections", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -153,6 +166,7 @@ test_that("empty? identifies zero-length collections", {
 })
 
 test_that("null? identifies NULL and empty lists", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -162,6 +176,7 @@ test_that("null? identifies NULL and empty lists", {
 })
 
 test_that("procedure? identifies functions", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -170,6 +185,7 @@ test_that("procedure? identifies functions", {
 })
 
 test_that("environment? identifies environments", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -178,6 +194,7 @@ test_that("environment? identifies environments", {
 })
 
 test_that("fn? and callable? are function predicates", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -186,6 +203,7 @@ test_that("fn? and callable? are function predicates", {
 })
 
 test_that("not returns logical negation", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -194,6 +212,7 @@ test_that("not returns logical negation", {
 })
 
 test_that("not treats #f and 0 as false", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -202,6 +221,7 @@ test_that("not treats #f and 0 as false", {
 })
 
 test_that("xor implements exclusive or", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -211,6 +231,7 @@ test_that("xor implements exclusive or", {
 })
 
 test_that("xor works with truthy values", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -219,6 +240,7 @@ test_that("xor works with truthy values", {
 })
 
 test_that("predicates and interop helpers work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -233,6 +255,7 @@ test_that("predicates and interop helpers work", {
 })
 
 test_that("real? excludes complex numbers", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -241,6 +264,7 @@ test_that("real? excludes complex numbers", {
 })
 
 test_that("rational? excludes infinities", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -249,6 +273,7 @@ test_that("rational? excludes infinities", {
 })
 
 test_that("integer? checks integer-valued numbers", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -258,6 +283,7 @@ test_that("integer? checks integer-valued numbers", {
 })
 
 test_that("exact? identifies integer storage", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -266,6 +292,7 @@ test_that("exact? identifies integer storage", {
 })
 
 test_that("inexact? identifies double storage", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -274,6 +301,7 @@ test_that("inexact? identifies double storage", {
 })
 
 test_that("natural? requires non-negative integers", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -283,6 +311,7 @@ test_that("natural? requires non-negative integers", {
 })
 
 test_that("zero? identifies zero", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -291,6 +320,7 @@ test_that("zero? identifies zero", {
 })
 
 test_that("positive? and negative? work", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -300,6 +330,7 @@ test_that("positive? and negative? work", {
 })
 
 test_that("even? and odd? work", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -309,6 +340,7 @@ test_that("even? and odd? work", {
 })
 
 test_that("finite? and infinite? work", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -318,6 +350,7 @@ test_that("finite? and infinite? work", {
 })
 
 test_that("nan? identifies NaN", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -330,6 +363,7 @@ test_that("nan? identifies NaN", {
 # ============================================================================
 
 test_that("identical? tests object identity", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -340,6 +374,7 @@ test_that("identical? tests object identity", {
 })
 
 test_that("identical? tests value identity", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -352,6 +387,7 @@ test_that("identical? tests value identity", {
 })
 
 test_that("equal? tests structural equality", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -360,6 +396,7 @@ test_that("equal? tests structural equality", {
 })
 
 test_that("equal? handles nested structures", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -367,6 +404,7 @@ test_that("equal? handles nested structures", {
 })
 
 test_that("equality handles empty collections", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -374,6 +412,7 @@ test_that("equality handles empty collections", {
 })
 
 test_that("equal? compares strings", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -382,6 +421,7 @@ test_that("equal? compares strings", {
 })
 
 test_that("equality handles NULL", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -391,6 +431,7 @@ test_that("equality handles NULL", {
 })
 
 test_that("= handles NULL (Scheme semantics, not R logical(0))", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -403,6 +444,7 @@ test_that("= handles NULL (Scheme semantics, not R logical(0))", {
 })
 
 test_that("identical? and equal? both work for lists", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -413,6 +455,7 @@ test_that("identical? and equal? both work for lists", {
 })
 
 test_that("equality handles symbols", {
+  thin()
   env <- new.env(parent = emptyenv())
   toplevel_env(engine, env = env)
 
@@ -426,6 +469,7 @@ test_that("equality handles symbols", {
 # ============================================================================
 
 test_that("predicates handle edge cases", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 

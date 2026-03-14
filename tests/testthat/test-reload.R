@@ -9,7 +9,10 @@ write_module <- function(path, name, body) {
   writeLines(lines, path)
 }
 
+thin <- make_cran_thinner()
+
 test_that("basic reload: value updated after file change", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -33,6 +36,7 @@ test_that("basic reload: value updated after file change", {
 })
 
 test_that("reference semantics: existing proxy sees new value after reload", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -59,6 +63,7 @@ test_that("reference semantics: existing proxy sees new value after reload", {
 })
 
 test_that("env identity preserved after reload", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -88,6 +93,7 @@ test_that("env identity preserved after reload", {
 })
 
 test_that("export-all reload: new binding added, old one updated", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -113,6 +119,7 @@ test_that("export-all reload: new binding added, old one updated", {
 })
 
 test_that("new exports visible after reload via proxy rebuild", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -138,6 +145,7 @@ test_that("new exports visible after reload via proxy rebuild", {
 })
 
 test_that("removed exports cleaned up from proxy", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -164,6 +172,7 @@ test_that("removed exports cleaned up from proxy", {
 })
 
 test_that("error: reload unloaded module", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -181,6 +190,7 @@ test_that("error: reload unloaded module", {
 })
 
 test_that("transitive update: A imports B, reload B, A sees new values", {
+  thin()
   eng <- make_engine()
   dir <- tempdir()
   path_b <- file.path(dir, "mod-b.arl")
@@ -217,6 +227,7 @@ test_that("transitive update: A imports B, reload B, A sees new values", {
 })
 
 test_that("multiple consumers: both see updates after reload", {
+  thin()
   eng <- make_engine()
   dir <- tempdir()
   path_c <- file.path(dir, "shared-mod.arl")
@@ -261,6 +272,7 @@ test_that("multiple consumers: both see updates after reload", {
 })
 
 test_that("cache bypass: modified file re-read on reload", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -287,6 +299,7 @@ test_that("cache bypass: modified file re-read on reload", {
 })
 
 test_that(":reload with :only modifier", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -312,6 +325,7 @@ test_that(":reload with :only modifier", {
 })
 
 test_that(":reload with :as modifier for qualified access", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)
@@ -335,6 +349,7 @@ test_that(":reload with :as modifier for qualified access", {
 })
 
 test_that("compile error: :reload inside nested scope", {
+  thin()
   eng <- make_engine()
   expect_error(
     eng$eval_text('(lambda () (import foo :reload))'),
@@ -343,6 +358,7 @@ test_that("compile error: :reload inside nested scope", {
 })
 
 test_that("compile error: duplicate :reload", {
+  thin()
   eng <- make_engine()
   expect_error(
     eng$eval_text('(import foo :reload :reload)'),
@@ -351,6 +367,7 @@ test_that("compile error: duplicate :reload", {
 })
 
 test_that("macro reload: macro body changes visible through proxy", {
+  thin()
   eng <- make_engine()
   path <- tempfile(fileext = ".arl")
   on.exit(unlink(path), add = TRUE)

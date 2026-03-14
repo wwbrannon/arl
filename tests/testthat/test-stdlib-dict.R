@@ -6,7 +6,10 @@ engine <- make_engine()
 # Basic dict operations (from collections)
 # ============================================================================
 
+thin <- make_cran_thinner()
+
 test_that("basic dict operations work", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
 
@@ -34,6 +37,7 @@ test_that("basic dict operations work", {
 # ============================================================================
 
 test_that("dict-update applies function to existing value", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict", "math"), env = env)
@@ -48,6 +52,7 @@ test_that("dict-update applies function to existing value", {
 })
 
 test_that("dict-update uses default for missing key", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict", "math"), env = env)
@@ -62,6 +67,7 @@ test_that("dict-update uses default for missing key", {
 })
 
 test_that("dict-update returns the dict", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -77,6 +83,7 @@ test_that("dict-update returns the dict", {
 # ============================================================================
 
 test_that("dict-map transforms values", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -91,6 +98,7 @@ test_that("dict-map transforms values", {
 })
 
 test_that("dict-map returns new dict", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -106,6 +114,7 @@ test_that("dict-map returns new dict", {
 })
 
 test_that("dict-map on empty dict", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -123,6 +132,7 @@ test_that("dict-map on empty dict", {
 # ============================================================================
 
 test_that("dict-filter keeps matching entries", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -137,6 +147,7 @@ test_that("dict-filter keeps matching entries", {
 })
 
 test_that("dict-filter returns new dict", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -152,6 +163,7 @@ test_that("dict-filter returns new dict", {
 # ============================================================================
 
 test_that("dict-for-each iterates for side effects", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -166,6 +178,7 @@ test_that("dict-for-each iterates for side effects", {
 })
 
 test_that("dict-for-each returns nil", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -181,6 +194,7 @@ test_that("dict-for-each returns nil", {
 # ============================================================================
 
 test_that("dict->alist converts dict to association list", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -197,6 +211,7 @@ test_that("dict->alist converts dict to association list", {
 })
 
 test_that("alist->dict converts association list to dict", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -210,6 +225,7 @@ test_that("alist->dict converts association list to dict", {
 })
 
 test_that("dict->alist round-trips with alist->dict", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
@@ -224,6 +240,7 @@ test_that("dict->alist round-trips with alist->dict", {
 })
 
 test_that("dict->alist on empty dict", {
+  thin()
   env <- new.env()
   toplevel_env(engine, env = env)
   import_stdlib_modules(engine, c("dict"), env = env)
