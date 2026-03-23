@@ -5,21 +5,16 @@
 
 <!-- badges: start -->
 
+[![CRAN](https://www.r-pkg.org/badges/version/arl)](https://CRAN.R-project.org/package=arl)
+[![R-universe](https://wwbrannon.r-universe.dev/badges/arl)](https://wwbrannon.r-universe.dev/arl)
 [![R CMD
 check](https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/wwbrannon/arl/actions/workflows/check.yaml)
 [![codecov](https://codecov.io/gh/wwbrannon/arl/graph/badge.svg?token=7pxGM6lI73)](https://app.codecov.io/gh/wwbrannon/arl)
-[![CRAN
-status](https://www.r-pkg.org/badges/version/arl)](https://CRAN.R-project.org/package=arl)
-[![License:
-MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18740487.svg)](https://doi.org/10.5281/zenodo.18740487)
+[![pkgdown](https://img.shields.io/badge/pkgdown-site-blue.svg)](https://willbrannon.com/arl)
 <!--
-[![R Coverage](https://app.codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=r-code)](https://app.codecov.io/gh/wwbrannon/arl?flags%5B0%5D=r-code)
-[![Arl Coverage](https://app.codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73&flag=arl-code)](https://app.codecov.io/gh/wwbrannon/arl?flags%5B0%5D=arl-code)
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-red.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/arl)](https://CRAN.R-project.org/package=arl)
-[![R-universe](https://wwbrannon.r-universe.dev/badges/arl)](https://wwbrannon.r-universe.dev/arl)
-[![pkgdown](https://img.shields.io/badge/pkgdown-site-blue.svg)][pkgdown-site]
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 --> <!-- badges: end -->
 
 A Lisp dialect that compiles to R: write macros, use every R function
@@ -36,19 +31,23 @@ transformation and self-tail-call optimization for stack-safe recursion.
 
 ## Installation
 
+Install from CRAN:
+
 ``` r
-# install.packages("arl")
-devtools::install_github("wwbrannon/arl")
+install.packages("arl")
 ```
 
-Arl is not yet on CRAN; install from GitHub with `devtools` as shown
-above. Once a CRAN release is available, `install.packages("arl")` will
-work.
+Or install the development version from Github:
+
+``` r
+devtools::install_github("wwbrannon/arl")
+```
 
 ## Quick Start
 
 ``` r
 library(arl)
+
 engine <- Engine$new()
 engine$repl()
 ```
@@ -157,7 +156,8 @@ passed as values.
 - `module` - Define a module with exports
 
 R formula syntax (`~`) and package namespace access (`::`, `:::`) are
-available via R interop, but are not Arl special forms.
+available via arl’s access to R functions, but are not Arl special
+forms.
 
 `help` (along with `doc`/`doc!`) is a built-in function, not a special
 form.
@@ -199,7 +199,8 @@ avoiding stack growth. This works through `if`, `begin`, `cond`, `let`,
       acc
       (factorial (- n 1) (* acc n)))))
 
-(factorial 100000 1)
+; Integer overflow, but not stack overflow
+(factorial 100000 1)  ; => Inf
 ```
 
 Since self-calls become loop iterations, recursive call frames won’t
@@ -252,10 +253,10 @@ are always available; non-prelude modules require explicit import (or
 use `Engine$new(load_prelude = FALSE)` for a completely bare engine):
 
 ``` lisp
-(import math)      ; inc/dec/abs/min/max/floor/ceiling/round/square/...
+(import math)      ; inc/dec/clamp/signum/expt/quotient/remainder/...
 (import looping)   ; until/do-list/loop/recur
 (import sort)      ; list-sort/sort-by
-(import strings)   ; str/string-join/string-split/...
+(import strings)   ; string-join/string-split/trim/string-format/...
 ```
 
 ### Modules and File Loading
@@ -276,10 +277,10 @@ vignette for defining your own modules.
 ### Semantics
 
 - **Truthiness**: `#f`/`FALSE`, `#nil`/`NULL`, and `0` are falsey;
-  everything else is truthy (same as R).
-- **Lists**: Arl lists are backed by R lists or calls; `car` returns the
-  head and `cdr` returns the tail as a list. Dotted pairs (`cons` with
-  non-list cdr) are also supported; see the [Arl vs
+  everything else is truthy.
+- **Lists**: Arl lists are backed by R lists, calls, or cons cells;
+  `car` returns the head and `cdr` returns the tail as a list. Dotted
+  pairs (`cons` with non-list cdr) are also supported; see the [Arl vs
   Scheme](https://github.com/wwbrannon/arl/blob/main/vignettes/arl-vs-scheme.Rmd)
   vignette.
 - **Keywords**: `:kw` tokens are self-evaluating and become named
@@ -290,15 +291,15 @@ vignette for defining your own modules.
 All R functions are accessible directly:
 
 ``` lisp
+; Access R data structures
+(define df (data.frame :x (c 1 2 3) :y (c 4 5 6)))
+
 ; Call R functions
 (lm (~ y x) :data df)
 
 ; Use R operators
 ($ mylist field)
 ([ vector 1)
-
-; Access R data structures
-(define df (data.frame :x (c 1 2 3) :y (c 4 5 6)))
 ```
 
 ### Examples
@@ -321,7 +322,7 @@ outputs:
 - **[pipeline-macros.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/pipeline-macros.arl)** -
   Macro-driven pipeline expansion and data flow
 - **[data-analysis.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/data-analysis.arl)** -
-  R interop for data processing and statistics
+  R interopability for data processing and statistics
 - **[graph-paths.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/graph-paths.arl)** -
   BFS traversal and Dijkstra shortest paths with report output
 - **[log-parser.arl](https://github.com/wwbrannon/arl/blob/main/inst/examples/log-parser.arl)** -
@@ -339,7 +340,7 @@ Arl leverages R’s existing eval/quote/environment system:
     token stream for the parser to consume.
 2.  **Parser**: Consume the tokenizer’s token stream and produce an
     abstract syntax tree (AST), removing syntactic sugar like `'`
-    (quote) \`\`\` (quasiquote), etc.
+    (quote) `` ` `` (quasiquote), etc.
 3.  **Macro expander**: Expand macros occurring in the input into code.
     Macro expansion is recursive, with each step generating new code
     that may have further macro calls to expand. Expansion terminates

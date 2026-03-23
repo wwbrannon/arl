@@ -1,5 +1,5 @@
 destination: site
-url:
+url: https://willbrannon.com/arl
 
 autolink:  # pkgdown is incorrectly linking these to the base R functions' docs
   exclude:
