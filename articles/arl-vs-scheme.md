@@ -1,0 +1,373 @@
+# Arl Compared to Scheme
+
+Arl is a Lisp dialect implemented in and with access to R. It borrows
+Lisp syntax and macro conventions, but its runtime model and interop are
+rooted in R. Because R’s development was [heavily
+influenced](https://cran.r-project.org/doc/html/interface98-paper/paper_1.html)
+by Scheme and has [similar underlying
+architecture](https://cran.r-project.org/doc/manuals/r-devel/R-lang.html#Computing-on-the-language),
+this vignette highlights key similarities with Scheme and the most
+important differences.
+
+## Common ground
+
+Arl and Scheme share a Lisp-family surface syntax and several familiar
+ideas:
+
+- **S-expressions**: code and data use the same list syntax.
+- **[Homoiconic](https://en.wikipedia.org/wiki/Homoiconicity) macros**:
+  `defmacro` plus quasiquote/unquote are central.
+- **First-class functions**: anonymous functions and higher-order
+  patterns are idiomatic.
+- **Lexical scoping**: bindings are local by default and resolve
+  predictably.
+
+## Core differences
+
+The main differences come from Arl leaning on R’s runtime:
+
+### Evaluation model
+
+Arl evaluates expressions via R’s
+[`eval()`](https://rdrr.io/r/base/eval.html) and environments. That
+means:
+
+- R’s base functions are available without importing.
+- R’s evaluation and error semantics apply under the hood.
+
+### Data model
+
+Scheme has pairs and lists as the fundamental sequence type. Arl uses R
+data structures:
+
+- Lists are R lists or calls (R’s type-generic vectors).
+- Arl also has dotted pairs (R6 `Cons` objects, tested with `pair?`);
+  `list-or-pair?` is true for non-empty lists or dotted pairs.
+- Vectors are R vectors.
+- `#nil` maps to R’s `NULL`.
+
+#### Pairlists vs R lists
+
+Scheme usually presents lists as chains of pairs. In Arl, the first
+distinction is **representation**:
+
+- **R list/call representation** (created by `list`, many stdlib ops,
+  and R interop).
+- **`Cons` cell representation** (R6 object), created by dotted-pair
+  syntax / low-level pair construction.
+
+Both can represent sequence-like data, but `list?` and `pair?` are
+intentionally representation-oriented:
+
+- `list?` is true for R lists/calls.
+- `pair?` is true for `Cons` cells.
+- `list-or-pair?` accepts either non-empty representation.
+
+Because quoted forms are R calls, you may see:
+
+    arl> (list? '(1 2 3))          ; => #t
+    #> TRUE
+    arl> (base::is.list '(1 2 3))  ; => #f
+    #> FALSE
+
+This is expected: Arl predicates express Lisp semantics; R predicates
+report R object types.
+
+For `Cons` chains, the classic proper/improper distinction still
+applies:
+
+- A `Cons` chain ending in `()`/`#nil` is **proper**.
+- A `Cons` chain with a non-list tail is **improper** (dotted pair).
+
+`car`/`cdr` work across both representations; for an improper pair,
+`cdr` returns the tail value directly.
+
+    arl> (define rlist (list 1 2 3))
+    #> (1 2 3)
+    arl> (define cons-proper (1 . (2 . (3 . ()))))
+    #> (1 2 3 . ())
+    arl> (define cons-improper (1 . 2))
+    #> (1 . 2)
+
+    arl> (list? rlist)
+    #> TRUE
+    arl> (pair? cons-proper)
+    #> TRUE
+    arl> (pair? cons-improper)
+    #> TRUE
+    arl> (cdr rlist)          ; => (2 3)
+    #> (2 3)
+    arl> (cdr cons-proper)    ; => (2 3) as a Cons chain
+    #> (2 3 . ())
+    arl> (cdr cons-improper)  ; => 2
+    #> 2
+
+In practice, most everyday Arl code should prefer R-list-backed lists.
+`Cons` representation remains useful for Lisp-style data modeling and
+explicit pair work.
+
+### Truthiness
+
+Scheme typically treats only `#f` as false. Arl treats `#f`/`FALSE`,
+`#nil`/`NULL`, and `0` as falsey; everything else is truthy.
+
+### Numeric edge cases (R semantics)
+
+Arl mirrors R’s numeric behavior rather than Scheme’s in several edge
+cases:
+
+- **Division by zero**: `(/ 1 0)` yields `Inf` (and `(/ -1 0)` yields
+  `-Inf`) instead of raising an error.
+- **NaN comparisons**: `(== NaN NaN)` yields `NA` rather than `#f`, due
+  to R’s `NA` propagation rules.
+
+This is intentional for R interop, but it is a meaningful semantic
+difference from Scheme. Prefer predicates like `is.infinite`, `is.nan`,
+and `is.na` when you need to branch on these values.
+
+    arl> (/ 1 0)         ; => Inf
+    #> Inf
+    arl> (== NaN NaN)    ; => NA
+    #> NA
+    arl> (is.infinite (/ 1 0))  ; => TRUE
+    #> TRUE
+    arl> (is.na (== NaN NaN))   ; => TRUE
+    #> TRUE
+
+### Numeric Tower Differences
+
+Arl implements a numeric tower similar to Scheme’s, but adapted for R’s
+type system:
+
+    number?    (is.numeric OR is.complex)
+    ├─ complex?  (is.complex)
+    └─ real?     (is.numeric AND NOT is.complex)
+       ├─ ±Inf   (real but not rational)
+       └─ rational? (real? AND is.finite)
+          └─ integer? (is.finite AND is.numeric AND x == as.integer(x))
+             └─ natural? (integer? AND x >= 0)
+
+    Orthogonal predicates:
+    exact?   (is.integer - storage type)
+    inexact? (number? AND NOT is.integer)
+
+**Key differences from Scheme:**
+
+1.  R doesn’t distinguish exact rationals from inexact reals - all are
+    IEEE 754 floats
+2.  `rational?` means “finite real” in Arl (since all finite floats are
+    rationally representable)
+3.  `exact?` checks storage type (integer vs. double), not mathematical
+    exactness
+4.  All complex numbers in R are inexact (double-precision)
+
+**Infinities and special values:**
+
+    arl> (real? Inf)       ; => #t (infinities are real)
+    #> TRUE
+    arl> (rational? Inf)   ; => #f (but not rational)
+    #> FALSE
+    arl> (finite? Inf)     ; => #f
+    #> FALSE
+    arl> (real? NaN)       ; => #t
+    #> TRUE
+    arl> (finite? NaN)     ; => #f
+    #> FALSE
+
+### Keywords and named arguments
+
+Arl keywords (`:from`, `:to`) are self-evaluating and map to **named
+arguments** in R calls. This is a major ergonomic difference from
+Scheme.
+
+### Tail-call optimization
+
+Scheme mandates full tail-call optimization (proper tail calls). Arl
+implements **self-TCO**: the compiler detects
+`(define name (lambda ...))` or `(set! name (lambda ...))` where the
+lambda body has self-calls in tail position and rewrites them as `while`
+loops. This covers tail calls through the `if` and `begin` special
+forms, as well as through macros in terms of them like `cond`, `let`,
+`let*`, `letrec`, etc. Because `letrec` expands into `set!`,
+`letrec`-bound self-recursive lambdas are optimized automatically.
+
+What is **not** covered:
+
+- **Mutual recursion** (`f` calls `g` in tail position, `g` calls `f`).
+- **`apply`-based tail calls** or indirect calls through higher-order
+  functions.
+- **Anonymous lambdas** which tail-recurse by use of a fixed-point
+  combinator (no name for the compiler to detect self-calls against).
+
+Like Scheme’s proper tail calls, self-TCO elides recursive stack frames:
+on error inside an optimized function, only the outermost call appears
+in the stack trace rather than the full chain of recursive calls.
+
+For cases not covered by self-TCO, use `loop`/`recur` for explicit
+tail-recursive patterns.
+
+    arl> ;; Self-TCO optimizes this automatically
+    arl> (define factorial
+    arl>   (lambda (n acc)
+    arl>     (if (< n 2) acc
+    arl>         (factorial (- n 1) (* acc n)))))
+    #> <function>
+
+    arl> ;; loop/recur for explicit control
+    arl> (loop ((i 10) (acc 1))
+    arl>   (if (< i 2) acc
+    arl>       (recur (- i 1) (* acc i))))
+    #> 3628800
+
+### Interop
+
+Arl can call R functions directly:
+
+    arl> (mean (c 1 2 3 4 5))
+    #> 3
+    arl> (seq :from 1 :to 10 :by 2)
+    #> 1 3 5 7 9
+
+Scheme code typically requires FFI layers for such interop; Arl treats
+it as normal function application.
+
+### Module system
+
+Arl’s module system is closer to Clojure’s namespaces or Racket’s
+modules than to R5RS/R6RS libraries:
+
+- **First-class modules**: modules are ordinary R environments and can
+  be passed around, inspected, and stored in data structures.
+- **Qualified access via `/`**: `(import math)` then `(math/inc 5)`,
+  similar to Racket’s prefix imports.
+- **`:refer`, `:as`, `:rename` modifiers**: `(import strings :as str)`
+  or `(import math :refer (inc dec))` — Clojure-inspired, unlike
+  Scheme’s `import` specs.
+- **Prelude**: 10 core modules are loaded automatically (like Scheme’s
+  base library), while other stdlib modules require explicit `import`.
+
+Scheme’s R6RS library system is static and resolved at expansion time;
+Arl’s imports are evaluated at runtime and modules can be loaded
+conditionally.
+
+## Macro systems
+
+This is one of the most significant design differences between Arl and
+Scheme.
+
+### Scheme: pattern-based `syntax-rules`
+
+Standard Scheme (R5RS and later) provides `syntax-rules`, a
+pattern-matching macro system. You write a set of patterns and
+corresponding templates; the expander matches the input against the
+patterns and substitutes into the template:
+
+``` scheme
+;; Scheme syntax-rules (not valid Arl)
+(define-syntax my-when
+  (syntax-rules ()
+    ((my-when test body ...)
+     (if test (begin body ...) (void)))))
+```
+
+`syntax-rules` is **hygienic by construction**: because the expander
+controls how names are substituted, macro-introduced bindings can never
+accidentally shadow the caller’s variables. The trade-off is that macros
+are limited to pattern-template rewriting – they cannot perform
+arbitrary computation at expansion time. (Scheme also has `syntax-case`,
+`er-macro-transformer`, and other lower-level systems, but
+`syntax-rules` is the standard portable mechanism.)
+
+### Arl: procedural `defmacro` with automatic hygiene
+
+Arl uses **procedural `defmacro`-style** macros, closer to the model in
+Common Lisp and Clojure. Each macro is an ordinary function that
+receives its arguments as unevaluated syntax trees and returns new
+syntax. Quasiquote, unquote, and unquote-splicing are the primary tools
+for building the output.
+
+    arl> (defmacro my-when (test . body)
+    arl>   `(if ,test (begin ,@body) #nil))
+
+    arl> (my-when (> 5 3) (+ 1 1))
+    #> 2
+
+Because the macro body is ordinary Arl code, macros can do arbitrary
+computation at expansion time – loops, conditionals, list manipulation,
+even calling R functions – before returning the final syntax. This is
+more flexible than `syntax-rules`, which is restricted to pattern
+matching and template substitution.
+
+### Hygiene: different approaches to the same goal
+
+Traditional `defmacro` (Common Lisp-style) is **unhygienic**: the macro
+author must manually use `gensym` to avoid name collisions. Scheme’s
+`syntax-rules` is hygienic by construction.
+
+Arl splits the difference. Its `defmacro` is **hygienic by default**:
+bindings the macro introduces (via `define`, `let`, `lambda`, etc.) are
+automatically renamed so they cannot collide with caller names.
+
+    arl> (defmacro swap (a b)
+    arl>   `(let ((temp ,a))
+    arl>      (set! ,a ,b)
+    arl>      (set! ,b temp)))
+
+    arl> (define temp 999)
+    #> 999
+    arl> (define p 1)
+    #> 1
+    arl> (define q 2)
+    #> 2
+    arl> (swap p q)
+    arl> (list p q temp)  ; temp is unaffected
+    #> (2 1 999)
+
+When you *want* to introduce a binding visible to the caller (an
+anaphoric macro), you use `capture` to opt out of hygiene for specific
+symbols. This is something `syntax-rules` cannot express at all without
+dropping down to a lower-level system.
+
+    arl> (defmacro aif2 (test then alt)
+    arl>   `(let ((it ,test))
+    arl>      (if it ,(capture 'it then) ,(capture 'it alt))))
+
+    arl> (aif2 (+ 10 20) (string-concat "got " it) "none")
+    #> "got 30"
+
+### Summary of differences
+
+|                                | Scheme `syntax-rules`                        | Arl `defmacro`                   |
+|--------------------------------|----------------------------------------------|----------------------------------|
+| **Style**                      | Pattern-template rewriting                   | Procedural (arbitrary code)      |
+| **Hygiene**                    | By construction                              | Automatic, opt-out via `capture` |
+| **Expansion-time computation** | Not supported                                | Full language available          |
+| **Anaphoric macros**           | Requires `syntax-case` or lower-level system | `capture` built in               |
+| **Quasiquote**                 | Not used in macros (template syntax instead) | Primary code-building tool       |
+
+For more on writing macros in Arl, see the [Macros and
+Quasiquote](https://willbrannon.com/arl/articles/macros.md) vignette.
+
+## Special forms
+
+Many familiar special forms exist (`quote`, `if`, `define`, `lambda`,
+`begin`), and there are Arl-specific R interop operators (`~`, `::`,
+`:::` for formula definition and package access) plus macro helpers
+tuned for R interop. See the [language
+reference](https://willbrannon.com/arl/articles/lang-reference.md) for
+more details.
+
+## When to think “Scheme” vs “R”
+
+- **Think Scheme** for macro structure and list processing patterns.
+- **Think R** for data frames, formulas, statistical modeling, and named
+  argument calls.
+
+## Related guides
+
+- [Getting
+  Started](https://willbrannon.com/arl/articles/getting-started.md)
+- [Macros and
+  Quasiquote](https://willbrannon.com/arl/articles/macros.md)
+- [R Interop and Data
+  Workflows](https://willbrannon.com/arl/articles/r-interop.md)

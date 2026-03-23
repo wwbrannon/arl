@@ -1,0 +1,168 @@
+# Tail Call Optimization
+
+R does not optimize tail calls. A recursive function that works fine in
+Scheme or Clojure will overflow R’s call stack after a few thousand
+iterations. Arl’s compiler fixes this for the most common case:
+**self-recursion**.
+
+## How It Works
+
+When the compiler sees `(define name (lambda ...))` or
+`(set! name (lambda ...))` and the lambda body contains calls to `name`
+in tail position, it rewrites the entire function as a `while(TRUE)`
+loop. Each self-call becomes a set of parameter reassignments followed
+by [`next`](https://rdrr.io/r/base/Control.html), so no new stack frames
+are allocated.
+
+Because `letrec` expands into `set!`, this means `letrec`-bound lambdas
+that self-recurse are automatically optimized too.
+
+    arl> ;; The compiler optimizes this automatically
+    arl> (define factorial
+    arl>   (lambda (n acc)
+    arl>     (if (< n 2)
+    arl>       acc
+    arl>       (factorial (- n 1) (* acc n)))))
+    #> <function>
+
+    arl> ;; No stack overflow (but 100000! is too large
+    arl> ;; to be representable and overflows to Inf)
+    arl> (factorial 100000 1)
+    #> Inf
+
+The compiled R code looks roughly like:
+
+``` r
+function(n, acc) {
+  while (TRUE) {
+    if (n < 2) {
+      return(acc)
+    } else {
+      .__tco_n <- n - 1
+      .__tco_acc <- acc * n
+      n <- .__tco_n
+      acc <- .__tco_acc
+      next
+    }
+  }
+}
+```
+
+Temporary variables (`.__tco_n`, `.__tco_acc`) ensure all new argument
+values are computed before any parameter is reassigned — just like a
+simultaneous `let`.
+
+Unlike in Scheme, more advanced types of tail recursion are **not**
+optimized: - **Mutual recursion** (`f` calls `g` in tail position, `g`
+calls `f`). - **`apply`-based tail calls** or indirect calls through
+higher-order functions. - **Anonymous lambdas** which tail-recurse by
+use of a fixed-point combinator (no name for the compiler to detect
+self-calls against).
+
+## What Counts as Tail Position
+
+The compiler recognizes self-calls in tail position through these
+special forms:
+
+- **`if`** — both the consequent and alternative branches
+- **`begin`** — the last expression
+
+This covers many other expressions (`cond`, `let`, `let*`, `letrec`,
+etc.) which are implemented as macros in terms of `if` and `begin`.
+
+    arl> ;; All three self-calls below are in tail position
+    arl> (define sum-positive
+    arl>   (lambda (lst acc)
+    arl>     (if (null? lst)
+    arl>       acc
+    arl>       (let ((x (car lst)))
+    arl>         (if (> x 0)
+    arl>           (sum-positive (cdr lst) (+ acc x))   ; tail: let -> if -> consequent
+    arl>           (sum-positive (cdr lst) acc))))))     ; tail: let -> if -> alternative
+    #> <function>
+
+A call that is **not** in tail position — for example, wrapped in
+another function call — will not be optimized:
+
+``` arl
+;; NOT tail-recursive: the + wraps the recursive call
+(define bad-sum
+  (lambda (n)
+    (if (< n 1)
+      0
+      (+ n (bad-sum (- n 1))))))   ; not in tail position
+```
+
+## Advanced Features
+
+Self-TCO works with all of Arl’s parameter features:
+
+- **Destructuring parameters** — pattern bindings are re-evaluated each
+  iteration inside the loop
+- **Rest parameters** — `(lambda (x . rest) ...)` works correctly
+- **Keyword arguments** — named arguments in the self-call are matched
+  to the right parameters
+
+## Disabling TCO for Debugging
+
+Since self-calls become loop iterations, recursive call frames do
+**not** appear in stack traces on error. Only the outermost call is
+visible. To preserve natural call stacks for debugging, you can disable
+self-TCO using the `disable_tco` option.
+
+There are three ways to disable it, in order of precedence:
+
+**Engine initialization parameter** (highest priority):
+
+``` r
+engine <- arl::Engine$new(disable_tco = TRUE)
+```
+
+**R option**:
+
+``` r
+options(arl.disable_tco = TRUE)
+```
+
+**Environment variable** (lowest priority):
+
+``` bash
+export ARL_DISABLE_TCO=1
+```
+
+With TCO disabled, self-recursive functions compile to normal recursive
+calls. This means deep recursion will hit R’s stack limit, but error
+stack traces will show the full chain of recursive calls, making it
+easier to identify where things went wrong.
+
+## loop/recur
+
+For mutual recursion or explicit looping patterns where self-TCO is not
+applicable, the `looping` module provides Clojure-style `loop`/`recur`.
+Since `looping` is not a prelude module, you need to import it
+explicitly:
+
+    arl> (import looping :refer :all)
+
+    arl> (define factorial
+    arl>   (lambda (n)
+    arl>     (loop ((i n) (acc 1))
+    arl>       (if (< i 2)
+    arl>         acc
+    arl>         (recur (- i 1) (* acc i))))))
+    #> <function>
+
+`loop` establishes named bindings and `recur` jumps back to the top of
+the loop with new values. This is implemented as a macro that expands to
+a `while` loop, so it has the same performance characteristics as
+self-TCO.
+
+## Summary
+
+| Feature      | Self-TCO                                                   | loop/recur                           |
+|--------------|------------------------------------------------------------|--------------------------------------|
+| Activation   | Automatic                                                  | Explicit `(import looping)` required |
+| Pattern      | `(define name (lambda ...))` or `(set! name (lambda ...))` | `(loop ((var init) ...) body)`       |
+| Scope        | Self-recursion only                                        | Any loop pattern                     |
+| Stack growth | None                                                       | None                                 |
+| Stack traces | Outermost frame only                                       | Outermost frame only                 |

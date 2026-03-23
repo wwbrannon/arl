@@ -1,0 +1,585 @@
+# Modules and Imports
+
+Arl provides a module system for organizing code into reusable,
+encapsulated units. This guide covers how to create modules, import
+them, and understand how the module system resolves paths.
+
+## Overview
+
+Arl has three mechanisms for loading code:
+
+- **`load`**: Evaluates a file in the current environment (source-like;
+  definitions and imports from the file are visible in the caller)
+- **`run`**: Evaluates a file in an isolated child environment
+  (definitions and imports in the file are not visible in the caller)
+- **`import`**: Loads a module and binds it as a first-class value; use
+  `:refer` to bring exports into scope unqualified
+
+## The `load` Function
+
+`load` is the simplest mechanism - it reads and evaluates a file in a
+target environment (defaulting to the current environment).
+
+### Signature
+
+``` arl
+(load "path")
+(load "path" env)
+```
+
+### Examples
+
+``` arl
+; Load a file from the current directory
+(load "utils.arl")
+
+; Load with an absolute path
+(load "/path/to/my/script.arl")
+
+; Load with a relative path
+(load "lib/helpers.arl")
+```
+
+### Path Resolution
+
+`load` treats its argument as a file path. It does **not** search the
+stdlib directory — use `(import name)` for stdlib modules.
+
+The path is resolved as-is: if the file exists at the given path, it’s
+loaded; otherwise an error is raised.
+
+### Re-evaluation
+
+`load` always re-evaluates the file on each call. If you call
+`(load "script.arl")` twice, the file is read and evaluated twice. This
+is intentional — `load` is for sourcing scripts, not for module loading
+(use `import` for that).
+
+## The `run` Function
+
+`run` reads and evaluates a file in a *child* of the current
+environment. Definitions and imports in that file stay in the child
+environment and are not visible in the caller. Use `run` when you want
+to execute a script without polluting the current scope (e.g. running a
+one-off task or a file that should not affect the caller’s bindings).
+
+### Signature
+
+``` arl
+(run "path")
+(run "path" parent-env)
+```
+
+### Examples
+
+``` arl
+; Run a script in isolation; its definitions are not visible here
+(run "scripts/one-off.arl")
+```
+
+`run` is defined in stdlib `core` and implemented in terms of `load`: it
+creates `new.env(parent = parent-env)` and evaluates the file there.
+
+## The `module` Special Form
+
+The `module` special form defines a named module with explicit exports.
+
+### Signature
+
+``` arl
+(module name
+  (export symbol1 symbol2 ...)
+  body...)
+
+; Or export everything defined in the module
+(module name
+  (export-all)
+  body...)
+```
+
+### Examples
+
+``` arl
+; File: math-utils.arl
+(module math-utils
+  (export square cube)
+
+  (define square
+    (lambda (x) (* x x)))
+
+  (define cube
+    (lambda (x) (* x x x)))
+
+  ; This is private - not exported
+  (define helper
+    (lambda (x) (+ x 1))))
+```
+
+### Nameless Modules
+
+If you omit the module name, Arl derives it from the source filename:
+
+``` arl
+; File: math-utils.arl
+(module (export square cube)
+  (define square (lambda (x) (* x x)))
+  (define cube (lambda (x) (* x x x))))
+; Registers as "math-utils" (derived from filename)
+```
+
+This is convenient for single-module files where the filename already
+conveys the module name.
+
+### Export Strategies
+
+**Explicit exports** (recommended):
+
+``` arl
+(module mymodule
+  (export func1 func2 var1)
+  (define func1 (lambda (x) (* x 2)))
+  (define func2 (lambda (x) (+ x 1)))
+  (define var1 42)
+  (define private-helper (lambda (x) (/ x 2))))  ; Not exported
+```
+
+**Export all**:
+
+``` arl
+(module mymodule
+  (export-all)
+  (define func1 (lambda (x) (* x 2)))
+  (define func2 (lambda (x) (+ x 1)))
+  (define _helper (lambda (x) (/ x 2))))  ; Not exported: _ prefix = private
+```
+
+Names beginning with `_` (underscore) are private by convention and are
+excluded from `export-all`. This lets you define internal helpers
+without accidentally exposing them. The `_` prefix convention applies
+only to `export-all`; explicit `(export ...)` can still export
+`_`-prefixed names if needed.
+
+**Re-export imported symbols**:
+
+``` arl
+; Facade module that bundles several modules
+(module collections
+  (export-all :re-export)
+  (import list :refer :all)
+  (import dict :refer :all)
+  (import set :refer :all))
+
+; Users can import everything from the facade
+(import collections :refer :all)
+```
+
+By default, `export-all` excludes imported symbols. The `:re-export`
+modifier includes them, enabling facade modules that re-package multiple
+modules under a single name.
+
+## The `import` Special Form
+
+The `import` special form loads a module and makes its exports
+available. `(import X)` binds the module environment to the symbol `X`.
+Access exports via qualified syntax (`X/sym`), or use `:refer` to bring
+specific names into scope unqualified. Use `:as` to alias the module
+binding.
+
+### Signature
+
+``` arl
+(import name)                          ; bind module as `name` (qualified access only)
+(import name :refer (sym1 sym2))       ; bind module + only these names unqualified
+(import name :refer :all)              ; bind module + all exports unqualified
+(import name :as alias)                ; bind module as `alias`
+(import name :as alias :refer (sym1))  ; alias + selective refer
+(import name :rename ((old new)))      ; rename specific names
+(import "path")                        ; import by file path
+```
+
+- **Symbol** (e.g. `control`): treated as a **module name**. Resolution
+  looks in the stdlib directory first, then the current working
+  directory.
+- **String** (e.g. `"lib/utils.arl"`): treated as a **file path**. Only
+  path-based resolution is used (no stdlib lookup). The path is
+  normalized to absolute so that the same file imported with different
+  path strings (e.g. `"inst/arl/control.arl"` and
+  `"./inst/arl/control.arl"`) reuses the same loaded module.
+
+### Qualified Access
+
+After importing, you can access module exports using the `/` syntax:
+
+``` arl
+(import math)
+(math/sin 1.0)     ; qualified access
+
+(import math :as m)
+(m/sin 1.0)         ; aliased qualified access
+
+(import math :refer (sin cos))
+(sin 1.0)           ; unqualified (referred)
+(math/cos 0.0)      ; qualified still works
+```
+
+The `/` syntax is reader sugar for the `module-ref` builtin: `math/inc`
+parses as `(module-ref math inc)`.
+
+### Examples
+
+``` arl
+; Import by module name (symbol): stdlib or CWD
+(import math)
+(math/square 5)  ; => 25
+
+(import control :refer :all)
+(when #t (println "hello"))
+
+; Import by path (string): path-only resolution, no stdlib
+(import "lib/my-module.arl")
+(import "/absolute/path/to/module.arl")
+```
+
+### Import Modifiers
+
+Import modifiers let you control which names are imported and how they
+appear in the current scope. This avoids namespace pollution and name
+collisions.
+
+**`:refer`** — control which names are available unqualified:
+
+``` arl
+(import list :refer (map filter reduce))  ; only these names unqualified
+(import list :refer :all)                 ; all exports unqualified
+```
+
+**`:as`** — alias the module binding:
+
+``` arl
+(import list :as l)
+(l/map square '(1 2 3))  ; => (1 4 9)
+```
+
+**`:rename`** — rename specific referred names:
+
+``` arl
+(import control :refer (when unless) :rename ((when my-when)))
+(my-when #t 42)  ; => 42
+```
+
+**`:reload`** — force re-evaluation of the module source:
+
+``` arl
+(import my-module :reload)
+```
+
+Modifiers work with both symbol and string imports, and apply to both
+regular values and macros.
+
+### Path Resolution
+
+- **`(import name)`** (symbol): resolve by **module name** — stdlib
+  (`inst/arl/`), then current directory. The file must register itself
+  with `(module name ...)`.
+- **`(import "path")`** (string): resolve by **path only** — the string
+  is a file path (existing file or `path.arl`). No stdlib lookup.
+  Relative paths are resolved from the directory of the file containing
+  the `import`, not from the current working directory. This means
+  `(import "helper.arl")` inside `lib/main.arl` looks for
+  `lib/helper.arl`. When no source file is known (e.g. at the REPL),
+  relative paths fall back to CWD. The path is normalized to absolute
+  for caching, so re-importing the same file with a different path
+  string does not reload it.
+
+### Module Registration and Scoping
+
+When you `import` a module:
+
+1.  If the module isn’t already registered for this engine, Arl loads
+    the file containing the module (into the engine’s shared module
+    cache)
+2.  The file must contain a `(module ...)` form that registers itself
+3.  `import` attaches the module’s exports into the *current*
+    environment (the scope where you wrote `(import ...)`)
+4.  Subsequent `(import M)` in any scope reuses the same module instance
+    and attaches its exports into that scope
+
+**Import scoping**: Each `(import M)` only makes M’s exports visible in
+the environment where that form was evaluated. Imports in one file are
+not visible in another file or in the REPL unless that file (or the
+REPL) also runs `(import M)`. Modules are loaded once per engine and
+shared; only the set of environments that “see” the exports depends on
+where you call `import`.
+
+### Module Introspection
+
+Arl provides several builtins for inspecting modules at runtime:
+
+- **`(module? x)`** — returns `#t` if `x` is a module environment
+- **`(namespace? x)`** — returns `#t` if `x` is a namespace node
+  (created by hierarchical imports)
+- **`(module-exports mod)`** — returns the list of exported symbol names
+- **`(module-name mod)`** — returns the canonical name string of a
+  module
+- **`(module-ref mod sym)`** — look up `sym` in module `mod`; the
+  desugared form of `mod/sym`
+
+### Error Handling
+
+``` arl
+; Module not found
+(import non-existent-module)
+; Error: Module not found: non-existent-module
+
+; Module file doesn't register itself
+; File: bad.arl containing just (define x 10)
+(import bad)
+; Error: Module 'bad' did not register itself
+
+; Accessing unexported symbol
+; File: restricted.arl
+(module restricted
+  (export public-fn)
+  (define public-fn (lambda () "visible"))
+  (define private-fn (lambda () "hidden")))
+
+(import restricted :refer :all)
+public-fn   ; Works
+private-fn  ; Error: object 'private-fn' not found
+```
+
+## Creating User Modules
+
+### Basic Module Structure
+
+Create a file `mymodule.arl`:
+
+``` arl
+(module mymodule
+  (export greet farewell)
+
+  (define greet
+    (lambda (name)
+      (string-concat "Hello, " name "!")))
+
+  (define farewell
+    (lambda (name)
+      (string-concat "Goodbye, " name "!"))))
+```
+
+Then import it:
+
+``` arl
+(import mymodule :refer :all)
+(greet "Alice")     ; => "Hello, Alice!"
+(farewell "Bob")    ; => "Goodbye, Bob!"
+```
+
+### Module with Private Helpers
+
+``` arl
+; File: calculator.arl
+(module calculator
+  (export add subtract)
+
+  ; Private helper
+  (define validate-number
+    (lambda (x)
+      (if (number? x)
+        x
+        (error "Not a number"))))
+
+  ; Public functions
+  (define add
+    (lambda (a b)
+      (+ (validate-number a)
+         (validate-number b))))
+
+  (define subtract
+    (lambda (a b)
+      (- (validate-number a)
+         (validate-number b)))))
+```
+
+### Nested Module Loading
+
+Modules can load other modules:
+
+``` arl
+; File: string-helpers.arl
+(module string-helpers
+  (export upcase downcase)
+  (define upcase (lambda (s) (toupper s)))
+  (define downcase (lambda (s) (tolower s))))
+
+; File: text-utils.arl
+(module text-utils
+  (export format-name)
+
+  (import string-helpers :refer :all)
+
+  (define format-name
+    (lambda (first last)
+      (string-concat (upcase first) " " (upcase last)))))
+
+; Usage:
+(import text-utils :refer :all)
+(format-name "john" "doe")  ; => "JOHN DOE"
+```
+
+## Standard Library Modules
+
+Arl’s standard library is organized into modules. The 10 **prelude**
+modules (logic, core, types, list, equality, functional, control,
+sequences, binding, threading) are loaded automatically when creating an
+engine, so their exports are available by default. **Non-prelude**
+modules require explicit import. The module structure is also relevant
+when writing your own modules (which must explicitly import their
+dependencies) or when creating a bare engine with
+`Engine$new(load_prelude = FALSE)`:
+
+``` arl
+; Non-prelude modules require explicit import:
+(import math :refer :all)       ; inc, dec, abs, floor, ceiling, round, etc.
+(import looping :refer :all)    ; until, do-list, loop, recur
+(import sort :refer :all)       ; sort, sort-by
+(import strings :refer :all)    ; str, string-join, string-split, etc.
+(import io :refer :all)         ; display, println, read-line
+(import dict :refer :all)       ; dict operations
+(import set :refer :all)        ; set operations
+
+; Prelude modules are already loaded but can be explicitly imported
+; in your own modules (which start with an empty scope):
+(import control :refer :all)    ; when, unless, cond, case, try/catch/finally
+(import binding :refer :all)    ; let, let*, letrec
+(import functional :refer :all) ; map, filter, reduce, etc.
+```
+
+Core functions (`car`, `cdr`, `cons`, `list`, arithmetic, predicates)
+come from the R runtime layer; the Arl modules above add macros and
+higher-level functions. To create an engine without prelude modules, use
+`Engine$new(load_prelude = FALSE)` — builtins like `gensym`, `eval`,
+`read`, and `cons` are still available.
+
+## Best Practices
+
+### 1. Use Explicit Exports
+
+Prefer `(export symbol1 symbol2 ...)` over `(export-all)` to maintain
+clear module interfaces:
+
+``` arl
+; Good - clear interface
+(module utils
+  (export public-fn1 public-fn2)
+  (define public-fn1 ...)
+  (define private-helper ...))
+
+; OK - use _ prefix for private helpers with export-all
+(module utils
+  (export-all)
+  (define public-fn ...)
+  (define _private-helper ...))  ; excluded by convention
+```
+
+### 2. Organize Related Functionality
+
+Group related functions into logical modules:
+
+``` arl
+; Good organization
+(module validation
+  (export validate-email validate-phone validate-zipcode)
+  ...)
+
+; Rather than one large utils module
+```
+
+### 3. Document Module Purpose
+
+Use `;;'` annotation comments to document your modules:
+
+``` arl
+;;' @description String manipulation utilities for text processing.
+(module string-utils
+  (export trim upcase downcase)
+  ...)
+```
+
+### 4. Avoid Circular Dependencies
+
+Circular module imports are detected at import time with a clear error
+message:
+
+``` arl
+; File: a.arl
+(module a
+  (export fn-a)
+  (import b)  ; Depends on b
+  ...)
+
+; File: b.arl
+(module b
+  (export fn-b)
+  (import a)  ; Depends on a - circular!
+  ...)
+
+; (import a) => Error: Circular dependency detected: a -> b -> a
+```
+
+### 5. Use Load Path Conventions
+
+Organize modules in a predictable directory structure:
+
+    project/
+      lib/
+        utils.arl
+        validators.arl
+      app.arl
+
+Then load with relative paths:
+
+``` arl
+; In app.arl
+(import "lib/utils")
+(import "lib/validators")
+```
+
+## Differences from Other Lisps
+
+### vs. Common Lisp
+
+- Arl uses first-class module environments with qualified access
+  (`mod/sym`)
+- No `use-package` — use `:refer` to bring names into scope
+- Simpler, file-based module system
+
+### vs. Scheme
+
+- Arl’s `module` is similar to R6RS libraries but with Clojure-style
+  qualified access
+- Arl supports `:refer`, `:as`, `:rename`, and `:reload` modifiers
+- Path resolution is more straightforward
+
+### vs. Clojure
+
+- Arl uses `:refer`/`:as`/`:rename` keywords (same as Clojure’s
+  `require`)
+- Qualified access via `mod/sym` (same as Clojure’s `ns/sym`)
+- Hierarchical module names: `collections/sorted-set`
+- Module bindings are locked after load (immutable from outside)
+
+## Summary
+
+- **`load`**: Evaluates a file in the current environment; always
+  re-evaluates (no caching, no stdlib lookup)
+- **`run`**: Evaluates a file in an isolated child environment
+  (definitions and imports not visible in the caller)
+- **`module`**: Defines a module with explicit exports; `(export-all)`
+  exports only symbols defined in the module (excluding `_`-prefixed
+  private names and imported symbols)
+- **`import`**: Loads a module, binds it as a first-class value, and
+  optionally brings exports into scope via `:refer`; each module is
+  loaded once per engine; qualified access via `mod/sym`
+- Circular imports are detected with a clear error message
+- Use explicit exports for maintainable module interfaces

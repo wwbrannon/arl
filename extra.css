@@ -1,0 +1,249 @@
+/* Arl pkgdown custom styles
+ *
+ * Layered on top of Bootstrap 5 defaults. Provides visual identity
+ * without fighting the framework.
+ */
+
+/* ---------- Color tokens ---------- */
+:root {
+  --arl-accent: #2a9d8f;
+  --arl-accent-dark: #1a7a6f;
+  --arl-code-bg: #f4f5f0;
+  --arl-subtle-bg: #f8f9fa;
+  --arl-text: #343a40;
+}
+
+/* ---------- Hero section (homepage) ---------- */
+.template-home .page-header {
+  padding: 3rem 0 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 3px solid var(--arl-accent);
+  text-align: center;
+}
+
+.template-home .page-header h1 {
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--arl-accent-dark);
+}
+
+/* Tagline paragraphs between page-header and first section */
+.template-home .section.level1 > p {
+  font-size: 1.25rem;
+  color: var(--arl-text);
+  max-width: 40em;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: justify;
+}
+
+/* ---------- Headings ---------- */
+.template-home main h2,
+.template-article main h2 {
+  color: var(--arl-accent-dark);
+  border-bottom: 2px solid var(--arl-accent);
+  padding-bottom: 0.3rem;
+  margin-top: 2.5rem;
+}
+
+/* ---------- Code blocks ---------- */
+pre {
+  background-color: var(--arl-code-bg);
+  border-left: 3px solid var(--arl-accent);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+}
+
+pre code {
+  background-color: transparent;
+}
+
+code {
+  color: var(--arl-accent-dark);
+}
+
+/* ---------- Navbar ---------- */
+.navbar .navbar-brand {
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.navbar .nav-link.active,
+.navbar .nav-link:hover {
+  color: var(--arl-accent) !important;
+}
+
+/* ---------- Feature cards (homepage bullet lists) ---------- */
+.template-home .section ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.template-home .section ul li {
+  background: var(--arl-subtle-bg);
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  transition: box-shadow 0.15s ease;
+}
+
+.template-home .section ul li:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.template-home .section ul li strong {
+  color: var(--arl-accent-dark);
+}
+
+/* ---------- Grid sections (Quick Examples 2x2, Install 1x2) ---------- */
+/* pkgdown puts the id on the h2, so we target the parent div via :has() */
+.template-home .section:has(> #quick-examples),
+.template-home .section:has(> #install) {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto 1fr 1fr;
+  gap: 1rem;
+}
+
+.template-home .section:has(> #install) {
+  grid-template-rows: auto 1fr;
+}
+
+.template-home .section:has(> #quick-examples) > h2,
+.template-home .section:has(> #install) > h2 {
+  grid-column: 1 / -1;
+}
+
+.template-home .section:has(> #quick-examples) > .section,
+.template-home .section:has(> #install) > .section {
+  background: var(--arl-subtle-bg);
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.template-home .section:has(> #quick-examples) > .section > .sourceCode,
+.template-home .section:has(> #install) > .section > .sourceCode {
+  flex: 1;
+}
+
+.template-home .section:has(> #quick-examples) > .section > .sourceCode > pre,
+.template-home .section:has(> #install) > .section > .sourceCode > pre {
+  height: 100%;
+}
+
+.template-home .section:has(> #quick-examples) > .section > h3,
+.template-home .section:has(> #install) > .section > h3 {
+  margin-top: 0;
+}
+
+.template-home .section:has(> #quick-examples) > .section pre,
+.template-home .section:has(> #install) > .section pre {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .template-home .section:has(> #quick-examples),
+  .template-home .section:has(> #install) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Section spacing ---------- */
+.template-home .section {
+  margin-bottom: 2.5rem;
+}
+
+/* ---------- Full-width homepage (no sidebar) ---------- */
+.template-home .row > main {
+  max-width: 72rem;
+  flex: 1;
+  margin: 0 auto;
+}
+
+.template-home .row > aside {
+  display: none;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  border-top: 2px solid var(--arl-accent);
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  align-items: center;
+}
+
+footer .pkgdown-footer-left p,
+footer .pkgdown-footer-right p {
+  margin-bottom: 0;
+}
+
+.pkgdown-footer-center {
+  text-align: center;
+  flex: 1 1 auto;
+}
+
+.pkgdown-footer-center img {
+  height: 20px;
+  vertical-align: middle;
+}
+
+/* Mobile: stack and center all footer columns */
+@media (max-width: 575.98px) {
+  footer .pkgdown-footer-left,
+  footer .pkgdown-footer-right {
+    text-align: center;
+  }
+}
+
+/* ---------- Links ---------- */
+a {
+  color: var(--arl-accent-dark);
+}
+
+a:hover {
+  color: var(--arl-accent);
+}
+
+/* ---------- Arl syntax highlighting (Pandoc span classes) ---------- */
+/* Bootstrap defaults are too subtle for keywords; override the classes  */
+/* that matter most for reading Lisp code.                               */
+code span.kw { color: #8839ef; font-weight: bold; } /* special forms    */
+code span.cn { color: #d20f39; }                     /* constants        */
+code span.do { color: #e64553; font-style: italic; } /* doc comments ;;' */
+code span.ot { color: #1e66f5; }                     /* :keywords        */
+
+/* ---------- Dark mode adjustments ---------- */
+[data-bs-theme="dark"] {
+  --arl-accent: #3fc1b0;
+  --arl-accent-dark: #5fd4c5;
+  --arl-code-bg: #1e1e1e;
+  --arl-subtle-bg: #212529;
+  --arl-text: #dee2e6;
+}
+
+[data-bs-theme="dark"] pre {
+  background-color: var(--arl-code-bg);
+}
+
+[data-bs-theme="dark"] .template-home .section ul li,
+[data-bs-theme="dark"] .template-home .section:has(> #quick-examples) > .section,
+[data-bs-theme="dark"] .template-home .section:has(> #install) > .section {
+  background: var(--arl-subtle-bg);
+  border-color: #495057;
+}
+
+[data-bs-theme="dark"] code {
+  color: var(--arl-accent);
+}
+
+[data-bs-theme="dark"] code span.kw { color: #c6a0f6; }
+[data-bs-theme="dark"] code span.cn { color: #ed8796; }
+[data-bs-theme="dark"] code span.do { color: #f5a97f; }
+[data-bs-theme="dark"] code span.ot { color: #8aadf4; }

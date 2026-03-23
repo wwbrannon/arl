@@ -1,0 +1,241 @@
+# Compiler and Internals
+
+This vignette explains how Arl code is compiled and executed. It is
+intended for contributors and curious users who want to understand what
+happens between typing an expression and seeing its result. Note that
+everything in this document should be considered an internal
+implementation detail subject to change without notice.
+
+## Pipeline overview
+
+Every Arl expression passes through five stages:
+
+    Source text -> Tokenizer -> Parser -> Macro Expander -> Compiler -> R eval()
+
+1.  **Tokenizer** (`R/tokenizer.R`) – Lexical analysis using regex-based
+    lexing. Produces a flat token stream (LPAREN, RPAREN, SYMBOL,
+    NUMBER, STRING, KEYWORD, etc.).
+
+2.  **Parser** (`R/parser.R`) – Converts the token stream into R call
+    objects representing Arl S-expressions. Reader macros (`'`, `` ` ``,
+    `,`, `,@`) are expanded into explicit `quote`, `quasiquote`,
+    `unquote`, and `unquote-splicing` forms during parsing.
+
+3.  **Macro Expander** (`R/macro.R`) – Walks the parsed AST and expands
+    `defmacro`-defined macros. Supports macro expansion up to an
+    arbitrary fixed depth (e.g., the single-level `macroexpand-1`, or
+    2-level, 3-level, etc), or full recursive expansion until no macros
+    remain. Quasiquote templates are processed by a shared walker
+    (`R/quasiquote.R`).
+
+4.  **Compiler** (`R/compiler.R`) – Translates the macro-expanded Arl
+    AST into R language objects. Handles all special forms, applies
+    optimizations (constant folding, dead code elimination, self-TCO),
+    and optionally inserts coverage instrumentation.
+
+5.  **R eval()** – The compiled R expression is evaluated with R’s
+    native [`eval()`](https://rdrr.io/r/base/eval.html). Because Arl
+    compiles to R code, all R functions and data structures are directly
+    accessible.
+
+## What “compilation” means
+
+Arl does not produce bytecode or machine code. Instead, the compiler
+translates Arl AST nodes into R `language` objects – the same objects
+you get from [`quote()`](https://rdrr.io/r/base/substitute.html) in R.
+For example:
+
+    arl> (define x (+ 1 2))
+    #> 3
+
+compiles to something like:
+
+``` r
+assign("x", 1 + 2, envir = .__env)
+```
+
+The result is a single R expression that can be passed to
+[`eval()`](https://rdrr.io/r/base/eval.html). This approach piggybacks
+on R’s own evaluation machinery, giving Arl access to R’s scoping,
+garbage collection, and entire function library for free. (Note that in
+practice, constant folding would precompute `3` rather than leaving an
+unevaluated `1 + 2` in the generated R code.)
+
+## Inspecting the compilation pipeline
+
+Use `engine$inspect_compilation(text)` to see each stage:
+
+``` r
+engine <- Engine$new()
+info <- engine$inspect_compilation("(when #t (+ 1 2))")
+
+info$parsed           # Arl AST after parsing
+info$expanded         # After macro expansion
+info$compiled         # Compiled R expression
+info$compiled_deparsed # R source as a character vector
+```
+
+The `compiled_deparsed` field is especially useful for understanding
+what R code the compiler generates.
+
+## Special form dispatch
+
+The compiler’s core is a dispatch table in `compile_impl` (see
+`compiler.R`). When it encounters a call, it checks the operator against
+the [known special
+forms](https://willbrannon.com/arl/articles/lang-reference.html#special-forms).
+Anything not in that list falls through to `compile_application`, which
+compiles a regular function call.
+
+A few implementation notes on how individual special forms are compiled:
+
+- `if` – wraps the condition in a truthiness check (`.__true_p()`)
+- `define` / `set!` – detect `(define name (lambda ...))` or
+  `(set! name (lambda ...))` patterns and enable self-TCO when
+  applicable
+- `lambda` – compiles closure creation with parameter patterns and
+  optional TCO rewriting
+- `begin` – compiled to R [`{ }`](https://rdrr.io/r/base/Paren.html)
+  blocks
+- `defmacro` – registers the macro with the macro expander at compile
+  time
+- `while` – compiled to its R equivalent
+- `and`, `or` – multi-argument wrappers around R’s `&&` and `||`, which
+  can only take two arguments
+- `quasiquote` – expands templates with unquote/splicing
+
+## Self-tail-call optimization
+
+When the compiler sees `(define name (lambda ...))` or
+`(set! name (lambda ...))` and the lambda body contains self-calls in
+tail position, it rewrites the entire function as a `while(TRUE)` loop.
+Tail calls become parameter reassignments followed by
+[`next`](https://rdrr.io/r/base/Control.html), eliminating stack growth.
+The `set!` support means `letrec`-bound lambdas are automatically
+optimized, since the `letrec` macro expands into `set!`.
+
+The key methods:
+
+- `has_self_tail_calls` – checks if a lambda body has self-recursive
+  tail calls
+- `expr_has_self_tail_call` – recursively walks the AST looking for
+  self-calls in tail positions (through `if`, `begin`, `cond`, `let`,
+  `let*`, `letrec`)
+- `compile_self_tail_call` – transforms the recursive call into
+  parameter reassignments within the loop body
+- `compile_tail_if`, `compile_tail_begin` – ensure both branches of `if`
+  and the last expression of `begin` get tail-position treatment
+
+For example:
+
+    arl> (define factorial
+    arl>   (lambda (n acc)
+    arl>     (if (< n 2)
+    arl>       acc
+    arl>       (factorial (- n 1) (* acc n)))))
+    #> <function>
+
+compiles to something like:
+
+``` r
+function(n, acc) {
+  while (TRUE) {
+    if (.__true_p(n < 2)) {
+      return(acc)
+    } else {
+      .__tco_n <- n - 1
+      .__tco_acc <- acc * n
+      n <- .__tco_n
+      acc <- .__tco_acc
+      next
+    }
+  }
+}
+```
+
+Self-TCO works with destructuring parameters, keyword arguments, and
+rest parameters. Since self-calls become loop iterations, recursive
+frames do not appear in stack traces – only the outermost call is
+visible.
+
+## Constant folding and dead code elimination
+
+The compiler evaluates pure function calls on compile-time literals at
+compile time. This is controlled by `try_constant_fold`, which maintains
+a list of safe functions (arithmetic, comparisons, math, string
+operations).
+
+When an `if` test is a compile-time constant, the compiler eliminates
+the dead branch entirely (`eval_constant_test` in `compile_if`). For
+example:
+
+    arl> (if #t "yes" "no")
+    #> "yes"
+
+compiles to just `"yes"`. Note that compile-time constant tests are not
+as trivial as they sound and can often result from macro expansion.
+
+Constant folding is automatically disabled when coverage tracking is
+active, because folding would bypass the instrumented function bodies
+and produce inaccurate coverage numbers.
+
+## Coverage instrumentation
+
+When a `CoverageTracker` is attached to the engine, the compiler inserts
+tracking calls at three points:
+
+1.  **Statement-level:** Before each statement in a lambda body, a
+    `.__coverage_track(file, start_line, end_line)` call is interleaved.
+
+2.  **Branch-level:** Both branches of `if` expressions are wrapped with
+    coverage calls, tracking which branches execute.
+
+3.  **If-test narrowing:** For `if` forms, coverage is narrowed to just
+    the test line (since branches are tracked separately).
+
+The tracker maintains a set of coverable lines derived from AST
+analysis, and coverage reports compare executed lines against this set.
+
+## Reserved internal names
+
+If you inspect compiled output (via `inspect_compilation`) or peek
+inside Arl environments, you will see names that start with `.__` (dot,
+underscore, underscore). These are **reserved for Arl’s internal
+machinery** and should not be used in user code.
+
+The convention serves two purposes:
+
+- The leading `.` hides names from
+  [`ls()`](https://rdrr.io/r/base/ls.html), keeping the environment
+  tidy.
+- The `.__` prefix signals “internal – do not touch.”
+
+Examples you might encounter:
+
+| Name                | Purpose                                    |
+|---------------------|--------------------------------------------|
+| `.__env`            | Reference to the enclosing Arl environment |
+| `.__true_p`         | Truthiness predicate for `if` tests        |
+| `.__assign_pattern` | Destructuring assignment helper            |
+| `.__tmp__N`         | Compiler-generated temporaries             |
+| `.__tco_<param>`    | Swap variables for tail-call optimization  |
+| `.__module`         | Sentinel marking module environments       |
+
+Attempting to bind a `.__`-prefixed name with `define` or `set!` is an
+error:
+
+    Error: define cannot bind reserved name '.__foo' (names starting with '.__' are internal)
+
+This guard is enforced at both compile time and runtime. It cannot
+prevent all access (you can always reach into an R environment
+directly), but it makes the boundary between user code and internal
+machinery explicit.
+
+## Related guides
+
+- [Getting
+  Started](https://willbrannon.com/arl/articles/getting-started.md)
+- [Macros and
+  Quasiquote](https://willbrannon.com/arl/articles/macros.md)
+- [Language
+  Reference](https://willbrannon.com/arl/articles/lang-reference.md)

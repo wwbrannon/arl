@@ -1,0 +1,114 @@
+# Runtime Options
+
+Arl behavior is controlled by a combination of R options and environment
+variables. Every user-facing setting can be configured through either
+mechanism.
+
+## Precedence
+
+When both an R option and an environment variable are set for the same
+setting, the R option wins:
+
+1.  **R option** (`options(arl.foo = value)`) – highest priority
+2.  **Environment variable** (`ARL_FOO=value`) – fallback
+3.  **Built-in default** – used when neither is set
+
+The naming convention is straightforward: option `arl.foo_bar` maps to
+environment variable `ARL_FOO_BAR`.
+
+## Setting values
+
+From R:
+
+``` r
+# R option (takes effect immediately, session-scoped)
+options(arl.repl_quiet = TRUE)
+
+# Environment variable (inherited by child processes)
+Sys.setenv(ARL_REPL_QUIET = "1")
+```
+
+From the shell:
+
+``` bash
+# Before starting R or the arl CLI
+export ARL_REPL_QUIET=1
+```
+
+For boolean settings, the environment variable values `1`, `true`, and
+`yes` (case-insensitive) are treated as `TRUE`; anything else is
+`FALSE`.
+
+## User-facing settings
+
+| Setting                   | R option                       | Env var                        | Default | Description                                              |
+|---------------------------|--------------------------------|--------------------------------|---------|----------------------------------------------------------|
+| Suppress display/trace    | `arl.quiet`                    | `ARL_QUIET`                    | `FALSE` | Silence `display` and `trace` output                     |
+| REPL quiet/banner         | `arl.repl_quiet`               | `ARL_REPL_QUIET`               | `FALSE` | Start REPL without the startup banner                    |
+| REPL history              | `arl.repl_use_history`         | `ARL_REPL_USE_HISTORY`         | `TRUE`  | Enable REPL command history                              |
+| REPL bracketed paste      | `arl.repl_bracketed_paste`     | `ARL_REPL_BRACKETED_PASTE`     | `TRUE`  | Enable bracketed-paste mode in the REPL                  |
+| CLI quiet (errors)        | `arl.cli_quiet`                | `ARL_CLI_QUIET`                | `FALSE` | Suppress CLI error messages and help text                |
+| Macro debug output        | `arl.debug_macro`              | `ARL_DEBUG_MACRO`              | `FALSE` | Print debug info during macro expansion                  |
+| Disable self-TCO          | `arl.disable_tco`              | `ARL_DISABLE_TCO`              | `FALSE` | Disable self-tail-call optimization (for debugging)      |
+| Disable constant folding  | `arl.disable_constant_folding` | `ARL_DISABLE_CONSTANT_FOLDING` | `FALSE` | Disable compile-time constant folding (for testing)      |
+| Disable all optimizations | `arl.disable_optimizations`    | `ARL_DISABLE_OPTIMIZATIONS`    | `FALSE` | Disable all non-essential compiler optimizations at once |
+| Display line limit        | `arl.display.max.lines`        | `ARL_DISPLAY_MAX_LINES`        | `20`    | Max lines for S3 object display (`Inf` to disable)       |
+
+## Shell-only settings
+
+Some settings are checked in the shell wrapper before R starts, so they
+can only be set as environment variables:
+
+| Env var                 | Description                                        |
+|-------------------------|----------------------------------------------------|
+| `ARL_SKIP_USER_PROFILE` | Skip sourcing `~/.Rprofile` when launching the CLI |
+
+## Examples
+
+Suppress all `display` and `trace` output:
+
+``` r
+options(arl.quiet = TRUE)
+engine <- arl::Engine$new()
+engine$eval_text('(display "this is silent")')  # no output
+```
+
+Or equivalently via environment variable:
+
+``` r
+Sys.setenv(ARL_QUIET = "1")
+engine <- arl::Engine$new()
+engine$eval_text('(display "this is silent")')  # no output
+Sys.unsetenv("ARL_QUIET")
+```
+
+Start the REPL without a banner:
+
+``` r
+options(arl.repl_quiet = TRUE)
+# or: Sys.setenv(ARL_REPL_QUIET = "1")
+```
+
+## Internal settings
+
+The following options are used internally for testing or session state.
+They do not have environment variable equivalents and are not intended
+for end-user configuration:
+
+- `arl.env_cache_warning_shown` – session flag for one-time cache
+  warning
+- `arl.coverage_tracker` – active `CoverageTracker` R6 object
+- `arl.stdin` – override R connection for stdin
+- `arl.repl_read_form_override` – test hook for REPL input
+- `arl.repl_can_use_history_override` – test hook for history detection
+- `arl.cli_exit_fn` – test hook for CLI exit behavior
+- `arl.cli_isatty_override` – test hook for TTY detection
+- `arl.cli_read_stdin_override` – test hook for stdin reads
+
+## Related guides
+
+- [Getting
+  Started](https://willbrannon.com/arl/articles/getting-started.md)
+- [Troubleshooting](https://willbrannon.com/arl/articles/troubleshooting.md)
+- [Compiler and
+  Internals](https://willbrannon.com/arl/articles/internals.md)
