@@ -458,7 +458,7 @@ fn (default .GlobalEnv)</p>
 arl&gt; (r-call "ls" (list))                ; list .GlobalEnv bindings
 #&gt; "args" "fn"
 arl&gt; (r-call "Sys.time" (list))          ; current time
-#&gt; 2026-03-23 05:34:57.40358</code></pre>
+#&gt; 2026-03-23 06:12:15.203836</code></pre>
 <p><strong>Note:</strong> R functions are directly available in Arl
 without <code>r-call</code>. Use <code>r-call</code> when you need to
 look up a function by string name or specify the search environment.</p>
@@ -516,7 +516,7 @@ File path to evaluate - <strong><code>parent</code></strong> — Parent
 environment for the child (default current environment)</p>
 <p><strong>Examples:</strong></p>
 <pre><code>arl&gt; (define run-demo-path (tempfile :fileext ".arl"))
-#&gt; "/tmp/RtmpPnfAem/file22e1500f0d02.arl"
+#&gt; "/tmp/Rtmp6lJ0UR/file257d439593a6.arl"
 arl&gt; (writeLines (c "(define run-demo-val 1)") run-demo-path)
 arl&gt; (run run-demo-path)
 #&gt; 1
@@ -1135,7 +1135,7 @@ Defaults to the current environment.</p>
 <p><strong>Signature:</strong> <code>(load path [env])</code></p>
 <p><strong>Examples:</strong></p>
 <pre><code>arl&gt; (define __load_demo_path (tempfile :fileext ".arl"))
-#&gt; "/tmp/RtmpPnfAem/file22e12f40778d.arl"
+#&gt; "/tmp/Rtmp6lJ0UR/file257d5212365b.arl"
 arl&gt; (writeLines (c "(define __load_demo_value 42)") __load_demo_path)
 arl&gt; (load __load_demo_path)
 #&gt; 42
@@ -1511,10 +1511,10 @@ arl&gt; (module-name math)  ; =&gt; "math"
 </div>
 
 <div class="pkgdown-footer-center">
+  <a href="https://CRAN.R-project.org/package=arl" class="external-link"><img src="https://www.r-pkg.org/badges/version/arl" alt="CRAN status"></a>
   <a href="https://github.com/wwbrannon/arl/actions/workflows/check.yaml" class="external-link"><img src="https://github.com/wwbrannon/arl/actions/workflows/check.yaml/badge.svg?branch=main" alt="R CMD check"></a>
   <a href="https://codecov.io/gh/wwbrannon/arl" class="external-link"><img src="https://codecov.io/gh/wwbrannon/arl/branch/main/graph/badge.svg?token=7pxGM6lI73" alt="Codecov"></a>
-  <a href="https://CRAN.R-project.org/package=arl" class="external-link"><img src="https://www.r-pkg.org/badges/version/arl" alt="CRAN status"></a>
-  <a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://doi.org/10.5281/zenodo.18740487" class="external-link"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.18740487.svg" alt="DOI: 10.5281/zenodo.18740487"></a>
 </div>
 
 <div class="pkgdown-footer-right">

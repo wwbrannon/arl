@@ -466,7 +466,7 @@ Environment to search for fn (default .GlobalEnv)
     arl> (r-call "ls" (list))                ; list .GlobalEnv bindings
     #> "args" "fn"
     arl> (r-call "Sys.time" (list))          ; current time
-    #> 2026-03-23 05:34:57.40358
+    #> 2026-03-23 06:12:15.203836
 
 **Note:** R functions are directly available in Arl without `r-call`.
 Use `r-call` when you need to look up a function by string name or
@@ -533,7 +533,7 @@ Parent environment for the child (default current environment)
 **Examples:**
 
     arl> (define run-demo-path (tempfile :fileext ".arl"))
-    #> "/tmp/RtmpPnfAem/file22e1500f0d02.arl"
+    #> "/tmp/Rtmp6lJ0UR/file257d439593a6.arl"
     arl> (writeLines (c "(define run-demo-val 1)") run-demo-path)
     arl> (run run-demo-path)
     #> 1
@@ -1282,7 +1282,7 @@ to the current environment.
 **Examples:**
 
     arl> (define __load_demo_path (tempfile :fileext ".arl"))
-    #> "/tmp/RtmpPnfAem/file22e12f40778d.arl"
+    #> "/tmp/Rtmp6lJ0UR/file257d5212365b.arl"
     arl> (writeLines (c "(define __load_demo_value 42)") __load_demo_path)
     arl> (load __load_demo_path)
     #> 42
