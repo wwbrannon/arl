@@ -1750,7 +1750,7 @@ Source:
     #> (:product "beta" "alpha" "beta" "gamma" "beta" "alpha" "gamma" "beta" :region "east" "west" "north" "east" "west" "north" "south" "south" :amount 120 80 150 60 90 110 50 30)
 
     arl> (define report-path (file.path (tempdir) "sales-report.csv"))
-    #> "/tmp/RtmpQ2tl3N/sales-report.csv"
+    #> "/tmp/Rtmphfm3ZB/sales-report.csv"
     arl> ((:: utils write.csv) sales-df report-path #f)
     arl> (assert-true (file.exists report-path))
     #> TRUE

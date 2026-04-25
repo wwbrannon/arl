@@ -458,7 +458,7 @@ fn (default .GlobalEnv)</p>
 arl&gt; (r-call "ls" (list))                ; list .GlobalEnv bindings
 #&gt; "args" "fn"
 arl&gt; (r-call "Sys.time" (list))          ; current time
-#&gt; 2026-03-23 06:12:15.203836</code></pre>
+#&gt; 2026-04-25 00:36:39.001122</code></pre>
 <p><strong>Note:</strong> R functions are directly available in Arl
 without <code>r-call</code>. Use <code>r-call</code> when you need to
 look up a function by string name or specify the search environment.</p>
@@ -516,7 +516,7 @@ File path to evaluate - <strong><code>parent</code></strong> — Parent
 environment for the child (default current environment)</p>
 <p><strong>Examples:</strong></p>
 <pre><code>arl&gt; (define run-demo-path (tempfile :fileext ".arl"))
-#&gt; "/tmp/Rtmp6lJ0UR/file257d439593a6.arl"
+#&gt; "/tmp/RtmprSyiNj/file21371d812370.arl"
 arl&gt; (writeLines (c "(define run-demo-val 1)") run-demo-path)
 arl&gt; (run run-demo-path)
 #&gt; 1
@@ -1135,7 +1135,7 @@ Defaults to the current environment.</p>
 <p><strong>Signature:</strong> <code>(load path [env])</code></p>
 <p><strong>Examples:</strong></p>
 <pre><code>arl&gt; (define __load_demo_path (tempfile :fileext ".arl"))
-#&gt; "/tmp/Rtmp6lJ0UR/file257d5212365b.arl"
+#&gt; "/tmp/RtmprSyiNj/file21374d264d05.arl"
 arl&gt; (writeLines (c "(define __load_demo_value 42)") __load_demo_path)
 arl&gt; (load __load_demo_path)
 #&gt; 42

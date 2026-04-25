@@ -273,38 +273,38 @@ logic_file <- system.file("arl", "logic.arl", package = "arl")
 engine$load_file_in_env(logic_file, engine$get_env())
 #> function (a, b) 
 #> {
-#>     .__coverage_track("/tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/logic.arl", 
+#>     .__coverage_track("/tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/logic.arl", 
 #>         75L, 75L)
 #>     if (.__true_p(a)) {
-#>         .__coverage_track("/tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/logic.arl", 
+#>         .__coverage_track("/tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/logic.arl", 
 #>             76L, 76L)
 #>         if (.__true_p(b)) {
-#>             .__coverage_track("/tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/logic.arl", 
+#>             .__coverage_track("/tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/logic.arl", 
 #>                 76L, 76L)
 #>             FALSE
 #>         }
 #>         else {
-#>             .__coverage_track("/tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/logic.arl", 
+#>             .__coverage_track("/tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/logic.arl", 
 #>                 76L, 76L)
 #>             TRUE
 #>         }
 #>     }
 #>     else {
-#>         .__coverage_track("/tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/logic.arl", 
+#>         .__coverage_track("/tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/logic.arl", 
 #>             77L, 77L)
 #>         if (.__true_p(b)) {
-#>             .__coverage_track("/tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/logic.arl", 
+#>             .__coverage_track("/tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/logic.arl", 
 #>                 77L, 77L)
 #>             TRUE
 #>         }
 #>         else {
-#>             .__coverage_track("/tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/logic.arl", 
+#>             .__coverage_track("/tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/logic.arl", 
 #>                 77L, 77L)
 #>             FALSE
 #>         }
 #>     }
 #> }
-#> <environment: 0x55d8a25d94b8>
+#> <environment: 0x564dc94b5fa8>
 #> attr(,"arl_doc")
 #> attr(,"arl_doc")$description
 #> [1] "Logical exclusive OR with Arl truthiness."
@@ -336,28 +336,28 @@ tracker$report_console()
 #> Arl Code Coverage (Execution Coverage)
 #> ======================================
 #> 
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/assert.arl    0/  67 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/binding.arl    0/  76 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/control.arl    0/  91 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/conversions.arl    0/  90 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/core.arl    0/  79 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/dict.arl    0/ 220 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/display.arl    0/ 175 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/equality.arl    0/ 113 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/functional.arl    0/ 167 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/io.arl    0/ 129 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/list.arl    0/ 183 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/logic.arl    3/   7 lines ( 42.9%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/looping.arl    0/ 108 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/math.arl    0/  83 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/r-interop.arl    0/  54 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/sequences.arl    0/ 197 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/set.arl    0/ 162 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/sort.arl    0/  71 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/strings.arl    0/ 194 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/struct.arl    0/  33 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/threading.arl    0/  75 lines (  0.0%)
-#> /tmp/Rtmpw2pmb5/temp_libpath1f7450a68ed0/arl/arl/types.arl    0/ 142 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/assert.arl    0/  67 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/binding.arl    0/  76 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/control.arl    0/  91 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/conversions.arl    0/  90 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/core.arl    0/  79 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/dict.arl    0/ 220 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/display.arl    0/ 175 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/equality.arl    0/ 113 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/functional.arl    0/ 167 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/io.arl    0/ 129 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/list.arl    0/ 183 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/logic.arl    3/   7 lines ( 42.9%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/looping.arl    0/ 108 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/math.arl    0/  83 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/r-interop.arl    0/  54 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/sequences.arl    0/ 197 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/set.arl    0/ 162 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/sort.arl    0/  71 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/strings.arl    0/ 194 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/struct.arl    0/  33 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/threading.arl    0/  75 lines (  0.0%)
+#> /tmp/RtmpiElDnT/temp_libpath1b2a11bdc042/arl/arl/types.arl    0/ 142 lines (  0.0%)
 #> 
 #> Total: 3/2516 lines (0.1%)
 #> 

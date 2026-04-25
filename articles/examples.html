@@ -1846,7 +1846,7 @@ arl&gt;   (data.frame :product products-vec :region regions-vec :amount amounts-
 #&gt; (:product "beta" "alpha" "beta" "gamma" "beta" "alpha" "gamma" "beta" :region "east" "west" "north" "east" "west" "north" "south" "south" :amount 120 80 150 60 90 110 50 30)
 
 arl&gt; (define report-path (file.path (tempdir) "sales-report.csv"))
-#&gt; "/tmp/RtmpQ2tl3N/sales-report.csv"
+#&gt; "/tmp/Rtmphfm3ZB/sales-report.csv"
 arl&gt; ((:: utils write.csv) sales-df report-path #f)
 arl&gt; (assert-true (file.exists report-path))
 #&gt; TRUE
